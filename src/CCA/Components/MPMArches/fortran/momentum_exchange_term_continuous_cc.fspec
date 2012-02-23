@@ -9,7 +9,7 @@ void momentum_exchange_cont_cc(
         Array3<double> dfx_fcy, 
 	Array3<double> dfx_fcz, 
      	CCVariable<double> dfx_cc,
-     	constCCVariable<double> ug_cc, 
+     	CCVariable<double> ug_cc, 
 	constCCVariable<double> up_cc,
      	const Array3<double> up_fcy, 
 	const Array3<double> up_fcz,

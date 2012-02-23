@@ -144,9 +144,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   // for multimaterial
   if (d_MAlab){
@@ -180,9 +178,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
     
-    constCCVariable<double> uVelocityCC;
-    constCCVariable<double> vVelocityCC;
-    constCCVariable<double> wVelocityCC;
+    constCCVariable<Vector> VelocityCC;
     constCCVariable<double> density;
     
     CCVariable<double> viscosity;
@@ -201,9 +197,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
                 
     new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
@@ -228,11 +222,29 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
 #endif      
-    fort_smagmodel(uVelocity, vVelocity, wVelocity,
-                   uVelocityCC, vVelocityCC, wVelocityCC,
-                   density, viscosity, idxLo, idxHi,
-                   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-                   mol_viscos, CF, d_factorMesh, d_filterl);
+//    fort_smagmodel(uVelocity, vVelocity, wVelocity,
+//                   uVelocityCC, vVelocityCC, wVelocityCC,
+//                   density, viscosity, idxLo, idxHi,
+//                   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+//                   mol_viscos, CF, d_factorMesh, d_filterl);
+
+    Vector Dx = patch->dCell(); 
+    double dmesh = Dx.x()*Dx.y()*Dx.z(); 
+    dmesh = pow(dmesh,1.0/3.0);
+
+    double pmixl = CF * max(d_filterl, d_factorMesh*dmesh); 
+
+    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){ 
+
+      IntVector c = *iter; 
+
+      viscosity[c] = compute_smag_viscos( uVelocity, vVelocity, wVelocity, 
+          VelocityCC, density, pmixl, Dx, c ); 
+
+      viscosity[c] += mol_viscos; 
+
+    } 
+
 
     //__________________________________
     // boundary conditions

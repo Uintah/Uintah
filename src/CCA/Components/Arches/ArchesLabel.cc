@@ -175,13 +175,8 @@ ArchesLabel::ArchesLabel()
   // Reactscalar Non Linear Src
   d_reactscalNonLinSrcSBLMLabel = VarLabel::create("reactscalNonLinSrcSBLM",CC_double);
 
-  // Cell Centered data after interpolation (for use in visualization)
-  d_oldCCVelocityLabel   =  VarLabel::create("oldCCVelocity",      CC_Vector);
-  d_newCCVelocityLabel   =  VarLabel::create("newCCVelocity",      CC_Vector);
-  d_newCCVelMagLabel     =  VarLabel::create("newCCVelMagnitude",  CC_double);
-  d_newCCUVelocityLabel  =  VarLabel::create("newCCUVelocity",     CC_double);
-  d_newCCVVelocityLabel  =  VarLabel::create("newCCVVelocity",     CC_double);
-  d_newCCWVelocityLabel  =  VarLabel::create("newCCWVelocity",     CC_double);
+  // Cell Centered data after interpolation (for use in visualization and turbulence models)
+  d_CCVelocityLabel   =  VarLabel::create("CCVelocity",      CC_Vector);
 
   // multimaterial wall/intrusion cells
   d_mmcellTypeLabel = VarLabel::create("mmcellType",
@@ -469,18 +464,6 @@ ArchesLabel::ArchesLabel()
   d_ShRFLabel  =  VarLabel::create("ShRF",  CC_double);
 
   
-  // carbon balance labels
-  d_CO2FlowRateLabel         =  VarLabel::create("CO2FlowRate",         sum_variable);
-  d_SO2FlowRateLabel         =  VarLabel::create("SO2FlowRate",         sum_variable);
-  d_carbonEfficiencyLabel    =  VarLabel::create("carbonEfficiency",    min_variable);
-  d_sulfurEfficiencyLabel    =  VarLabel::create("sulfurEfficiency",    min_variable);
-  d_scalarFlowRateLabel      =  VarLabel::create("scalarFlowRate",      sum_variable);
-  d_scalarEfficiencyLabel    =  VarLabel::create("scalarEfficiency",    min_variable);
-  d_enthalpyFlowRateLabel    =  VarLabel::create("enthalpyFlowRate",    sum_variable);
-  d_enthalpyEfficiencyLabel  =  VarLabel::create("enthalpyEfficiency",  min_variable);
-  d_totalRadSrcLabel         =  VarLabel::create("totalRadSrc",         sum_variable);
-  d_normTotalRadSrcLabel     =  VarLabel::create("normTotalRadSrc",     min_variable);
-
   //MMS labels
   d_uFmmsLabel  =  VarLabel::create("uFmms",  SFCX_double);
   d_vFmmsLabel  =  VarLabel::create("vFmms",  SFCY_double);
@@ -577,12 +560,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressurePred_label);
   VarLabel::destroy(d_refPressure_label);
-  VarLabel::destroy(d_oldCCVelocityLabel);
-  VarLabel::destroy(d_newCCVelocityLabel);
-  VarLabel::destroy(d_newCCVelMagLabel);
-  VarLabel::destroy(d_newCCUVelocityLabel);
-  VarLabel::destroy(d_newCCVVelocityLabel);
-  VarLabel::destroy(d_newCCWVelocityLabel);
+  VarLabel::destroy(d_CCVelocityLabel);
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
 
@@ -738,16 +716,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShFLabel);
   VarLabel::destroy(d_ShELabel);
   VarLabel::destroy(d_ShRFLabel);
-  VarLabel::destroy(d_CO2FlowRateLabel);
-  VarLabel::destroy(d_carbonEfficiencyLabel);
-  VarLabel::destroy(d_SO2FlowRateLabel);
-  VarLabel::destroy(d_sulfurEfficiencyLabel);
-  VarLabel::destroy(d_scalarFlowRateLabel);
-  VarLabel::destroy(d_scalarEfficiencyLabel);
-  VarLabel::destroy(d_enthalpyFlowRateLabel);
-  VarLabel::destroy(d_enthalpyEfficiencyLabel);
-  VarLabel::destroy(d_totalRadSrcLabel);
-  VarLabel::destroy(d_normTotalRadSrcLabel);
 
   //mms variabels
   VarLabel::destroy(d_uFmmsLabel);

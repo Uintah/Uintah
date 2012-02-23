@@ -999,10 +999,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_uVelRhoHatLabel);
     tsk->computes(d_lab->d_vVelRhoHatLabel);
     tsk->computes(d_lab->d_wVelRhoHatLabel);
-    tsk->computes(d_lab->d_newCCVelocityLabel);
-    tsk->computes(d_lab->d_newCCUVelocityLabel);
-    tsk->computes(d_lab->d_newCCVVelocityLabel);
-    tsk->computes(d_lab->d_newCCWVelocityLabel);
+    tsk->computes(d_lab->d_CCVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel);
     tsk->computes(d_lab->d_volFractionLabel);
@@ -1194,13 +1191,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       wFmms.initialize(0.0);
     }
 
-    new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch);
-    new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch);
-    new_dw->allocateAndPut(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch);
-    new_dw->allocateAndPut(ccVelocity, d_lab->d_newCCVelocityLabel, indx, patch);
-    uVelocityCC.initialize(0.0);
-    vVelocityCC.initialize(0.0);
-    wVelocityCC.initialize(0.0);
+    new_dw->allocateAndPut(ccVelocity, d_lab->d_CCVelocityLabel, indx, patch);
     ccVelocity.initialize(Vector(0.,0.,0.));
 
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
@@ -1680,9 +1671,8 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
 
     printSchedule(level,dbg,"Arches::readCCInitialCondition");
 
-    tsk->modifies(d_lab->d_newCCUVelocityLabel);
-    tsk->modifies(d_lab->d_newCCVVelocityLabel);
-    tsk->modifies(d_lab->d_newCCWVelocityLabel);
+    tsk->modifies(d_lab->d_CCVelocityLabel); 
+
     tsk->modifies(d_lab->d_pressurePSLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -1699,16 +1689,15 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
                                DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    CCVariable<double> uVelocityCC;
-    CCVariable<double> vVelocityCC;
-    CCVariable<double> wVelocityCC;
+
+    CCVariable<Vector> VelocityCC; 
     CCVariable<double> pressure;
-    new_dw->getModifiable(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch);
-    new_dw->getModifiable(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch);
-    new_dw->getModifiable(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch);
+
+    new_dw->getModifiable(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch);
     new_dw->getModifiable(pressure,    d_lab->d_pressurePSLabel,     indx, patch);
 
     ifstream fd(d_init_inputfile.c_str());
@@ -1717,17 +1706,20 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
       warn << "ERROR Arches::readCCInitialCondition: \nUnable to open the given input file " << d_init_inputfile;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
+
     int nx,ny,nz;
     fd >> nx >> ny >> nz;
     const Level* level = patch->getLevel();
     IntVector low, high;
     level->findCellIndexRange(low, high);
     IntVector range = high-low;//-IntVector(2,2,2);
+    
     if (!(range == IntVector(nx,ny,nz))) {
       ostringstream warn;
       warn << "ERROR Arches::readCCInitialCondition: \nWrong grid size in input file " << range;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
+    
     double tmp;
     fd >> tmp >> tmp >> tmp;
     fd >> tmp >> tmp >> tmp;
@@ -1742,9 +1734,9 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
           fd >> uvel >> vvel >> wvel >> pres >> tmp;
           if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
               (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
-            uVelocityCC[currCell] = 0.01*uvel;
-            vVelocityCC[currCell] = 0.01*vvel;
-            wVelocityCC[currCell] = 0.01*wvel;
+            VelocityCC[currCell][0] = 0.01*uvel;
+            VelocityCC[currCell][1] = 0.01*vvel;
+            VelocityCC[currCell][2] = 0.01*wvel;
             pressure[currCell] = 0.1*pres;
           }
         }
@@ -2018,7 +2010,7 @@ Arches::sched_weightedAbsInit( const LevelP& level,
         i != d_lab->partVel.end(); i++){
     tsk->computes( i->second );
   }
-  tsk->requires( Task::NewDW, d_lab->d_newCCVelocityLabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, d_lab->d_CCVelocityLabel, Ghost::None, 0 );
 
   // Models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -2136,7 +2128,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
     }
 
     constCCVariable<Vector> gasVel;
-    new_dw->get( gasVel, d_lab->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+    new_dw->get( gasVel, d_lab->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
      // --- PARTICLE VELS
     for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin();
           i != d_lab->partVel.end(); i++){
@@ -2317,9 +2309,7 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2341,17 +2331,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    constCCVariable<double> uVelocityCC;
-    constCCVariable<double> vVelocityCC;
-    constCCVariable<double> wVelocityCC;
+    constCCVariable<Vector> CCVelocity; 
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(CCVelocity, d_lab->d_CCVelocityLabel, indx, patch, gac, 1); 
 
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
@@ -2362,19 +2348,19 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(1,0,0);
-      uVelocity[c] = 0.5 * (uVelocityCC[c] + uVelocityCC[L]);
+      uVelocity[c] = 0.5 * (CCVelocity[c][0] + CCVelocity[L][0]);
     }
 
     for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(0,1,0);
-      vVelocity[c] = 0.5 * (vVelocityCC[c] + vVelocityCC[L]);
+      vVelocity[c] = 0.5 * (CCVelocity[c][1] + CCVelocity[L][1]);
     }
 
     for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector L = c - IntVector(0,0,1);
-      wVelocity[c] = 0.5 * (wVelocityCC[c] + wVelocityCC[L]);
+      wVelocity[c] = 0.5 * (CCVelocity[c][2] + CCVelocity[L][2]);
     }
   }
 }
@@ -2395,10 +2381,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
-  tsk->modifies(d_lab->d_newCCUVelocityLabel);
-  tsk->modifies(d_lab->d_newCCVVelocityLabel);
-  tsk->modifies(d_lab->d_newCCWVelocityLabel);
-  tsk->modifies(d_lab->d_newCCVelocityLabel);
+  tsk->modifies(d_lab->d_CCVelocityLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -2421,9 +2404,6 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     constSFCXVariable<double> uvel_FC;
     constSFCYVariable<double> vvel_FC;
     constSFCZVariable<double> wvel_FC;
-    CCVariable<double> uvel_CC;
-    CCVariable<double> vvel_CC;
-    CCVariable<double> wvel_CC;
     CCVariable<Vector> vel_CC;
 
     IntVector idxLo = patch->getFortranCellLowIndex();
@@ -2440,13 +2420,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     new_dw->get(vvel_FC, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(wvel_FC, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
 
-    new_dw->getModifiable(uvel_CC, d_lab->d_newCCUVelocityLabel,indx, patch);
-    new_dw->getModifiable(vvel_CC, d_lab->d_newCCVVelocityLabel,indx, patch);
-    new_dw->getModifiable(wvel_CC, d_lab->d_newCCWVelocityLabel,indx, patch);
-    new_dw->getModifiable(vel_CC,  d_lab->d_newCCVelocityLabel, indx, patch);
-    uvel_CC.initialize(0.0);
-    vvel_CC.initialize(0.0);
-    wvel_CC.initialize(0.0);
+    new_dw->getModifiable(vel_CC,  d_lab->d_CCVelocityLabel, indx, patch);
     vel_CC.initialize(Vector(0.0,0.0,0.0));
 
     //__________________________________
@@ -2461,16 +2435,18 @@ Arches::getCCVelocities(const ProcessorGroup* ,
       IntVector idxV(i,j+1,k);
       IntVector idxW(i,j,k+1);
 
-      uvel_CC[c] = cellinfo->wfac[i] * uvel_FC[c] +
-                   cellinfo->efac[i] * uvel_FC[idxU];
+      double u,v,w;
 
-      vvel_CC[c] = cellinfo->sfac[j] * vvel_FC[c] +
-                   cellinfo->nfac[j] * vvel_FC[idxV];
+      u = cellinfo->wfac[i] * uvel_FC[c] +
+          cellinfo->efac[i] * uvel_FC[idxU];
 
-      wvel_CC[c] = cellinfo->bfac[k] * wvel_FC[c] +
-                   cellinfo->tfac[k] * wvel_FC[idxW];
+      v = cellinfo->sfac[j] * vvel_FC[c] +
+          cellinfo->nfac[j] * vvel_FC[idxV];
 
-      vel_CC[c] = Vector(uvel_CC[c], vvel_CC[c], wvel_CC[c]);
+      w = cellinfo->bfac[k] * wvel_FC[c] +
+          cellinfo->tfac[k] * wvel_FC[idxW];
+
+      vel_CC[c] = Vector(u, v, w);
     }
     //__________________________________
     // Apply boundary conditions
@@ -2504,22 +2480,24 @@ Arches::getCCVelocities(const ProcessorGroup* ,
         IntVector idxV(i,j+1,k);
         IntVector idxW(i,j,k+1);
 
-        uvel_CC[c] = one_or_zero.x() *
-                      (cellinfo->wfac[i] * uvel_FC[c] +
-                       cellinfo->efac[i] * uvel_FC[idxU]) +
-                      (1.0 - one_or_zero.x()) * uvel_FC[idxU];
+        double u,v,w;
 
-        vvel_CC[c] = one_or_zero.y() *
-                       (cellinfo->sfac[j] * vvel_FC[c] +
-                        cellinfo->nfac[j] * vvel_FC[idxV]) +
-                       (1.0 - one_or_zero.y()) * vvel_FC[idxV];
+        u = one_or_zero.x() *
+            (cellinfo->wfac[i] * uvel_FC[c] +
+             cellinfo->efac[i] * uvel_FC[idxU]) +
+            (1.0 - one_or_zero.x()) * uvel_FC[idxU];
 
-        wvel_CC[c] = one_or_zero.z() *
-                      (cellinfo->bfac[k] * wvel_FC[c] +
-                       cellinfo->tfac[k] * wvel_FC[idxW] ) +
-                      (1.0 - one_or_zero.z()) * wvel_FC[idxW];
+        v = one_or_zero.y() *
+            (cellinfo->sfac[j] * vvel_FC[c] +
+             cellinfo->nfac[j] * vvel_FC[idxV]) +
+            (1.0 - one_or_zero.y()) * vvel_FC[idxV];
 
-        vel_CC[c] = Vector( uvel_CC[c], vvel_CC[c], wvel_CC[c] );
+        w = one_or_zero.z() *
+            (cellinfo->bfac[k] * wvel_FC[c] +
+             cellinfo->tfac[k] * wvel_FC[idxW] ) +
+            (1.0 - one_or_zero.z()) * wvel_FC[idxW];
+
+        vel_CC[c] = Vector( u, v, w );
       }
     }
   }

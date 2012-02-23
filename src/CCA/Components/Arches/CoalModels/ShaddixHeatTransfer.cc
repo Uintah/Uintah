@@ -324,7 +324,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   // also require paticle velocity, gas velocity, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
   tsk->requires(Task::NewDW, iQuad->second, Ghost::None, 0);
-  tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
+  tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
 
@@ -543,7 +543,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     
     // gas velocity used to calculate Reynolds number
     constCCVariable<Vector> gasVel; 
-    old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 ); 
+    old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 ); 
     
     constCCVariable<double> den;
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 

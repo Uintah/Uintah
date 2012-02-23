@@ -20,9 +20,7 @@
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
-    <save label="newCCUVelocity"/>
-    <save label="newCCVVelocity"/>
-    <save label="newCCWVelocity"/>
+    <save label="CCVelocity"/>
     <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>

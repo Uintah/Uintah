@@ -2328,13 +2328,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
       arches_matls->getUnion(), 
       Ghost::AroundCells, numGhostCells);
 
-  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, 
-      arches_matls->getUnion(),
-      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, 
-      arches_matls->getUnion(),
-      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, 
+  t->requires(Task::OldDW, d_Alab->d_CCVelocityLabel, 
       arches_matls->getUnion(),
       Ghost::AroundCells, numGhostCells);
 
@@ -2642,10 +2636,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     constCCVariable<int> cellType;
     constCCVariable<double> pressure;
 
-    constCCVariable<double> xvelCC_gas;
-    constCCVariable<double> yvelCC_gas;
-    constCCVariable<double> zvelCC_gas;
-
     constCCVariable<double> gas_fraction_cc;
 
     constCCVariable<double> density;
@@ -2685,6 +2675,11 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     CCVariable<double> KStabilityV; 
     CCVariable<double> KStabilityW; 
 
+    constCCVariable<Vector> CCVelocity; 
+    CCVariable<double> xvelCC_gas; 
+    CCVariable<double> yvelCC_gas; 
+    CCVariable<double> zvelCC_gas; 
+
     int numGhostCells = 1;
     int numGhostCellsG = 1;
 
@@ -2695,12 +2690,24 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     old_dw->get(pressure, d_Alab->d_pressPlusHydroLabel,        matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
 
-    old_dw->get(xvelCC_gas, d_Alab->d_newCCUVelocityLabel,   matlIndex, 
+    old_dw->get(CCVelocity, d_Alab->d_CCVelocityLabel,   matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
-    old_dw->get(yvelCC_gas, d_Alab->d_newCCVVelocityLabel,   matlIndex, 
-        patch, Ghost::AroundCells, numGhostCellsG);
-    old_dw->get(zvelCC_gas, d_Alab->d_newCCWVelocityLabel,   matlIndex, 
-        patch, Ghost::AroundCells, numGhostCellsG);
+
+    new_dw->allocateTemporary( xvelCC_gas, patch, Ghost::AroundCells, 1 ); 
+    new_dw->allocateTemporary( yvelCC_gas, patch, Ghost::AroundCells, 1 ); 
+    new_dw->allocateTemporary( zvelCC_gas, patch, Ghost::AroundCells, 1 ); 
+
+    //copy over components of velocity.  Not very efficient but would 
+    //require a rewrite of the momexch from fortran to c++
+    for ( CellIterator iter = patch->getCellIterator( numGhostCellsG ); !iter.done(); ++iter ){ 
+
+      IntVector c = *iter; 
+
+      xvelCC_gas[c] = CCVelocity[c].x(); 
+      yvelCC_gas[c] = CCVelocity[c].y(); 
+      zvelCC_gas[c] = CCVelocity[c].z(); 
+
+    } 
 
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
@@ -3591,13 +3598,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
       arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
 
-  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, 
-      arches_matls->getUnion(),
-      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, 
-      arches_matls->getUnion(),
-      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, 
+  t->requires(Task::OldDW, d_Alab->d_CCVelocityLabel, 
       arches_matls->getUnion(),
       Ghost::AroundCells, numGhostCells);
 
@@ -3746,9 +3747,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     constCCVariable<int> cellType;
     constCCVariable<double> tempGas;
     constCCVariable<double> gas_fraction_cc;
-    constCCVariable<double> ugCC;
-    constCCVariable<double> vgCC;
-    constCCVariable<double> wgCC;
+    constCCVariable<Vector> CCVelocity; 
     constCCVariable<double> denMicro;
 
     // stuff for radiative heat flux to intrusions
@@ -3895,14 +3894,28 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
 
-    old_dw->get(ugCC, d_Alab->d_newCCUVelocityLabel, matlIndex, 
+    old_dw->get(CCVelocity, d_Alab->d_CCVelocityLabel, matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
 
-    old_dw->get(vgCC, d_Alab->d_newCCVVelocityLabel, matlIndex, 
-        patch, Ghost::AroundCells, numGhostCellsG);
+    CCVariable<double> ugCC; 
+    CCVariable<double> vgCC; 
+    CCVariable<double> wgCC; 
 
-    old_dw->get(wgCC, d_Alab->d_newCCWVelocityLabel, matlIndex, 
-        patch, Ghost::AroundCells, numGhostCellsG);
+    new_dw->allocateTemporary( ugCC, patch, Ghost::AroundCells, numGhostCellsG ); 
+    new_dw->allocateTemporary( vgCC, patch, Ghost::AroundCells, numGhostCellsG ); 
+    new_dw->allocateTemporary( wgCC, patch, Ghost::AroundCells, numGhostCellsG ); 
+
+    //copy over components of velocity.  Not very efficient but would 
+    //require a rewrite of the momexch from fortran to c++
+    for ( CellIterator iter = patch->getCellIterator( numGhostCellsG ); !iter.done(); ++iter ){ 
+
+      IntVector c = *iter; 
+
+      ugCC[c] = CCVelocity[c].x(); 
+      vgCC[c] = CCVelocity[c].y(); 
+      wgCC[c] = CCVelocity[c].z(); 
+
+    } 
 
     old_dw->get(denMicro, d_Alab->d_densityMicroLabel,
         matlIndex, patch, Ghost::AroundCells, numGhostCellsG);

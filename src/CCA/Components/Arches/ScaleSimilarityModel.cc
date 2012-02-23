@@ -126,9 +126,7 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
   // for multimaterial
@@ -164,9 +162,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    constCCVariable<double> uVel;
-    constCCVariable<double> vVel;
-    constCCVariable<double> wVel;
+    constCCVariable<Vector> Vel; 
     constCCVariable<double> den;
     constCCVariable<double> scalar;
     constCCVariable<double> voidFraction;
@@ -174,9 +170,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(uVel,   d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(vVel,   d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(wVel,   d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(Vel,    d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(den,    d_lab->d_densityCPLabel,      indx, patch, gac, 1);
     new_dw->get(scalar, d_lab->d_scalarSPLabel,       indx, patch, gac, 1);
     
@@ -272,15 +266,15 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
           IntVector currCell(colX, colY, colZ);
-          denUU[currCell] = uVel[currCell]*uVel[currCell];
-          denUV[currCell] = uVel[currCell]*vVel[currCell];
-          denUW[currCell] = uVel[currCell]*wVel[currCell];
-          denVV[currCell] = vVel[currCell]*vVel[currCell];
-          denVW[currCell] = vVel[currCell]*wVel[currCell];
-          denWW[currCell] = wVel[currCell]*wVel[currCell];
-          denPhiU[currCell] = scalar[currCell]*uVel[currCell];
-          denPhiV[currCell] = scalar[currCell]*vVel[currCell];
-          denPhiW[currCell] = scalar[currCell]*wVel[currCell];
+          denUU[currCell] = Vel[currCell].x() * Vel[currCell].x(); 
+          denUV[currCell] = Vel[currCell].x() * Vel[currCell].y();
+          denUW[currCell] = Vel[currCell].x() * Vel[currCell].z();
+          denVV[currCell] = Vel[currCell].y() * Vel[currCell].y();
+          denVW[currCell] = Vel[currCell].y() * Vel[currCell].z();
+          denWW[currCell] = Vel[currCell].z() * Vel[currCell].z();
+          denPhiU[currCell] = scalar[currCell]*Vel[currCell].x();
+          denPhiV[currCell] = scalar[currCell]*Vel[currCell].y();
+          denPhiW[currCell] = scalar[currCell]*Vel[currCell].z();
         }
       }
     }
@@ -713,19 +707,19 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,uVel, filterUVel);
+    d_filter->applyFilter(pc, patch, Vel, filterUVel, 0);
 #if 0
     cerr << "In the Scale Similarity print vVel" << endl;
     vVel.print(cerr);
 #endif
 
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,vVel, filterVVel);
+    d_filter->applyFilter(pc, patch, Vel, filterVVel, 1);
 #if 0
     cerr << "In the Scale Similarity model after filter print filterVVel" << endl;
     filterVVel.print(cerr);
 #endif
 
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,wVel, filterWVel);
+    d_filter->applyFilter(pc, patch, Vel, filterWVel, 2);
     d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
     d_filter->applyFilter< Array3<double> >(pc, patch,denUU, filterdenUU);
     d_filter->applyFilter< Array3<double> >(pc, patch,denUV, filterdenUV);
@@ -771,9 +765,9 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
                 totalVol += vol;
                 //                filterDen[currCell] += den[filterCell]*vol; 
                 filterDen[currCell] += den[currCell]*vol; 
-                filterUVel[currCell] += uVel[filterCell]*vol; 
-                filterVVel[currCell] += vVel[filterCell]*vol; 
-                filterWVel[currCell] += wVel[filterCell]*vol;
+                filterUVel[currCell] += Vel[filterCell].x()*vol; 
+                filterVVel[currCell] += Vel[filterCell].y()*vol; 
+                filterWVel[currCell] += Vel[filterCell].z()*vol;
                 filterdenUU[currCell] += denUU[filterCell]*vol;  
                 filterdenUV[currCell] += denUV[filterCell]*vol;  
                 filterdenUW[currCell] += denUW[filterCell]*vol;  

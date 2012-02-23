@@ -24,7 +24,7 @@
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
     <save label="vorticity"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>

@@ -30,10 +30,7 @@
     <save label="continuityResidual"/>
 <!-- flow field variables -->
     <save label="pressurePS"/>
-    <save label="newCCUVelocity"/>
-    <save label="newCCVVelocity"/>
-    <save label="newCCWVelocity"/>
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
     <save label="scalarSP"/>
     <save label="scalarVarSP"/>
     <save label="densityCP"/>

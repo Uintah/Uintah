@@ -365,9 +365,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
     
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
     tsk->requires(Task::OldDW, d_lab->d_CsLabel,             gac, 1);
@@ -1482,9 +1480,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    constCCVariable<double> ccUVel;
-    constCCVariable<double> ccVVel;
-    constCCVariable<double> ccWVel;
+    constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
     constCCVariable<double> scalar;
     constCCVariable<double> enthalpy;
@@ -1497,9 +1493,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     // Get the velocity and density
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(ccVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(ccWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(den,       d_lab->d_densityCPLabel,   indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,   indx, patch, gac, 1);
     old_dw->get(CsOld,     d_lab->d_CsLabel,          indx, patch, gac, 1);
@@ -1768,27 +1762,27 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     if (xplus) endX--;
 
   TAU_PROFILE_START(compute1);
-#ifdef use_fortran
-    IntVector start(startX, startY, startZ);
-    IntVector end(endX - 1, endY - 1, endZ -1);
-    fort_comp_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-        ccUVel,ccVVel,ccWVel,den,
-        IsI,betaIJ[0],betaIJ[1],betaIJ[2],betaIJ[3],betaIJ[4],betaIJ[5],
-        rhoU,rhoV,rhoW,rhoUU,rhoUV,rhoUW,rhoVV,rhoVW,rhoWW,
-        start,end);
-    if (d_dynScalarModel)
-    fort_comp_dynamic_4loop(ccUVel,ccVVel,ccWVel,
-        den,scalar,enthalpy,reactScalar,
-        scalarGrad[0], scalarGrad[1],scalarGrad[2],
-        enthalpyGrad[0], enthalpyGrad[1],enthalpyGrad[2],
-        reactScalarGrad[0], reactScalarGrad[1],reactScalarGrad[2], IsI,
-        scalarBeta[0],scalarBeta[1],scalarBeta[2],
-        enthalpyBeta[0],enthalpyBeta[1],enthalpyBeta[2],
-        reactScalarBeta[0],reactScalarBeta[1],reactScalarBeta[2],
-        rhoFU,rhoFV,rhoFW,rhoEU,rhoEV,rhoEW,rhoRFU,rhoRFV,rhoRFW,
-        start,end,d_calcScalar,
-        d_calcEnthalpy,d_calcReactingScalar);
-#else
+//#ifdef use_fortran
+//    IntVector start(startX, startY, startZ);
+//    IntVector end(endX - 1, endY - 1, endZ -1);
+//    fort_comp_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
+//        ccUVel,ccVVel,ccWVel,den,
+//        IsI,betaIJ[0],betaIJ[1],betaIJ[2],betaIJ[3],betaIJ[4],betaIJ[5],
+//        rhoU,rhoV,rhoW,rhoUU,rhoUV,rhoUW,rhoVV,rhoVW,rhoWW,
+//        start,end);
+//    if (d_dynScalarModel)
+//    fort_comp_dynamic_4loop(ccUVel,ccVVel,ccWVel,
+//        den,scalar,enthalpy,reactScalar,
+//        scalarGrad[0], scalarGrad[1],scalarGrad[2],
+//        enthalpyGrad[0], enthalpyGrad[1],enthalpyGrad[2],
+//        reactScalarGrad[0], reactScalarGrad[1],reactScalarGrad[2], IsI,
+//        scalarBeta[0],scalarBeta[1],scalarBeta[2],
+//        enthalpyBeta[0],enthalpyBeta[1],enthalpyBeta[2],
+//        reactScalarBeta[0],reactScalarBeta[1],reactScalarBeta[2],
+//        rhoFU,rhoFV,rhoFW,rhoEU,rhoEV,rhoEW,rhoRFU,rhoRFV,rhoRFW,
+//        start,end,d_calcScalar,
+//        d_calcEnthalpy,d_calcReactingScalar);
+//#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
@@ -1806,9 +1800,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 // trace has been neglected
 //          double trace = (sij0 + sij1 + sij2)/3.0;
           double trace = 0.0;
-          double uvel_cur = ccUVel[currCell];
-          double vvel_cur = ccVVel[currCell];
-          double wvel_cur = ccWVel[currCell];
+          double uvel_cur = ccVel[currCell].x();
+          double vvel_cur = ccVel[currCell].y();
+          double wvel_cur = ccVel[currCell].z();
           double den_cur = den[currCell];
           double delta = cellinfo->sew[colX]*
                          cellinfo->sns[colY]*cellinfo->stb[colZ];
@@ -1871,7 +1865,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-#endif
+//#endif
   TAU_PROFILE_STOP(compute1);
     Array3<double> filterRhoUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterRhoUU.initialize(0.0);

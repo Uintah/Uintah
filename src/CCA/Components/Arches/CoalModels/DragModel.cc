@@ -334,7 +334,7 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires( Task::OldDW, d_weight_label, Ghost::None, 0);
 
   // require gas velocity
-  tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+  tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
@@ -470,7 +470,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
     }
 
     constCCVariable<Vector> gasVel; 
-    old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<Vector> partVel; 
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);

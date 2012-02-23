@@ -27,7 +27,7 @@
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="scalarSP"/>
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="continuityResidual"/>

@@ -227,9 +227,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
@@ -304,9 +302,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
 
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
@@ -825,9 +821,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
     constSFCZVariable<double> wVel;
-    constCCVariable<double> uVelCC;
-    constCCVariable<double> vVelCC;
-    constCCVariable<double> wVelCC;
+    constCCVariable<Vector> VelCC;
     constSFCXVariable<double> filterRhoU;
     constSFCYVariable<double> filterRhoV;
     constSFCZVariable<double> filterRhoW;
@@ -844,9 +838,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     new_dw->get(uVel,       d_lab->d_uVelocitySPBCLabel,  indx, patch, gaf, 1);
     new_dw->get(vVel,       d_lab->d_vVelocitySPBCLabel,  indx, patch, gaf, 1);
     new_dw->get(wVel,       d_lab->d_wVelocitySPBCLabel,  indx, patch, gaf, 1);
-    new_dw->get(uVelCC,     d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(vVelCC,     d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(wVelCC,     d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(VelCC,      d_lab->d_CCVelocityLabel,     indx, patch, gac, 1);
     new_dw->get(filterRhoU, d_lab->d_filterRhoULabel,     indx, patch, gaf, 1);
     new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel,     indx, patch, gaf, 1);
     new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel,     indx, patch, gaf, 1);
@@ -950,28 +942,28 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
           uwp = uVel[currCell];
           // colX,coly,colZ component cancels out when computing derivative,
           // so it has been ommited
-          unp = 0.5*uVelCC[IntVector(colX,colY+1,colZ)];
-          usp = 0.5*uVelCC[IntVector(colX,colY-1,colZ)];
-          utp = 0.5*uVelCC[IntVector(colX,colY,colZ+1)];
-          ubp = 0.5*uVelCC[IntVector(colX,colY,colZ-1)];
+          unp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].x();
+          usp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].x();
+          utp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].x();
+          ubp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].x();
 
           vnp = vVel[IntVector(colX,colY+1,colZ)];
           vsp = vVel[currCell];
           // colX,coly,colZ component cancels out when computing derivative,
           // so it has been ommited
-          vep = 0.5*vVelCC[IntVector(colX+1,colY,colZ)];
-          vwp = 0.5*vVelCC[IntVector(colX-1,colY,colZ)];
-          vtp = 0.5*vVelCC[IntVector(colX,colY,colZ+1)];
-          vbp = 0.5*vVelCC[IntVector(colX,colY,colZ-1)];
+          vep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].y();
+          vwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].y();
+          vtp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].y();
+          vbp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].y();
 
           wtp = wVel[IntVector(colX,colY,colZ+1)];
           wbp = wVel[currCell];
           // colX,coly,colZ component cancels out when computing derivative,
           // so it has been ommited
-          wep = 0.5*wVelCC[IntVector(colX+1,colY,colZ)];
-          wwp = 0.5*wVelCC[IntVector(colX-1,colY,colZ)];
-          wnp = 0.5*wVelCC[IntVector(colX,colY+1,colZ)];
-          wsp = 0.5*wVelCC[IntVector(colX,colY-1,colZ)];
+          wep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].z();
+          wwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].z();
+          wnp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].z();
+          wsp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].z();
 
           //     calculate the grid strain rate tensor
           (SIJ[0])[currCell] = (uep-uwp)/sewcur;
@@ -1208,9 +1200,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    constCCVariable<double> ccUVel;
-    constCCVariable<double> ccVVel;
-    constCCVariable<double> ccWVel;
+    constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
     constCCVariable<double> scalar;
     constCCVariable<double> enthalpy;
@@ -1221,9 +1211,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     // Get the velocity and density
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(ccUVel,    d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(ccVVel,    d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(ccWVel,    d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(den,       d_lab->d_densityCPLabel,      indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,      indx, patch, gac, 1);
 
@@ -1451,9 +1439,9 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           // trace has been neglected
           //        double trace = (sij0 + sij1 + sij2)/3.0;
           double trace = 0.0;
-          double uvel_cur = ccUVel[currCell];
-          double vvel_cur = ccVVel[currCell];
-          double wvel_cur = ccWVel[currCell];
+          double uvel_cur = ccVel[currCell].x();
+          double vvel_cur = ccVel[currCell].y();
+          double wvel_cur = ccVel[currCell].z();
           double den_cur = den[currCell];
 
           IsI[currCell] = isi_cur; 

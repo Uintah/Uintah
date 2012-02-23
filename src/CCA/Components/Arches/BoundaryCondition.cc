@@ -3990,15 +3990,6 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gn, 0);
-  if (d_enthalpySolve){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0);
-  }
-  
-  tsk->computes(d_lab->d_scalarFlowRateLabel);
-  if (d_enthalpySolve){
-    tsk->computes(d_lab->d_enthalpyFlowRateLabel);
-  }
 
   for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
 
@@ -4029,9 +4020,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
 
     ArchesConstVariables constVars;
 
-    constCCVariable<double> scalar;
-    constCCVariable<double> enthalpy;
-    
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac,1);
@@ -4044,14 +4032,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
     new_dw->get(constVars.uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(constVars.vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(constVars.wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
-    new_dw->get(scalar,              d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
-
-    double scalarIN = 0.0;
-    double scalarOUT = 0.0;
-    getVariableFlowRate(patch, cellinfo, &constVars, scalar,
-                        &scalarIN, &scalarOUT); 
-
-    new_dw->put(sum_vartype(scalarOUT-scalarIN), d_lab->d_scalarFlowRateLabel);
 
     // --- new efficiency calculator --- 
     for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
@@ -4066,15 +4046,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
       getVariableFlowRate(patch, cellinfo, &constVars, species, &IN, &OUT);
       new_dw->put(sum_vartype(OUT-IN), iter->second.flowRateLabel);
 
-    }
-        
-    double enthalpyIN = 0.0;
-    double enthalpyOUT = 0.0;
-    if (d_enthalpySolve) {
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
-      getVariableFlowRate(patch, cellinfo, &constVars, enthalpy,
-                        &enthalpyIN, &enthalpyOUT); 
-      new_dw->put(sum_vartype(enthalpyOUT-enthalpyIN), d_lab->d_enthalpyFlowRateLabel);
     }
   }
 }
@@ -4092,16 +4063,6 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
   for (int ii = 0; ii < d_numInlets; ii++) {
     tsk->requires(Task::OldDW, d_flowInlets[ii]->d_flowRate_label);
     tsk->computes(d_flowInlets[ii]->d_flowRate_label);
-  }
-
-  tsk->requires(Task::NewDW, d_lab->d_scalarFlowRateLabel);
-  tsk->computes(d_lab->d_scalarEfficiencyLabel);
-
-  if (d_enthalpySolve) {
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
-    tsk->requires(Task::NewDW, d_lab->d_totalRadSrcLabel);
-    tsk->computes(d_lab->d_normTotalRadSrcLabel);
-    tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
   }
 
   for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
@@ -4125,45 +4086,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
-    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_SO2FlowRate, sum_enthalpyFlowRate;
-    sum_vartype sum_totalRadSrc;
-    delt_vartype flowRate;
-    double scalarFlowRate = 0.0;
-    double enthalpyFlowRate = 0.0;
-    double totalFlowRate = 0.0;
-    double totalEnthalpyFlowRate = 0.0;
-    double scalarEfficiency = 0.0;
-    double enthalpyEfficiency = 0.0;
-    double totalRadSrc = 0.0;
-    double normTotalRadSrc = 0.0;
-
-    new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
-    scalarFlowRate = sum_scalarFlowRate;
-
-    if (d_enthalpySolve) {
-      new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
-      enthalpyFlowRate = sum_enthalpyFlowRate;
-      new_dw->get(sum_totalRadSrc, d_lab->d_totalRadSrcLabel);
-      totalRadSrc = sum_totalRadSrc;
-    }
-    for (int indx = 0; indx < d_numInlets; indx++) {
-      FlowInlet* fi = d_flowInlets[indx];
-      old_dw->get(flowRate, d_flowInlets[indx]->d_flowRate_label);
-      d_flowInlets[indx]->flowRate = flowRate;
-      fi->flowRate = flowRate;
-      new_dw->put(flowRate, d_flowInlets[indx]->d_flowRate_label);
-      double scalarValue = fi->streamMixturefraction.d_mixVars[0];
-      if (scalarValue > 0.0)
-          totalFlowRate += fi->flowRate;
-      if ((d_enthalpySolve)&&(scalarValue > 0.0))
-            totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
-    }
-    if (totalFlowRate > 0.0){
-      scalarEfficiency = scalarFlowRate / totalFlowRate;
-    }else{ 
-      proc0cout << "WARNING! No mixture fraction in the domain."<<endl;
-    }
-    new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
 
     // new efficiency calculation
     for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
@@ -4206,20 +4128,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       comp_eff = flowRates / new_totalFlowRate; 
 
       new_dw->put(delt_vartype(comp_eff), iter->second.label);
-    }
 
-    if (d_enthalpySolve) {
-      if (totalEnthalpyFlowRate < 0.0) {
-        enthalpyEfficiency = enthalpyFlowRate/totalEnthalpyFlowRate;
-        normTotalRadSrc = totalRadSrc/totalEnthalpyFlowRate;
-        enthalpyEfficiency -= normTotalRadSrc;
-      }else{ 
-        proc0cout << "No enthalpy in the domain"<< endl;
-      }
-      new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
-      new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
- 
 }
 //****************************************************************************
 // Get boundary flow rate for a given variable

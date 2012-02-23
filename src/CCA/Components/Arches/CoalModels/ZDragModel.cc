@@ -292,7 +292,7 @@ ZDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires( Task::OldDW, d_weight_label, gn, 0);
 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+  tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   // require particle velocity
@@ -395,7 +395,7 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
     }
 
     constCCVariable<Vector> gasVel;
-    old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> den;
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );

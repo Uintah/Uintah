@@ -34,7 +34,7 @@
 <!--save label = "enthalpySP"/-->
     <save label="cellType"/>
     <save label="heatLoss"/>
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
 <!-- dv's -->
     <save label="CH4" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
