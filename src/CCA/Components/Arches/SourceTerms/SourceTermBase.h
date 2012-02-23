@@ -37,11 +37,11 @@ class SourceTermBase{
 public: 
 
   SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
-                  vector<std::string> reqLabelNames );
+                  vector<std::string> reqLabelNames, std::string type );
   virtual ~SourceTermBase();
 
   /** @brief Indicates the var type of source this is **/ 
-  enum MY_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC}; 
+  enum MY_GRID_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC}; 
 
   /** @brief Input file interface */
   virtual void problemSetup(const ProblemSpecP& db) = 0;  
@@ -76,13 +76,16 @@ public:
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
-	/** @brief Return the type of source (CC, FCX, etc... ) */
-  inline MY_TYPE getSourceType(){ return _source_type; };
+	/** @brief Return the grid type of source (CC, FCX, etc... ) **/
+  inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; };
 
-	/** @brief Return the list of table lookup species needed for this source term */ 
+  /** brief Return the type of source (constant, do_radation, etc... ) **/ 
+  inline std::string getSourceType(){ return _type; }; 
+
+	/** @brief Return the list of table lookup species needed for this source term **/ 
 	inline std::vector<std::string> get_tablelookup_species(){ return _table_lookup_species; };  
 
-  /** @brief Builder class containing instructions on how to build the property model */ 
+  /** @brief Builder class containing instructions on how to build the property model **/ 
   class Builder { 
 
     public: 
@@ -94,12 +97,14 @@ public:
     protected: 
 
       std::string _name;
+      std::string _type; 
   }; 
 
 protected:
 
   std::string _src_name;                             ///< User assigned source name 
   std::string _init_type;                            ///< Initialization type. 
+  std::string _type;                                 ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
   const VarLabel* _src_label;                        ///< Source varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
@@ -107,7 +112,7 @@ protected:
   vector<std::string> _required_labels;              ///< Vector of required labels
   vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
 	vector<std::string> _table_lookup_species;         ///< List of table lookup species
-  MY_TYPE _source_type;                              ///< Source type
+  MY_GRID_TYPE _source_grid_type;                    ///< Source grid type
 
 
 

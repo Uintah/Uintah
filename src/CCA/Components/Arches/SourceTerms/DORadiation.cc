@@ -13,8 +13,9 @@ using namespace Uintah;
 
 DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLabel* MAlab,
                           BoundaryCondition* bc, 
-                      vector<std::string> req_label_names, const ProcessorGroup* my_world ) 
-: SourceTermBase( src_name, labels->d_sharedState, req_label_names ), 
+                          vector<std::string> req_label_names, const ProcessorGroup* my_world, 
+                          std::string type ) 
+: SourceTermBase( src_name, labels->d_sharedState, req_label_names, type ), 
   _labels( labels ),
   _MAlab(MAlab), 
   _bc(bc), 
@@ -62,7 +63,7 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   _extra_local_labels.push_back(_abskpLocalLabel); 
 
   //Declare the source type: 
-  _source_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
+  _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
 }
 

@@ -12,15 +12,15 @@ using namespace std;
 using namespace Uintah; 
 
 BowmanNOx::BowmanNOx( std::string src_name, ArchesLabel* field_labels,
-                            vector<std::string> req_label_names ) 
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names), _field_labels(field_labels)
+                            vector<std::string> req_label_names, std::string type ) 
+: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 { 
 
   _label_sched_init = false; 
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
-  _source_type = CC_SRC; 
+  _source_grid_type = CC_SRC; 
 
   _MW_O2 = 32.00; 
   _MW_N2 = 28.00; 

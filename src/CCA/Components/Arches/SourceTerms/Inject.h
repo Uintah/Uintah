@@ -54,7 +54,7 @@ class Inject: public SourceTermBase {
 public: 
 
   Inject<sT>( std::string srcName, SimulationStateP& shared_state, 
-                       vector<std::string> reqLabelNames );
+                       vector<std::string> reqLabelNames, std::string type );
 
   ~Inject<sT>();
   /** @brief Interface for the inputfile and set constants */ 
@@ -84,15 +84,18 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+          _type = "inject_src"; 
+        };
       ~Builder(){}; 
 
       Inject<sT>* build()
-      { return scinew Inject<sT>( _name, _shared_state, _required_label_names ); };
+      { return scinew Inject<sT>( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 
       std::string _name; 
+      std::string _type; 
       SimulationStateP& _shared_state; 
       vector<std::string> _required_label_names; 
 
@@ -108,20 +111,20 @@ private:
 
   template <typename sT>
   Inject<sT>::Inject( std::string src_name, SimulationStateP& shared_state,
-                              vector<std::string> req_label_names ) 
-  : SourceTermBase(src_name, shared_state, req_label_names)
+                              vector<std::string> req_label_names, std::string type ) 
+  : SourceTermBase(src_name, shared_state, req_label_names, type)
   {
     _label_sched_init = false; 
     _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
 
     if ( typeid(sT) == typeid(SFCXVariable<double>) )
-      _source_type = FX_SRC; 
+      _source_grid_type = FX_SRC; 
     else if ( typeid(sT) == typeid(SFCYVariable<double>) )
-      _source_type = FY_SRC; 
+      _source_grid_type = FY_SRC; 
     else if ( typeid(sT) == typeid(SFCZVariable<double>) )
-      _source_type = FZ_SRC; 
+      _source_grid_type = FZ_SRC; 
     else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
-      _source_type = CC_SRC; 
+      _source_grid_type = CC_SRC; 
     } else {
       throw InvalidValue( "Error: Attempting to instantiate source (Inject) with unrecognized type.", __FILE__, __LINE__); 
     }

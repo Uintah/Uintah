@@ -61,7 +61,7 @@ class WestbrookDryer: public SourceTermBase {
 public: 
 
   WestbrookDryer( std::string srcName, ArchesLabel* field_labels, 
-                vector<std::string> reqLabelNames );
+                vector<std::string> reqLabelNames, std::string type );
 
   ~WestbrookDryer();
   /** @brief Interface for the inputfile and set constants */ 
@@ -90,15 +90,18 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, ArchesLabel* field_labels ) 
-        : _name(name), _field_labels(field_labels), _required_label_names(required_label_names){};
+        : _name(name), _field_labels(field_labels), _required_label_names(required_label_names){
+          _type = "westbrook_dryer"; 
+        };
       ~Builder(){}; 
 
       WestbrookDryer* build()
-      { return scinew WestbrookDryer( _name, _field_labels, _required_label_names ); };
+      { return scinew WestbrookDryer( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 
       std::string _name; 
+      std::string _type; 
       //SimulationStateP& _shared_state; 
       ArchesLabel* _field_labels; 
       vector<std::string> _required_label_names; 

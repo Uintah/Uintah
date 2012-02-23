@@ -12,7 +12,7 @@ class UnweightedSrcTerm: public SourceTermBase {
 public: 
 
   UnweightedSrcTerm( std::string srcName, SimulationStateP& shared_state, 
-                     vector<std::string> reqLabelNames );
+                     vector<std::string> reqLabelNames, std::string type );
 
   ~UnweightedSrcTerm();
   /** @brief Interface for the inputfile and set constants */ 
@@ -42,15 +42,18 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+          _type = "unweightedAbs"; 
+        };
       ~Builder(){}; 
 
       UnweightedSrcTerm* build()
-      { return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names ); };
+      { return scinew UnweightedSrcTerm( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 
       std::string _name; 
+      std::string _type; 
       SimulationStateP& _shared_state; 
       vector<std::string> _required_label_names; 
 

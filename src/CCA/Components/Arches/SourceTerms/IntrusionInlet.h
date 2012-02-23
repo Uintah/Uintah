@@ -53,7 +53,7 @@ namespace Uintah{
         enum DIRECTION { PLUS_X, MINUS_X, PLUS_Y, MINUS_Y, PLUS_Z, MINUS_Z }; 
 
         IntrusionInlet<sT>( std::string srcName, SimulationStateP& shared_state, 
-            vector<std::string> reqLabelNames );
+            vector<std::string> reqLabelNames, std::string type );
         ~IntrusionInlet<sT>();
 
         void problemSetup(const ProblemSpecP& db);
@@ -78,15 +78,18 @@ namespace Uintah{
             public: 
 
               Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-                : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+                : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+                  _type = "intrusion_inlet"; 
+                };
               ~Builder(){}; 
 
               IntrusionInlet<sT>* build()
-              { return scinew IntrusionInlet<sT>( _name, _shared_state, _required_label_names ); };
+              { return scinew IntrusionInlet<sT>( _name, _shared_state, _required_label_names, _type ); };
 
             private: 
 
               std::string _name; 
+              std::string _type; 
               SimulationStateP& _shared_state; 
               vector<std::string> _required_label_names; 
 
@@ -115,21 +118,21 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template<typename sT>
     IntrusionInlet<sT>::IntrusionInlet( std::string src_name, SimulationStateP& shared_state,
-        vector<std::string> req_label_names ) 
-    : SourceTermBase( src_name, shared_state, req_label_names )
+        vector<std::string> req_label_names, std::string type ) 
+    : SourceTermBase( src_name, shared_state, req_label_names, type )
     {
       _label_sched_init = false; 
 
       _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
 
       if ( typeid(sT) == typeid(SFCXVariable<double>) )
-        _source_type = FX_SRC; 
+        _source_grid_type = FX_SRC; 
       else if ( typeid(sT) == typeid(SFCYVariable<double>) )
-        _source_type = FY_SRC; 
+        _source_grid_type = FY_SRC; 
       else if ( typeid(sT) == typeid(SFCZVariable<double>) )
-        _source_type = FZ_SRC; 
+        _source_grid_type = FZ_SRC; 
       else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
-        _source_type = CC_SRC; 
+        _source_grid_type = CC_SRC; 
       } else {
         throw InvalidValue( "Error: Attempting to instantiate source (IntrusionInlet) with unrecognized type.", __FILE__, __LINE__); 
       }

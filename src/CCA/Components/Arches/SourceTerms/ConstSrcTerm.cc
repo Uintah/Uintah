@@ -11,8 +11,8 @@ using namespace std;
 using namespace Uintah; 
 
 ConstSrcTerm::ConstSrcTerm( std::string src_name, SimulationStateP& shared_state,
-                            vector<std::string> req_label_names ) 
-: SourceTermBase(src_name, shared_state, req_label_names)
+                            vector<std::string> req_label_names, std::string type ) 
+: SourceTermBase(src_name, shared_state, req_label_names, type)
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
@@ -31,7 +31,7 @@ ConstSrcTerm::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("constant",d_constant, 0.); 
 
-  _source_type = CC_SRC; 
+  _source_grid_type = CC_SRC; 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

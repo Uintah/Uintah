@@ -39,7 +39,7 @@ class CoalGasHeat: public SourceTermBase {
 
   public: 
 
-  CoalGasHeat( std::string src_name, vector<std::string> required_label_names, SimulationStateP& shared_state );
+  CoalGasHeat( std::string src_name, vector<std::string> required_label_names, SimulationStateP& shared_state, std::string type );
 
   ~CoalGasHeat();
 
@@ -72,15 +72,18 @@ class CoalGasHeat: public SourceTermBase {
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+          _type = "coal_gas_heat"; 
+        };
       ~Builder(){}; 
 
       CoalGasHeat* build()
-      { return scinew CoalGasHeat( _name, _required_label_names, _shared_state ); };
+      { return scinew CoalGasHeat( _name, _required_label_names, _shared_state, _type ); };
 
     private: 
 
       std::string _name; 
+      std::string _type; 
       SimulationStateP& _shared_state; 
       vector<std::string> _required_label_names; 
 

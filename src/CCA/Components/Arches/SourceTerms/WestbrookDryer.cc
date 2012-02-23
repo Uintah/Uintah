@@ -12,8 +12,8 @@ using namespace std;
 using namespace Uintah; 
 
 WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
-                            vector<std::string> req_label_names ) 
-: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names), 
+                            vector<std::string> req_label_names, std::string type ) 
+: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type ), 
   _field_labels(field_labels)
 { 
 
@@ -29,7 +29,7 @@ WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
   d_WDextentLabel    = VarLabel::create( tag, CCVariable<double>::getTypeDescription() ); 
   _extra_local_labels[1] = d_WDextentLabel; 
 
-  _source_type = CC_SRC; 
+  _source_grid_type = CC_SRC; 
 }
 
 WestbrookDryer::~WestbrookDryer()
