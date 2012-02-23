@@ -23,7 +23,7 @@
     <outputInitTimestep/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>

@@ -113,7 +113,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
   if (d_bala) {
     //--Old
     // fluid velocity
-    tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+    tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
 
     // requires weighted legnth and weight (to back out length)
     for (int i = 0; i < N; i++){
@@ -146,7 +146,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
   } else if(d_drag) {
    
-    tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+    tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
     
     for (int i = 0; i < N; i++){
       std::string name = "w_qn";
@@ -235,7 +235,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
       constCCVariable<Vector> gasVel; 
 
-      old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 ); 
+      old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 ); 
 
       // now loop for all qn's
       int N = dqmomFactory.get_quad_nodes();  
@@ -365,7 +365,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
      
       constCCVariable<Vector> gasVel;
 
-      old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+      old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
       
       int N = dqmomFactory.get_quad_nodes();
       for ( int iqn = 0; iqn < N; iqn++){

@@ -196,6 +196,56 @@ private:
 
       // const VarLabel* variables 
 
+      inline double compute_smag_viscos ( constSFCXVariable<double>& u, constSFCYVariable<double> v, constSFCZVariable<double> w, 
+          constCCVariable<Vector>& UCC,
+          constCCVariable<double>& den, double pmixl, Vector Dx, IntVector c ){ 
+
+        IntVector cxp = c + IntVector(1,0,0);
+        IntVector cxm = c - IntVector(1,0,0);
+        IntVector cyp = c + IntVector(0,1,0);
+        IntVector cym = c - IntVector(0,1,0);
+        IntVector czp = c + IntVector(0,0,1);
+        IntVector czm = c - IntVector(0,0,1);
+
+        double uep = u[cxp];
+        double uwp = u[c];
+        double unp = 0.50 * UCC[cyp].x();
+        double usp = 0.50 * UCC[cym].x();
+        double utp = 0.50 * UCC[czp].x();
+        double ubp = 0.50 * UCC[czm].x();
+
+        double vep = 0.50 * UCC[cxp].y();
+        double vwp = 0.50 * UCC[cxm].y();
+        double vnp = v[cyp];
+        double vsp = v[c];
+        double vtp = 0.50 * UCC[czp].y();
+        double vbp = 0.50 * UCC[czm].y();
+
+        double wep = 0.50 * UCC[cxp].z();
+        double wwp = 0.50 * UCC[cxm].z();
+        double wnp = 0.50 * UCC[cyp].z();
+        double wsp = 0.50 * UCC[cym].z();
+        double wtp = w[czp];
+        double wbp = w[c];
+
+        double s11 = (uep-uwp)/Dx.x();
+        double s22 = (vnp-vsp)/Dx.y();
+        double s33 = (wtp-wbp)/Dx.z();
+        double s12 = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
+        double s13 = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
+        double s23 = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
+
+        double IsI = 2.0 * ( pow(s11,2.0) + pow(s22,2.0) + pow(s33,2.0)
+            + 2.0 * ( pow(s12,2) + pow(s13,2) + pow(s23,2) ) ); 
+
+        IsI = std::sqrt( IsI ); 
+
+        double turb_viscos = pow(pmixl, 2.0) * den[c] * IsI; 
+
+        return turb_viscos; 
+
+      };
+
 }; // End class SmagorinskyModel
 } // End namespace Uintah
   

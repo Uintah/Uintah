@@ -24,9 +24,7 @@
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="scalarSP"/>
-    <save label="newCCUVelocity"/>
-    <save label="newCCVVelocity"/>
-    <save label="newCCWVelocity"/>
+    <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>

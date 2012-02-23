@@ -35,7 +35,7 @@
     <save label="netflowOUTBC"/>
     <save label="totalKineticEnergy"/>
 <!-- flow field -->
-    <save label="newCCVelocity"/>
+    <save label="CCVelocity"/>
     <save label="densityCP"/>
     <save label="enthalpySP"/>
     <save label="pressurePS"/>

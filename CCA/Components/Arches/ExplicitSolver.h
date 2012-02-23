@@ -171,10 +171,6 @@ public:
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels);
 
-  void sched_probeData(SchedulerP&,
-                       const PatchSet* patches,
-                       const MaterialSet* matls);
-
   // GROUP: Action Computations :
   void sched_printTotalKE(SchedulerP& sched,
                           const PatchSet* patches,
@@ -307,12 +303,6 @@ private:
                         DataWarehouse* new_dw,
                         const TimeIntegratorLabel* timelabels);
 
-  void probeData(const ProcessorGroup* pc,
-                 const PatchSubset* patches,
-                 const MaterialSubset* matls,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw);
-
   void printTotalKE(const ProcessorGroup* ,
                     const PatchSubset* patches,
                     const MaterialSubset*,
@@ -407,7 +397,6 @@ private:
   // Total number of nonlinear iterates
   int d_nonlinear_its;
   // for probing data for debuging or plotting
-  bool d_probe_data;
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
   // Boundary conditions
@@ -420,8 +409,6 @@ private:
   bool d_calScalar;
   bool d_enthalpySolve;
   bool d_calcVariance;
-  vector<IntVector> d_probePoints;
-
 
   // Momentum Eqn Solver
   MomentumSolver* d_momSolver;

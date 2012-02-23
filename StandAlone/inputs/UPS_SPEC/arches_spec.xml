@@ -174,7 +174,6 @@
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- use for simple two stream mixing --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />  <!-- initial heat loss value in the domain --> 
-          <NOT_ADIABATIC                spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
           <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
           <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
@@ -334,10 +333,6 @@
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
 
-        <ProbePoints                    spec="OPTIONAL NO_DATA" >
-          <probe_point                  spec="MULTIPLE VECTOR" />
-        </ProbePoints>
-        
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >

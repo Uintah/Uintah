@@ -345,10 +345,6 @@ DORadiationModel::sched_computeSource( const LevelP& level,
     tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
   }
   
-  if ( timelabels->integrator_last_step ){
-    tsk->computes(d_lab->d_totalRadSrcLabel);
-  }
-  
   cout << " energy exchange " << d_boundaryCondition->getIfCalcEnergyExchange() << endl;
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
@@ -505,20 +501,6 @@ DORadiationModel::computeSource( const ProcessorGroup* pc,
         intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars, wall );
       }
     }
-  
-    if ((timelabels->integrator_last_step)){
-    
-      for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        int i = c.x();
-        int j = c.y();
-        int k = c.z();
-        double vol=cellinfo->sew[i]*cellinfo->sns[j]*cellinfo->stb[k];
-        new_total_src += vol*radVars.src[c];
-      }
-      new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
-    }
-    
   }
 }
 

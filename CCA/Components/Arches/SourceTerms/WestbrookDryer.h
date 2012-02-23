@@ -136,11 +136,11 @@ public:
       rate *= d_sign; // picking the sign.
 
       // now check the rate based on local reactants: 
-      double constant = dt * vol / den; 
+      double constant = dt / den; 
 
       // check limiting reactant
       if ( std::abs( constant*rate ) > CxHy ){ 
-        rate = d_sign*den/(dt*vol)*CxHy; 
+        rate = d_sign * den / dt * CxHy; 
       } 
 
       // check for nan

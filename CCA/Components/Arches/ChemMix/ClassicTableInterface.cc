@@ -130,21 +130,23 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     d_adiabatic = true; 
   }
 
-  // For cases where <TransportEqn> defines the enthalpy equation. 
-  EqnFactory& eqn_factory = EqnFactory::self();
-  EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
-  std::vector<std::string> srcs = eqn.getSourcesList(); 
-  for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
+  if ( d_enthalpy_name != "enthalpySP" ){ 
+    // For cases where <TransportEqn> defines the enthalpy equation. 
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
+    std::vector<std::string> srcs = eqn.getSourcesList(); 
+    for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
 
-    //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
-    SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    SourceTermBase& src = src_factory.retrieve_source_term( *iter ); 
-    std::string type = src.getSourceType(); 
+      //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      SourceTermBase& src = src_factory.retrieve_source_term( *iter ); 
+      std::string type = src.getSourceType(); 
 
-    if ( type == "do_radiation" ) { 
-      d_adiabatic = false; 
+      if ( type == "do_radiation" ) { 
+        d_adiabatic = false; 
+      } 
     } 
-  } 
+  }
   
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_classic->getRootNode(); 

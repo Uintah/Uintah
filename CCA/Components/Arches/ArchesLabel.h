@@ -229,12 +229,7 @@ namespace Uintah {
       // labels for nonlinear residuals
 
       // For storing the interpolated CC Velocity Variables
-      const VarLabel* d_oldCCVelocityLabel;
-      const VarLabel* d_newCCVelocityLabel;
-      const VarLabel* d_newCCVelMagLabel;
-      const VarLabel* d_newCCUVelocityLabel;
-      const VarLabel* d_newCCVVelocityLabel;
-      const VarLabel* d_newCCWVelocityLabel;
+      const VarLabel* d_CCVelocityLabel;
 
       // for multimaterial
       const VarLabel* d_mmcellTypeLabel;
@@ -463,16 +458,6 @@ namespace Uintah {
       const VarLabel* d_ShFLabel;
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
-      const VarLabel* d_CO2FlowRateLabel;
-      const VarLabel* d_SO2FlowRateLabel;
-      const VarLabel* d_carbonEfficiencyLabel;
-      const VarLabel* d_sulfurEfficiencyLabel;
-      const VarLabel* d_scalarFlowRateLabel;
-      const VarLabel* d_scalarEfficiencyLabel;
-      const VarLabel* d_enthalpyFlowRateLabel;
-      const VarLabel* d_enthalpyEfficiencyLabel;
-      const VarLabel* d_totalRadSrcLabel;
-      const VarLabel* d_normTotalRadSrcLabel;
 
       //mms force term labels
       const VarLabel* d_uFmmsLabel;

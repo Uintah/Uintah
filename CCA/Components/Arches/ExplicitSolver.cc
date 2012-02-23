@@ -126,7 +126,6 @@ ExplicitSolver(ArchesLabel* label,
   d_scalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
-  d_probe_data = false;
 }
 
 // ****************************************************************************
@@ -152,17 +151,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
-  ProblemSpecP test_probe_db = db->findBlock("ProbePoints");
-  if ( test_probe_db ) {
-    d_probe_data = true;
-    IntVector prbPoint;
-    for (ProblemSpecP probe_db = db->findBlock("ProbePoints");
-         probe_db;
-         probe_db = probe_db->findNextBlock("ProbePoints")) {
-      probe_db->require("probe_point", prbPoint);
-      d_probePoints.push_back(prbPoint);
-    }
-  }
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld,
@@ -712,11 +700,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
-  // print information at probes provided in input file
-  if (d_probe_data)
-    sched_probeData(sched, patches, matls);
-
   return(0);
+
 }
 
 // ****************************************************************************
@@ -855,11 +840,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   // Schedule an interpolation of the face centered velocity data
   // to a cell centered vector for used by the viz tools
 
-  // print information at probes provided in input file
-
-  if (d_probe_data)
-    sched_probeData(sched, patches, matls);
-
 #   ifdef WASATCH_IN_ARCHES
   {
     
@@ -919,7 +899,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0);
 #ifdef WASATCH_IN_ARCHES
   tsk->requires(Task::OldDW, d_lab->d_areaFractionFXLabel,  gn, 0);
@@ -1031,10 +1011,6 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,  gaf, 1);
       tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,  gaf, 1);
 
-      tsk->computes(d_lab->d_oldCCVelocityLabel);
-      tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
-      tsk->computes(d_lab->d_vVelRhoHat_CCLabel);
-      tsk->computes(d_lab->d_wVelRhoHat_CCLabel);
     }
 
 
@@ -1046,22 +1022,14 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel, gn, 0);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      tsk->computes(d_lab->d_newCCVelocityLabel);
-      tsk->computes(d_lab->d_newCCVelMagLabel);
-      tsk->computes(d_lab->d_newCCUVelocityLabel);
-      tsk->computes(d_lab->d_newCCVVelocityLabel);
-      tsk->computes(d_lab->d_newCCWVelocityLabel);
+      tsk->computes(d_lab->d_CCVelocityLabel);
       tsk->computes(d_lab->d_kineticEnergyLabel);
       tsk->computes(d_lab->d_velocityDivergenceLabel);
       tsk->computes(d_lab->d_velDivResidualLabel);
       tsk->computes(d_lab->d_continuityResidualLabel);
     }
     else {
-      tsk->modifies(d_lab->d_newCCVelocityLabel);
-      tsk->modifies(d_lab->d_newCCVelMagLabel);
-      tsk->modifies(d_lab->d_newCCUVelocityLabel);
-      tsk->modifies(d_lab->d_newCCVVelocityLabel);
-      tsk->modifies(d_lab->d_newCCWVelocityLabel);
+      tsk->modifies(d_lab->d_CCVelocityLabel);
       tsk->modifies(d_lab->d_kineticEnergyLabel);
       tsk->modifies(d_lab->d_velocityDivergenceLabel);
       tsk->modifies(d_lab->d_velDivResidualLabel);
@@ -1081,9 +1049,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,  gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,  gac, 1);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,  gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,  gac, 1);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_vorticityXLabel);
       tsk->computes(d_lab->d_vorticityYLabel);
@@ -1118,19 +1084,10 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    constSFCXVariable<double> oldUVel;
-    constSFCYVariable<double> oldVVel;
-    constSFCZVariable<double> oldWVel;
-    constSFCXVariable<double> uHatVel_FCX;
-    constSFCYVariable<double> vHatVel_FCY;
-    constSFCZVariable<double> wHatVel_FCZ;
-    CCVariable<Vector> oldCCVel;
-    CCVariable<double> uHatVel_CC;
-    CCVariable<double> vHatVel_CC;
-    CCVariable<double> wHatVel_CC;
     CCVariable<double> divergence;
     CCVariable<double> div_residual;
     CCVariable<double> residual;
+    CCVariable<Vector> newCCVel; 
     constCCVariable<double> density;
     constCCVariable<double> drhodt;
     constCCVariable<double> div_constraint;
@@ -1138,11 +1095,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
-    CCVariable<Vector> newCCVel;
-    CCVariable<double> newCCVelMag;
-    CCVariable<double> newCCUVel;
-    CCVariable<double> newCCVVel;
-    CCVariable<double> newCCWVel;
+    CCVariable<Vector> CCVel;
     CCVariable<double> kineticEnergy;
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1160,221 +1113,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(oldUVel,     d_lab->d_uVelocitySPBCLabel, indx, patch,   gaf, 1);
-      old_dw->get(oldVVel,     d_lab->d_vVelocitySPBCLabel, indx, patch,   gaf, 1);
-      old_dw->get(oldWVel,     d_lab->d_wVelocitySPBCLabel, indx, patch,   gaf, 1);
-      new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel,    indx, patch,  gaf, 1);
-      new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel,    indx, patch,  gaf, 1);
-      new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel,    indx, patch,  gaf, 1);
-
-      new_dw->allocateAndPut(oldCCVel,   d_lab->d_oldCCVelocityLabel, indx, patch);
-      new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, indx, patch);
-      new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, indx, patch);
-      new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, indx, patch);
-
-      oldCCVel.initialize(Vector(0.0,0.0,0.0));
-      uHatVel_CC.initialize(0.0);
-      vHatVel_CC.initialize(0.0);
-      wHatVel_CC.initialize(0.0);
-      for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
-        for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-          for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
-
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
-                           cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
-            double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
-                           cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
-            double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
-                           cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      // boundary conditions not to compute erroneous values in the case of ramping
-      if (xminus) {
-        int ii = idxLo.x()-1;
-        for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-          for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = oldUVel[idxU];
-            double uhat = uHatVel_FCX[idxU];
-            double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
-                           cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
-            double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
-                           cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      if (xplus) {
-        int ii =  idxHi.x()+1;
-        for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-          for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = oldUVel[idx];
-            double uhat = uHatVel_FCX[idx];
-            double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
-                           cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
-            double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
-                           cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      if (yminus) {
-        int jj = idxLo.y()-1;
-        for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-          for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
-                           cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
-            double old_v = oldVVel[idxV];
-            double vhat = vHatVel_FCY[idxV];
-            double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
-                           cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      if (yplus) {
-        int jj =  idxHi.y()+1;
-        for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-          for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
-                           cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
-            double old_v = oldVVel[idx];
-            double vhat = vHatVel_FCY[idx];
-            double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
-                           cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      if (zminus) {
-        int kk = idxLo.z()-1;
-        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-          for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
-                           cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
-            double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
-                           cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
-            double old_w = oldWVel[idxW];
-            double what = wHatVel_FCZ[idxW];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-      if (zplus) {
-        int kk =  idxHi.z()+1;
-        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-          for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-            IntVector idx(ii,jj,kk);
-            IntVector idxU(ii+1,jj,kk);
-            IntVector idxV(ii,jj+1,kk);
-            IntVector idxW(ii,jj,kk+1);
-
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
-                           cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
-            double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
-                           cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
-            double old_w = oldWVel[idx];
-            double what = wHatVel_FCZ[idx];
-
-            oldCCVel[idx] = Vector(old_u,old_v,old_w);
-            uHatVel_CC[idx] = uhat;
-            vHatVel_CC[idx] = vhat;
-            wHatVel_CC[idx] = what;
-          }
-        }
-      }
-    }
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
@@ -1385,36 +1126,24 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          d_lab->d_divConstraintLabel, indx, patch, gn, 0);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(newCCVel,      d_lab->d_newCCVelocityLabel,     indx, patch);
-      new_dw->allocateAndPut(newCCVelMag,   d_lab->d_newCCVelMagLabel,       indx, patch);
-      new_dw->allocateAndPut(newCCUVel,     d_lab->d_newCCUVelocityLabel,    indx, patch);
-      new_dw->allocateAndPut(newCCVVel,     d_lab->d_newCCVVelocityLabel,    indx, patch);
-      new_dw->allocateAndPut(newCCWVel,     d_lab->d_newCCWVelocityLabel,    indx, patch);
+      new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
       new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,     indx, patch);
       new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
       new_dw->allocateAndPut(div_residual,  d_lab->d_velDivResidualLabel,    indx, patch);
       new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
     }
     else {
-      new_dw->getModifiable(newCCVel,       d_lab->d_newCCVelocityLabel,      indx, patch);
-      new_dw->getModifiable(newCCVelMag,    d_lab->d_newCCVelMagLabel,        indx, patch);
-      new_dw->getModifiable(newCCUVel,      d_lab->d_newCCUVelocityLabel,     indx, patch);
-      new_dw->getModifiable(newCCVVel,      d_lab->d_newCCVVelocityLabel,     indx, patch);
-      new_dw->getModifiable(newCCWVel,      d_lab->d_newCCWVelocityLabel,     indx, patch);
+      new_dw->getModifiable(newCCVel,       d_lab->d_CCVelocityLabel,      indx, patch);
       new_dw->getModifiable(kineticEnergy,  d_lab->d_kineticEnergyLabel,      indx, patch);
       new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
       new_dw->getModifiable(div_residual,   d_lab->d_velDivResidualLabel,     indx, patch);
       new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
-    newCCUVel.initialize(0.0);
-    newCCVVel.initialize(0.0);
-    newCCWVel.initialize(0.0);
     kineticEnergy.initialize(0.0);
     divergence.initialize(0.0);
     div_residual.initialize(0.0);
     residual.initialize(0.0);
-
 
     double total_kin_energy = 0.0;
 
@@ -1435,10 +1164,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1466,10 +1191,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1496,10 +1217,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1526,10 +1243,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1556,10 +1269,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1586,10 +1295,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1616,10 +1321,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idx];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           if (!d_KE_fromFC)
             kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
           else
@@ -1682,17 +1383,13 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 
     CCVariable<double> vorticityX, vorticityY, vorticityZ, vorticity;
 
-    constCCVariable<double> newCCUVel;
-    constCCVariable<double> newCCVVel;
-    constCCVariable<double> newCCWVel;
+    constCCVariable<Vector> CCVel; 
 
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(newCCUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(newCCVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(newCCWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(CCVel, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1730,173 +1427,14 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
           // ii,jj,kk velocity component cancels out when computing derivative,
           // so it has been ommited
 
-          vorticityX[idx] = 0.5*(newCCWVel[idxV]-newCCWVel[idxyminus])/cellinfo->sns[jj]
-                           -0.5*(newCCVVel[idxW]-newCCVVel[idxzminus])/cellinfo->stb[kk];
-          vorticityY[idx] = 0.5*(newCCUVel[idxW]-newCCUVel[idxzminus])/cellinfo->stb[kk]
-                           -0.5*(newCCWVel[idxU]-newCCWVel[idxxminus])/cellinfo->sew[ii];
-          vorticityZ[idx] = 0.5*(newCCVVel[idxU]-newCCVVel[idxxminus])/cellinfo->sew[ii]
-                           -0.5*(newCCUVel[idxV]-newCCUVel[idxyminus])/cellinfo->sns[jj];
+          vorticityX[idx] = 0.5*(CCVel[idxV].z()-CCVel[idxyminus].z())/cellinfo->sns[jj]
+                           -0.5*(CCVel[idxW].y()-CCVel[idxzminus].y())/cellinfo->stb[kk];
+          vorticityY[idx] = 0.5*(CCVel[idxW].x()-CCVel[idxzminus].x())/cellinfo->stb[kk]
+                           -0.5*(CCVel[idxU].z()-CCVel[idxxminus].z())/cellinfo->sew[ii];
+          vorticityZ[idx] = 0.5*(CCVel[idxU].y()-CCVel[idxxminus].y())/cellinfo->sew[ii]
+                           -0.5*(CCVel[idxV].x()-CCVel[idxyminus].x())/cellinfo->sns[jj];
           vorticity[idx] = sqrt(vorticityX[idx]*vorticityX[idx]+vorticityY[idx]*vorticityY[idx]
                           + vorticityZ[idx]*vorticityZ[idx]);
-        }
-      }
-    }
-  }
-}
-
-
-// ****************************************************************************
-// Schedule probe data
-// ****************************************************************************
-void
-ExplicitSolver::sched_probeData(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls)
-{
-  Task* tsk = scinew Task( "ExplicitSolver::probeData", this,
-                           &ExplicitSolver::probeData);
-  Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,     gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,   gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,       gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel,  gn, 0);
-
-  if (d_calcVariance) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel,  gn, 0);
-  }
-
-  if (d_enthalpySolve)
-    tsk->requires(Task::NewDW, d_lab->d_tempINLabel,       gn, 0);
-
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,     gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,    gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,    gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,    gn, 0);
-
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxXLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxYLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,   gn, 0);
-  }
-  sched->addTask(tsk, patches, matls);
-}
-// ****************************************************************************
-// Actual probe data
-// ****************************************************************************
-void
-ExplicitSolver::probeData(const ProcessorGroup* ,
-                          const PatchSubset* patches,
-                          const MaterialSubset*,
-                          DataWarehouse*,
-                          DataWarehouse* new_dw)
-{
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    double time = d_lab->d_sharedState->getElapsedTime();
-
-  // Get the new velocity
-    Ghost::GhostType  gn = Ghost::None;
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    constCCVariable<double> newintUVel;
-    constCCVariable<double> newintVVel;
-    constCCVariable<double> newintWVel;
-    constCCVariable<double> density;
-    constCCVariable<double> viscosity;
-    constCCVariable<double> pressure;
-    constCCVariable<double> mixtureFraction;
-    constCCVariable<double> kineticEnergy;
-
-    new_dw->get(newUVel,    d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
-    new_dw->get(newVVel,    d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
-    new_dw->get(newWVel,    d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
-
-    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gn, 0);
-    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gn, 0);
-    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gn, 0);
-
-    new_dw->get(density,         d_lab->d_densityCPLabel,    indx, patch, gn, 0);
-    new_dw->get(viscosity,       d_lab->d_viscosityCTSLabel, indx, patch, gn, 0);
-    new_dw->get(pressure,        d_lab->d_pressurePSLabel,   indx, patch, gn, 0);
-    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel,     indx, patch, gn, 0);
-    new_dw->get(kineticEnergy,   d_lab->d_kineticEnergyLabel,indx, patch, gn, 0);
-
-    constCCVariable<double> mixFracVariance;
-    if (d_calcVariance) {
-      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, indx, patch, gn, 0);
-    }
-
-    constCCVariable<double> gasfraction;
-    constCCVariable<double> tempSolid;
-    constCCVariable<double> totalHT;
-    constSFCXVariable<double> totalHT_FCX;
-    constSFCYVariable<double> totalHT_FCY;
-    constSFCZVariable<double> totalHT_FCZ;
-    constSFCXVariable<double> totHtFluxX;
-    constSFCYVariable<double> totHtFluxY;
-    constSFCZVariable<double> totHtFluxZ;
-    if (d_MAlab) {
-      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
-      new_dw->get(tempSolid,   d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
-      new_dw->get(totalHT,     d_MAlab->totHT_CCLabel,     indx, patch, gn, 0);
-      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel,    indx, patch, gn, 0);
-      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel,    indx, patch, gn, 0);
-      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel,    indx, patch, gn, 0);
-      new_dw->get(totHtFluxX,  d_MAlab->totHtFluxXLabel,   indx, patch, gn, 0);
-      new_dw->get(totHtFluxY,  d_MAlab->totHtFluxYLabel,   indx, patch, gn, 0);
-      new_dw->get(totHtFluxZ,  d_MAlab->totHtFluxZLabel,   indx, patch, gn, 0);
-    }
-
-    constCCVariable<double> temperature;
-    if (d_enthalpySolve)
-      new_dw->get(temperature, d_lab->d_tempINLabel, indx, patch, gn, 0);
-
-    for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
-         iter != d_probePoints.end(); iter++) {
-
-      if (patch->containsCell(*iter)) {
-        cerr.precision(10);
-        cerr << "for Intvector: " << *iter << endl;
-        cerr << "Density: " << density[*iter] << endl;
-        cerr << "Viscosity: " << viscosity[*iter] << endl;
-        cerr << "Pressure: " << pressure[*iter] << endl;
-        cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
-        if (d_enthalpySolve)
-          cerr<<"Gas Temperature: " << temperature[*iter] << endl;
-        cerr << "UVelocity: " << newUVel[*iter] << endl;
-        cerr << "VVelocity: " << newVVel[*iter] << endl;
-        cerr << "WVelocity: " << newWVel[*iter] << endl;
-        cerr << "CCUVelocity: " << newintUVel[*iter] << endl;
-        cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
-        cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
-        cerr << "KineticEnergy: " << kineticEnergy[*iter] << endl;
-        if (d_calcVariance) {
-          cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
-        }
-        if (d_MAlab) {
-          cerr.precision(16);
-          cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
-          cerr << " Solid Temperature at Location " << *iter << " At time " << time << ","<< tempSolid[*iter] << endl;
-          cerr << " Total Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
-          cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
-          cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxX[*iter] << endl;
-          cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxY[*iter] << endl;
-          cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxZ[*iter] << endl;
         }
       }
     }
@@ -1967,7 +1505,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
-    old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
+    old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0);
 #ifdef WASATCH_IN_ARCHES
     old_dw->get(old_areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch, gn, 0);
@@ -2171,13 +1709,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_totalflowOUTLabel);
   tsk->computes(d_lab->d_netflowOUTBCLabel);
   tsk->computes(d_lab->d_denAccumLabel);
-  tsk->computes(d_lab->d_scalarEfficiencyLabel);
-  tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
-  tsk->computes(d_lab->d_carbonEfficiencyLabel);
-  tsk->computes(d_lab->d_sulfurEfficiencyLabel);
-  tsk->computes(d_lab->d_CO2FlowRateLabel);
-  tsk->computes(d_lab->d_SO2FlowRateLabel);
-  tsk->computes(d_lab->d_scalarFlowRateLabel);
   tsk->computes(d_lab->d_divConstraintLabel);
   tsk->computes(d_lab->d_densityGuessLabel);
 
@@ -2239,26 +1770,12 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUT = 0.0;
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
-    double carbon_efficiency = 0.0;
-    double sulfur_efficiency = 0.0;
-    double scalar_efficiency = 0.0;
-    double enthalpy_efficiency = 0.0;
-    double CO2FlowRate = 0.0;
-    double SO2FlowRate = 0.0;
-    double scalarFlowRate = 0.0;
 
     new_dw->put(delt_vartype(uvwout),         d_lab->d_uvwoutLabel);
     new_dw->put(delt_vartype(flowIN),         d_lab->d_totalflowINLabel);
     new_dw->put(delt_vartype(flowOUT),        d_lab->d_totalflowOUTLabel);
     new_dw->put(delt_vartype(flowOUToutbc),   d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum),       d_lab->d_denAccumLabel);
-    new_dw->put(delt_vartype(carbon_efficiency),   d_lab->d_carbonEfficiencyLabel);
-    new_dw->put(delt_vartype(sulfur_efficiency),   d_lab->d_sulfurEfficiencyLabel);
-    new_dw->put(delt_vartype(enthalpy_efficiency), d_lab->d_enthalpyEfficiencyLabel);
-    new_dw->put(delt_vartype(scalar_efficiency),   d_lab->d_scalarEfficiencyLabel);
-    new_dw->put(delt_vartype(CO2FlowRate),         d_lab->d_CO2FlowRateLabel);
-    new_dw->put(delt_vartype(SO2FlowRate),         d_lab->d_SO2FlowRateLabel);
-    new_dw->put(delt_vartype(scalarFlowRate),      d_lab->d_scalarFlowRateLabel);
   }
 }
 //______________________________________________________________________

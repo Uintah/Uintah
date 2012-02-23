@@ -21,9 +21,7 @@
         <outputTimestepInterval>1</outputTimestepInterval>
         <outputInitTimestep/>
         <save label = "pressurePS"/>
-        <save label = "newCCUVelocity"/>        
-        <save label = "newCCVVelocity"/>        
-        <save label = "newCCWVelocity"/>  
+        <save label = "CCVelocity"/>  
         <save label = "uVelocitySPBC"/>
         <save label = "vVelocitySPBC"/>
         <save label = "wVelocitySPBC"/>
