@@ -33,6 +33,7 @@ PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
 	$(SRCDIR)/asci.cc        \
+	$(SRCDIR)/jacquie.cc        \
 	$(SRCDIR)/monica1.cc     \
 	$(SRCDIR)/monica2.cc     \
 	$(SRCDIR)/jim1.cc        \
