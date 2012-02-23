@@ -16,7 +16,7 @@
     <delt_min>1.0e-6</delt_min>
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <!-- max_Timesteps>5</max_Timesteps -->
+    <!--max_Timesteps>5</max_Timesteps-->
   </Time>
 
   <DataArchiver>
@@ -161,7 +161,7 @@
         <upper>[6,1,1]</upper>
         <resolution>[120,20,20]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[6,1,1]</patches>
       </Box>
     </Level>
 
@@ -235,19 +235,19 @@
       </DiffusiveFluxExpression>
       
      <VolumeFractionExpression>
-         <NameTag name="volFraction" state="STATE_N"/>
+         <NameTag name="volFraction" state="STATE_NONE"/>
      </VolumeFractionExpression>
 
      <XAreaFractionExpression>
-         <NameTag name="areaFractionFX" state="STATE_N"/>
+         <NameTag name="areaFractionFX" state="STATE_NONE"/>
      </XAreaFractionExpression>
 
      <YAreaFractionExpression>
-         <NameTag name="areaFractionFY" state="STATE_N"/>
+         <NameTag name="areaFractionFY" state="STATE_NONE"/>
      </YAreaFractionExpression>
 
      <ZAreaFractionExpression>
-         <NameTag name="areaFractionFZ" state="STATE_N"/>
+         <NameTag name="areaFractionFZ" state="STATE_NONE"/>
      </ZAreaFractionExpression>
 
     </TransportEquation>
@@ -263,7 +263,7 @@
 
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
       <!-- SCALARS -->
