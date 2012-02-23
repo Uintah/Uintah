@@ -484,10 +484,6 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT;
-
     CCVariable<double> heat_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 

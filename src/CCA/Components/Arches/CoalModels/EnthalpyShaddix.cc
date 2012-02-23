@@ -517,10 +517,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT;
-
     CCVariable<double> heat_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
@@ -774,7 +770,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
         double hc = get_hc(particle_temperature);
         double hh = get_hh(particle_temperature);
-        double ha = get_ha(particle_temperature);
 
         if(d_unweighted){
 
@@ -831,8 +826,6 @@ EnthalpyShaddix::calc_enthalpy(double particle_temperature, double rc_mass,
 double
 EnthalpyShaddix::calc_hcint(double Tp){
 
-  double z1 = 380.0/Tp;
-  double z2 = 1800.0/Tp;
   //double rawcoal_enthalpy = (Rgas/MW_avg)*g1(z1,z2);
   double rawcoal_enthalpy = 1046.0*Tp;
   return rawcoal_enthalpy; // J/kg
@@ -841,8 +834,6 @@ EnthalpyShaddix::calc_hcint(double Tp){
 double
 EnthalpyShaddix::calc_hhint(double Tp){
 
-  double z1 = 380.0/Tp;
-  double z2 = 1800.0/Tp;
   //double char_enthalpy = (Rgas/12.0)*g1(z1,z2);
   double char_enthalpy = 1046.0*Tp;
   return char_enthalpy; // J/kg

@@ -59,7 +59,6 @@ using namespace std;
 
 using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/smagmodel_fort.h>
 #include <CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
 
 //****************************************************************************
@@ -204,11 +203,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     }
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
     // get physical constants
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -222,11 +216,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
 #endif      
-//    fort_smagmodel(uVelocity, vVelocity, wVelocity,
-//                   uVelocityCC, vVelocityCC, wVelocityCC,
-//                   density, viscosity, idxLo, idxHi,
-//                   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-//                   mol_viscos, CF, d_factorMesh, d_filterl);
 
     Vector Dx = patch->dCell(); 
     double dmesh = Dx.x()*Dx.y()*Dx.z(); 
