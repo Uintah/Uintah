@@ -1,0 +1,8 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+<test>
+  <name>BurnRate</name>
+  <ups>DeterminingBurnRate.ups</ups>
+  <tst>burn_rates.tst</tst>
+</test>
+</config>
