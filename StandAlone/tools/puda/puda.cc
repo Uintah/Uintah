@@ -78,6 +78,7 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/puda/monica1.h>
 #include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/jim1.h>
+#include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
@@ -133,6 +134,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.\n)";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -jacquie              (finds burn rate vs pressure)\n";
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
   cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
@@ -294,6 +296,8 @@ main(int argc, char** argv)
       clf.do_monica1 = true;
     } else if(s == "-monica2"){
       clf.do_monica2 = true;
+      } else if(s == "-jacquie"){
+      clf.do_jacquie = true;
     } else if(s == "-jim1"){
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
@@ -493,6 +497,9 @@ main(int argc, char** argv)
 
     if( clf.do_jim1 ){
       jim1( da, clf );
+    }
+    if( clf.do_jacquie ){
+      jacquie( da, clf );
     }
 
     if( clf.do_jim2 ){

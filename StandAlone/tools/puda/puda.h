@@ -44,6 +44,7 @@ namespace Uintah {
     bool be_brief;
     bool do_monica1;
     bool do_monica2;
+    bool do_jacquie;
     bool do_jim1;
     bool do_PIC;
     bool do_AA_MMS_1;
