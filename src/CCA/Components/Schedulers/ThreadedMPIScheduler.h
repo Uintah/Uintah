@@ -118,39 +118,41 @@ WARNING
     int getAviableThreadNum();
   };
 
-class TaskWorker : public Runnable { 
 
-public:
-  
-  TaskWorker(ThreadedMPIScheduler* scheduler, int id);
+  class TaskWorker : public Runnable {
 
-  void assignTask( DetailedTask* task, int iteration);
+  public:
 
-  DetailedTask* getTask();
+    TaskWorker(ThreadedMPIScheduler* scheduler, int id);
 
-  void run();
+    void assignTask( DetailedTask* task, int iteration);
 
-  void quit(){d_quit=true;};
+    DetailedTask* getTask();
 
-  double getWaittime();
-  void resetWaittime(double start);
-  
-  friend class ThreadedMPIScheduler;
+    void run();
+
+    void quit(){d_quit=true;};
+
+    double getWaittime();
+
+    void resetWaittime(double start);
+
+    friend class ThreadedMPIScheduler;
 
 
-private:
-  int                    d_id;
-  ThreadedMPIScheduler*  d_scheduler;
-  DetailedTask*  d_task;
-  int            d_iteration;    
-  Mutex d_runmutex;
-  ConditionVariable d_runsignal;
-  bool                   d_quit;
-  double                 d_waittime;
-  double                 d_waitstart;
-  int                    d_rank;
-  CommRecMPI            d_sends_;
-};
+  private:
+    int                    d_id;
+    ThreadedMPIScheduler*  d_scheduler;
+    DetailedTask*          d_task;
+    int                    d_iteration;
+    Mutex                  d_runmutex;
+    ConditionVariable      d_runsignal;
+    bool                   d_quit;
+    CommRecMPI             d_sends_;
+    double                 d_waittime;
+    double                 d_waitstart;
+    int                    d_rank;
+  };
 
 } // End namespace Uintah
    

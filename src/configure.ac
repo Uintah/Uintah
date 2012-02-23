@@ -161,6 +161,10 @@ SCI_ARG_VAR(F77,Fortran 77 compiler command)
 SCI_ARG_VAR(FFLAGS,Fortran 77 compiler flags)
 SCI_ARG_VAR(CPP,C preprocessor)
 SCI_ARG_VAR(CXXCPP,C++ preprocessor)
+SCI_ARG_VAR(NVCC, CUDA compiler command)
+SCI_ARG_VAR(NVCC_CFLAGS, CUDA C compiler flags)
+SCI_ARG_VAR(NVCC_CXXFLAGS, CUDA C++ compiler flags)
+SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 
 AC_CANONICAL_HOST
 
@@ -309,6 +313,18 @@ SCI_ARG_WITH(mpi_extra_libs,
                  Use this additional library(or libraries - comma separated) for mpi linking),
   [with_mpi_extra_libs="$withval"],
   [with_mpi_extra_libs=""])
+SCI_ARG_WITH(cuda,
+  AC_HELP_STRING(--with-cuda=DIR,
+                 Use the CUDA installation in DIR),
+  [with_cuda="$withval"
+   sci_required_cuda=yes],
+  [with_cuda=""])  
+SCI_ARG_WITH(cuda_sdk,
+  AC_HELP_STRING(--with-cuda-sdk=DIR,
+                 Use the CUDA SDK installation in DIR),
+  [with_cuda_sdk="$withval"
+   sci_required_cuda_sdk=yes],
+  [with_cuda_sdk=""])    
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -3959,6 +3975,225 @@ AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
+
+##  --  search for cuda stuff  ------------------------------------------
+if test "$sci_required_cuda" = "yes"; then
+
+  echo
+  AS_MESSAGE(checking for required CUDA components......)
+  echo
+  
+  # guard against building staticaly linked Uintah with CUDA
+  if test \( "$with_cuda" -a "$with_cuda_sdk" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
+    AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
+  fi
+
+  # make sure we have both CUDA and CUDA-SDK
+  if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
+    AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
+  fi
+  
+  if test \( "$with_cuda" -a "$with_cuda_sdk" = "" \) -o \( "$with_cuda" = "" -a "$with_cuda_sdk" \); then
+    AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
+  fi
+  
+  # check that the CUDA installation and SDK exist
+  if ! test -d "$with_cuda"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
+  fi
+
+  if ! test -d "$with_cuda_sdk"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda_sdk=DIR is not valid: $with_cuda_sdk] )
+  fi
+
+  # the major CUDA definitions, etc
+  DEF_CUDA=""
+  HAVE_CUDA=""
+  HAVE_CUDA_H=""
+  INC_CUDA_H=""
+  CUDA_LIB_DIR=""
+
+  # all the -L's
+  CUDA_LIB_DIR_FLAG=""
+
+  # all the -l's
+  CUDA_LIB_FLAG=""
+
+  # confirm the existence/location of CUDA lib and include directories
+  _cuda_lib=
+  _cuda_inc="$with_cuda/include"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_cuda_lib,$with_cuda)
+  
+  # confirm the existence/location of CUDA-SDK lib and include directories
+  _cuda_sdk_lib=$with_cuda_sdk/C/lib
+  _cuda_sdk_inc=$with_cuda_sdk/C/common/inc
+  
+  # don't need to account for lib64 or lib32. It will be just lib...
+  # below we will check for "libcutil" or "libcutil_x86_64" within $with_cuda_sdk/C/lib
+  _cutil_lib=""
+  if test "$NBITS" = 64; then
+    _cutil_lib="cutil_x86_64"
+  else
+    _cutil_lib="cutil"
+  fi  
+
+# code to compile and test various system GPU/CUDA properties
+# these files, etc will be deleted after tests)
+  cat > device_query.cu << EOF
+#include <stdio.h>
+#include <cutil.h>
+#include <cuda.h>
+int main(int argc, char** argv)
+{
+    int devCount;
+    cudaGetDeviceCount(&devCount);
+    printf("Checking CUDA capable devices...   (%d) devices\n", devCount);
+ 
+    for (int i = 0; i < devCount; ++i)
+    {
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, i);
+        printf("Device %d: %s CC Maj/Min: %d.%d\n", i, deviceProp.name, deviceProp.major, deviceProp.minor);
+    }
+    return 0;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             CUDA capable devices,
+                             cuda.h cutil.h,
+                             $_cuda_inc $_cuda_sdk_inc,
+                             cudart $_cutil_lib,
+                             $_cuda_lib $_cuda_sdk_lib,
+                             ,
+                             device_query.cu,
+                             optional,
+                             no)
+
+rm -rf device_query*
+
+# test if nvcc can compile tr1/type_traits headers provided by host compiler
+# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
+  cat > type_traits_test.cu << EOF
+#include <tr1/type_traits>
+int main(void)
+{
+      return 0;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             NVCC tr1/type_traits header compatibility,
+                             cuda.h cutil.h,
+                             $_cuda_inc $_cuda_sdk_inc,
+                             cudart $_cutil_lib,
+                             $_cuda_lib $_cuda_sdk_lib,
+                             ,
+                             type_traits_test.cu,
+                             optional,
+                             no)
+
+rm -rf type_traits_test*
+
+
+  cat > cuda_conf_test.cu << EOF
+#include <stdlib.h>
+#include <cutil.h>
+#include <cuda.h>
+
+__global__ void vectorAddGPU(float *a, float *results, int N) {
+	int idx = threadIdx.x;
+	if (idx < N) {
+		*(results+idx) = *(a+idx) * (*(a+idx));
+	}
+}
+
+int main(int argc, char **argv) {
+
+	int N = 512;
+    float *a = (float *)malloc(N * sizeof(float));
+    float *results = (float *)malloc(N * sizeof(float));
+	float *dev_a, *dev_results;
+	int memsize = N * sizeof(float);
+
+	for (int i = 0; i < N; i++) {
+	    *(a+i) = i;
+		printf("a:%d = %f\n", i, *(a+i));
+	}
+
+	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_a, memsize));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_results, memsize));
+	CUDA_SAFE_CALL(cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpy(dev_results, results, memsize, cudaMemcpyHostToDevice));
+
+	vectorAddGPU<<< 1, 512 >>>(dev_a, dev_results, N);
+
+	CUDA_SAFE_CALL(cudaMemcpy(results, dev_results, memsize, cudaMemcpyDeviceToHost));
+
+	for (int i = 0; i < N; i++) {
+		printf("a:%d = %f\n", i, *(results+i));
+	}
+
+    CUDA_SAFE_CALL(cudaFree(dev_a));
+    CUDA_SAFE_CALL(cudaFree(dev_results));
+    free(a);
+    free(results);
+
+	cudaThreadExit();
+
+	return 1;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             CUDA and CUDA_SDK libraries and headers,
+                             cuda.h cutil.h,
+                             $_cuda_inc $_cuda_sdk_inc,
+                             cudart $_cutil_lib,
+                             $_cuda_lib $_cuda_sdk_lib,
+                             ,
+                             cuda_conf_test.cu,
+                             optional,
+                             yes)
+
+rm -rf cuda_conf_test*
+echo
+
+#[aph] - debug
+#echo
+#echo "HAVE_CUDA         = " $HAVE_CUDA
+#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
+#echo "INC_CUDA_H        = " $INC_CUDA_H
+#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
+#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
+#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
+#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_LIBS         = " $NVCC_LIBS
+#echo
+#echo "CC       = " $CC
+#echo "NVCC     = " $NVCC
+#echo "LIBS     = " $LIBS
+#echo "LDFLAGS  = " $LDFLAGS
+#echo "CFLAGS   = " $CFLAGS
+#echo "CXXFLAGS = " $CXXFLAGS
+#echo
+
+fi #end sci_required_cuda
+
+# these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+AC_SUBST(HAVE_CUDA)
+AC_SUBST(DEF_CUDA)
+AC_SUBST(INC_CUDA_H)
+AC_SUBST(CUDA_LIB_DIR_FLAG)
+AC_SUBST(CUDA_LIB_FLAG)
+AC_SUBST(NVCC_CFLAGS)
+AC_SUBST(NVCC_CXXFLAGS)
+AC_SUBST(NVCC_LIBS)
+
+sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 
 ##  --  finis flags  ------------------------------------------------

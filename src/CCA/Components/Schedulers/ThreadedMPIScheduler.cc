@@ -358,8 +358,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-      "[ThreadedMPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_TIMER(doittimer, "Task execution", "[ThreadedMPIScheduler::execute() loop] ", TAU_USER);
   TAU_PROFILE_START(doittimer);
 
   int currphase=0;
@@ -374,8 +373,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   if( dbg.active()) {
     cerrLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks (" 
-      << ntasks << " local)"<< endl;
+    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)"<< endl;
     cerrLock.unlock();
   }
 
@@ -875,7 +873,7 @@ ThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
 }
 
 /** Computing Thread Methods***/
-TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) : 
+TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) :
    d_id( id ), d_scheduler(scheduler),  d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
    d_waittime(0.0),d_waitstart(0.0),  d_rank(scheduler->getProcessorGroup()->myrank())
@@ -889,16 +887,17 @@ TaskWorker::run()
   threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
   Thread::self()->set_myid(d_id+1);
   Thread::self()->set_affinity(d_id+1);
+
   while(true) {
     //wait for main thread signal
     d_runsignal.wait(d_runmutex);
     d_runmutex.unlock();
     d_waittime += Time::currentSeconds()-d_waitstart;
+
     if (d_quit) {
       if( taskdbg.active() ) {
       cerrLock.lock();
-       taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << "quiting   " << "\n";
+       taskdbg << "Worker " << d_rank  << "-" << d_id << "quiting   " << "\n";
       cerrLock.unlock();
       }
       return;
@@ -906,21 +905,20 @@ TaskWorker::run()
 
     if( taskdbg.active() ) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << ": executeTask:   " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank  << "-" << d_id << ": executeTask:   " << *d_task << "\n";
       cerrLock.unlock();
     }
     ASSERT(d_task!=NULL);
+
     try {
       if (d_task->getTask()->getType() == Task::Reduction){
         d_scheduler->initiateReduction(d_task);
       } else{
-      d_scheduler->runTask(d_task, d_iteration, d_id);
+    	  d_scheduler->runTask(d_task, d_iteration, d_id);
       }
-    } catch (Exception& e){
+    } catch (Exception& e) {
       cerrLock.lock();
-      cerr << "Worker " << d_rank << "-" << d_id << 
-        ": Caught exception: " << e.message() << "\n";
+      cerr << "Worker " << d_rank << "-" << d_id << ": Caught exception: " << e.message() << "\n";
       if(e.stackTrace())
           cerr << "Stack trace: " << e.stackTrace() << '\n';
       cerrLock.unlock();
@@ -928,8 +926,7 @@ TaskWorker::run()
 
     if( taskdbg.active() ) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id 
-        << ": finishTask:   " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank << "-" << d_id << ": finishTask:   " << *d_task << "\n";
       cerrLock.unlock();
     }
 
@@ -954,3 +951,4 @@ void TaskWorker::resetWaittime(double start)
     d_waitstart  = start;
     d_waittime = 0.0;
 }
+

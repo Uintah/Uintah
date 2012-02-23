@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/ErrnoException.h>

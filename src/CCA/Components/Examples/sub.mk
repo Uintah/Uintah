@@ -35,24 +35,30 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Examples
 
 SRCS     += \
-	$(SRCDIR)/AMRWave.cc       \
-	$(SRCDIR)/Wave.cc          \
-	$(SRCDIR)/Poisson1.cc      \
-	$(SRCDIR)/Poisson2.cc      \
-	$(SRCDIR)/Poisson4.cc      \
-	$(SRCDIR)/Burger.cc        \
-	$(SRCDIR)/HeatEquation.cc  \
-	$(SRCDIR)/Poisson3.cc      \
-	$(SRCDIR)/ParticleTest1.cc \
-	$(SRCDIR)/Interpolator.cc  \
-	$(SRCDIR)/ExamplesLabel.cc \
-	$(SRCDIR)/RegridderTest.cc \
-	$(SRCDIR)/SolverTest1.cc   \
-	$(SRCDIR)/RegionDB.cc      \
-	$(SRCDIR)/Benchmark.cc
+	$(SRCDIR)/AMRWave.cc         \
+	$(SRCDIR)/Wave.cc            \
+	$(SRCDIR)/Poisson1.cc        \
+	$(SRCDIR)/Poisson2.cc        \
+	$(SRCDIR)/Poisson3.cc        \
+	$(SRCDIR)/Poisson4.cc        \
+	$(SRCDIR)/Burger.cc          \
+	$(SRCDIR)/HeatEquation.cc    \
+	$(SRCDIR)/ParticleTest1.cc   \
+	$(SRCDIR)/Interpolator.cc    \
+	$(SRCDIR)/ExamplesLabel.cc   \
+	$(SRCDIR)/RegridderTest.cc   \
+	$(SRCDIR)/SolverTest1.cc     \
+	$(SRCDIR)/RegionDB.cc        \
+	$(SRCDIR)/Benchmark.cc       \
        
 ifeq ($(BUILD_MODELS_RADIATION),yes)
-  SRCS +=$(SRCDIR)/RMCRT_Test.cc	
+  SRCS += $(SRCDIR)/RMCRT_Test.cc	
+endif
+
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/AdvectSlabs.cc     \
+          $(SRCDIR)/PoissonGPU1.cu     \
+          $(SRCDIR)/GPUSchedulerTest.cu
 endif
 
 PSELIBS := \
@@ -70,7 +76,7 @@ PSELIBS := \
 	Core/Math             \
 	Core/Parallel
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

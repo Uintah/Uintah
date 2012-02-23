@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
+#include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/Wave.h>
@@ -58,7 +59,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <sci_defs/uintah_defs.h>
-//#include <CCA/Components/Examples/Poisson4.h>
+#include <sci_defs/cuda_defs.h>
+
+#ifdef HAVE_CUDA
+#include <CCA/Components/Examples/GPUSchedulerTest.h>
+#include <CCA/Components/Examples/AdvectSlabs.h>
+//#include <CCA/Components/Examples/AdvectSlabsGPU.h>
+#include <CCA/Components/Examples/PoissonGPU1.h>
+#endif
 
 #ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -182,6 +190,20 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
   } 
+#ifdef HAVE_CUDA
+  if (sim_comp == "advectslabs" || sim_comp == "ADVECTSLABS") {
+    return scinew AdvectSlabs(world);
+  }
+//  if (sim_comp == "advectslabsgpu" || sim_comp == "ADVECTSLABSGPU") {
+//    return scinew AdvectSlabsGPU(world);
+//  }
+  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
+    return scinew PoissonGPU1(world);
+  }
+  if (sim_comp == "gpuschedulertest" || sim_comp == "GPUSCHEDULERTEST") {
+    return scinew GPUSchedulerTest(world);
+  }
+#endif
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
   } 
@@ -191,9 +213,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
-//  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-//    return scinew Poisson4(world);
-//  } 
+  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+    return scinew Poisson4(world);
+  }
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 

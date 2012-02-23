@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #include <CCA/Ports/Scheduler.h>
 
 using namespace Uintah;

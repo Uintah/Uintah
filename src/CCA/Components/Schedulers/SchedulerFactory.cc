@@ -40,7 +40,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
+#include <sci_defs/cuda_defs.h>
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
+#endif
+
 #include <iostream>
+
 
 using namespace std;
 using namespace Uintah;
@@ -51,50 +58,58 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
-  
+
   ProblemSpecP sc_ps = ps->findBlock("Scheduler");
-  if (sc_ps)
-    sc_ps->getAttribute("type",scheduler);
+  if (sc_ps) {
+    sc_ps->getAttribute("type", scheduler);
+  }
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
     if (scheduler == "") {
-      //Uintah::Parallel::noThreading();
       if (Uintah::Parallel::getMaxThreads() > 0) {
-        scheduler = "ThreadedMPI";
-      } else { 
+        scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
+      } else {
         scheduler = "MPIScheduler";
       }
     }
-  }
-  else {// No MPI
-    if (scheduler == "")
+  } else {  // No MPI
+    if (scheduler == "") {
       scheduler = "SingleProcessorScheduler";
+    }
   }
 
-  if (world->myrank() == 0)
-    cout << "Scheduler: \t\t" << scheduler << endl;
+  if ((Uintah::Parallel::getMaxThreads() > 0) && ((scheduler != "ThreadedMPI")
+                                              &&  (scheduler != "ThreadedMPI2"
+                                              &&  (scheduler != "GPUThreadedMPI")))) {
+    throw ProblemSetupException("Threaded or GPU Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
+  }
 
-  if(scheduler == "SingleProcessorScheduler"){
-    sch = scinew SingleProcessorScheduler(world, output);
-  } else if(scheduler == "MPIScheduler" ||
-            scheduler == "MPI" ){
-    sch = scinew MPIScheduler(world, output);
-  } else if(scheduler == "DynamicMPI"){
-    sch = scinew DynamicMPIScheduler(world, output);
-  } else if(scheduler == "ThreadedMPI"){
-    sch = scinew ThreadedMPIScheduler(world, output);
+  if (world->myrank() == 0) {
+    cout << "Scheduler: \t\t" << scheduler << endl;
+  }
+
+  if (scheduler == "SingleProcessorScheduler") {
+    sch = scinew SingleProcessorScheduler(world, output, NULL);
+  } else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
+    sch = scinew MPIScheduler(world, output, NULL);
+  } else if (scheduler == "DynamicMPI") {
+    sch = scinew DynamicMPIScheduler(world, output, NULL);
+  } else if (scheduler == "ThreadedMPI") {
+    sch = scinew ThreadedMPIScheduler(world, output, NULL);
   } else if(scheduler == "ThreadedMPI2"){
     sch = scinew ThreadedMPIScheduler2(world, output);
-  } else {
-    sch = 0;   
+  }
+#ifdef HAVE_CUDA
+  else if (scheduler == "GPUThreadedMPI") {
+    sch = scinew GPUThreadedMPIScheduler(world, output, NULL);
+  }
+#endif
+  else {
+    sch = 0;
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
-
-  if ((Uintah::Parallel::getMaxThreads() > 0) && (scheduler != "ThreadedMPI") && (scheduler != "ThreadedMPI2")  ) {
-    throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
-  }
-  
+ 
   return sch;
 
 }

@@ -37,6 +37,10 @@ SRCS     += $(SRCDIR)/Advector.cc \
 	$(SRCDIR)/SecondOrderAdvector.cc \
  	$(SRCDIR)/SecondOrderBase.cc \
 	$(SRCDIR)/AdvectionFactory.cc
+	
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/FirstOrderAdvectorGPU.cu
+endif	
 
 PSELIBS := \
 	CCA/Ports \

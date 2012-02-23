@@ -33,6 +33,7 @@
 OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS))) \
 	   $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS))) \
 	   $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
+	   $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
 	   $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS))) \
 	   $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS))) \
 	   $(patsubst %.f,%.$(OBJEXT),$(filter %.f,$(SRCS))) \
