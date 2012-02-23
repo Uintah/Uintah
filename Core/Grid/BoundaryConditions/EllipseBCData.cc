@@ -101,7 +101,6 @@ bool EllipseBCData::inside(const Point &p) const
   const double pi = 3.141592653589793;
   const double angleRad = d_angleDegrees*pi/180.0;
   double ellipseFormula =0.0;
-  double xsq,ysq;
   const double focalDistance = sqrt(d_majorRadius*d_majorRadius - d_minorRadius*d_minorRadius);
 
   if (d_face=="x-") {        
