@@ -343,6 +343,7 @@
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
+                                                                      advectslabs, advectslabsgpu, gpuschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -845,7 +846,7 @@
   <!--__________________________________-->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI ThreadedMPI'">
+                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI ThreadedMPI GPUThreadedMPI'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
@@ -982,6 +983,19 @@
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </Poisson>
+
+  <AdvectSlabs                spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+  </AdvectSlabs>
+  
+  <AdvectSlabsGPU             spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+  </AdvectSlabsGPU>
+  
+  <GPUSchedulerTest           spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </GPUSchedulerTest>  
 
   <!--  Particle Test Component -->
   <ParticleTest1              spec="OPTIONAL NO_DATA" >

@@ -26,7 +26,9 @@ CHECKPOINTS=""
 
 #__________________________________
 # Machine specific variables
+
 MACHINE=`hostname`
+
 if [ "$MACHINE" == "rt" ]; then
   COMMON_GROUP="uintah"
   BUILD_DIR=/home/csafe-tester/"$OS"
@@ -39,7 +41,8 @@ if [ "$MACHINE" == "rt" ]; then
   HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi
-if [ "$MACHINE" == "blaze" ]; then
+
+if test "$MACHINE" = "blaze"; then
   COMMON_GROUP="sci"
   BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
   TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
@@ -51,12 +54,30 @@ if [ "$MACHINE" == "blaze" ]; then
   HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 fi
+
+if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
+  DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
+  REPLY_TO="ahumphrey@sci.utah.edu"
+  COMMON_GROUP="uintah"
+  BUILD_DIR=/home/csafe-tester/"$OS"
+  TEST_DATA=/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/home/csafe-tester/scripts
+  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+fi
+
+
 #______________________________________________________________________
 
 
 # test OS
 if [ "$OS" != "Linux" ]; then
-  echo "Linux OS is the only OS that is current configured to work. Abort"
+  echo "Linux OS is the only OS that is currently configured to work. Abort"
   exit -1
 fi
 
@@ -346,4 +367,3 @@ if [ $VERBOSE = "yes" ]; then
 fi
 
 exit $retval
-

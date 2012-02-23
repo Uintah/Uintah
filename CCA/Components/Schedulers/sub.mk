@@ -56,6 +56,10 @@ SRCS += \
 	$(SRCDIR)/IncorrectAllocation.cc \
 	$(SRCDIR)/Util.cc \
 	$(SRCDIR)/templates.cc
+	
+ifeq ($(HAVE_CUDA),yes)
+	SRCS += $(SRCDIR)/GPUThreadedMPIScheduler.cc
+endif
 
 PSELIBS := \
 	CCA/Components/ProblemSpecification \
@@ -75,7 +79,7 @@ PSELIBS := \
 	\
 	Core/Math
 
-LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

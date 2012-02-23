@@ -172,7 +172,6 @@ HAVE_LAPACKMP  := @HAVE_LAPACKMP@
 LAPACK_LIBRARY := @LAPACK_LIB_DIR_FLAG@ @LAPACK_LIB_FLAG@
 LAPACKMP_LIBRARY := @LAPACKMP_LIB_DIR_FLAG@ @LAPACKMP_LIB_FLAG@
 
-
 ifneq ($(TAU_MAKEFILE),)
   TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
   TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
@@ -194,6 +193,10 @@ MPI_INCLUDE := @INC_MPI_H@
 
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
+
+HAVE_CUDA        := @HAVE_CUDA@
+CUDA_INCLUDE     := @INC_CUDA_H@
+CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
 
 MDSPLUS_LIBRARY := @MDSPLUS_LIB_DIR_FLAG@ @MDSPLUS_LIB_FLAG@
 MDSPLUS_INCLUDE := @INC_MDSPLUS_H@
@@ -257,7 +260,7 @@ PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@
 
 ELECTRIC_FENCE := @ELECTRIC_FENCE_LIB_DIR_FLAG@ @ELECTRIC_FENCE_LIB_FLAG@
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) $(PAPI_INCLUDE) @INC_Z_H@ @INC_HYPRE_H@ $(TAUINC) @INC_PNG_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) $(PAPI_INCLUDE) $(CUDA_INCLUDE) @INC_Z_H@ @INC_HYPRE_H@ $(TAUINC) @INC_PNG_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
 
 BUILD_ICE=@BUILD_ICE@
@@ -288,17 +291,22 @@ CORE_STATIC_LIBS := \
 
 CC              := @CC@
 CXX             := @CXX@
+NVCC            := @NVCC@
 AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@
 CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) @WOFF_STRING@
+NVCC_CFLAGS     := @NVCC_CFLAGS@
+NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@
 ifeq ($(IS_WIN),yes)
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
   LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
+  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
   PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
 else
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
   LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR) $(ELECTRIC_FENCE)
+  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
 endif
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
@@ -335,7 +343,7 @@ else
   SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .$(OBJEXT) .s .F .f .cpp .cxx
+.SUFFIXES: .cc .cu .c .$(OBJEXT) .s .F .f .cpp .cxx
 
 .cc.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
@@ -441,6 +449,32 @@ else
       endif
     endif
   endif
+endif
+
+.cu.$(OBJEXT): $<
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@-rm -f $@
+else
+	-rm -f $@
+endif
+#
+# .d - most likely gcc... have to explicitly put it in a .d file.
+#
+# -M outputs to stdout(err?) dependency info.
+# Prepend that file to replace filename.o with:
+#     <path_to_file>/filename.o.
+# Note: For the CUDA compiler (nvcc), it is necessary to generate
+#       dependencies after the compilation phase.
+#
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Compiling: $<"
+	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+else
+	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 endif
 
 .cpp.$(OBJEXT): $<

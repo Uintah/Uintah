@@ -1,59 +1,67 @@
-/*
-   For more information, please see: http://software.sci.utah.edu
+/* include/sci_defs/config_testdefs.h.in.  Generated from configure.ac by autoheader.  */
 
-   The MIT License
+/* Define to 1 if you have the <ext/algorithm> header file. */
+#undef HAVE_EXT_ALGORITHM
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+/* Define to 1 if you have the <limits.h> header file. */
+#undef HAVE_LIMITS_H
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-*/
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
 
-#ifndef SCI_CONFIG_DEFS_H
-#define SCI_CONFIG_DEFS_H
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
 
-/* The following system variables are updated by configure, via this line:
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
 
-AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
 
-(While we aren't certain exactly how, the AC_CONFIG_HEADER macro will
-parse the config_testdefs.h.in file [this file] and replace the
-'#define VARIABLE value' with the correct value by testing to see if
-the associated include header file exists/compiles on your system.
-This apparently only works for certain system defined variables.)
+/* Define to 1 if you have the <sys/select.h> header file. */
+#undef HAVE_SYS_SELECT_H
 
-If you are looking at this file on the src side (ie, it is named
-'config_testdefs.h.in'), you will see these variables set to '0'.  But
-if you are looking at the already configured file (config_defs.h on
-the binary side), they will have the correct '0' or '1' value.
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
 
-*/
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
 
-#define HAVE_LIMITS_H 0
-#define HAVE_SYS_SELECT_H 0
-#define HAVE_UNISTD_H 0
-#define HAVE_SYS_TIME_H 0
-#define HAVE_SYS_UUID_H 0
-#define HAVE_UUID_UUID_H 0
-#define HAVE_EXT_ALGORITHM 0
-#define HAVE_STDINT_H 0
-#define HAVE_INTTYPES_H 0
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
 
-#endif
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* The size of `long long', as computed by sizeof. */
+#undef SIZEOF_LONG_LONG
+
+/* The size of `void*', as computed by sizeof. */
+#undef SIZEOF_VOIDP
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS

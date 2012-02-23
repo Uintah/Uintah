@@ -52,6 +52,7 @@ namespace Uintah {
   class LoadBalancer;
   class Task;
   class SimulationInterface;
+
 /**************************************
 
 CLASS
@@ -96,8 +97,8 @@ WARNING
     
     virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater,
                                  unsigned long & maxMemUse ) = 0;
-    virtual void   setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
-    virtual char * getStartAddr() = 0;
+    virtual void  setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
+    virtual char* getStartAddr() = 0;
     virtual void resetMaxMemValue() = 0;
 
     //////////
@@ -186,7 +187,7 @@ WARNING
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
     // ghost cells as well (requestedLow, requestedHigh) for each of the
-    // patches.  Required and requested will besame if requestedNumGCells = 0.
+    // patches.  Required and requested will be the same if requestedNumGCells = 0.
     virtual const std::vector<const Patch*>*
     getSuperPatchExtents(const VarLabel* label, int matlIndex,
 			 const Patch* patch, Ghost::GhostType requestedGType,

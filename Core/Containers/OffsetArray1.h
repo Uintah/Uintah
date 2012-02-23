@@ -152,7 +152,7 @@ OffsetArray1<T>::OffsetArray1(const OffsetArray1<T>& a)
     objs=new T[size]-_l;
   else
     objs=0;
-  for(int i=this->l;i<this->h;i++)objs[i]=a.objs[i];
+  for(int i=this->_l;i<this->_h;i++)objs[i]=a.objs[i];
 }
 
 template<class T>

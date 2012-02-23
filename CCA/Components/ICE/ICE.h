@@ -541,13 +541,12 @@ namespace Uintah {
                                   DataWarehouse*,
                                   DataWarehouse*);
                                   
-                                  
       void conservedtoPrimitive_Vars(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-                                  
+
                                   
 //__________________________________
 //   RF TASKS    

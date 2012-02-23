@@ -135,8 +135,9 @@ namespace Uintah {
         T* dd=d;
         for(int j=0;j<s.y();j++){
           T* ddd=dd;
-          for(int k=0;k<s.x();k++)
+          for(int k=0;k<s.x();k++) {
             ddd[k]=val;
+          }
           dd+=d_size.x();
         }
         d+=d_size.x()*d_size.y();

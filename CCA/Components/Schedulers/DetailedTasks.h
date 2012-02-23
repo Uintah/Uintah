@@ -47,6 +47,8 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <set>
 
+#include <sci_defs/cuda_defs.h>
+
 namespace Uintah {
   using SCIRun::Min;
   using SCIRun::Max;
@@ -116,7 +118,7 @@ namespace Uintah {
   public:
     DependencyBatch(int to, DetailedTask* fromTask, DetailedTask* toTask)
       : comp_next(0), fromTask(fromTask),
-	head(0), messageTag(-1), to(to), 
+	head(0), messageTag(-1), to(to),
 	received_(false), madeMPIRequest_(false),
 	lock_(0)
     {
@@ -198,6 +200,7 @@ namespace Uintah {
     ProfileType getProfileType() {return d_profileType;}
     void doit(const ProcessorGroup* pg, std::vector<OnDemandDataWarehouseP>& oddws,
 	      std::vector<DataWarehouseP>& dws);
+
     // Called after doit and mpi data sent (packed in buffers) finishes.
     // Handles internal dependencies and scrubbing.
     // Called after doit finishes.
@@ -214,7 +217,7 @@ namespace Uintah {
     const MaterialSubset* getMaterials() const {
       return matls;
     }
-    void assignResource( int idx ) {
+    void assignResource(int idx) {
       resourceIndex = idx;
     }
     int getAssignedResourceIndex() const {
@@ -255,8 +258,35 @@ namespace Uintah {
     bool areInternalDependenciesSatisfied()
     { return (numPendingInternalDependencies == 0); }
 
+#ifdef HAVE_CUDA
+    void assignDevice (int device) {
+      deviceNum_ = device;
+    }
+    int getDeviceNum () {
+      return deviceNum_;
+    }
+    bool addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream);
+    bool addH2DCopyEvent(cudaEvent_t* event);
+    bool addD2HCopyEvent(cudaEvent_t* event);
+    bool addH2DStream(cudaStream_t* stream);
+    bool addD2HStream(cudaStream_t* stream);
+    cudaError_t checkH2DCopyDependencies();
+    cudaError_t checkD2HCopyDependencies();
+    std::vector<cudaStream_t*>* getH2DStreams() { return &h2dStreams; }
+    std::vector<cudaStream_t*>* getD2HStreams() { return &d2hStreams; }
+    std::vector<cudaEvent_t*>* getH2DCopyEvents()  { return &h2dCopyEvents;  }
+    std::vector<cudaEvent_t*>* getD2HCopyEvents()  { return &d2hCopyEvents;  }
+    inline void incrementH2DCopyCount() { h2dCopyCount_++; }
+    inline void decrementH2DCopyCount() { h2dCopyCount_--; }
+    inline void incrementD2HCopyCount() { d2hCopyCount_++; }
+    inline void decrementD2HCopyCount() { d2hCopyCount_--; }
+    inline int getH2DCopyCount() { return h2dCopyCount_; }
+    inline int getD2HCopyCount() { return d2hCopyCount_; }
+#endif
+
   protected:
     friend class TaskGraph;
+
   private:
     // called by done()
     void scrub(std::vector<OnDemandDataWarehouseP>&);
@@ -270,7 +300,7 @@ namespace Uintah {
 
     bool initiated_;
     bool externallyReady_;
-    int externalDependencyCount_;
+    int  externalDependencyCount_;
 
     mutable std::string name_; /* doesn't get set until getName() is called
 			     the first time. */
@@ -278,7 +308,6 @@ namespace Uintah {
     // Called when prerequisite tasks (dependencies) call done.
     void dependencySatisfied(InternalDependency* dep);
 
-    
     // Internal dependencies are dependencies within the same process.
     std::list<InternalDependency> internalDependencies;
     
@@ -294,14 +323,31 @@ namespace Uintah {
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);
     
-    //specifies the type of task this is
-      //normal executes on either the patches cells or the patches coarse cells
-      //fine executes on the patches fine cells (for example coarsening)
+    // specifies the type of task this is:
+    //   * normal executes on either the patches cells or the patches coarse cells
+    //   * fine executes on the patches fine cells (for example coarsening)
     
     bool operator<(const DetailedTask& other);
     
     ProfileType d_profileType;
-  };
+
+#ifdef HAVE_CUDA
+    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
+    bool gpuExternallyReady_;
+    bool completed_;
+    int  h2dCopyCount_;
+    int  d2hCopyCount_;
+    int  deviceNum_;
+
+    // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
+    std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
+    std::vector<cudaStream_t*>  h2dStreams;
+    std::vector<cudaStream_t*>  d2hStreams;
+    std::vector<cudaEvent_t*>   h2dCopyEvents;
+    std::vector<cudaEvent_t*>   d2hCopyEvents;
+#endif
+
+  }; // end class DetailedTask
   
   class DetailedTaskPriorityComparison
   {
@@ -311,9 +357,12 @@ namespace Uintah {
 
   class DetailedTasks {
   public:
-    DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-		  DetailedTasks* first, const TaskGraph* taskgraph, const std::set<int> &neighborhood_processors,
-		  bool mustConsiderInternalDependencies = false);
+    DetailedTasks(SchedulerCommon* sc,
+                  const ProcessorGroup* pg,
+                  DetailedTasks* first,
+                  const TaskGraph* taskgraph,
+                  const std::set<int> &neighborhood_processors,
+                  bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
     void add(DetailedTask* task);
@@ -333,17 +382,16 @@ namespace Uintah {
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
 				  const Patch* toPatch, int matl,
-				  const IntVector& low, const IntVector& high,
-                                  DetailedDep::CommCondition cond);
+				  const IntVector& low, const IntVector& high, DetailedDep::CommCondition cond);
 
     DetailedTask* getOldDWSendTask(int proc);
 
-    void logMemoryUse(ostream& out, unsigned long& total,
-		      const std::string& tag);
+    void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
 
     void initTimestep();
     
     void computeLocalTasks(int me);
+
     int numLocalTasks() const {
       return (int)localtasks_.size();
     }
@@ -384,6 +432,24 @@ namespace Uintah {
     
     void setTaskPriorityAlg(QueueAlg alg) { taskPriorityAlg_=alg; }
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
+
+#ifdef HAVE_CUDA
+    void addInitiallyReadyGPUTask(DetailedTask* dtask);
+    void addInternalReadyGPUTask(DetailedTask* dtask);
+    void addExternalReadyGPUTask(DetailedTask* dtask);
+    void addCompletionPendingGPUTask(DetailedTask* dtask);
+    DetailedTask* getNextInitiallyReadyGPUTask();
+    DetailedTask* getNextInternalReadyGPUTask();
+    DetailedTask* getNextExternalReadyGPUTask();
+    DetailedTask* getNextCompletionPendingGPUTask();
+    DetailedTask* peekNextInternalReadyGPUTask();
+    DetailedTask* peekNextExternalReadyGPUTask();
+    DetailedTask* peekNextCompletionPendingGPUTask();
+    int numIntiallyReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
+    int numInternalReadyGPUTasks() { return internalReadyGPUTasks_.size(); }
+    int numExternalReadyGPUTasks() { return externalReadyGPUTasks_.size(); }
+    int numCompletionPendingGPUTasks() { return completionPendingGPUTasks_.size(); }
+#endif
 
   protected:
     friend class DetailedTask;
@@ -427,8 +493,7 @@ namespace Uintah {
     std::vector<DependencyBatch*> batches_;
     DetailedDep* initreq_;
     
-    // True for mixed scheduler which needs to keep track of internal
-    // depedencies.
+    // True for mixed scheduler which needs to keep track of internal depedencies.
     bool mustConsiderInternalDependencies_;
 
     // In the future, we may want to prioritize tasks for the MixedScheduler
@@ -440,9 +505,9 @@ namespace Uintah {
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
-    TaskQueue readyTasks_; 
-    TaskQueue initiallyReadyTasks_;
-    TaskPQueue mpiCompletedTasks_;
+    TaskQueue   readyTasks_;
+    TaskQueue   initiallyReadyTasks_;
+    TaskPQueue  mpiCompletedTasks_;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
@@ -460,7 +525,15 @@ namespace Uintah {
 
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);
-  };
+
+#ifdef HAVE_CUDA
+    TaskPQueue initiallyReadyGPUTasks_;    // prior MPI communication completed
+    TaskPQueue internalReadyGPUTasks_;     // ready to initiate h2d copies
+    TaskPQueue externalReadyGPUTasks_;     // h2d copies completed, ready to execute
+    TaskPQueue completionPendingGPUTasks_; // waiting for d2h copies to complete
+#endif
+
+  }; // end class DetailedTasks
 
   std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
   std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);

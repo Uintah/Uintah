@@ -161,7 +161,7 @@ AMRSimulationController::run()
    double start;
   
    d_lb->resetCostForecaster();
-   while( ( time < d_timeinfo->maxTime ) && 
+   while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
 
@@ -912,15 +912,14 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
 
-  Task* task = scinew Task("coarsenDelt", this,
-      &AMRSimulationController::coarsenDelt);
+  Task* task = scinew Task("coarsenDelt", this, &AMRSimulationController::coarsenDelt);
 
   for (int i = 0; i < grid->numLevels(); i++) {
-    //coarsen delt requires each levels delt varaible
+    //coarsen delt requires each levels delt variable
     task->requires(Task::NewDW,d_sharedState->get_delt_label(),grid->getLevel(i).get_rep());
   }
 
-  //coarse delt computes the global delt variable
+  //coarsen delt computes the global delt variable
   task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());

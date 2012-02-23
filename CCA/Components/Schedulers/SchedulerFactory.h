@@ -43,13 +43,11 @@ namespace Uintah {
   class UINTAHSHARE SchedulerFactory
   {
   public:
-    // this function has a switch for all known load balancers
-    
+    // this function has a switch for all known Schedulers
+
     static SchedulerCommon* create(ProblemSpecP& ps,
                                    const ProcessorGroup* world,
                                    Output* ouput);
-
-
   };
 } // End namespace Uintah
 

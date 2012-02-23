@@ -48,17 +48,20 @@ MaterialSubset* Task::globalMatlSubset = 0;
 
 void Task::initialize()
 {
-  comp_head=comp_tail=0;
-  req_head=req_tail=0;
-  mod_head=mod_tail=0;
-  patch_set=0;
-  matl_set=0;
-  d_usesThreads = false;
+  comp_head = comp_tail = 0;
+  req_head = req_tail = 0;
+  mod_head = mod_tail = 0;
+  patch_set = 0;
+  matl_set = 0;
   d_usesMPI = false;
+  d_usesThreads = false;
+  d_usesGPU = false;
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
-  for(int i=0;i<TotalDWs;i++)
+
+  for(int i=0;i<TotalDWs;i++) {
     dwmap[i]=Task::InvalidDW;
+  }
   sortedOrder=-1;
   d_phase=-1;
   d_comm=-1;
@@ -69,21 +72,29 @@ Task::ActionBase::~ActionBase()
 {
 }
 
+Task::ActionGPUBase::~ActionGPUBase()
+{
+}
+
 Task::~Task()
 {
   delete d_action;
+  delete d_actionGPU;
+
   Dependency* dep = req_head;
   while(dep){
     Dependency* next = dep->next;
     delete dep;
     dep=next;
   }
+
   dep = comp_head;
   while(dep){
     Dependency* next = dep->next;
     delete dep;
     dep=next;
   }
+
   dep = mod_head;
   while(dep){
     Dependency* next = dep->next;
@@ -91,16 +102,20 @@ Task::~Task()
     dep=next;
   }
   
-  if(matl_set && matl_set->removeReference())
+  if(matl_set && matl_set->removeReference()) {
     delete matl_set;
+  }
 
-  if(patch_set && patch_set->removeReference())
+  if(patch_set && patch_set->removeReference()) {
     delete patch_set;
+  }
 
   // easier to periodically delete this than to force a call to a cleanup
   // function, and probably not very expensive.
-  if (globalMatlSubset && globalMatlSubset->removeReference())
+  if (globalMatlSubset && globalMatlSubset->removeReference()) {
     delete globalMatlSubset;
+  }
+
   globalMatlSubset = 0;
 }
 
@@ -110,11 +125,13 @@ void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
   ASSERT(patch_set == 0);
   ASSERT(matl_set == 0);
   patch_set=ps;
-  if(patch_set)
+  if(patch_set) {
     patch_set->addReference();
+  }
   matl_set=ms;
-  if(matl_set)
+  if(matl_set) {
     matl_set->addReference();
+  }
 }
 
 //__________________________________
@@ -144,6 +161,12 @@ void
 Task::usesThreads(bool state)
 {
   d_usesThreads = state;
+}
+
+void
+Task::usesGPU(bool state)
+{
+  d_usesGPU = state;
 }
 
 void
@@ -766,15 +789,30 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
 
 //__________________________________
 void
-Task::doit (const ProcessorGroup* pc,
-	     const PatchSubset* patches,
-	     const MaterialSubset* matls,
-	     vector < DataWarehouseP > &dws)
+Task::doit(const ProcessorGroup* pg,
+	         const PatchSubset* patches,
+	         const MaterialSubset* matls,
+	         vector<DataWarehouseP>& dws)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-  if(d_action)
-    d_action->doit(pc, patches, matls, fromDW, toDW);
+  if(d_action) {
+    d_action->doit(pg, patches, matls, fromDW, toDW);
+  }
+}
+
+void
+Task::doitGPU(const ProcessorGroup* pg,
+              const PatchSubset* patches,
+              const MaterialSubset* matls,
+              vector<DataWarehouseP>& dws,
+              int device)
+{
+  DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
+  DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
+  if(d_actionGPU) {
+    d_actionGPU->doitGPU(pg, patches, matls, fromDW, toDW, device);
+  }
 }
 
 //__________________________________
@@ -920,14 +958,14 @@ namespace Uintah {
   
 //__________________________________
   ostream &
-  operator << (ostream &out, const Task & task)
+  operator << (ostream& out, const Task& task)
   {
     task.display( out );
     return out;
   }
   
 //__________________________________
-  ostream &
+  ostream&
   operator << (ostream &out, const Task::TaskType & tt)
   {
     switch( tt ) {

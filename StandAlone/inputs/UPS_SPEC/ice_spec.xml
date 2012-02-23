@@ -4,7 +4,7 @@
   <CFD>
     <ICE                                spec="OPTIONAL NO_DATA" >
       <advection                        spec="REQUIRED NO_DATA" 
-                                          attribute1="type                REQUIRED STRING 'FirstOrder, SecondOrder'" 
+                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'" 
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
                                           attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
       <ADD_HEAT                         spec="OPTIONAL NO_DATA" >

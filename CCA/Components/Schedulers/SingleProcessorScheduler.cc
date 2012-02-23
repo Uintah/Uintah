@@ -49,9 +49,9 @@ extern DebugStream taskdbg;
 extern DebugStream taskLevel_dbg;
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
-    	    	    	    	    	    	   Output* oport, 
-						   SingleProcessorScheduler* parent)
-   : SchedulerCommon(myworld, oport)
+                                                   Output* oport,
+                                                   SingleProcessorScheduler* parent)
+	: SchedulerCommon(myworld, oport)
 {
   d_generation = 0;
   m_parent = parent;
@@ -129,14 +129,15 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   
   dts->initializeScrubs(dws, dwmap);
   
-  for(int i=0;i<ntasks;i++){
+  for(int i=0;i<ntasks;i++) {
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
     taskdbg << d_myworld->myrank() << " SPS: Initiating: "; printTask(taskdbg, task); taskdbg << '\n';
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+    }
 
     task->doit(d_myworld, dws, plain_old_dws);
 

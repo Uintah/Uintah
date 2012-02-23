@@ -72,10 +72,10 @@ extern int create_tau_mapping( const string & taskname,
 
 ofstream wout;
 
-DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup * myworld,
-			          Output         * oport,
-			          DynamicMPIScheduler   * parentScheduler) :
-  MPIScheduler( myworld, oport, parentScheduler )
+DynamicMPIScheduler::DynamicMPIScheduler(const ProcessorGroup* myworld,
+                                         Output* oport,
+                                         DynamicMPIScheduler* parentScheduler)
+	: MPIScheduler( myworld, oport, parentScheduler)
 {
 
 }
@@ -187,9 +187,10 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   DetailedTasks* dts = tg->getDetailedTasks();
 
-  if(dts == 0){
-    if (d_myworld->myrank() == 0)
+  if(dts == 0) {
+    if (d_myworld->myrank() == 0) {
       cerr << "DynamicMPIScheduler skipping execute, no tasks\n";
+    }
     return;
   }
 
@@ -200,10 +201,11 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
-  for (int i = 0; i < ntasks; i++)
+  for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
+  }
 
-  if(timeout.active()){
+  if(timeout.active()) {
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
@@ -233,11 +235,11 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int i = 0;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-		    "[DynamicMPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_TIMER(doittimer, "Task execution", "[DynamicMPIScheduler::execute() loop] ", TAU_USER); 
   TAU_PROFILE_START(doittimer);
 
 #if 0
@@ -253,7 +255,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   map<int, int> phaseTasksDone;
   map<int,  DetailedTask *> phaseSyncTask;
   dts->setTaskPriorityAlg(taskQueueAlg_ );
-  for (int i = 0; i < ntasks; i++){
+  for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
   
@@ -263,8 +265,9 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     dbg << me << " Executing " << dts->numTasks() << " tasks (" 
 	       << ntasks << " local)";
     map<int,int>::iterator it;
-    for ( it=phaseTasks.begin() ; it != phaseTasks.end(); it++ )
+    for ( it=phaseTasks.begin() ; it != phaseTasks.end(); it++ ) {
       dbg << ", phase["<< (*it).first << "] = " << (*it).second;
+    }
     dbg << endl;
     cerrLock.unlock();
   }
@@ -298,13 +301,11 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     while(dts->numInternalReadyTasks() > 0) { 
       DetailedTask * task = dts->getNextInternalReadyTask();
 
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))  //save the reduction task for later
-      {
-        phaseSyncTask[task->getTask()->d_phase]= task;
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc)) {  //save the reduction task for later
+        phaseSyncTask[task->getTask()->d_phase] = task;
         taskdbg << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-      }
-      else {
-        initiateTask( task, abort, abort_point, iteration );
+      } else {
+        initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
         taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
@@ -416,7 +417,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
                 (phaseSyncTask.find(currphase)!= phaseSyncTask.end() && 
                  phaseTasksDone[currphase] == phaseTasks[currphase]-1) ) //if there is work to do
       {
-        processMPIRecvs(TEST);  //recieve what is ready and do not block
+        processMPIRecvs(TEST);  // receive what is ready and do not block
       }
       else
       {

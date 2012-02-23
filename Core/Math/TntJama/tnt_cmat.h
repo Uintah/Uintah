@@ -56,8 +56,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include "tnt_subscript.h"
 #include "tnt_vec.h"
-/*#include <cstdlib>*/
-/*#include <cassert>*/
+#include <cstdlib>
+#include <cassert>
 #include <iostream>
 #include <sstream>
 

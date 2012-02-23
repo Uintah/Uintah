@@ -329,7 +329,7 @@ WARNING
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    //max ghost cells of all tasks - will be used for loadbalancer to create neighorhood
+    //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
   };
 } // End namespace Uintah
