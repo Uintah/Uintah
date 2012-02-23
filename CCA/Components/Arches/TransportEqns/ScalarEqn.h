@@ -98,10 +98,6 @@ public:
   /** @brief Compute all source terms for this scalar eqn */
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
-  /** @brief Return a list of all sources associated with this transport equation */ 
-  inline const vector<string> getSourcesList(){
-    return d_sources; };
-
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
@@ -149,8 +145,6 @@ public:
            phiType& phi );
 
 private:
-
-  vector<std::string> d_sources;
 
   struct constCCVarWrapper {
     constCCVariable<double> data; 

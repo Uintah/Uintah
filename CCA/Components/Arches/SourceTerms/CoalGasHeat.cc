@@ -16,8 +16,8 @@
 using namespace std;
 using namespace Uintah; 
 
-CoalGasHeat::CoalGasHeat( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
-: SourceTermBase( src_name, shared_state, label_names )
+CoalGasHeat::CoalGasHeat( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state, std::string type ) 
+: SourceTermBase( src_name, shared_state, label_names, type )
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
@@ -36,7 +36,7 @@ CoalGasHeat::problemSetup(const ProblemSpecP& inputdb)
 
   db->require( "heat_model_name", _heat_model_name ); 
 
-  _source_type = CC_SRC; 
+  _source_grid_type = CC_SRC; 
 
 }
 //---------------------------------------------------------------------------

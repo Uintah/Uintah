@@ -12,7 +12,7 @@ class MMS1: public SourceTermBase {
 public: 
 
   MMS1( std::string srcName, SimulationStateP& shared_state, 
-        vector<std::string> reqLabelNames );
+        vector<std::string> reqLabelNames, std::string type );
 
   ~MMS1();
   /** @brief Interface for the inputfile and set constants */ 
@@ -41,15 +41,18 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+          _type = "mms1";
+        };
       ~Builder(){}; 
 
       MMS1* build()
-      { return scinew MMS1( _name, _shared_state, _required_label_names ); };
+      { return scinew MMS1( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 
       std::string _name; 
+      std::string _type; 
       SimulationStateP& _shared_state; 
       vector<std::string> _required_label_names; 
 

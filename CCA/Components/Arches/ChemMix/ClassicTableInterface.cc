@@ -35,6 +35,8 @@
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 
@@ -128,11 +130,22 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     d_adiabatic = true; 
   }
 
-  // Developer's switch
-  if ( db_classic->findBlock("NOT_ADIABATIC") ) { 
-    d_adiabatic = false; 
-  } 
+  // For cases where <TransportEqn> defines the enthalpy equation. 
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
+  std::vector<std::string> srcs = eqn.getSourcesList(); 
+  for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
 
+    //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
+    SourceTermFactory& src_factory = SourceTermFactory::self(); 
+    SourceTermBase& src = src_factory.retrieve_source_term( *iter ); 
+    std::string type = src.getSourceType(); 
+
+    if ( type == "do_radiation" ) { 
+      d_adiabatic = false; 
+    } 
+  } 
+  
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_classic->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  

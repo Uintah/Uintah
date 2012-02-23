@@ -135,6 +135,10 @@ public:
     return d_use_density_guess; 
   };
 
+  /** @brief Return a list of all sources associated with this transport equation */ 
+  inline const vector<string> getSourcesList(){
+    return d_sources; };
+
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
   computeBCsSpecial( const Patch* patch, 
@@ -224,6 +228,7 @@ protected:
   double curr_time;                 ///< "old" time (t)
   bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
                                     ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
+  vector<std::string> d_sources;    ///< List of source terms for this eqn
 
 private:
 

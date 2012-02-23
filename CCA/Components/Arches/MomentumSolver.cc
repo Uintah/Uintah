@@ -859,7 +859,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       SourceTermBase& src = factor.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      SourceTermBase::MY_TYPE src_type = src.getSourceType(); 
+      SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType(); 
 
       switch (src_type) {
         case SourceTermBase::CCVECTOR_SRC: 
