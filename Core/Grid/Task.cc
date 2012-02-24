@@ -181,6 +181,7 @@ Task::requires(WhichDW dw,
                const VarLabel* var,
 	        const PatchSubset* patches,
 	        PatchDomainSpec patches_dom,
+	        int level_offset,
 	        const MaterialSubset* matls,
 	        MaterialDomainSpec matls_dom,
 	        Ghost::GhostType gtype,
@@ -198,7 +199,7 @@ Task::requires(WhichDW dw,
 
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls,
                                       patches_dom, matls_dom,
-                                      gtype, numGhostCells);
+                                      gtype, numGhostCells, level_offset);
 
   if (numGhostCells > maxGhostCells) maxGhostCells=numGhostCells;
 
@@ -212,6 +213,24 @@ Task::requires(WhichDW dw,
     d_requiresOldDW.insert(make_pair(var, dep));
   else
     d_requires.insert(make_pair(var, dep));
+}
+
+//__________________________________
+void
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+	        const PatchSubset* patches,
+	        PatchDomainSpec patches_dom,
+	        const MaterialSubset* matls,
+	        MaterialDomainSpec matls_dom,
+	        Ghost::GhostType gtype,
+	        int numGhostCells,
+	        bool oldTG)
+{
+  int offset=0;
+  if (patches_dom == CoarseLevel || patches_dom == FineLevel) offset=1;
+  requires(dw, var, patches, patches_dom, offset, matls, matls_dom,
+           gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
@@ -609,11 +628,11 @@ Task::Dependency* Task::isInDepMap(const DepMap& depMap,
     {
       if(dep->patches_dom == Task::CoarseLevel)  //check that the level of the patches matches the coarse level
       {
-        hasPatches=getLevel(getPatchSet())->getRelativeLevel(-1)==getLevel(patches);
+        hasPatches=getLevel(getPatchSet())->getRelativeLevel(-dep->level_offset)==getLevel(patches);
       }
       else if(dep->patches_dom == Task::FineLevel) //check that the level of the patches matches the fine level
       {
-        hasPatches=getLevel(getPatchSet())->getRelativeLevel(1)==getLevel(patches);
+        hasPatches=getLevel(getPatchSet())->getRelativeLevel(dep->level_offset)==getLevel(patches);
       }
       else  //check that the patches subset contain the requested patch
       {
@@ -649,11 +668,12 @@ Task::Dependency::Dependency(DepType deptype,
 			        PatchDomainSpec patches_dom,
 			        MaterialDomainSpec matls_dom,
 			        Ghost::GhostType gtype,
-			        int numGhostCells)
+			        int numGhostCells,
+			        int level_offset)
                              
 : deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(patches), matls(matls),
   reductionLevel(0), patches_dom(patches_dom), matls_dom(matls_dom),
-  gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells)
+  gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells), level_offset(level_offset)
 {
   if (var)
     var->addReference();
@@ -676,7 +696,7 @@ Task::Dependency::Dependency(DepType deptype,
 
 : deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(0), matls(matls),
   reductionLevel(reductionLevel), patches_dom(ThisLevel),
-  matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0)
+  matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0), level_offset(0)
 {
   if (var)
     var->addReference();
@@ -730,7 +750,7 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
     return PatchSubset::intersection(patches, domainPatches);
   case Task::CoarseLevel:
   case Task::FineLevel:      
-    return getOtherLevelPatchSubset(patches_dom, patches, domainPatches, numGhostCells);
+    return getOtherLevelPatchSubset(patches_dom, level_offset, patches, domainPatches, numGhostCells);
   default:
     SCI_THROW(InternalError(string("Unknown patch domain ") + " type "+to_string(static_cast<int>(patches_dom)),
                             __FILE__, __LINE__));
@@ -754,7 +774,7 @@ Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials)
 
 //__________________________________
 constHandle< PatchSubset > Task::Dependency::
-getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
+getOtherLevelPatchSubset(Task::PatchDomainSpec dom, int level_offset,
                          const PatchSubset* subset,
                          const PatchSubset* domainSubset, int ngc)
 {
@@ -764,10 +784,10 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
   int levelOffset = 0;
   switch(dom){
   case Task::CoarseLevel:
-    levelOffset = -1;
+    levelOffset = -level_offset;
     break;
   case Task::FineLevel:
-    levelOffset = 1;
+    levelOffset = level_offset;
     break;
   default:
     SCI_THROW(InternalError("Unhandled DomainSpec in Task::Dependency::getOtherLevelComputeSubset",

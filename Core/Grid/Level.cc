@@ -934,23 +934,26 @@ bool Level::hasFinerLevel() const
   return getIndex() < grid->numLevels()-1;
 }
 
-IntVector Level::mapCellToCoarser(const IntVector& idx) const
+IntVector Level::mapCellToCoarser(const IntVector& idx, int level_offset) const
 { 
-  IntVector ratio = idx/d_refinementRatio;
-  
+  IntVector refinementRatio = d_refinementRatio;
+  while (--level_offset){
+    refinementRatio =  refinementRatio * grid->getLevel(d_index-level_offset)->d_refinementRatio; 
+  }
+  IntVector ratio = idx/refinementRatio;
 
   // If the fine cell index is negative
   // you must add an offset to get the right
   // coarse cell. -Todd
   IntVector offset(0,0,0);
-  if (idx.x()< 0 && d_refinementRatio.x() > 1){
-    offset.x((int)fmod((double)idx.x(),(double)d_refinementRatio.x()));
+  if (idx.x()< 0 && refinementRatio.x() > 1){
+    offset.x((int)fmod((double)idx.x(),(double)refinementRatio.x()));
   }
-  if (idx.y()< 0 && d_refinementRatio.y() > 1){
-    offset.y((int)fmod((double)idx.y(),(double)d_refinementRatio.y()));
+  if (idx.y()< 0 && refinementRatio.y() > 1){
+    offset.y((int)fmod((double)idx.y(),(double)refinementRatio.y()));
   }  
-  if (idx.z()< 0 && d_refinementRatio.z() > 1){
-    offset.z((int)fmod((double)idx.z(),(double)d_refinementRatio.z()));
+  if (idx.z()< 0 && refinementRatio.z() > 1){
+    offset.z((int)fmod((double)idx.z(),(double)refinementRatio.z()));
   }
   return ratio + offset;
 }

@@ -1148,10 +1148,17 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
       origPatch = task->patches->get(0);
       ASSERT(req->patches == NULL);
       ASSERT(task->patches->size() == 1);
+      ASSERT(req->level_offset>0);
       const Level* origLevel = origPatch->getLevel();
       if (req->patches_dom == Task::CoarseLevel) {
         // change the ghost cells to reflect coarse level
+        LevelP nextLevel = origPatch->getLevelP();
+        int levelOffset = req->level_offset;
         IntVector ratio = origPatch->getLevel()->getRefinementRatio();
+        while (--levelOffset) {
+          nextLevel = nextLevel->getCoarserLevel();
+          ratio = ratio * nextLevel->getRefinementRatio();
+        }
         int ngc = req->numGhostCells * Max(Max(ratio.x(), ratio.y()), ratio.z());
         IntVector ghost(ngc,ngc,ngc);
 
@@ -1160,8 +1167,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
         otherLevelLow = origPatch->getExtraCellLowIndex() - ghost;
         otherLevelHigh = origPatch->getExtraCellHighIndex() + ghost;
 
-        otherLevelLow = origLevel->mapCellToCoarser(otherLevelLow);
-        otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh) + 
+        otherLevelLow = origLevel->mapCellToCoarser(otherLevelLow, req->level_offset);
+        otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh, req->level_offset) + 
           ratio - IntVector(1,1,1);
       }
       else {

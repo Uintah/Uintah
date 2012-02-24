@@ -912,6 +912,13 @@ WARNING
     //////////
     // Most general case
     void requires(WhichDW, const VarLabel*,
+                  const PatchSubset* patches, PatchDomainSpec patches_dom, int level_offset,
+                  const MaterialSubset* matls, MaterialDomainSpec matls_dom,
+                  Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
+    
+    //////////
+    // Like general case, level_offset is not specified
+    void requires(WhichDW, const VarLabel*,
                   const PatchSubset* patches, PatchDomainSpec patches_dom,
                   const MaterialSubset* matls, MaterialDomainSpec matls_dom,
                   Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
@@ -1072,6 +1079,7 @@ WARNING
       // in the multi-TG construct, this will signify that the required
       // var will be constructed by the old TG
       int numGhostCells;
+      int level_offset;
       int mapDataWarehouse() const {
         return task->mapDataWarehouse(whichdw);
       }
@@ -1083,7 +1091,8 @@ WARNING
                  PatchDomainSpec patches_dom = ThisLevel,
                  MaterialDomainSpec matls_dom = NormalDomain,
                  Ghost::GhostType gtype = Ghost::None,
-                 int numGhostCells = 0);
+                 int numGhostCells = 0,
+                 int level_offset = 0);
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
                  bool oldtg, 
                  const Level* reductionLevel,
@@ -1101,7 +1110,7 @@ WARNING
 
     private:
       static constHandle< PatchSubset >
-      getOtherLevelPatchSubset(PatchDomainSpec dom,
+      getOtherLevelPatchSubset(PatchDomainSpec dom, int level_offset, 
                                  const PatchSubset* subset,
                                  const PatchSubset* domainSubset, int ngc);
      

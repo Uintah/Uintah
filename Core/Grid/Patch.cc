@@ -1229,7 +1229,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
                                  Patch::selectType& selected_patches,
                                  int nPaddingCells /*=0*/) const
 {
-  ASSERT(levelOffset == 1 || levelOffset == -1);
+  ASSERT(levelOffset !=0);
 
   // include the padding cells in the final low/high indices
   IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
@@ -1246,7 +1246,10 @@ void Patch::getOtherLevelPatches(int levelOffset,
     // is on the other side of a coarse boundary
 
     // refinement ratio between the two levels
-    IntVector crr = otherLevel->getRelativeLevel(1)->getRefinementRatio();
+    IntVector crr = IntVector(1,1,1);
+    for (int i=1;i<=(-levelOffset);i++){
+      crr = crr * otherLevel->getRelativeLevel(i)->getRefinementRatio();
+    }
     IntVector highIndex = getExtraCellHighIndex();
     IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
                      (highIndex.y() % crr.y()) == 0 ? 0 : 1,

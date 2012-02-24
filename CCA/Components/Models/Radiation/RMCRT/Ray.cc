@@ -613,9 +613,12 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
   
-  // coarser levels
+  // coarser level 1
   tsk->requires(abskg_dw, d_abskgLabel,     allPatches, Task::CoarseLevel,allMatls, ND, gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  allPatches, Task::CoarseLevel,allMatls, ND, gac, SHRT_MAX);
+  // coarser level 2
+  //tsk->requires(abskg_dw, d_abskgLabel,     allPatches, Task::CoarseLevel,2,allMatls, ND, gac, SHRT_MAX);
+  //tsk->requires(sigma_dw, d_sigmaT4_label,  allPatches, Task::CoarseLevel,2,allMatls, ND, gac, SHRT_MAX);
   
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel );
