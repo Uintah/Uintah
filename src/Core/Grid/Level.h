@@ -145,7 +145,7 @@ public:
 
   IntVector mapNodeToCoarser(const IntVector& idx) const;
   IntVector mapNodeToFiner(const IntVector& idx) const;
-  IntVector mapCellToCoarser(const IntVector& idx) const;
+  IntVector mapCellToCoarser(const IntVector& idx, int level_offset=1) const;
   IntVector mapCellToFiner(const IntVector& idx) const;
 
   //////////
@@ -179,10 +179,10 @@ public:
   void performConsistencyCheck() const;
   GridP getGrid() const;
 
-  const LevelP& getFineLevel() const
+ /* const LevelP& getFineLevel() const
   { return getRelativeLevel(1); }
   const LevelP& getCoarseLevel() const
-  { return getRelativeLevel(-1); }
+  { return getRelativeLevel(-1); }*/
      
   const LevelP& getRelativeLevel(int offset) const;
 

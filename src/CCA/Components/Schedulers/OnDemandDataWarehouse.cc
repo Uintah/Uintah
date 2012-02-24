@@ -1958,6 +1958,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
                                  bool useBoundaryCells /*=true*/)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
+
   GridVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
@@ -2059,6 +2060,12 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     cout << endl << " Original region: " << low << " " << high << endl;
     cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
+  }
+  if (dbg.active()) {
+    cerrLock.lock();
+    dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() 
+          << " For region: " << low << " " << high << "  has been gotten" << endl;
+    cerrLock.unlock();
   }
 
   ASSERT(diff.x()*diff.y()*diff.z() <= totalCells);
