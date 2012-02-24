@@ -990,7 +990,7 @@ TaskGraph::createDetailedDependencies()
     }
   }
 
-  numTaskPhases=currphase;
+  numTaskPhases=currphase+1;
 
   TAU_PROFILE_STOP(rctimer);
   // Go through the modifies/requires and 
