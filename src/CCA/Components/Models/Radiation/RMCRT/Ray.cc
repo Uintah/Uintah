@@ -396,9 +396,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
-        double plusMinus_one = 2 * _mTwister.rand() - 1;
+        double plusMinus_one = 2 * _mTwister.randDblExc() - 1;
         double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
+        double theta = 2 * M_PI * _mTwister.randDblExc();            // Uniform betwen 0-2Pi
 
         Vector direction_vector;
         direction_vector[0] = r*cos(theta);                   // Convert to cartesian
@@ -743,9 +743,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         //  Ray direction      
         // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
-        double plusMinus_one = 2 * _mTwister.rand() - 1;
+        double plusMinus_one = 2 * _mTwister.randDblExc() - 1;
         double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
+        double theta = 2 * M_PI * _mTwister.randDblExc();            // Uniform betwen 0-2Pi
 
         // dbg2 << " plusMinus_one " << plusMinus_one << " r " << r << " theta " << theta << endl;
 
