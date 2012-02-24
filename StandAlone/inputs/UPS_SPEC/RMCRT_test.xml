@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include> 
-  <AMR>
+  <AMR                        spec="OPTIONAL NO_DATA" >
     <RMCRT                    spec="OPTIONAL NO_DATA" >
       <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" />             
       <min_grid_level         spec="OPTIONAL INTEGER" />            
@@ -14,13 +14,6 @@
       </Refine_Regions>
     </RMCRT>
   </AMR>
-  
-
-  <pseudoRMCRT                spec="OPTIONAL NO_DATA">
-    <ballRadius               spec="OPTIONAL DOUBLE 'positive'"/>
-    <orbitRadius              spec="OPTIONAL DOUBLE 'positive'"/>
-    <angularVelocity          spec="OPTIONAL DOUBLE 'positive'"/>
-  </pseudoRMCRT>
   
   <include href="Models.xml"  section="Models/RMCRT" />
 

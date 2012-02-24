@@ -106,27 +106,6 @@ WARNING
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw );
-    
-    void scheduleShootRays_onCoarseLevel(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const MaterialSet* matls);
-    
-    void shootRays_onCoarseLevel ( const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw );
-                             
-                             
-    void scheduleShootRays_multiLevel(SchedulerP& sched,
-                                      const LevelP& level,
-                                      const MaterialSet* matls);
-    
-    void shootRays_multiLevel( const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw );
 
     void scheduleRefine_Q(SchedulerP& sched,
                           const PatchSet* patches,
@@ -178,7 +157,7 @@ WARNING
    protected:
     const ProcessorGroup* d_myworld;
     
-    Ray* d_realRMCRT;
+    Ray* d_RMCRT;
 
     ExamplesLabel*   d_examplesLabel;
     SimulationStateP d_sharedState;
@@ -189,27 +168,15 @@ WARNING
     VarLabel* d_abskgLabel;
     VarLabel* d_absorpLabel;
     VarLabel* d_sigmaT4Label;
-
-    SCIRun::Vector d_gridMax;
-    SCIRun::Vector d_gridMin;
     
     Ghost::GhostType d_gn;
     Ghost::GhostType d_gac;
     
-
-    // Fake cylinder
-    SCIRun::Vector d_centerOfBall;
-    SCIRun::Vector d_centerOfDomain;
-    double         d_radiusOfBall;
-    double         d_radiusOfOrbit;
-    double         d_angularVelocity;
     double         d_initColor;
     double         d_initAbskg;
     int            d_matl;
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
-    bool           d_doFakeRMCRT;
-    bool           d_doRealRMCRT;
     
     int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     std::vector<GeometryObject*> d_refine_geom_objs;
