@@ -435,19 +435,12 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
     void addInitiallyReadyGPUTask(DetailedTask* dtask);
-    void addInternalReadyGPUTask(DetailedTask* dtask);
-    void addExternalReadyGPUTask(DetailedTask* dtask);
     void addCompletionPendingGPUTask(DetailedTask* dtask);
     DetailedTask* getNextInitiallyReadyGPUTask();
-    DetailedTask* getNextInternalReadyGPUTask();
-    DetailedTask* getNextExternalReadyGPUTask();
     DetailedTask* getNextCompletionPendingGPUTask();
-    DetailedTask* peekNextInternalReadyGPUTask();
-    DetailedTask* peekNextExternalReadyGPUTask();
+    DetailedTask* peekNextInitiallyReadyGPUTask();
     DetailedTask* peekNextCompletionPendingGPUTask();
-    int numIntiallyReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
-    int numInternalReadyGPUTasks() { return internalReadyGPUTasks_.size(); }
-    int numExternalReadyGPUTasks() { return externalReadyGPUTasks_.size(); }
+    int numInitiallyReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
     int numCompletionPendingGPUTasks() { return completionPendingGPUTasks_.size(); }
 #endif
 
@@ -458,6 +451,7 @@ namespace Uintah {
     SchedulerCommon* getSchedulerCommon() {
       return sc_;
     }
+
   private:
     std::map<int,int> sendoldmap;
     ParticleExchangeVar particleSends_;
@@ -527,10 +521,8 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_;    // prior MPI communication completed
-    TaskPQueue internalReadyGPUTasks_;     // ready to initiate h2d copies
-    TaskPQueue externalReadyGPUTasks_;     // h2d copies completed, ready to execute
-    TaskPQueue completionPendingGPUTasks_; // waiting for d2h copies to complete
+    TaskPQueue initiallyReadyGPUTasks_;     // intially ready, h2d copies pending
+    TaskPQueue completionPendingGPUTasks_;  // execution and d2h copies pending
 #endif
 
   }; // end class DetailedTasks

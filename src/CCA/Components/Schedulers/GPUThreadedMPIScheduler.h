@@ -157,10 +157,6 @@ WARNING
 
     void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_compData);
 
-    void registerStream(cudaStream_t* stream, int device);
-
-    void registerEvent(cudaEvent_t* event, int device);
-
     void reclaimStreams(DetailedTask* dtask, CopyType type);
 
     void reclaimEvents(DetailedTask* dtask, CopyType type);

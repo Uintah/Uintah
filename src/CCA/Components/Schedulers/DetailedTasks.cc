@@ -1345,23 +1345,7 @@ DetailedTask* DetailedTasks::getNextInitiallyReadyGPUTask()
 {
   DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
   initiallyReadyGPUTasks_.pop();
-//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << initiallyReadyGPUTasks_.size() << endl;
-  return nextTask;
-}
-
-DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
-{
-  DetailedTask* nextTask = internalReadyGPUTasks_.top();
-  internalReadyGPUTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << internalReadyGPUTasks__.size() << endl;
-  return nextTask;
-}
-
-DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
-{
-  DetailedTask* nextTask = externalReadyGPUTasks_.top();
-  externalReadyGPUTasks_.pop();
-//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << externalReadyGPUTasks_.size() << endl;
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << initiallyReadyGPUTasks_.size() << endl;
   return nextTask;
 }
 
@@ -1373,15 +1357,9 @@ DetailedTask* DetailedTasks::getNextCompletionPendingGPUTask()
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
+DetailedTask* DetailedTasks::peekNextInitiallyReadyGPUTask()
 {
-  DetailedTask* dtask = internalReadyGPUTasks_.top();
-  return dtask;
-}
-
-DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
-{
-  DetailedTask* dtask = externalReadyGPUTasks_.top();
+  DetailedTask* dtask = initiallyReadyGPUTasks_.top();
   return dtask;
 }
 
@@ -1394,16 +1372,6 @@ DetailedTask* DetailedTasks::peekNextCompletionPendingGPUTask()
 void DetailedTasks::addInitiallyReadyGPUTask(DetailedTask* dtask)
 {
   initiallyReadyGPUTasks_.push(dtask);
-}
-
-void DetailedTasks::addInternalReadyGPUTask(DetailedTask* dtask)
-{
-  internalReadyGPUTasks_.push(dtask);
-}
-
-void DetailedTasks::addExternalReadyGPUTask(DetailedTask* dtask)
-{
-  externalReadyGPUTasks_.push(dtask);
 }
 
 void DetailedTasks::addCompletionPendingGPUTask(DetailedTask* dtask)
