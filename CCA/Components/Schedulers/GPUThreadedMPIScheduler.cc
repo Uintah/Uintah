@@ -480,8 +480,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
      * (1)
      *
      * If we have an internally-ready CPU task, initiate its MPI recvs, preparing it for
-     * CPU external ready queue. The task is moved to the CPU external-ready queue in the call
-     * task->checkExternalDepCount()
+     * CPU external ready queue. The task is moved to the CPU external-ready queue in the
+     * call to task->checkExternalDepCount().
      *
      */
     else if (dts->numInternalReadyTasks() > 0) {
@@ -517,58 +517,6 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     /*
      * (2)
      *
-     * Take a GPU-task from the initially-ready queue, assign it to a device and initiate
-     * it's H2D computes and requires data copies. Also mark this task as initiated.
-     *
-     */
-    else if (dts->numIntiallyReadyGPUTasks() > 0) {
-
-      DetailedTask* dtask = dts->getNextInitiallyReadyGPUTask();
-
-      // assign a device to this GPU task
-      dtask->assignDevice(currentGPU_);
-
-      // assigning devices round robin fashion for now
-      currentGPU_++;
-      currentGPU_ %= this->numGPUs_;
-
-      // initiate H2D mem copies for this task's computes and requires
-      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-      if (timeStep > 0) {
-        initiateH2DRequiresCopies(dtask, iteration);
-        initiateH2DComputesCopies(dtask, iteration);
-      }
-
-      dtask->markInitiated();
-      dts->addInternalReadyGPUTask(dtask);
-    }
-
-    /*
-     * (3)
-     *
-     * Check if highest priority GPU task's async H2D copies are completed. If so, then
-     * put it into the GPU external-ready queue and reclaim the streams and events it used
-     * for these operations.
-     *
-     */
-    else if (dts->numInternalReadyGPUTasks() > 0) {
-
-      DetailedTask* dtask = dts->peekNextInternalReadyGPUTask();
-      cudaError_t retVal = dtask->checkH2DCopyDependencies();
-      if (retVal == cudaSuccess) {
-        // all work associated with this task's h2d copies is complete
-        dtask = dts->getNextInternalReadyGPUTask();
-        dts->addExternalReadyGPUTask(dtask);
-
-        // this will recycle streams and events used by the DetailedTask for H2D copies
-        reclaimStreams(dtask, H2D);
-        reclaimEvents(dtask, H2D);
-      }
-    }
-
-    /*
-     * (4)
-     *
      * If it is time to run reduction task, do so.
      *
      */
@@ -587,8 +535,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
       if (reducetask->getTask()->getType() == Task::Reduction) {
         if (!abort) {
           currcomm++;
-          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator "
-                  << currcomm << endl;
+          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName()
+                  << " with communicator " << currcomm << endl;
           assignTask(reducetask, currcomm);
         }
       } else {  // Task::OncePerProc task
@@ -611,7 +559,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     }
 
     /*
-     * (5)
+     * (3)
      *
      * Run a CPU task that has its MPI communication complete. These tasks get in the external
      * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
@@ -632,11 +580,28 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
 
       DetailedTask* dtask = dts->getNextExternalReadyTask();
 
-      // if it's a GPU-enabled task, place it in the GPU initially-ready queue
+      /*
+       * If it's a GPU-enabled task, assign it to a device and initiate it's H2D computes
+       * and requires data copies. This is where each GPU task's execution cycle begins.
+       */
       if (dtask->getTask()->usesGPU()) {
+
+        // assigning devices round robin fashion for now
+        dtask->assignDevice(currentGPU_);
+        currentGPU_++;
+        currentGPU_ %= this->numGPUs_;
+
+        // initiate H2D mem copies for this task's computes and requires
+        int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+        if (timeStep > 0) {
+          initiateH2DRequiresCopies(dtask, iteration);
+          initiateH2DComputesCopies(dtask, iteration);
+        }
+
+        dtask->markInitiated();
         dts->addInitiallyReadyGPUTask(dtask);
         continue;
-      }
+      }  // end first stage of GPU task execution cycle
 
       if (taskdbg.active()) {
         cerrLock.lock();
@@ -653,42 +618,53 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     }
 
     /*
-     * (6)
+     * (4)
      *
-     * If a GPU task has its device memory prepared, execute the task and put it into the
-     * GPU-completion-pending queue.
-     *
+     * Check if highest priority GPU task's async H2D copies are completed. If so, then
+     * reclaim the streams and events it used for these operations, execute the task and
+     * then put it into the GPU completion-pending queue.
      */
-    else if (dts->numExternalReadyGPUTasks() > 0) {
+    else if (dts->numInitiallyReadyGPUTasks() > 0) {
 
-      DetailedTask* dtask = dts->getNextExternalReadyGPUTask();
+      DetailedTask* dtask = dts->peekNextInitiallyReadyGPUTask();
+      cudaError_t retVal = dtask->checkH2DCopyDependencies();
+      if (retVal == cudaSuccess) {
+        // all work associated with this task's h2d copies is complete
+        dtask = dts->getNextInitiallyReadyGPUTask();
 
-      if (taskdbg.active()) {
-        cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Dispatching task " << *dtask << "("
-                << dts->numExternalReadyGPUTasks() << "/" << pending_tasks.size() << " tasks in queue)"
-                << endl;
-        cerrLock.unlock();
-        pending_tasks.erase(pending_tasks.find(dtask));
+        if (taskdbg.active()) {
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Dispatching task " << *dtask << "("
+                  << dts->numInitiallyReadyGPUTasks() << "/" << pending_tasks.size() << " tasks in queue)"
+                  << endl;
+          cerrLock.unlock();
+          pending_tasks.erase(pending_tasks.find(dtask));
+        }
+
+        // recycle this task's H2D copies streams and events
+        reclaimStreams(dtask, H2D);
+        reclaimEvents(dtask, H2D);
+
+        // TODO - create the GPU analog to getExternalDepCount()
+        // ASSERTEQ(task->getExternalDepCount(), 0);
+        runGPUTask(dtask, iteration);
+        phaseTasksDone[dtask->getTask()->d_phase]++;
+        dts->addCompletionPendingGPUTask(dtask);
       }
-      // TODO - create the GPU analog to getExternalDepCount()
-//      ASSERTEQ(task->getExternalDepCount(), 0);
-      runGPUTask(dtask, iteration);
-      dts->addCompletionPendingGPUTask(dtask);
-      phaseTasksDone[dtask->getTask()->d_phase]++;
     }
 
+
     /*
-     * (7)
+     * (5)
      *
-     * Check to see if any GPU tasks have their D2H copies completed so that the task's
-     * MPI send can be posted and done() can be called.
+     * Check to see if any GPU tasks have their D2H copies completed. This means the kernel(s)
+     * have executed and all teh results are back on the host in the DataWarehouse. This task's
+     * MPI send can then be posted and done() can be called.
      */
     else if (dts->numCompletionPendingGPUTasks() > 0) {
 
       DetailedTask* dtask = dts->peekNextCompletionPendingGPUTask();
       cudaError_t retVal = dtask->checkD2HCopyDependencies();
-
       if (retVal == cudaSuccess) {
         dtask = dts->getNextCompletionPendingGPUTask();
         postMPISends(dtask, iteration, 0);  // t_id 0 (the control thread) for centralized threaded scheduler
@@ -705,7 +681,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     }
 
     /*
-     * (8)
+     * (6)
      *
      * Otherwise there's nothing to do but process MPI recvs.
      */
@@ -1173,12 +1149,14 @@ void GPUThreadedMPIScheduler::initiateH2DRequiresCopies(DetailedTask* dtask, int
           if (type == TypeDescription::CCVariable) {
             constCCVariable<double> ccVar;
             dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            ccVar.getWindow()->getData()->addReference();
             h_reqData = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
 
           } else if (type == TypeDescription::NCVariable) {
             constNCVariable<double> ncVar;
             dw->get(ncVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            ncVar.getWindow()->getData()->addReference();
             h_reqData = (double*)ncVar.getWindow()->getData()->getPointer();
             size = ncVar.getWindow()->getData()->size();
 
@@ -1249,12 +1227,14 @@ void GPUThreadedMPIScheduler::initiateH2DComputesCopies(DetailedTask* dtask, int
           if (type == TypeDescription::CCVariable) {
             CCVariable<double> ccVar;
             dw->allocateAndPut(ccVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            ccVar.getWindow()->getData()->addReference();
             h_compData = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
 
           } else if (type == TypeDescription::NCVariable) {
             NCVariable<double> ncVar;
             dw->allocateAndPut(ncVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            ncVar.getWindow()->getData()->addReference();
             h_compData = (double*)ncVar.getWindow()->getData()->getPointer();
             size = ncVar.getWindow()->getData()->size();
 
