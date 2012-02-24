@@ -98,7 +98,7 @@ void LinearMeltTemp::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP temp_ps = ps->appendChild("melting_temp_model");
   temp_ps->setAttribute("type","linear_Tm");
   
-  temp_ps->appendElement("Tm0",    d_Tm0);
+  temp_ps->appendElement("T_m0",    d_Tm0);
   temp_ps->appendElement("a",      d_a);
   temp_ps->appendElement("b",      d_b);
   temp_ps->appendElement("Gamma_0",d_Gamma);
