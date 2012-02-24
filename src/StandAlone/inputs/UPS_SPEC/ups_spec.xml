@@ -971,7 +971,7 @@
   <!--                 EXAMPLES                                             -->
   
   <!-- RMCRT_Test     -->
-  <include href="RMCRT_test.xml" section="pseudoRMCRT"/>
+  <include href="RMCRT_test.xml"/>
   
   <!-- Burger         -->
   <Burger                     spec="OPTIONAL NO_DATA">

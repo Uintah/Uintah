@@ -145,18 +145,7 @@
   </DataArchiver>
   
   
-  <!--__________________________________ -->
-  <!--
-  <pseudoRMCRT>
-    <ballRadius>  0.1     </ballRadius>
-    <orbitRadius> 0.25    </orbitRadius>
-    <angularVelocity> 10  </angularVelocity>
-    <CoarseLevelRMCRTMethod> false     </CoarseLevelRMCRTMethod>
-    <multiLevelRMCRTMethod>  true      </multiLevelRMCRTMethod>
-  </pseudoRMCRT>
-  -->
-  
-  <!-- ray tracer    -->  
+  <!--__________________________________ --> 
   <RMCRT>
     <randomSeed>         false     </randomSeed>
     <Temperature>       64.804     </Temperature>
