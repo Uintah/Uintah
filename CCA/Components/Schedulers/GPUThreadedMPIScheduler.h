@@ -163,10 +163,6 @@ WARNING
 
     cudaError_t unregisterPageLockedHostMem();
 
-    cudaError_t unregisterHostRequiresPinnedMem();
-
-    cudaError_t unregisterHostComputesPinnedMem();
-
     void clearCudaStreams();
 
     void clearCudaEvents();
