@@ -78,7 +78,7 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
     cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
 
-    double pressure = -9999999.0;  // the max pressure during the timestep
+      double pressure = -9999999.0;  // the max pressure during the timestep
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
       for(Level::const_patchIterator iter = level->patchesBegin();

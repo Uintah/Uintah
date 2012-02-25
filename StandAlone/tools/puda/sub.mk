@@ -33,13 +33,14 @@ PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
 	$(SRCDIR)/asci.cc        \
-	$(SRCDIR)/jacquie.cc        \
+	$(SRCDIR)/jacquie.cc     \
 	$(SRCDIR)/monica1.cc     \
 	$(SRCDIR)/monica2.cc     \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
 	$(SRCDIR)/jim3.cc        \
 	$(SRCDIR)/PIC.cc         \
+	$(SRCDIR)/POL.cc         \
 	$(SRCDIR)/AA_MMS.cc      \
 	$(SRCDIR)/rtdata.cc      \
 	$(SRCDIR)/tecplot.cc     \
