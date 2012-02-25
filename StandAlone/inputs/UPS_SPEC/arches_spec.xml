@@ -226,8 +226,8 @@
 
         <use_new_bcs                    spec="OPTIONAL NO_DATA"/>
         
-        <TurbulentInlet			spec="OPTIONAL NO_DATA" >
-          <cell_low			spec="REQUIRED INTEGER"/>
+        <TurbulentInlet                 spec="OPTIONAL NO_DATA" >
+          <cell_low                     spec="REQUIRED INTEGER"/>
           <cell_high                    spec="REQUIRED INTEGER"/>
           <Ntimestep                    spec="REQUIRED INTEGER"/>
           <turbulence_intensity         spec="REQUIRED DOUBLE"/>
@@ -441,30 +441,29 @@
         <Sources                        spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 
-																				'constant_src, 
-                                        westbrook_dryer, 
-																				coal_gas_oxi, 
-																				coal_gas_heat, 
-																				coal_gas_devol, 
-																				coal_gas_momentum,
-																				cc_inject_src, 
-																				fx_inject_src, 
-                                        fy_inject_src, 
-																				fz_inject_src, 
-																				tab_rxn_rate, 
-                                        cc_intrusion_inlet, 
-																				fx_intrusion_inlet, 
-                                        fy_intrusion_inlet, 
-																				fz_intrusion_inlet, 
-																				do_radiation, 
-																				bowman_nox'">
+                                        attribute2="type REQUIRED STRING  'constant_src, 
+                                                                           westbrook_dryer, 
+                                                                           coal_gas_oxi,                                                         
+                                                                           coal_gas_heat,                                                        
+                                                                           coal_gas_devol,                                                       
+                                                                           coal_gas_momentum,                                                    
+                                                                           cc_inject_src,                                                        
+                                                                           fx_inject_src,                                                        
+                                                                           fy_inject_src,                                                          
+                                                                           fz_inject_src,                                                          
+                                                                           tab_rxn_rate,                                                           
+                                                                           cc_intrusion_inlet,                                                     
+                                                                           fx_intrusion_inlet,                                                     
+                                                                           fy_intrusion_inlet,                                                     
+                                                                           fz_intrusion_inlet,                                                     
+                                                                           do_radiation,                                                           
+                                                                           bowman_nox'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
 
-						<!-- Spec for the heat transfer source --> 
-						<heat_model_name 					  spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
+            <!-- Spec for the heat transfer source --> 
+            <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
 
             <!-- Tabulated reaction rate --> 
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
@@ -480,29 +479,29 @@
               <geom_object/>
             </injector>
 
-						<!-- DO radiation model --> 
-						<calc_frequency 						spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
-                                                <abskp_label        spec="OPTIONAL STRING" need_applies_to="type do_radiation"/>
-  					<calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
-						<co2_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
-						<h2o_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
+            <!-- DO radiation model --> 
+            <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+            <abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" />
+            <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
+            <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
+            <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
-						<DORadiationModel 					spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
-            	<opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
-            	<ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
-            	<property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
+            <DORadiationModel           spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
+              <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
+              <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
+              <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
               <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
-            	<LinearSolver               spec="OPTIONAL NO_DATA"                                      
-            	                            attribute1="type REQUIRED STRING 'hypre, petsc'">
-            	  <res_tol                  spec="REQUIRED DOUBLE" />
-            	  <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
-            	  <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
-            	  <max_iter                 spec="REQUIRED INTEGER" />
-            	</LinearSolver>
-            	<spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
+              <LinearSolver               spec="OPTIONAL NO_DATA"                                      
+                                          attribute1="type REQUIRED STRING 'hypre, petsc'">
+                <res_tol                  spec="REQUIRED DOUBLE" />
+                <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
+                <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+                <max_iter                 spec="REQUIRED INTEGER" />
+              </LinearSolver>
+              <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
               <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
               <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
-						</DORadiationModel>
+            </DORadiationModel>
 
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
@@ -529,11 +528,10 @@
               <temperature              spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines the temperature of the pilot --> 
             </hot_spot>
 
-						<!-- Bowman NOx rate expression --> 
-						<!-- A, E_R, o2_label, density_label, temperature_label are defined above in the westbrook dryer model --> 
-						<no2_label 								  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for NO2 (default = NO2) --> 
-					
-
+            <!-- Bowman NOx rate expression --> 
+            <!-- A, E_R, o2_label, density_label, temperature_label are defined above in the westbrook dryer model --> 
+            <no2_label                  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for NO2 (default = NO2) --> 
+                                        
             <!-- Intrusion inlets --> 
             <intrusion                  spec="OPTIONAL NO_DATA">
               <geom_object/>
@@ -542,7 +540,6 @@
             <velocity                   spec="OPTIONAL DOUBLE"/>
             <density                    spec="OPTIONAL DOUBLE"/>
             <phi                        spec="OPTIONAL DOUBLE"/>
-
           </src>
 
         </Sources>
