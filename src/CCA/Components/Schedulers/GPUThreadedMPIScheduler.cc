@@ -653,7 +653,6 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
       }
     }
 
-
     /*
      * (5)
      *
@@ -1548,44 +1547,6 @@ cudaError_t GPUThreadedMPIScheduler::unregisterPageLockedHostMem()
     // unregister the page-locked host requires memory
     double* ptr = *iter;
     CUDA_SAFE_CALL( retVal = cudaHostUnregister(ptr) );
-  }
-  return retVal;
-}
-
-cudaError_t GPUThreadedMPIScheduler::unregisterHostRequiresPinnedMem()
-{
-  cudaError_t retVal;
-  std::map<VarLabelMatl<Patch>, GPUGridVariable>::iterator iter;
-
-  for(iter = hostRequiresPtrs.begin(); iter != hostRequiresPtrs.end(); iter++) {
-
-    // TODO we may not need this here, cudaHostRegisterPortable flag allows the ptr to be considered pinned by all CUDA contexts
-    // set the device & CUDA context
-    int device = iter->second.device;
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
-
-    // unregister the page-locked host requires memory
-    double* h_reqPtr = iter->second.ptr;
-    CUDA_SAFE_CALL( retVal = cudaHostUnregister(h_reqPtr) );
-  }
-  return retVal;
-}
-
-cudaError_t GPUThreadedMPIScheduler::unregisterHostComputesPinnedMem()
-{
-  cudaError_t retVal;
-  std::map<VarLabelMatl<Patch>, GPUGridVariable>::iterator iter;
-
-  for(iter = hostComputesPtrs.begin(); iter != hostComputesPtrs.end(); iter++) {
-
-    // TODO we may not need this here, cudaHostRegisterPortable flag allows the ptr to be considered pinned by all CUDA contexts
-    // set the device & CUDA context
-    int device = iter->second.device;
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) ); // set the CUDA context
-
-    // unregister the page-locked host computes memory
-    double* h_compPtr = iter->second.ptr;
-    CUDA_SAFE_CALL( retVal = cudaHostUnregister(h_compPtr) );
   }
   return retVal;
 }
