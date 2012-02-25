@@ -191,7 +191,6 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
         ParticleVariable<double> valuePoint;
         ParticleVariable<Vector> valueVector;
         ParticleVariable<Matrix3> valueMatrix;
-        da->query(value_pID,       "p.particleID", matl, patch, t);
         da->query(value_pos,       "p.x",          matl, patch, t);
         // find all or just the first particle on that patch
         vector<long64> particlesToGrab;
@@ -209,6 +208,7 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
                   // save all the particles
                   particlesToGrab.push_back(*iter);
                } else {
+                  cout << "Adding particle: " << *iter << endl;
                   particlesToGrab.push_back(*iter);
                   break;
                }
@@ -228,8 +228,11 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
               total += valuePoint[particlesToGrab[i]];
            }
 
-           partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
-
+           if(particlesToGrab.size() > 0)
+             partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
+           else 
+             partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << 0 << endl;
+             
         } else if( clf.particleVariable.compare("p.velocity") == 0) {
            da->query(valueVector,  clf.particleVariable,  matl, patch, t);
            Vector total = Vector(0.0,0.0,0.0);
@@ -239,7 +242,10 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
               total += valueVector[particlesToGrab[i]];
            }
 
-           partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
+           if(particlesToGrab.size() > 0)
+             partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
+           else 
+             partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << 0 << endl;
 
         } else if( clf.particleVariable.compare("p.stress") == 0) {
            da->query(valueMatrix,  clf.particleVariable,  matl, patch, t);
@@ -250,9 +256,23 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
               total += valueMatrix[particlesToGrab[i]];
            }
 
-           partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
-           
+           if(stresses)
+           {
+              Matrix3 one; 
+              one.Identity();
+              Matrix3 Mdev = total/particlesToGrab.size() - one*((total/particlesToGrab.size()).Trace()/3.0);
+              double eq_stress=sqrt(Mdev.NormSquared()*1.5);
 
+             if(particlesToGrab.size() > 0)
+               partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << -1./3.0*(total / particlesToGrab.size()).Trace() << "\t" << eq_stress << endl;
+             else 
+               partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << 0 << "\t" << 0 << endl;
+           } else {
+             if(particlesToGrab.size() > 0)
+               partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << total / particlesToGrab.size() << endl;
+             else 
+               partfile << cell.x() << "\t" << cell.y() << "\t" << cell.z() << "\t" << 0 << endl;
+           }
         }
 
       } // for levels

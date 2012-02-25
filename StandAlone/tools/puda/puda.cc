@@ -328,6 +328,9 @@ main(int argc, char** argv)
       axis = *argv[++i];
       ortho1 = strtoul(argv[++i],(char**)NULL,10);
       ortho2 = strtoul(argv[++i],(char**)NULL,10);
+ 
+
+      clf.do_POL = true;
 
       // check if optional arguments were found
       if(string(argv[i+1]) == "true")
@@ -498,7 +501,7 @@ main(int argc, char** argv)
     }
 
     // Print a particular particle variable
-    if (clf.do_partvar) {
+    if (clf.do_partvar && !clf.do_POL) {
       vector<int> index;
       vector<double> times;
       da->queryTimesteps(index, times);
