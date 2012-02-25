@@ -659,7 +659,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
      *
      * Check to see if any GPU tasks have their D2H copies completed. This means the kernel(s)
      * have executed and all teh results are back on the host in the DataWarehouse. This task's
-     * MPI send can then be posted and done() can be called.
+     * MPI sends can then be posted and done() can be called.
      */
     else if (dts->numCompletionPendingGPUTasks() > 0) {
 
@@ -669,8 +669,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
         dtask = dts->getNextCompletionPendingGPUTask();
         postMPISends(dtask, iteration, 0);  // t_id 0 (the control thread) for centralized threaded scheduler
 
-        // using CopyType::D2H will also recycle streams and events requested from Scheduler by
-        // the component for kernel invocation and D2H copies
+        // recycle streams and events used by the DetailedTask for kernel execution and H2D copies
         reclaimStreams(dtask, D2H);
         reclaimEvents(dtask, D2H);
 
@@ -1421,30 +1420,6 @@ cudaEvent_t* GPUThreadedMPIScheduler::getCudaEvent(int device)
     // this will get put into idle event queue and properly disposed of later
     event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
   }
-  return event;
-}
-
-// called component-side (for now) so scheduler can add d2h stream to a particular task
-cudaStream_t* GPUThreadedMPIScheduler::getCudaStream(const VarLabel* label, int matlIndex, const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  DetailedTask* dtask = deviceComputesPtrs.find(var)->second.dtask;
-  int device = dtask->getDeviceNum();
-  cudaStream_t* stream = getCudaStream(device);
-  dtask->addD2HStream(stream);
-
-  return stream;
-}
-
-// called component-side (for now) so scheduler can add d2h stream to a particular task
-cudaEvent_t* GPUThreadedMPIScheduler::getCudaEvent(const VarLabel* label, int matlIndex, const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  DetailedTask* dtask = deviceComputesPtrs.find(var)->second.dtask;
-  int device = dtask->getDeviceNum();
-  cudaEvent_t* event = getCudaEvent(device);
-  dtask->addD2HCopyEvent(event);
-
   return event;
 }
 

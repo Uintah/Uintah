@@ -122,10 +122,6 @@ WARNING
 
     cudaEvent_t* getCudaEvent(int device);
 
-    cudaStream_t* getCudaStream(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    cudaEvent_t* getCudaEvent(const VarLabel* label, int matlIndex, const Patch* patch);
-
     void addCudaStream(cudaStream_t* stream, int device);
 
     void addCudaEvent(cudaEvent_t* event, int device);
