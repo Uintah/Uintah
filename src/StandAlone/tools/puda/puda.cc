@@ -81,6 +81,7 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/puda/jacquie.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/PIC.h>
+#include <StandAlone/tools/puda/POL.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
@@ -131,7 +132,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -gridstats\n";
   cerr << "  -listvariables\n";
   cerr << "  -varsummary\n";
-  cerr << "  -brief               (Makes varsummary print out a subset of information.\n)";
+  cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
   cerr << "  -jacquie              (finds burn rate vs pressure)\n";
@@ -139,8 +140,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
   cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
-  cerr << "  -GV_MMS            (GeneralizedVortex MMS)\n"; //MMS
-  cerr << "  -ER_MMS            (Expanding Ring MMS)\n"; 
+  cerr << "  -GV_MMS              (GeneralizedVortex MMS)\n"; //MMS
+  cerr << "  -ER_MMS              (Expanding Ring MMS)\n"; 
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -160,6 +161,16 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
   cerr << "  -pic                 (prints particle ids of all particles  in cell\n";
   cerr << "                        <i> <j> <k> [ints] on the specified timesteps)\n";
+  cerr << "  -pol                 (prints out average of all particles in a cell over an\n";
+  cerr << "                       entire line on a line of cells and is called with:\n";
+  cerr << "                       <axis: [x,y,z]> <ortho1> <ortho2> <average; default=true>\n";
+  cerr << "                       <stressSplitting; default=false>\n";
+  cerr << "                       'ortho1' and 'ortho2' inidicate the coordinates in the plane\n";
+  cerr << "                       orthogonal to 'axis'.  'average' tells whether to average\n";
+  cerr << "                       over all particles in the cell, or just to use the first\n";
+  cerr << "                       particle encountered.  'stressSplitting' only takes affect\n";
+  cerr << "                       if the particle variable is p.stress, and splits the stress\n";
+  cerr << "                       into hydrostatic and deviatoric parts.)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -244,7 +255,12 @@ main(int argc, char** argv)
   CommandLineFlags clf;
 
   int mat = -1; //not part of clf
-  int cellx, celly, cellz;
+  int cellx = -1, celly = -1, cellz = -1;
+  char axis = 'n';
+  int ortho1 = -1;
+  int ortho2 = -1;
+  bool doPOLAverage = true;
+  bool doPOLStressSplit = false;
 
   // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
@@ -308,6 +324,32 @@ main(int argc, char** argv)
       cellx = strtoul(argv[++i],(char**)NULL,10);
       celly = strtoul(argv[++i],(char**)NULL,10);
       cellz = strtoul(argv[++i],(char**)NULL,10);
+    } else if(s == "-pol") {
+      axis = *argv[++i];
+      ortho1 = strtoul(argv[++i],(char**)NULL,10);
+      ortho2 = strtoul(argv[++i],(char**)NULL,10);
+
+      // check if optional arguments were found
+      if(string(argv[i+1]) == "true")
+      {
+         doPOLAverage = true;
+         i++;
+      } else if(string(argv[i+1]) == "false")
+      {
+         doPOLAverage = false;
+         i++;
+      }
+
+      if(string(argv[i+1]) == "true")
+      {
+         doPOLStressSplit = true;
+         i++;
+      } else if(string(argv[i+1]) == "false")
+      {
+         doPOLStressSplit = false;
+         i++;
+      }
+
     } else if(s == "-AA_MMS_1"){
       clf.do_AA_MMS_1 = true;
     } else if(s == "-AA_MMS_2"){
@@ -509,6 +551,11 @@ main(int argc, char** argv)
     if( clf.do_PIC ){
       PIC( da, clf, cellx, celly, cellz );
     }
+
+    if( clf.do_POL ){
+      POL( da, clf, axis, ortho1, ortho2, doPOLAverage, doPOLStressSplit );
+    }
+
 
     if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
       AA_MMS( da, clf );
