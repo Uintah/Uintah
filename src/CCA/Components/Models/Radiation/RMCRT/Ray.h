@@ -96,6 +96,7 @@ namespace Uintah{
       int    _slice;
       int    d_matl;
       MaterialSet* d_matlSet;
+      IntVector _halo;        // number of cells surrounding a coarse patch on coarser levels
       
       double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
@@ -104,6 +105,7 @@ namespace Uintah{
       bool _solveBoundaryFlux;
       bool _CCRays;
       bool _shouldSetBC;
+      bool _isDbgOn;
 
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
