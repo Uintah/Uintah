@@ -113,6 +113,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
   maxGhost=0;
+  maxLevelOffset=0;
 }
 
 SchedulerCommon::~SchedulerCommon()
@@ -658,6 +659,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   numTasks_++;
 
   if (task->maxGhostCells > maxGhost) maxGhost = task->maxGhostCells;
+  if (task->maxLevelOffset > maxLevelOffset) maxLevelOffset = task->maxLevelOffset;
 
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.

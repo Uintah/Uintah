@@ -249,6 +249,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   // WARNING - this should be determined from the taskgraph? - Steve
   // Now maxGhost is from taskgraph 
   int maxGhost = d_scheduler->getMaxGhost();
+  int maxLevelOffset = d_scheduler->getMaxLevelOffset();
   d_neighbors.clear();
   d_neighborProcessors.clear();
   
@@ -278,17 +279,16 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         // one for current level, coarse level, find level, old level
         // each call to level->selectPatches must be done with an empty patch set
         // or otherwise it will conflict with the sorted order of the cached patches
-        Patch::selectType neighbor, coarse, fine, old;
-        vector<Patch::selectType*> n; // shortcut to not have to use the same code 4 times
+        Patch::selectType neighbor;
 
         IntVector ghost(maxGhost,maxGhost,maxGhost);
 
         IntVector low(patch->getExtraLowIndex(Patch::CellBased, IntVector(0,0,0)));
         IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
         level->selectPatches(low-ghost, high+ghost, neighbor);
-        n.push_back(&neighbor);
         for(int i=0;i<neighbor.size();i++) //add owning processors
         { 
+          d_neighbors.insert(neighbor[i]->getRealPatch());
           int nproc=getPatchwiseProcessorAssignment(neighbor[i]);
           if(nproc>=0)
             d_neighborProcessors.insert(nproc);
@@ -300,11 +300,12 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
+            Patch::selectType old;
             const LevelP& oldLevel = oldGrid->getLevel(l);
             oldLevel->selectPatches(patch->getExtraCellLowIndex()-ghost, patch->getExtraCellHighIndex()+ghost, old);
-            n.push_back(&old);
             for(int i=0;i<old.size();i++) //add owning processors (they are the old owners)
             { 
+              d_neighbors.insert(old[i]->getRealPatch());
               int nproc=getPatchwiseProcessorAssignment(old[i]);
               if(nproc>=0)
                 d_neighborProcessors.insert(nproc);
@@ -317,50 +318,43 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
-          const LevelP& coarseLevel = level->getCoarserLevel();
-          IntVector ratio = level->getRefinementRatio();
+          LevelP coarseLevel = level;
+          IntVector ratio(1, 1, 1);
+          IntVector ghost(maxGhost, maxGhost, maxGhost);
+          for (int offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
+            ratio = ratio * coarseLevel->getRefinementRatio();
+            coarseLevel = coarseLevel->getCoarserLevel();
+            Patch::selectType coarse;
 
-          // we can require up to 1 ghost cell from a coarse patch
-          // If any direction's refinement ratio is 1, we will need 2 ghost cells
-          int ngc;
-          if (Min(Min(ratio.x(), ratio.y()), ratio.z()) == 1) 
-            ngc = 2 * Max(Max(ratio.x(), ratio.y()), ratio.z());
-          else ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
-
-          IntVector ghost(ngc,ngc,ngc);
-          coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), 
-              level->mapCellToCoarser(high+ghost), coarse);
-          n.push_back(&coarse);
-          for(int i=0;i<coarse.size();i++) //add owning processors
-          { 
-            int nproc=getPatchwiseProcessorAssignment(coarse[i]);
-            if(nproc>=0)
-              d_neighborProcessors.insert(nproc);
-            int oproc=getOldProcessorAssignment(0,coarse[i],0);
-            if(oproc>=0)
-              d_neighborProcessors.insert(oproc);
+            coarseLevel->selectPatches(level->mapCellToCoarser(low - ghost, offset),
+                    level->mapCellToCoarser(high + ghost, offset), coarse);
+            for (int i = 0; i < coarse.size(); i++) //add owning processors
+            {
+              d_neighbors.insert(coarse[i]->getRealPatch());
+              int nproc = getPatchwiseProcessorAssignment(coarse[i]);
+              if (nproc >= 0)
+                d_neighborProcessors.insert(nproc);
+              int oproc = getOldProcessorAssignment(0, coarse[i], 0);
+              if (oproc >= 0)
+                d_neighborProcessors.insert(oproc);
+            }
           }
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
-          IntVector ghost(2,2,2); // need two to compensate for extra cells
+          IntVector ghost(maxGhost, maxGhost, maxGhost);
           const LevelP& fineLevel = level->getFinerLevel();
+          Patch::selectType fine;
           fineLevel->selectPatches(level->mapCellToFiner(low-ghost), 
               level->mapCellToFiner(high+ghost), fine);
-          n.push_back(&fine);
           for(int i=0;i<fine.size();i++) //add owning processors
           { 
+            d_neighbors.insert(fine[i]->getRealPatch());
             int nproc=getPatchwiseProcessorAssignment(fine[i]);
             if(nproc>=0)
               d_neighborProcessors.insert(nproc);
             int oproc=getOldProcessorAssignment(0,fine[i],0);
             if(oproc>=0)
               d_neighborProcessors.insert(oproc);
-          }
-        }
-        for (unsigned i = 0; i < n.size(); i++) {
-          for(int j=0;j<(*n[i]).size();j++)
-          {
-            d_neighbors.insert((*n[i])[j]->getRealPatch());
           }
         }
       }
