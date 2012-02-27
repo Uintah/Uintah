@@ -16,7 +16,8 @@
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>        
       <benchmark              spec="OPTIONAL INTEGER 'positive'"/>                    
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>                   
-      <CCRays                 spec="OPTIONAL BOOLEAN"/> 
+      <CCRays                 spec="OPTIONAL BOOLEAN"/>
+      <halo                   spec="OPTIONAL VECTOR 'positive'"/>
     </RMCRT>
     
     <!--__________________________________-->

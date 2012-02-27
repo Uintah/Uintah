@@ -16,7 +16,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 1        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -75,6 +75,7 @@
       </Face>
     </BoundaryConditions>
 
+
     <Level>
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
@@ -84,17 +85,24 @@
          <extraCells> [1,1,1]     </extraCells>      
       </Box>                                         
     </Level>
-
     <Level>
       <Box label = "1">                              
-         <lower>      [ 0,0,0]      </lower>         
-         <upper>      [1, 1, 1]     </upper>         
-         <resolution> [41,41,41] </resolution>        
-         <patches>    [1,1,1]       </patches>   
-         <extraCells> [1,1,1]       </extraCells>         
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
+      </Box>                                         
+    </Level>    
+    <Level>
+      <Box label = "2">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [3,3,3]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
       </Box>                                         
     </Level>
-
   </Grid>
   <!--__________________________________-->
   <AMR>
@@ -129,13 +137,14 @@
   
   <!--__________________________________ -->
   <RMCRT>
-    <randomSeed>         false     </randomSeed>
+    <randomSeed>        false      </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
-    <NoOfRays>          25         </NoOfRays>
+    <NoOfRays>          1          </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
+    <halo>           [4,4,4]       </halo>
   </RMCRT>
 </Uintah_specification>
