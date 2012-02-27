@@ -202,6 +202,7 @@ Task::requires(WhichDW dw,
                                       gtype, numGhostCells, level_offset);
 
   if (numGhostCells > maxGhostCells) maxGhostCells=numGhostCells;
+  if (level_offset > maxLevelOffset) maxLevelOffset=level_offset;
 
   dep->next=0;
   if(req_tail)

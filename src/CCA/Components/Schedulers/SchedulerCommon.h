@@ -226,6 +226,8 @@ WARNING
     const VarLabel * reloc_new_posLabel_;
     
     int getMaxGhost() {return maxGhost;}
+    
+    int getMaxLevelOffset() {return maxLevelOffset;}
 
   protected:
     void finalizeTimestep();
@@ -331,6 +333,10 @@ WARNING
 
     //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
+    
+    //max level offset of all tasks - will be used for loadbalancer to create neighborhood
+    int maxLevelOffset;
+    
   };
 } // End namespace Uintah
 

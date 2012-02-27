@@ -201,6 +201,7 @@ WARNING
     typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     virtual int getMaxGhost() = 0;
+    virtual int getMaxLevelOffset() = 0;
   private:
     Scheduler(const Scheduler&);
     Scheduler& operator=(const Scheduler&);
