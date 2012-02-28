@@ -8,9 +8,7 @@
 //-- ExprLib includes --//
 #include <expression/Tag.h>
 
-
 #include <string>
-
 
 namespace Wasatch{
 
@@ -21,17 +19,17 @@ namespace Wasatch{
 
     std::string exprName;
     std::string state;
-    
+
     param->getAttribute( "name", exprName );
     param->getAttribute( "state", state );
 
-    Expr::Context exprContext;
+    Expr::Context exprContext(Expr::INVALID_CONTEXT);
     if     ( state.compare("STATE_NONE"   ) == 0 )  exprContext = Expr::STATE_NONE;
     else if( state.compare("STATE_N"      ) == 0 )  exprContext = Expr::STATE_N;
     else if( state.compare("STATE_NP1"    ) == 0 )  exprContext = Expr::STATE_NP1;
     else if( state.compare("CARRY_FORWARD") == 0 )  exprContext = Expr::CARRY_FORWARD;
 
-    return Expr::Tag(exprName, exprContext); 
+    return Expr::Tag(exprName, exprContext);
   }
 
 } // namespace Wasatch
