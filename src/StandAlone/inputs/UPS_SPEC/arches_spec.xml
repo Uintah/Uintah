@@ -457,7 +457,8 @@
                                                                            fy_intrusion_inlet,                                                     
                                                                            fz_intrusion_inlet,                                                     
                                                                            do_radiation,                                                           
-                                                                           bowman_nox'">                                                           
+                                                                           bowman_nox,
+                                                                           wasatch_expr'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -467,6 +468,9 @@
 
             <!-- Tabulated reaction rate --> 
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
+            
+            <!-- Wasatch expression as a source - needs ForceOnGraph in Wasatch block -->
+            <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant_src" />
