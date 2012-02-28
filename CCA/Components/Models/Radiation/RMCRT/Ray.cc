@@ -175,10 +175,24 @@ Ray::initProperties( const ProcessorGroup* pc,
     int Nz = pHigh[2] - pLow[2];
 
     Vector Dx = patch->dCell(); 
-
+    
+    BBox L_BB;
+    level->getInteriorSpatialRange(L_BB);                 // edge of computational domain
+    Vector L_length = Abs(L_BB.max() - L_BB.min());
+    
     //__________________________________
     //  Benchmark initializations
-    if ( _benchmark == 1 ) {
+    if ( _benchmark == 1 || _benchmark == 3 ) {
+    
+      // bulletproofing
+      Vector valid_length(1,1,1);
+      if (L_length != valid_length){
+        ostringstream msg;
+        msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
+        msg << valid_length << ".  Your domain is " << L_BB << endl; 
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
         abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
@@ -196,15 +210,6 @@ Ray::initProperties( const ProcessorGroup* pc,
       }
       // apply boundary conditions
       setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
-    }    
-    else if (_benchmark == 3) {
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
-                        + 0.1;  
-      }
     }
 
     //__________________________________
