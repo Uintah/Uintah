@@ -497,6 +497,10 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
       double pM = (1./(n*K))*(pow(J,-n)-1.);
       double pJWL=pM;
+
+      // For computing speed of sound if not yet detonating
+      double rho_cur = rho0/J;
+      double dp_drho = (1./(K*rho0))*pow((rho_cur/rho0),n-1.);
       if(pProgressF_new[idx] > 0.0){
         double one_plus_omega = 1.+om;
         double inv_rho_rat=J; //rho0/rhoM;
@@ -508,12 +512,17 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
         pJWL  = A_e_to_the_R1_rho0_over_rhoM +
                 B_e_to_the_R2_rho0_over_rhoM +
                 C_rho_rat_tothe_one_plus_omega;
+
+        // For computing speed of sound if detonat(ing/ed)
+        double rho0_rhoMsqrd = rho0/(rho_cur*rho_cur);
+        dp_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+                + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+                + (one_plus_omega/rho_cur)*C_rho_rat_tothe_one_plus_omega;
       }
 
       p = pM*(1.0-pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
 
       // Get the deformed volume and current density
-      double rho_cur = rho0/J;
       pvolume[idx] = pmass[idx]/rho_cur;
 
       // compute the total stress
@@ -522,7 +531,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
       Vector pvelocity_idx = pvelocity[idx];
 
       // Compute wave speed at each particle, store the maximum
-      double dp_drho = (1./(K*rho0))*pow((rho_cur/rho0),n-1.);
       c_dil = sqrt(dp_drho);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
