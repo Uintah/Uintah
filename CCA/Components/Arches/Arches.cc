@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
+#include <CCA/Components/Arches/SourceTerms/WasatchExprSource.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
@@ -519,23 +520,26 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->problemSetup(db);
   
-# ifdef WASATCH_IN_ARCHES
+#ifdef WASATCH_IN_ARCHES
   //create expressions to export dependent table vals into wasatch
   typedef std::vector<std::string> StringVec;
-  MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
-  StringVec DepVarsString = d_mixingTable->getAllDepVars();
-  
-  for (int i=0; i<DepVarsString.size(); i++) {
-    proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
-    const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
-    
-    if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
-      typedef Expr::PlaceHolder<SVolField>  FieldExpr;
-      solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTableTag));     
-      proc0cout << " done" << endl;
+  if (d_props->getMixRxnModel() ) {
+    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    if (d_props->getMixingModelType() == "ClassicTable" ) {
+      StringVec DepVarsString = d_mixingTable->getAllDepVars();
+      for (int i=0; i<DepVarsString.size(); i++) {
+        proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
+        const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
+        if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
+          typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+          solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTableTag));     
+          proc0cout << " done" << endl;
+        }
+      }
     }
   }
-# endif //WASATCH-IN-ARCHES
+
+#endif //WASATCH-IN-ARCHES
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
@@ -2645,6 +2649,13 @@ void Arches::registerUDSources(ProblemSpecP& db)
 				SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, d_lab, d_boundaryCondition, d_myworld );
 				factory.register_source_term( src_name, srcBuilder );
 
+#ifdef WASATCH_IN_ARCHES        
+      } else if ( src_type == "wasatch_expr" ) {
+          
+        //Allows any arbitrary wasatch expression to be used as a source, as long as ForceOnGraph is used and expression is saved in data archiver
+        SourceTermBase::Builder* srcBuilder = scinew WasatchExprSource::Builder( src_name, required_varLabels, d_lab->d_sharedState );
+        factory.register_source_term( src_name, srcBuilder );
+#endif
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
