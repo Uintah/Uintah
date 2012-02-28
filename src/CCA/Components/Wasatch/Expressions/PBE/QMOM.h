@@ -144,7 +144,15 @@ evaluate()
   double **p = new double *[nMoments];
   for (int i = 0; i<nMoments; i++)
     p[i] = new double [nMoments+1];
+  
+  // initialize the p matrix
+  for (int i=0; i<nMoments; i++) {
+    for (int j=0; j<nMoments+1; j++) {
+      p[i][j]=0.0;
+    }
+  }  
   p[0][0] = 1.0;
+  
   //
   const int abSize = nMoments/2;
   double* alpha = new double[nMoments];
@@ -249,12 +257,7 @@ evaluate()
         std::ostringstream errorMsg;
         errorMsg 	<< endl
                   << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
-					        << "Value: b["<<jCol<<"] = "<<rhsB << std::endl
-        << "Value: M_0 " <<*knownMomentsIterators[0] << std::endl
-        << "Value: M_1 " <<*knownMomentsIterators[1] << std::endl
-        << "Value: M_2 " <<*knownMomentsIterators[2] << std::endl
-        << "Value: M_3 " <<*knownMomentsIterators[3] << std::endl;
-
+                  << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
         throw std::runtime_error( errorMsg.str() );
       }
       b[jCol] = -sqrt(rhsB);
