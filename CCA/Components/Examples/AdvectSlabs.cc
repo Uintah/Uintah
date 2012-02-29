@@ -220,15 +220,5 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
     }
 }
 
-//______________________________________________________________________
-//  
-namespace SCIRun {
-
-  void swapbytes( Uintah::fflux& f) {
-    double *p = f.d_fflux;
-    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
-    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-  }
-} // namespace SCIRun
 
 
