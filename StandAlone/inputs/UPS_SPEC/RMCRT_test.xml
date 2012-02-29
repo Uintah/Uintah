@@ -2,16 +2,13 @@
 <Uintah_Include> 
   <AMR                        spec="OPTIONAL NO_DATA" >
     <RMCRT                    spec="OPTIONAL NO_DATA" >
-      <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" />             
-      <min_grid_level         spec="OPTIONAL INTEGER" />            
-      <max_grid_level         spec="OPTIONAL INTEGER" />            
+      <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" />  
+      <abskg_threshold        spec="OPTIONAL DOUBLE  'positive'"/>   
+      <sigmaT4_threshold      spec="OPTIONAL DOUBLE  'positive'"/> 
+              
       <manualGrid             spec="OPTIONAL BOOLEAN" />            
       <CoarseLevelRMCRTMethod spec="OPTIONAL BOOLEAN" />
       <multiLevelRMCRTMethod  spec="OPTIONAL BOOLEAN" />
-      
-      <Refine_Regions         spec="OPTIONAL NO_DATA" >             
-        <geom_object          spec="MULTIPLE" />                 
-      </Refine_Regions>
     </RMCRT>
   </AMR>
   

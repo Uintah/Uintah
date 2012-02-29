@@ -1,12 +1,16 @@
 //----- Ray.cc ----------------------------------------------
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <time.h>
 
 //--------------------------------------------------------------
@@ -23,9 +27,19 @@ Ray::Ray()
 {
   _pi = acos(-1); 
 
-  d_sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() ); 
-  d_matlSet = 0;
-  _isDbgOn = dbg2.active();
+  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
+  d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
+  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
+  d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
+  //d_ROI_loCellLabel      = VarLabel::create( "ROI_lo",           minIntVec_vartype::getTypeDescription() );
+  //d_ROI_hiCellLabel      = VarLabel::create( "ROI_hi",           maxIntVec_vartype::getTypeDescription() );
+   
+  d_matlSet       = 0;
+  _isDbgOn        = dbg2.active();
+  
+  d_gac           = Ghost::AroundCells;
+  d_gn            = Ghost::None;
+  d_orderOfInterpolation = -9;
 }
 
 //---------------------------------------------------------------------------
@@ -33,7 +47,10 @@ Ray::Ray()
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
-  VarLabel::destroy(d_sigmaT4_label);
+  VarLabel::destroy( d_sigmaT4_label );
+  VarLabel::destroy( d_mag_grad_abskgLabel );
+  VarLabel::destroy( d_mag_grad_sigmaT4Label );
+  VarLabel::destroy( d_flaggedCellsLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -44,19 +61,19 @@ Ray::~Ray()
 // Method: Problem setup (access to input file information)
 //---------------------------------------------------------------------------
 void
-Ray::problemSetup( const ProblemSpecP& inputdb) 
+Ray::problemSetup( const ProblemSpecP& prob_spec,
+                   const ProblemSpecP& rmcrtps) 
 {
-  ProblemSpecP db = inputdb;
-
-  db->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      1000 );
-  db->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
-  db->getWithDefault( "Slice"     ,       _slice     ,      9 );          // Level in z direction of xy slice
-  db->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
-  db->getWithDefault( "benchmark" ,       _benchmark,       0 );  
-  db->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
-  db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
-  db->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
-  db->getWithDefault( "halo"      ,       _halo,           IntVector(10,10,10));
+  ProblemSpecP rmcrt_ps = rmcrtps;
+  rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      1000 );
+  rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
+  rmcrt_ps->getWithDefault( "Slice"     ,       _slice     ,      9 );          // Level in z direction of xy slice
+  rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
+  rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
+  rmcrt_ps->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
+  rmcrt_ps->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
+  rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
+  rmcrt_ps->getWithDefault( "halo"      ,       _halo,           IntVector(10,10,10));
 
   if (_benchmark > 3 || _benchmark < 0  ){
     ostringstream warn;
@@ -65,10 +82,28 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
+  //__________________________________
+  //  Read in the AMR section
+  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+  if (amr_ps){
+    rmcrt_ps = amr_ps->findBlock("RMCRT");
+
+    if(!rmcrt_ps){
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+    rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
+    rmcrt_ps->getWithDefault( "abskg_threshold",    _abskg_thld,   DBL_MAX);
+    rmcrt_ps->getWithDefault( "sigmaT4_threshold",  _sigmaT4_thld, DBL_MAX);
+  }
+
+  
   _sigma_over_pi = _sigma/_pi;
-  ProblemSpecP root_ps = db->getRootNode();
+
   
 #if 0 
+  ProblemSpecP root_ps = prob_spec->getRootNode();
   const MaterialSubset* mss = d_matlSet->getUnion();
   is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
   is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
@@ -109,13 +144,13 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int tim
   printSchedule(level,dbg,taskname);
 
   if ( time_sub_step == 0 ) { 
-    tsk->requires( Task::OldDW, d_abskgLabel,       Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, d_abskgLabel,       d_gn, 0 ); 
+    tsk->requires( Task::OldDW, d_temperatureLabel, d_gn, 0 ); 
     tsk->computes( d_sigmaT4_label ); 
     tsk->computes( d_abskgLabel ); 
     tsk->computes( d_absorpLabel );
   } else { 
-    tsk->requires( Task::NewDW, d_temperatureLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, d_temperatureLabel, d_gn, 0 ); 
     tsk->modifies( d_sigmaT4_label ); 
     tsk->modifies( d_abskgLabel ); 
     tsk->modifies( d_absorpLabel ); 
@@ -183,7 +218,7 @@ Ray::initProperties( const ProcessorGroup* pc,
     //__________________________________
     //  Benchmark initializations
     if ( _benchmark == 1 || _benchmark == 3 ) {
-    
+  
       // bulletproofing
       Vector valid_length(1,1,1);
       if (L_length != valid_length){
@@ -1070,9 +1105,9 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 //  Set Boundary conditions
 void 
 Ray::setBC(CCVariable<double>& Q_CC,
-       const string& desc,
-       const Patch* patch,
-       const int mat_id)
+           const string& desc,
+           const Patch* patch,
+           const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false){
     return;
@@ -1153,6 +1188,240 @@ Ray::setBC(CCVariable<double>& Q_CC,
   }  // faces loop
 }
 
+
+//______________________________________________________________________
+//
+void Ray::sched_Refine_Q(SchedulerP& sched,
+                         const PatchSet* patches,
+                         const MaterialSet* matls)
+{
+  const Level* fineLevel = getLevel(patches);
+  int L_indx = fineLevel->getIndex();
+  
+  if(L_indx > 0 ){
+     printSchedule(patches,dbg,"Ray::scheduleRefine_Q (divQ)");
+
+    Task* task = scinew Task("Ray::refine_Q",this, 
+                             &Ray::refine_Q);
+    
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
+    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
+     
+    task->computes(d_divQLabel);
+    sched->addTask(task, patches, matls);
+  }
+}
+  
+//______________________________________________________________________
+//
+void Ray::refine_Q(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse* new_dw)
+{
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  
+  for(int p=0;p<patches->size();p++){  
+    const Patch* finePatch = patches->get(p);
+    printTask(patches, finePatch,dbg,"Doing refineQ");
+
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);
+
+    CCVariable<double> sumColorDiff_fine;
+    new_dw->allocateAndPut(sumColorDiff_fine, d_divQLabel, d_matl, finePatch);
+    sumColorDiff_fine.initialize(0);
+    
+    IntVector refineRatio = fineLevel->getRefinementRatio();
+
+    // region of fine space that will correspond to the coarse we need to get
+    IntVector cl, ch, fl, fh;
+    IntVector bl(0,0,0);  // boundary layer or padding
+    int nghostCells = 1;
+    bool returnExclusiveRange=true;
+    
+    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
+                        nghostCells, returnExclusiveRange);
+
+    dbg <<" refineQ: " 
+        <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
+        <<" coarseRegion " << cl << " " << ch <<endl;
+
+    constCCVariable<double> sumColorDiff_coarse;
+    new_dw->getRegion(sumColorDiff_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch);
+
+    selectInterpolator(sumColorDiff_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
+                       refineRatio, fl, fh,sumColorDiff_fine);
+
+  }  // fine patch loop 
+}
+  
+//______________________________________________________________________
+// This task determine the extents of the fine level region of interest
+void Ray::sched_ROI_Extents ( const LevelP& level, 
+                              SchedulerP& scheduler )
+{
+  int maxLevels = level->getGrid()->numLevels() -1;
+  int L_indx = level->getIndex();
+  
+  if(L_indx != maxLevels){     // only schedule on the finest level
+    return;
+  }
+  
+  printSchedule(level,dbg,"Ray::ROI_Extents");
+
+  Task* tsk = scinew Task( "Ray::ROI_Extents", this, 
+                           &Ray::ROI_Extents);
+
+  tsk->requires( Task::NewDW, d_abskgLabel,     d_gn, 0 );
+  tsk->requires( Task::NewDW, d_sigmaT4_label,  d_gn, 0 );
+  tsk->computes( d_mag_grad_abskgLabel );
+  tsk->computes( d_mag_grad_sigmaT4Label );
+  tsk->computes( d_flaggedCellsLabel );
+
+//  tsk->computes(roi_LoPt);
+//  tsk->computes(roi_HiPt);
+
+  scheduler->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+
+//______________________________________________________________________
+// 
+void Ray::ROI_Extents ( const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw)                
+{ 
+  const Level* level = getLevel(patches);
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,dbg,"Doing initialROI_Extents");
+
+    //__________________________________     
+    constCCVariable<double> abskg;
+    constCCVariable<double> sigmaT4;
+
+    CCVariable<double> mag_grad_abskg;
+    CCVariable<double> mag_grad_sigmaT4;
+    CCVariable<int> flaggedCells;
+
+    new_dw->get(abskg,    d_abskgLabel ,     d_matl , patch, d_gac,1);
+    new_dw->get(sigmaT4,  d_sigmaT4_label ,  d_matl , patch, d_gac,1);
+
+    new_dw->allocateAndPut(mag_grad_abskg,   d_mag_grad_abskgLabel,    0, patch);
+    new_dw->allocateAndPut(mag_grad_sigmaT4, d_mag_grad_sigmaT4Label,  0, patch);
+    new_dw->allocateAndPut(flaggedCells,     d_flaggedCellsLabel,      0, patch);
+
+    mag_grad_abskg.initialize(0.0);
+    mag_grad_sigmaT4.initialize(0.0);
+    flaggedCells.initialize(0);
+
+    compute_Mag_gradient(abskg,   mag_grad_abskg,   patch);
+    compute_Mag_gradient(sigmaT4, mag_grad_sigmaT4, patch);
+
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+
+      if( mag_grad_abskg[c] > _abskg_thld || mag_grad_sigmaT4[c] > _sigmaT4_thld ){
+        flaggedCells[c] = true;
+        
+      }
+    }
+  }  // patches loop
+  
+//  new_dw->put(minIntVec_vartype(ROI_lo), d_ROI_loLabel);
+//  new_dw->put(maxIntVec_vartype(ROI_hi), d_ROI_hiLabel);
+}
+
+
+//______________________________________________________________________
+void Ray::sched_CoarsenAll( const LevelP& coarseLevel, 
+                            SchedulerP& sched )
+{
+  if(coarseLevel->hasFinerLevel()){
+    printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
+    bool modifies = false;
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_abskgLabel);
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_sigmaT4_label);
+  }
+}
+
+//______________________________________________________________________
+void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel, 
+                            SchedulerP& sched,
+                            Task::WhichDW this_dw,
+                            const bool modifies,
+                            const VarLabel* variable)
+{ 
+  string taskname = "        Coarsen_Q_" + variable->getName();
+  printSchedule(coarseLevel,dbg,taskname);
+
+  Task* t = scinew Task( taskname, this, &Ray::coarsen_Q, 
+                         variable, modifies, this_dw );
+  
+  if(modifies){
+    t->modifies(variable);
+  }else{
+    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    t->computes(variable);
+  }
+  sched->addTask( t, coarseLevel->eachPatch(), d_matlSet );
+}
+
+//______________________________________________________________________
+void Ray::coarsen_Q ( const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw, 
+                      DataWarehouse* new_dw,
+                      const VarLabel* variable,
+                      const bool modifies,
+                      Task::WhichDW which_dw )
+{
+  const Level* coarseLevel = getLevel(patches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  DataWarehouse* this_dw = new_dw;
+  
+  if( which_dw == Task::OldDW ){
+    this_dw = old_dw;
+  }
+  
+
+  for(int p=0;p<patches->size();p++){  
+    const Patch* coarsePatch = patches->get(p);
+
+    printTask(patches, coarsePatch,dbg,"Doing coarsen: " + variable->getName());
+
+    // Find the overlapping regions...
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
+
+    for(int m = 0;m<matls->size();m++){
+      int matl = matls->get(m);
+
+      CCVariable<double> Q_coarse;
+      if(modifies){
+        new_dw->getModifiable(Q_coarse,  variable, matl, coarsePatch);
+      }else{
+        new_dw->allocateAndPut(Q_coarse, variable, matl, coarsePatch);
+      }
+      Q_coarse.initialize(0.0);
+
+      // coarsen
+      bool computesAve = false;
+      fineToCoarseOperator(Q_coarse,   computesAve, 
+                           variable,   matl, new_dw,                   
+                           coarsePatch, coarseLevel, fineLevel);        
+    }
+  }  // course patch loop 
+}
 
 //______________________________________________________________________
 // ISAAC's NOTES: 

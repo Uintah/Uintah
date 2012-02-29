@@ -37,7 +37,8 @@ namespace Uintah{
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
-      void  problemSetup( const ProblemSpecP& inputdb ); 
+      void  problemSetup( const ProblemSpecP& prob_spec,
+                          const ProblemSpecP& rmcrt_ps ); 
 
       /** @brief Algorithm for tracing rays through a single level*/ 
       void sched_rayTrace( const LevelP& level, 
@@ -68,6 +69,19 @@ namespace Uintah{
                                          SchedulerP& sched );
       
       //__________________________________
+      //  Multilevel tasks
+      void sched_Refine_Q(SchedulerP& sched,
+                          const PatchSet* patches,
+                          const MaterialSet* matls);
+                      
+      void sched_CoarsenAll( const LevelP& coarseLevel, 
+                             SchedulerP& sched );
+                             
+
+      void sched_ROI_Extents ( const LevelP& level, 
+                                 SchedulerP& scheduler );
+                               
+      //__________________________________
       //  Helpers
       /** @brief map the component VarLabels to RMCRT VarLabels */
      void registerVarLabels(int   matl,
@@ -84,21 +98,21 @@ namespace Uintah{
     private: 
       enum DIR {X, Y, Z, NONE};
       double _pi;
-      double _alphaEW;//absorptivity of the East and West walls
-      double _alphaNS;//absorptivity of the North and South walls
-      double _alphaTB;//absorptivity of the top and bottom walls
-      double _TEW;
-      double _TNS;
-      double _TTB;
       double _Threshold;
-      double _sigma; 
+      double _sigma;
+      double _sigmaT4_thld;                  // threshold values for determining the extents of ROI
+      double _abskg_thld;
+      
+       
       int    _NoOfRays;
       int    _slice;
       int    d_matl;
-      MaterialSet* d_matlSet;
-      IntVector _halo;        // number of cells surrounding a coarse patch on coarser levels
+      int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       
-      double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      MaterialSet* d_matlSet;
+      IntVector _halo;                       // number of cells surrounding a coarse patch on coarser levels
+      
+      double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
       int  _benchmark; 
       bool _isSeedRandom;
@@ -107,11 +121,19 @@ namespace Uintah{
       bool _shouldSetBC;
       bool _isDbgOn;
 
+      Ghost::GhostType d_gn;
+      Ghost::GhostType d_gac;
+
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_divQLabel;
+      const VarLabel* d_mag_grad_abskgLabel;
+      const VarLabel* d_mag_grad_sigmaT4Label;
+      const VarLabel* d_flaggedCellsLabel;
+//      const VarLabel* d_ROI_loCellLabel;
+//      const VarLabel* d_ROI_hiCellLabel;
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
@@ -166,6 +188,36 @@ namespace Uintah{
     int numFaceCells(const Patch* patch,
                      const Patch::FaceIteratorType type,
                      const Patch::FaceType face);
+
+    //_____________________________________________________________________
+    //    Multiple Level tasks
+    void refine_Q(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw);
+                          
+    // coarsen a single variable                      
+    void sched_Coarsen_Q( const LevelP& coarseLevel,
+                          SchedulerP& scheduler,
+                          Task::WhichDW this_dw,
+                          const bool modifies,
+                          const VarLabel* variable);
+                  
+    void coarsen_Q ( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*, 
+                     DataWarehouse* new_dw,
+                     const VarLabel* variable,
+                     const bool modifies,
+                     Task::WhichDW this_dw);
+                     
+    void ROI_Extents ( const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse*, 
+                         DataWarehouse* new_dw);
 
   }; // class Ray
 } // namespace Uintah
