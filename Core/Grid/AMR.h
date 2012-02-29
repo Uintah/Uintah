@@ -906,7 +906,16 @@ UINTAHSHARE void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
                                             const Patch* coarsePatch,  
                                             const Patch* finePatch,    
                                             NodeIterator& iter,
-                                            bool& isRight_CP_FP_pair);                                     
+                                            bool& isRight_CP_FP_pair); 
+                                            
+                                            
+UINTAHSHARE void compute_Mag_gradient( constCCVariable<double>& q_CC,
+                                       CCVariable<double>& mag_grad_q_CC,                   
+                                       const Patch* patch);
+                               
+UINTAHSHARE void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
+                                         CCVariable<double>& mag_div_q_CC,                   
+                                         const Patch* patch);                                
                                         
 } // end namespace Uintah
 #endif

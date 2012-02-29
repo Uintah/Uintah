@@ -475,4 +475,54 @@ void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
   }
 }
 
+/*_____________________________________________________________________ 
+Function~  compute_Mag_gradient--
+Purpose~   computes the magnitude of the gradient/divergence of q_CC.
+           First order central difference.  Used in setting refinement flags
+______________________________________________________________________*/
+void compute_Mag_gradient( constCCVariable<double>& q_CC,
+                           CCVariable<double>& mag_grad_q_CC,
+                           const Patch* patch) 
+{                  
+  Vector dx = patch->dCell(); 
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    Vector grad_q_CC;
+    
+    for(int dir = 0; dir <3; dir ++ ) { 
+      IntVector r = c;
+      IntVector l = c;
+      double inv_dx = 0.5 /dx[dir];
+      r[dir] += 1;
+      l[dir] -= 1;
+      grad_q_CC[dir] = (q_CC[r] - q_CC[l])*inv_dx;
+    }
+    mag_grad_q_CC[c] = grad_q_CC.length();
+  }
+}
+//______________________________________________________________________
+//          vector version
+void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
+                             CCVariable<double>& mag_div_q_CC,       
+                             const Patch* patch)                     
+{                  
+  Vector dx = patch->dCell(); 
+  
+
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    Vector Divergence_q_CC;
+    for(int dir = 0; dir <3; dir ++ ) { 
+      IntVector r = c;
+      IntVector l = c;
+      
+      double inv_dx = 0.5 /dx[dir];
+      r[dir] += 1;
+      l[dir] -= 1;
+      Divergence_q_CC[dir]=(q_CC[r][dir] - q_CC[l][dir])*inv_dx;
+    }
+    mag_div_q_CC[c] = Divergence_q_CC.length();
+  }
+}
+
 }
