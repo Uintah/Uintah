@@ -20,6 +20,7 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
+#       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
 #       no_restart:             - skip the restart tests
@@ -31,6 +32,7 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
