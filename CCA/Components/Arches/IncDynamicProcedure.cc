@@ -1359,10 +1359,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexHigh = patch->getFortranCellHighIndex();
     double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
-#if 0
-    cerr << "In the IncDynamic Procedure print ccuvel" << endl;
-    ccuVel.print(cerr);
-#endif
 
     d_filter->applyFilter(pc, patch, ccVel, filterUVel, 0);
     d_filter->applyFilter(pc, patch, ccVel, filterVVel, 1);
@@ -1409,9 +1405,9 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                              cellinfo->stb[colZ+kk]*
                              (1.0-0.5*abs(ii))*
                              (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                filterUVel[currCell] += ccuVel[filterCell]*vol*invDelta; 
-                filterVVel[currCell] += ccvVel[filterCell]*vol*invDelta; 
-                filterWVel[currCell] += ccwVel[filterCell]*vol*invDelta;
+                filterUVel[currCell] += ccVel[filterCell][0]*vol*invDelta; 
+                filterVVel[currCell] += ccVel[filterCell][1]*vol*invDelta; 
+                filterWVel[currCell] += ccVel[filterCell][2]*vol*invDelta;
                 filterUU[currCell] += UU[filterCell]*vol*invDelta;  
                 filterUV[currCell] += UV[filterCell]*vol*invDelta;  
                 filterUW[currCell] += UW[filterCell]*vol*invDelta;  

@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 
 /** 
 * @class  DORadiation
@@ -110,6 +111,7 @@ private:
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 
+  RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
 
   const VarLabel* _co2_label; 
@@ -127,6 +129,8 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+
+  bool _using_prop_calculator; 
 
 }; // end DORadiation
 } // end namespace Uintah
