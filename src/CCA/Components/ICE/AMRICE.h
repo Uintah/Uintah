@@ -242,14 +242,6 @@ namespace Uintah {
                        DataWarehouse*,
                        DataWarehouse* new_dw,
                        bool initial);
-                       
-    void compute_Mag_gradient( constCCVariable<double>& q_CC,
-                               CCVariable<double>& mag_grad_q_CC,                   
-                               const Patch* patch);
-                               
-    void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
-                                 CCVariable<double>& mag_div_q_CC,                   
-                                 const Patch* patch);
 
     void set_refineFlags( constCCVariable<double>& q_CC_grad,
                           double threshold,
