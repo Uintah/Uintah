@@ -3983,10 +3983,11 @@ if test "$sci_required_cuda" = "yes"; then
   AS_MESSAGE(checking for required CUDA components......)
   echo
   
+  # This is now turned off to test some static builds on the GPU-enabled Jaguar-XK6
   # guard against building staticaly linked Uintah with CUDA
-  if test \( "$with_cuda" -a "$with_cuda_sdk" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
-    AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
-  fi
+  #if test \( "$with_cuda" -a "$with_cuda_sdk" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
+    #AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
+  #fi
 
   # make sure we have both CUDA and CUDA-SDK
   if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
