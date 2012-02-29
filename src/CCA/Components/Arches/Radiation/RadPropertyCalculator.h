@@ -32,9 +32,9 @@ namespace Uintah {
           db_pc->getAttribute("type", calculator_type); 
 
           if ( calculator_type == "constant" ){ 
-            //_calculator = scinew ConstantProperties(); 
+            _calculator = scinew ConstantProperties(); 
           } else if ( calculator_type == "burns_christon" ){ 
-            //_calculator = scinew BurnsChriston(); 
+            _calculator = scinew BurnsChriston(); 
           } else { 
             throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
           } 
@@ -61,8 +61,8 @@ namespace Uintah {
       class PropertyCalculatorBase { 
 
         public: 
-          PropertyCalculatorBase(); 
-          virtual ~PropertyCalculatorBase(); 
+          PropertyCalculatorBase() {} 
+          virtual ~PropertyCalculatorBase() {}
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
           virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
@@ -73,8 +73,8 @@ namespace Uintah {
       class ConstantProperties : public PropertyCalculatorBase  { 
 
         public: 
-          ConstantProperties();
-          ~ConstantProperties();
+          ConstantProperties() {}
+          ~ConstantProperties() {}
 
           bool problemSetup( const ProblemSpecP& db ) {
               
@@ -99,8 +99,8 @@ namespace Uintah {
       class  BurnsChriston : public PropertyCalculatorBase  { 
 
         public: 
-          BurnsChriston();
-          ~BurnsChriston();
+          BurnsChriston() {}
+          ~BurnsChriston() {}
 
           bool problemSetup( const ProblemSpecP& db ) { 
             ProblemSpecP db_prop = db; 
