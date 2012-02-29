@@ -88,7 +88,6 @@ WARNING
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
-    virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleInitialErrorEstimate  ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
@@ -107,35 +106,6 @@ WARNING
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw );
 
-    void scheduleRefine_Q(SchedulerP& sched,
-                          const PatchSet* patches,
-                          const MaterialSet* matls);
-
-    void refine_Q(const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*,
-                  DataWarehouse* new_dw);
-                  
-    // coarsen all variables              
-    void scheduleCoarsenAll( const LevelP& coarseLevel, 
-                            SchedulerP& sched );
-                          
-    // coarsen a single variable                      
-    void scheduleCoarsen_Q( const LevelP& coarseLevel,
-                            SchedulerP& scheduler,
-                            Task::WhichDW this_dw,
-                            const bool modifies,
-                            const VarLabel* variable);
-                  
-    void coarsen_Q ( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse*, 
-                     DataWarehouse* new_dw,
-                     const VarLabel* variable,
-                     const bool modifies,
-                     Task::WhichDW this_dw);
                                                     
     void schedulePseudoCFD(SchedulerP& sched,
                            const PatchSet* patches,
@@ -145,14 +115,7 @@ WARNING
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);       
-
-    void errorEstimate ( const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse*, 
-                         DataWarehouse* new_dw, 
-                         bool initial);
+                     DataWarehouse* new_dw);
 
    protected:
     const ProcessorGroup* d_myworld;
@@ -178,7 +141,6 @@ WARNING
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
     
-    int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     std::vector<GeometryObject*> d_refine_geom_objs;
   };
 

@@ -116,6 +116,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_DORadiation->problemSetup(db, false);
   }
 
+#if 0
   if (db->findBlock("RMCRT")){
     d_doRMCRT         = true;
     d_radiationCalc   = true;
@@ -129,8 +130,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
                                 d_lab->d_radiationSRCINLabel ) ; 
     
     d_RMCRT->problemSetup( rmcrt_db ); 
-
   }
+#endif
 
   //__________________________________
   //  Convection scheme
@@ -274,7 +275,7 @@ EnthalpySolver::solve(const LevelP& level,
   if ( d_doRMCRT ) {
     Task::WhichDW abskg_dw = Task::OldDW;
     Task::WhichDW temp_dw  = Task::OldDW;
-    Task::WhichDW sigma_dw = Task::OldDW;
+    Task::WhichDW sigma_dw = Task::NewDW;
     bool modifies_divQ     = false;
     
     if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ){ 
