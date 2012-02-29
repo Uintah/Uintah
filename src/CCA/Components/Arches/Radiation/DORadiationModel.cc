@@ -88,9 +88,7 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
 
   d_linearSolver = 0;
   d_radCalcFreq = 0; 
-  _props_calculator = 0;
   d_perproc_patches = 0;
-  _using_props_calculator = false;
   d_use_abskp = false;
 }
 
@@ -100,7 +98,6 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
 DORadiationModel::~DORadiationModel()
 {
   delete d_linearSolver;
-  delete _props_calculator;
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches; 
 }
@@ -125,29 +122,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
   
   string prop_model;
   ProblemSpecP db = params->findBlock("DORadiationModel");
-  //__________________________________
-  // property calculator
-  if ( db->findBlock("property_calculator") ){ 
-
-    std::string calculator_type; 
-    db->findBlock("property_calculator")->getAttribute("type",calculator_type);
-
-    if ( calculator_type == "constant" ){ 
-      _props_calculator = scinew ConstantProperties(); 
-    } else if ( calculator_type == "burns_christon" ){ 
-      _props_calculator = scinew BurnsChriston(); 
-    } else { 
-      throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
-    } 
-
-    ProblemSpecP db_pc = db->findBlock("property_calculator"); 
-    _using_props_calculator = _props_calculator->problemSetup( db_pc );
-
-    if ( !_using_props_calculator ) {
-      throw InvalidValue("Error: Property calculator specified in input file but I was unable to setup your calculator!",__FILE__, __LINE__); 
-    } 
-  } 
-
 
   //__________________________________
   // article absorption coefficient 
@@ -532,9 +506,6 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, fractiontwo,
                lprobone, lprobtwo, lprobthree, d_lambda, lradcal);
 
-  if (_using_props_calculator){
-    _props_calculator->computeProps( patch, vars->ABSKG );                                      
-  }
 }
 
 //***************************************************************************
