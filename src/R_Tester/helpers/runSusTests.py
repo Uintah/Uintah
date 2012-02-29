@@ -69,6 +69,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   max_parallelism = float(argv[5])
   svn_revision    = getoutput("svn info ../src |grep Revision")
   
+  
+  has_gpu = 0     # Hardwired for now.  I'm not sure if this is the right place for 
+                  # deciding if a machine is gpu capable.
+  
   #__________________________________
   # set environmental variables
   environ['PATH']              = "%s%s%s%s%s" % (helperspath, pathsep, toolspath, pathsep, environ['PATH'])
@@ -190,10 +194,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     do_memory      = 1
     do_restart     = 1
     do_performance = 0
-    do_debug = 1
-    do_opt   = 1
+    do_debug        = 1
+    do_opt          = 1
+    do_gpu          = 0    # run test if gpu is supported
     abs_tolerance = 1e-9   # defaults used in compare_uda
-    rel_tolerance = 1e-6    
+    rel_tolerance = 1e-6
+    sus_options     = ""
     startFrom = "inputFile"
     
     #__________________________________
@@ -212,6 +218,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           do_memory = 0
         if flags[i] == "no_restart":
           do_restart = 0
+        if flags[i] == "gpu":
+          do_gpu = 1
         if flags[i] == "no_dbg":
           do_debug = 0
         if flags[i] == "no_opt":
@@ -231,8 +239,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           startFrom          = "checkpoint"
         # parse the flags for 
         #    abs_tolerance=<number>
-        #    rel_tolerance=<number>  
+        #    rel_tolerance=<number> 
+        #    sus_option=" " 
         tmp = flags[i].rsplit('=')
+        if tmp[0] == "sus_options":
+           sus_options = tmp[1]
         if tmp[0] == "abs_tolerance":
           abs_tolerance = tmp[1]
         if tmp[0] == "rel_tolerance":
@@ -253,6 +264,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if do_opt == 0 and dbg_opt == "opt":
       print "\nWARNING: skipping this test (do_opt: %s, dbg_opt: %s)\n" % (do_opt, dbg_opt)
       continue
+      
+    if do_gpu == 1 and has_gpu == 0:
+      print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+      continue      
+      
     
     if dbg_opt == "opt" : # qwerty: Think this is right now...
       do_memory = 0
@@ -261,7 +277,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       do_memory = 0
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
-    tolerances = [abs_tolerance, rel_tolerance]
+    tolerances  = [abs_tolerance, rel_tolerance]
+    varBucket   = [sus_options]
     
     ran_any_tests = 1
 
@@ -327,7 +344,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom)
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
     system("rm inputs")
 
     # copy results to web server
@@ -354,7 +371,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         startFrom = "restart"
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom)
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket)
 
         if rc > 0:
           failcode = 1
@@ -437,7 +454,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket):
   global startpath
   
   testname = nameoftest(test)
@@ -448,12 +465,14 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "Skipping test %s because it requires mpi and max_parallism < 1.1" % testname;
       return -1; 
 
+  sus_options             = varBucket[0]
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
   compUda_RC      = 0   # compare_uda return code
   performance_RC  = 0   # performance return code
   memory_RC       = 0   # memory return code
+  
 
 
   output_to_browser=1
@@ -518,10 +537,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus %s" % (susdir, SVN_OPTIONS)
+    command = "/usr/bin/time -p %s/sus %s %s" % (susdir, sus_options, SVN_OPTIONS)
     mpimsg = ""
   else:
-    command = "/usr/bin/time -p %s %s %s/sus %s -mpi" % (MPIHEAD, int(np), susdir, SVN_OPTIONS)
+    command = "/usr/bin/time -p %s %s %s/sus %s %s -mpi" % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer

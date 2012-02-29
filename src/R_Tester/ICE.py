@@ -22,6 +22,7 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #  flags: 
+#       gpu:                    - run test if machine is gpu enabled
 #       no_uda_comparison:      - skip the uda comparisons
 #       no_memoryTest:          - skip all memory checks
 #       no_restart:             - skip the restart tests
@@ -32,7 +33,8 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000) 
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       sus_options="string"    - Additional command line options for sus command
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
@@ -41,18 +43,12 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["exactComparison"]),      \
-                   ("advect",           "advect.ups",            1, "Darwin", ["doesTestRun"]),         \
                    ("riemann_sm",       "riemann_sm.ups",        1, "Linux", ["exactComparison"]),      \
-                   ("riemann_sm",       "riemann_sm.ups",        1, "Darwin", ["doesTestRun"]),         \
                    ("hotBlob2mat",      "hotBlob2mat.ups",       1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob2mat",      "hotBlob2mat.ups",       1, "Darwin", ["doesTestRun"]),         \
                    ("hotBlob2mat_sym",  "hotBlob2mat_sym.ups",   1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob2mat_sym",  "hotBlob2mat_sym.ups",   1, "Darwin", ["doesTestRun"]),         \
                    ("impHotBlob",       "impHotBlob.ups",        1, "Linux", ["exactComparison"]),      \
-                   ("impHotBlob",       "impHotBlob.ups",        1, "Darwin", ["doesTestRun"]),         \
                    ("hotBlob2mat8patch","hotBlob2mat8patch.ups", 8, "Linux",["exactComparison"]),       \
                    ("advect2matAMR",    "advect2matAMR.ups",     1, "Linux", ["exactComparison"]),      \
-                   ("advect2matAMR",    "advect2matAMR.ups",     1, "Darwin", ["doesTestRun"]),         \
                    ("hotBlob_AMR",      "hotBlob_AMR.ups",       4, "Linux", ["exactComparison"]),      \
                    ("hotBlob_AMR_3L",    hotBlob_AMR_3L_ups,     4, "Linux", ["exactComparison"]),      \
                    ("impAdvectAMR",     "impAdvectAMR.ups",    1.1, "Linux", ["exactComparison"])
