@@ -72,6 +72,10 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
+  _prop_calculator = 0;
+  _using_prop_calculator = 0; 
+  _DO_model = 0; 
+
 }
 
 RMCRT_Radiation::~RMCRT_Radiation()
@@ -85,6 +89,9 @@ RMCRT_Radiation::~RMCRT_Radiation()
     VarLabel::destroy( *iter ); 
 
   }
+
+  delete _prop_calculator; 
+  delete _DO_model; 
 
 }
 //---------------------------------------------------------------------------
@@ -105,6 +112,9 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db, true ); 
+
+  _prop_calculator = scinew RadPropertyCalculator(); 
+  _using_prop_calculator = _prop_calculator->problemSetup( db ); 
 
   _labels->add_species( _co2_label_name ); 
   _labels->add_species( _h2o_label_name ); 
