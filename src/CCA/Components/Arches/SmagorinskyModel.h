@@ -69,6 +69,9 @@ WARNING
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
@@ -199,49 +202,49 @@ private:
 
       inline double compute_smag_viscos ( constSFCXVariable<double>& u, constSFCYVariable<double> v, constSFCZVariable<double> w, 
           constCCVariable<Vector>& UCC,
-          constCCVariable<double>& den, double pmixl, Vector Dx, IntVector c ){ 
+          constCCVariable<double>& den, double pmixl, Vector Dx, IntVector c ){
 
-        IntVector cxp = c + IntVector(1,0,0);
-        IntVector cxm = c - IntVector(1,0,0);
-        IntVector cyp = c + IntVector(0,1,0);
-        IntVector cym = c - IntVector(0,1,0);
-        IntVector czp = c + IntVector(0,0,1);
-        IntVector czm = c - IntVector(0,0,1);
+        const IntVector cxp = c + IntVector(1,0,0);
+        const IntVector cxm = c - IntVector(1,0,0);
+        const IntVector cyp = c + IntVector(0,1,0);
+        const IntVector cym = c - IntVector(0,1,0);
+        const IntVector czp = c + IntVector(0,0,1);
+        const IntVector czm = c - IntVector(0,0,1);
 
-        double uep = u[cxp];
-        double uwp = u[c];
-        double unp = 0.50 * UCC[cyp].x();
-        double usp = 0.50 * UCC[cym].x();
-        double utp = 0.50 * UCC[czp].x();
-        double ubp = 0.50 * UCC[czm].x();
+        const double uep = u[cxp];
+        const double uwp = u[c];
+        const double unp = 0.50 * UCC[cyp].x();
+        const double usp = 0.50 * UCC[cym].x();
+        const double utp = 0.50 * UCC[czp].x();
+        const double ubp = 0.50 * UCC[czm].x();
 
-        double vep = 0.50 * UCC[cxp].y();
-        double vwp = 0.50 * UCC[cxm].y();
-        double vnp = v[cyp];
-        double vsp = v[c];
-        double vtp = 0.50 * UCC[czp].y();
-        double vbp = 0.50 * UCC[czm].y();
+        const double vep = 0.50 * UCC[cxp].y();
+        const double vwp = 0.50 * UCC[cxm].y();
+        const double vnp = v[cyp];
+        const double vsp = v[c];
+        const double vtp = 0.50 * UCC[czp].y();
+        const double vbp = 0.50 * UCC[czm].y();
 
-        double wep = 0.50 * UCC[cxp].z();
-        double wwp = 0.50 * UCC[cxm].z();
-        double wnp = 0.50 * UCC[cyp].z();
-        double wsp = 0.50 * UCC[cym].z();
-        double wtp = w[czp];
-        double wbp = w[c];
+        const double wep = 0.50 * UCC[cxp].z();
+        const double wwp = 0.50 * UCC[cxm].z();
+        const double wnp = 0.50 * UCC[cyp].z();
+        const double wsp = 0.50 * UCC[cym].z();
+        const double wtp = w[czp];
+        const double wbp = w[c];
 
-        double s11 = (uep-uwp)/Dx.x();
-        double s22 = (vnp-vsp)/Dx.y();
-        double s33 = (wtp-wbp)/Dx.z();
-        double s12 = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
-        double s13 = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
-        double s23 = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
+        const double s11 = (uep-uwp)/Dx.x();
+        const double s22 = (vnp-vsp)/Dx.y();
+        const double s33 = (wtp-wbp)/Dx.z();
+        const double s12 = 0.50 * ((unp-usp)/Dx.y() + (vep-vwp)/Dx.x());
+        const double s13 = 0.50 * ((utp-ubp)/Dx.z() + (wep-wwp)/Dx.x());
+        const double s23 = 0.50 * ((vtp-vbp)/Dx.z() + (wnp-wsp)/Dx.y());
 
         double IsI = 2.0 * ( pow(s11,2.0) + pow(s22,2.0) + pow(s33,2.0)
             + 2.0 * ( pow(s12,2) + pow(s13,2) + pow(s23,2) ) ); 
 
         IsI = std::sqrt( IsI ); 
 
-        double turb_viscos = pow(pmixl, 2.0) * den[c] * IsI; 
+        const double turb_viscos = pow(pmixl, 2.0) * den[c] * IsI;
 
         return turb_viscos; 
 
