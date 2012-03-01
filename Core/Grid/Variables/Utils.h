@@ -30,8 +30,11 @@ DEALINGS IN THE SOFTWARE.
 #define Packages_Uintah_Core_Grid_Variables_Utils_h
 
 #include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
+
 //______________________________________________________________________
 //   This function examines all the values for being positive.  If a 
 //   negative value or nan is found the function returns false along 
@@ -46,6 +49,9 @@ bool areAllValuesPositive( T                 & src,
 //   with the first cell index.
 template< class T >
 bool areAllValuesNumbers( T                 & src, 
+                           SCIRun::IntVector & neg_cell );
+
+bool areAllNodeValuesNumbers( NCVariable<Vector>  & src, 
                            SCIRun::IntVector & neg_cell );
 }
 
