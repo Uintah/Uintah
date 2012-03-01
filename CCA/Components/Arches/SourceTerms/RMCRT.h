@@ -1,9 +1,11 @@
 #ifndef Uintah_Component_Arches_RMCRT_h
 #define Uintah_Component_Arches_RMCRT_h
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
+
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -134,6 +136,7 @@ private:
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 
+  RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
 
   const VarLabel* _co2_label; 
@@ -152,6 +155,8 @@ private:
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
 
-}; // end RMCRT_Radiation
+  bool _using_prop_calculator; 
+
+}; // end RMCRT
 } // end namespace Uintah
 #endif

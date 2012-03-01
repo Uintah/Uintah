@@ -4,9 +4,11 @@
 
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah { 
 

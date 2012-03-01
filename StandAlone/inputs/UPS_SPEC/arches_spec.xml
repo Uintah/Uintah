@@ -487,13 +487,13 @@
             </injector>
 
             <!-- Radiation models --> 
-            <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+            <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
             <abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" />
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
             <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
-            <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
+            <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation rmcrt_radiation" >  <!-- TEMPORARY HACK-->
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
@@ -511,7 +511,7 @@
             </DORadiationModel>
             
             <!-- RMCRT -->
-            <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
+            <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
