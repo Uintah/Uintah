@@ -61,6 +61,7 @@ public:
 
   /** @brief Return an instance of the factory.  */
   static DQMOMEqnFactory& self(); 
+
   /** @brief Register a scalar eqn with the builder.    */
   void register_scalar_eqn( const std::string name, 
                             DQMOMEqnBuilderBase* builder);
@@ -98,6 +99,7 @@ public:
     return n_quad_; };
 
 private:
+
   typedef std::map< std::string, DQMOMEqnBuilderBase* >  BuildMap; 
 
   BuildMap builders_; 
@@ -110,6 +112,10 @@ private:
   ~DQMOMEqnFactory(); 
 
   int n_quad_; 
+
+  bool doing_dqmom_; 
+
+  std::string which_dmqom_;
 
 }; // class DQMOMEqnFactory 
 } // end namespace Uintah

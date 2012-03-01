@@ -459,6 +459,7 @@
                                                                            fy_intrusion_inlet,                                                     
                                                                            fz_intrusion_inlet,                                                     
                                                                            do_radiation,                                                           
+                                                                           rmcrt_radiation, 
                                                                            bowman_nox,
                                                                            wasatch_expr'">                                                           
 
