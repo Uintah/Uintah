@@ -151,6 +151,7 @@ private:
   };  
 
   bool d_laminar_pr; 
+  std::string d_pr_label; 
 
   const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
 

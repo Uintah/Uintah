@@ -412,6 +412,8 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
+          <use_laminar_pr               spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 

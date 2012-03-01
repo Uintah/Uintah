@@ -74,10 +74,12 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
-  if (db->findBlock("use_laminar_pr"))
+  if (db->findBlock("use_laminar_pr")){
     d_laminar_pr = true; 
-  else
-    d_laminar_pr = false; 
+    db->findBlock("use_laminar_pr")->getAttribute("label",d_pr_label); 
+  } else {
+    d_laminar_pr = false;
+  }
  
   // Discretization information
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
@@ -243,7 +245,7 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
   if (d_laminar_pr){
     // This requires that the LaminarPrNo model is activated
-    const VarLabel* pr_label = VarLabel::find("laminar_pr"); 
+    const VarLabel* pr_label = VarLabel::find(d_pr_label); 
     tsk->requires(Task::OldDW, pr_label, gn, 0); 
   }
 
@@ -298,7 +300,7 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
     if ( d_laminar_pr ) { 
       constCCVariable<double> lam_pr_no; 
-      const VarLabel* pr_label = VarLabel::find("laminar_pr"); 
+      const VarLabel* pr_label = VarLabel::find(d_pr_label); 
       old_dw->get( lam_pr_no, pr_label, matlIndex, patch, gn, 0 ); 
 
       pr_no.copyData( lam_pr_no ); 
