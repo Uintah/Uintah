@@ -281,6 +281,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
   // restart problem spec
   mpm_flag_ps->get("computeNodalHeatFlux",d_computeNodalHeatFlux);
+  mpm_flag_ps->get("computeScaleFactor",  d_computeScaleFactor);
   
   delete d_interpolator;
 
@@ -382,6 +383,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);
   ps->appendElement("DoPressureStabilization", d_doPressureStabilization);
   ps->appendElement("computeNodalHeatFlux",d_computeNodalHeatFlux);
+  ps->appendElement("computeScaleFactor",  d_computeScaleFactor);
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
