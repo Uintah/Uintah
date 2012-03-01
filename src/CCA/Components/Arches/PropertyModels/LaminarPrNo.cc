@@ -7,7 +7,7 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 LaminarPrNo::LaminarPrNo( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
 {
-  std::string varlabel_name = "laminar_pr"; 
+  std::string varlabel_name = prop_name; 
   // the prop is the pr number.  Along with this, we will also give access to D and mu
   _prop_label = VarLabel::create( varlabel_name, CCVariable<double>::getTypeDescription() ); 
 
