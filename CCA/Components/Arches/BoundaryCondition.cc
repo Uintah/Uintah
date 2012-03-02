@@ -6706,7 +6706,7 @@ BoundaryCondition::setHattedIntrusionVelocity( const int p,
                                                constCCVariable<double>& density ) 
 { 
   if ( _using_new_intrusion ) { 
-//    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+    _intrusionBC->setHattedVelocity( p, u, v, w, density );
   } 
 } 
 void
@@ -6723,9 +6723,9 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
 {
 
   if ( _using_new_intrusion ) { 
-//    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
-//    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
-//    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
+    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
+    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
   }
 
 }

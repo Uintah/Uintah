@@ -276,9 +276,9 @@ IntrusionBC::sched_computeProperties( SchedulerP& sched,
                                       const PatchSet* patches, 
                                       const MaterialSet* matls )
 {
-//  Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
+  Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
-//  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, patches, matls); 
 }
 void 
 IntrusionBC::computeProperties( const ProcessorGroup*, 

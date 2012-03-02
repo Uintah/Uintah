@@ -112,7 +112,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
         src_db !=0; src_db = src_db->findNextBlock("src")){
       std::string type="null";
       src_db->getAttribute("type",type); 
-      if ( type == "do_radiation" ){ 
+      if ( type == "do_radiation" || type == "rmcrt_radiation" ){ 
         d_allocate_soot = true; 
       } 
     }
