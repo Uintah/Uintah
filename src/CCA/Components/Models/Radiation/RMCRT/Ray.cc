@@ -330,9 +330,15 @@ Ray::sched_rayTrace( const LevelP& level,
                      bool modifies_divQ )
 {
   std::string taskname = "Ray::sched_rayTrace";
+#ifdef HAVE_CUDA
+  std::string gputaskname = "Ray::sched_rayTraceGPU";
+  Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
+                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw );
+#else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
                          modifies_divQ, abskg_dw, sigma_dw );
-                         
+#endif
+
   printSchedule(level,dbg,taskname);
 
   // require an infinite number of ghost cells so  you can access
