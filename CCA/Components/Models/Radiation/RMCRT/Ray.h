@@ -8,6 +8,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
+#include <sci_defs/cuda_defs.h>
+
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -46,13 +48,13 @@ namespace Uintah{
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
                            bool modifies_divQ );
-                           
+
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
                                      SchedulerP& sched,
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
-                                     bool modifies_divQ  );
+                                     bool modifies_divQ );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
@@ -143,7 +145,19 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
-                     Task::WhichDW which_sigmaT4_dw ); 
+                     Task::WhichDW which_sigmaT4_dw );
+#ifdef HAVE_CUDA
+      //----------------------------------------
+      void rayTraceGPU( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        int device,
+                        bool modifies_divQ,
+                        Task::WhichDW which_abskg_dw,
+                        Task::WhichDW which_sigmaT4_dw );
+#endif
       //__________________________________
       void rayTrace_dataOnion( const ProcessorGroup* pc, 
                                const PatchSubset* patches, 

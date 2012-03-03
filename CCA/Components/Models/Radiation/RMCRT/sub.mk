@@ -26,8 +26,14 @@
 # DEALINGS IN THE SOFTWARE.
 # 
 # 
+
 SRCDIR   := CCA/Components/Models/Radiation/RMCRT
 
 SRCS += $(SRCDIR)/Ray.cc
 
-LIBS := 
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/RayGPU.cu
+  LIBS :=  $(CUDA_LIBRARY)
+endif
+
+LIBS :=
