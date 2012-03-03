@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_FIRST_ORDER_ADVECTOR_GPU_H
 
 #include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Disclosure/TypeDescription.h>
 
@@ -44,14 +45,12 @@ namespace Uintah {
 
   public:
     FirstOrderAdvectorGPU();
-    FirstOrderAdvectorGPU(DataWarehouse* new_dw, 
-                       const Patch* patch,
-                       const bool isNewGrid);
+
+    FirstOrderAdvectorGPU(DataWarehouse* new_dw, const Patch* patch, const bool isNewGrid);
+
     virtual ~FirstOrderAdvectorGPU();
 
-    virtual FirstOrderAdvectorGPU* clone(DataWarehouse* new_dw, 
-                                      const Patch* patch,
-                                      const bool isNewGrid);
+    virtual FirstOrderAdvectorGPU* clone(DataWarehouse* new_dw, const Patch* patch, const bool isNewGrid);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
@@ -62,6 +61,17 @@ namespace Uintah {
                                      const int&  indx,
                                      const bool& bulletProof_test,
                                      DataWarehouse* new_dw);
+
+    virtual void inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
+                                        const VarLabel* vvel_FCMELabel,
+                                        const VarLabel* wvel_FCMELabel,
+                                        const double& delT,
+                                        const Patch* patch,
+                                        const int& indx,
+                                        const bool& bulletProofing_test,
+                                        DataWarehouse* new_dw,
+                                        const int& device,
+                                        GPUThreadedMPIScheduler* sched);
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
