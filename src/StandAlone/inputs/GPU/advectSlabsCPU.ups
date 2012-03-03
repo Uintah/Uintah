@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-      <title>AdvectSlabs test</title>
+      <title>AdvectSlabsCPU test</title>
   </Meta>
 
   <SimulationComponent type="advectslabs" />
@@ -28,7 +28,6 @@
   <!--__________________________________-->
   <AdvectSlabs>
     <delt>.01</delt>
-    <maxresidual>.01</maxresidual>
   </AdvectSlabs>
   
   
@@ -69,10 +68,11 @@
 
     <Level>
       <Box label = "1">                              
-         <lower>     [0,0,0]        </lower>         
-         <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[50,50,50]     </resolution>    
-         <patches>   [2,1,1]        </patches>       
+         <lower>      [0,0,0]        </lower>         
+         <upper>      [1.0,1.0,1.0]  </upper>         
+         <resolution> [64,64,64]     </resolution>    
+         <patches>    [1,1,1]        </patches>
+         <extraCells> [1,1,1]    </extraCells>
       </Box>                                         
     </Level>
   </Grid>
