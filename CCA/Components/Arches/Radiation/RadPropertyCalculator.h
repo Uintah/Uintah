@@ -5,6 +5,8 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -52,7 +54,7 @@ namespace Uintah {
 
       };
 
-      void compute( const Patch* patch, CCVariable<double> abskg ){ 
+      void compute( const Patch* patch, CCVariable<double>& abskg ){ 
 
         _calculator->computeProps( patch, abskg );
 
@@ -70,14 +72,16 @@ namespace Uintah {
           virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
       };
 
-      //__________________________________
+      //______________________________________________________________________
       //
       class ConstantProperties : public PropertyCalculatorBase  { 
 
         public: 
           ConstantProperties() {}
           ~ConstantProperties() {}
-
+          
+          //__________________________________
+          //
           bool problemSetup( const ProblemSpecP& db ) {
               
             ProblemSpecP db_prop = db; 
@@ -87,7 +91,9 @@ namespace Uintah {
 
             return property_on; 
           };
-
+          
+          //__________________________________
+          //
           void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
             abskg.initialize(_value); 
           }; 
@@ -96,39 +102,65 @@ namespace Uintah {
           double _value; 
       }; 
 
-      //__________________________________
+      //______________________________________________________________________
       //
       class  BurnsChriston : public PropertyCalculatorBase  { 
 
         public: 
-          BurnsChriston() {}
+          BurnsChriston() {
+            notSet = Point(-9,-9,-9);
+            min    = notSet;
+            max    = notSet;
+          }
           ~BurnsChriston() {}
-
+          
+          //__________________________________
+          //
           bool problemSetup( const ProblemSpecP& db ) { 
-            ProblemSpecP db_prop = db; 
-            db_prop->require("grid",grid);
-             
+            ProblemSpecP db_prop = db;
+            
+            db_prop->get("min", min);  // optional
+            db_prop->get("max", max);
+            
             bool property_on = true; 
             return property_on; 
           };
-
+          
+          //__________________________________
+          //
           void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+            
+            BBox domain(min,max);
+            
+            // if the user didn't specify the min and max 
+            // use the grid's domain
+            if( min == notSet  &&  max == notSet ){
+              const Level* level = patch->getLevel();
+              GridP grid  = level->getGrid();
+              grid->getInteriorSpatialRange(domain);
+            }
 
-            Vector Dx = patch->dCell(); 
-
+            Point midPt((max - min)/2 + min);
+            
             for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
               IntVector c = *iter; 
-              std::cout << abskg[c] << std::endl;
-              abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
-                              * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
-                              * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 
-                              + 0.1;
+              Point pos = patch->getCellPosition(c);
+              
+              if(domain.inside(pos)){
+                abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( pos.x() - midPt.x() ) )
+                                * ( 1.0 - 2.0 * fabs( pos.y() - midPt.y() ) )
+                                * ( 1.0 - 2.0 * fabs( pos.z() - midPt.z() ) ) 
+                                + 0.1;
+              }
             } 
           }; 
 
         private: 
-          double _value; 
-          IntVector grid; 
+          double _value;
+          Point notSet;
+          Point min;
+          Point max;
+           
       }; 
 
       RadPropertyCalculator::PropertyCalculatorBase* _calculator;
