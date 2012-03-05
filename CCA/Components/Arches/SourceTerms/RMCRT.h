@@ -21,22 +21,17 @@
 *
 * The input file interface for this property should like this in your UPS file: 
 *
-*	 <calc_frequency 						   spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
-*  <calc_on_all_RKsteps          spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
-*	 <co2_label 									 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label with default of CO2, default = CO2 --> 
-*	 <h2o_label 									 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label wtih default of H2O, default = H2O --> 
-*	 <RMCRT_RadiationModel 					   spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
-*  	 <opl                        spec="REQUIRED DOUBLE" />
-*    <ordinates                  spec="OPTIONAL INTEGER" />
-*    <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
-*    <LinearSolver               spec="OPTIONAL NO_DATA" 
-*            	                        attribute1="type REQUIRED STRING 'hypre, petsc'">
-*      <res_tol                  spec="REQUIRED DOUBLE" />
-*      <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
-*      <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
-*      <max_iter                 spec="REQUIRED INTEGER" />
-*    </LinearSolver>
-*  </RMCRT_RadiationModel>
+*  <calc_frequency /> 
+*  <calc_on_all_RKsteps/> <!-- calculate radiation every RK step, default = false --> 
+*
+*
+*  <RMCRT>
+*    <randomSeed>        false      </randomSeed>
+*    <NoOfRays>          25         </NoOfRays>
+*    <Threshold>         0.05       </Threshold>
+*    <Slice>             20         </Slice>
+*    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+* </RMCRT>
 *
 * TO DO'S: 
 *  @todo Remove _bc from code.  But first must remove it from RMCRT_RadiationModel.cc
@@ -44,8 +39,7 @@
 */ 
 
 namespace Uintah{
-
-  class DORadiationModel; 
+ 
   class ArchesLabel; 
   class BoundaryCondition; 
 
@@ -67,12 +61,12 @@ public:
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 
                             int timeSubStep );
-  
-  void computeSource( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw, 
+                            
+  void computeSource( const ProcessorGroup*, 
+                      const PatchSubset* , 
+                      const MaterialSubset* , 
+                      DataWarehouse* , 
+                      DataWarehouse* , 
                       int timeSubStep );
   
   void sched_dummyInit( const LevelP& level, 
@@ -84,6 +78,7 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  //______________________________________________________________________
   class Builder
     : public SourceTermBase::Builder { 
 
@@ -99,7 +94,7 @@ public:
           _bc(bc), 
           _my_world(my_world), 
           _required_label_names(required_label_names){
-          _type = "do_radiation"; 
+          _type = "rmcrt_radiation"; 
         };
       ~Builder(){}; 
 
@@ -109,7 +104,6 @@ public:
       };
 
     private: 
-
       std::string _name; 
       std::string _type; 
       ArchesLabel* _labels; 
@@ -119,43 +113,54 @@ public:
       vector<std::string> _required_label_names; 
 
   }; // class Builder 
-
+  //______________________________________________________________________
+  //
 private:
 
-  int _radiation_calc_freq; 
+
+  void sched_radProperties( const LevelP& level,
+                            SchedulerP& sched,
+                            const int time_sub_step );
+  
+  void radProperties( const ProcessorGroup* ,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* ,
+                      DataWarehouse* new_dw,
+                      const int time_sub_step );    
+
+
+  //__________________________________
+  //
+  int _radiation_calc_freq;
+  int _matl;
+  MaterialSet* _matlSet;
+  
 
   bool _all_rk; 
+  bool _using_prop_calculator;
+  bool _CoarseLevelRMCRTMethod;
+  bool _multiLevelRMCRTMethod;
+  
+  double _initColor;
+  double _initAbskg; 
 
-  std::string _co2_label_name; 
-  std::string _h2o_label_name; 
-  std::string _T_label_name; 
-  std::string _abskp_label_name; 
-
-  DORadiationModel* _DO_model;
   Ray* _RMCRT;
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 
   RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
-
-  const VarLabel* _co2_label; 
-  const VarLabel* _h2o_label; 
-  const VarLabel* _T_label; 
+  SimulationStateP      _sharedState;
+ 
+  const VarLabel* _T_label;
+  const VarLabel* _colorLabel;
+  const VarLabel* _sigmaT4Label;
   const VarLabel* _abskgLabel;
-  const VarLabel* _abskpLocalLabel;
-  const VarLabel* _abskpLabel;
-  const VarLabel* _radiationSRCLabel;
-  const VarLabel* _radiationFluxELabel;
-  const VarLabel* _radiationFluxWLabel;
-  const VarLabel* _radiationFluxNLabel;
-  const VarLabel* _radiationFluxSLabel;
-  const VarLabel* _radiationFluxTLabel;
-  const VarLabel* _radiationFluxBLabel;
-  const VarLabel* _radiationVolqLabel;
-  const PatchSet* _perproc_patches;
-
-  bool _using_prop_calculator; 
+  const VarLabel* _absorpLabel;
+  
+  Ghost::GhostType _gn;
+  Ghost::GhostType _gac;
 
 }; // end RMCRT
 } // end namespace Uintah

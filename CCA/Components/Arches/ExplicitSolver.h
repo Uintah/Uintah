@@ -82,7 +82,6 @@ class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
-class RMCRTRadiationModel;
 class PartVel;
 class DQMOM;
 class ExplicitSolver: public NonlinearSolver {
@@ -449,11 +448,7 @@ private:
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
   int d_numSourceBoundaries;
-
-  //RMCRT Stuff
-  bool d_standAloneRMCRT;
-  RMCRTRadiationModel* d_RMCRTRadiationModel;
-
+  
   //DQMOM
   bool d_doDQMOM;
   PartVel* d_partVel;

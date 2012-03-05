@@ -208,10 +208,8 @@ private:
   
   // radiation models
   DORadiationModel* d_DORadiation;
-  Ray* d_RMCRT;
   bool d_radiationCalc;
   bool d_DORadiationCalc;
-  bool d_doRMCRT;
   
   const PatchSet* d_perproc_patches;
 
