@@ -47,7 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -80,7 +79,6 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_DORadiation = 0;
   d_DORadiationCalc = false;
   d_radiationCalc = false;
-  d_doRMCRT = false; 
 }
 
 //****************************************************************************
@@ -92,8 +90,6 @@ EnthalpySolver::~EnthalpySolver()
   delete d_source;
   delete d_rhsSolver;
   delete d_DORadiation;
-  if ( d_doRMCRT ) 
-    delete d_RMCRT; 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
   //VarLabel::destroy(d_abskpLabel);
@@ -115,23 +111,6 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_DORadiation = scinew DORadiationModel( d_lab, d_MAlab, d_boundaryCondition, d_myworld);
     d_DORadiation->problemSetup(db, false);
   }
-
-#if 0
-  if (db->findBlock("RMCRT")){
-    d_doRMCRT         = true;
-    d_radiationCalc   = true;
-    ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
-    d_RMCRT = scinew Ray(); 
-    int archIndex = 0;
-    d_RMCRT->registerVarLabels( d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(),
-                                d_lab->d_abskgINLabel,
-                                d_lab->d_absorpINLabel,
-                                d_lab->d_tempINLabel,
-                                d_lab->d_radiationSRCINLabel ) ; 
-    
-    d_RMCRT->problemSetup( rmcrt_db ); 
-  }
-#endif
 
   //__________________________________
   //  Convection scheme
@@ -267,23 +246,6 @@ EnthalpySolver::solve(const LevelP& level,
       iter != d_new_sources.end(); iter++){
     SourceTermBase& src = factory.retrieve_source_term( *iter );
     src.sched_computeSource( level, sched, timeSubStep );
-  }
-
-  //__________________________________
-  //  Radiation
-  // RMCRT: 
-  if ( d_doRMCRT ) {
-    Task::WhichDW abskg_dw = Task::OldDW;
-    Task::WhichDW temp_dw  = Task::OldDW;
-    Task::WhichDW sigma_dw = Task::NewDW;
-    bool modifies_divQ     = false;
-    
-    if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ){ 
-      modifies_divQ = true;
-    }
-   // d_RMCRT->sched_initProperties( level, sched, sub_step ); 
-    d_RMCRT->sched_sigmaT4( level, sched, temp_dw);
-    d_RMCRT->sched_rayTrace( level, sched, abskg_dw, sigma_dw, modifies_divQ );
   }
 
   // Discrete Ordanences
