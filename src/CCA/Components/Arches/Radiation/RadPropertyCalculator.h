@@ -138,6 +138,8 @@ namespace Uintah {
               const Level* level = patch->getLevel();
               GridP grid  = level->getGrid();
               grid->getInteriorSpatialRange(domain);
+              min = domain.min();
+              max = domain.max();
             }
 
             Point midPt((max - min)/2 + min);
