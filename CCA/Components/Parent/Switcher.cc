@@ -758,11 +758,11 @@ void Switcher::initNewVars(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void Switcher::carryOverVars(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw)
+void Switcher::carryOverVars(const ProcessorGroup *,
+                             const PatchSubset    * patches,
+                             const MaterialSubset * matls,
+                                   DataWarehouse  * old_dw, 
+                                   DataWarehouse  * new_dw)
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
@@ -770,11 +770,31 @@ void Switcher::carryOverVars(const ProcessorGroup*,
   if ( L_indx < (int) d_doCarryOverVarPerLevel.size() ) {
   
     for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) {
-     
+    
       if ( d_doCarryOverVarPerLevel[L_indx][i] ) {
-        VarLabel* var = d_carryOverVarLabels[i];
+      
+        const VarLabel* label = d_carryOverVarLabels[i];
         const MaterialSubset* xfer_matls = d_carryOverVarMatls[i] == 0 ? matls : d_carryOverVarMatls[i];
-        new_dw->transferFrom( old_dw, var, patches, xfer_matls );
+
+        //__________________________________
+        //  reduction variables
+        if( label->typeDescription()->isReductionVariable() ){
+
+	  switch( label->typeDescription()->getSubType()->getType() ){
+	  case Uintah::TypeDescription::double_type:
+	    {
+	      ReductionVariable<double, Reductions::Max<double> > var_d;
+	      old_dw->get(var_d, label);
+	      new_dw->put(var_d, label);
+	    }
+	    break;
+	  default:
+	    throw InternalError("ERROR:Switcher::carryOverVars - Unknown reduction variable type", __FILE__, __LINE__);
+	  }
+        }
+        else{  // all grid variables
+          new_dw->transferFrom( old_dw, label, patches, xfer_matls );
+        }
       }
     }  
   }
