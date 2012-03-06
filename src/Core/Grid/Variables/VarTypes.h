@@ -76,6 +76,10 @@ namespace Uintah {
 
    typedef ReductionVariable<bool, Reductions::And<bool> > bool_and_vartype;
     
+   typedef ReductionVariable<Vector, Reductions::Min<Vector> > minvec_vartype;
+   
+   typedef ReductionVariable<Vector, Reductions::Max<Vector> > maxvec_vartype;
+   
    typedef ReductionVariable<Vector, Reductions::Sum<Vector> > sumvec_vartype;
 
 //   typedef ReductionVariable<long, Reductions::Sum<long> > sumlong_vartype;

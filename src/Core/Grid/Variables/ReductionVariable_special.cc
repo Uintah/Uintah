@@ -343,4 +343,86 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
   value.z(*ptr++);
 }
 
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Min<Vector> >
+::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
+{
+   datatype = MPI_DOUBLE;
+   count = 3;
+   op = MPI_MIN;
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Min<Vector> >
+::getMPIData(vector<char>& data, int& index)
+{       
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  *ptr++ = value.x();
+  *ptr++ = value.y();
+  *ptr++ = value.z();
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Min<Vector> >
+   ::putMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  value.x(*ptr++);
+  value.y(*ptr++);
+  value.z(*ptr++);
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Max<Vector> >
+::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
+{
+   datatype = MPI_DOUBLE;
+   count = 3;
+   op = MPI_MAX;
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Max<Vector> >
+::getMPIData(vector<char>& data, int& index)
+{       
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  *ptr++ = value.x();
+  *ptr++ = value.y();
+  *ptr++ = value.z();
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+
+UINTAHSHARE void
+ReductionVariable<Vector, Reductions::Max<Vector> >
+   ::putMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  value.x(*ptr++);
+  value.y(*ptr++);
+  value.z(*ptr++);
+}
+
 } // end namespace Uintah
