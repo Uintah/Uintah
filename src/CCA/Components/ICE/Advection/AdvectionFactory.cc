@@ -30,11 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-
-#include <sci_defs/cuda_defs.h>
-#ifdef HAVE_CUDA
-#include <CCA/Components/ICE/Advection/FirstOrderAdvectorGPU.h>
-#endif
 #include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -92,12 +87,6 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
     d_OrderOfAdvection = 1;
     return(scinew FirstOrderAdvector());
   } 
-#ifdef HAVE_CUDA
-  if (advect_options["type"] == "FirstOrderGPU"){
-    d_OrderOfAdvection = 1;
-    return(scinew FirstOrderAdvectorGPU());
-  } 
-#endif
   else if (advect_options["type"] == "SecondOrder"){
     d_OrderOfAdvection = 2;
     return(scinew SecondOrderAdvector());
