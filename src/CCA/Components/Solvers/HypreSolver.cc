@@ -104,7 +104,7 @@ namespace Uintah {
     int skip;
     int jump;
     int logging;
-		int relax_type; 
+    int relax_type; 
     bool symmetric;
   };
 
@@ -877,8 +877,9 @@ namespace Uintah {
         param->getWithDefault ("skip",            p->skip,           0);          
         param->getWithDefault ("jump",            p->jump,           0);          
         param->getWithDefault ("logging",         p->logging,        0);          
-				param->getWithDefault ("relax_type",      p->relax_type,     1); // Jacobi = 0; weighted Jacobi = 1; 
-																																			   // red-black GS symmetric = 2; red-black GS non-symmetrix = 3;
+        param->getWithDefault ("relax_type",      p->relax_type,     1); 
+        // Jacobi = 0; weighted Jacobi = 1;                                                                                                                                                                                                                                                                                    
+        // red-black GS symmetric = 2; red-black GS non-symmetrix = 3;
 
         found=true;
       }
@@ -893,7 +894,7 @@ namespace Uintah {
       p->skip    = 0;
       p->jump    = 0;
       p->logging = 0;
-			p->relax_type = 1; 
+      p->relax_type = 1; 
     }
     p->symmetric = true;
     return p;
