@@ -1108,6 +1108,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
               << " max_rhs before solve "<< max_RHS_old
               << " after solve " << max_RHS<< endl;
     
+    // output files for debugging
+    int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+    int proc = d_myworld->myrank();
+    ostringstream fname;
+    
+    fname << "." << proc <<"." << timestep << "." << counter;
+    d_solver_parameters->setOutputFileName(fname.str());
+    
     //__________________________________
     // restart timestep
                                           //  too many outer iterations
