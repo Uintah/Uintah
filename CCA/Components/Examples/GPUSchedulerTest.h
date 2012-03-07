@@ -38,6 +38,20 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Components/Examples/uintahshare.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+__global__ void timeAdvanceTestKernel(uint3 domainLow,
+                                      uint3 domainHigh,
+                                      uint3 domainSize,
+                                      int ghostLayers,
+                                      double *phi,
+                                      double *newphi,
+                                      double *residual);
+#ifdef __cplusplus
+}
+#endif
+
 namespace Uintah {
 
   class SimpleMaterial;
