@@ -151,7 +151,7 @@
           <p                        spec="OPTIONAL DOUBLE"/>
           <m                        spec="REQUIRED DOUBLE" need_applies_to="type=ProutTompkins"/>
         </RateModel>
-      </ReactionModel>
+      </SolidReactionModel>
  
       <refPressure                  spec="OPTIONAL DOUBLE" />
       
