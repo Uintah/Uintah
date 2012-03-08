@@ -26604,6 +26604,10 @@ int
 main ()
 {
 
+                                                                  float x[]={0.7f};
+                                                                  float y[]={0.8f};
+                                                                  float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
   ;
   return 0;
 }
@@ -27517,6 +27521,10 @@ int
 main ()
 {
 
+                                                   float x[]={0.7f};
+                                                   float y[]={0.8f};
+                                                   float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
   ;
   return 0;
 }
@@ -27957,9 +27965,11 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                         float x[]={0.7f};
+                                                                                         float y[]={0.8f};
+                                                                                         float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
+  ;
   return 0;
 }
 _ACEOF
@@ -28393,9 +28403,7 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+  ;
   return 0;
 }
 _ACEOF
@@ -28797,9 +28805,7 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+  ;
   return 0;
 }
 _ACEOF
@@ -29241,9 +29247,11 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                float x[]={0.7f};
+                                                                                float y[]={0.8f};
+                                                                                float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
+  ;
   return 0;
 }
 _ACEOF
@@ -29686,9 +29694,11 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                         float x[]={0.7f};
+                                                                         float y[]={0.8f};
+                                                                         float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
+  ;
   return 0;
 }
 _ACEOF
@@ -30129,9 +30139,12 @@ $__sci_pound_includes
 int
 main ()
 {
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+
+                                                                     float x[]={0.7f};
+                                                                     float y[]={0.8f};
+                                                                     float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
+  ;
   return 0;
 }
 _ACEOF
@@ -30536,9 +30549,7 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+  ;
   return 0;
 }
 _ACEOF
@@ -30939,9 +30950,7 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+  ;
   return 0;
 }
 _ACEOF
@@ -31344,9 +31353,7 @@ int
 main ()
 {
 
-  float x[]={0.7f};
-  float y[]={0.8f};
-  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+  ;
   return 0;
 }
 _ACEOF
