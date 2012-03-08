@@ -39,6 +39,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <sci_defs/cuda_defs.h>
+#ifdef HAVE_CUDA
+#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+#endif
 
 #include <iostream>
 #include <cmath>
@@ -178,7 +181,7 @@ namespace Uintah{
                      Task::WhichDW which_sigmaT4_dw );
 
 #ifdef HAVE_CUDA
-      //----------------------------------------
+      //______________________________________________________________________
       void rayTraceGPU( const ProcessorGroup* pc,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -194,6 +197,9 @@ namespace Uintah{
                                   const dim3 &high,
                                   const dim3 &cell,
                                   const int &face);
+
+      //______________________________________________________________________
+      void initMTRandGPU();
 #endif
 
       //__________________________________

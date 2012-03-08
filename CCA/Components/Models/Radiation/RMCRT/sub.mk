@@ -32,7 +32,9 @@ SRCDIR   := CCA/Components/Models/Radiation/RMCRT
 SRCS += $(SRCDIR)/Ray.cc
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/RayGPU.cu
+  SRCS += $(SRCDIR)/RayGPU.cu \
+          $(SRCDIR)/MersenneTwisterGPU.cu \
+          $(SRCDIR)/mtgp64dc-param-11213.c
   LIBS :=  $(CUDA_LIBRARY)
 endif
 
