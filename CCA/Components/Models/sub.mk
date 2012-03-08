@@ -75,6 +75,7 @@ ifneq ($(BUILD_MPM),no)
   ifneq ($(BUILD_ICE),no) 
     PSELIBS += CCA/Components/MPMICE
     SUBDIRS += $(SRCDIR)/HEChem
+    SUBDIRS += $(SRCDIR)/SolidReactionModel
   endif
 endif
 
