@@ -138,18 +138,18 @@
                                       attribute="type REQUIRED STRING 'Arrhenius, ModifiedArrhenius'">
           <A                        spec="REQUIRED DOUBLE"/>
           <Ea                       spec="REQUIRED DOUBLE"/>
-          <b                        spec="REQUIRED DOUBLE" need_applies_to="ModifiedArrhenius"/> 
+          <b                        spec="REQUIRED DOUBLE" need_applies_to="type ModifiedArrhenius"/> 
         </RateConstantModel>
         <RateModel                  spec="OPTIONAL NO_DATA"
                                       attribute="type REQUIRED STRING 'AvaramiErofeev, ContractingCylinder, ContractingSphere, Diffusion,
                                                                        NthOrder, Power, ProutTompkins'">
           <a                        spec="REQUIRED DOUBLE" need_applies_to="type AvaramiErofeev Power"/>
-          <b                        spec="REQUIRED DOBULE" need_applies_to="type AvaramiErofeev Power"/>
+          <b                        spec="REQUIRED DOUBLE" need_applies_to="type AvaramiErofeev Power"/>
           <dimension                spec="REQUIRED DOUBLE" need_applies_to="type Diffusion"/>
           <n                        spec="REQUIRED DOUBLE" need_applies_to="type NthOrder ProutTompkins"/>
           <q                        spec="REQUIRED DOUBLE" need_applies_to="type ProutTompkins"/>
           <p                        spec="OPTIONAL DOUBLE"/>
-          <m                        spec="REQUIRED DOUBLE" need_applies_to="type=ProutTompkins"/>
+          <m                        spec="REQUIRED DOUBLE" need_applies_to="type ProutTompkins"/>
         </RateModel>
       </SolidReactionModel>
  
