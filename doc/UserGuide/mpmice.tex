@@ -40,6 +40,103 @@ description of the method.
 %\subsubsection{BoundaryConditions}
 %\subsubsection{Physical Boundary Conditions}
 
+\section{Solid State Kinetic Models}
+
+A generalized reaction model for solid state kinetics based on the
+assumption that the temperature dependence of the rate can be separated
+from the reaction model as embodied by the equation:
+
+\begin{equation}
+\frac{d\alpha}{dt}=k(T)f(\alpha)
+\end{equation}
+
+\noindent is implemented in Uintah and named \textbf{SolidReactionModel}.  To
+use the \textbf{SolidReactionModel} one must specify both a temperature
+dependent rate constant model and a rate model.  The model is a grid based
+model, so should work with both MPM and ICE materials.  In the case where an MPM
+material is used as the reactant or product, the thermodynamic quantities
+that are interpolated to the grid are used to calculate reaction rates.   
+
+Additional rate constant and rate models may be added by either subclassing \textbf{RateConstantModel}
+or \textbf{RateModel}.  Examples of this can be found in the 
+\textbf{src/CCA/Components/Models/SolidReactionModel}
+directory. Two models currently exist for the rate constant $k(T)$, Arrhenius and
+Modified Arrhenius.  These two models have the forms:
+
+\begin{equation}
+k(T)=Ae^{\frac{-E_a}{RT}}
+\end{equation}
+
+\noindent and:
+
+\begin{equation}
+k(T)=AT^be^{\frac{-Ea}{RT}}
+\end{equation}
+
+Various rate models of different classes exist for use.  These classes include
+reaction-order models, diffusion models, geometrical contraction models and
+nucleation models. The following table shows the various models available.  Models
+were taken from \cite{ref:vyazovkinwight} and \cite{ref:khawamflanagan}.\newline\newline
+
+\begin{tabular}{ |l | c | c |}
+\hline
+\textbf{Model} & $f(\alpha)$ & \textbf{Uintah 'type'} \\
+\hline
+\hline
+\multicolumn{3}{|c|}{\textbf{Reaction-order Models}} \\
+\hline
+Nth Order & $(1-\alpha)^n$  & NthOrder \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Diffusion Models}} \\
+\hline
+1-D Diffusion & $1/2\alpha$  & Diffusion \\
+\hline
+2-D Diffusion & $-1/ln(1-\alpha)$  & Diffusion \\
+\hline
+3-D Diffusion& $3/2(1-\alpha)^{2/3}(1-(1-\alpha)^{1/3})$  & Diffusion \\
+\hline
+4-D Diffusion& $3/2(1/alpha^{1/3}-1)$  & Diffusion \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Geometrical Contraction Models}} \\
+\hline
+Contracting Cylinder& $2\sqrt{1-\alpha}$  & ContractingCylinder \\
+\hline
+Contracting Sphere& $3(1-\alpha)^{2/3}$  & ContractingSphere \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Nucleation Models}} \\
+\hline
+Power & $a\alpha^b$  & Power \\
+\hline
+Avarami-Erofe'ev & $a(1-\alpha)(-ln(1-\alpha))^b$  & AvaramiErofeev \\
+\hline
+\end{tabular} \newline\newline
+
+The input file specification is as follows:
+
+\begin{verbatim}
+  <Models>
+    <Model type="SolidReactionModel">
+      <RateConstantModel type="type">
+         ....
+      </RateConstantModel>
+      <RateModel type="type">
+         ....
+      </RateModel>
+    </Model>
+  <Models>
+\end{verbatim}
+
+\noindent Here, the type attribute for \textbf{RateConstantModel} should be either \textbf{Arrhenius} or \textbf{ModifiedArrhenius}
+which both take an activation energy \textbf{Ea}, and frequency factor \textbf{A}.  In addition, the modified Arrhenius
+model takes a temperature dependence exponent, \textbf{b}.
+
+The specification of type attribute for \textbf{RateModel} should be one of those listed in the previous table.
+The \textbf{NthOrder} model must have a positive integral value for the reaction order \textbf{n}. 
+The \textbf{Diffusion} based models require a \textbf{dimension} value that should be 1, 2, 3 or 4 depending
+on the dimensionality of the desired rate model.  Both geometric contraction models take no additional
+input parameters. Both nucleation based models, \textbf{Power} and \textbf{AvaramiErofeev}, take both 
+an \textbf{a} and a \textbf{b} input parameter. 
+
 \section{HE Combustion Models}
 
 Three models exist for reaction of high explosive materials.  Each
