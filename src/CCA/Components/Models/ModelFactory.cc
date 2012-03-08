@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #  include <CCA/Components/Models/HEChem/LightTime.h>
 #  include <CCA/Components/Models/HEChem/DDT0.h>
 #  include <CCA/Components/Models/HEChem/DDT1.h>
+#  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
 #include <CCA/Components/Models/Radiation/RadiationDriver.h>
@@ -126,8 +127,6 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew Steady_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "Unsteady_Burn")
       d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "DDT0")
-      d_models.push_back(scinew DDT0(d_myworld, model_ps, prob_spec));
     else if(type == "IandG")
       d_models.push_back(scinew IandG(d_myworld, model_ps));
     else if(type == "JWLpp")
@@ -138,6 +137,8 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew DDT0(d_myworld, model_ps, prob_spec));
     else if(type == "DDT1")
       d_models.push_back(scinew DDT1(d_myworld, model_ps, prob_spec));
+    else if(type == "SolidReactionModel")
+      d_models.push_back(scinew SolidReactionModel(d_myworld, model_ps, prob_spec));
     else if(type == "Radiation")
 #  if !defined( NO_FORTRAN )
       d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
