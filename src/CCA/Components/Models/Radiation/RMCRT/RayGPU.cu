@@ -38,17 +38,9 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("RAY",       false);
-static DebugStream dbg2("RAY_DEBUG",false);
-static DebugStream dbg_BC("RAY_BC", false);
-
-//---------------------------------------------------------------------------
-// Function: The GPU ray tracer kernel
-//---------------------------------------------------------------------------
-__global__ void rayTraceKernel ()
-{
-  // stub
-}
+static DebugStream dbg("RAY_GPU",       false);
+static DebugStream dbg2("RAY_GPU_DEBUG",false);
+static DebugStream dbg_BC("RAY_GPU_BC", false);
 
 
 //---------------------------------------------------------------------------
@@ -63,6 +55,15 @@ void Ray::rayTraceGPU( const ProcessorGroup* pc,
                        bool modifies_divQ,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW which_sigmaT4_dw )
+{
+  cudaSetDevice(device);
+  initMTRandGPU();
+
+  // setup for and invoke RT GPU kernel
+
+}
+
+void Ray::initMTRandGPU()
 {
   // stub
 }
@@ -79,4 +80,11 @@ inline bool Ray::containsCellGPU(const dim3 &low,
   return false;
 }
 
+//---------------------------------------------------------------------------
+// Function: The GPU ray tracer kernel
+//---------------------------------------------------------------------------
+__global__ void rayTraceKernel()
+{
+  // stub
+}
 
