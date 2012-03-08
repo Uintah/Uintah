@@ -775,8 +775,12 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-NVCC_CFLAGS="-arch=sm_20 "
-NVCC_CXXFLAGS="-arch=sm_20 "
+# __STDC_CONSTANT_MACROS is for the macro UINT64_C() to work correctly from stdint.h and appends
+# the correct suffix for a 64-bit unsigned integer literal to c. __STDC_CONSTANT_MACROS
+# is a workaround to allow C++ programs to use macros specified in the C99 standard that
+# aren't in the C++ standard.
+NVCC_CFLAGS="-arch=sm_20 -D__STDC_CONSTANT_MACROS "
+NVCC_CXXFLAGS="-arch=sm_20 -D__STDC_CONSTANT_MACROS "
 
 # set up the -Xcompiler flag so that NVCC can pass CFLAGS to host C comiler
 for i in $CFLAGS; do
