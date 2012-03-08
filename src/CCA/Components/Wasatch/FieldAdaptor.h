@@ -8,6 +8,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */
 #include <Core/Grid/Variables/SFCZVariable.h>  /* z-face variable */
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
+#include <Core/Grid/Variables/PerPatch.h>      /* single double per patch */
 #include <Core/Disclosure/TypeDescription.h>
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
@@ -112,7 +113,7 @@ namespace Wasatch{
 
     return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent,
                                                              bcPlus[0], bcPlus[1], bcPlus[2] ),
-                       const_cast<double*>( uintahVar.getPointer() ),
+                       const_cast<typename FieldT::AtomicT*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage );
   }
 
@@ -133,6 +134,11 @@ namespace Wasatch{
    *   - \c const_type : the Uintah const field type.
    */
   template<typename FieldT> struct SelectUintahFieldType;
+
+  template<> struct SelectUintahFieldType<double>{
+    typedef Uintah::PerPatch<double> type;
+    typedef Uintah::PerPatch<double> const_type;
+  };
 
   template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField>{
     typedef Uintah::     CCVariable<double>  type;
