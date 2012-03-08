@@ -350,7 +350,7 @@ void MTRandGPU::mtgp64_init_state(uint64_t array[],
   array[0] = seed;
   array[1] = hidden_seed;
   for (i = 1; i < size; i++) {
-//    array[i] ^= UINT64_C(6364136223846793005) * (array[i - 1] ^ (array[i - 1] >> 62)) + i;
+    array[i] ^= UINT64_C(6364136223846793005) * (array[i - 1] ^ (array[i - 1] >> 62)) + i;
   }
 }
 
