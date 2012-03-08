@@ -2738,7 +2738,11 @@ if test "$with_mkl"; then
      *)
        SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
                     $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,
-                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
+                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
+                                                                  float x[]={0.7f};
+                                                                  float y[]={0.8f};
+                                                                  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                  ],$_sci_optional)
        SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
                     $_sci_inc,mkl mkl_def guide,$_sci_lib,
                     $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
@@ -2780,11 +2784,19 @@ if test ! "$HAVE_BLAS"; then
          AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
        fi
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
-                    -faltivec,,,-framework vecLib,,$_sci_optional)
+                    -faltivec,,,-framework vecLib,[
+                                                   float x[]={0.7f};
+                                                   float y[]={0.8f};
+                                                   float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                   ],$_sci_optional)
        ;;
      *)
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
-                    $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+                    $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                                         float x[]={0.7f};
+                                                                                         float y[]={0.8f};
+                                                                                         float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                         ],$_sci_optional)
        ;;
   esac
 
@@ -2830,20 +2842,32 @@ if test "$HAVE_BLAS" != "yes"; then
        # Can't use the "specific" key word as we are testing for a number
        # of different configurations.
        SCI_TRY_LINK(BLAS,blas and cblas libraries-1,cblas.h,
-                    $_sci_inc,cblas blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+                    $_sci_inc,cblas blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                                float x[]={0.7f};
+                                                                                float y[]={0.8f};
+                                                                                float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                ],optional)
        if test "$HAVE_BLAS" = "yes"; then
           HAVE_CBLAS=yes
           CBLAS_H="cblas.h"
           DEF_CBLAS="#define HAVE_CBLAS 1"
        else
           SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
-            $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+            $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                         float x[]={0.7f};
+                                                                         float y[]={0.8f};
+                                                                         float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                         ],optional)
           if test "$HAVE_BLAS" = "no"; then
              #scs library should be used on the SGI altix
              #SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
              #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
              SCI_TRY_LINK(BLAS,blas and cblas libraries-2,cblas.h,
-               $_sci_inc,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+               $_sci_inc,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                     float x[]={0.7f};
+                                                                     float y[]={0.8f};
+                                                                     float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                     ],optional)
              if test "$HAVE_BLAS" = "yes"; then
                 HAVE_CBLAS=yes
                 CBLAS_H="cblas.h"
