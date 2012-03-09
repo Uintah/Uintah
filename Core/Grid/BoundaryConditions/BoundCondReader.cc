@@ -74,6 +74,21 @@ BoundCondReader::~BoundCondReader()
   //cout << "Calling BoundCondReader destructor" << endl;
 }
 
+// given a set of lower or upper bounds for multiple boxes (points)
+// this function checks if Point p (usually center of circle, ellipse, or annulus)
+// is on a given face on any of the boxes.
+bool is_on_face(const int dir, 
+                const Point p,
+                const std::vector<Point>& points)
+{
+  std::vector<Point>::const_iterator iter = points.begin();
+  while (iter != points.end()) {
+    if ( p(dir) == (*iter)(dir) ) return true;
+    ++iter;
+  }
+  return false;
+}
+
 void BoundCondReader::whichPatchFace(const std::string fc,
                                 Patch::FaceType& face_side, 
                                 int& plusMinusFaces,
@@ -121,6 +136,9 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   Point grid_LoPt(1e30, 1e30, 1e30);
   Point grid_HiPt(-1e30, -1e30, -1e30); 
   
+  std::vector<Point> grid_LoPts; // store the lower bounds of all boxes
+  std::vector<Point> grid_HiPts; // store the upper bounds of all boxes
+  
   for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
       level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
 
@@ -131,6 +149,8 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
        Point upper;
        box_ps->require("lower", lower);
        box_ps->require("upper", upper);
+       grid_LoPts.push_back(lower);
+       grid_HiPts.push_back(upper);       
        grid_LoPt=Min(lower, grid_LoPt);
        grid_HiPt=Max(upper, grid_HiPt);
      }
@@ -174,15 +194,18 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     }    
     
     //  bullet proofing-- origin must be on the same plane as the face
-    bool test = true;
+
+    bool isOnFace = false;
+    
     if(plusMinusFaces == -1){    // x-, y-, z- faces
-      test = (p(p_dir) != grid_LoPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_LoPts);
     }
+    
     if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      test = (p(p_dir) != grid_HiPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
     }    
     
-    if(test){
+    if(!isOnFace){
       ostringstream warn;
       warn<<"ERROR: Input file\n The Circle BC geometry is not correctly specified."
           << " The origin " << p << " must be on the same plane" 
@@ -217,15 +240,17 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     Point p(o[0],o[1],o[2]);
 
     //  bullet proofing-- origin must be on the same plane as the face
-    bool test = true;
+    bool isOnFace = false;
+    
     if(plusMinusFaces == -1){    // x-, y-, z- faces
-      test = (p(p_dir) != grid_LoPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_LoPts);
     }
+    
     if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      test = (p(p_dir) != grid_HiPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
     }    
     
-    if(test){
+    if(!isOnFace){
       ostringstream warn;
       warn<<"ERROR: Input file\n The Annulus BC geometry is not correctly specified."
           << " The origin " << p << " must be on the same plane" 
@@ -260,15 +285,17 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     angle_stream >> angle;
     
     //  bullet proofing-- origin must be on the same plane as the face
-    bool test = true;
+    bool isOnFace = false;
+    
     if(plusMinusFaces == -1){    // x-, y-, z- faces
-      test = (p(p_dir) != grid_LoPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_LoPts);
     }
+    
     if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      test = (p(p_dir) != grid_HiPt(p_dir));
+      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
     }    
     
-    if(test){
+    if(!isOnFace){
       ostringstream warn;
       warn<<"ERROR: Input file\n The Ellipse BC geometry is not correctly specified."
       << " The origin " << p << " must be on the same plane" 
