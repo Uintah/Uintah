@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -137,6 +138,7 @@ ExplicitSolver::~ExplicitSolver()
   delete d_momSolver;
   delete d_scalarSolver;
   delete d_enthalpySolver;
+  delete d_eff_calculator; 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
@@ -288,6 +290,15 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
                          "not supported: " + d_mms, __FILE__, __LINE__);
 
   }
+
+  bool check_calculator; 
+  d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab ); 
+  check_calculator = d_eff_calculator->problemSetup( db ); 
+
+  if ( !check_calculator ){ 
+    throw ProblemSetupException("Error: Efficiency Calculator not properly setup.",
+                                __FILE__, __LINE__);
+  } 
 }
 
 // ****************************************************************************
@@ -669,6 +680,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
     }
 
+    if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
+      // this is the new efficiency calculator
+      d_eff_calculator->sched_computeEfficiencies( level, sched ); 
+    }
+
 
     // Schedule an interpolation of the face centered velocity data
     sched_interpolateFromFCToCC(sched, patches, matls,
@@ -719,6 +735,8 @@ int ExplicitSolver::noSolve(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  d_eff_calculator->sched_dummySolve( level, sched ); 
 
   // use FE timelabels for nosolve
   nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,

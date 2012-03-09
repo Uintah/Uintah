@@ -84,6 +84,7 @@ class PhysicalConstants;
 class EnthalpySolver;
 class PartVel;
 class DQMOM;
+class EfficiencyCalculator; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -457,6 +458,8 @@ private:
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
+
+  EfficiencyCalculator* d_eff_calculator; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
