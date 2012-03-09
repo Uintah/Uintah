@@ -33,6 +33,8 @@ namespace Wasatch{
     xYVolCoord_ = yYVolCoord_ = zYVolCoord_ = false;
     xZVolCoord_ = yZVolCoord_ = zZVolCoord_ = false;
 
+    hasSetVarlabels_ = false;
+
     //_____________________________________________________________
     // build expressions to set coordinates.  If any initialization
     // expressions require the coordinates, then this will trigger
@@ -118,6 +120,8 @@ namespace Wasatch{
     if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, xzvt_, task, pss, mss );
     if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, yzvt_, task, pss, mss );
     if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, zzvt_, task, pss, mss );
+
+    hasSetVarlabels_ = true;
   }
 
   //------------------------------------------------------------------

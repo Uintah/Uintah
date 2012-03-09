@@ -26,7 +26,7 @@ namespace Expr{ class ExpressionFactory; }
 namespace Wasatch{
 
   class StringNames;
-  
+
   /**
    *  \class CoordHelper
    *  \author James C. Sutherland
@@ -47,7 +47,8 @@ namespace Wasatch{
       xSVolCoord_, ySVolCoord_, zSVolCoord_,
       xXVolCoord_, yXVolCoord_, zXVolCoord_,
       xYVolCoord_, yYVolCoord_, zYVolCoord_,
-      xZVolCoord_, yZVolCoord_, zZVolCoord_;
+      xZVolCoord_, yZVolCoord_, zZVolCoord_,
+      hasSetVarlabels_;
 
     Uintah::VarLabel *xSVol_, *ySVol_, *zSVol_;
     Uintah::VarLabel *xXVol_, *yXVol_, *zXVol_;
@@ -127,9 +128,14 @@ namespace Wasatch{
   {
     const Uintah::Task::MaterialDomainSpec domain = Uintah::Task::NormalDomain;
     const Uintah::Task::PatchDomainSpec level = Uintah::Task::ThisLevel;
-    vl = Uintah::VarLabel::create( tag.field_name(),
-                                   get_uintah_field_type_descriptor<FieldT>(),
-                                   get_uintah_ghost_descriptor<FieldT>() );
+    if( hasSetVarlabels_ ){
+      vl = Uintah::VarLabel::find( tag.field_name() );
+    }
+    else{
+      vl = Uintah::VarLabel::create( tag.field_name(),
+                                     get_uintah_field_type_descriptor<FieldT>(),
+                                     get_uintah_ghost_descriptor<FieldT>() );
+    }
     fieldTags_.insert( tag );
     task.computes( vl, pss, level, mss, domain );
   }
