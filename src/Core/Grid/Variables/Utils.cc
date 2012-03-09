@@ -155,12 +155,20 @@ template bool areAllValuesPositive( CCVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCXVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCYVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCZVariable<double> &, IntVector & );
+template bool areAllValuesPositive( constCCVariable<double> &, IntVector & );
+template bool areAllValuesPositive( constSFCXVariable<double> &, IntVector & );
+template bool areAllValuesPositive( constSFCYVariable<double> &, IntVector & );
+template bool areAllValuesPositive( constSFCZVariable<double> &, IntVector & );
 
 // Explicit template instantiations:
 template bool areAllValuesNumbers( CCVariable<double> &, IntVector & );
 template bool areAllValuesNumbers( SFCXVariable<double> &, IntVector & );
 template bool areAllValuesNumbers( SFCYVariable<double> &, IntVector & );
 template bool areAllValuesNumbers( SFCZVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( constCCVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( constSFCXVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( constSFCYVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( constSFCZVariable<double> &, IntVector & );
 
 //template bool areAllNodeValuesNumbers( NCVariable<double> &, IntVector & );
 } // end namespace Uintah
