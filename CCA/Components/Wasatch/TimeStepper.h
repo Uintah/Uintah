@@ -83,10 +83,10 @@ namespace Wasatch{
     GraphHelper* const solnGraphHelper_;
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
 
-    CoordHelper* coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
+    CoordHelper* const coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
 
-    std::list  < TaskInterface*    > taskInterfaceList_;  ///< all of the TaskInterface objects managed here
     std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
+    std::list< TaskInterface* > taskInterfaceList_;    ///< all of the TaskInterface objects managed here
 
     /**
      *  \brief used internally to obtain the appropriate vector
@@ -205,8 +205,8 @@ namespace Wasatch{
     const std::string& rhsName = solnGraphHelper_->exprFactory->get_label(rhsID).name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
     const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
-    Uintah::VarLabel* solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
-    Uintah::VarLabel* rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
+    Uintah::VarLabel* const solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
+    Uintah::VarLabel* const rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
     std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
     fields.insert( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
     //rhsIDs_.insert( rhsID );

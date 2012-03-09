@@ -133,17 +133,17 @@ namespace Wasatch{
     }
   }
 
-  //--------------------------------------------------------------------  
-  
+  //--------------------------------------------------------------------
+
   void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
-                                   GraphCategories& gc, 
+                                   GraphCategories& gc,
                                    const std::string taskListName ) {
     for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("AnyExpression");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("AnyExpression") ){
-      
+
       const Expr::Tag anyExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
-      
+
       Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
@@ -153,14 +153,14 @@ namespace Wasatch{
         msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
         << __FILE__ << " : " << __LINE__ << endl;
       }
-      
+
       GraphHelper* const graphHelper = gc[cat];
 
       const Expr::ExpressionID anyExpressionID = graphHelper->exprFactory->get_id(anyExpressionTag);
       graphHelper->rootIDs.insert( anyExpressionID );
-    }    
+    }
   }
-  
+
   //--------------------------------------------------------------------
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
@@ -203,7 +203,7 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
-    } 
+    }
 
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
@@ -225,7 +225,7 @@ namespace Wasatch{
       Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
       sharedState->registerWasatchMaterial(mat);
     }
-    
+
     // we are able to get the solver port from here
     linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
     if(!linSolver_) {
@@ -312,7 +312,6 @@ namespace Wasatch{
         << err.what() << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-
     }
 
     //
@@ -343,7 +342,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentTransportEquation");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") ){
-      // note - parse_momentum_equations returns a vector of equation adaptors
+      // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, graphCategories_);
         adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
@@ -361,8 +360,7 @@ namespace Wasatch{
       timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
     }
-    
-    
+
     //
     // force additional expressions on the graph
     //
@@ -373,9 +371,8 @@ namespace Wasatch{
       std::string taskListName;
       forceOnGraphParams->getAttribute("tasklist", taskListName);
       force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
-    } 
-    
-}
+    }
+  }
 
   //--------------------------------------------------------------------
 
@@ -389,7 +386,7 @@ namespace Wasatch{
     if (buildWasatchMaterial_) {
       set_wasatch_materials(sharedState_->allWasatchMaterials());
     }
-    
+
     //_______________________________________________________________
     // Set up the operators associated with the local patches.  We
     // only need to do this once, so we choose to do it here.  It
@@ -410,7 +407,6 @@ namespace Wasatch{
           PatchInfo& pi = patchInfoMap_[patch->getID()];
           pi.operators = opdb;
           pi.patchID = patch->getID();
-          //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
         }
       }
     }
@@ -710,25 +706,25 @@ namespace Wasatch{
     }
     return NULL;
   }
- 
+
  //------------------------------------------------------------------
- 
- void 
+
+ void
  Wasatch::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
                           Uintah::SchedulerP& /*sched*/)
   {
   // do nothing for now
-  } 
+  }
 
  //------------------------------------------------------------------
- 
- void 
- Wasatch::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/, 
+
+ void
+ Wasatch::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                   Uintah::SchedulerP& /*scheduler*/,
                                   bool, bool)
   {
   // do nothing for now
-  } 
+  }
 //------------------------------------------------------------------
 
 } // namespace Wasatch
