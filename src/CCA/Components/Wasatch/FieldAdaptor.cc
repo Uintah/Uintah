@@ -85,10 +85,6 @@ namespace Wasatch{
     const IntVec extent = glob;
     const IntVec offset(0,0,0);
 
-//    std::cout << "obtaining temporary field from patch with dim: " << gs
-//        << "  field dim: " << glob
-//        << std::endl;
-
     return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
   }
 
@@ -114,6 +110,7 @@ namespace Wasatch{
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
 
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<double>(){ return Uintah::Ghost::None; }
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation

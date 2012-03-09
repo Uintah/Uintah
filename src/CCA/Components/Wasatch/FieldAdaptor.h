@@ -244,6 +244,12 @@ namespace Wasatch{
 //    return Uintah::IntVector(0,0,0);
   }
 
+  template<>
+  inline Uintah::IntVector get_uintah_ghost_descriptor<double>()
+  {
+    return Uintah::IntVector(0,0,0);
+  }
+
   //====================================================================
 
   /**
