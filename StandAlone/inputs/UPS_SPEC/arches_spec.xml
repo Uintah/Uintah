@@ -63,6 +63,24 @@
         </model>
       </PropertyModels>
 
+      <EfficiencyCalculator             spec="OPTIONAL NO_DATA">
+
+        <calculator                     spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'combustion_efficiency'">
+
+          <mixture_fraction             spec="REQUIRED NO_DATA"
+                                        attribute1="mf_label_1 REQUIRED STRING"
+                                        attribute2="mf_label_2 OPTIONAL STRING"
+                                        attribute3="N          REQUIRED INTEGER 'positive'"
+                                        need_applies_to="type combustion_efficiency"/>
+          <phi_label                    spec="REQUIRED STRING"
+                                        need_applies_to="type combustion_efficiency"/>
+
+        </calculator>
+
+      </EfficiencyCalculator>
+
 
 
       <MMS                              spec="OPTIONAL NO_DATA"
