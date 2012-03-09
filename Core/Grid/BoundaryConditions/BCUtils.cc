@@ -47,6 +47,9 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   ProblemSpecP level_ps = grid_ps->findBlock("Level");
   Vector periodic;
   level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
+  if(periodic == Vector(1,1,1)){
+    return;
+  }
   
   map<string,bool> is_BC_set;     
   map<string,bool> is_periodic;
