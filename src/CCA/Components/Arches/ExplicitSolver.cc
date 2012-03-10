@@ -295,10 +295,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab ); 
   check_calculator = d_eff_calculator->problemSetup( db ); 
 
-  if ( !check_calculator ){ 
-    throw ProblemSetupException("Error: Efficiency Calculator not properly setup.",
-                                __FILE__, __LINE__);
-  } 
 }
 
 // ****************************************************************************
