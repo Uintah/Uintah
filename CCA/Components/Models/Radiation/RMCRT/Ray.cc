@@ -61,8 +61,8 @@ Ray::Ray()
   d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
   d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
-  //d_ROI_loCellLabel      = VarLabel::create( "ROI_lo",           minIntVec_vartype::getTypeDescription() );
-  //d_ROI_hiCellLabel      = VarLabel::create( "ROI_hi",           maxIntVec_vartype::getTypeDescription() );
+  d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
+  d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -81,6 +81,8 @@ Ray::~Ray()
   VarLabel::destroy( d_mag_grad_abskgLabel );
   VarLabel::destroy( d_mag_grad_sigmaT4Label );
   VarLabel::destroy( d_flaggedCellsLabel );
+  VarLabel::destroy( d_ROI_LoCellLabel );
+  VarLabel::destroy( d_ROI_HiCellLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -684,6 +686,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // finest level:
   tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
+  tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
+  tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
   
   // coarser level
   int nCoarseLevels = maxLevels;
@@ -722,6 +726,16 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   MTRand _mTwister;
 
   //__________________________________
+  //   fine level region of interest ROI
+  minvec_vartype lo;
+  maxvec_vartype hi;
+  new_dw->get( lo, d_ROI_LoCellLabel);
+  new_dw->get( hi, d_ROI_HiCellLabel);
+  const IntVector fineLevel_ROI_Lo = roundNearest(Vector(lo));
+  const IntVector fineLevel_ROI_Hi = roundNearest(Vector(hi));
+  dbg << "fineLevel_ROI_Lo: " << fineLevel_ROI_Lo << " fineLevel_ROI_Hi: "<< fineLevel_ROI_Hi << endl;
+  
+  //__________________________________
   //retrieve all of the data for all levels
   StaticArray< constCCVariable<double> > abskg(maxLevels);
   StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
@@ -738,25 +752,72 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   for(int L = 0; L<maxLevels; L++){
     LevelP level = new_dw->getGrid()->getLevel(L);
     
-    IntVector domainLo_EC, domainHi_EC;
-    level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
+    if (level->hasFinerLevel() ) {                               // coarse level data
+      IntVector domainLo_EC, domainHi_EC;
+      level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-    abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-    sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      cout << " getting coarse level data L:" <<L<< endl;
+    } 
+    else{                                                        // fine level
+      cout << " getting fine level data L:" <<L<< endl;
+      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    }
     
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
     DzDx[L] = dx.z() / dx.x();
     Dx[L] = dx;
-  }
-  
+  } 
   abskg_fine     = abskg[maxLevels-1];
   sigmaT4Pi_fine = sigmaT4Pi[maxLevels-1];
+  
+  
+  //__________________________________
+  // Determine the extents of the regions below the fineLevel
+  vector<IntVector> regionLo(maxLevels);
+  vector<IntVector> regionHi(maxLevels);
+
+  // finest level
+  IntVector finelevel_EC = fineLevel->getExtraCells();
+  regionLo[maxLevels-1] = fineLevel_ROI_Lo + finelevel_EC;
+  regionHi[maxLevels-1] = fineLevel_ROI_Hi - finelevel_EC;
+
+  // coarsest level
+  level_0->findInteriorCellIndexRange(regionLo[0], regionHi[0]);
+
+  for (int L = maxLevels - 2; L > 0; L--) {
+
+    LevelP level = new_dw->getGrid()->getLevel(L);
+
+    if( level->hasCoarserLevel() ){
+
+      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - _halo;
+      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + _halo;
+
+      // region must be within a level
+      IntVector levelLo, levelHi;
+      level->findInteriorCellIndexRange(levelLo, levelHi);
+
+      regionLo[L] = Max(regionLo[L], levelLo);
+      regionHi[L] = Min(regionHi[L], levelHi);
+    }
+  }
+    
+/*`==========TESTING==========*/
+    if(dbg2.active()){
+      for(int L = 0; L<maxLevels; L++){
+        dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
+      }
+    } 
+/*===========TESTING==========`*/
+  
   
   // Determine the size of the domain.
   BBox domain_BB;
   level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
-  
 
   double start=clock();
 
@@ -775,47 +836,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       new_dw->allocateAndPut( divQ_fine, d_divQLabel, d_matl, finePatch );
       divQ_fine.initialize( 0.0 );
     }
-    
-   
-    //__________________________________
-    // Determine the extents of the regions below the finePatch
-    vector<IntVector> regionLo(maxLevels);
-    vector<IntVector> regionHi(maxLevels);
-           
-    // finest level
-    regionLo[maxLevels-1] = finePatch->getCellLowIndex();
-    regionHi[maxLevels-1] = finePatch->getCellHighIndex();
-  
-    // coarsest level
-    level_0->findInteriorCellIndexRange(regionLo[0], regionHi[0]);
-  
-    for (int L = maxLevels - 2; L > 0; L--) {
-    
-      LevelP level = new_dw->getGrid()->getLevel(L);
 
-      if( level->hasCoarserLevel() ){
-        
-        regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - _halo;
-        regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + _halo;
-
-        // region must be within a level
-        IntVector levelLo, levelHi;
-        level->findInteriorCellIndexRange(levelLo, levelHi);
-
-        regionLo[L] = Max(regionLo[L], levelLo);
-        regionHi[L] = Min(regionHi[L], levelHi);
-      }
-    }
-    
-/*`==========TESTING==========*/
-    if(dbg2.active()){
-      for(int L = 0; L<maxLevels; L++){
-        dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
-      }
-    } 
-/*===========TESTING==========`*/
-    
-    
     unsigned long int size = 0;                             // current size of PathIndex
 
     //__________________________________
@@ -1313,14 +1334,14 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
   Task* tsk = scinew Task( "Ray::ROI_Extents", this, 
                            &Ray::ROI_Extents);
 
-  tsk->requires( Task::NewDW, d_abskgLabel,     d_gn, 0 );
-  tsk->requires( Task::NewDW, d_sigmaT4_label,  d_gn, 0 );
+  tsk->requires( Task::NewDW, d_abskgLabel,     d_gac, 1 );
+  tsk->requires( Task::NewDW, d_sigmaT4_label,  d_gac, 1 );
   tsk->computes( d_mag_grad_abskgLabel );
   tsk->computes( d_mag_grad_sigmaT4Label );
   tsk->computes( d_flaggedCellsLabel );
 
-//  tsk->computes(roi_LoPt);
-//  tsk->computes(roi_HiPt);
+  tsk->computes(d_ROI_LoCellLabel);
+  tsk->computes(d_ROI_HiCellLabel);
 
   scheduler->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1335,9 +1356,12 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 { 
   const Level* level = getLevel(patches);
 
+  IntVector ROI_hi(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+  IntVector ROI_lo(SHRT_MAX,  SHRT_MAX, SHRT_MAX);
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing initialROI_Extents");
+    printTask(patches, patch,dbg,"Doing ROI_Extents");
 
     //__________________________________     
     constCCVariable<double> abskg;
@@ -1358,21 +1382,35 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
     mag_grad_sigmaT4.initialize(0.0);
     flaggedCells.initialize(0);
 
+    //__________________________________
+    //  compute the magnitude of the gradient of abskg & sigmatT4
+    //  useful to visualize and set the thresholds
     compute_Mag_gradient(abskg,   mag_grad_abskg,   patch);
     compute_Mag_gradient(sigmaT4, mag_grad_sigmaT4, patch);
-
+    bool flaggedPatch = false;
+    
+    
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
       if( mag_grad_abskg[c] > _abskg_thld || mag_grad_sigmaT4[c] > _sigmaT4_thld ){
         flaggedCells[c] = true;
-        
+        flaggedPatch = true;
       }
+    }
+    
+    // compute ROI lo & hi
+    if(flaggedPatch){
+      IntVector lo = patch->getExtraCellLowIndex();  // include BCs
+      IntVector hi = patch->getExtraCellHighIndex();
+
+      ROI_lo = Min(ROI_lo, lo);
+      ROI_hi = Max(ROI_hi, hi);
     }
   }  // patches loop
   
-//  new_dw->put(minIntVec_vartype(ROI_lo), d_ROI_loLabel);
-//  new_dw->put(maxIntVec_vartype(ROI_hi), d_ROI_hiLabel);
+  new_dw->put(minvec_vartype(ROI_lo.asVector()), d_ROI_LoCellLabel);
+  new_dw->put(maxvec_vartype(ROI_hi.asVector()), d_ROI_HiCellLabel);
 }
 
 
