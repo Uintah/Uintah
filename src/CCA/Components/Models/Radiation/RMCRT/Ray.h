@@ -167,8 +167,8 @@ namespace Uintah{
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
-//      const VarLabel* d_ROI_loCellLabel;
-//      const VarLabel* d_ROI_hiCellLabel;
+      const VarLabel* d_ROI_LoCellLabel;
+      const VarLabel* d_ROI_HiCellLabel;
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
