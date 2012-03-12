@@ -4,7 +4,7 @@
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
-#include <math.h>
+#include <cmath>
 
 //#define WASATCH_QMOM_DIAGNOSTICS
 
@@ -30,7 +30,12 @@ class QMOM : public Expr::Expression<FieldT>
   const FieldT* superSaturation_;
   const Expr::TagList knownMomentsTagList_;
   const Expr::Tag superSaturationTag_;
-  
+
+  const int nMoments_;
+
+  double **pmatrix_;
+  std::vector<double> a_, b_, alpha_, jMatrix_, eigenValues_, weights_, work_;
+
   QMOM( const Expr::TagList knownMomentsTagList,
        const Expr::Tag superSaturationTag );
 
@@ -47,8 +52,8 @@ public:
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
-    { 
-      return new QMOM<FieldT>( knownMomentsTagList_, supersaturationt_ ); 
+    {
+      return new QMOM<FieldT>( knownMomentsTagList_, supersaturationt_ );
     }
 
   private:
@@ -79,14 +84,30 @@ QMOM( const Expr::TagList knownMomentsTaglist,
       const Expr::Tag     superSaturationTag )
   : Expr::Expression<FieldT>(),
     knownMomentsTagList_( knownMomentsTaglist ),
-    superSaturationTag_ ( superSaturationTag  )
-{}
+    superSaturationTag_ ( superSaturationTag  ),
+    nMoments_( knownMomentsTaglist.size() )
+{
+  pmatrix_ = new double *[nMoments_];
+  for (int i = 0; i<nMoments_; i++)
+    pmatrix_[i] = new double [nMoments_+1];
+
+  const int abSize = nMoments_/2;
+  alpha_.resize(nMoments_);
+  a_.resize( abSize );
+  b_.resize( abSize );
+  jMatrix_.resize( abSize*abSize );
+  eigenValues_.resize( abSize );
+  weights_.resize(abSize);
+}
 
 //--------------------------------------------------------------------
 template<typename FieldT>
 QMOM<FieldT>::
 ~QMOM()
-{}
+{
+  for (int i = 0; i<nMoments_; i++) delete[] pmatrix_[i];
+  delete[] pmatrix_;
+}
 
 //--------------------------------------------------------------------
 template< typename FieldT >
@@ -140,32 +161,28 @@ evaluate()
   typedef std::vector<FieldT*> ResultsVec;
   ResultsVec& results = this->get_value_vec();
   //
-  const int nMoments = knownMoments_.size();
-  double **p = new double *[nMoments];
-  for (int i = 0; i<nMoments; i++)
-    p[i] = new double [nMoments+1];
-  
+
   // initialize the p matrix
-  for (int i=0; i<nMoments; i++) {
-    for (int j=0; j<nMoments+1; j++) {
-      p[i][j]=0.0;
+  for (int i=0; i<nMoments_; ++i) {
+    for (int j=0; j<nMoments_+1; ++j) {
+      pmatrix_[i][j]=0.0;
     }
-  }  
-  p[0][0] = 1.0;
-  
+  }
+  pmatrix_[0][0] = 1.0;
+
   //
-  const int abSize = nMoments/2;
-  double* alpha = new double[nMoments];
-  double* a = new double[abSize];
-  double* b = new double[abSize];
-  double* jMatrix = new double[abSize*abSize];
-  double* eigenValues = new double[abSize];
-  double* weights = new double[abSize];
+  const int abSize = nMoments_/2;
+  alpha_.resize(nMoments_);
+  a_.resize( abSize );
+  b_.resize( abSize );
+  jMatrix_.resize( abSize*abSize );
+  eigenValues_.resize( abSize );
+  weights_.resize(abSize);
   // loop over every point in the patch. get a sample iterator for any of the
   // fields.
   const FieldT* sampleField = knownMoments_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
-  
+
   // grab an iterator for the supersaturation ratio field, set to m_0 if blank
   if ( superSaturationTag_ == Expr::Tag() ) {
     superSaturation_ = knownMoments_[0];
@@ -178,116 +195,116 @@ evaluate()
   //
   std::vector<typename FieldT::const_interior_iterator> knownMomentsIterators;
   std::vector<typename FieldT::interior_iterator> resultsIterators;
-  for (int i=0; i<nMoments; i++) {
+  for (int i=0; i<nMoments_; ++i) {
     typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->interior_begin();
     knownMomentsIterators.push_back(thisIterator);
 
     typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
-  
+
   //
   while (sampleIterator!=sampleField->interior_end()) {
-    
+
     // check if we are in a region where supersaturation is nonzero
     if ( (superSaturationTag_ != Expr::Tag() && *supersatIter < 1e-10) || (superSaturationTag_ != Expr::Tag() && *knownMomentsIterators[0] == 0) ) {
       // in case the supersaturation is zero, set the weights and abscissae to zero
-      for (int i=0; i<abSize; i++) {
+      for (int i=0; i<abSize; ++i) {
         int matLoc = 2*i;
         *resultsIterators[matLoc] = 0.0;     // weight
         *resultsIterators[matLoc + 1] = 1.0; // abscissa
-      }      
+      }
       //increment iterators
       ++sampleIterator;
-      for (int i=0; i<nMoments; i++) {
+      for (int i=0; i<nMoments_; ++i) {
         knownMomentsIterators[i] += 1;
         resultsIterators[i] += 1;
-      }  
+      }
       ++supersatIter;
       continue;
     }
-    
+
     // for every point, calculate the quadrature weights and abscissae
     // start by putting together the p matrix. this is documented in the wasatch
     // pdf documentation.
- //   for ( int i=0; i<nMoments; i++) std::cout << "Moment[" << i <<"] = " << *knownMomentsIterators[i] << std::endl;
-    for (int iRow=0; iRow<=nMoments-2; iRow += 2) {
+    for (int iRow=0; iRow<=nMoments_-2; iRow += 2) {
       // get the the iRow moment for this point
-      p[iRow][1] = *knownMomentsIterators[iRow];
+      pmatrix_[iRow][1] = *knownMomentsIterators[iRow];
       // get the the (iRow+1) moment for all points
-      p[iRow+1][1] = -*knownMomentsIterators[iRow+1];
+      pmatrix_[iRow+1][1] = -*knownMomentsIterators[iRow+1];
     }
     // keep filling the p matrix. this gets easier now
-    for (int jCol=2; jCol<=nMoments; jCol++) {
-      for (int iRow=0; iRow <= nMoments - jCol; iRow++) {
-        p[iRow][jCol] = p[0][jCol-1]*p[iRow+1][jCol-2] - p[0][jCol-2]*p[iRow+1][jCol-1];
+    for (int jCol=2; jCol<=nMoments_; ++jCol) {
+      for (int iRow=0; iRow <= nMoments_ - jCol; ++iRow) {
+        pmatrix_[iRow][jCol] = pmatrix_[0][jCol-1]*pmatrix_[iRow+1][jCol-2]
+                             - pmatrix_[0][jCol-2]*pmatrix_[iRow+1][jCol-1];
       }
     }
 
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-    for (int iRow=0; iRow<nMoments; iRow++) {
-      for (int jCol=0; jCol<nMoments+1; jCol++) {
-        printf("p[%i][%i] = %f \t \t",iRow,jCol,p[iRow][jCol]);
+    for (int iRow=0; iRow<nMoments_; iRow++) {
+      for (int jCol=0; jCol<nMoments_+1; jCol++) {
+        printf("p[%i][%i] = %f \t \t",iRow,jCol,pmatrix_[iRow][jCol]);
       }
       printf("\n");
     }
 #endif
-    
+
     //
     //
-    alpha[0]=0.0;
-    for (int jCol=1; jCol<nMoments; jCol++)
-      alpha[jCol] = p[0][jCol+1]/(p[0][jCol]*p[0][jCol-1]);
+    alpha_[0]=0.0;
+    for (int jCol=1; jCol<nMoments_; ++jCol)
+      alpha_[jCol] = pmatrix_[0][jCol+1]/(pmatrix_[0][jCol]*pmatrix_[0][jCol-1]);
 
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-    for (int iRow=0; iRow<nMoments; iRow++) {
-        printf("alpha[%i] = %f \t \t",iRow,alpha[iRow]);
+    for (int iRow=0; iRow<nMoments_; iRow++) {
+        printf("alpha[%i] = %f \t \t",iRow,alpha_[iRow]);
     }
     printf("\n");
 #endif
 
     //_________________________
     // construct a and b arrays
-    for (int jCol=0; jCol < abSize-1; jCol++) {
+    for (int jCol=0; jCol < abSize-1; ++jCol) {
       const int twojcol = 2*jCol;
-      a[jCol] = alpha[twojcol+1] + alpha[twojcol];
-      const double rhsB = alpha[twojcol+1]*alpha[twojcol+2];
+      a_[jCol] = alpha_[twojcol+1] + alpha_[twojcol];
+      const double rhsB = alpha_[twojcol+1]*alpha_[twojcol+2];
       //
       if (rhsB < 0) {
         std::ostringstream errorMsg;
-        errorMsg 	<< endl
-                  << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
-                  << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
+        errorMsg << endl
+                 << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
+                 << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
         throw std::runtime_error( errorMsg.str() );
       }
-      b[jCol] = -sqrt(rhsB);
+      b_[jCol] = -std::sqrt(rhsB);
     }
     // fill in the last entry for a
-    a[abSize-1] = alpha[2*(abSize-1) + 1] + alpha[2*(abSize-1)];
-    
+    a_[abSize-1] = alpha_[2*(abSize-1) + 1] + alpha_[2*(abSize-1)];
+
 #ifdef WASATCH_QMOM_DIAGNOSTICS
     for (int iRow=0; iRow<abSize; iRow++) {
       printf("a[%i] = %f \t \t",iRow,a[iRow]);
     }
     printf("\n");
     for (int iRow=0; iRow<abSize; iRow++) {
-      printf("b[%i] = %f \t \t",iRow,b[iRow]);
+      printf("b[%i] = %f \t \t",iRow,b_[iRow]);
     }
     printf("\n");
 #endif
-    
+
     //___________________
     // construct J matrix
-    for (int iRow=0; iRow<abSize - 1; iRow++) {
-      jMatrix[iRow+iRow*abSize] = a[iRow];
-      jMatrix[iRow+(iRow+1)*abSize] = b[iRow];
-      jMatrix[iRow + 1 + iRow*abSize] = b[iRow];
+    for (int iRow=0; iRow<abSize - 1; ++iRow) {
+      jMatrix_[iRow+iRow*abSize] = a_[iRow];
+      jMatrix_[iRow+(iRow+1)*abSize] = b_[iRow];
+      jMatrix_[iRow + 1 + iRow*abSize] = b_[iRow];
     }
-    jMatrix[abSize*abSize-1] = a[abSize - 1];
-    
+    jMatrix_[abSize*abSize-1] = a_[abSize - 1];
+
 #ifdef WASATCH_QMOM_DIAGNOSTICS
     for (int iRow=0; iRow<abSize*abSize; iRow++) {
-      printf("J[%i] = %f \t \t",iRow,jMatrix[iRow]);
+      printf("J[%i] = %f \t \t",iRow,jMatrix_[iRow]);
     }
     printf("\n");
 #endif
@@ -301,33 +318,32 @@ evaluate()
     lwork = -1;
     char jobz='V';
     char matType = 'U';
-    dsyev_( &jobz, &matType, &n, jMatrix, &lda, eigenValues, &wkopt, &lwork, &info );
+    dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &wkopt, &lwork, &info );
     lwork = (int)wkopt;
-    work = new double[lwork];
+    work_.resize(lwork);
     // Solve eigenproblem. eigenvectors are stored in the jMatrix, columnwise
-    dsyev_( &jobz, &matType, &n, jMatrix, &lda, eigenValues, work, &lwork, &info );
-    delete[] work;
-    
+    dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
+
 #ifdef WASATCH_QMOM_DIAGNOSTICS
     for (int iRow=0; iRow<abSize; iRow++) {
-      printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues[iRow]);
+      printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues_[iRow]);
     }
     printf("\n");
 #endif
-    
+
     //__________
     // save the weights and abscissae
     m0 = *knownMomentsIterators[0];
-    for (int i=0; i<abSize; i++) {
-      int matLoc = i*abSize;
-      weights[i] = jMatrix[matLoc]*jMatrix[matLoc]*m0;
+    for (int i=0; i<abSize; ++i) {
+      const int matLoc = i*abSize;
+      weights_[i] = jMatrix_[matLoc]*jMatrix_[matLoc]*m0;
     }
-    for (int i=0; i<abSize; i++) {
-      int matLoc = 2*i;
-      *resultsIterators[matLoc] = weights[i];
-      *resultsIterators[matLoc + 1] = eigenValues[i];
+    for (int i=0; i<abSize; ++i) {
+      const int matLoc = 2*i;
+      *resultsIterators[matLoc] = weights_[i];
+      *resultsIterators[matLoc + 1] = eigenValues_[i];
     }
-    
+
 #ifdef WASATCH_QMOM_DIAGNOSTICS
     for (int i=0; i<abSize; i++) {
       int matLoc = 2*i;
@@ -338,23 +354,15 @@ evaluate()
     printf("__________________________________________________");
     printf("\n");
 #endif
-    
+
     //__________
     // increment iterators
     ++sampleIterator;
-    for (int i=0; i<nMoments; i++) {
+    for (int i=0; i<nMoments_; ++i) {
       knownMomentsIterators[i] += 1;
       resultsIterators[i] += 1;
     }
   }
-  delete[] a;
-  delete[] b;
-  delete[] alpha;
-  delete[] eigenValues;
-  delete[] weights;
-  delete[] jMatrix;
-  for (int i = 0; i<nMoments; i++) delete[] p[i];
-  delete[] p;
 }
 
 #endif // QMOM_Expr_h
