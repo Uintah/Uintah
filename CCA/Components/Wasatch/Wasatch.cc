@@ -484,14 +484,10 @@ namespace Wasatch{
                                                Uintah::SchedulerP& sched )
   {
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
-
-    // jcs: was getting patch set this way (from discussions with Justin).
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
-
     const Uintah::MaterialSet* materials = materials_;//sharedState_->allWasatchMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
-
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
