@@ -6,6 +6,7 @@ from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
+import socket
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -63,15 +64,16 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
   
   global startpath
-  startpath     = getcwd()
+  startpath       = getcwd()
   
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
   svn_revision    = getoutput("svn info ../src |grep Revision")
   
   
-  has_gpu = 0     # Hardwired for now.  I'm not sure if this is the right place for 
-                  # deciding if a machine is gpu capable.
+                    # 1 for GPU RT machine (kaibab), 0 otherwise.
+                    #   need to make this generic, perhaps pycuda?
+  has_gpu         = 1 if socket.gethostname() == "kaibab" else 0
   
   #__________________________________
   # set environmental variables
