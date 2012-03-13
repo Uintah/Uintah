@@ -134,8 +134,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= growthCoefVal_ * exp(expConst_ /  log(*superSat_ + 1.01) );  // this is g0
-  //note: + 1.01 added to precent NaN for now
+  result <<= nebo_cond( *superSat_ > 1.0, growthCoefVal_ * exp(expConst_ /  log(*superSat_) ) )
+                      ( 0.0 );
 }
 
 //--------------------------------------------------------------------

@@ -208,7 +208,8 @@ evaluate()
 
     // check if we are in a region where supersaturation is nonzero
     if ( (superSaturationTag_ != Expr::Tag() && *supersatIter < 1e-10) || (superSaturationTag_ != Expr::Tag() && *knownMomentsIterators[0] == 0) ) {
-      // in case the supersaturation is zero, set the weights and abscissae to zero
+      // in case the supersaturation or m_0 is zero, set the weights to zero and abscissae to 1
+      // helps with numerical stabilization of problem
       for (int i=0; i<abSize; ++i) {
         int matLoc = 2*i;
         *resultsIterators[matLoc] = 0.0;     // weight
@@ -275,6 +276,10 @@ evaluate()
         errorMsg << endl
                  << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
                  << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
+        std::cout << superSaturationTag_ << std::endl; 
+        for (int i = 0; i<nMoments_; i++) {
+          std::cout << "Value: M["<<i<<"] = "<<*knownMomentsIterators[i] << std::endl;   
+        }
         throw std::runtime_error( errorMsg.str() );
       }
       b_[jCol] = -std::sqrt(rhsB);

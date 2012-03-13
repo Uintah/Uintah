@@ -251,14 +251,13 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
 				SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
 				factory.register_source_term( src_name, srcBuilder );
-
-#ifdef WASATCH_IN_ARCHES        
+      
       } else if ( src_type == "wasatch_expr" ) {
           
         //Allows any arbitrary wasatch expression to be used as a source, as long as ForceOnGraph is used and expression is saved in data archiver
         SourceTermBase::Builder* srcBuilder = scinew WasatchExprSource::Builder( src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
-#endif
+
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;
