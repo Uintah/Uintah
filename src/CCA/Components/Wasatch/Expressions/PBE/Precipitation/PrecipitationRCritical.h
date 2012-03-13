@@ -123,8 +123,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= rKnotVal_ / log(*superSat_ + 1.01); //this is r*
-  //note stability +1.01
+  result <<= nebo_cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
+                      ( 0.0 ); //this is r*
 }
 
 //--------------------------------------------------------------------

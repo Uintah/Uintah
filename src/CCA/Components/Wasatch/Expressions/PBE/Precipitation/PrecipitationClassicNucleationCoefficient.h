@@ -123,18 +123,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  typename FieldT::const_interior_iterator superSatIterator = superSat_->interior_begin();
-  typename FieldT::interior_iterator resultsIterator = result.interior_begin();
-  
-  while (superSatIterator!=superSat_->interior_end() ) {
-    if (*superSatIterator > 1.1 ) {  //set value to 0 if S is too small
-      *resultsIterator = exp(expConst_ / log(*superSatIterator) / log(*superSatIterator) );
-    } else {
-      *resultsIterator = 0.0;
-    }
-    ++superSatIterator;
-    ++resultsIterator;
-  }
+  result <<= nebo_cond( *superSat_ > 1.0, exp(expConst_ / log(*superSat_) / log(*superSat_) ) )
+                      ( 0.0 );
 }
 
 //--------------------------------------------------------------------                                                

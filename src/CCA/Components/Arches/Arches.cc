@@ -524,6 +524,19 @@ Arches::problemSetup(const ProblemSpecP& params,
           proc0cout << " done" << endl;
         }
       }
+      //create constant expressions for table header constants
+      typedef std::map< string, double > doubleMap;      
+      doubleMap d_mixconsts = d_mixingTable->getAllConstants();   
+      doubleMap::iterator ConstIter;
+      for ( ConstIter = d_mixconsts.begin(); ConstIter != d_mixconsts.end(); ConstIter++) {
+        std::string tabConst = ConstIter->first;
+        proc0cout << "Creating Wasatch Expression for " << tabConst << "... ";
+        const Expr::Tag TableConstTag( tabConst , Expr::STATE_NONE );
+        double constVal = ConstIter->second;
+        typedef Expr::ConstantExpr<SVolField>::Builder Builder;
+        solngh->exprFactory->register_expression( new Builder( TableConstTag, constVal ) );
+        proc0cout << " done" << endl;
+      }
     }
   }
 
