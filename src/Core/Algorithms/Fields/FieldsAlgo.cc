@@ -441,6 +441,8 @@ template void cast_to_mesh_here< TriSurfMesh<TriLinearLgn<Point> > >( void *, Tr
 
 template void cast_to_mesh_here<GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<float>, FData3d<float, LatVolMesh<HexTrilinearLgn<Point> > > > >(void*, GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<float>, FData3d<float, LatVolMesh<HexTrilinearLgn<Point> > > >*&);
 template void cast_to_mesh_here<GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<double>, FData3d<double, LatVolMesh<HexTrilinearLgn<Point> > > > >(void*, GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<double>, FData3d<double, LatVolMesh<HexTrilinearLgn<Point> > > >*&);
+template void cast_to_mesh_here<GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<int>, FData3d<int, LatVolMesh<HexTrilinearLgn<Point> > > > >(void*, GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<int>, FData3d<int, LatVolMesh<HexTrilinearLgn<Point> > > >*&);
+
 
 template void cast_to_mesh_here<GenericField<ImageMesh<QuadBilinearLgn<Point> >, ConstantBasis<float>, FData2d<float, ImageMesh<QuadBilinearLgn<Point> > > > >(void*, GenericField<ImageMesh<QuadBilinearLgn<Point> >, ConstantBasis<float>, FData2d<float, ImageMesh<QuadBilinearLgn<Point> > > >*&);
 template void cast_to_mesh_here<GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, std::vector<double, std::allocator<double> > > >(void*, GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, std::vector<double, std::allocator<double> > >*&);
