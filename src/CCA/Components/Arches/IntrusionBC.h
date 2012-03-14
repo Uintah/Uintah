@@ -119,7 +119,7 @@ namespace Uintah{
 
 
       /** @brief Sets the hatted velocity boundary conditions */ 
-      void setHattedVelocity( const int p, 
+      void setHattedVelocity( const Patch* p, 
                               SFCXVariable<double>& u, 
                               SFCYVariable<double>& v, 
                               SFCZVariable<double>& w, 
@@ -131,7 +131,7 @@ namespace Uintah{
                       CCVariable<double>& scalar );
 
       /** @brief Adds flux contribution to the RHS **/ 
-      void addScalarRHS( const int p, 
+      void addScalarRHS( const Patch* p, 
                          Vector Dx, 
                          const std::string scalar_name, 
                          CCVariable<double>& RHS,
@@ -229,26 +229,25 @@ namespace Uintah{
 
             double velocity = 0.0; 
 
-            velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c + _dHelp[dir]] ); 
+            velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c - _faceDirHelp[dir]] ); 
 
-            IntVector cb = c + _faceDirHelp[dir]; 
+            //IntVector cb = c + _faceDirHelp[dir]; 
 
             if ( dir == 0 || dir == 1 ){ 
 
-              u[cb] = velocity; 
+              u[c] = velocity; 
 
             } else if ( dir == 2 || dir == 3 ){ 
 
-              v[cb] = velocity; 
+              v[c] = velocity; 
               
             } else { 
 
-              w[cb] = velocity; 
+              w[c] = velocity; 
 
             } 
           };
       }; 
-
 
       typedef std::map<int, std::vector<IntVector> > BCIterator; 
 
@@ -333,7 +332,7 @@ namespace Uintah{
 
 
       /** @brief Add an iterator to the list of total iterators for this patch and face */ 
-      void inline addIterator( IntVector c, int p, IntrusionBC::Boundary& intrusion ){ 
+      void inline add_iterator( IntVector c, int p, IntrusionBC::Boundary& intrusion ){ 
 
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {
@@ -362,7 +361,7 @@ namespace Uintah{
       }
 
       /** @brief Prints a list of the iterators for a given patch */ 
-      void inline printIterator ( int p, IntrusionBC::Boundary& intrusion ){ 
+      void inline print_iterator ( int p, IntrusionBC::Boundary& intrusion ){ 
 
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {

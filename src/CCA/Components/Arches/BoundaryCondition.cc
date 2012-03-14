@@ -6699,7 +6699,7 @@ void BoundaryCondition::setPrefill__NEW( const ProcessorGroup*,
   }
 }
 void 
-BoundaryCondition::setHattedIntrusionVelocity( const int p, 
+BoundaryCondition::setHattedIntrusionVelocity( const Patch* p, 
                                                SFCXVariable<double>& u, 
                                                SFCYVariable<double>& v, 
                                                SFCZVariable<double>& w, 
