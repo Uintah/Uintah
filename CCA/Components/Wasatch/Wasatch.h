@@ -1,7 +1,7 @@
 /*
   The MIT License
 
-  Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE),
+  Copyright (c) 2010-2012 Institute for Clean and Secure Energy (ICSE),
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -215,21 +215,21 @@ namespace Wasatch{
      */
     void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
-    
+
     //__________________________________
     //  AMR
-    virtual void scheduleCoarsen(const Uintah::LevelP& coarseLevel, 
-                                 Uintah::SchedulerP& sched);                        
+    virtual void scheduleCoarsen(const Uintah::LevelP& coarseLevel,
+                                 Uintah::SchedulerP& sched);
 
-    virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/, 
+    virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                          Uintah::SchedulerP& /*scheduler*/,
                                          bool, bool);
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
-    Expr::ExpressionFactory* solution_factory(){ return (graphCategories_[ADVANCE_SOLUTION])->exprFactory; } 
+    Expr::ExpressionFactory* solution_factory(){ return (graphCategories_[ADVANCE_SOLUTION])->exprFactory; }
     void disable_timestepper_creation(){ buildTimeIntegrator_ = false; }
-    void disable_wasatch_material(){ buildWasatchMaterial_ = false; }    
+    void disable_wasatch_material(){ buildWasatchMaterial_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
     const std::set<std::string>& io_field_set(){ return ioFieldSet_; }
@@ -243,7 +243,7 @@ namespace Wasatch{
     std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
-    
+
     /**
      *  a container of information for constructing ExprLib graphs.
      *  These are then wrapped as Wasatch::TaskInterface objects and

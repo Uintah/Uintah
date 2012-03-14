@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef ScalarRHS_h
 #define ScalarRHS_h
 
@@ -45,7 +67,7 @@ class ScalarRHS : public Expr::Expression<FieldT>
 protected:
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
-  
+
   typedef typename SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFluxT; ///< The type of field for the x-face variables.
   typedef typename FaceTypes::YFace YFluxT; ///< The type of field for the y-face variables.
@@ -59,8 +81,8 @@ protected:
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  SVolToFieldTInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,XVolField,XFluxT>::type  XVolToXFluxInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;  
-  
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;
+
 public:
 
   /**
@@ -114,7 +136,7 @@ public:
              const Expr::Tag& volFracTag,
              const Expr::Tag& xAreaFracTag,
              const Expr::Tag& yAreaFracTag,
-             const Expr::Tag& zAreaFracTag,            
+             const Expr::Tag& zAreaFracTag,
              const bool isConstDensity);
 
     /**
@@ -140,7 +162,7 @@ public:
              const Expr::Tag& volFracTag,
              const Expr::Tag& xAreaFracTag,
              const Expr::Tag& yAreaFracTag,
-             const Expr::Tag& zAreaFracTag,                        
+             const Expr::Tag& zAreaFracTag,
              const bool isConstDensity);
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
@@ -150,7 +172,7 @@ public:
     const Expr::Tag volfracT_;
     const Expr::Tag xareafracT_;
     const Expr::Tag yareafracT_;
-    const Expr::Tag zareafracT_;    
+    const Expr::Tag zareafracT_;
     const Expr::Tag densityT_;
     const bool isConstDensity_;
   };
@@ -165,24 +187,24 @@ protected:
   const Expr::Tag convTagX_, convTagY_, convTagZ_;
   const Expr::Tag diffTagX_, diffTagY_, diffTagZ_;
 
-  const bool haveConvection_, haveDiffusion_;  
+  const bool haveConvection_, haveDiffusion_;
   const bool doXDir_, doYDir_, doZDir_;
 
-  const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;  
+  const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;
   const bool haveVolFrac_, haveXAreaFrac_, haveYAreaFrac_, haveZAreaFrac_;
-    
+
   const Expr::Tag densityTag_;
 
   const SVolField* rho_;
   const SVolField* volfrac_;
   const XVolField* xareafrac_;
   const YVolField* yareafrac_;
-  const ZVolField* zareafrac_;  
+  const ZVolField* zareafrac_;
   const SVolToFieldTInterpT* volFracInterpOp_;
   const XVolToXFluxInterpT* xAreaFracInterpOp_;
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
   const ZVolToZFluxInterpT* zAreaFracInterpOp_;
-  
+
   const bool isConstDensity_;
   const DensityInterpT* densityInterpOp_;
 
@@ -210,7 +232,7 @@ protected:
              const Expr::Tag volFracTag,
              const Expr::Tag xAreaFracTag,
              const Expr::Tag yAreaFracTag,
-             const Expr::Tag zAreaFracTag,                                    
+             const Expr::Tag zAreaFracTag,
              const bool  isConstDensity );
 
   virtual ~ScalarRHS();

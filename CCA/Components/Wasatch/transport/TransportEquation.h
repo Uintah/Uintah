@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Wasatch_TransportEquation_h
 #define Wasatch_TransportEquation_h
 
@@ -17,7 +39,7 @@
 #include <CCA/Components/Wasatch/PatchInfo.h>
 
 namespace Wasatch{
-  
+
   class ExprDeps;  // forward declaration.
   class GraphHelper;
   /**
@@ -30,8 +52,8 @@ namespace Wasatch{
   class TransportEquation
   {
   public:
-    
-    
+
+
     /**
      *  \brief Construct a TransportEquation
      *
@@ -46,7 +68,7 @@ namespace Wasatch{
         rhsExprID_( rhsExprID ),
         stagLoc_( NODIR )
     {}
-    
+
     /**
      *  \brief Construct a TransportEquation
      *
@@ -64,24 +86,24 @@ namespace Wasatch{
         rhsExprID_( rhsExprID ),
         stagLoc_( stagLoc )
     {}
-    
+
     virtual ~TransportEquation(){}
-    
+
     /**
      *  \brief Obtain the name of the solution variable for thisa transport equation.
      */
     const std::string& solution_variable_name() const{ return solnVarName_; }
-    
+
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
-     */    
+     */
     const Direction staggered_location() const{ return stagLoc_; }
-    
+
     /**
-     *  \brief Obtain the name (i.e. string) staggered location of the solution 
+     *  \brief Obtain the name (i.e. string) staggered location of the solution
      *  variable that is governed by this transport equation.
-     */    
+     */
     const std::string dir_name() const {
       switch (stagLoc_) {
       case XDIR:
@@ -96,9 +118,9 @@ namespace Wasatch{
         return "";
       }
     }
-    
+
     Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
-    
+
     /**
      *  Set up the boundary condition on initial conditions evaluators for this
      *  TransportEquation. Each derived class must implement this
@@ -111,8 +133,8 @@ namespace Wasatch{
                                            const Uintah::PatchSet* const localPatches,
                                            const PatchInfoMap& patchInfoMap,
                                            const Uintah::MaterialSubset* const materials) = 0;
-    
-    
+
+
     /**
      *  Set up the boundary condition evaluators for this
      *  TransportEquation. Each derived class must implement this
@@ -125,7 +147,7 @@ namespace Wasatch{
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
                                             const Uintah::MaterialSubset* const materials) = 0;
-    
+
     /**
      *  Return the ExpressionID that identifies an expression that will
      *  set the initial condition for this transport equation.
@@ -138,13 +160,13 @@ namespace Wasatch{
      *  initial conditions.
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
-    
+
   protected:
     const std::string  solnVarName_;  ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;    ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;
   };
-  
+
 } // namespace Wasatch
 
 #endif // Wasatch_TransportEquation_h
