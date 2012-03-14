@@ -226,7 +226,9 @@
                                         attribute2="label REQUIRED STRING">       <!-- type = how bc is applied, 
                                                                                        label= unique name for this intrusion boundary --> 
            <geom_object/>                                                         <!-- geometry object associated with this intrusion --> 
-           <boundary_direction          spec="OPTIONAL MULTIPLE_INTEGERS"/>       <!-- direction to apply type of BC, otherwise treated as wall --> 
+           <flux_dir                    spec="MULTIPLE STRING 'x-,X-,x+,X+,
+                                                               y-,Y-,y+,Y+,
+                                                               z-,Z-,z+,Z+"/>                  <!-- direction to apply type of BC, otherwise treated as wall --> 
            <variable                    spec="MULTIPLE NO_DATA"                     
                                         attribute1="label REQUIRED STRING"       
                                         attribute2="value REQUIRED DOUBLE"/>      <!-- label= variable name, 

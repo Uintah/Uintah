@@ -453,7 +453,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) { 
-        _intrusions->addScalarRHS( p, Dx, d_eqnName, RHS, den ); 
+        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS, den ); 
       }
     }
   

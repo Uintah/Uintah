@@ -963,7 +963,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                        cellinfo, &velocityVars, &constVelocityVars);
     }
 
-    d_boundaryCondition->setHattedIntrusionVelocity( p, velocityVars.uVelRhoHat, 
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, 
         velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density ); 
 
     //MMS boundary conditions ~Setting the uncorrected velocities~
@@ -1199,7 +1199,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                                           old_uvel, old_vvel, old_wvel );
     }
 
-    d_boundaryCondition->setHattedIntrusionVelocity( p, new_uvel, new_vvel, new_wvel, new_density ); 
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel, new_density ); 
   }  // patches
 }
 // ****************************************************************************
