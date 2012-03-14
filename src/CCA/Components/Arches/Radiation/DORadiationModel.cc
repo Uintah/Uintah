@@ -344,8 +344,6 @@ DORadiationModel::computeSource( const ProcessorGroup* pc,
 
   int archIndex = 0; // only one arches material
   int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  double new_total_src = 0.0;
-    
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

@@ -654,8 +654,8 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
       double FSum = 0.0;
 
-      double heat_rate_;
-      double gas_heat_rate_;
+      //double heat_rate_;
+      //double gas_heat_rate_;
       double abskp_;
 
       // intermediate calculation values
