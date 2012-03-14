@@ -84,12 +84,14 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
     MPIScheduler(myworld, oport, parentScheduler), d_nextsignal("next condition"),
       d_nextmutex("next mutex"), dlbLock("loadbalancer lock") {
 
-  gpuInitialize();
+  if (Parallel::usingGPU()) {
+    gpuInitialize();
 
-  // we need one of these for each GPU, as each device will have it's own CUDA context
-  for (int i = 0; i < numGPUs_; i++) {
-    idleStreams.push_back(std::queue<cudaStream_t*>());
-    idleEvents.push_back(std::queue<cudaEvent_t*>());
+    // we need one of these for each GPU, as each device will have it's own CUDA context
+    for (int i = 0; i < numGPUs_; i++) {
+      idleStreams.push_back(std::queue<cudaStream_t*>());
+      idleEvents.push_back(std::queue<cudaEvent_t*>());
+    }
   }
 
   // disable memory windowing on variables.  This will ensure that
@@ -116,10 +118,12 @@ GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {
     }
   }
 
-  // cleanup CUDA stream and event handles
-  // TODO need to fix clearCudaStreams() bug
-  idleStreams.clear();
-  idleEvents.clear();
+  if (Parallel::usingGPU()) {
+    // cleanup CUDA stream and event handles
+    // TODO need to fix clearCudaStreams() bug
+    idleStreams.clear();
+    idleEvents.clear();
+  }
 }
 
 void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state) {
@@ -167,7 +171,7 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, Simula
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
-          "This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__,
+          "This scheduler requires number of threads > 1, use  -nthreads <num> and -gpu ", __FILE__,
           __LINE__);
     }
   } else if (numThreads_ > 32) {
@@ -1283,8 +1287,10 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   if (!pinned) {
     // page-lock (pin) host memory for async copy to device
     // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-    CUDA_SAFE_CALL( retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable));
-    pinnedHostPtrs.insert(h_reqData);
+    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
+    if(retVal == cudaSuccess) {
+      pinnedHostPtrs.insert(h_reqData);
+    }
   }
 
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
@@ -1319,8 +1325,10 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   if (!pinned) {
     // page-lock (pin) host memory for async copy to device
     // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-    CUDA_SAFE_CALL( retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable) );
-    pinnedHostPtrs.insert(h_compData);
+    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
+    if(retVal == cudaSuccess) {
+      pinnedHostPtrs.insert(h_compData);
+    }
   }
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
