@@ -227,7 +227,7 @@ namespace Uintah {
         public: 
 
           CombustionEfficiency(std::string id, const BoundaryCondition* bcs, ArchesLabel* a_lab) 
-            : _id(id), _bcs(bcs), _a_labs(a_lab), Calculator(id, a_lab) {
+            : Calculator(id, a_lab), _bcs(bcs) {
 
             std::cout << " Instantiating a calculator named: " << _id << " of type: combustion_efficiency" << std::endl;
 
@@ -337,8 +337,7 @@ namespace Uintah {
 
                 new_dw->get( mf_1, _mf_1_label, indx, patch, Ghost::None, 0 ); 
 
-
-              } else if ( _num_mf = 2 ){ 
+              } else if ( _num_mf == 2 ){ 
 
                 new_dw->get( mf_1, _mf_1_label, indx, patch, Ghost::None, 0 ); 
                 new_dw->get( mf_2, _mf_2_label, indx, patch, Ghost::None, 0 ); 
@@ -603,7 +602,7 @@ namespace Uintah {
           std::string _mf_id_1; 
           std::string _mf_id_2; 
 
-          double _num_mf; 
+          int _num_mf; 
 
           const VarLabel* _numerator_label; 
           const VarLabel* _denominator_label; 
@@ -612,8 +611,8 @@ namespace Uintah {
           const VarLabel* _mf_2_label; 
           const VarLabel* _phi_label;
 
-          ArchesLabel* _a_labs; 
           const BoundaryCondition* _bcs; 
+          ArchesLabel* _a_labs; 
 
       }; 
 
