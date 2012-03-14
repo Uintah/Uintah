@@ -576,6 +576,10 @@ namespace Uintah {
             const double rho_f = 0.5 * ( rho[c] + rho[cm] ); 
             const double u_f   = std::min( 0.0, u[c] ); 
 
+            const double flux = rho_f * u_f; 
+
+            return flux; 
+
           };
 
           template<typename UT>
@@ -587,6 +591,10 @@ namespace Uintah {
 
             const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
             const double u_f   = std::max( 0.0, u[cp] ); 
+
+            const double flux = rho_f * u_f; 
+
+            return flux; 
 
           };
 
@@ -604,8 +612,8 @@ namespace Uintah {
           const VarLabel* _mf_2_label; 
           const VarLabel* _phi_label;
 
-          const BoundaryCondition* _bcs; 
           ArchesLabel* _a_labs; 
+          const BoundaryCondition* _bcs; 
 
       }; 
 
