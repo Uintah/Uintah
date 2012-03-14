@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
 #include "../TimeStepper.h"
@@ -89,7 +111,7 @@ namespace Wasatch{
     proc0cout << "------------------------------------------------" << std::endl;
     proc0cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
     Expr::ExpressionID rhsID;
-    
+
     if( eqnLabel == "generic" ){
        // find out if this corresponds to a staggered or non-staggered field
       std::string staggeredDirection;
@@ -227,7 +249,7 @@ namespace Wasatch{
                                              thisPhiName,
                                              rhsID );
             solnGraphHelper->rootIDs.insert(rhsID);
-            
+
             adaptor = scinew EqnTimestepAdaptor< XVolField >( scaltesteqn );
             adaptors.push_back(adaptor);
           }
@@ -382,7 +404,7 @@ namespace Wasatch{
 
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< XVolField > MomTransEq;      
+      typedef MomentumTransportEquation< XVolField > MomTransEq;
       const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, xvelname, xmomname, params, linSolver );
       momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
@@ -392,7 +414,7 @@ namespace Wasatch{
                                       rhsID,
                                       linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);
-      
+
       adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
@@ -409,7 +431,7 @@ namespace Wasatch{
                                      rhsID,
                                      linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);
-      
+
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
@@ -426,7 +448,7 @@ namespace Wasatch{
                                      rhsID,
                                      linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);
-      
+
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
@@ -528,7 +550,7 @@ namespace Wasatch{
     Expr::TagList transportedMomentTags;
     Expr::TagList abscissaeTags;
     Expr::TagList weightsTags;
-    
+
     std::string basePhiName;
     params->get( "PopulationName", basePhiName );
     basePhiName = "m_" + basePhiName;
@@ -633,7 +655,7 @@ namespace Wasatch{
         momtranseq = scinew MomTransEq( thisPhiName, rhsID);
         adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
         adaptors.push_back(adaptor);
-        // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO 
+        // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
         // THAT ELSEWHERE, BUT THIS IS NEEDED TO MAKE THINGS EASIER WHEN USING
         // WASATCH IN ARCHES.
         solnGraphHelper->rootIDs.insert(rhsID);

@@ -1,13 +1,35 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef FluxLimiterInterpolant_h
 #define FluxLimiterInterpolant_h
 /* -------------------------------------------------------
-%%       %%%% %%     %% %%%% %%%%%%%% %%%%%%%% %%%%%%%%  
-%%        %%  %%%   %%%  %%     %%    %%       %%     %% 
-%%        %%  %%%% %%%%  %%     %%    %%       %%     %% 
-%%        %%  %% %%% %%  %%     %%    %%%%%%   %%%%%%%%  
-%%        %%  %%     %%  %%     %%    %%       %%   %%   
-%%        %%  %%     %%  %%     %%    %%       %%    %%  
-%%%%%%%% %%%% %%     %% %%%%    %%    %%%%%%%% %%     %% 
+%%       %%%% %%     %% %%%% %%%%%%%% %%%%%%%% %%%%%%%%
+%%        %%  %%%   %%%  %%     %%    %%       %%     %%
+%%        %%  %%%% %%%%  %%     %%    %%       %%     %%
+%%        %%  %% %%% %%  %%     %%    %%%%%%   %%%%%%%%
+%%        %%  %%     %%  %%     %%    %%       %%   %%
+%%        %%  %%     %%  %%     %%    %%       %%    %%
+%%%%%%%% %%%% %%     %% %%%%    %%    %%%%%%%% %%     %%
 ----------------------------------------------------------*/
 
 #include <vector>
@@ -26,7 +48,7 @@
  *	  when apply_to_field() is done.
  *
  *  \brief     Calculates convective flux using a flux limiter.
- *  
+ *
  *  This class is a lightweight operator, i.e. it does NOT implement a
  *  matvec operation. The FluxLimiterInterpolant will interpolate the
  *  convective flux \f$\phi u_i\f$ where \f$\phi\f$ denotes a staggered or
@@ -38,7 +60,7 @@
  *  field, then the FluxLimiterInterpolant will produce a scalar face
  *  field. Similarly, if \f$\phi\f$ was an X-Staggered volume field, then
  *  the FluxLimiterInterpolant will produce an X-Staggered face field.
- * 
+ *
  *  Based on this convention, the FluxLimiterInterpolant class is templated
  *  on two types o fields: the phi field type (PhiVolT) and its
  *  corresponding face field type (PhiFaceT).
@@ -46,50 +68,50 @@
 
 template < typename PhiVolT, typename PhiFaceT >
 class FluxLimiterInterpolant {
-  
+
 private:
-  
-  // Here, the advectivevelocity has been already interpolated to the phi cell 
-  // faces. The destination field should be of the same type as the advective 
+
+  // Here, the advectivevelocity has been already interpolated to the phi cell
+  // faces. The destination field should be of the same type as the advective
   // velocity, i.e. a staggered, cell centered field.
-  const PhiFaceT* advectiveVelocity_; 
-  
+  const PhiFaceT* advectiveVelocity_;
+
   // holds the limiter type to be used, i.e. SUPERBEE, VANLEER, etc...
   Wasatch::ConvInterpMethods limiterType_;
-  
-  // An integer denoting the offset for the face index owned by the control 
-  // volume in question. For the x direction, theStride = 0. 
+
+  // An integer denoting the offset for the face index owned by the control
+  // volume in question. For the x direction, theStride = 0.
   // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
-  size_t stride_; 
-  
+  size_t stride_;
+
   // for the plus face, bndPlusStrideCoef is useful to define how many strides
   // one will have to move
-  size_t bndPlusStrideCoef_;  
-  
+  size_t bndPlusStrideCoef_;
+
   // some counters to help in the evaluate member function
   std::vector<size_t> faceCount_;
   std::vector<size_t> volIncr_;
   std::vector<size_t> faceIncr_;
-  
+
   // boundary counters
-  std::vector<size_t> bndFaceCount_; // counter for faces at the boundary  
+  std::vector<size_t> bndFaceCount_; // counter for faces at the boundary
   std::vector<size_t> bndVolIncr_;
   std::vector<size_t> bndFaceIncr_;
-  
+
   //
   int calculate_stride(const std::vector<int>& dim,
                        const std::vector<bool> hasPlusFace) const;
-  
-  
+
+
 public:
-  
+
   typedef typename PhiVolT::Ghost      SrcGhost;
   typedef typename PhiVolT::Location   SrcLocation;
   typedef typename PhiFaceT::Ghost     DestGhost;
   typedef typename PhiFaceT::Location  DestLocation;
   typedef PhiVolT SrcFieldType;
   typedef PhiFaceT DestFieldType;
-  
+
   /**
    *  \brief Constructor for flux limiter interpolant.
    *  \param dim: A 3D vector containing the number of control volumes
@@ -99,12 +121,12 @@ public:
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
                           const std::vector<bool> hasPlusFace );
-  
+
   /**
    *  \brief Destructor for flux limiter interpolant.
-   */  
+   */
   ~FluxLimiterInterpolant();
-  
+
   /**
    *  \brief Sets the advective velocity field for the flux limiter interpolator.
    *
@@ -113,13 +135,13 @@ public:
    *         destination field, i.e. a face centered field.
    */
   void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
-  
+
   /**
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
   void set_flux_limiter_type (Wasatch::ConvInterpMethods limiterType);
-  
+
   /**
    *  \brief Applies the flux limiter interpolation to the source field.
    *
@@ -130,8 +152,8 @@ public:
    *         hold the convective flux \f$\phi*u_i\f$ in the direction
    *         i. It will be stored on the staggered cell centers.
    */
-  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
-  
+  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const;
+
 };
 
 #endif // FluxLimiterInterpolant_h

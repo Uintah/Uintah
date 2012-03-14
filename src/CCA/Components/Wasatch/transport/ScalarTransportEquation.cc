@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 //-- Wasatch includes --//
 #include "ScalarTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
@@ -595,14 +617,14 @@ namespace Wasatch{
       srcTags.push_back( srcTag );
 
     }
-    
+
     //_____________
     // volume fraction for embedded boundaries Terms
     Expr::Tag volFracTag = Expr::Tag();
     if (params->findBlock("VolumeFractionExpression")) {
       volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag xAreaFracTag = Expr::Tag();
     if (params->findBlock("XAreaFractionExpression")) {
       xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
@@ -617,7 +639,7 @@ namespace Wasatch{
     if (params->findBlock("ZAreaFractionExpression")) {
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     if (isStrong){
       const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
       return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );

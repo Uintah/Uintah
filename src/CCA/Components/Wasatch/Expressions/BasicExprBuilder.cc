@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -111,7 +133,7 @@ namespace Wasatch{
       typedef typename SineTime<FieldT>::Builder Builder;
       builder = scinew Builder( tag, timeVarTag );
     }
-    
+
     else if ( params->findBlock("ExprAlgebra") ) {
       std::string algebraicOperation;
       Uintah::ProblemSpecP valParams = params->findBlock("ExprAlgebra");
@@ -119,8 +141,8 @@ namespace Wasatch{
       const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
       valParams->getAttribute("algebraicOperation",algebraicOperation);
       typedef typename ExprAlgebra<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );      
-    }    
+      builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );
+    }
 
     return builder;
   }
@@ -213,7 +235,7 @@ namespace Wasatch{
     return builder;
   }
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionBuilder*
   build_physics_coefficient_expr( Uintah::ProblemSpecP params )
@@ -222,9 +244,9 @@ namespace Wasatch{
     Expr::ExpressionBuilder* builder = NULL;
     std::string exprType;
     Uintah::ProblemSpecP valParams = params->get("value",exprType);
-      
-    if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {      
-      double coef, MolecularVolume, DiffusionCoefficient;     
+
+    if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {
+      double coef, MolecularVolume, DiffusionCoefficient;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationBulkDiffusionCoefficient");
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
@@ -235,10 +257,10 @@ namespace Wasatch{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, coef, hasOstwaldRipening); 
+      builder = scinew Builder(tag, saturationTag, eqTag, coef, hasOstwaldRipening);
     }
 
-    else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {      
+    else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
       double coef, expcoef, MolecularDiameter, DiffusionCoefficient, SurfaceEnergy , T;
       const double K_B = 1.3806488e-23;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationMonosurfaceCoefficient");
@@ -250,8 +272,8 @@ namespace Wasatch{
       expcoef = - SurfaceEnergy * SurfaceEnergy * MolecularDiameter * MolecularDiameter * PI / K_B / K_B / T / T;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationMonosurfaceCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, coef, expcoef); 
-    } 
+      builder = scinew Builder(tag, saturationTag, coef, expcoef);
+    }
 
     else if (params->findBlock("PrecipitationClassicNucleationCoefficient") ) {
       double expcoef, SurfaceEnergy, MolecularVolume, T;
@@ -262,7 +284,7 @@ namespace Wasatch{
       coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
       coefParams -> getAttribute("Temperature",T);
       expcoef = -16 * PI / 3 * SurfaceEnergy * SurfaceEnergy * SurfaceEnergy / K_B / K_B / K_B / T / T / T * MolecularVolume * MolecularVolume / N_A / N_A;
-      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationClassicNucleationCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, expcoef);
     }
@@ -273,7 +295,7 @@ namespace Wasatch{
       coefParams -> getAttribute("R0", RKnot);
       coefParams -> getAttribute("Conversion_Fac", CFCoef);
       coef = RKnot*CFCoef;
-      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
     }
@@ -287,7 +309,7 @@ namespace Wasatch{
       coefParams -> getAttribute("Temperature", T);
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coef = 2.0*SurfaceEnergy*MolecularVolume/R/T*CFCoef;
-      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
@@ -296,39 +318,39 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionBuilder*
   build_post_processing_expr( Uintah::ProblemSpecP params )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
-    
+
     Expr::ExpressionBuilder* builder = NULL;
     if( params->findBlock("VelocityMagnitude") ){
       Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
       Expr::Tag xVelTag = Expr::Tag();
-      if (valParams->findBlock("XVelocity")) 
+      if (valParams->findBlock("XVelocity"))
         xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
       Expr::Tag yVelTag = Expr::Tag();
-      if (valParams->findBlock("YVelocity")) 
+      if (valParams->findBlock("YVelocity"))
         yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
       Expr::Tag zVelTag = Expr::Tag();
-      if (valParams->findBlock("ZVelocity")) 
+      if (valParams->findBlock("ZVelocity"))
         Expr::Tag zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
       typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
       builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
-    } 
-    
+    }
+
     else if( params->findBlock("Vorticity") ){
       Uintah::ProblemSpecP valParams = params->findBlock("Vorticity");
       std::string vorticityComponent;
       valParams->require("Component",vorticityComponent);
-      
+
       Expr::Tag vel1Tag = Expr::Tag();
-      if (valParams->findBlock("Vel1")) 
+      if (valParams->findBlock("Vel1"))
         vel1Tag = parse_nametag( valParams->findBlock("Vel1")->findBlock("NameTag") );
       Expr::Tag vel2Tag = Expr::Tag();
-      if (valParams->findBlock("Vel2")) 
+      if (valParams->findBlock("Vel2"))
         vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
       if (vorticityComponent == "X") {
         typedef typename Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
@@ -340,8 +362,8 @@ namespace Wasatch{
         typedef typename Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
         builder = scinew Builder(tag, vel1Tag, vel2Tag);
       }
-    }    
-    
+    }
+
     else if( params->findBlock("InterpolateExpression") ){
       Uintah::ProblemSpecP valParams = params->findBlock("InterpolateExpression");
       std::string srcFieldType;
@@ -354,35 +376,35 @@ namespace Wasatch{
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << srcFieldType << "'" << ". Trying to interpolate SVOL to SVOL is redundant." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          
+
         }
         case XVOL : {
           typedef typename InterpolateExpression<XVolField, SVolField>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);  
+          builder = scinew Builder(tag, srcTag);
           break;
         }
         case YVOL : {
           typedef typename InterpolateExpression<YVolField, SVolField>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);  
+          builder = scinew Builder(tag, srcTag);
           break;
         }
         case ZVOL : {
           typedef typename InterpolateExpression<ZVolField, SVolField>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);  
-          break;     
+          builder = scinew Builder(tag, srcTag);
+          break;
         }
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }          
-    }    
-    
+      }
+    }
+
     return builder;
   }
-  
+
   //------------------------------------------------------------------
-  
+
   void
   create_expressions_from_input( Uintah::ProblemSpecP parser,
                                  GraphCategories& gc )
@@ -463,17 +485,17 @@ namespace Wasatch{
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
-    
+
     //___________________________________________________
-    // parse and build physical coefficients expressions    
+    // parse and build physical coefficients expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PhysicsCoefficient");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PhysicsCoefficient") ){
-      
+
       std::string fieldType, taskListName;
       exprParams->getAttribute("type",fieldType);
       exprParams->require("TaskList",taskListName);
-      
+
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_physics_coefficient_expr< SVolField >( exprParams );  break;
         case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams );  break;
@@ -484,7 +506,7 @@ namespace Wasatch{
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
@@ -494,21 +516,21 @@ namespace Wasatch{
         msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
-    
+
     //___________________________________________________
-    // parse and build post-processing expressions    
+    // parse and build post-processing expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PostProcessingExpression");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
-      
+
       std::string fieldType, taskListName;
       exprParams->getAttribute("type",fieldType);
       exprParams->require("TaskList",taskListName);
-      
+
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
         default:
@@ -517,7 +539,7 @@ namespace Wasatch{
               << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
@@ -527,11 +549,11 @@ namespace Wasatch{
         msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
-    
+
   }
 
   //------------------------------------------------------------------

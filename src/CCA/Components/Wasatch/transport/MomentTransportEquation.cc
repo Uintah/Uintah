@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 //-- Wasatch includes --//
 #include "MomentTransportEquation.h"
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -25,7 +47,7 @@
 
 namespace Wasatch {
 
-  //------------------------------------------------------------------  
+  //------------------------------------------------------------------
   template< typename FieldT >
   void setup_growth_expression( Uintah::ProblemSpecP growthParams,
                                const std::string& basePhiName,
@@ -39,20 +61,20 @@ namespace Wasatch {
   {
     Expr::Tag growthTag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
-    
+
     Expr::Tag growthCoefTag;
     if( growthParams->findBlock("GrowthCoefficientExpression") ){
       Uintah::ProblemSpecP nameTagParam = growthParams->findBlock("GrowthCoefficientExpression")->findBlock("NameTag");
       growthCoefTag = parse_nametag( nameTagParam );
     }
-        
+
     std::string growthModel;
     growthParams->get("GrowthModel",growthModel);
     growthTag = Expr::Tag( thisPhiName + "_growth_" + growthModel, Expr::STATE_NONE);
     double constCoef = 1.0;
     if (growthParams->findBlock("PreGrowthCoefficient") )
       growthParams->get("PreGrowthCoefficient",constCoef);
-      
+
     if (growthModel == "BULK_DIFFUSION") {      //g(r) = 1/r
       std::stringstream previousMomentOrderStr;
       previousMomentOrderStr << momentOrder - 2;
@@ -65,7 +87,7 @@ namespace Wasatch {
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
-        
+
     } else if (growthModel == "MONOSURFACE") { //g(r) = r^2
       std::stringstream nextMomentOrderStr;
       nextMomentOrderStr << momentOrder + 1;
@@ -78,7 +100,7 @@ namespace Wasatch {
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
-        
+
     } else if (growthModel == "CONSTANT") {   // g0
       std::stringstream currentMomentOrderStr;
       currentMomentOrderStr << momentOrder;
@@ -89,14 +111,14 @@ namespace Wasatch {
 
     growthTags.push_back(growthTag);
     factory.register_expression( builder );
-    
+
     if (growthParams->findBlock("OstwaldRipening") ){
       Uintah::ProblemSpecP ostwaldParams = growthParams->findBlock("OstwaldRipening");
       int nPts = nEqs/2;
       Expr::Tag ostwaldTag; // this tag will be populated
-      Expr::ExpressionBuilder* builder2 = NULL;   
+      Expr::ExpressionBuilder* builder2 = NULL;
       ostwaldTag = Expr::Tag( thisPhiName + "_Ostwald_Ripening", Expr::STATE_NONE );
-      
+
       double Molec_Vol;
       double Surf_Eng;
       double Temperature;
@@ -108,12 +130,12 @@ namespace Wasatch {
       double CFCoef = 1.0;
       if (ostwaldParams->findBlock("ConversionFactor") )
         ostwaldParams->get("ConversionFactor", CFCoef);  //converts small radii to SI
-      
+
       double RCutoff = 0.1;                           //Does RCutoff need an expression in future?
       if (ostwaldParams->findBlock("RCutoff") )
         ostwaldParams->get("RCutoff",RCutoff);
       expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature * CFCoef;
-      
+
       typedef typename OstwaldRipening<FieldT>::Builder ostwald;
       builder2 = scinew ostwald(ostwaldTag, growthCoefTag, weightsTagList, abscissaeTagList, momentOrder, expCoef, RCutoff, constCoef, nPts);
       growthTags.push_back(ostwaldTag);
@@ -136,25 +158,25 @@ namespace Wasatch {
     //where r* can be an expression or constant
     Expr::Tag birthTag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
-    
+
     std::string birthModel;
     birthParams->get("BirthModel",birthModel);
-    
+
     double preCoef = 1.0;
-    if (birthParams->findBlock("PreBirthCoefficient") ) 
+    if (birthParams->findBlock("PreBirthCoefficient") )
       birthParams->get("PreBirthCoefficient",preCoef);
-    
+
     double stdDev = 1.0;
     if (birthParams->findBlock("StandardDeviation") )
       birthParams->get("StandardDeviation",stdDev);
-        
-    Expr::Tag birthCoefTag; 
+
+    Expr::Tag birthCoefTag;
     //register coefficient expr if found
     if( birthParams->findBlock("BirthCoefficientExpression") ){
       Uintah::ProblemSpecP nameTagParam = birthParams->findBlock("BirthCoefficientExpression")->findBlock("NameTag");
       birthCoefTag = parse_nametag( nameTagParam );
     }
-    
+
     Expr::Tag RStarTag;
    //register RStar Expr, or use const RStar if found
     double ConstRStar = 1.0;
@@ -163,20 +185,20 @@ namespace Wasatch {
       RStarTag = parse_nametag( nameTagParam );
     } else {
       RStarTag = Expr::Tag ();
-      if (birthParams->findBlock("ConstantRStar") ) 
+      if (birthParams->findBlock("ConstantRStar") )
         birthParams->get("ConstantRStar",ConstRStar);
     }
 
     birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );
     typedef typename Birth<FieldT>::Builder birth;
     builder = scinew birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthModel, ConstRStar, stdDev);
-    
+
     birthTags.push_back(birthTag);
     factory.register_expression( builder );
   }
-  
+
   //------------------------------------------------------------------
-  
+
   std::string
   get_population_name( Uintah::ProblemSpecP params )
   {
@@ -212,7 +234,7 @@ namespace Wasatch {
     // for growth, nucleation, birth, death, and any other fancy source terms
     Expr::TagList rhsTags;
     typename ScalarRHS<FieldT>::FieldTagInfo info;
-    
+
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
@@ -228,9 +250,9 @@ namespace Wasatch {
                                         abscissaeTags,
                                         factory);
     }
-    
+
     //_________________
-    // Birth 
+    // Birth
     for( Uintah::ProblemSpecP birthParams=params->findBlock("BirthExpression");
         birthParams != 0;
         birthParams = birthParams->findNextBlock("BirthExpression") ){
@@ -261,29 +283,29 @@ namespace Wasatch {
       setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, factory, info );
 
     }
-    
+
     //_____________
     // volume fraction for embedded boundaries Terms
     Expr::Tag volFracTag = Expr::Tag();
     if (params->findBlock("VolumeFractionExpression")) {
       volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag xAreaFracTag = Expr::Tag();
     if (params->findBlock("XAreaFractionExpression")) {
       xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag yAreaFracTag = Expr::Tag();
     if (params->findBlock("YAreaFractionExpression")) {
       yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag zAreaFracTag = Expr::Tag();
     if (params->findBlock("ZAreaFractionExpression")) {
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     //
     // Because of the forms that the ScalarRHS expression builders are defined,
     // we need a density tag and a boolean variable to be passed into this expression
@@ -333,7 +355,7 @@ namespace Wasatch {
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
-  {  
+  {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     if (factory.have_entry(phiTag)) {
@@ -344,8 +366,8 @@ namespace Wasatch {
                                           localPatches,
                                           patchInfoMap,
                                           materials );
-    }    
-    
+    }
+
   }
 
   //------------------------------------------------------------------
@@ -356,8 +378,8 @@ namespace Wasatch {
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
-  {  
-    
+  {
+
     // see BCHelperTools.cc
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
                                                    Expr::STATE_N ),
@@ -366,7 +388,7 @@ namespace Wasatch {
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials );    
+                                        materials );
   }
 
   //------------------------------------------------------------------

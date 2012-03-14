@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Wasatch_MomentTransportEquation_h
 #define Wasatch_MomentTransportEquation_h
 
@@ -14,7 +36,7 @@
 
 
 namespace Wasatch{
-  
+
   /**
    *  \ingroup WasatchCore
    *  \class MomentTransportEquation
@@ -28,9 +50,9 @@ namespace Wasatch{
    *
    *  \f[
    *    \frac{\partial m_k}{\partial t} =
-   *    - \frac{\partial m_k u_x }{\partial x} 
-   *    - \frac{\partial m_k u_y }{\partial y} 
-   *    - \frac{\partial m_k u_z }{\partial z} 
+   *    - \frac{\partial m_k u_x }{\partial x}
+   *    - \frac{\partial m_k u_y }{\partial y}
+   *    - \frac{\partial m_k u_z }{\partial z}
    *    - \frac{\partial J_{m_k,x}}{\partial x}
    *    - \frac{\partial J_{m_k,y}}{\partial y}
    *    - \frac{\partial J_{m_k,z}}{\partial z}
@@ -44,8 +66,8 @@ namespace Wasatch{
    *
    *  - The source term of momentum equation is \f$\nabla P \f$ and
    *    the diffusive Flux is \f$\nabla . \tau \f$. Right now in the
-   *    momentumTransportEqu we do not require density when it is  
-   *    constant. So, you should be careful about these 2 terms in 
+   *    momentumTransportEqu we do not require density when it is
+   *    constant. So, you should be careful about these 2 terms in
    *    constant density cases. You need to use kinematic viscosity
    *    instead of dynamic viscosity for calculating \f$ \tau \f$ and
    *    use density wieghted pressure instead of normal pressure.
@@ -54,7 +76,7 @@ namespace Wasatch{
   template<typename FieldT>
   class MomentTransportEquation : public Wasatch::TransportEquation
   {
-  public:        
+  public:
     /**
      *  \brief Construct a MomentTransportEquation
      *  \param basePhiName This equation will be created n-times where n is a user
@@ -64,23 +86,23 @@ namespace Wasatch{
      *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
      *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
      *
-     *  Note that the static member method get_rhs_expr_id can be useful to 
+     *  Note that the static member method get_rhs_expr_id can be useful to
      *  obtain the appropriate input arguments here.
      */
     MomentTransportEquation(const std::string thisPhiName,
                             const Expr::ExpressionID id );
-    
+
     ~MomentTransportEquation();
 
     /**
-     *  \brief apply the boundary conditions on the initial condition 
+     *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            const Uintah::PatchSet* const localPatches,
                                            const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);    
-    
+                                           const Uintah::MaterialSubset* const materials);
+
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
@@ -88,12 +110,12 @@ namespace Wasatch{
                                    const Uintah::PatchSet* const localPatches,
                                    const PatchInfoMap& patchInfoMap,
                                    const Uintah::MaterialSubset* const materials);
-    
+
     /**
      *  \brief setup the initial conditions for this transport equation.
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
-    
+
     /**
      * \brief Parse the input file to determine the rhs expression id.
      *        Also registers convective flux, diffusive flux, and
@@ -109,9 +131,9 @@ namespace Wasatch{
     static Expr::ExpressionID  get_moment_rhs_id(Expr::ExpressionFactory& factory,
                                                   Uintah::ProblemSpecP params,
                                                   Expr::TagList& weightsTags,
-                                                  Expr::TagList& abscissaeTags,                    
-                                                  const double momentOrder);    
-    
+                                                  Expr::TagList& abscissaeTags,
+                                                  const double momentOrder);
+
     /**
      *  \brief Parse the input file to get the name of this ScalarTransportEquation
      *
@@ -119,7 +141,7 @@ namespace Wasatch{
      *         equation. Scope should be within the TransportEquation tag.
      */
     //static std::string get_phi_name( Uintah::ProblemSpecP params );
-    
+
   private:
     //Expr::TagList weightsTagList_, abscissaeTagList_, weightsAndAbscissaeTagList_;
     };

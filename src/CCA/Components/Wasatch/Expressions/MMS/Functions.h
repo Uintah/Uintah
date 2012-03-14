@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #ifndef Wasatch_MMS_Functions
 #define Wasatch_MMS_Functions
 
@@ -109,7 +131,7 @@ SineTime<ValT>::Builder::build() const
  *  \author Tony Saad
  *  \date September, 2011
  *  \brief Implements simple algebraic operations between expressions. This useful
-           for initializing data for debugging without the need to implement 
+           for initializing data for debugging without the need to implement
            expressions such as x + y etc... this was required by the visit team
            and the easiest way to implement this was to create this expression.
            Furthermore, when initializing with embedded boundaries, we must
@@ -120,13 +142,13 @@ template< typename FieldT >
 class ExprAlgebra : public Expr::Expression<FieldT>
 {
 public:
-  
+
   /**
    *  \brief Builds a Taylor Vortex velocity function in x direction Expression.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder(const Expr::Tag& result, 
+    Builder(const Expr::Tag& result,
             const Expr::Tag& tag1,
             const Expr::Tag& tag2,
             const std::string& algebraicOperation);
@@ -136,13 +158,13 @@ public:
     const Expr::Tag tag1_, tag2_;
     const std::string algebraicoperation_;
   };
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-  
+
 private:
-  
+
   ExprAlgebra( const Expr::Tag& tag1,
             const Expr::Tag& tag2,
               const std::string& algebraicOperation);
@@ -196,9 +218,9 @@ evaluate()
   using namespace SpatialOps;
   FieldT& phi = this->value();
   if (algebraicOperation_ == "SUM") phi <<= *field1_ + *field2_;
-  if (algebraicOperation_ == "DIFFERENCE") phi <<= *field1_ - *field2_;  
-  if (algebraicOperation_ == "PRODUCT") phi <<= *field1_ * *field2_;    
-  
+  if (algebraicOperation_ == "DIFFERENCE") phi <<= *field1_ - *field2_;
+  if (algebraicOperation_ == "PRODUCT") phi <<= *field1_ * *field2_;
+
 }
 
 //--------------------------------------------------------------------
