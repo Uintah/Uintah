@@ -62,6 +62,7 @@ namespace Uintah {
       double kinematic_hardening_constant;
       double fluid_B0;
       double fluid_pressure_initial;
+      double subcycling_characteristic_number;
       double PEAKI1;
       double B0;
       double G0;
