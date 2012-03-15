@@ -5,19 +5,19 @@
 
 #include <expression/Expression.h>
 
-/*
+/**
  *  \ingroup WasatchExpressions
  *  \class PrecipitationBulkDiffusionCoefficient
  *  \author Alex Abboud
  *  \date January 2012
  *
  *  \tparam FieldT the type of field.
- 
+ *
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with bulk diffusion growth
  *  \f$ g_0 = \nu D C_{eq} (S-1) \f$ or \f$ (S - \bar{S}) \f$   
  *  \f$ g(r) = 1/r \f$
-
+ *
  */
 template< typename FieldT >
 class PrecipitationBulkDiffusionCoefficient

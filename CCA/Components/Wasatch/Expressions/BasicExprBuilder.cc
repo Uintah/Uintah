@@ -39,6 +39,7 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationMonosurfaceCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationRCritical.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationSource.h>
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
@@ -238,7 +239,7 @@ namespace Wasatch{
 
   template<typename FieldT>
   Expr::ExpressionBuilder*
-  build_physics_coefficient_expr( Uintah::ProblemSpecP params )
+  build_physics_coefficient_expr( Uintah::ProblemSpecP params , Uintah::ProblemSpecP wasatchParams )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     Expr::ExpressionBuilder* builder = NULL;
@@ -313,6 +314,49 @@ namespace Wasatch{
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
+    }
+    
+    else if (params->findBlock("PrecipitationSource") ) {
+      //this loops over all possible non-convective/non-diffusive rhs terms and creates a taglist
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSource");
+      std::vector<double> Molec_Volumes;
+      Expr::TagList sourceTagList;
+      Expr::Tag sourceTag;
+      double molecVol;
+      std::string modelType;
+      std::string basePhiName;
+      
+      const Expr::Tag etaScaleTag = parse_nametag( coefParams->findBlock("EtaScale")->findBlock("NameTag") );
+      for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
+            momentParams != 0;
+            momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
+        momentParams->get("MolecVol", molecVol);  
+        momentParams->get("PopulationName", basePhiName);
+        
+        for (Uintah::ProblemSpecP growthParams=momentParams->findBlock("GrowthExpression");
+             growthParams != 0;
+             growthParams = growthParams->findNextBlock("GrowthExpression") ) {
+          Molec_Volumes.push_back(molecVol);
+          growthParams->get("GrowthModel", modelType);
+          sourceTag = Expr::Tag( "m_" + basePhiName + "_3_growth_" + modelType, Expr::STATE_NONE);
+          sourceTagList.push_back(sourceTag);
+          if (growthParams->findBlock("OstwaldRipening") ){
+            Molec_Volumes.push_back(molecVol);
+            sourceTag = Expr::Tag( "m_" + basePhiName + "_3_Ostwald_Ripening", Expr::STATE_NONE);
+            sourceTagList.push_back(sourceTag);
+          }
+        }
+        for (Uintah::ProblemSpecP birthParams=momentParams->findBlock("BirthExpression");
+             birthParams != 0;
+             birthParams = birthParams->findNextBlock("BirthExpression") ) {
+          Molec_Volumes.push_back(molecVol);
+          birthParams->get("BirthModel", modelType);
+          sourceTag = Expr::Tag("m_" + basePhiName + "_3_birth_" + modelType, Expr::STATE_NONE);
+          sourceTagList.push_back(sourceTag);
+        }
+      }
+      typedef typename PrecipitationSource<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, sourceTagList, etaScaleTag, Molec_Volumes);
     }
     return builder;
   }
@@ -497,10 +541,10 @@ namespace Wasatch{
       exprParams->require("TaskList",taskListName);
 
       switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_physics_coefficient_expr< SVolField >( exprParams );  break;
-        case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams );  break;
-        case YVOL : builder = build_physics_coefficient_expr< YVolField >( exprParams );  break;
-        case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams );  break;
+        case SVOL : builder = build_physics_coefficient_expr< SVolField >( exprParams , parser);  break;
+        case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams , parser);  break;
+        case YVOL : builder = build_physics_coefficient_expr< YVolField >( exprParams , parser);  break;
+        case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams , parser);  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;

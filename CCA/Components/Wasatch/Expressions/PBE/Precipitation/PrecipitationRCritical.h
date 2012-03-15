@@ -5,16 +5,17 @@
 
 #include <expression/Expression.h>
 
-/*
+/**
  *  \ingroup WasatchExpressions
  *  \class PrecipitationRCritical
-
+ *  \author Alex Abboud
+ *  \date February 2012
  *
  *  \tparam FieldT the type of field.
  *
- *  \brief calculates the R cirtical for Nucleation
+ *  \brief calculates the critical radius for Nucleation
  *  \f$ R^* = R_0 / \ln (S) \f$
- 
+ *
  */
 template< typename FieldT >
 class PrecipitationRCritical
@@ -27,15 +28,15 @@ class PrecipitationRCritical
   const FieldT* eqConc_;   //field form table of equilibrium concentration
   
   PrecipitationRCritical( const Expr::Tag& superSatTag,
-                     const double rKnotVal_);
+                          const double rKnotVal_);
   
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& result,
-            const Expr::Tag& superSatTag,
-            const double rKnotVal)
+             const Expr::Tag& superSatTag,
+             const double rKnotVal)
     : ExpressionBuilder(result),
     supersatt_(superSatTag),
     rknotval_(rKnotVal)
@@ -72,7 +73,7 @@ public:
 template< typename FieldT >
 PrecipitationRCritical<FieldT>::
 PrecipitationRCritical( const Expr::Tag& superSatTag,
-                   const double rKnotVal)
+                        const double rKnotVal)
 : Expr::Expression<FieldT>(),
   superSatTag_(superSatTag),
   rKnotVal_(rKnotVal)
@@ -123,8 +124,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= nebo_cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
-                      ( 0.0 ); //this is r*
+  result <<= cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
+                 ( 0.0 ); //this is r*
 }
 
 //--------------------------------------------------------------------
