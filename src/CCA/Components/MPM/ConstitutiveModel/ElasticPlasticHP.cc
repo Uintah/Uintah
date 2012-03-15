@@ -1340,10 +1340,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             // Calculate values needed for tangent modulus calculation
             state->temperature = temperature;
             Tm_cur = d_melt->computeMeltingTemp(state);
+            state->meltingTemp = Tm_cur ;
             mu_cur = d_shear->computeShearModulus(state);
-            state->meltingTemp  = Tm_cur ;
             state->shearModulus = mu_cur ;
-            
             double sigY = d_plastic->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
             if (!(sigY > 0.0)) isLocalized = true;
@@ -1858,8 +1857,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step and update the plasticity state
       double Tm_cur = d_melt->computeMeltingTemp(state);
+      state->meltingTemp = Tm_cur ;
       double mu_cur = d_shear->computeShearModulus(state);
-      state->meltingTemp  = Tm_cur ;
       state->shearModulus = mu_cur ;
 
       // Compute trial stress
