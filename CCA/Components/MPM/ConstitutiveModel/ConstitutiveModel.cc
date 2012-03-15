@@ -119,6 +119,7 @@ ConstitutiveModel::addComputesAndRequires(Task*,
                                           const MPMMaterial*,
                                           const PatchSet*) const
 {
+  throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);
 }
 
 void 
@@ -128,6 +129,7 @@ ConstitutiveModel::addComputesAndRequires(Task*,
                                           const bool ,
                                           const bool) const
 {
+  throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);  
 }
 
 void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task* task, 
@@ -186,6 +188,16 @@ ConstitutiveModel::computeStressTensor(const PatchSubset*,
                                        DataWarehouse*,
                                        DataWarehouse*)
 {
+  throw InternalError("Stub Task: ConstitutiveModel::computeStressTensor ", __FILE__, __LINE__);
+}
+
+void 
+ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
+                                               const MPMMaterial*,
+                                               DataWarehouse*,
+                                               DataWarehouse*)
+{
+  throw InternalError("Stub Task: ConstitutiveModel::computeStressTensorImplicit ", __FILE__, __LINE__);
 }
 
 void ConstitutiveModel::checkNeedAddMPMMaterial(const PatchSubset*,
@@ -205,6 +217,7 @@ ConstitutiveModel::carryForward(const PatchSubset*,
                                 DataWarehouse*,
                                 DataWarehouse*)
 {
+  throw InternalError("Stub Task: ConstitutiveModel::carryForward ", __FILE__, __LINE__);
 }
 
 void
@@ -247,6 +260,7 @@ ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
                                              const PatchSet*,
                                              MPMLabel*) const
 {
+  throw InternalError("Stub Task: ConstitutiveModel::allocateCMDataAddRequires ", __FILE__, __LINE__);
 }
 
 void 

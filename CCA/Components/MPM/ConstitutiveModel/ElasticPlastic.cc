@@ -656,11 +656,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  if (flag->d_integrator == MPMFlags::Implicit) {
-    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
-    return;
-  }
-
   if (cout_EP.active()) {
     cout_EP << getpid() 
             << " ElasticPlastic:ComputeStressTensor:Explicit"

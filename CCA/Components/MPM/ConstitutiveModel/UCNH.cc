@@ -1245,13 +1245,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                 const MPMMaterial* matl,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
-{
-  // Implicit from Damage component
-  if (flag->d_integrator == MPMFlags::Implicit) {
-    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
-    return;
-  }
-  
+{ 
   // Constants
   double onethird = (1.0/3.0), sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity;

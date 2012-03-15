@@ -3459,7 +3459,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
+    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw);
   }
 }
 

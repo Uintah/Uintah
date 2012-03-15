@@ -90,6 +90,11 @@ namespace Uintah {
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+                                     
+    virtual void computeStressTensorImplicit(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////
     /*! Initial computes and requires for the constitutive model */
