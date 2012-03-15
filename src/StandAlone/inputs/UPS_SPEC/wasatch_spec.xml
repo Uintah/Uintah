@@ -271,6 +271,8 @@
     <!-- ================== -->
     <MomentTransportEquation	spec="MULTIPLE NO_DATA">
 
+      <MolecVol spec="OPTIONAL DOUBLE" /> <!-- used to scale rxn ext src term -->
+
       <!-- this is for example ACC, Aragonite... the solution variables will be m_PopulationName_0, m_PopulationName_1... -->
       <PopulationName		spec="REQUIRED STRING" /> 
       

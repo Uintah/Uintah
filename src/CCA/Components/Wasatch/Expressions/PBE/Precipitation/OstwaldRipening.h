@@ -5,14 +5,14 @@
 
 #include <expression/Expression.h>
 
-/*
+/**
  *  \ingroup WasatchExpressions
  *  \class OstwaldRipening
  *  \author Alex Abboud
  *  \date February 2012
  *
  *  \tparam FieldT the type of field.
- 
+ *
  *  \brief calculates the source term associated with Oswalt Ripening
  *  where \f$ G = g_0 * ( S- \bar{S} )/r \f$ this is the second term
  *  \f$ \bar{S} = \exp ( 2 \nu \gamma /R T r) \f$

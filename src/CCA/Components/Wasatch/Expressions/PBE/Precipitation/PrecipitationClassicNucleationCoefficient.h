@@ -123,8 +123,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= nebo_cond( *superSat_ > 1.0, exp(expConst_ / log(*superSat_) / log(*superSat_) ) )
-                      ( 0.0 );
+  result <<= cond( *superSat_ > 1.0, exp(expConst_ / log(*superSat_) / log(*superSat_) ) )
+                 ( 0.0 );
 }
 
 //--------------------------------------------------------------------                                                

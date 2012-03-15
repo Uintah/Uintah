@@ -5,14 +5,14 @@
 
 #include <expression/Expression.h>
 
-/*
+/**
  *  \ingroup WasatchExpressions
  *  \class PrecipitationMonosurfaceCoefficient
  *  \author Alex Abboud
  *  \date January 2012
  *
  *  \tparam FieldT the type of field.
- 
+ *
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with monosurface nucleation growth
  *  \f$ g_0 = \beta_A D d^3 \exp ( - \Delta G / K_B T ) \f$
@@ -134,8 +134,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= nebo_cond( *superSat_ > 1.0, growthCoefVal_ * exp(expConst_ /  log(*superSat_) ) )
-                      ( 0.0 );
+  result <<= cond( *superSat_ > 1.0, growthCoefVal_ * exp(expConst_ /  log(*superSat_) ) )
+                 ( 0.0 );
 }
 
 //--------------------------------------------------------------------
