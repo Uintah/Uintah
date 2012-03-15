@@ -309,11 +309,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
 {
-  if (flag->d_integrator == MPMFlags::Implicit) {
-    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
-    return;
-  }
-
   // Local variables 
   double  J, p, IEl, U, W, c_dil;
   Matrix3 Shear, pBBar_new, pDefGradInc;

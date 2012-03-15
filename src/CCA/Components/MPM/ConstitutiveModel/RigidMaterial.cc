@@ -129,10 +129,6 @@ RigidMaterial::computeStressTensor(const PatchSubset* patches,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  if (flag->d_integrator == MPMFlags::Implicit) {
-    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
-    return;
-  }
   carryForward(patches, matl, old_dw, new_dw);
 }
 

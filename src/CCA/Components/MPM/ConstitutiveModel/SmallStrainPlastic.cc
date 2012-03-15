@@ -621,11 +621,7 @@ SmallStrainPlastic::computeStressTensor(const PatchSubset* patches,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  if (flag->d_integrator == MPMFlags::Implicit) {
-    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
-  } else {
-    computeStressTensorExplicit(patches, matl, old_dw, new_dw);
-  }
+  computeStressTensorExplicit(patches, matl, old_dw, new_dw);
 }
 
 void 
