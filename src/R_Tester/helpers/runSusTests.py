@@ -517,6 +517,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
     
+  #__________________________________
+  #  H A C K    The checks above sometimes fail on hmx & fin
+  if socket.gethostname() == "fin" or  socket.gethostname() == "hmx":
+    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN    
+  #__________________________________
+  
   
   # set where to view the log files
   logpath = environ['WEBLOG']
