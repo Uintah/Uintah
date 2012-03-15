@@ -245,9 +245,17 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchFields
    *  \brief Obtain the number of ghost cells for a given SpatialOps
-   *         field type.
+   *         field type, assuming that there are the same number of
+   *         ghost cells in each direction and on the (+) side as the
+   *         (-) side.
    */
-  template<typename FieldT> inline int get_n_ghost(){ return FieldT::Ghost::NGHOST; }
+  template<typename FieldT> inline int get_n_ghost(){
+    const SpatialOps::structured::IntVec ngm = FieldT::Ghost::NGhostMinus::int_vec();
+    const SpatialOps::structured::IntVec ngp = FieldT::Ghost::NGhostPlus::int_vec();
+    assert( ngm==ngp && ngm[0]==ngm[1] && ngm[0]==ngm[2] );
+    return ngm[0];
+  }
+
   template<> inline int get_n_ghost<double>(){ return 0; };
 
   /**

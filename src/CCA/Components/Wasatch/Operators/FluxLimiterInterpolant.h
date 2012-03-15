@@ -105,9 +105,7 @@ private:
 
 public:
 
-  typedef typename PhiVolT::Ghost      SrcGhost;
   typedef typename PhiVolT::Location   SrcLocation;
-  typedef typename PhiFaceT::Ghost     DestGhost;
   typedef typename PhiFaceT::Location  DestLocation;
   typedef PhiVolT SrcFieldType;
   typedef PhiFaceT DestFieldType;

@@ -22,10 +22,13 @@
 
 #include "FluxLimiterInterpolant.h"
 #include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 #include <cmath>
+
 #include "spatialops/SpatialOpsDefs.h"
 #include "spatialops/structured/FVTools.h"
+
 
 //--------------------------------------------------------------------
 
@@ -44,7 +47,7 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
   bndVolIncr_.resize(3);
   bndFaceIncr_.resize(3);
 
-  int nGhost = 2*SrcGhost::NGHOST;
+  int nGhost = 2*Wasatch::get_n_ghost<PhiVolT>();
   for (int i=0;i<=2;i++) {
     faceIncr_[i] = 0;
     volIncr_[i] = 0;
