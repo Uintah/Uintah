@@ -101,9 +101,9 @@ namespace Wasatch{
 
     using SpatialOps::structured::IntVec;
 
-    const IntVec glob( gs[0] + FieldT::Ghost::NGHOST*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
-                       gs[1] + FieldT::Ghost::NGHOST*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
-                       gs[2] + FieldT::Ghost::NGHOST*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
+    const IntVec glob( gs[0] + get_n_ghost<FieldT>()*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
+                       gs[1] + get_n_ghost<FieldT>()*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
+                       gs[2] + get_n_ghost<FieldT>()*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
     const IntVec extent = glob;
     const IntVec offset(0,0,0);
 
