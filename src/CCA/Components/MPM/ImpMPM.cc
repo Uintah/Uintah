@@ -870,7 +870,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   if(!flags->d_doGridReset){
     scheduleUpdateTotalDisplacement(      sched, d_perproc_patches,matls);
   }
-  scheduleComputeStressTensor(            sched, d_perproc_patches,matls);
+  scheduleComputeStressTensorImplicit(    sched, d_perproc_patches,matls);
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
   scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
   scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
@@ -1375,14 +1375,14 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   sched->addTask(task,patches,d_sharedState->allMaterials());
 }
 
-void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
-                                         const PatchSet* patches,
-                                         const MaterialSet* matls)
+void ImpMPM::scheduleComputeStressTensorImplicit(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor");
-  Task* t = scinew Task("ImpMPM::computeStressTensor",
-                    this, &ImpMPM::computeStressTensor);
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensorImplicit");
+  Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
+                    this, &ImpMPM::computeStressTensorImplicit);
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -1554,10 +1554,11 @@ void ImpMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   // main way is to count particles, but for now we only want particles on
   // the finest level.  Thus to schedule cells for regridding during the
   // execution, we'll coarsen the flagged cells (see coarsen).
-                                                                                
+  printSchedule(coarseLevel,cout_doing,"ImpMPM::scheduleErrorEstimate");     
+                                                              
   if (cout_doing.active())
     cout_doing << "ImpMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-                                                                                
+              
   // The simulation controller should not schedule it every time step
   Task* task = scinew Task("errorEstimate", this, &ImpMPM::errorEstimate);
                                                                                 
@@ -1592,9 +1593,6 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 
   // This task is done for visualization only
 
-
-
-  
   t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pSizeLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
@@ -1676,10 +1674,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   for (int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing iterate on patch " << patch->getID()
-                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::iterate-----------------------");
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1721,9 +1716,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   d_numIterations = 0;
   while(!(dispInc && dispIncQ)) {
-    if(UintahParallelComponent::d_myworld->myrank() == 0){
-     cerr << "Beginning Iteration = " << count << "\n";
-    }
+    proc0cout << "    Beginning Iteration = " << count << "\n";
+    
     count++;
     d_subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
     d_subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
@@ -1737,8 +1731,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
     double frac_QNorm = dispIncQNorm/(dispIncQNorm0 + 1.e-100);
 
     if(UintahParallelComponent::d_myworld->myrank() == 0){
-      cerr << "dispIncNorm/dispIncNormMax = " << frac_Norm << "\n";
-      cerr << "dispIncQNorm/dispIncQNorm0 = "<< frac_QNorm << "\n";
+      cerr << "  dispIncNorm/dispIncNormMax = " << frac_Norm << "\n";
+      cerr << "  dispIncQNorm/dispIncQNorm0 = "<< frac_QNorm << "\n";
     }
     if( (frac_Norm  <= flags->d_conv_crit_disp) || (dispIncNormMax <= flags->d_conv_crit_disp) ){
       dispInc = true;
@@ -1782,7 +1776,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   for (int p = 0; p < patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing <<"Getting the recursive data on patch " << patch->getID()
+      cout_doing <<"  Getting the recursive data on patch " << patch->getID()
                  <<"\t\t\t IMPM"<< "\n" << "\n";
     }
 
@@ -2564,7 +2558,7 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
                            bool recursion)
 {
   if (cout_doing.active())
-    cout_doing <<"Doing destroyMatrix \t\t\t\t IMPM"  << "\n" << "\n";
+    cout_doing <<"Doing destroyMatrix \t\t\t\t\t IMPM"  << "\n";
 
   d_solver->destroyMatrix(recursion);
 }
@@ -2581,10 +2575,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing createMatrix on patch " << patch->getID() 
-                 << "\t\t\t\t IMPM"    << "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::createMatrix");
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
@@ -2656,9 +2647,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
-    printTask(patches,patch,cout_doing,
-              "Doing applyBoundaryConditions\t\t\t\t");
+    printTask(patches,patch,cout_doing,"Doing applyBoundaryConditions");
 
     IntVector lowIndex,highIndex;
 
@@ -2792,7 +2781,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing computeContact on patch " << patch->getID()
-                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                 <<"\t\t\t\t IMPM"<< "\n";
     }
 
     delt_vartype dt;
@@ -2861,10 +2850,8 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing findFixedDOF on patch " << patch->getID()
-                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    }
+    
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::findFixedDOF");
 
     IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
@@ -2920,7 +2907,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
                                  bool recursion)
 {
   if (cout_doing.active())
-    cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t IMPM"<< "\n" << "\n";
+    cout_doing <<"Doing computeStressTensor (wrapper) " <<"\t\t\t IMPM"<< "\n";
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -2944,10 +2931,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing formStiffnessMatrix " << patch->getID()
-                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::formStiffnessMatrix");
 
     IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
@@ -3005,10 +2989,8 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-                 <<"\t\t\t IMPM"<< "\n" << "\n";
-    }
+    
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::computeInternalForce");
     
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -3103,10 +3085,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing formQ on patch " << patch->getID()
-                 <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::formQ");
 
     IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
@@ -3196,7 +3175,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     for(int p = 0; p<patches->size();p++) {
       const Patch* patch = patches->get(p);
       cout_doing <<"Doing solveForDuCG on patch " << patch->getID()
-                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
+                  <<"\t\t\t\t IMPM"<< "\n";
     }
   }
 
@@ -3223,10 +3202,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
 {
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing getDisplacementIncrement on patch " << patch->getID()
-                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::getDisplacementIncrement");
 
     IntVector lowIndex(0,0,0),highIndex(0,0,0);
     if(flags->d_8or27==8){
@@ -3270,11 +3246,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 {
   for (int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing updateGridKinematics on patch " << patch->getID()
-                 <<"\t\t\t IMPM"<< "\n" << "\n";
-    }
-
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::updateGridKinematics");
     Ghost::GhostType  gnone = Ghost::None;
 
     int rig_index=-99;
@@ -3370,10 +3342,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
   int global_offset=0;
   for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
-   if (cout_doing.active()) {
-     cout_doing <<"Doing checkConvergence on patch " << patch->getID()
-                <<"\t\t\t IMPM"<< "\n" << "\n";
-   }
+   printTask(patches, patch,cout_doing,"Doing ImpMPM::checkConvergence");
 
    IntVector lowIndex(0,0,0),highIndex(0,0,0);
    if(flags->d_8or27==8){
@@ -3447,14 +3416,14 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 
 }
 
-void ImpMPM::computeStressTensor(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* ,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
+void ImpMPM::computeStressTensorImplicit(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* ,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   if (cout_doing.active()) 
-    cout_doing <<"Doing computeStressTensor" <<"\t\t\t\t IMPM"<< "\n" << "\n";
+    cout_doing <<"Doing computeStressTensorImplicit (wrapper)" <<"\t\t IMPM"<< "\n";
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -3471,10 +3440,7 @@ void ImpMPM::updateTotalDisplacement(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing updateTotalDisplacement on patch " << patch->getID()
-                 <<"\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::updateTotalDisplacement");
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -3505,10 +3471,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing computeAcceleration on patch " << patch->getID()
-                 <<"\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::computeAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -3544,10 +3507,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-                 << patch->getID() <<"\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::interpolateToParticlesAndUpdate");
 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
@@ -3732,10 +3692,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
   }
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing interpolateStressToGrid on patch " << patch->getID()
-                 <<"\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::interpolateStressToGrid");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -3958,10 +3915,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
-   if (cout_doing.active()) {
-     cout_doing <<"Doing actuallyComputeStableTimestep on patch "
-                << patch->getID() <<"\t IMPM"<< "\n" << "\n";
-   }
+   
+   printTask(patches, patch,cout_doing,"Doing ImpMPM::actuallyComputeStableTimestep");
 
    if(d_numIterations==0){
      new_dw->put(delt_vartype(d_initialDt), lb->delTLabel, patch->getLevel());
@@ -4066,8 +4021,9 @@ void ImpMPM::errorEstimate(const ProcessorGroup* group,
                                                                                 
     for(int p=0;p<patches->size();p++){
       const Patch* coarsePatch = patches->get(p);
+      
       printTask(patches, coarsePatch,cout_doing,
-                "Doing errorEstimate\t\t\t\t\t");
+                "Doing IMPM::errorEstimate\t\t\t\t\t");
                                                                                 
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
