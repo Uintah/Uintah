@@ -185,6 +185,14 @@ namespace Uintah{
             _sHelp.push_back( +1.0 ); 
             _sHelp.push_back( -1.0 ); 
             _sHelp.push_back( +1.0 ); 
+
+            // helper for getting neighboring interior cell
+            _inside.push_back( IntVector(-1,0,0) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
+            _inside.push_back( IntVector( 0,-1,0) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
+            _inside.push_back( IntVector( 0,0,-1) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
           }; 
           virtual ~VelInletBase(){}; 
 
@@ -201,6 +209,7 @@ namespace Uintah{
 
           std::vector<IntVector> _dHelp;
           std::vector<IntVector> _faceDirHelp; 
+          std::vector<IntVector> _inside; 
           std::vector<int>       _iHelp; 
           std::vector<double>    _sHelp; 
 
@@ -229,7 +238,7 @@ namespace Uintah{
 
             double velocity = 0.0; 
 
-            velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c - _faceDirHelp[dir]] ); 
+            velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c + _inside[dir]] ); 
 
             //IntVector cb = c + _faceDirHelp[dir]; 
 
@@ -264,6 +273,7 @@ namespace Uintah{
         Vector                       velocity; 
         double                       mass_flow_rate; 
         BCIterator                   bc_face_iterator; 
+        bool                         has_been_initialized; 
 
         //state space information: 
         double density; // from state-space calculation
@@ -325,6 +335,7 @@ namespace Uintah{
 
       std::vector<IntVector> _dHelp;
       std::vector<IntVector> _faceDirHelp; 
+      std::vector<IntVector> _inside; 
       std::vector<int>       _iHelp; 
       std::vector<double>    _sHelp; 
 
@@ -359,6 +370,20 @@ namespace Uintah{
           } 
         } 
       }
+
+      void inline initialize_face_iterator( int p, IntrusionBC::Boundary& intrusion ){ 
+
+        BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
+        if ( iMAP == intrusion.bc_face_iterator.end() ) {
+
+          //this is a new patch that hasn't been added yet
+          std::vector<IntVector> cell_indices; 
+          cell_indices.clear(); 
+          intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+
+        } 
+
+      } 
 
       /** @brief Prints a list of the iterators for a given patch */ 
       void inline print_iterator ( int p, IntrusionBC::Boundary& intrusion ){ 
