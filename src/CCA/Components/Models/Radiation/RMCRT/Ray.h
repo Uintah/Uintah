@@ -156,6 +156,12 @@ namespace Uintah{
       bool _shouldSetBC;
       bool _isDbgOn;
 
+      // Virtual Radiometer parameters
+      bool _virtRad;
+      double _viewAng;
+      Vector _orient;
+      IntVector _VRLocation;
+      
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
