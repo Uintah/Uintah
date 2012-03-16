@@ -3,9 +3,9 @@
 
   <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
-                                                                        elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp,
+                                                                        elastic_plastic, hypo_elastic, elastic_plastic_hp,
                                                                         ideal_gas, membrane, murnaghanMPM, mw_visco_elastic, rigid, shell_CNH,
-                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic,
+                                                                        trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
                                                                         cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, Arenisca'">
     <A                             spec="OPTIONAL DOUBLE" />

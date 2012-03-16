@@ -80,7 +80,7 @@
     <MPM>
       <material name="Iron Target">
         <include href="inputs/MPM/MaterialData/MaterialConstArmcoIron.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <include href="inputs/MPM/MaterialData/IsotropicElasticArmcoIron.xml"/>
@@ -116,7 +116,7 @@
       </material>
       <material name="Iron Target New Particles">
         <include href="inputs/MPM/MaterialData/MaterialConstArmcoIron.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <include href="inputs/MPM/MaterialData/IsotropicElasticArmcoIron.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
@@ -148,7 +148,7 @@
       <!--
       <material name = "Copper Coating">
         <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
@@ -194,7 +194,7 @@
       -->
       <material name="Hard Steel Core">
         <include href="inputs/MPM/MaterialData/MaterialConstS7ToolSteel.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <include href="inputs/MPM/MaterialData/IsotropicElasticS7ToolSteel.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
@@ -236,7 +236,7 @@
       </material>
       <material name="Hard Steel Core New Particles">
         <include href="inputs/MPM/MaterialData/MaterialConstS7ToolSteel.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <include href="inputs/MPM/MaterialData/IsotropicElasticS7ToolSteel.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>

@@ -57,9 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
-#include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
@@ -216,17 +214,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "shell_CNH")
     return(scinew ShellMaterial(child,flags));
    
-  else if (mat_type ==  "hypoelastic_plastic")
-    return(scinew HypoElasticPlastic(child,flags));
-
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlasticHP(child,flags));
 
   else if (mat_type ==  "elastic_plastic_hp")
     return(scinew ElasticPlasticHP(child,flags));
-
-  else if (mat_type ==  "small_strain_plastic")
-    return(scinew SmallStrainPlastic(child,flags));
 
   else if (mat_type ==  "soil_foam")
     return(scinew SoilFoam(child,flags));

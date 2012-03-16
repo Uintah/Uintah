@@ -79,7 +79,7 @@
     <MPM>
       <material name="Iron Target">
         <include href="inputs/MPM/MaterialData/MaterialConstArmcoIron.xml"/>
-        <constitutive_model type="small_strain_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <include href="inputs/MPM/MaterialData/IsotropicElasticArmcoIron.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
@@ -112,7 +112,7 @@
       </material>
       <material name="Hard Steel Core">
         <include href="inputs/MPM/MaterialData/MaterialConstS7ToolSteel.xml"/>
-        <constitutive_model type="small_strain_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <tolerance>5.0e-10</tolerance>
           <damage_cutoff>0.7</damage_cutoff>
           <include href="inputs/MPM/MaterialData/IsotropicElasticS7ToolSteel.xml"/>

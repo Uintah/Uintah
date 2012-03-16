@@ -563,6 +563,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  if (flag->d_integrator == MPMFlags::Implicit) {
+    computeStressTensorImplicit(patches, matl, old_dw, new_dw);
+    return;
+  }
+
   //if ((patches->get(0))->getID() == 19)
   //  cout_CST << getpid() 
   //           << "ComputeStressTensor: In : Matl = " << matl << " id = " 

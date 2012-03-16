@@ -61,7 +61,7 @@
      <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
-          <constitutive_model type="hypoelastic_plastic">
+          <constitutive_model type="elastic_plastic_hp">
             <remove_particles>true</remove_particles>
             <zero_stress_upon_failure>true</zero_stress_upon_failure>
             <evolve_porosity>false</evolve_porosity>
@@ -108,7 +108,7 @@
       <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
-          <constitutive_model type="hypoelastic_plastic">
+          <constitutive_model type="elastic_plastic_hp">
             <remove_particles>true</remove_particles>
             <zero_stress_upon_failure>true</zero_stress_upon_failure>
             <evolve_porosity>false</evolve_porosity>
