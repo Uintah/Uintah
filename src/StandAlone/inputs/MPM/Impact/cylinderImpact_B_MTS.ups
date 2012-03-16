@@ -71,7 +71,7 @@
            </material>
            <material>
                 <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
-              <constitutive_model type="hypoelastic_plastic">
+              <constitutive_model type="elastic_plastic_hp">
                    <tolerance>5.0e-10</tolerance>
                    <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>

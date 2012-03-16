@@ -72,7 +72,7 @@
            </material>
            <material>
                 <include href="../MaterialData/MaterialConst4340Steel.xml"/>
-              <constitutive_model type="hypoelastic_plastic">
+              <constitutive_model type="elastic_plastic_hp">
                    <tolerance>1.0e-10</tolerance>
                    <include href="../MaterialData/IsotropicElastic4340Steel.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>

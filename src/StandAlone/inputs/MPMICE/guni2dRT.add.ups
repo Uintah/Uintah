@@ -163,7 +163,7 @@
   <room_temp>294.0</room_temp>
   <melt_temp>1793.0</melt_temp>
 
-        <constitutive_model type = "hypoelastic_plastic">
+        <constitutive_model type = "elastic_plastic_hp">
           <useModifiedEOS> true </useModifiedEOS>
        
   <shear_modulus>80.0e9</shear_modulus>

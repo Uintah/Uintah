@@ -53,10 +53,8 @@ SRCS   += \
         $(SRCDIR)/IdealGasMP.cc                 \
         $(SRCDIR)/Membrane.cc                   \
         $(SRCDIR)/ShellMaterial.cc              \
-        $(SRCDIR)/HypoElasticPlastic.cc         \
         $(SRCDIR)/ElasticPlastic.cc             \
         $(SRCDIR)/ElasticPlasticHP.cc           \
-        $(SRCDIR)/SmallStrainPlastic.cc         \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/MurnaghanMPM.cc               \
@@ -64,8 +62,8 @@ SRCS   += \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
-        $(SRCDIR)/SoilFoam.cc	                \
-       	$(SRCDIR)/NonLocalDruckerPrager.cc      \
+        $(SRCDIR)/SoilFoam.cc	             \
+        $(SRCDIR)/NonLocalDruckerPrager.cc      \
         $(SRCDIR)/Arenisca.cc
 
 ifneq ($(NO_FORTRAN),yes)
