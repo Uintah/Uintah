@@ -323,6 +323,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
                                      constVelocityVars.density, constVelocityVars.pressure);
     }
+
+    //intrusions: 
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, velocityVars.vVelRhoHat, 
+                                                     velocityVars.wVelRhoHat, constVelocityVars.density ); 
     
     // boundary condition
     if ( !d_boundaryCondition->isUsingNewBC() ) { 

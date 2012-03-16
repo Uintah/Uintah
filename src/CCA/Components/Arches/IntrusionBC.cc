@@ -35,6 +35,15 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, 
   _faceDirHelp.push_back( IntVector(0,0,0) ); 
   _faceDirHelp.push_back( IntVector(0,0,+1) ); 
 
+  // helper for getting neighboring interior cell
+  // neighbor = face_iter + _inside[direction]; 
+  _inside.push_back( IntVector(-1,0,0) ); 
+  _inside.push_back( IntVector( 0,0,0) ); 
+  _inside.push_back( IntVector( 0,-1,0) ); 
+  _inside.push_back( IntVector( 0,0,0) ); 
+  _inside.push_back( IntVector( 0,0,-1) ); 
+  _inside.push_back( IntVector( 0,0,0) ); 
+
   // helper for referencing the right index depending on direction 
   _iHelp.push_back( 0 ); 
   _iHelp.push_back( 0 ); 
@@ -152,7 +161,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       if ( intrusion.type != IntrusionBC::SIMPLE_WALL ) {
 
-        for ( ProblemSpecP db_ds = db->findBlock("flux_dir"); db_ds != 0; db_ds = db_intrusion->findNextBlock("flux_dir") ){ 
+        for ( ProblemSpecP db_ds = db_intrusion->findBlock("flux_dir"); db_ds != 0; db_ds = db_intrusion->findNextBlock("flux_dir") ){ 
           std::string my_dir;
           my_dir = db_ds->getNodeValue(); 
           if ( my_dir == "x-" || my_dir == "X-"){ 
@@ -201,6 +210,9 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       //make an area varlable
       intrusion.bc_area = VarLabel::create( name + "_bc_area", sum_vartype::getTypeDescription() ); 
+
+      //this is for the face iterator
+      intrusion.has_been_initialized = false; 
 
       IntrusionMap::iterator i = _intrusion_map.find( name ); 
       if ( i == _intrusion_map.end() ){ 
@@ -259,7 +271,7 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
         if ( !(intersect_box.degenerate()) ) { 
 
-          for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
+          for ( CellIterator icell = patch->getCellIterator(); !icell.done(); icell++ ) { 
 
             IntVector c = *icell; 
 
@@ -480,6 +492,13 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
 
+      //make sure cell face iterator map is clean from the start: 
+      if ( !iter->second.has_been_initialized ){ 
+        iter->second.bc_face_iterator.clear(); 
+        iter->second.has_been_initialized = true; 
+      }
+      initialize_face_iterator( patchID, iter->second ); 
+
       for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){ 
 
         GeometryPieceP piece = iter->second.geometry[i]; 
@@ -488,7 +507,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
         if ( !(intersect_box.degenerate()) ) { 
 
-          for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
+          for ( CellIterator icell = patch->getCellIterator(); !icell.done(); icell++ ) { 
 
             IntVector c = *icell; 
 
@@ -634,10 +653,10 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
             if ( iIntrusion->second.directions[idir] != 0 ){ 
 
               // sets the velocity depending on the method set in the input 
-              if ( patch->containsCell( c ) ){ 
+             // if ( patch->containsCell( c ) ){ 
                 iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density, 
                     iIntrusion->second.density, iIntrusion->second.velocity );  
-              }
+             // }
 
             } 
           }
@@ -711,16 +730,16 @@ IntrusionBC::addScalarRHS( const Patch* patch,
         if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
           BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-          
+
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
             IntVector c = *i;
 
             for ( int idir = 0; idir < 6; idir++ ){ 
 
-              IntVector c_int = c + _dHelp[idir]; 
+              IntVector c_int = c + _inside[idir]; 
 
-              if ( iIntrusion->second.directions[idir] != 0 && patch->containsCell( c_int ) ){ 
+              if ( iIntrusion->second.directions[idir] != 0 ){ 
 
                 double face_den = ( iIntrusion->second.density + density[c_int] ) / 2.0; 
 
