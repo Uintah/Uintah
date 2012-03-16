@@ -284,7 +284,7 @@ private:
                                        bool recursion);
 
   // No matrix calculations are performed.
-  void computeStressTensor(            const ProcessorGroup*,
+  void computeStressTensorImplicit(    const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -477,7 +477,7 @@ private:
   void scheduleFindFixedHCDOF(                 SchedulerP&, const PatchSet*, 
                                                const MaterialSet*);
 
-  void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
+  void scheduleComputeStressTensorImplicit(    SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleComputeInternalHeatRate(        SchedulerP&, const PatchSet*,
