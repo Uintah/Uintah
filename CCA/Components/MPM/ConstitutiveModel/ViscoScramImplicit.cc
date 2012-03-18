@@ -593,10 +593,10 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
 
 
 void 
-ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                const MPMMaterial* matl,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
 
 
 {

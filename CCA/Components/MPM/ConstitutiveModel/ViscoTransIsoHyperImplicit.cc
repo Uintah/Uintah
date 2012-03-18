@@ -890,10 +890,10 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 }
 
 void
-ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                        const MPMMaterial* matl,
+                                                        DataWarehouse* old_dw,
+                                                        DataWarehouse* new_dw)
 //___________________the final one
 {
    for(int pp=0;pp<patches->size();pp++){
