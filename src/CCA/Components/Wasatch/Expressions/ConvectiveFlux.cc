@@ -86,6 +86,8 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
 {
+  using namespace SpatialOps;
+
   PhiFaceT& result = this->value();
 
   // note that PhiFaceT and VelFaceT should on the same mesh location
@@ -97,7 +99,7 @@ void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
   // intepolate phi to the control volume faces
   phiInterpOp_->apply_to_field( *phi_, result );
 
-  result *= *velInterp;
+  result <<= result * *velInterp;
 }
 
 //--------------------------------------------------------------------

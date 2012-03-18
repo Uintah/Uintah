@@ -89,12 +89,12 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result = 0.0;
+  result <<= 0.0;
   if ( pressuret_ != emptyTag_ ){
     gradOp_->apply_to_field( *pressure_, result );
     result <<= -result;
   }
-  result += *rhsPart_;
+  result <<= result + *rhsPart_;
 }
 
 //--------------------------------------------------------------------
