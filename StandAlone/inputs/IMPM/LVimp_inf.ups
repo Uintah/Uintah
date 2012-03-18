@@ -7,7 +7,7 @@
        <title>Left Ventricle</title>
    </Meta>
 
-   <SimulationComponent type="ice" />
+   <SimulationComponent type="impm" />
 
    <Time>
         <maxTime>  4.5e-1 </maxTime>

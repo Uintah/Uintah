@@ -9,7 +9,7 @@
        <title>none</title>
    </Meta>
 
-   <SimulationComponent type="ice" />
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>10</maxTime>

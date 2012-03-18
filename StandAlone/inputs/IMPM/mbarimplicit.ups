@@ -9,7 +9,7 @@
        <title>Three point bending problem</title>
    </Meta>
 
-   <SimulationComponent type="ice" />
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>1</maxTime>
