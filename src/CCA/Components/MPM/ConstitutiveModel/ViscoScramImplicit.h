@@ -136,16 +136,16 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-                                               const MPMMaterial* matl,
+                                          const MPMMaterial* matl,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw,
                                           Solver* solver,
                                           const bool recursion);
 
-         virtual void computeStressTensor(const PatchSubset* patches,
-                                          const MPMMaterial* matl,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw);
+         virtual void computeStressTensorImplicit(const PatchSubset* patches,
+                                                  const MPMMaterial* matl,
+                                                  DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,

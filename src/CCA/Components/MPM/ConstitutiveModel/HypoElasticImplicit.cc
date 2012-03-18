@@ -355,10 +355,10 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
 
 void 
-HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                 const MPMMaterial* matl,
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw)
 
 
 {
