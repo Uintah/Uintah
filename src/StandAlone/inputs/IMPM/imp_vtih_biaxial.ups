@@ -7,7 +7,7 @@
        <title>Constitutive Model Tester</title>
    </Meta>
 
-   <SimulationComponent type="ice" />
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>3.0</maxTime>
