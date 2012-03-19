@@ -3215,6 +3215,7 @@ ElasticPlasticHP::allocateCMDataAddRequires(Task* task,
   task->requires(Task::NewDW, pDamageLabel_preReloc,         matlset, gnone);
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
   task->requires(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
+  task->requires(Task::NewDW, pEnergyLabel_preReloc,         matlset, gnone);
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
 }
 //______________________________________________________________________
@@ -3238,12 +3239,12 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleVariable<Matrix3> pRotation;
   ParticleVariable<double>  pPlasticStrain, pDamage,pPorosity, pStrainRate,
-                            pPlasticStrainRate;
+                            pPlasticStrainRate, pEnergy;
   ParticleVariable<int>     pLocalized;
 
   constParticleVariable<Matrix3> o_Rotation;
   constParticleVariable<double>  o_PlasticStrain, o_Damage,o_Porosity;
-  constParticleVariable<double>  o_StrainRate, o_PlasticStrainRate;
+  constParticleVariable<double>  o_StrainRate, o_PlasticStrainRate, o_Energy;
   constParticleVariable<int>     o_Localized;
 
   new_dw->allocateTemporary(pRotation,         addset);
@@ -3253,6 +3254,7 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pStrainRate,       addset);
   new_dw->allocateTemporary(pLocalized,        addset);
   new_dw->allocateTemporary(pPorosity,         addset);
+  new_dw->allocateTemporary(pEnergy,           addset);
 
   new_dw->get(o_Rotation,         pRotationLabel_preReloc,         delset);
   new_dw->get(o_StrainRate,       pStrainRateLabel_preReloc,       delset);
@@ -3261,6 +3263,7 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->get(o_Damage,           pDamageLabel_preReloc,           delset);
   new_dw->get(o_Localized,        pLocalizedLabel_preReloc,        delset);
   new_dw->get(o_Porosity,         pPorosityLabel_preReloc,         delset);
+  new_dw->get(o_Energy,           pEnergyLabel_preReloc,           delset);
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -3271,6 +3274,7 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
     pDamage[*n]     = o_Damage[*o];
     pLocalized[*n]  = o_Localized[*o];
     pPorosity[*n]   = o_Porosity[*o];
+    pEnergy[*n]     = o_Energy[*o];
   }
 
   (*newState)[pRotationLabel]       = pRotation.clone();
@@ -3280,6 +3284,7 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[pDamageLabel]     = pDamage.clone();
   (*newState)[pLocalizedLabel]  = pLocalized.clone();
   (*newState)[pPorosityLabel]   = pPorosity.clone();
+  (*newState)[pEnergyLabel]     = pEnergy.clone();
   
   // Initialize the data for the plasticity model
   d_plastic->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
@@ -3481,25 +3486,48 @@ double ElasticPlasticHP::getCompressibility()
 //
 void
 ElasticPlasticHP::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                const MPMMaterial* ,
+                                                const MPMMaterial* matl,
                                                 const PatchSet* ) const
 {
+  Ghost::GhostType  gnone = Ghost::None;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,   matlset, gnone);
+
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 //__________________________________
 //
 void ElasticPlasticHP::checkNeedAddMPMMaterial(const PatchSubset* patches,
                                              const MPMMaterial* matl,
-                                             DataWarehouse* ,
+                                             DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
   if (cout_EP.active()) {
     cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
             << " id = " << matl->getDWIndex() <<  " patch = "
             << (patches->get(0))->getID();
-  }
-
+  }  
+  
   double need_add=0.;
+                                                                                
+  // Loop thru patches
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    constParticleVariable<double> pPlasticStrain;
+    new_dw->get(pPlasticStrain, pPlasticStrainLabel_preReloc, pset);
+
+    // Loop thru particles
+    ParticleSubset::iterator iter = pset->begin(); 
+    for( ; iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      if(pPlasticStrain[idx]>5.e-2){
+        need_add = -1.;
+      }
+    }
+  }
   new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
+  
 }
