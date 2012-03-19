@@ -472,9 +472,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       double sldAngl; // solid angle of VR
       double VRTheta; // the polar angle of each ray from the radiometer normal
       
-      if (origin == _VRLocation)
+      if (origin == _VRLocation && _virtRad){
         solveVR = true;
-
+      }
       // ray loop
       for (int iRay=0; iRay < _NoOfRays; iRay++){
         IntVector cur = origin;
@@ -496,18 +496,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         direction_vector[2] = plusMinus_one;                  
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-        int step[3];                                          // Gives +1 or -1 based on sign
-        bool sign[3];
-        for ( int ii= 0; ii<3; ii++){
-          if (inv_direction_vector[ii]>0){
-            step[ii] = 1;
-            sign[ii] = 1;
-          }
-          else{
-            step[ii] = -1;
-            sign[ii] = 0;//
-          }
-        }
         
         double DyDxRatio = Dx.y() / Dx.x(); //noncubic
         double DzDxRatio = Dx.z() / Dx.x(); //noncubic
@@ -605,6 +593,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
         }
 
+        // Step and sign for ray marching
+        int step[3];                                          // Gives +1 or -1 based on sign
+        bool sign[3];
+        for ( int ii= 0; ii<3; ii++){
+          if (inv_direction_vector[ii]>0){
+            step[ii] = 1;
+            sign[ii] = 1;
+          }
+          else{
+            step[ii] = -1;
+            sign[ii] = 0;//
+          }
+        }
 
         double tMaxX = (i + sign[0]             - ray_location[0]) * inv_direction_vector[0];
         double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
