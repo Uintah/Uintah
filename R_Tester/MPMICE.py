@@ -37,12 +37,16 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
                    ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint"]),   \
     	       ]
               
-# Tests that are run during local regression testing
-#LOCALTESTS =  [    ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
-#                   ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"])
-#    	       ]
+  	       ]
 
-LOCALTESTS = NIGHTLYTESTS
+LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Linux", ["exactComparison"]),   \
+                 ("guni2dRT",              "guni2dRT.ups",              4,  "Linux", ["exactComparison"]),   \  
+                 ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux", ["exactComparison"]),   \  
+                 ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),   \  
+                 ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \  
+                 ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Linux", ["exactComparison"]),   \  
+                 ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"])
+    	       ]
 
 #__________________________________
 
