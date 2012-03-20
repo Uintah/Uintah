@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/malloc_defs.h>
+#include <sci_defs/gperftools_defs.h>
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
@@ -83,6 +84,9 @@ DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
 static DebugStream dbg_barrier("MPIBarriers",false);
 static DebugStream dbg_dwmem("LogDWMemory",false);
+static DebugStream gprofile("CPUProfiler",false);
+static DebugStream gheapprofile("HeapProfiler",false);
+static DebugStream gheapchecker("HeapChecker",false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -101,6 +105,36 @@ AMRSimulationController::run()
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
  
 
+  if (gprofile.active()){
+#ifdef USE_GPERFTOOLS
+    char gprofname[512];
+    sprintf(gprofname, "cpuprof-rank%d", d_myworld->myrank());
+    ProfilerStart(gprofname);
+#endif
+  }
+  
+  if (gheapprofile.active()){
+#ifdef USE_GPERFTOOLS
+    char gheapprofname[512];
+    sprintf(gheapprofname, "heapprof-rank%d", d_myworld->myrank());
+    HeapProfilerStart(gheapprofname);
+#endif
+  }
+
+#ifdef USE_GPERFTOOLS
+  HeapLeakChecker * heap_checker=NULL;
+#endif
+  if (gheapchecker.active()){
+    if (!gheapprofile.active()){
+#ifdef USE_GPERFTOOLS
+      char gheapchkname[512];
+      sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myrank());
+      heap_checker= new HeapLeakChecker(gheapchkname);
+#endif
+    } else {
+      cout<< "HEAPCHECKER: Cannot start with heapprofiler" <<endl;
+    }
+  }
 
   bool log_dw_mem=false;
 
@@ -164,7 +198,14 @@ AMRSimulationController::run()
    while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
-
+  
+     if (gheapprofile.active()){
+#ifdef USE_GPERFTOOLS
+       char heapename[512];
+       sprintf(heapename, "Timestep %d", iterations);
+       HeapProfilerDump(heapename);
+#endif
+     }
      TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, time );
 
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
@@ -383,7 +424,23 @@ AMRSimulationController::run()
    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
-
+  if (gprofile.active()){
+#ifdef USE_GPERFTOOLS
+    ProfilerStop();
+#endif
+  }
+  if (gheapprofile.active()){
+#ifdef USE_GPERFTOOLS
+    HeapProfilerStop();
+#endif
+  }
+   if (gheapchecker.active() && !gheapprofile.active()){
+#ifdef USE_GPERFTOOLS
+     if (heap_checker && !heap_checker->NoLeaks()) 
+       cout << "HEAPCHECKER: MEMORY LEACK DETECTED!" << endl;
+     delete heap_checker;
+#endif
+   }
 } // end run()
 
 //______________________________________________________________________

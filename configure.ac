@@ -3552,10 +3552,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
 ##  --  search for google perftools stuff  -------------------------------------------
 if test "$sci_required_gperftools" = "yes"; then
   
-  if ! test -d "$with_gperftools"; then
-    AC_MSG_ERROR( [The directory specified with --with-gperftools=DIR is not valid: $gperftools] )
-  fi
-
   # the major Google Perftools definitions, etc
   DEF_GPERFTOOLS=""
   HAVE_GPERFTOOLS=""
