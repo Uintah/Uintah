@@ -169,7 +169,8 @@ else
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
-          $(BOOST_LIBRARY) $(CUDA_LIBRARY) $(PAPI_LIBRARY)
+          $(BOOST_LIBRARY) $(CUDA_LIBRARY) \
+          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

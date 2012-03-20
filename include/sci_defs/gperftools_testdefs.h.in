@@ -27,13 +27,13 @@
 */
 
 
-#ifndef SCI_PAPI_DEFS_H
-#define SCI_PAPI_DEFS_H
+#ifndef SCI_GPERFTOOLS_DEFS_H
+#define SCI_GPERFTOOLS_DEFS_H
 
-@DEF_PAPI@
+@DEF_GPERFTOOLS@
 
-#ifdef USE_PAPI_COUNTERS
-#  include <papi.h>
+#ifdef USE_GPERFTOOLS
+#include <google/heap-profiler.h>
 #endif
 
 #endif

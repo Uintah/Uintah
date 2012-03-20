@@ -380,7 +380,14 @@ SCI_ARG_WITH(papi,
   [with_papi="$withval"
    sci_required_papi=yes],
   [with_papi=""])
-    
+  
+SCI_ARG_WITH(gperftools,
+  AC_HELP_STRING(--with-gperftools=DIR,
+                 Use the Google Perftools installation in DIR),
+  [with_gperftools="$withval"
+   sci_required_gperftools=yes],
+  [with_gperftools=""])
+  
 SCI_ARG_WITH(unp,
   AC_HELP_STRING(--with-unp=DIR,
                  Use the unp installation in DIR),
@@ -3540,6 +3547,64 @@ AC_SUBST(PAPI_LIB_DIR_FLAG)
 AC_SUBST(PAPI_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
+
+##  --  search for google perftools stuff  -------------------------------------------
+if test "$sci_required_gperftools" = "yes"; then
+  
+  if ! test -d "$with_gperftools"; then
+    AC_MSG_ERROR( [The directory specified with --with-gperftools=DIR is not valid: $gperftools] )
+  fi
+
+  # the major Google Perftools definitions, etc
+  DEF_GPERFTOOLS=""
+  HAVE_GPERFTOOLS=""
+  HAVE_GPERFTOOLS_H=""
+  INC_GPERFTOOLS_H=""
+  GPERFTOOLS_LIB_DIR=""
+
+  # all the -L's
+  GPERFTOOLS_LIB_DIR_FLAG=""
+
+  # all the -l's
+  GPERFTOOLS_LIB_FLAG=""
+
+  # confirm the existence/location of Google Perftools lib and include directories
+  _gperftools_lib=$with_gperftools
+  _gperftools_inc="$with_gperftools/include"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_gperftools_lib,$_gperftools_lib)
+  
+  AC_LANG_PUSH(C++)
+  SCI_COMPILE_LINK_TEST(GPERFTOOLS, Google Perftools libraries and headers,
+                        [#include <google/heap-profiler.h>
+                        #include <cstdlib>],
+                        $_gperftools_inc,
+                        tcmalloc profiler,
+                        $_gperftools_lib,
+                        ,
+                        [const char* prefix = "prefix";
+                        HeapProfilerStart(prefix);
+                        int* heapint = (int*)malloc(sizeof(int));
+                        free(heapint);
+                        HeapProfilerStop();],
+                        optional)
+  AC_LANG_POP(C++)     
+  
+if test $HAVE_GPERFTOOLS="yes"; then
+  DEF_GPERFTOOLS="#define USE_GPERFTOOLS 1"
+fi                     
+
+fi #end sci_required_gperftools
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_GPERFTOOLS)
+AC_SUBST(DEF_GPERFTOOLS)
+AC_SUBST(INC_GPERFTOOLS_H)
+AC_SUBST(GPERFTOOLS_LIB_DIR_FLAG)
+AC_SUBST(GPERFTOOLS_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
 
 ##  --  search for freetype stuff  -------------------------------------------

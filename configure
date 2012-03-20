@@ -683,6 +683,11 @@ INC_FREETYPE_H
 DEF_FREETYPE
 FREETYPE_LIB_DIR_FLAG
 FREETYPE_LIB_FLAG
+GPERFTOOLS_LIB_FLAG
+GPERFTOOLS_LIB_DIR_FLAG
+INC_GPERFTOOLS_H
+DEF_GPERFTOOLS
+HAVE_GPERFTOOLS
 PAPI_LIB_FLAG
 PAPI_LIB_DIR_FLAG
 INC_PAPI_H
@@ -936,6 +941,7 @@ with_tabprops
 with_zoltan
 with_tau
 with_papi
+with_gperftools
 with_unp
 with_zlib
 with_jpeg
@@ -1668,6 +1674,7 @@ Optional Packages:
 --with-tau=<tau-makefile>
                           Specify a Tau Makefile
 --with-papi=DIR         Use the papi installation in DIR
+--with-gperftools=DIR   Use the Google Perftools installation in DIR
 --with-unp=DIR          Use the unp installation in DIR
 --with-zlib=DIR         Use the zlib installation in DIR
 --with-jpeg=DIR         Use the jpeg installation in DIR
@@ -3464,6 +3471,23 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-papi --without-papi"
   if test -n "$papi" -a ! -e "$papi"; then
     as_fn_error $? "The file or directory parameter ($papi) specified for --with-papi does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-gperftools was given.
+if test "${with_gperftools+set}" = set; then :
+  withval=$with_gperftools; with_gperftools="$withval"
+   sci_required_gperftools=yes
+else
+  with_gperftools=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-gperftools --without-gperftools"
+  if test -n "$gperftools" -a ! -e "$gperftools"; then
+    as_fn_error $? "The file or directory parameter ($gperftools) specified for --with-gperftools does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -39278,6 +39302,266 @@ fi #end sci_required_papi
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
+
+##  --  search for google perftools stuff  -------------------------------------------
+if test "$sci_required_gperftools" = "yes"; then
+
+  if ! test -d "$with_gperftools"; then
+    as_fn_error $? "The directory specified with --with-gperftools=DIR is not valid: $gperftools " "$LINENO" 5
+  fi
+
+  # the major Google Perftools definitions, etc
+  DEF_GPERFTOOLS=""
+  HAVE_GPERFTOOLS=""
+  HAVE_GPERFTOOLS_H=""
+  INC_GPERFTOOLS_H=""
+  GPERFTOOLS_LIB_DIR=""
+
+  # all the -L's
+  GPERFTOOLS_LIB_DIR_FLAG=""
+
+  # all the -l's
+  GPERFTOOLS_LIB_FLAG=""
+
+  # confirm the existence/location of Google Perftools lib and include directories
+  _gperftools_lib=$with_gperftools
+  _gperftools_inc="$with_gperftools/include"
+  # account for lib64 or lib32 or just lib...
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_gperftools_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_gperftools_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_gperftools_lib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_gperftools_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_gperftools_lib/lib
+    fi
+  fi
+  eval _gperftools_lib='"$_new_lib_path"'
+
+
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      GPERFTOOLS_LIB_DIR        => lib path
+##      GPERFTOOLS_LIB_DIR_FLAG   => all the -L's
+##      GPERFTOOLS_LIB_FLAG       => all the -l's
+##      HAVE_GPERFTOOLS           => yes or no
+##      INC_GPERFTOOLS_H          => all the -I's
+##      HAVE_GPERFTOOLS_H         => yes or no
+
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Google Perftools libraries and headers (optional)" >&5
+$as_echo_n "checking for Google Perftools libraries and headers (optional)... " >&6; }
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $_gperftools_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in tcmalloc profiler; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_gperftools_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <google/heap-profiler.h>
+                        #include <cstdlib>
+int
+main ()
+{
+const char* prefix = "prefix";
+                        HeapProfilerStart(prefix);
+                        int* heapint = (int*)malloc(sizeof(int));
+                        free(heapint);
+                        HeapProfilerStop();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+eval GPERFTOOLS_LIB_DIR='"$_gperftools_lib"'
+
+if test "$_gperftools_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval GPERFTOOLS_LIB_DIR_FLAG=''
+else
+  eval GPERFTOOLS_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval GPERFTOOLS_LIB_FLAG='"$_sci_libs"'
+eval HAVE_GPERFTOOLS="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_GPERFTOOLS_H=''
+else
+  eval INC_GPERFTOOLS_H='"$_sci_includes"'
+fi
+
+eval HAVE_GPERFTOOLS_H="yes"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+eval GPERFTOOLS_LIB_DIR=''
+eval GPERFTOOLS_LIB_DIR_FLAG=''
+eval GPERFTOOLS_LIB_FLAG=''
+eval HAVE_GPERFTOOLS="no"
+eval INC_GPERFTOOLS_H=''
+eval HAVE_GPERFTOOLS_H="no"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+if test "optional" = "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required GPERFTOOLS failed.
+    To see the failed compile information, look in config.log,
+    search for GPERFTOOLS. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+if test $HAVE_GPERFTOOLS="yes"; then
+  DEF_GPERFTOOLS="#define USE_GPERFTOOLS 1"
+fi
+
+fi #end sci_required_gperftools
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
 
 ##  --  search for freetype stuff  -------------------------------------------
