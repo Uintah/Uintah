@@ -64,16 +64,6 @@ VonMisesYield::evalYieldCondition(const double sigEqv,
   return (sigEqv*sigEqv-sigFlow*sigFlow);
 }
 
-double 
-VonMisesYield::evalYieldCondition(const Matrix3& xi,
-                                  const PlasticityState* state)
-{
-  double sigy = state->yieldStress;
-  double xiNorm = xi.Norm();
-  double Phi = sqrt(1.5)*xiNorm - sigy;
-  return Phi;
-}
-
 void 
 VonMisesYield::evalDerivOfYieldFunction(const Matrix3& sig,
                                         const double ,
@@ -97,80 +87,6 @@ VonMisesYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
   Matrix3 sigDev = sig - I*(trSig/3.0);
   derivative = sigDev*3.0;
   return;
-}
-
-/*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)
-    Assume f = sqrt{3/2} ||xi|| - sigma_y */
-void 
-VonMisesYield::eval_df_dsigma(const Matrix3& xi,
-                              const PlasticityState* ,
-                              Matrix3& df_dsigma)
-{
-  double xiNorm = xi.Norm();
-  df_dsigma = xi*(sqrt(1.5)/xiNorm);
-  return;
-}
-
-/*! Derivative with respect to the \f$xi\f$ where \f$\xi = s - \beta \f$  
-    where \f$s\f$ is deviatoric part of Cauchy stress and 
-    \f$\beta\f$ is the backstress 
-    Assume f = sqrt{3/2} ||xi|| - sigma_y */
-void 
-VonMisesYield::eval_df_dxi(const Matrix3& xi,
-                           const PlasticityState* ,
-                           Matrix3& df_dxi)
-{
-  double xiNorm = xi.Norm();
-  df_dxi = xi*(sqrt(1.5)/xiNorm);
-  return;
-}
-
-/* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
-void 
-VonMisesYield::eval_df_ds_df_dbeta(const Matrix3& xi,
-                                   const PlasticityState* state,
-                                   Matrix3& df_ds,
-                                   Matrix3& df_dbeta)
-{
-  eval_df_dxi(xi, state, df_ds);
-  df_dbeta = df_ds*(-1.0); 
-  return;
-}
-
-/*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)
-    Assume f = sqrt{3/2} ||xi|| - sigma_y */
-double 
-VonMisesYield::eval_df_dep(const Matrix3& ,
-                           const double& dsigy_dep,
-                           const PlasticityState* )
-{
-  return -dsigy_dep;
-}
-
-/*! Derivative with respect to the porosity (\f$\epsilon^p \f$)
-    Assume f = sqrt{3/2} ||xi|| - sigma_y */
-double 
-VonMisesYield::eval_df_dphi(const Matrix3& ,
-                            const PlasticityState* )
-{
-  return 0.0;
-}
-
-/*! Compute h_alpha  where \f$d/dt(ep) = d/dt(gamma)~h_{\alpha}\f$ */
-double 
-VonMisesYield::eval_h_alpha(const Matrix3& ,
-                            const PlasticityState* )
-{
-  return 1.0;
-}
-
-/*! Compute h_phi  where \f$d/dt(phi) = d/dt(gamma)~h_{\phi}\f$ */
-double 
-VonMisesYield::eval_h_phi(const Matrix3& ,
-                          const double& ,
-                          const PlasticityState* )
-{
-  return 0.0;
 }
 
 void 

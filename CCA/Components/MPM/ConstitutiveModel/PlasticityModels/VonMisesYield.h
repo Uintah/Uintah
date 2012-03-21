@@ -87,9 +87,6 @@ namespace Uintah {
                               const double porosity,
                               double& sig);
 
-    double evalYieldCondition(const Matrix3& xi,
-                              const PlasticityState* state);
-
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Evaluate the derivative of the yield function \f$(\Phi)\f$
@@ -116,42 +113,6 @@ namespace Uintah {
                                      const double flowStress,
                                      const double porosity,
                                      Matrix3& derivative);
-
-    /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)*/
-    void eval_df_dsigma(const Matrix3& xi,
-                        const PlasticityState* state,
-                        Matrix3& df_dsigma);
-
-    /*! Derivative with respect to the \f$xi\f$ where \f$\xi = s - \beta \f$  
-        where \f$s\f$ is deviatoric part of Cauchy stress and 
-        \f$\beta\f$ is the backstress */
-    void eval_df_dxi(const Matrix3& xi,
-                     const PlasticityState* state,
-                     Matrix3& df_xi);
-
-    /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
-    void eval_df_ds_df_dbeta(const Matrix3& xi,
-                             const PlasticityState* state,
-                             Matrix3& df_ds,
-                             Matrix3& df_dbeta);
-
-    /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
-    double eval_df_dep(const Matrix3& xi,
-                       const double& d_sigy_dep,
-                       const PlasticityState* state);
-
-    /*! Derivative with respect to the porosity (\f$\epsilon^p \f$)*/
-    double eval_df_dphi(const Matrix3& xi,
-                        const PlasticityState* state);
-
-    /*! Compute h_alpha  where \f$d/dt(ep) = d/dt(gamma)~h_{\alpha}\f$ */
-    double eval_h_alpha(const Matrix3& xi,
-                        const PlasticityState* state);
-
-    /*! Compute h_phi  where \f$d/dt(phi) = d/dt(gamma)~h_{\phi}\f$ */
-    double eval_h_phi(const Matrix3& xi,
-                      const double& factorA,
-                      const PlasticityState* state);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
