@@ -112,47 +112,6 @@ namespace Uintah {
                                              const double porosity,
                                              Matrix3& derivative) = 0;
 
-    /*! Evaluate the yield condition - \f$ sigma \f$ is the Cauchy stress
-    and \f$ \beta \f$ is the back stress */
-    virtual double evalYieldCondition(const Matrix3& xi,
-                                      const PlasticityState* state) = 0;
-
-    /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)*/
-    virtual void eval_df_dsigma(const Matrix3& xi,
-                                const PlasticityState* state,
-                                Matrix3& df_dsigma) = 0;
-
-    /*! Derivative with respect to the \f$xi\f$ where \f$\xi = s - \beta \f$  
-        where \f$s\f$ is deviatoric part of Cauchy stress and 
-        \f$\beta\f$ is the backstress */
-    virtual void eval_df_dxi(const Matrix3& xi,
-                             const PlasticityState* state,
-                             Matrix3& df_xi) = 0;
-
-    /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
-    virtual void eval_df_ds_df_dbeta(const Matrix3& xi,
-                                     const PlasticityState* state,
-                                     Matrix3& df_ds,
-                                     Matrix3& df_dbeta) = 0;
-
-    /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
-    virtual double eval_df_dep(const Matrix3& xi,
-                               const double& d_sigy_dep,
-                               const PlasticityState* state) = 0;
-
-    /*! Derivative with respect to the porosity (\f$\epsilon^p \f$)*/
-    virtual double eval_df_dphi(const Matrix3& xi,
-                                const PlasticityState* state) = 0;
-
-    /*! Compute h_alpha  where \f$d/dt(ep) = d/dt(gamma)~h_{\alpha}\f$ */
-    virtual double eval_h_alpha(const Matrix3& xi,
-                                const PlasticityState* state) = 0;
-
-    /*! Compute h_phi  where \f$d/dt(phi) = d/dt(gamma)~h_{\phi}\f$ */
-    virtual double eval_h_phi(const Matrix3& xi,
-                              const double& factorA,
-                              const PlasticityState* state) = 0;
-
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Compute the elastic-plastic tangent modulus.
