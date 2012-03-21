@@ -157,6 +157,7 @@
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
     <om                            spec="OPTIONAL DOUBLE" />
+    <plastic_convergence_algo       spec="OPTIONAL STRING 'biswajit, radialReturn'" need_applies_to="type elastic_plastic_hp"/>
     <plasticity_model              spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'isotropic_hardening, johnson_cook, mts_model,
                                                                        preston_tonks_wallace, steinberg_cochran_guinan,
@@ -238,7 +239,7 @@
       <y2                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
       <yinf                        spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
     </plasticity_model>
-    <visco_plasticity_model              spec="OPTIONAL NO_DATA"
+    <visco_plasticity_model        spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'suvic_i'" >
       <coeff_backstress_evol       spec="OPTIONAL DOUBLE" />
       <exponent_backstress_evol    spec="OPTIONAL DOUBLE" />
@@ -640,6 +641,7 @@
     <DC11     spec="OPTIONAL DOUBLE" />
     <DC12     spec="OPTIONAL DOUBLE" />
     <DC13     spec="OPTIONAL DOUBLE" />
+  <!--__________________________________-->  
   <!-- The following are for the nonlocal_drucker_prager model -->
     <alpha                spec="OPTIONAL DOUBLE"  />
     <alpha_p              spec="OPTIONAL DOUBLE"  />
@@ -652,6 +654,7 @@
     <initial_xstress      spec="OPTIONAL DOUBLE"/>
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
+  <!--______________________________________________________________________ -->
   <!-- The floowing are for the Arenisca model -->
     <FSLOPE                           spec="OPTIONAL DOUBLE"  />
     <FSLOPE_p                         spec="OPTIONAL DOUBLE"  />
@@ -667,13 +670,15 @@
     <fluid_B0                         spec="OPTIONAL DOUBLE"  />
     <fluid_pressure_initial           spec="OPTIONAL DOUBLE"  />
     <subcycling_characteristic_number spec="OPTIONAL DOUBLE"  />
+    
+  <!--______________________________________________________________________ -->    
   <!-- The following are for the UCNH & JWLppMPM model initial stress -->
-  <useInitialStress                 spec="OPTIONAL BOOLEAN" />
-    <initial_pressure               spec="OPTIONAL DOUBLE"  />
-  <yield_distrib                    spec="OPTIONAL STRING 'constant, uniform'" />
-    <yield_range                    spec="OPTIONAL DOUBLE"  />
-    <yield_seed                     spec="OPTIONAL INTEGER"  />
-  <useEOSFactory                    spec="OPTIONAL BOOLEAN" />
+    <useInitialStress                 spec="OPTIONAL BOOLEAN" />
+    <initial_pressure                 spec="OPTIONAL DOUBLE"  />
+    <yield_distrib                    spec="OPTIONAL STRING 'constant, uniform'" />
+    <yield_range                      spec="OPTIONAL DOUBLE"  />
+    <yield_seed                       spec="OPTIONAL INTEGER"  />
+    <useEOSFactory                    spec="OPTIONAL BOOLEAN" />
   </constitutive_model>
 
 
