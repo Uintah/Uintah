@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Disclosure/TypeUtils.h>
 
@@ -67,6 +68,7 @@ template class Uintah::CCVariable<float>;
 template class Uintah::CCVariable<int>;
 template class Uintah::CCVariable<Uintah::long64>;
 template class Uintah::CCVariable<Uintah::Stencil7>;
+template class Uintah::CCVariable<Uintah::Stencil4>;
 
 template class Uintah::SFCXVariable<SCIRun::Vector>;
 template class Uintah::SFCXVariable<Uintah::Matrix3>;
