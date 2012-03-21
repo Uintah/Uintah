@@ -287,7 +287,7 @@ CORE_STATIC_PSELIBS := \
     Core_Malloc Core_IO Core_OS                             
 CORE_STATIC_LIBS := \
     $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) \
-    $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) $(DL_LIBRARY) $(CUDA_LIBRARY)
+    $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) $(DL_LIBRARY) $(CUDA_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------

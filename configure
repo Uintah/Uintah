@@ -39045,10 +39045,6 @@ if test "$sci_required_papi" = "yes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required PAPI components......" >&5
 $as_echo "$as_me: checking for required PAPI components......" >&6;}
 
-  if ! test -d "$with_papi"; then
-    as_fn_error $? "The directory specified with --with-papi=DIR is not valid: $with_papi " "$LINENO" 5
-  fi
-
   # the major PAPI definitions, etc
   DEF_PAPI=""
   HAVE_PAPI=""
@@ -39290,6 +39286,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test $HAVE_PAPI="yes"; then
   DEF_PAPI="#define USE_PAPI_COUNTERS 1"
+else
+  as_fn_error $? "The directory specified with --with-papi=DIR is not valid: $with_papi " "$LINENO" 5
 fi
 
 fi #end sci_required_papi
@@ -39413,7 +39411,7 @@ for i in $_gperftools_inc; do
 done
 
 
-for i in tcmalloc profiler; do
+for i in tcmalloc profiler unwind; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else
@@ -39546,6 +39544,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test $HAVE_GPERFTOOLS="yes"; then
   DEF_GPERFTOOLS="#define USE_GPERFTOOLS 1"
+else
+  as_fn_error $? "The directory specified with --with-gperftools=DIR is not valid: $with_gperftools " "$LINENO" 5
 fi
 
 fi #end sci_required_gperftools
