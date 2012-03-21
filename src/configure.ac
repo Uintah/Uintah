@@ -3492,10 +3492,6 @@ if test "$sci_required_papi" = "yes"; then
 
   AS_MESSAGE(checking for required PAPI components......)
   
-  if ! test -d "$with_papi"; then
-    AC_MSG_ERROR( [The directory specified with --with-papi=DIR is not valid: $with_papi] )
-  fi
-
   # the major PAPI definitions, etc
   DEF_PAPI=""
   HAVE_PAPI=""
@@ -3535,6 +3531,8 @@ if test "$sci_required_papi" = "yes"; then
   
 if test $HAVE_PAPI="yes"; then
   DEF_PAPI="#define USE_PAPI_COUNTERS 1"
+else
+  AC_MSG_ERROR( [The directory specified with --with-papi=DIR is not valid: $with_papi] )
 fi                     
 
 fi #end sci_required_papi
@@ -3576,7 +3574,7 @@ if test "$sci_required_gperftools" = "yes"; then
                         [#include <google/heap-profiler.h>
                         #include <cstdlib>],
                         $_gperftools_inc,
-                        tcmalloc profiler,
+                        tcmalloc profiler unwind,
                         $_gperftools_lib,
                         ,
                         [const char* prefix = "prefix";
@@ -3589,6 +3587,8 @@ if test "$sci_required_gperftools" = "yes"; then
   
 if test $HAVE_GPERFTOOLS="yes"; then
   DEF_GPERFTOOLS="#define USE_GPERFTOOLS 1"
+else
+  AC_MSG_ERROR( [The directory specified with --with-gperftools=DIR is not valid: $with_gperftools] )
 fi                     
 
 fi #end sci_required_gperftools
