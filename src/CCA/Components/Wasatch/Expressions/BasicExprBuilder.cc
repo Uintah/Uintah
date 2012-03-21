@@ -327,6 +327,8 @@ namespace Wasatch{
       std::string basePhiName;
       
       const Expr::Tag etaScaleTag = parse_nametag( coefParams->findBlock("EtaScale")->findBlock("NameTag") );
+      const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
+
       for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
             momentParams != 0;
             momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
@@ -356,7 +358,7 @@ namespace Wasatch{
         }
       }
       typedef typename PrecipitationSource<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, sourceTagList, etaScaleTag, Molec_Volumes);
+      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, Molec_Volumes);
     }
     return builder;
   }
