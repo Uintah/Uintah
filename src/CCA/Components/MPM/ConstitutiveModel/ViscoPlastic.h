@@ -363,17 +363,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute the quantity 
-                   \f$d(\gamma)/dt * \Delta T = \Delta \gamma \f$ 
-                   using Newton iterative root finder */
-    ////////////////////////////////////////////////////////////////////////
-    double computeDeltaGamma(const double& delT,
-                             const double& tolerance,
-                             const double& normTrialS,
-                             const MPMMaterial* matl,
-                             const particleIndex idx,
-                             PlasticityState* state);
 
     ////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic tangent modulus tensor for isotropic

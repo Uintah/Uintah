@@ -1790,22 +1790,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 //  solver->flushMatrix();
 }
 
-////////////////////////////////////////////////////////////////////////
-// Compute the quantity 
-//             \f$d(\gamma)/dt * \Delta T = \Delta \gamma \f$ 
-//             using Newton iterative root finder */
-////////////////////////////////////////////////////////////////////////
-double 
-ViscoPlastic::computeDeltaGamma(const double& delT,
-                                  const double& tolerance,
-                                  const double& normTrialS,
-                                  const MPMMaterial* matl,
-                                  const particleIndex idx,
-                                  PlasticityState* state)
-{
-
-  return 0.0;
-}
 
 /*! Compute the elastic tangent modulus tensor for isotropic
     materials
