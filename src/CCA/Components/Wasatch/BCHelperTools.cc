@@ -26,7 +26,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -744,7 +744,7 @@ namespace Wasatch {
   //-----------------------------------------------------------------------------
 
   void update_pressure_rhs( const Expr::Tag& pressureTag,
-                            Uintah::CCVariable<Uintah::Stencil7>& pressureMatrix,
+                            Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                             SVolField& pressureField,
                             SVolField& pressureRHS,
                             const Uintah::Patch* patch)
@@ -820,15 +820,15 @@ namespace Wasatch {
 
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
-              Uintah::Stencil7& coefs = pressureMatrix[bc_point_indices];
+              Uintah::Stencil4& coefs = pressureMatrix[bc_point_indices];
 
               switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; break;
-              case Uintah::Patch::xplus : coefs.e = 0.0; break;
+              //case Uintah::Patch::xplus : coefs.e = 0.0; break;
               case Uintah::Patch::yminus: coefs.s = 0.0; break;
-              case Uintah::Patch::yplus : coefs.n = 0.0; break;
+              //case Uintah::Patch::yplus : coefs.n = 0.0; break;
               case Uintah::Patch::zminus: coefs.b = 0.0; break;
-              case Uintah::Patch::zplus : coefs.t = 0.0; break;
+              //case Uintah::Patch::zplus : coefs.t = 0.0; break;
               }
 
               bc_point_indices = bc_point_indices - patchCellOffset;

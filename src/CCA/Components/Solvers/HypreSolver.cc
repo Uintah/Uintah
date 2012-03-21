@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -226,18 +227,19 @@ namespace Uintah {
         HYPRE_StructMatrixSetSymmetric(HA, params->symmetric);
         int ghost[] = {1,1,1,1,1,1};
         HYPRE_StructMatrixSetNumGhost(HA, ghost);
-        HYPRE_StructMatrixInitialize(HA);
-
+        HYPRE_StructMatrixInitialize(HA);        
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
-          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
+          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );          
           //__________________________________
           // Get A matrix from the DW
+          typename Types::symmetric_matrix_type AStencil4;
           typename Types::matrix_type A;
-          A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
-
+          if (params->getUseStencil4()) A_dw->get( AStencil4, A_label, matl, patch, Ghost::None, 0);
+          else A_dw->get( A, A_label, matl, patch, Ghost::None, 0);
+          
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-
+          
           IntVector l,h;
           if(params->getSolveOnExtraCells()){
             l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
@@ -246,41 +248,75 @@ namespace Uintah {
             l = patch->getLowIndex(basis);
             h = patch->getHighIndex(basis);
           }
-
+          
           //__________________________________
           // Feed it to Hypre
           if(params->symmetric){
+            
             double* values = scinew double[(h.x()-l.x())*4]; 
             int stencil_indices[] = {0,1,2,3};
             
-            for(int z=l.z();z<h.z();z++){
-              for(int y=l.y();y<h.y();y++){
-            
-                const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                double* p = values;
-            
-                for(int x=l.x();x<h.x();x++){
-                  *p++ = AA->p;
-                  *p++ = AA->w;
-                  *p++ = AA->s;
-                  *p++ = AA->b;
-                  AA++;
-                }
-                IntVector ll(l.x(), y, z);
-                IntVector hh(h.x()-1, y, z);
-                HYPRE_StructMatrixSetBoxValues(HA,
-                                               ll.get_pointer(), hh.get_pointer(),
-                                               4, stencil_indices, values);
-
-              } // y loop
-            }  // z loop
+            // use stencil4 as coefficient matrix. NOTE: This should be templated
+            // on the stencil type. This workaround is to get things moving
+            // until we convince component developers to move to stencil4. You must
+            // set params->setUseStencil4(true) when you setup your linear solver
+            // if you want to use stencil4. You must also provide a matrix of type 
+            // stencil4 otherwise this will crash.
+            if (params->getUseStencil4()) {
+              
+              for(int z=l.z();z<h.z();z++){
+                for(int y=l.y();y<h.y();y++){
+                  
+                  const Stencil4* AA = &AStencil4[IntVector(l.x(), y, z)];
+                  double* p = values;
+                  
+                  for(int x=l.x();x<h.x();x++){
+                    *p++ = AA->p;
+                    *p++ = AA->w;
+                    *p++ = AA->s;
+                    *p++ = AA->b;
+                    AA++;
+                  }
+                  IntVector ll(l.x(), y, z);
+                  IntVector hh(h.x()-1, y, z);
+                  HYPRE_StructMatrixSetBoxValues(HA,
+                                                 ll.get_pointer(), hh.get_pointer(),
+                                                 4, stencil_indices, values);
+                  
+                } // y loop
+              }  // z loop              
+              
+            } else { // use stencil7
+              
+              for(int z=l.z();z<h.z();z++){
+                for(int y=l.y();y<h.y();y++){
+                  
+                  const Stencil7* AA = &A[IntVector(l.x(), y, z)];
+                  double* p = values;
+                  
+                  for(int x=l.x();x<h.x();x++){
+                    *p++ = AA->p;
+                    *p++ = AA->w;
+                    *p++ = AA->s;
+                    *p++ = AA->b;
+                    AA++;
+                  }
+                  IntVector ll(l.x(), y, z);
+                  IntVector hh(h.x()-1, y, z);
+                  HYPRE_StructMatrixSetBoxValues(HA,
+                                                 ll.get_pointer(), hh.get_pointer(),
+                                                 4, stencil_indices, values);
+                  
+                } // y loop
+              }  // z loop              
+            }
             delete[] values;
           } else {
             int stencil_indices[] = {0,1,2,3,4,5,6};
             
             for(int z=l.z();z<h.z();z++){
               for(int y=l.y();y<h.y();y++){
-            
+                
                 const double* values = &A[IntVector(l.x(), y, z)].p;
                 IntVector ll(l.x(), y, z);
                 IntVector hh(h.x()-1, y, z);
@@ -291,7 +327,7 @@ namespace Uintah {
               }  // y loop
             } // z loop
           }
-        }
+        }        
         HYPRE_StructMatrixAssemble(HA);
 
         //__________________________________
@@ -942,6 +978,7 @@ namespace Uintah {
       throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
     }
 
+    std::cout << "domtype " << domtype << std::endl;
     switch(domtype){
     case TypeDescription::SFCXVariable:
       {

@@ -52,6 +52,7 @@ using SCIRun::Vector;
 
 class Matrix3;
 class Stencil7;
+class Stencil4;
 class ConnectionList;
 class Short27;
 class TypeDescription;
@@ -87,6 +88,8 @@ UINTAHSHARE const TypeDescription* fun_getTypeDescription(Stencil7*);
 // Added by Oren for implicit ICE AMR pressure solver type that
 // appears in ICELabel.cc.
 UINTAHSHARE const TypeDescription* fun_getTypeDescription(ConnectionList*);
+
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Stencil4*);
 
 #include <Core/Disclosure/uintahshare.h>
 

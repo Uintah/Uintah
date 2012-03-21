@@ -43,6 +43,7 @@ SolverInterface::~SolverInterface()
 
 SolverParameters::~SolverParameters()
 {
-  solveOnExtraCells = true;
+  useStencil4                 = false;
+  solveOnExtraCells           = true;
   residualNormalizationFactor = 1;
 }

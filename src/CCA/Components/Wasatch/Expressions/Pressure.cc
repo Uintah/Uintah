@@ -75,7 +75,7 @@ Pressure::Pressure( const std::string& pressureName,
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
-    matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
+    matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( pressureName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
@@ -205,8 +205,9 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
   // p is current cell
   double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
-  double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
-
+  //double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
+  double w = 0.0, s = 0.0, b = 0.0;
+  
   IntVector l,h;
   l = patch->getCellLowIndex();
   h = patch->getCellHighIndex();
@@ -214,32 +215,32 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
 
   if (doX_) {
     const double dx2 = spacing[0]*spacing[0];
-    e = 1.0/dx2;
+    //e = 1.0/dx2;
     w = 1.0/dx2;
     p -= 2.0/dx2;
   }
   if (doY_) {
     const double dy2 = spacing[1]*spacing[1];
-    n = 1.0/dy2;
+    //n = 1.0/dy2;
     s = 1.0/dy2;
     p -= 2.0/dy2;
   }
   if (doZ_) {
     const double dz2 = spacing[2]*spacing[2];
-    t = 1.0/dz2;
+    //t = 1.0/dz2;
     b = 1.0/dz2;
     p -= 2.0/dz2;
   }
 
   for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
     IntVector iCell = *iter;
-    Uintah::Stencil7&  coefs = matrix_[iCell];
+    Uintah::Stencil4&  coefs = matrix_[iCell];
     coefs.w = w;
-    coefs.e = e;
-    coefs.n = n;
+    //coefs.e = e;
+    //coefs.n = n;
     coefs.s = s;
     coefs.b = b;
-    coefs.t = t;
+    //coefs.t = t;
     coefs.p = p;
   }
 

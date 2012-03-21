@@ -389,7 +389,8 @@ namespace Wasatch{
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
     Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
     sparams->setSolveOnExtraCells( false );
-
+    sparams->setUseStencil4( true );
+    
     if( !factory.have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
       Expr::Tag fxt, fyt, fzt;

@@ -34,6 +34,7 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah{
@@ -106,7 +107,7 @@ class Pressure
   const DivY* divYOp_;
   const DivZ* divZOp_;
 
-  typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
+  typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;
 
