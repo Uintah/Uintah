@@ -63,31 +63,7 @@ NIGHTLYTESTS = [
             ]
               
 # Tests that are run during local regression testing              
-LOCALTESTS = [  
-                 ("advect_3L_3D",                   "advect_3L_3D.ups",                   1,  "Linux", ["no_restart"]),    \
-                 ("disks_complex",                "disks_complex.ups",                4,  "Linux", ["exactComparison"]),    \
-                 ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
-                 ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
-                 ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-                 ("periodic_disks",                 "periodic_disks.ups",                 1,  "Linux", ["exactComparison"]),    \
-                 ("periodic_spheres3D",             "periodic_spheres3D.ups",             8,  "Linux", ["exactComparison"]),    \
-                 ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
-                 ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
-                 ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
-                 ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux", ["exactComparison"]),    \
-                 ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
-                 ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-                 ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-                 ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
-                 ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
-                 ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
-                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
-                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"])
-              ]
-
-UNUSED =      [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "ALL"), \
-	          ("testConvert1MAdd", "testConvert1MAdd.ups", 1, "ALL"), \
-              ]
+LOCALTESTS = NIGHTLYTESTS
 
 #__________________________________
 
