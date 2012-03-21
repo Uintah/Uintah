@@ -505,6 +505,9 @@
         <EtaScale spec = "REQUIRED NO_DATA" >
           <NameTag spec="REQUIRED"/>
         </EtaScale>
+        <Density spec = "REQUIRED NO_DATA" >
+          <NameTag spec="REQUIRED"/>
+        </Density>
       </PrecipitationSource> 
        
     </PhysicsCoefficient>

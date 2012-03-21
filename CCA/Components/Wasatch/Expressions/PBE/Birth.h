@@ -188,7 +188,7 @@ evaluate()
         typename FieldT::interior_iterator resultsIter = result.interior_begin();
         double IntVal;
         double dx;
-        double npts = 10;
+        int npts = 10;
         while (rStarIter!=rStar_->interior_end() ) {
           std::vector <double> x;
           x = std::vector<double>(npts);
@@ -219,7 +219,7 @@ evaluate()
       } else { //if (birthModel_ == "NORMAL" {
         std::vector <double> x;
         double dx;
-        double npts = 10;
+        int npts = 10;
         x = std::vector<double>(npts);
         dx = (6*stdDev_)/npts;
         x[0] = constRStar_ - 3*stdDev_;
@@ -248,7 +248,7 @@ evaluate()
         typename FieldT::interior_iterator resultsIter = result.interior_begin();
         double IntVal;
         double dx;
-        double npts = 10;
+        int npts = 10;
         while (rStarIter!=rStar_->interior_end() ) {
           std::vector <double> x;
           x = std::vector<double>(npts);
@@ -278,7 +278,7 @@ evaluate()
       } else { //if (birthModel_ == "NORMAL" {
         std::vector <double> x;
         double dx;
-        double npts = 10;
+        int npts = 10;
         x = std::vector<double>(npts);
         dx = (6*stdDev_)/npts;
         x[0] = constRStar_ - 3*stdDev_;

@@ -24,14 +24,17 @@ class PrecipitationSource
 {
   const Expr::TagList sourceTagList_;   // these are the tags of all the known sources
   const Expr::Tag etaScaleTag_;            // this expression value can be read table header and takign inverse
+  const Expr::Tag densityTag_;             //rho to multiply source term by, since scalar solution is for dphirho/dt
   const std::vector< double > molecVols_;  // \nu in the source evaluation
   
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec sources_;
   const FieldT* etaScale_;
+  const FieldT* density_;
   
   PrecipitationSource( const Expr::TagList sourceTagList_,
                        const Expr::Tag etaScaleTag_,
+                       const Expr::Tag densityTag_,
                        const std::vector<double> molecVols_);
   
 public:
@@ -41,21 +44,24 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::TagList& sourceTagList,
              const Expr::Tag& etaScaleTag,
+             const Expr::Tag& densityTag,
              const std::vector<double> molecVols)
     : ExpressionBuilder(result),
     sourcetaglist_  (sourceTagList),
     etascalet_      (etaScaleTag),
+    densityt_       (densityTag),
     molecvols_      (molecVols)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationSource<FieldT>( sourcetaglist_, etascalet_, molecvols_ );
+      return new PrecipitationSource<FieldT>( sourcetaglist_, etascalet_, densityt_, molecvols_ );
     }
     
   private:
     const Expr::TagList sourcetaglist_;    // these are the tags of all the known source
     const Expr::Tag etascalet_;          // eta scaling tag
+    const Expr::Tag densityt_;           //density tag
     const std::vector<double> molecvols_;  // vector for scaling source term
   };
   
@@ -78,10 +84,12 @@ template< typename FieldT >
 PrecipitationSource<FieldT>::
 PrecipitationSource( const Expr::TagList sourceTagList,
                      const Expr::Tag etaScaleTag,
+                     const Expr::Tag densityTag,
                      const std::vector<double> molecVols)
 : Expr::Expression<FieldT>(),
 sourceTagList_  (sourceTagList),
 etaScaleTag_    (etaScaleTag),
+densityTag_     (densityTag),
 molecVols_      (molecVols)
 {}
 
@@ -101,6 +109,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( sourceTagList_ );
   exprDeps.requires_expression( etaScaleTag_ );
+  exprDeps.requires_expression( densityTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -116,6 +125,7 @@ bind_fields( const Expr::FieldManagerList& fml )
     sources_.push_back(&fm.field_ref(*isource) );
   }
   etaScale_ = &fm.field_ref( etaScaleTag_ );
+  density_ = &fm.field_ref( densityTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -138,6 +148,7 @@ evaluate()
   result = 0.0;
   
   typename FieldT::const_interior_iterator etaScaleIter = etaScale_->interior_begin();
+  typename FieldT::const_interior_iterator densityIter = density_->interior_begin();
   typename FieldT::interior_iterator resultsIterator = result.interior_begin();
   double nSources_ = molecVols_.size();
   
@@ -153,12 +164,13 @@ evaluate()
     for (int i = 0; i < nSources_; i++) {
       SumVal +=  molecVols_[i] * *sourceIterators[i];  //need 4pi/3 here?
     } 
-    *resultsIterator =  1 / *etaScaleIter * SumVal ; 
+    *resultsIterator =  1 / *etaScaleIter * *densityIter * SumVal ; 
     for (int i = 0; i < nSources_; i++) {
       ++sourceIterators[i];
     }
     ++resultsIterator;
     ++etaScaleIter;
+    ++densityIter;
   } 
 }  
 
