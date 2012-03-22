@@ -79,6 +79,8 @@ namespace Uintah {
     const VarLabel* pBackStressLabel_preReloc;
     const VarLabel* pBackStressIsoLabel;
     const VarLabel* pBackStressIsoLabel_preReloc;
+    const VarLabel* pKappaStateLabel;
+    const VarLabel* pKappaStateLabel_preReloc;
   private:
     CMData d_initialData;
 
