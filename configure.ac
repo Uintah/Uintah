@@ -3488,52 +3488,37 @@ fi
 AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for papi stuff  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
 if test "$sci_required_papi" = "yes"; then
-
-  AS_MESSAGE(checking for required PAPI components......)
+ 
+  if test "$with_papi" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_papi"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_papi/include"
+  fi
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(PAPI, PAPI libraries and headers,
+               papi.h,
+               $_sci_inc,
+               papi,
+               $_sci_lib,
+               ,
+               [long long flops;
+               int event=PAPI_DP_OPS;
+               float x=0.0;
+               PAPI_start_counters(&event, 1);
+               x++;
+               PAPI_stop_counters(&flops, 1);],
+               $_sci_optional)
+  AC_LANG(C)     
   
-  # the major PAPI definitions, etc
-  DEF_PAPI=""
-  HAVE_PAPI=""
-  HAVE_PAPI_H=""
-  INC_PAPI_H=""
-  PAPI_LIB_DIR=""
-
-  # all the -L's
-  PAPI_LIB_DIR_FLAG=""
-
-  # all the -l's
-  PAPI_LIB_FLAG=""
-
-  # confirm the existence/location of PAPI lib and include directories
-  _papi_lib=
-  _papi_inc="$with_papi/include"
-  # account for lib64 or lib32 or just lib...
-  BASE_LIB_PATH(_papi_lib,$with_papi)
-  
-  AC_LANG_PUSH(C++)
-  SCI_COMPILE_LINK_TEST(PAPI, PAPI libraries and headers,
-                        [#include <papi.h>
-                        #include <cstdlib>],
-                        $_papi_inc,
-                        papi,
-                        $_papi_lib,
-                        ,
-                        [int *event_set = (int*)malloc(sizeof(int));
-                        *event_set = PAPI_DP_OPS;
-                        long long *flops = (long long *)malloc(sizeof(long long));
-                        PAPI_start_counters(event_set, 1);
-                        PAPI_stop_counters(flops, 1);
-                        free(event_set);
-                        free(flops);],
-                        optional)
-  AC_LANG_POP(C++)     
-  
-if test $HAVE_PAPI="yes"; then
   DEF_PAPI="#define USE_PAPI_COUNTERS 1"
-else
-  AC_MSG_ERROR( [The directory specified with --with-papi=DIR is not valid: $with_papi] )
-fi                     
 
 fi #end sci_required_papi
 
@@ -3548,52 +3533,40 @@ sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
 
 
 ##  --  search for google perftools stuff  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
 if test "$sci_required_gperftools" = "yes"; then
+
+  if test "$with_gperftools" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_gperftools"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_gperftools/include"
+  fi
   
-  # the major Google Perftools definitions, etc
-  DEF_GPERFTOOLS=""
-  HAVE_GPERFTOOLS=""
-  HAVE_GPERFTOOLS_H=""
-  INC_GPERFTOOLS_H=""
-  GPERFTOOLS_LIB_DIR=""
-
-  # all the -L's
-  GPERFTOOLS_LIB_DIR_FLAG=""
-
-  # all the -l's
-  GPERFTOOLS_LIB_FLAG=""
-
-  # confirm the existence/location of Google Perftools lib and include directories
-  _gperftools_lib=$with_gperftools
-  _gperftools_inc="$with_gperftools/include"
   # account for lib64 or lib32 or just lib...
-  BASE_LIB_PATH(_gperftools_lib,$_gperftools_lib)
   
-  AC_LANG_PUSH(C++)
-  SCI_COMPILE_LINK_TEST(GPERFTOOLS, Google Perftools libraries and headers,
-                        [#include <google/heap-profiler.h>
-                        #include <cstdlib>],
-                        $_gperftools_inc,
-                        tcmalloc profiler unwind,
-                        $_gperftools_lib,
-                        ,
-                        [const char* prefix = "prefix";
-                        HeapProfilerStart(prefix);
-                        int* heapint = (int*)malloc(sizeof(int));
-                        free(heapint);
-                        HeapProfilerStop();],
-                        optional)
-  AC_LANG_POP(C++)     
-  
-if test $HAVE_GPERFTOOLS="yes"; then
+  AC_LANG(C++)
+  SCI_TRY_LINK(GPERFTOOLS, Google Perftools libraries and headers,
+              google/heap-profiler.h google/profiler.h,
+              $_sci_inc,
+              tcmalloc profiler unwind,
+              $_sci_lib,
+              ,
+              [ProfilerStart("prefixc");
+              HeapProfilerStart("prefixm");
+              ProfilerStop();
+              HeapProfilerStop();],
+              $_sci_optional)
+  AC_LANG(C)
+
   DEF_GPERFTOOLS="#define USE_GPERFTOOLS 1"
-else
-  AC_MSG_ERROR( [The directory specified with --with-gperftools=DIR is not valid: $with_gperftools] )
-fi                     
 
 fi #end sci_required_gperftools
 
-# these are all defined after the call to SCI_COMPILE_LINK_TEST
 AC_SUBST(HAVE_GPERFTOOLS)
 AC_SUBST(DEF_GPERFTOOLS)
 AC_SUBST(INC_GPERFTOOLS_H)
