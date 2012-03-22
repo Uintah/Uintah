@@ -290,7 +290,7 @@ else
 
 
   echo $PATH
-  svn co https://code.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+  svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
   retval=$?
 
   if [ $VERBOSE = "yes" ]; then
