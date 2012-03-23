@@ -469,8 +469,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
       double sumI = 0;
       double sumProjI = 0; // for virtual radiometer
-      double sldAngl; // solid angle of VR
-      double VRTheta; // the polar angle of each ray from the radiometer normal
+      double sumI_prev = 0; // used for VR
+      double sldAngl = 0; // solid angle of VR
+      double VRTheta = 0; // the polar angle of each ray from the radiometer normal
       
       if (origin == _VRLocation && _virtRad){
         solveVR = true;
@@ -494,10 +495,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
         direction_vector[1] = r*sin(theta);
         direction_vector[2] = plusMinus_one;                  
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
+
         double DyDxRatio = Dx.y() / Dx.x(); //noncubic
         double DzDxRatio = Dx.z() / Dx.x(); //noncubic
         
-
 
         Vector ray_location;
         Vector ray_location_prev;
@@ -596,7 +597,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
         if(solveVR){
-          sumProjI += cos(VRTheta) * sumI;
+          sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                         // from all the rays up to that point
+          sumI_prev = sumI;
           }
       }  // Ray loop
       
