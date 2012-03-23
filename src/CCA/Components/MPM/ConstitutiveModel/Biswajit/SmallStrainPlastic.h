@@ -50,7 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   class MPMLabel;
   class MPMFlags;

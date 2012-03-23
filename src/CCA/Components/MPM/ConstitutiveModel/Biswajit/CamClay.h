@@ -32,16 +32,16 @@ DEALINGS IN THE SOFTWARE.
 #define __CAM_CLAY_PLASTIC_H__
 
 
-#include "ConstitutiveModel.h"
-#include "PlasticityModels/YieldCondition.h"
-#include "PlasticityModels/InternalVariableModel.h"
-#include "PlasticityModels/MPMEquationOfState.h"
-#include "PlasticityModels/ShearModulusModel.h"
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include "Models/YieldCondition.h"
+#include "Models/InternalVariableModel.h"
+#include "Models/PressureModel.h"
+#include "Models/ShearModulusModel.h"
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <cmath>
 
-namespace Uintah {
+namespace UintahBB {
 
   class MPMLabel;
   class MPMFlags;
@@ -53,21 +53,21 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class CamClay : public ConstitutiveModel {
+  class CamClay : public Uintah::ConstitutiveModel {
 
   public:
 
-    const VarLabel* pTotalStrainLabel;  
+    const VarLabel* pStrainLabel;  
     const VarLabel* pElasticStrainLabel;  
     const VarLabel* pDeltaGammaLabel;  
 
-    const VarLabel* pTotalStrainLabel_preReloc;  
+    const VarLabel* pStrainLabel_preReloc;  
     const VarLabel* pElasticStrainLabel_preReloc;  
     const VarLabel* pDeltaGammaLabel_preReloc;  
 
   protected:
 
-    MPMEquationOfState*         d_eos;
+    PressureModel*         d_eos;
     ShearModulusModel*          d_shear;
     YieldCondition*             d_yield;
     InternalVariableModel*      d_intvar;
@@ -83,7 +83,7 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    CamClay(ProblemSpecP& ps,MPMFlags* flag);
+    CamClay(Uintah::ProblemSpecP& ps, Uintah::MPMFlags* flag);
     CamClay(const CamClay* cm);
          
     ////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
-                                           MPMLabel* lb) const;
+                                           Uintah::MPMLabel* lb) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief allocate cm data add */

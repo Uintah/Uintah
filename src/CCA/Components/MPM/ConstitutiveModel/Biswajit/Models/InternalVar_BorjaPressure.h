@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include "InternalVariableModel.h"    
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 

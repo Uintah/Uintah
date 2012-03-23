@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Math/Matrix3.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!

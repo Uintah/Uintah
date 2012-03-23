@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ShearModulusModel.h"
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /*! \class ShearModulus_Nadal
    *  \brief The shear modulus model given by Nadal and LePoac

@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __BB_UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
 #define __BB_UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
 
-namespace Uintah {
+namespace UintahBB {
   // Structures for Plasticity 
 
 struct HyperelasticPlasticStateData {

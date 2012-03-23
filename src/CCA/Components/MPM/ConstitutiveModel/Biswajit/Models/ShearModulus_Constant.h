@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ShearModulusModel.h"
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /*! \class ShearModulus_Constant
    *  \brief The shear modulus does not vary with density and temperature

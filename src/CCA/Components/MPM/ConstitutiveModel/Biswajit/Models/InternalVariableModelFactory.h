@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
-namespace Uintah {
+namespace UintahBB {
 
   class InternalVariableModel;
   class MPMLabel;

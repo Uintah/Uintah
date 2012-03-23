@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include "YieldCondition.h"     
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /*! \class  YieldCond_vonMises
    *  \brief  von Mises-Huber Yield Condition (J2 plasticity).

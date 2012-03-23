@@ -35,12 +35,12 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/CamClay.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/InternalVariableModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/YieldConditionFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/InternalVariableModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/PressureModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ShearModulusModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ModelState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/LinearInterpolator.h>
@@ -65,6 +65,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Exceptions/InvalidValue.h>
 
 
@@ -76,10 +77,10 @@ static DebugStream cout_CC1("SSEP1",false);
 static DebugStream CSTi("SSEPi",false);
 static DebugStream CSTir("SSEPir",false);
 
-CamClay::CamClay(ProblemSpecP& ps,MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag)
+UintahBB::CamClay::CamClay(ProblemSpecP& ps, Uintah::MPMFlags* Mflag)
+  : Uintah::ConstitutiveModel(Mflag)
 {
-  d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos = UintahBB::PressureModelFactory::create(ps);
   if(!d_eos){
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
@@ -88,14 +89,14 @@ CamClay::CamClay(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_shear = ShearModulusModelFactory::create(ps);
+  d_shear = UintahBB::ShearModulusModelFactory::create(ps);
   if (!d_shear) {
     ostringstream desc;
     desc << "CamClay::Error in shear modulus model factory" << endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
-  d_yield = YieldConditionFactory::create(ps);
+  d_yield = UintahBB::YieldConditionFactory::create(ps);
   if(!d_yield){
     ostringstream desc;
     desc << "An error occured in the YieldConditionFactory that has \n"
@@ -104,7 +105,7 @@ CamClay::CamClay(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_intvar = InternalVariableModelFactory::create(ps);
+  d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
   if(!d_intvar){
     ostringstream desc;
     desc << "An error occured in the InternalVariableModelFactory that has \n"
@@ -117,25 +118,25 @@ CamClay::CamClay(ProblemSpecP& ps,MPMFlags* Mflag)
 
 }
 
-CamClay::CamClay(const CamClay* cm) :
+UintahBB::CamClay::CamClay(const UintahBB::CamClay* cm) :
   ConstitutiveModel(cm)
 {
-  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-  d_shear = ShearModulusModelFactory::createCopy(cm->d_shear);
-  d_yield = YieldConditionFactory::createCopy(cm->d_yield);
-  d_intvar = InternalVariableModelFactory::createCopy(cm->d_intvar);
+  d_eos = UintahBB::PressureModelFactory::createCopy(cm->d_eos);
+  d_shear = UintahBB::ShearModulusModelFactory::createCopy(cm->d_shear);
+  d_yield = UintahBB::YieldConditionFactory::createCopy(cm->d_yield);
+  d_intvar = UintahBB::InternalVariableModelFactory::createCopy(cm->d_intvar);
   
   initializeLocalMPMLabels();
 }
 
-CamClay::~CamClay()
+UintahBB::CamClay::~CamClay()
 {
   // Destructor 
-  VarLabel::destroy(pTotalStrainLabel);
+  VarLabel::destroy(pStrainLabel);
   VarLabel::destroy(pElasticStrainLabel);
   VarLabel::destroy(pDeltaGammaLabel);
 
-  VarLabel::destroy(pTotalStrainLabel_preReloc);
+  VarLabel::destroy(pStrainLabel_preReloc);
   VarLabel::destroy(pElasticStrainLabel_preReloc);
   VarLabel::destroy(pDeltaGammaLabel_preReloc);
 
@@ -146,7 +147,7 @@ CamClay::~CamClay()
 }
 
 
-void CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void UintahBB::CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
@@ -161,23 +162,23 @@ void CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 }
 
 
-CamClay* CamClay::clone()
+UintahBB::CamClay* UintahBB::CamClay::clone()
 {
   return scinew CamClay(*this);
 }
 
 
 void
-CamClay::initializeLocalMPMLabels()
+UintahBB::CamClay::initializeLocalMPMLabels()
 {
-  pTotalStrainLabel = VarLabel::create("p.strain",
+  pStrainLabel = VarLabel::create("p.strain",
     ParticleVariable<Matrix3>::getTypeDescription());
   pElasticStrainLabel = VarLabel::create("p.elasticStrain",
     ParticleVariable<Matrix3>::getTypeDescription());
   pDeltaGammaLabel = VarLabel::create("p.deltaGamma",
     ParticleVariable<double>::getTypeDescription());
 
-  pTotalStrainLabel_preReloc = VarLabel::create("p.strain+",
+  pStrainLabel_preReloc = VarLabel::create("p.strain+",
     ParticleVariable<Matrix3>::getTypeDescription());
   pElasticStrainLabel_preReloc = VarLabel::create("p.elasticStrain+",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -186,15 +187,15 @@ CamClay::initializeLocalMPMLabels()
 }
 
 void 
-CamClay::addParticleState(std::vector<const VarLabel*>& from,
+UintahBB::CamClay::addParticleState(std::vector<const VarLabel*>& from,
                           std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
-  from.push_back(pTotalStrainLabel);
+  from.push_back(pStrainLabel);
   from.push_back(pElasticStrainLabel);
   from.push_back(pDeltaGammaLabel);
 
-  to.push_back(pTotalStrainLabel_preReloc);
+  to.push_back(pStrainLabel_preReloc);
   to.push_back(pElasticStrainLabel_preReloc);
   to.push_back(pDeltaGammaLabel_preReloc);
 
@@ -203,13 +204,13 @@ CamClay::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
-CamClay::addInitialComputesAndRequires(Task* task,
+UintahBB::CamClay::addInitialComputesAndRequires(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->computes(pTotalStrainLabel, matlset);
+  task->computes(pStrainLabel, matlset);
   task->computes(pElasticStrainLabel, matlset);
   task->computes(pDeltaGammaLabel, matlset);
  
@@ -218,7 +219,7 @@ CamClay::addInitialComputesAndRequires(Task* task,
 }
 
 void 
-CamClay::initializeCMData(const Patch* patch,
+UintahBB::CamClay::initializeCMData(const Patch* patch,
                           const MPMMaterial* matl,
                           DataWarehouse* new_dw)
 {
@@ -234,26 +235,26 @@ CamClay::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  ParticleVariable<Matrix3>  pTotalStrain, pElasticStrain; 
+  ParticleVariable<Matrix3>  pStrain, pElasticStrain; 
   ParticleVariable<double>   pDeltaGamma;
 
-  new_dw->allocateAndPut(pTotalStrain, pTotalStrainLabel, pset);
+  new_dw->allocateAndPut(pStrain, pStrainLabel, pset);
   new_dw->allocateAndPut(pElasticStrain, pElasticStrainLabel, pset);
   new_dw->allocateAndPut(pDeltaGamma, pDeltaGammaLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
 
-    pTotalStrain[*iter] = zero;
+    pStrain[*iter] = zero;
     pElasticStrain[*iter] = zero;
     pDeltaGamma[*iter] = 0.0;
   }
 
   // Initialize the data for the internal variable model
-  d_intvar->initializeInternalVars(pset, new_dw);
+  d_intvar->initializeInternalVariable(pset, new_dw);
 }
 
 void 
-CamClay::computeStableTimestep(const Patch* patch,
+UintahBB::CamClay::computeStableTimestep(const Patch* patch,
                                const MPMMaterial* matl,
                                DataWarehouse* new_dw)
 {
@@ -303,7 +304,7 @@ CamClay::computeStableTimestep(const Patch* patch,
 }
 
 void 
-CamClay::addComputesAndRequires(Task* task,
+UintahBB::CamClay::addComputesAndRequires(Task* task,
                                 const MPMMaterial* matl,
                                 const PatchSet* patches) const
 {
@@ -315,11 +316,11 @@ CamClay::addComputesAndRequires(Task* task,
   addSharedCRForExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, pTotalStrainLabel,      matlset, gnone);
+  task->requires(Task::OldDW, pStrainLabel,      matlset, gnone);
   task->requires(Task::OldDW, pElasticStrainLabel,    matlset, gnone);
   task->requires(Task::OldDW, pDeltaGammaLabel,    matlset, gnone);
 
-  task->computes(pTotalStrainLabel_preReloc,    matlset);
+  task->computes(pStrainLabel_preReloc,    matlset);
   task->computes(pElasticStrainLabel_preReloc,  matlset);
   task->computes(pDeltaGammaLabel_preReloc,  matlset);
 
@@ -328,7 +329,7 @@ CamClay::addComputesAndRequires(Task* task,
 }
 
 void 
-CamClay::computeStressTensor(const PatchSubset* patches,
+UintahBB::CamClay::computeStressTensor(const PatchSubset* patches,
                              const MPMMaterial* matl,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
@@ -353,7 +354,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   Matrix3 strain(0.0);                  // Total strain
   double strain_v = 0.0;                // Volumeric strain (eps_v)
   Matrix3 strain_dev(0.0);              // Deviatoric strain (e)
-  double strain_dev_norm = 0.0          // ||e||
+  double strain_dev_norm = 0.0;         // ||e||
   double strain_s = 0.0;                // eps_s = sqrt(2/3) ||e|| 
 
   Matrix3 strain_elast_tr(0.0);         // Trial elastic strain
@@ -362,10 +363,13 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   double strain_elast_devtr_norm = 0.0; // ||ee||
   double strain_elast_s_tr = 0.0;       // epse_s = sqrt(2/3) ||ee||
 
-  double strain_elast_v_n = 0.0         // last volumetric elastic strain
+  double strain_elast_v_n = 0.0;        // last volumetric elastic strain
   Matrix3 strain_elast_dev_n(0.0);      // last devaitoric elastic strain
   double strain_elast_dev_n_norm = 0.0;
   double strain_elast_s_n = 0.0;
+
+  double strain_elast_v = 0.0;        
+  double strain_elast_s = 0.0;        
 
   // Plasticity related variables
   Matrix3 flow(0.0);                    // Plastic flow direction n = ee/||ee||
@@ -388,6 +392,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   double rf0 = 0.0, normrf0 = 0.0, normrf = 0.0;
 
   // Newton iteration computed variables
+  double dfdp = 0.0, dfdq = 0.0;
   double dpdepsev = 0.0, dpdepses = 0.0, dqdepsev = 0.0, dqdepses = 0.0, dpcdepsev = 0.0;
   double d2fdpdepsev = 0.0, d2fdpdepses = 0.0, drvdepsev = 0.0, drvdepses = 0.0, drvdgamma = 0.0;
   double d2fdqdepsev = 0.0, d2fdqdepses = 0.0, drsdepsev = 0.0, drsdepses = 0.0, drsdgamma = 0.0;
@@ -440,9 +445,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // GET LOCAL DATA 
-    constParticleVariable<Matrix3> pTotalStrain_old, pElasticStrain_old; 
+    constParticleVariable<Matrix3> pStrain_old, pElasticStrain_old; 
     constParticleVariable<double>  pDeltaGamma_old;
-    old_dw->get(pTotalStrain_old,       pTotalStrainLabel,       pset);
+    old_dw->get(pStrain_old,       pStrainLabel,       pset);
     old_dw->get(pElasticStrain_old,     pElasticStrainLabel,     pset);
     old_dw->get(pDeltaGamma_old,        pDeltaGammaLabel,        pset);
 
@@ -459,10 +464,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
                            lb->pVolumeLabel_preReloc,             pset);
 
     // LOCAL
-    ParticleVariable<Matrix3>  pTotalStrain_new, pElasticStrain_new; 
+    ParticleVariable<Matrix3>  pStrain_new, pElasticStrain_new; 
     ParticleVariable<double> pDeltaGamma_new;
-    new_dw->allocateAndPut(pTotalStrain_new,      
-                           pTotalStrainLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pStrain_new,      
+                           pStrainLabel_preReloc,            pset);
     new_dw->allocateAndPut(pElasticStrain_new,      
                            pElasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDeltaGamma_new,      
@@ -524,7 +529,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
+      //pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
 
       // Calculate rate of deformation tensor (D)
       rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
@@ -532,7 +537,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the total strain  (**WARNING** not rotationally corrected)
       //   Volumetric strain &  Deviatoric strain
-      strain = pTotalStrain_old[idx] + strainInc;
+      strain = pStrain_old[idx] + strainInc;
       strain_v = strain.Trace();
       strain_dev = strain - one*(strain_v/3.0);
       strain_dev_norm = strain_dev.Norm();
@@ -552,8 +557,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
       strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
       
-      // Set up the PlasticityState (for t_n)
-      PlasticityState* state = scinew PlasticityState();
+      // Set up the ModelState (for t_n)
+      ModelState* state = scinew ModelState();
       state->density             = rho_cur;
       state->initialDensity      = rho_0;
       state->volume              = pVol_new[idx];
@@ -590,7 +595,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       // Compute plastic flow direction (n = ee/||ee||)
       // Magic to deal with small strains
       double small = 1.0e-12;
-      double oo_strain_elast_s_tr =  (strain_elast_s_tr > small) : 1.0/strain_elast_s_tr : 1.0;
+      double oo_strain_elast_s_tr =  (strain_elast_s_tr > small) ? 1.0/strain_elast_s_tr : 1.0;
       flow = strain_elast_devtr*(sqrtTwoThird*oo_strain_elast_s_tr);
       
       // Calculate yield function
@@ -608,8 +613,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         pc = pc_n;
 
         // Derivatives
-        dfdp = d_yield->evalVolStressDerivOfYieldFunction(state);
-        dfdq = d_yield->evalDevStressDerivOfYieldFunction(state);
+        dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
+        dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
         // Residual
         rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
@@ -642,7 +647,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
          
           // calc deldelgamma
           dpdepsev = d_eos->computeDpDepse_v(state);
-          dpdepses = d_eos->computeDpDepse_s(state)
+          dpdepses = d_eos->computeDpDepse_s(state);
           dqdepsev = dpdepses;
           dqdepses = d_shear->computeDqDepse_s(state);
           dpcdepsev = d_intvar->computeVolStrainDerivOfInternalVariable(state);
@@ -680,7 +685,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           inv_A_MAT.multiply(rvs_vec, Ainvrvs);
 
           double denom = C_MAT[0]*AinvB[0] + C_MAT[1]*AinvB[1];
-          doubel deldelgamma = 0.0;
+          double deldelgamma = 0.0;
           if (fabs(denom) > 1e-20) {
             deldelgamma = (-C_MAT[0]*Ainvrvs[0]-C_MAT[1]*Ainvrvs[1] + rf)/denom;
           } else {
@@ -712,8 +717,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           state->p = p;
           state->p_c = pc;
 
-          dfdp = d_yield->evalVolStressDerivOfYieldFunction(state);
-          dfdq = d_yield->evalDevStressDerivOfYieldFunction(state);
+          dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
+          dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
           fyield = d_yield->evalYieldCondition(state);
 
@@ -821,7 +826,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 }
 
 void 
-CamClay::carryForward(const PatchSubset* patches,
+UintahBB::CamClay::carryForward(const PatchSubset* patches,
                       const MPMMaterial* matl,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
@@ -855,7 +860,7 @@ CamClay::carryForward(const PatchSubset* patches,
                            pDeltaGammaLabel_preReloc,        pset);
 
     // Get the internal variables
-    d_intvar->getInternalVariables(pset, old_dw);
+    d_intvar->getInternalVariable(pset, old_dw);
     d_intvar->allocateAndPutRigid(pset, new_dw);
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -876,10 +881,10 @@ CamClay::carryForward(const PatchSubset* patches,
 }
 
 void 
-CamClay::allocateCMDataAddRequires(Task* task,
+UintahBB::CamClay::allocateCMDataAddRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet* patch,
-                                   MPMLabel* lb) const
+                                   Uintah::MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -897,7 +902,7 @@ CamClay::allocateCMDataAddRequires(Task* task,
 }
 
 void 
-CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
+UintahBB::CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
                            ParticleSubset* addset,
                            map<const VarLabel*, 
                            ParticleVariableBase*>* newState,
@@ -916,7 +921,7 @@ CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
   ParticleVariable<Matrix3>  pStrain, pElasticStrain; 
   ParticleVariable<double>   pDeltaGamma;
 
-  constParticleVariable<Matrix3>  o_Strain, o_ElasticStrain, 
+  constParticleVariable<Matrix3>  o_Strain, o_ElasticStrain; 
   constParticleVariable<double>   o_DeltaGamma;
 
   new_dw->allocateTemporary(pStrain,addset);
@@ -943,7 +948,7 @@ CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 
-double CamClay::computeRhoMicroCM(double pressure,
+double UintahBB::CamClay::computeRhoMicroCM(double pressure,
                                   const double p_ref,
                                   const MPMMaterial* matl,
                                   double temperature,
@@ -955,7 +960,7 @@ double CamClay::computeRhoMicroCM(double pressure,
   return rho_cur;
 }
 
-void CamClay::computePressEOSCM(double rho_cur,double& pressure,
+void UintahBB::CamClay::computePressEOSCM(double rho_cur,double& pressure,
                                 double p_ref,  
                                 double& dp_drho, double& csquared,
                                 const MPMMaterial* matl,
@@ -966,20 +971,20 @@ void CamClay::computePressEOSCM(double rho_cur,double& pressure,
   pressure += p_ref;
 }
 
-double CamClay::getCompressibility()
+double UintahBB::CamClay::getCompressibility()
 {
-  return 1.0/d_initialData.Bulk;
+  return 1.0/d_eos->initialBulkModulus();
 }
 
 void
-CamClay::scheduleCheckNeedAddMPMMaterial(Task* task,
+UintahBB::CamClay::scheduleCheckNeedAddMPMMaterial(Task* task,
                                          const MPMMaterial* ,
                                          const PatchSet* ) const
 {
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 
-void CamClay::checkNeedAddMPMMaterial(const PatchSubset* patches,
+void UintahBB::CamClay::checkNeedAddMPMMaterial(const PatchSubset* patches,
                                       const MPMMaterial* matl,
                                       DataWarehouse* ,
                                       DataWarehouse* new_dw)

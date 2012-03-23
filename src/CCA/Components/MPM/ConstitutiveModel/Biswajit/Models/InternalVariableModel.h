@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 
 
-namespace Uintah {
+namespace UintahBB {
 
   ///////////////////////////////////////////////////////////////////////////
   /*!
@@ -94,6 +94,9 @@ namespace Uintah {
 
     virtual void allocateAndPutInternalVariable(ParticleSubset* pset,
                                                 DataWarehouse* new_dw){}; 
+
+    virtual void allocateAndPutRigid(ParticleSubset* pset,
+                                     DataWarehouse* new_dw){}; 
 
     //////////
     /*! \brief Compute the internal variable and return new value  */

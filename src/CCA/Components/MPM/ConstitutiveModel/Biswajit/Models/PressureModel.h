@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __EQUATION_OF_STATE_H__
-#define __EQUATION_OF_STATE_H__
+#ifndef __BB_EQUATION_OF_STATE_H__
+#define __BB_EQUATION_OF_STATE_H__
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include "ModelState.h"
 #include <Core/Math/Matrix3.h>
 
 
-namespace Uintah {
+namespace UintahBB {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 
@@ -150,5 +150,5 @@ namespace Uintah {
       
 
 
-#endif  // __EQUATION_OF_STATE_H__
+#endif  // __BB_EQUATION_OF_STATE_H__
 

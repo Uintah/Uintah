@@ -28,23 +28,23 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef _EQUATIONOFSTATEFACTORY_H_
-#define _EQUATIONOFSTATEFACTORY_H_
+#ifndef _BB_EQUATIONOFSTATEFACTORY_H_
+#define _BB_EQUATIONOFSTATEFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
-namespace Uintah {
+namespace UintahBB {
 
-  class MPMEquationOfState;
+  class PressureModel;
 
-  class MPMEquationOfStateFactory
+  class PressureModelFactory
   {
   public:
     // this function has a switch for all known mat_types
-    static MPMEquationOfState* create(ProblemSpecP& ps);
-    static MPMEquationOfState* createCopy(const MPMEquationOfState* cm);
+    static PressureModel* create(ProblemSpecP& ps);
+    static PressureModel* createCopy(const PressureModel* cm);
   };
 } // End namespace Uintah
       
-#endif /* _EQUATIONOFSTATEFACTORY_H_ */
+#endif /* _BB_EQUATIONOFSTATEFACTORY_H_ */

@@ -164,6 +164,17 @@ InternalVar_BorjaPressure::allocateAndPutInternalVariables(ParticleSubset* pset,
   new_dw->allocateAndPut(pPc_new, pPcLabel_preReloc, pset);
 }
 
+void
+InternalVar_BorjaPressure::allocateAndPutRigid(ParticleSubset* pset ,
+                                DataWarehouse* new_dw )
+{
+  new_dw->allocateAndPut(pPc_new, pPcLabel_preReloc, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+     pPc_new[*iter] = 0.0;
+  }
+}
+
 double 
 InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
                                              const double& ,

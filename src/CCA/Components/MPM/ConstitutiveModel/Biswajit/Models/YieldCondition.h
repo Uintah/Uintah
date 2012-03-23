@@ -37,8 +37,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ModelState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/PressureModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ShearModulusModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/InternalVariableModel.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /*! \class YieldCondition
    *  \brief A generic wrapper for various yield conditions

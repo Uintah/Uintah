@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   // Forward declarations
   class YieldCondition;

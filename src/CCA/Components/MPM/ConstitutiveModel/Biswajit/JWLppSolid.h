@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <Core/Disclosure/TypeDescription.h>
 
-namespace Uintah {
+namespace UintahBB {
   class JWLppSolid : public ConstitutiveModel {
 
   public:
