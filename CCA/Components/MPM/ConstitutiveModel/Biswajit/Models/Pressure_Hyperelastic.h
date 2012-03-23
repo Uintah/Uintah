@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include "PressureModel.h" 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 

@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ModelState.h"
 
 
-namespace Uintah {
+namespace UintahBB {
 
   ///////////////////////////////////////////////////////////////////////////
   /*!

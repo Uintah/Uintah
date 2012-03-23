@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-namespace Uintah {
+namespace UintahBB {
 
   /*! \class ShearModulusModel
    *  \brief A generic wrapper for various shear modulus models
