@@ -467,7 +467,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
        if (i==Nx/2 && j==Nx/2){
        */
 
-      double SumI = 0;
+      double sumI = 0;
       double sumProjI = 0; // for virtual radiometer
       double sldAngl; // solid angle of VR
       double VRTheta; // the polar angle of each ray from the radiometer normal
@@ -477,8 +477,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       }
       // ray loop
       for (int iRay=0; iRay < _NoOfRays; iRay++){
-        IntVector cur = origin;
-        IntVector prevCell = cur;
+
 
         if(_isSeedRandom == false){
           _mTwister.seed((i + j +k) * iRay +1);
@@ -495,10 +494,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
         direction_vector[1] = r*sin(theta);
         direction_vector[2] = plusMinus_one;                  
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
-
-        
         double DyDxRatio = Dx.y() / Dx.x(); //noncubic
         double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+        
+
 
         Vector ray_location;
         Vector ray_location_prev;
@@ -593,140 +592,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
         }
 
-        // Step and sign for ray marching
-        int step[3];                                          // Gives +1 or -1 based on sign
-        bool sign[3];
-        for ( int ii= 0; ii<3; ii++){
-          if (inv_direction_vector[ii]>0){
-            step[ii] = 1;
-            sign[ii] = 1;
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+
+
+        if(solveVR){
+          sumProjI += cos(VRTheta) * sumI;
           }
-          else{
-            step[ii] = -1;
-            sign[ii] = 0;//
-          }
-        }
-
-        double tMaxX = (i + sign[0]             - ray_location[0]) * inv_direction_vector[0];
-        double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
-        double tMaxZ = (k + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
-
-        //Length of t to traverse one cell
-        double tDeltaX = abs(inv_direction_vector[0]);
-        double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
-        double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
-        double tMax_prev = 0;
-        bool in_domain = true;
-
-        //Initializes the following values for each ray
-        double intensity = 1.0;
-        double fs = 1.0;
-        double optical_thickness = 0;
-
-        //+++++++Begin ray tracing+++++++++++++++++++
-
-        Vector temp_direction = direction_vector;   // Used for reflections
-
-        //save the direction vector so that it can get modified by...
-        //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
-        //the domain after it was updated following the first switch statement.
-
-        int nReflect = 0; // Number of reflections that a ray has undergone
-        //Threshold while loop
-        while (intensity > _Threshold){
-        
-          int face = -9;
-
-          while (in_domain){
-            
-            prevCell = cur;
-            double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
-
-            //__________________________________
-            //  Determine which cell the ray will enter next
-            if (tMaxX < tMaxY){
-              if (tMaxX < tMaxZ){
-                cur[0]    = cur[0] + step[0];
-                disMin    = tMaxX - tMax_prev;
-                tMax_prev = tMaxX;
-                tMaxX     = tMaxX + tDeltaX;
-                face      = 0;
-              }
-              else {
-                cur[2]    = cur[2] + step[2];
-                disMin    = tMaxZ - tMax_prev;
-                tMax_prev = tMaxZ;
-                tMaxZ     = tMaxZ + tDeltaZ;
-                face      = 2;
-              }
-            }
-            else {
-              if(tMaxY <tMaxZ){
-                cur[1]    = cur[1] + step[1];
-                disMin    = tMaxY - tMax_prev;
-                tMax_prev = tMaxY;
-                tMaxY     = tMaxY + tDeltaY;
-                face      = 1;
-              }
-              else {
-                cur[2]    = cur[2] + step[2];
-                disMin    = tMaxZ - tMax_prev;
-                tMax_prev = tMaxZ;
-                tMaxZ     = tMaxZ + tDeltaZ;
-                face      =2;
-              }
-            }
-
-            in_domain = containsCell(domainLo, domainHi, cur, face);
-
-            //__________________________________
-            //  Update the ray location
-            //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
-            //ray_location_prev = ray_location;
-            //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
-
-            // The running total of alpha*length
-            double optical_thickness_prev = optical_thickness;
-            optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
-            // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
-
-
-            size++;
-
-            //Eqn 3-15(see below reference) while
-            //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            SumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
-            if(solveVR)
-              sumProjI += cos(VRTheta) * sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
-          } //end domain while loop.  ++++++++++++++
-
-          intensity = exp(-optical_thickness);
-
-          //  wall emission 12/15/11
-          SumI += abskg[cur]*sigmaT4Pi[cur] * intensity;
-          sumProjI += cos(VRTheta) * abskg[cur]*sigmaT4Pi[cur] * intensity;
-
-          intensity = intensity * (1-abskg[cur]);
-
-          //__________________________________
-          //  Reflections
-          if (intensity > _Threshold){
-
-            ++nReflect;
-            fs = fs * (1-abskg[cur]);
-
-            //put cur back inside the domain
-            cur = prevCell;
-
-            // apply reflection condition
-            step[face] *= -1;                      // begin stepping in opposite direction
-            sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
-
-            in_domain = 1;
-
-
-          }  // if reflection
-        }  // threshold while loop.
       }  // Ray loop
       
       //__________________________________
@@ -740,7 +611,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (SumI/_NoOfRays) );
+      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (sumI/_NoOfRays) );
       //cout << divQ[origin] << endl;
       //} // end quick debug testing
     }  // end cell iterator
@@ -973,7 +844,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 /*===========TESTING==========`*/
       
       
-      double SumI = 0;
+      double sumI = 0;
       
       Vector tMax;
       vector<Vector> tDelta(maxLevels);
@@ -1130,9 +1001,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
             //Eqn 3-15(see below reference) while
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            SumI += sigmaT4Pi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+            sumI += sigmaT4Pi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
             
-            dbg2 << "origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << SumI << " in_domain " << in_domain << endl;
+            dbg2 << "origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
             //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
             //dbg2 << "    direction " << direction << endl;
          
@@ -1141,7 +1012,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
           intensity = exp(-optical_thickness);
 
           //  wall emission
-          SumI += abskg[L][cur] * sigmaT4Pi[L][cur] * intensity;
+          sumI += abskg[L][cur] * sigmaT4Pi[L][cur] * intensity;
 
           intensity = intensity * (1-abskg[L][cur]);  
            
@@ -1167,9 +1038,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4Pi_fine[origin] - (SumI/_NoOfRays) );
+      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4Pi_fine[origin] - (sumI/_NoOfRays) );
       
-      dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (SumI/_NoOfRays) << endl;
+      dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_NoOfRays) << endl;
        // } // end quick debug testing
     }  // end cell iterator
 
@@ -1602,6 +1473,165 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
     }
   }  // course patch loop 
 }
+
+
+
+//______________________________________________________________________
+void Ray::updateSumI ( const Vector& inv_direction_vector,
+                       const Vector& ray_location,
+                       const IntVector& origin,
+                       const Vector& Dx,
+                       const IntVector& domainLo,
+                       const IntVector& domainHi,
+                       constCCVariable<double> sigmaT4Pi,
+                       constCCVariable<double> abskg,
+                       unsigned long int& size,
+                       double& sumI)
+
+{
+
+    IntVector cur = origin;
+    IntVector prevCell = cur;
+
+    // Step and sign for ray marching
+     int step[3];                                          // Gives +1 or -1 based on sign
+     bool sign[3];
+     for ( int ii= 0; ii<3; ii++){
+       if (inv_direction_vector[ii]>0){
+         step[ii] = 1;
+         sign[ii] = 1;
+       }
+       else{
+         step[ii] = -1;
+         sign[ii] = 0;
+       }
+     }
+
+     double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+     double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+
+     double tMaxX = (origin[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
+     double tMaxY = (origin[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
+     double tMaxZ = (origin[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
+
+     //Length of t to traverse one cell
+     double tDeltaX = abs(inv_direction_vector[0]);
+     double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
+     double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
+     double tMax_prev = 0;
+     bool in_domain = true;
+
+     //Initializes the following values for each ray
+     double intensity = 1.0;
+     double fs = 1.0;
+     double optical_thickness = 0;
+
+     //+++++++Begin ray tracing+++++++++++++++++++
+
+     // Vector temp_direction = direction_vector;   // Used for reflections
+
+     //save the direction vector so that it can get modified by...
+     //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
+     //the domain after it was updated following the first switch statement.
+
+     int nReflect = 0; // Number of reflections that a ray has undergone
+     //Threshold while loop
+     while (intensity > _Threshold){
+
+       int face = -9;
+
+       while (in_domain){
+
+         prevCell = cur;
+         double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
+
+         //__________________________________
+         //  Determine which cell the ray will enter next
+         if (tMaxX < tMaxY){
+           if (tMaxX < tMaxZ){
+             cur[0]    = cur[0] + step[0];
+             disMin    = tMaxX - tMax_prev;
+             tMax_prev = tMaxX;
+             tMaxX     = tMaxX + tDeltaX;
+             face      = 0;
+           }
+           else {
+             cur[2]    = cur[2] + step[2];
+             disMin    = tMaxZ - tMax_prev;
+             tMax_prev = tMaxZ;
+             tMaxZ     = tMaxZ + tDeltaZ;
+             face      = 2;
+           }
+         }
+         else {
+           if(tMaxY <tMaxZ){
+             cur[1]    = cur[1] + step[1];
+             disMin    = tMaxY - tMax_prev;
+             tMax_prev = tMaxY;
+             tMaxY     = tMaxY + tDeltaY;
+             face      = 1;
+           }
+           else {
+             cur[2]    = cur[2] + step[2];
+             disMin    = tMaxZ - tMax_prev;
+             tMax_prev = tMaxZ;
+             tMaxZ     = tMaxZ + tDeltaZ;
+             face      =2;
+           }
+         }
+
+         in_domain = containsCell(domainLo, domainHi, cur, face);
+
+         //__________________________________
+         //  Update the ray location
+         //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
+         //ray_location_prev = ray_location;
+         //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
+
+         // The running total of alpha*length
+         double optical_thickness_prev = optical_thickness;
+         optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
+         // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
+
+
+         size++;
+
+         //Eqn 3-15(see below reference) while
+         //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+         sumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+
+       } //end domain while loop.  ++++++++++++++
+
+       intensity = exp(-optical_thickness);
+
+       //  wall emission 12/15/11
+       sumI += abskg[cur]*sigmaT4Pi[cur] * intensity;
+
+       intensity = intensity * (1-abskg[cur]);
+
+       //__________________________________
+       //  Reflections
+       if (intensity > _Threshold){
+
+         ++nReflect;
+         fs = fs * (1-abskg[cur]);
+
+         //put cur back inside the domain
+         cur = prevCell;
+
+         // apply reflection condition
+         step[face] *= -1;                      // begin stepping in opposite direction
+         sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
+
+         in_domain = 1;
+
+
+       }  // if reflection
+     }  // threshold while loop.
+
+} // end of updateSumI function
+
+
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
