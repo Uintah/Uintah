@@ -53,7 +53,6 @@ SRCS   += \
         $(SRCDIR)/IdealGasMP.cc                 \
         $(SRCDIR)/Membrane.cc                   \
         $(SRCDIR)/ShellMaterial.cc              \
-        $(SRCDIR)/ElasticPlastic.cc             \
         $(SRCDIR)/ElasticPlasticHP.cc           \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
