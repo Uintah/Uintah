@@ -67,7 +67,7 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
       volIncr_[1] = 3;
       volIncr_[2] = 0;
       if (hasPlusFace[0]) faceIncr_[1] += 1;
-      faceCount_[0] = dim[0]-1;
+      faceCount_[0] = dim[0] - 1;
 
       // boundary counters
       bndPlusStrideCoef_ = dim[0] + nGhost - 1;
@@ -120,7 +120,7 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
       faceIncr_[2] = 0;
       volIncr_[1] = 0;
       volIncr_[2] = 0;
-      if (hasPlusFace[2]) faceIncr_[2] += stride_;
+      //if (hasPlusFace[2]) faceIncr_[2] += stride_;
       //faceCount_[0] = dim[0] + nGhost;
       faceCount_[2] = dim[2] -1;
 
@@ -139,7 +139,7 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
       bndFaceIncr_[1] = 0;
       bndFaceIncr_[2] = 0;
 
-      if (hasPlusFace[2]) bndFaceIncr_[2] += stride_;
+      //if (hasPlusFace[2]) bndFaceIncr_[2] += stride_;
       break;
   }
 }
@@ -302,7 +302,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
           *destFld = *srcFieldPlus + 0.5*psi*(*srcFieldMinus - *srcFieldPlus);
         }
 
-        else *destFld = 0.0; // may need a better condition here to account for
+        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus); // may need a better condition here to account for
         // a tolerance value for example.
 
         srcFieldMinus += bndVolIncr_[0];
@@ -354,7 +354,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
           *destFld = *srcFieldMinus + 0.5*psi*(*srcFieldPlus - *srcFieldMinus);
         }
 
-        else *destFld = 0.0;
+        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
 
         srcFieldMinus += bndVolIncr_[0];
         srcFieldPlus += bndVolIncr_[0];
@@ -405,7 +405,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
           *destFld = *srcFieldPlus + 0.5*psi*(*srcFieldMinus - *srcFieldPlus);
         }
 
-        else *destFld = 0.0;
+        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
 
         ++srcFieldMinus;
         ++srcFieldMinusMinus;
