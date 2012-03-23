@@ -162,7 +162,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   ParticleVariable<double> pKappa;
   ParticleVariable<Matrix3> pBackStress;
   ParticleVariable<Matrix3> pBackStressIso;
-  ParticleVariable<int> pKappaState;
+  ParticleVariable<double> pKappaState;
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainVol,     pPlasticStrainVolLabel, pset);
   new_dw->allocateAndPut(pElasticStrainVol,     pElasticStrainVolLabel, pset);
@@ -183,7 +183,7 @@ void Arenisca::initializeCMData(const Patch* patch,
       (d_initialData.CR*d_initialData.FSLOPE+1.0);
     pBackStress[*iter].set(0.0);
     pBackStressIso[*iter] = Identity*d_initialData.fluid_pressure_initial;
-    pKappaState[*iter] = 0;
+    pKappaState[*iter] = 0.0;
   }
   computeStableTimestep(patch, matl, new_dw);
 }
@@ -305,8 +305,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3>  pBackStress_new;
     constParticleVariable<Matrix3> pBackStressIso;
     ParticleVariable<Matrix3>  pBackStressIso_new;
-    constParticleVariable<int> pKappaState;
-    ParticleVariable<int>  pKappaState_new;
+    constParticleVariable<double> pKappaState;
+    ParticleVariable<double>  pKappaState_new;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
@@ -591,13 +591,13 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                             /( p3_crush_curve*p1_crush_curve*var1 )*strain_iteration.Trace();
           } else {
             pKappa_new[idx] = 0.01*p0_crush_curve + cap_radius;
-            pKappaState_new[idx] = 1;
+            pKappaState_new[idx] = 1.0;
           }
           //pKappa_new[idx] = log(strain_iteration.Trace()/p3_crush_curve+1.0)
           //                   /p1_crush_curve+p0_crush_curve+cap_radius;
           if (pKappa_new[idx]<min_kappa){
             pKappa_new[idx] = min_kappa;
-            pKappaState_new[idx] = 2;
+            pKappaState_new[idx] = 2.0;
           }
 
           PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain_new[idx];
@@ -613,7 +613,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           //if (pKappa_new[idx]>p0_crush_curve+cap_radius) { (1)KappaMin
           if (pKappa_new[idx]>0.01*p0_crush_curve+cap_radius) {
             pKappa_new[idx]=0.01*p0_crush_curve+cap_radius;
-            pKappaState_new[idx] = 1;
+            pKappaState_new[idx] = 1.0;
           }
 
         }
@@ -924,7 +924,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                  *(M*gamma).Trace()/var1;
                 if (pKappa_loop<min_kappa){
                   pKappa_loop = min_kappa;
-                  pKappaState_new[idx] = 2;
+                  pKappaState_new[idx] = 2.0;
                 }
               } else if (pKappa_loop-cap_radius-0.01*p0_crush_curve<0) {
                 //pKappa_loop = p0_crush_curve + cap_radius; (1)KappaMin
@@ -933,7 +933,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                             /( p3_crush_curve*p1_crush_curve*var1 )*(M*gamma).Trace();
               } else {
                 pKappa_loop = p0_crush_curve + 0.01*cap_radius;
-                pKappaState_new[idx] = 1;
+                pKappaState_new[idx] = 1.0;
               }
               PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*(pPlasticStrain_new[idx]+(M*gamma).Norm());
               if (cond_fixed_cap_radius==0) {
@@ -948,7 +948,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
               //if (pKappa_loop>p0_crush_curve+cap_radius) { (1)KappaMin
               if (pKappa_loop>0.01*p0_crush_curve+cap_radius) {
                 pKappa_loop = 0.01*p0_crush_curve+cap_radius;
-                pKappaState_new[idx] = 1;
+                pKappaState_new[idx] = 1.0;
               }
 
               f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
