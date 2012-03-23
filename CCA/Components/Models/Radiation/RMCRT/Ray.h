@@ -103,6 +103,17 @@ namespace Uintah{
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched );
       
+      void  updateSumI ( const Vector& inv_direction_vector,
+      		             const Vector& ray_location,
+      		             const IntVector& origin,
+      		             const Vector& Dx,
+      		             const IntVector& domainLo,
+      		             const IntVector& domainHi,
+      		             constCCVariable<double> sigmaT4Pi,
+      		             constCCVariable<double> abskg,
+      		             unsigned long int& size,
+      		             double& sumI);
+
       //__________________________________
       //  Multilevel tasks
       void sched_Refine_Q(SchedulerP& sched,
