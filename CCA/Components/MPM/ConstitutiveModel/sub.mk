@@ -75,6 +75,7 @@ endif
 
 SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
+        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
   SUBDIRS += $(SRCDIR)/fortran

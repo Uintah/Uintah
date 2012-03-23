@@ -55,7 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
