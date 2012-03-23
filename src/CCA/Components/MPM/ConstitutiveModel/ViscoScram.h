@@ -144,6 +144,8 @@ namespace Uintah {
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;
     double d_bulk;
+    double d_K0;
+    double p_ref_cal;
 
     CMData d_initialData;
     TimeTemperatureData d_tt;
@@ -271,5 +273,4 @@ private:
 } // End namespace Uintah
       
 
-#endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
-
+#endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
