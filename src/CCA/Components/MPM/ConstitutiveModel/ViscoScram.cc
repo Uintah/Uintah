@@ -1468,12 +1468,12 @@ double ViscoScram::computeRhoMicroCM(double pressure,
          // Special case if iteration is close to relative volume = 1
          if(rhoM < rho_orig && d_useModifiedEOS)
          {
+           double inv_rho_orig = 1.0/rho_orig;         // MODIFIED EOS
            double A = p_ref_cal;         // MODIFIED EOS
            double n = d_K0/p_ref_cal;
            double rho_rat_to_the_n = pow(rhoM*inv_rho_orig,n);
-           f =  A * rho_rat_to_the_n - iterVar->Pressure;
+           f =  A * rho_rat_to_the_n - pressure;
 
-           double rho_rat_to_the_n = pow(rhoM*inv_rho_orig,n);
            df_drho = (d_K0*inv_rho_orig)*pow(rhoM*inv_rho_orig,n-1.0);
          } else {
            f = (A_e_to_the_R1_rho0_over_rhoM +
@@ -1536,7 +1536,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
       while(fabs(delta/rhoM) > epsilon){  // Main Iterative loop
         // Compute the difference between the previous pressure and the new pressure
-        f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
+        f       = computePBirchMurnaghan(rho0/rhoM, rho0) - pressure;
 
         // Compute the new pressure derivative
         df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
@@ -1554,7 +1554,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           rhoM  = 2.0*rho0;
 
           while(fabs(delta/rhoM) > epsilon){
-            f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
+            f       = computePBirchMurnaghan(rho0/rhoM, rho0) - pressure;
             df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
 
             // determine by how much to change
@@ -1681,7 +1681,7 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
 
     if(rho_cur >= rho_orig) {         // Compression
       double v = rho_orig/rho_cur;    // reduced volume
-      pressure = computePBirchMurnaghan(v);
+      pressure = computePBirchMurnaghan(v, rho_orig);
       dp_drho  = computedPdrhoBirchMurnaghan(v, rho_orig);
     } else {                          // Expansion
       pressure = d_murnahanEOSData.P0*pow(rho_cur/rho_orig, (1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)));
@@ -1709,7 +1709,7 @@ double ViscoScram::getCompressibility()
 
 //_____________________________________________________
 // Functions used in solution of the BirchMurnaghan EOS
-double ViscoScram::computePBirchMurnaghan(double v)
+double ViscoScram::computePBirchMurnaghan(double v, double rho0)
 {
   if(rho0/v < rho0 && d_useModifiedEOS) {
     return d_murnahanEOSData.P0*pow(1.0/v, (1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)));
@@ -1726,7 +1726,7 @@ double ViscoScram::computedPdrhoBirchMurnaghan(double v, double rho0)
 {
   if(rho0/v < rho0 && d_useModifiedEOS) {
     return (1.0/(d_murnahanEOSData.bulkPrime*rho0))*pow(1.0/v,(1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)-1.0));
-  else {
+  } else {
     double K = d_murnahanEOSData.bulkPrime;
     double n = d_murnahanEOSData.gamma;
     return 3.0/(2.0*K) * (-7.0*rho0/(3.0*pow(v,10.0/3.0)) + 5.0*rho0/(3.0*pow(v,8.0/3.0)))
@@ -1770,7 +1770,7 @@ double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl, Iterat
   // Special case if iteration is close to relative volume = 1
   if(rhoM < matl->getInitialDensity() && d_useModifiedEOS)
   {
-    double rho_rat_to_the_n = pow(rhoM*inv_rho_orig,n);
+    double n = d_K0/p_ref_cal;
     return (d_K0*inv_rho_orig)*pow(rhoM*inv_rho_orig,n-1.0);
     
   } else { 
