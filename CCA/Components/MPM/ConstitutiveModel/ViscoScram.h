@@ -250,7 +250,7 @@ namespace Uintah {
 private:
 
     // Functions and variables for solving the BirchMurnaghan equation of state
-    double computePBirchMurnaghan(double v);
+    double computePBirchMurnaghan(double v, double rho0);
     double computedPdrhoBirchMurnaghan(double v, double rho0);
 
     // Functions and variables for solving JWL temperature dependend form of equation of state
