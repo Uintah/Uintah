@@ -1660,7 +1660,9 @@ namespace Uintah{
         Vector c_af = areaFraction[c]; 
         Vector cp_af = areaFraction[c + coord]; 
 
-        Fdiff[c] = 1.0/prNo[c] * Dx.y()*Dx.z() * 
+        double pr_no = prNo[c]; 
+
+        Fdiff[c] = 1.0/pr_no * Dx.y()*Dx.z() * 
                    ( face_gamma.plus * grad_phi.plus * cp_af.x() - 
                      face_gamma.minus * grad_phi.minus * c_af.x() ); 
 
@@ -1673,7 +1675,7 @@ namespace Uintah{
 
         cp_af = areaFraction[c + coord]; 
 
-        Fdiff[c] += 1.0/prNo[c] * Dx.x()*Dx.z() *  
+        Fdiff[c] += 1.0/pr_no * Dx.x()*Dx.z() *  
                    ( face_gamma.plus * grad_phi.plus * cp_af.y() - 
                      face_gamma.minus * grad_phi.minus * c_af.y() ); 
 #endif
@@ -1686,7 +1688,7 @@ namespace Uintah{
 
         cp_af = areaFraction[c + coord]; 
 
-        Fdiff[c] += 1.0/prNo[c] * Dx.x()*Dx.y() * 
+        Fdiff[c] += 1.0/pr_no * Dx.x()*Dx.y() * 
                    ( face_gamma.plus * grad_phi.plus * cp_af.z() - 
                       face_gamma.minus * grad_phi.minus * c_af.z() ); 
 
@@ -1748,11 +1750,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.x() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                             ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
 
                 }
@@ -1772,11 +1774,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.x() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                              ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
                 }
                 break; 
@@ -1796,11 +1798,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.y() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                             ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
                 }
                 break; 
@@ -1819,11 +1821,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.y() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                              ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
                 }
                 break;
@@ -1844,11 +1846,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.z() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                             ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
 
                 }
@@ -1868,11 +1870,11 @@ namespace Uintah{
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
-                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                  Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.z() ); 
 
                   // to match with the old code...
-                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                  Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                              ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
                 }
                 break; 

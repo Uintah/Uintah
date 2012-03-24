@@ -13,7 +13,10 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/IO/UintahZlibUtil.h>
 #include <Core/Grid/Box.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 //============================================
 
@@ -148,6 +151,120 @@ namespace Uintah{
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw );
 
+      //------------ scalars ---------------------
+      //
+
+      /** @brief A base class for scalar inlet conditions **/ 
+      class scalarInletBase { 
+
+        public: 
+
+          scalarInletBase(){ 
+            // helper for the intvector direction 
+            _dHelp.push_back( IntVector(-1,0,0) ); 
+            _dHelp.push_back( IntVector(+1,0,0) ); 
+            _dHelp.push_back( IntVector(0,-1,0) ); 
+            _dHelp.push_back( IntVector(0,+1,0) ); 
+            _dHelp.push_back( IntVector(0,0,-1) ); 
+            _dHelp.push_back( IntVector(0,0,+1) ); 
+
+            // helper for the indexing for face cells
+            _faceDirHelp.push_back( IntVector(0,0,0) ); 
+            _faceDirHelp.push_back( IntVector(+1,0,0) ); 
+            _faceDirHelp.push_back( IntVector(0,0,0) ); 
+            _faceDirHelp.push_back( IntVector(0,+1,0) ); 
+            _faceDirHelp.push_back( IntVector(0,0,0) ); 
+            _faceDirHelp.push_back( IntVector(0,0,+1) ); 
+
+            // helper for referencing the right index depending on direction 
+            _iHelp.push_back( 0 ); 
+            _iHelp.push_back( 0 ); 
+            _iHelp.push_back( 1 ); 
+            _iHelp.push_back( 1 ); 
+            _iHelp.push_back( 2 ); 
+            _iHelp.push_back( 2 ); 
+
+            // helper for the sign on the face
+            _sHelp.push_back( -1.0 ); 
+            _sHelp.push_back( +1.0 ); 
+            _sHelp.push_back( -1.0 ); 
+            _sHelp.push_back( +1.0 ); 
+            _sHelp.push_back( -1.0 ); 
+            _sHelp.push_back( +1.0 ); 
+
+            // helper for getting neighboring interior cell
+            _inside.push_back( IntVector(-1,0,0) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
+            _inside.push_back( IntVector( 0,-1,0) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
+            _inside.push_back( IntVector( 0,0,-1) ); 
+            _inside.push_back( IntVector( 0,0,0) ); 
+          }; 
+
+          virtual ~scalarInletBase(){}; 
+
+          virtual void problem_setup( ProblemSpecP& db ) = 0; 
+
+          virtual void set_scalar_rhs( int dir, 
+                                       IntVector c, 
+                                       CCVariable<double>& RHS, 
+                                       double face_den, 
+                                       double face_vel,
+                                       std::vector<double> area ) = 0; 
+
+          virtual double get_scalar( const IntVector c ) = 0;
+
+        protected: 
+
+          std::vector<IntVector> _dHelp;
+          std::vector<IntVector> _faceDirHelp; 
+          std::vector<IntVector> _inside; 
+          std::vector<int>       _iHelp; 
+          std::vector<double>    _sHelp; 
+
+
+      };
+
+      /** @brief Sets the scalar boundary value to a constant **/ 
+      class constantScalar : public scalarInletBase { 
+
+        public: 
+
+          constantScalar(){};
+          ~constantScalar(){};
+
+          void problem_setup( ProblemSpecP& db ){
+          
+            db->getWithDefault("constant",_C, 0.0);
+
+          }; 
+
+          inline void set_scalar_rhs( int dir,
+                                      IntVector c, 
+                                      CCVariable<double>& RHS, 
+                                      double face_den, 
+                                      double face_vel, 
+                                      std::vector<double> area ){
+
+            RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * _C; 
+          
+          }; 
+
+          inline double get_scalar( const IntVector ){ 
+
+            return _C; 
+
+          } 
+
+        private: 
+
+          double _C; 
+
+      }; 
+
+      //------------- velocity -----------------------
+      //
+
       /** @brief A base class for velocity inlet conditons **/ 
       class VelInletBase { 
 
@@ -196,14 +313,19 @@ namespace Uintah{
           }; 
           virtual ~VelInletBase(){}; 
 
+          virtual void problem_setup( ProblemSpecP& db ) = 0; 
+
           virtual void set_velocity( int dir, 
                                      IntVector c, 
                                      SFCXVariable<double>& u, 
                                      SFCYVariable<double>& v, 
                                      SFCZVariable<double>& w, 
                                      constCCVariable<double>& den, 
-                                     double bc_density, 
-                                     Vector bc_velocity ) = 0; 
+                                     double bc_density ) = 0; 
+
+          virtual Vector const get_velocity( const IntVector ) = 0;
+
+          virtual void massflowrate_velocity( int d, const double value ) = 0;
 
         protected: 
 
@@ -227,36 +349,271 @@ namespace Uintah{
           FlatVelProf(){}; 
           ~FlatVelProf(){}; 
 
+          void problem_setup( ProblemSpecP& db ){
+          
+          
+            double u;
+            double v; 
+            double w; 
+
+            ProblemSpecP db_flat = db->findBlock("velocity"); 
+
+            db_flat->getWithDefault("u",u,0.0);
+            db_flat->getWithDefault("v",v,0.0);
+            db_flat->getWithDefault("w",w,0.0);
+
+            _bc_velocity[0] = u; 
+            _bc_velocity[1] = v; 
+            _bc_velocity[2] = w; 
+
+
+          }; 
+
           inline void set_velocity( int dir, 
                                IntVector c, 
                                SFCXVariable<double>& u, 
                                SFCYVariable<double>& v, 
                                SFCZVariable<double>& w, 
                                constCCVariable<double>& density, 
-                               double bc_density, 
-                               Vector bc_velocity ){ 
-
-            double velocity = 0.0; 
-
-            velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c + _inside[dir]] ); 
-
-            //IntVector cb = c + _faceDirHelp[dir]; 
+                               double bc_density ){ 
 
             if ( dir == 0 || dir == 1 ){ 
 
-              u[c] = velocity; 
+              u[c] = _bc_velocity[0]; 
 
             } else if ( dir == 2 || dir == 3 ){ 
 
-              v[c] = velocity; 
+              v[c] = _bc_velocity[1]; 
               
             } else { 
 
-              w[c] = velocity; 
+              w[c] = _bc_velocity[2]; 
 
             } 
           };
+
+          const inline Vector get_velocity( const IntVector ){ 
+            return _bc_velocity; 
+          } 
+
+          void massflowrate_velocity( int d, const double v ){ 
+            _bc_velocity[d] = v; 
+          } 
+
+        private: 
+
+          Vector _bc_velocity; 
       }; 
+
+      /** @brief Velocity File from an input file **/ 
+      class InputFileVelocity : public VelInletBase { 
+
+        public: 
+
+          InputFileVelocity(){};
+          ~InputFileVelocity(){};
+
+          typedef std::map<IntVector, double> CellToValuesMap; 
+          typedef std::map<std::string, CellToValuesMap> ScalarToBCValueMap; 
+
+          void problem_setup( ProblemSpecP& db ){ 
+
+            ProblemSpecP db_v = db->findBlock("velocity"); 
+
+            db_v->require("input_file",_file_reference); 
+
+            //go out an load the velocity: 
+            gzFile file = gzopen( _file_reference.c_str(), "r"); 
+
+            int total_variables; 
+
+            if ( file == NULL ) { 
+              proc0cout << "Error opening file: " << _file_reference << " for intrusion boundary conditions. Errno: " << errno << endl;
+              throw ProblemSetupException("Unable to open the given input file: " + _file_reference, __FILE__, __LINE__);
+            }
+
+            total_variables = getInt(file); 
+            std::string eqn_input_file; 
+            bool found_file = false; 
+            bool found_u = false; 
+            bool found_v = false; 
+            bool found_w = false; 
+            for ( int i = 0; i < total_variables; i++ ){
+
+              std::string varname  = getString( file );
+              eqn_input_file  = getString( file ); 
+
+              if ( varname == "uvel" ){ 
+                found_u = true;
+                _u_filename = eqn_input_file; 
+              } else if ( varname == "vvel" ){ 
+                found_v = true;
+                _v_filename = eqn_input_file; 
+              } else if ( varname == "wvel" ){ 
+                found_w = true;
+                _w_filename = eqn_input_file; 
+              } 
+
+            }
+
+            // REQUIRE that each component is explicitly specified
+            if ( !found_u ){ 
+              throw ProblemSetupException("Unable to open velocity input file for U direction.", __FILE__, __LINE__);
+            } else {
+              CellToValuesMap bc_values; 
+              bc_values = readInputFile( _u_filename ); 
+
+              _velocity_map.insert(std::make_pair( "u", bc_values ));
+
+            }
+            if ( !found_v ){ 
+              throw ProblemSetupException("Unable to open velocity input file for V direction.", __FILE__, __LINE__);
+            } else { 
+              CellToValuesMap bc_values; 
+              bc_values = readInputFile( _v_filename ); 
+
+              _velocity_map.insert(std::make_pair( "v", bc_values ));
+
+            } 
+            if ( !found_w ){ 
+              throw ProblemSetupException("Unable to open velocity input file for W direction.", __FILE__, __LINE__);
+            } else { 
+              CellToValuesMap bc_values; 
+              bc_values = readInputFile( _w_filename ); 
+
+              _velocity_map.insert(std::make_pair( "w", bc_values ));
+
+            } 
+            gzclose( file ); 
+            
+
+          };
+
+          inline void set_velocity( int dir, 
+                               IntVector c, 
+                               SFCXVariable<double>& u, 
+                               SFCYVariable<double>& v, 
+                               SFCZVariable<double>& w, 
+                               constCCVariable<double>& density, 
+                               double bc_density ){ 
+
+            if ( dir == 0 || dir == 1 ) { 
+
+              ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u"); 
+              CellToValuesMap::iterator u_iter = u_storage->second.find( c ); 
+
+              if ( u_iter == u_storage->second.end() ){ 
+                throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__); 
+              } else { 
+                u[c] = u_iter->second; 
+              } 
+
+            } else if ( dir == 2 || dir == 3 ) { 
+
+              ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v"); 
+              CellToValuesMap::iterator v_iter = v_storage->second.find( c ); 
+
+              if ( v_iter == v_storage->second.end() ){ 
+                throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__); 
+              } else { 
+                v[c] = v_iter->second; 
+              } 
+
+            } else { 
+
+              ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w"); 
+              CellToValuesMap::iterator w_iter = w_storage->second.find( c ); 
+
+              if ( w_iter == w_storage->second.end() ){ 
+                throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__); 
+              } else { 
+                w[c] = w_iter->second; 
+              } 
+
+            } 
+
+          }
+
+          
+          const inline Vector get_velocity( const IntVector c ){ 
+            Vector vel_vec;
+
+            ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u"); 
+            CellToValuesMap::iterator u_iter = u_storage->second.find( c ); 
+            if ( u_iter == u_storage->second.end() ){ 
+              throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__); 
+            } else { 
+              vel_vec[0] = u_iter->second; 
+            } 
+
+            ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v"); 
+            CellToValuesMap::iterator v_iter = v_storage->second.find( c ); 
+            if ( v_iter == v_storage->second.end() ){ 
+              throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__); 
+            } else { 
+              vel_vec[1] = v_iter->second; 
+            } 
+
+            ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w"); 
+            CellToValuesMap::iterator w_iter = w_storage->second.find( c ); 
+            if ( w_iter == w_storage->second.end() ){ 
+              throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__); 
+            } else { 
+              vel_vec[2] = w_iter->second; 
+            } 
+
+            return vel_vec;
+          } 
+
+          void massflowrate_velocity( int d, const double v ){ 
+              throw InvalidValue("Error: Not allowed to specify mass flow rate for intrusion + inputfile for velocity",__FILE__,__LINE__); 
+          } 
+
+        private: 
+
+          std::string _file_reference; 
+          std::map<IntVector, double> _u;
+          std::map<IntVector, double> _v;
+          std::map<IntVector, double> _w;
+
+          std::string _u_filename; 
+          std::string _v_filename;
+          std::string _w_filename; 
+
+          ScalarToBCValueMap _velocity_map; 
+
+          //---- read the file ---
+          std::map<IntVector, double>
+          readInputFile( std::string file_name )
+          {
+          
+            gzFile file = gzopen( file_name.c_str(), "r" ); 
+            if ( file == NULL ) { 
+              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+            }
+          
+            std::string variable = getString( file ); 
+            int         num_points = getInt( file ); 
+            std::map<IntVector, double> result; 
+          
+            for ( int i = 0; i < num_points; i++ ) {
+              int I = getInt( file ); 
+              int J = getInt( file ); 
+              int K = getInt( file ); 
+              double v = getDouble( file ); 
+          
+              IntVector C(I,J,K);
+          
+              result.insert( std::make_pair( C, v )).first; 
+          
+            }
+          
+            gzclose( file ); 
+            return result; 
+          }
+          
+      };
 
       typedef std::map<int, std::vector<IntVector> > BCIterator; 
 
@@ -270,13 +627,15 @@ namespace Uintah{
         std::vector<std::string>     VARIABLE_TYPE; 
         // Note that directions is a vector as: [-X,+X,-Y,+Y,-Z,+Z] ~ 0 means off/non-zero means on
         std::vector<int>             directions; 
-        Vector                       velocity; 
         double                       mass_flow_rate; 
-        BCIterator                   bc_face_iterator; 
+        BCIterator                   bc_face_iterator;
+        BCIterator                   interior_cell_iterator; 
         bool                         has_been_initialized; 
+        Vector                       velocity;
 
         //state space information: 
         double density; // from state-space calculation
+        std::map<IntVector, double> density_map; 
 
         //geometric information: 
         const VarLabel* bc_area; 
@@ -287,7 +646,11 @@ namespace Uintah{
         //material properties
         double temperature; 
 
+        // control the definition of the interior relative to the object
         bool inverted; 
+
+        //scalars
+        std::map<std::string, scalarInletBase*> scalar_map; 
 
       }; 
 
@@ -299,27 +662,29 @@ namespace Uintah{
         if ( inverted ) { 
           test = true; 
         } 
-        Box geom_box = piece->getBoundingBox(); 
-        Box patch_box = patch->getBox(); 
-        Box intersect_box = geom_box.intersect( patch_box ); 
 
-        if ( !(intersect_box.degenerate()) ){ 
-
-          Point p = patch->cellPosition( c ); 
-          if ( piece->inside( p ) ) { 
-            if ( inverted ) { 
-              test = false; 
-            } else { 
-              test = true; 
-            } 
+        Point p = patch->cellPosition( c ); 
+        if ( piece->inside( p ) ) { 
+          if ( inverted ) { 
+            test = false; 
+          } else { 
+            test = true; 
           } 
-        }
+        } 
+
         return test; 
+
       } 
 
       inline std::vector<Boundary> get_intrusions(){ 
         return _intrusions; 
       } 
+
+      std::vector<IntVector> _dHelp;
+      std::vector<IntVector> _faceDirHelp; 
+      std::vector<IntVector> _inside; 
+      std::vector<int>       _iHelp; 
+      std::vector<double>    _sHelp; 
 
     private: 
 
@@ -333,45 +698,80 @@ namespace Uintah{
       bool _do_energy_exchange; 
       bool _mpm_energy_exchange; 
 
-      std::vector<IntVector> _dHelp;
-      std::vector<IntVector> _faceDirHelp; 
-      std::vector<IntVector> _inside; 
-      std::vector<int>       _iHelp; 
-      std::vector<double>    _sHelp; 
 
       const VarLabel* _T_label; 
 
+      /** @brief Add a face iterator to the list of total iterators for this patch and face */ 
+      void inline add_face_iterator( IntVector c, const Patch* patch, int dir, IntrusionBC::Boundary& intrusion ){ 
 
-      /** @brief Add an iterator to the list of total iterators for this patch and face */ 
-      void inline add_iterator( IntVector c, int p, IntrusionBC::Boundary& intrusion ){ 
+        if ( patch->containsCell( c + _inside[dir] ) ) { 
 
-        BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
-        if ( iMAP == intrusion.bc_face_iterator.end() ) {
+          int p = patch->getID(); 
 
-          //this is a new patch that hasn't been added yet
-          std::vector<IntVector> cell_indices; 
-          cell_indices.push_back(c); 
-          intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+          BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
 
-        } else { 
+          if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-          //iterator already started for this patch
-          // does this cell alread exisit in the list? 
-          bool already_present = false; 
-          for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
-            if ( *iVEC == c ) { 
-              already_present = true; 
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices; 
+            cell_indices.push_back(c); 
+            intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+
+          } else { 
+
+            //iterator already started for this patch
+            // does this cell alread exisit in the list? 
+            bool already_present = false; 
+            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
+              if ( *iVEC == c ) { 
+                already_present = true; 
+              } 
+            } 
+
+            if ( !already_present ) { 
+              //not in the list, insert it: 
+              iMAP->second.push_back(c); 
             } 
           } 
-
-          if ( !already_present ) { 
-            //not in the list, insert it: 
-            iMAP->second.push_back(c); 
-          } 
-        } 
+        }
       }
 
-      void inline initialize_face_iterator( int p, IntrusionBC::Boundary& intrusion ){ 
+      /** @brief Add a face iterator to the list of total iterators for this patch and face */ 
+      void inline add_interior_iterator( IntVector c, const Patch* patch, int dir, IntrusionBC::Boundary& intrusion ){ 
+
+        int p = patch->getID(); 
+
+        BCIterator::iterator iMAP = intrusion.interior_cell_iterator.find( p );
+
+        if ( patch->containsCell( c ) ){ 
+
+          if ( iMAP == intrusion.bc_face_iterator.end() ) {
+
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices; 
+            cell_indices.push_back(c); 
+            intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+
+          } else { 
+
+            //iterator already started for this patch
+            // does this cell alread exisit in the list? 
+            bool already_present = false; 
+            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
+              if ( *iVEC == c ) { 
+                already_present = true; 
+              } 
+            } 
+
+            if ( !already_present ) { 
+              //not in the list, insert it: 
+              iMAP->second.push_back(c); 
+            } 
+          } 
+        }
+      }
+
+      void inline initialize_the_iterators( int p, IntrusionBC::Boundary& intrusion ){ 
 
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {
@@ -380,6 +780,15 @@ namespace Uintah{
           std::vector<IntVector> cell_indices; 
           cell_indices.clear(); 
           intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+
+        } 
+        BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
+        if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
+
+          //this is a new patch that hasn't been added yet
+          std::vector<IntVector> cell_indices; 
+          cell_indices.clear(); 
+          intrusion.interior_cell_iterator.insert(make_pair( p, cell_indices )); 
 
         } 
 
@@ -391,14 +800,27 @@ namespace Uintah{
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-          std::cout << "For patch = " << p << " ... no iterator found for geometry " << endl;
+          std::cout << "For patch = " << p << " ... no FACE iterator found for geometry " << endl;
 
 
         } else { 
 
           for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
             IntVector v = *iVEC; 
-            std::cout << " For patch = " << p << " found an interator at: " << v[0] << " " << v[1] << " " << v[2] << endl;
+            std::cout << " For patch = " << p << " found a face interator at: " << v[0] << " " << v[1] << " " << v[2] << endl;
+          } 
+        } 
+        BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
+        if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
+
+          std::cout << "For patch = " << p << " ... no INTERIOR iterator found for geometry " << endl;
+
+
+        } else { 
+
+          for ( std::vector<IntVector>::iterator iVEC = iMAP2->second.begin(); iVEC != iMAP2->second.end(); iVEC++ ){ 
+            IntVector v = *iVEC; 
+            std::cout << " For patch = " << p << " found a INTERIOR interator at: " << v[0] << " " << v[1] << " " << v[2] << endl;
           } 
         } 
       } 

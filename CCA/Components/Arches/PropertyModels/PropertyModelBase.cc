@@ -8,6 +8,7 @@ PropertyModelBase::PropertyModelBase( std::string prop_name, SimulationStateP& s
   _prop_name( prop_name ), _shared_state( shared_state )
 {
   _init_type = "constant"; //Can be overwritten in derived class
+  _const_init = 1.0;
 }
 
 PropertyModelBase::~PropertyModelBase()
