@@ -6425,10 +6425,10 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
             double negsmall = -1.0E-10;
             double possmall =  1.0E-10;
             double zero     = 0.0E0; 
-            int sign        = 1;
+            double sign        = 1.0;
 
             if ( bc_iter->second.type == PRESSURE ) { 
-              sign = -1; 
+              sign = -1.0; 
             }
 
             switch (face) {

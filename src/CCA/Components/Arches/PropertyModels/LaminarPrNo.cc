@@ -63,6 +63,12 @@ void LaminarPrNo::problemSetup( const ProblemSpecP& inputdb )
   db->findBlock("oxidizer")->require( "dipole_moment", _dipole_moment_b ); 
   db->findBlock("oxidizer")->require( "viscosity", _viscosity_b ); 
 
+  db->getAttribute("initialization", _init_type); 
+
+  if ( _init_type == "constant" ){ 
+    db->require("constant", _const_init); 
+  } 
+
 }
 
 //---------------------------------------------------------------------------
