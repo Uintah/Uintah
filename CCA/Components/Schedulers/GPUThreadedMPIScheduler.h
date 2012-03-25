@@ -130,8 +130,8 @@ WARNING
 
     ConditionVariable     d_nextsignal;
     Mutex                 d_nextmutex;   //conditional wait mutex
-    GPUTaskWorker*        t_worker[16];  //workers
-    Thread*               t_thread[16];
+    GPUTaskWorker*        t_worker[MAX_THREADS];  //workers
+    Thread*               t_thread[MAX_THREADS];
     Mutex                 dlbLock;       //load balancer lock
     
 
@@ -170,7 +170,7 @@ WARNING
     void clearMaps();
 
     Output*                oport_t;
-    CommRecMPI             sends_[16+1];
+    CommRecMPI             sends_[MAX_THREADS];
     QueueAlg               taskQueueAlg_;
     int                    numThreads_;
     int                    numGPUs_;
