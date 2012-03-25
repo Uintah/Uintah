@@ -142,11 +142,11 @@ WARNING
       //////////
       // Returns the number of threads that a processing element is
       // allowed to use to compute its tasks.  
-      static int getMaxThreads();
+      static int getNumThreads();
 
       //////////
       // Insert Documentation here:
-      static void setMaxThreads( int maxNumThreads );
+      static void setNumThreads( int num );
       
    private:
       Parallel();

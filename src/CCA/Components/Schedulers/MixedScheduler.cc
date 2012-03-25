@@ -58,7 +58,7 @@ static DebugStream dbg("MixedScheduler", false);
 MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
    : MPIScheduler(myworld, oport), log(myworld, oport)
 {
-  int num_threads = Parallel::getMaxThreads();
+  int num_threads = Parallel::getNumThreads();
   d_threadPool = scinew ThreadPool( this, num_threads, num_threads );
 }
 

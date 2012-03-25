@@ -468,7 +468,7 @@ private:
    inline RunningTaskInfo* getCurrentTaskInfo();
     
    //std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-   std::list<RunningTaskInfo>  d_runningTasks[16];
+   std::list<RunningTaskInfo>  d_runningTasks[MAX_THREADS];
    ScrubMode d_scrubMode;
 
    bool aborted;

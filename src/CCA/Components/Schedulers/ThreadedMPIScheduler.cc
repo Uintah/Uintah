@@ -123,16 +123,16 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   if (d_myworld->myrank() == 0)
       cout << "   Using \"" << taskQueueAlg <<  "\" Algorithm" <<endl;
 
-  numThreads_ = Uintah::Parallel::getMaxThreads() - 1;
+  numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1) {
     if (d_myworld->myrank() == 0) {
 	    cerr << "Error: no thread number specified" << endl;
 	    throw ProblemSetupException("This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__, __LINE__);
      }
-  } else if (numThreads_ > 32) {
+  } else if (numThreads_ > MAX_THREADS) {
     if (d_myworld->myrank() == 0) {
 	    cerr << "Error: thread number too large" << endl;
-	    throw ProblemSetupException("Too many number of threads. This scheduler only supports up to 32 threads", __FILE__, __LINE__);
+	    throw ProblemSetupException("Too many number of threads. Try to increase MAX_THREADS and recompile.", __FILE__, __LINE__);
     }
   }
   
