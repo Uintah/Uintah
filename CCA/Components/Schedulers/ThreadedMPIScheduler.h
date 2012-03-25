@@ -95,21 +95,14 @@ WARNING
     
     ConditionVariable     d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
-    TaskWorker*            t_worker[16];  //workers
-    Thread*                t_thread[16];
-    /*Thread share data*/
-    /*
-    ConditionVariable*     t_runsignal[16];  //signal from sheduler to task
-    Mutex*                 t_runmutex[16];   //conditional wait mutex
-    DetailedTask*          t_task[16];     //current running tasks;
-    int                    t_iteration[16];     //current running tasks;
-    */
+    TaskWorker*            t_worker[MAX_THREADS];  //workers
+    Thread*                t_thread[MAX_THREADS];
     Mutex                  dlbLock;   //load balancer lock
     
   private:
     
     Output*       oport_t;
-    CommRecMPI            sends_[16+1];
+    CommRecMPI            sends_[MAX_THREADS];
     ThreadedMPIScheduler(const ThreadedMPIScheduler&);
     ThreadedMPIScheduler& operator=(const ThreadedMPIScheduler&);
     

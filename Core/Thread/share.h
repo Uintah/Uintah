@@ -39,3 +39,5 @@ DEALINGS IN THE SOFTWARE.
 #else
 #define SCISHARE
 #endif
+
+#define MAX_THREADS 64

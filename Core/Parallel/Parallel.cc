@@ -62,7 +62,7 @@ static bool            determinedIfUsingMPI = false;
 static bool            initialized = false;
 static bool            usingMPI = false;
 static bool            usingGPU = false;
-static int             maxThreads = -1;
+static int             numThreads = -1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
 static int             worldSize = -1;
@@ -104,15 +104,15 @@ Parallel::setUsingGPU( bool useGPU )
 }
 
 int
-Parallel::getMaxThreads()
+Parallel::getNumThreads()
 {
-  return ::maxThreads;
+  return ::numThreads;
 }
 
 void
-Parallel::setMaxThreads( int maxNumThreads )
+Parallel::setNumThreads( int num)
 {
-   ::maxThreads = maxNumThreads;
+   ::numThreads = num;
    //::allowThreads = true;
 }
 
@@ -120,7 +120,7 @@ void
 Parallel::noThreading()
 {
   //::allowThreads = false;
-  ::maxThreads = 1;
+  ::numThreads = 1;
 }
 
 void
@@ -150,11 +150,11 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   if(determinedIfUsingMPI)
     return;
   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
-    ::maxThreads = atoi( max );
+    ::numThreads = atoi( max );
     //::allowThreads = true;
-    cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
+    cerr << "PSE_MAX_THREADS set to " << ::numThreads << "\n";
 
-    if( ::maxThreads <= 0 || ::maxThreads > 16 ){
+    if( ::numThreads <= 0 || ::numThreads > 16 ){
       // Empirical evidence points to 16 being the most threads
       // that we should use... (this isn't conclusive evidence)
       cerr << "PSE_MAX_THREADS is out of range 1..16\n";
@@ -222,7 +222,7 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
    if(::usingMPI){	
 #ifdef THREADED_MPI_AVAILABLE
-     if( ::maxThreads > 0 ) {
+     if( ::numThreads > 0 ) {
        required = MPI_THREAD_MULTIPLE;
      } else {
        required = MPI_THREAD_SINGLE;
@@ -268,7 +268,7 @@ Parallel::initializeManager(int& argc, char**& argv)
      SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
 #endif
      rootContext = scinew ProcessorGroup(0, worldComm, true,
-					 worldRank,worldSize, ::maxThreads);
+					 worldRank,worldSize, ::numThreads);
 
      if(rootContext->myrank() == 0) {
        cout << "Parallel: " << rootContext->size() << " processors (using MPI)\n";

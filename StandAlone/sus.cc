@@ -340,10 +340,12 @@ main( int argc, char *argv[], char *env[] )
               arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-      if ( numThreads< 2 || numThreads>32 ) {
-        usage("number of threads is out of range 2...32", arg, argv[0]);
+      if ( numThreads< 2) {
+        usage("Number of threads is too small", arg, argv[0]);
+      } else if (numThreads>MAX_THREADS ) {
+        usage("Number of threads is out of range. Try to increase MAX_THREADS and recompile", arg, argv[0]);
       }
-      Uintah::Parallel::setMaxThreads(numThreads);
+      Uintah::Parallel::setNumThreads(numThreads);
     } else if(arg == "-threadmpi"){
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
     } else if(arg == "-solver") {

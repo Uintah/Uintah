@@ -98,8 +98,8 @@ WARNING
     
     ConditionVariable     d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
-    SchedulerWorker*            t_worker[16];  //workers
-    Thread*                t_thread[16]; 
+    SchedulerWorker*            t_worker[MAX_THREADS];  //workers
+    Thread*                t_thread[MAX_THREADS]; 
     Mutex                  dlbLock;   //load balancer lock
     mutable CrowdMonitor   schedulerLock; //scheduler lock
     mutable CrowdMonitor   recvLock;
@@ -123,7 +123,7 @@ WARNING
   private:
     
     Output*       oport_t;
-    CommRecMPI            sends_[16+1];
+    CommRecMPI            sends_[MAX_THREADS];
     ThreadedMPIScheduler2(const ThreadedMPIScheduler2&);
     ThreadedMPIScheduler2& operator=(const ThreadedMPIScheduler2&);
     

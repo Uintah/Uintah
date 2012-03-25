@@ -191,7 +191,7 @@ namespace Uintah {
         cout << "Error: Cannot initialize PAPI thread support!" << endl
              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
-      if (Parallel::getMaxThreads() > 1) {
+      if (Parallel::getNumThreads() > 1) {
       	throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
       }
     }
