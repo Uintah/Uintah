@@ -233,15 +233,19 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
   }
 
   for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+    // NOTE: for the conjugate gradient solver in Hypre, we must pass a positive
+    // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
+    // to the Laplacian operator is not positive definite - but "- A" is. Hence,
+    // we multiply all coefficients by -1.
     IntVector iCell = *iter;
     Uintah::Stencil4&  coefs = matrix_[iCell];
-    coefs.w = w;
-    //coefs.e = e;
-    //coefs.n = n;
-    coefs.s = s;
-    coefs.b = b;
-    //coefs.t = t;
-    coefs.p = p;
+    coefs.w = -w;
+    //coefs.e = -e;
+    //coefs.n = -n;
+    coefs.s = -s;
+    coefs.b = -b;
+    //coefs.t = -t;
+    coefs.p = -p;
   }
 
   //
@@ -296,26 +300,28 @@ Pressure::evaluate()
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into
   // the solver in the "schedule_solver" method.
+  // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
+  // - Laplacian(p) = - p_rhs
   if( doX_ ){
     interpX_->apply_to_field( *fx_, *tmpx );
     divXOp_ ->apply_to_field( *tmpx, *tmp );
-    rhs <<= rhs + *tmp;
+    rhs <<= rhs - *tmp;
   }
 
   if( doY_ ){
     interpY_->apply_to_field( *fy_, *tmpy );
     divYOp_ ->apply_to_field( *tmpy, *tmp );
-    rhs <<= rhs + *tmp;
+    rhs <<= rhs - *tmp;
   }
 
   if( doZ_ ){
     interpZ_->apply_to_field( *fz_, *tmpz );
     divZOp_ ->apply_to_field( *tmpz, *tmp );
-    rhs <<= rhs + *tmp;
+    rhs <<= rhs - *tmp;
   }
 
   if( doDens_ ){
-    rhs <<= rhs + *d2rhodt2_;
+    rhs <<= rhs - *d2rhodt2_;
   }
   //
   // fix pressure rhs and modify pressure matrix

@@ -67,12 +67,9 @@
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-8  </tolerance>
+            <tolerance>      1.e-13  </tolerance>
             <maxiterations>  1000    </maxiterations>
-            <npre>           1       </npre>
-            <npost>          1       </npost>
-            <skip>           0       </skip>
-            <jump>           0       </jump>
+            <relax_type> 2 </relax_type>
            </Parameters>
 
       </Pressure>
