@@ -1,0 +1,441 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Convection Test SVOL Fields ydir, multipatch, no bcs</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_central" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_upwind" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_superbee" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_charm" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_koren" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_mc" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_ospre" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_smart" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_vanleer" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_hcus" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_minmod" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_hquick" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-y" state="STATE_N" />
+      <ParabolicFunction a="-4.0" b="4.0" c="0.0">
+         <NameTag name="XYVOL" state="STATE_NONE" />
+       </ParabolicFunction>
+    </BasicExpression>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_central</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>CENTRAL</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_upwind</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_superbee</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SUPERBEE</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_charm</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>CHARM</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_koren</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>KOREN</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_mc</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>MC</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_ospre</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>OSPRE</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_smart</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SMART</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_vanleer</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>VANLEER</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_hcus</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>HCUS</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_minmod</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>MINMOD</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_hquick</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>HQUICK</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>convection_test_svol_ydir_bc.uda</filebase>
+    <outputTimestepInterval>250</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0002"/>
+    <compression>gzip</compression>
+    <save label="phi_central"/>
+    <save label="phi_upwind"/>
+    <save label="phi_superbee"/>
+    <save label="phi_charm"/>
+    <save label="phi_koren"/>
+    <save label="phi_mc"/>
+    <save label="phi_ospre"/>
+    <save label="phi_smart"/>
+    <save label="phi_vanleer"/>
+    <save label="phi_hcus"/>
+    <save label="phi_minmod"/>
+    <save label="phi_hquick"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Dirichlet" label="phi_central">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_upwind">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_superbee">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_charm">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_koren">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_mc">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_ospre">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_smart">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_vanleer">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_hcus">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_minmod">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi_hquick">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Neumann" label="phi_central">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_upwind">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_superbee">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_charm">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_koren">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_mc">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_ospre">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_smart">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_vanleer">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_hcus">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_minmod">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Neumann" label="phi_hquick">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+     </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,2,1]</upper>
+        <resolution>[100,200,2]</resolution>
+        <patches>[2,4,1]</patches>
+      </Box>
+      <periodic>[1,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
