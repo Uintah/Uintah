@@ -144,8 +144,6 @@ namespace Uintah {
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;
     double d_bulk;
-    double d_K0;
-    double p_ref_cal;
 
     CMData d_initialData;
     TimeTemperatureData d_tt;
@@ -250,7 +248,7 @@ namespace Uintah {
 private:
 
     // Functions and variables for solving the BirchMurnaghan equation of state
-    double computePBirchMurnaghan(double v, double rho0);
+    double computePBirchMurnaghan(double v);
     double computedPdrhoBirchMurnaghan(double v, double rho0);
 
     // Functions and variables for solving JWL temperature dependend form of equation of state
@@ -273,4 +271,5 @@ private:
 } // End namespace Uintah
       
 
-#endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
+#endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
+
