@@ -168,12 +168,12 @@ void HypoElasticImplicit::computeStableTimestep(const Patch*,
 }
 
 void 
-HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         Solver* solver,
-                                         const bool )
+HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                 const MPMMaterial* matl,
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw,
+                                                 Solver* solver,
+                                                 const bool )
 
 {
   for(int pp=0;pp<patches->size();pp++){

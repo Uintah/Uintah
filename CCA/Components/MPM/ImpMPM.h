@@ -276,7 +276,7 @@ private:
                                        DataWarehouse* new_dw);
 
   // This is for the computation with the 24 x 24 matrix
-  void computeStressTensor(            const ProcessorGroup*,
+  void computeStressTensorImplicit(    const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,

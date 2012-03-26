@@ -1672,12 +1672,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void UCNH::computeStressTensor(const PatchSubset* patches,
-                               const MPMMaterial* matl,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               Solver* solver,
-                               const bool )
+void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       Solver* solver,
+                                       const bool )
 
 {
   // Constants

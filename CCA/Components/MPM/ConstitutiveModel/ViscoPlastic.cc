@@ -1484,12 +1484,12 @@ ViscoPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-ViscoPlastic::computeStressTensor(const PatchSubset* patches,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
-                                        Solver* solver,
-                                        const bool recurs)
+ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
+                                          Solver* solver,
+                                          const bool recurs)
 {
   // Constants
   Ghost::GhostType gac = Ghost::AroundCells;

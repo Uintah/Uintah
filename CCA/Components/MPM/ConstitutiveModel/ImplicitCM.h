@@ -79,12 +79,12 @@ namespace Uintah {
     ImplicitCM(const ImplicitCM* cm);
     virtual ~ImplicitCM();
          
-    virtual void computeStressTensor(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     Solver* solver,
-                                     const bool recursion);
+    virtual void computeStressTensorImplicit(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw,
+                                             Solver* solver,
+                                             const bool recursion);
          
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,

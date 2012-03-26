@@ -110,12 +110,12 @@ namespace Uintah {
                                         const bool SchedParent) const;
 
     /* Computes stress tensor for the implicit code */
-    virtual void computeStressTensor(const PatchSubset* ,
-                                     const MPMMaterial* ,
-                                     DataWarehouse* ,
-                                     DataWarehouse* ,
-                                     Solver* ,
-                                     const bool );
+    virtual void computeStressTensorImplicit(const PatchSubset* ,
+                                             const MPMMaterial* ,
+                                             DataWarehouse* ,
+                                             DataWarehouse* ,
+                                             Solver* ,
+                                             const bool );
 
     /*! carry forward CM data for RigidMPM */
     virtual void carryForward(const PatchSubset* patches,

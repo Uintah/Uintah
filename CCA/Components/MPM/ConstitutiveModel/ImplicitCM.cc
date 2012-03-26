@@ -233,13 +233,14 @@ ImplicitCM::carryForwardSharedDataImplicit(ParticleSubset* pset,
 }
 
 void 
-ImplicitCM::computeStressTensor(const PatchSubset*,
+ImplicitCM::computeStressTensorImplicit(const PatchSubset*,
                                        const MPMMaterial*,
                                        DataWarehouse*,
                                        DataWarehouse*,
                                        Solver* ,
                                        const bool)
 {
+  throw InternalError("Stub Task: ImplicitCM::computeStressTensorImplicit ", __FILE__, __LINE__);
 }
 
 void ImplicitCM::loadBMatsGIMP(Array3<int> l2g,

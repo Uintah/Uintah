@@ -257,12 +257,12 @@ Vector TransIsoHyperImplicit::getInitialFiberDir()
 }
 
 void
-TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         Solver* solver,
-                                         const bool )
+TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                   const MPMMaterial* matl,
+                                                   DataWarehouse* old_dw,
+                                                   DataWarehouse* new_dw,
+                                                   Solver* solver,
+                                                   const bool )
 //COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimestep
 {

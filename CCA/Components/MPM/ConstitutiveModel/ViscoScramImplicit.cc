@@ -399,12 +399,12 @@ void ViscoScramImplicit::computeStableTimestep(const Patch*,
 }
 
 void 
-ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         Solver* solver,
-                                         const bool )
+ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+                                                const MPMMaterial* matl,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw,
+                                                Solver* solver,
+                                                const bool )
 
 {
   for(int pp=0;pp<patches->size();pp++){

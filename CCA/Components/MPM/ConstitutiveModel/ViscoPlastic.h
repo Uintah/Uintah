@@ -227,12 +227,12 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute Stress Tensor Implicit */
     ////////////////////////////////////////////////////////////////////////
-    virtual void computeStressTensor(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     Solver* solver,
-                                     const bool recursion);
+    virtual void computeStressTensorImplicit(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw,
+                                             Solver* solver,
+                                             const bool recursion);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief carry forward CM data for RigidMPM */
