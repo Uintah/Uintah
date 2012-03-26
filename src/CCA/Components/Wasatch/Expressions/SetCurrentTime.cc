@@ -30,7 +30,8 @@ namespace Wasatch{
                                   const int RKStage )
     : Expr::Expression<double>(),
       state_( sharedState ),
-      RKStage_( RKStage )
+      RKStage_( RKStage ),
+      deltat_ ( 0.0 )
   {}
 
   //--------------------------------------------------------------------
@@ -43,19 +44,26 @@ namespace Wasatch{
   void
   SetCurrentTime::evaluate()
   {
-    double& result = this->value();
-    result = state_->getElapsedTime();
-    if (RKStage_ == 2) result += deltat_;
-    if (RKStage_ == 3) result += deltat_*0.5;
-    //std::cout<<"Current Simulation Time: " << result << " STAGE = "<< RKStage_	 << std::endl;
+    //std::cout << "set current time deltat: " << deltat_ << std::endl;
+    typedef std::vector<double*>& doubleVec;
+    doubleVec results = this->get_value_vec();
+    const double delt = state_->d_current_delt;
+    const double elapsedTime = state_->getElapsedTime();
+    *results[0] = elapsedTime;
+    *results[1] = delt;
+    if (RKStage_ == 2) *results[0] += delt;
+    if (RKStage_ == 3) {
+        *results[0] += delt*0.5;
+        *results[1]  = 0.5*delt;
+    }
   }
 
   //--------------------------------------------------------------------
 
-  SetCurrentTime::Builder::Builder( const Expr::Tag& result,
+  SetCurrentTime::Builder::Builder( const Expr::TagList& resultsTags,
                                     const Uintah::SimulationStateP sharedState,
                                     const int RKStage )
-    : ExpressionBuilder(result),
+    : ExpressionBuilder(resultsTags),
       state_( sharedState ),
       RKStage_(RKStage)
   {}

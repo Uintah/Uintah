@@ -26,6 +26,7 @@
 #include <CCA/Ports/SolverInterface.h>
 
 //-- Wasatch includes --//
+#include <CCA/Components/Wasatch/StringNames.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
@@ -369,11 +370,11 @@ namespace Wasatch{
     //_________________________________________________________
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
-    factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
+    const Expr::ExpressionID momRHSPartID= factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
                                                                            cfxt, cfyt, cfzt,
                                                                            tauxt, tauyt, tauzt,
                                                                            bodyForcet) );
-
+    factory.cleave_from_parents ( momRHSPartID );
     //__________________
 
     // Here we should register an expression to get \nabla.(\rho*v)
@@ -398,15 +399,18 @@ namespace Wasatch{
       if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
       if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
 
+      const StringNames& sName = StringNames::self();
+      const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
+      
       Expr::TagList ptags;
       ptags.push_back( pressure_tag() );
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-      const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                       d2rhodt2t, *sparams, linSolver);
+      const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
+                                                                                       d2rhodt2t, timestepTag, *sparams, linSolver);
       std::cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;
       pressureID_ = factory.register_expression( pbuilder );
-      factory.cleave_from_children( pressureID_ );
+      //factory.cleave_from_children( pressureID_ );
       factory.cleave_from_parents ( pressureID_ );
     }
     else{
@@ -466,23 +470,23 @@ namespace Wasatch{
       default:                         break;
     }
     if (factory.have_entry(velTag)) {
-      process_boundary_conditions<FieldT>( velTag,
-                                           velTag.name(),
-                                           this->staggered_location(),
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials );
+//      process_boundary_conditions<FieldT>( velTag,
+//                                           velTag.name(),
+//                                           this->staggered_location(),
+//                                           graphHelper,
+//                                           localPatches,
+//                                           patchInfoMap,
+//                                           materials );
     }
     // set bcs for pressure
     if (factory.have_entry(pressure_tag())) {
-      process_boundary_conditions<SVolField>( pressure_tag(),
-                                              "pressure",
-                                              NODIR,
-                                              graphHelper,
-                                              localPatches,
-                                              patchInfoMap,
-                                              materials );
+//      process_boundary_conditions<SVolField>( pressure_tag(),
+//                                              "pressure",
+//                                              NODIR,
+//                                              graphHelper,
+//                                              localPatches,
+//                                              patchInfoMap,
+//                                              materials );
     }
     // set bcs for partial rhs
     if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
@@ -524,29 +528,29 @@ namespace Wasatch{
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
-    Expr::Tag velTag;
-    switch (this->staggered_location()) {
-      case XDIR:  velTag=velTags_[0];  break;
-      case YDIR:  velTag=velTags_[1];  break;
-      case ZDIR:  velTag=velTags_[2];  break;
-      default:                         break;
-    }
-    process_boundary_conditions<FieldT>( velTag,
-                                         velTag.name(),
-                                         this->staggered_location(),
-                                         graphHelper,
-                                         localPatches,
-                                         patchInfoMap,
-                                         materials );
+//    Expr::Tag velTag;
+//    switch (this->staggered_location()) {
+//      case XDIR:  velTag=velTags_[0];  break;
+//      case YDIR:  velTag=velTags_[1];  break;
+//      case ZDIR:  velTag=velTags_[2];  break;
+//      default:                         break;
+//    }
+//    process_boundary_conditions<FieldT>( velTag,
+//                                         velTag.name(),
+//                                         this->staggered_location(),
+//                                         graphHelper,
+//                                         localPatches,
+//                                         patchInfoMap,
+//                                         materials );
 
-    // set bcs for pressure
-    process_boundary_conditions<SVolField>( pressure_tag(),
-                                            "pressure",
-                                            NODIR,
-                                            graphHelper,
-                                            localPatches,
-                                            patchInfoMap,
-                                            materials );
+//    // set bcs for pressure
+//    process_boundary_conditions<SVolField>( pressure_tag(),
+//                                            "pressure",
+//                                            NODIR,
+//                                            graphHelper,
+//                                            localPatches,
+//                                            patchInfoMap,
+//                                            materials );
     // set bcs for partial rhs
     process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
                                          rhs_part_tag(mom_tag(thisMomName_)).name(),

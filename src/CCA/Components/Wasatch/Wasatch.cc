@@ -420,8 +420,11 @@ namespace Wasatch{
 
     //_______________________________________
     // set the time
+    Expr::TagList timeTags;
+    timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
+    timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
     const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, 1 ), true );
+    exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, 1 ), true );
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -483,6 +486,7 @@ namespace Wasatch{
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
+    std::cout << "Scheduling compute stable timestep\n";
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
     const Uintah::MaterialSet* materials = materials_;//sharedState_->allWasatchMaterials();
@@ -603,7 +607,11 @@ namespace Wasatch{
     const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
     Expr::ExpressionID timeID;
     if( rkStage==1 ){
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, rkStage), true );
+      Expr::TagList timeTags;
+      timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
+      timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
+      const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );      
+      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, rkStage), true );
     } else {
       timeID = exprFactory.get_id(timeTag);
     }

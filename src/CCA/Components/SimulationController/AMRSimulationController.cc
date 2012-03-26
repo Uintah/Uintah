@@ -243,7 +243,7 @@ AMRSimulationController::run()
      newDW->get(delt_var, d_sharedState->get_delt_label());
 
      delt = delt_var;
-     
+
      // delt adjusted based on timeinfo parameters
      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
@@ -344,6 +344,7 @@ AMRSimulationController::run()
          d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
        }
      }
+
      if(dbg_barrier.active())
      {
        start=Time::currentSeconds();
@@ -376,6 +377,7 @@ AMRSimulationController::run()
 
      printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
      // Execute the current timestep, restarting if necessary
+     d_sharedState->d_current_delt = delt;
      executeTimestep( time, delt, currentGrid, totalFine );
      
      // Print MPI statistics

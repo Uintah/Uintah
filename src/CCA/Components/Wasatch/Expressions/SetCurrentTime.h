@@ -58,7 +58,7 @@ public:
     const int RKStage_;
 
   public:
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::TagList& resultsTags,
              const Uintah::SimulationStateP sharedState,
              const int RKStage );
     ~Builder(){}

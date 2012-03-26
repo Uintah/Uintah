@@ -30,6 +30,7 @@ namespace Wasatch{
   StringNames::StringNames() :
 
     time("time"),
+    timestep("timestep"),
 
     xsvolcoord("XSVOL"),  ysvolcoord("YSVOL"),  zsvolcoord("ZSVOL"),
     xxvolcoord("XXVOL"),  yxvolcoord("YXVOL"),  zxvolcoord("ZXVOL"),
