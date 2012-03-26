@@ -400,7 +400,7 @@ RadHypreSolver::radLinearSolve()
   /*Calculating sum of RHS*/
   iprod = hypre_StructInnerProd(d_b,d_b);
   sum_b = sqrt(iprod);
-  d_residual = d_stored_residual / sum_b;
+  d_residual = d_stored_residual;
   double zero_residual = 0.0;
 
   
@@ -614,13 +614,13 @@ RadHypreSolver::radLinearSolve()
   }
 
   if(me == 0) {
-    final_res_norm *= sum_b;          
+    //final_res_norm *= sum_b;          
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
-  if (((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))||
-     ((final_res_norm<d_residual)&&(init_norm<d_residual)))
+
+  if (final_res_norm < d_residual)
     return true;
   else
     return false;
