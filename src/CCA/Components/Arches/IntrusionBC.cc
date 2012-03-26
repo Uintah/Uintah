@@ -71,13 +71,17 @@ IntrusionBC::~IntrusionBC()
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
       VarLabel::destroy(iIntrusion->second.bc_area); 
-      delete(iIntrusion->second.velocity_inlet_generator); 
+      if ( iIntrusion->second.has_velocity_model )  {
+        delete(iIntrusion->second.velocity_inlet_generator); 
+      }
 
-      // DELETE THE SCALAR OBJS
+      for ( std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.begin(); 
+          scalar_iter != iIntrusion->second.scalar_map.end(); scalar_iter++ ){
+        
+        delete(scalar_iter->second); 
 
+      }
     }
-
-   
   }
 }
 
@@ -100,8 +104,11 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       // set up velocity:
       ProblemSpecP db_velocity = db_intrusion->findBlock("velocity"); 
+      intrusion.has_velocity_model = false; 
 
       if ( db_velocity ){ 
+
+        intrusion.has_velocity_model = true; 
 
         std::string vel_type;
         db_velocity->getAttribute("type",vel_type);
@@ -113,7 +120,8 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
         } else if ( vel_type == "from_file" ){
 
-          // add
+          intrusion.type = IntrusionBC::INLET; 
+          intrusion.velocity_inlet_generator = scinew InputFileVelocity(); 
 
         } else { 
 
@@ -150,7 +158,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
           }  else if ( scalar_type == "from_file" ){ 
 
-            // add
+            scalar_bc = scinew scalarFromInput( scalar_label ); 
 
           } else { 
 
@@ -199,7 +207,8 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       if ( intrusion.type != IntrusionBC::SIMPLE_WALL ) {
 
-        for ( ProblemSpecP db_ds = db_intrusion->findBlock("flux_dir"); db_ds != 0; db_ds = db_intrusion->findNextBlock("flux_dir") ){ 
+        for ( ProblemSpecP db_ds = db_intrusion->findBlock("flux_dir"); 
+            db_ds != 0; db_ds = db_ds->findNextBlock("flux_dir") ){ 
           std::string my_dir;
           my_dir = db_ds->getNodeValue(); 
           if ( my_dir == "x-" || my_dir == "X-"){ 
@@ -766,7 +775,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
 
         //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
         if ( scalar_iter == iIntrusion->second.scalar_map.end() ){ 
-          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
+          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__); 
         } 
 
         if ( !iIntrusion->second.interior_cell_iterator.empty() ) {

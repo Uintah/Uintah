@@ -235,7 +235,7 @@
                                         attribute2="value REQUIRED DOUBLE"/>      <!-- label= variable name, 
                                                                                        value= variable boundary value -->
 
-           <velocity                    spec="REQUIRED NO_DATA"
+           <velocity                    spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'flat, from_file'">
 
             <!-- flat velocity profile -->                             
@@ -246,17 +246,17 @@
             <w                          spec="OPTIONAL DOUBLE" 
                                         need_applies_to="type flat"/>
             <!-- from input file --> 
-            <file_name                  spec="OPTIONAL STRING"
+            <input_file                spec="OPTIONAL STRING"
                                         need_applies_to="type from_file"/>
 
 
            </velocity>
-           <scalars                     spec="REQUIRED NO_DATA">
+           <scalars                     spec="OPTIONAL NO_DATA">
 
             <scalar                     spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
                                         attribute2="type REQUIRED STRING 'flat, from_file'">
-              <file_name                spec="OPTIONAL STRING"
+              <input_file               spec="OPTIONAL STRING"
                                         need_applies_to="type from_file"/>
               <constant                 spec="OPTIONAL DOUBLE"
                                         need_applies_to="type flat"/>
