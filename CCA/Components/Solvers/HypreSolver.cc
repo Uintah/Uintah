@@ -978,7 +978,6 @@ namespace Uintah {
       throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
     }
 
-    std::cout << "domtype " << domtype << std::endl;
     switch(domtype){
     case TypeDescription::SFCXVariable:
       {

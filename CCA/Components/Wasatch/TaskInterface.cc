@@ -488,8 +488,8 @@ namespace Wasatch{
 
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
-            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
             pexpr.set_patch(patches->get(ip));
+            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );            
           }
 
           tree->bind_fields( *fml_ );
