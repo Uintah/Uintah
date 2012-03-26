@@ -334,7 +334,7 @@
           </geom_object>
         </OutletBC>
         <intrusions>
-          <intrusion type="simple_wall" label="pipe">
+          <intrusion label="pipe">
             <geom_object>
               <difference>
                 <cylinder label="outer cylinder"/>

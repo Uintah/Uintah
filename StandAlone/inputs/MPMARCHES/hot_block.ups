@@ -266,7 +266,7 @@
           </geom_object>
         </OutletBC>
         <intrusions>
-          <intrusion type="simple_wall" label="block">
+          <intrusion label="block">
             <geom_object>
               <cylinder label="hot block"/>
             </geom_object>
