@@ -287,12 +287,12 @@ namespace Uintah {
                                      DataWarehouse* new_dw);
     
     // Damage specific CST for solver
-    virtual void computeStressTensor(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     Solver* solver,
-                                     const bool );
+    virtual void computeStressTensorImplicit(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw,
+                                             Solver* solver,
+                                             const bool );
     
     
     // Helper Functions //

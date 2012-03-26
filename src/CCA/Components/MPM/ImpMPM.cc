@@ -1145,8 +1145,8 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor");
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ImpMPM::computeStressTensor",
-                    this, &ImpMPM::computeStressTensor,recursion);
+  Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
+                    this, &ImpMPM::computeStressTensorImplicit,recursion);
 
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
   for(int m = 0; m < numMatls; m++){
@@ -1382,7 +1382,7 @@ void ImpMPM::scheduleComputeStressTensorImplicit(SchedulerP& sched,
   int numMatls = d_sharedState->getNumMPMMatls();
   printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensorImplicit");
   Task* t = scinew Task("ImpMPM::computeStressTensorImplicit",
-                    this, &ImpMPM::computeStressTensorImplicit);
+                  this, &ImpMPM::computeStressTensorImplicit);
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -2899,7 +2899,7 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
   }      // patches
 }
 
-void ImpMPM::computeStressTensor(const ProcessorGroup*,
+void ImpMPM::computeStressTensorImplicit(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
@@ -2914,7 +2914,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ImplicitCM* cmi = dynamic_cast<ImplicitCM*>(cm);
     if (cmi)
-      cmi->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
+      cmi->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,
                                d_solver, recursion);
 
   }

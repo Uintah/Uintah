@@ -187,12 +187,12 @@ RigidMaterial::addComputesAndRequires(Task* task,
 }
 
 void 
-RigidMaterial::computeStressTensor(const PatchSubset* patches,
-                                   const MPMMaterial* matl,
-                                   DataWarehouse* ,
-                                   DataWarehouse* new_dw,
-                                   Solver* ,
-                                   const bool )
+RigidMaterial::computeStressTensorImplicit(const PatchSubset* patches,
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* ,
+                                           DataWarehouse* new_dw,
+                                           Solver* ,
+                                           const bool )
 
 {
   int dwi = matl->getDWIndex();

@@ -2052,12 +2052,12 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void 
-ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
-                                    const MPMMaterial* matl,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    Solver* solver,
-                                    const bool )
+ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
+                                              const MPMMaterial* matl,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw,
+                                              Solver* solver,
+                                              const bool )
 {
   // Constants
   Ghost::GhostType gac = Ghost::AroundCells;
