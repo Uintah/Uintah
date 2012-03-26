@@ -203,7 +203,7 @@ namespace Uintah{
 
           virtual ~scalarInletBase(){}; 
 
-          virtual void problem_setup( ProblemSpecP& db ) = 0; 
+          virtual void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ) = 0; 
 
           virtual void set_scalar_rhs( int dir, 
                                        IntVector c, 
@@ -233,7 +233,7 @@ namespace Uintah{
           constantScalar(){};
           ~constantScalar(){};
 
-          void problem_setup( ProblemSpecP& db ){
+          void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){
           
             db->getWithDefault("constant",_C, 0.0);
 
@@ -272,12 +272,12 @@ namespace Uintah{
           scalarFromInput(std::string label) : _label(label){};
           ~scalarFromInput(){};
 
-          void problem_setup( ProblemSpecP& db ){ 
+          void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){ 
 
             std::string inputfile; 
             db->require("input_file",inputfile); 
 
-            for ( ProblemSpecP db_flux = db->findBlock("flux_dir"); 
+            for ( ProblemSpecP db_flux = db_intrusion->findBlock("flux_dir"); 
                 db_flux != 0; db_flux = db_flux->findNextBlock("flux_dir") ){ 
 
               std::string my_dir; 

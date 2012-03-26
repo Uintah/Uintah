@@ -166,7 +166,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
           } 
 
-          scalar_bc->problem_setup( db_single_scalar ); 
+          scalar_bc->problem_setup( db_single_scalar, db_intrusion ); 
 
           intrusion.scalar_map.insert(make_pair( scalar_label, scalar_bc ));
 
@@ -386,17 +386,14 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
     typedef std::vector<std::string> StringVec; 
     typedef std::map<std::string, double> StringDoubleMap;
 
-
-    MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
-    StringVec iv_var_names = mixingTable->getAllIndepVars(); 
-
-    //int size_of_iv = iv_var_names.size(); 
-    //vector<double> iv[size_of_iv]; 
     vector<double> iv; 
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-      if ( !iIntrusion->second.bc_face_iterator.empty() ){ 
+      if ( !iIntrusion->second.bc_face_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){ 
+
+        MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
+        StringVec iv_var_names = mixingTable->getAllIndepVars(); 
 
         BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).find(patchID); 
 
@@ -700,10 +697,6 @@ IntrusionBC::setHattedVelocity( const Patch*  patch,
 
             if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-              // sets the velocity depending on the method set in the input 
-              std::map<IntVector,double>::iterator iDensity = iIntrusion->second.density_map.find( c ); 
-              double bc_den = iDensity->second;
-
               iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density, 
                   iIntrusion->second.density );  
 
@@ -722,6 +715,7 @@ IntrusionBC::setScalar( const int p,
                         CCVariable<double>& scalar ){ 
 
   std::cout << " ERROR!  DANGER WILL ROBINSON!" << std::endl;
+  throw InvalidValue("Error: IntrusionBC::setScalar not implemented ", __FILE__, __LINE__); 
 //  if ( _intrusion_on ) { 
 //
 //    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
