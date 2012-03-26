@@ -29,6 +29,15 @@
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Material.h>
+
+#include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -52,7 +61,9 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
                     const Expr::Tag& fztag,
+                    const Expr::Tag& dilatationtag,                   
                     const Expr::Tag& d2rhodt2tag,
+                    const Expr::Tag& timesteptag,
                     const Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
@@ -61,8 +72,11 @@ Pressure::Pressure( const std::string& pressureName,
     fyt_( fytag ),
     fzt_( fztag ),
 
+    dilatationt_ ( dilatationtag ),
     d2rhodt2t_( d2rhodt2tag ),
 
+    timestept_( timesteptag ),
+  
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
@@ -144,9 +158,7 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     else   dw->getModifiable( matrix_, matrixLabel_, material, patch );
     //setup_matrix(patch);
   } else {
-    //std::cout << "RKStage "<< RKStage << "before allocate and put matrix \n";
     dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
-    ///std::cout << "after allocate and put matrix \n";
     setup_matrix(patch);
     didAllocateMatrix_=true;
   }
@@ -161,6 +173,8 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( doY_    )  exprDeps.requires_expression( fyt_ );
   if( doZ_    )  exprDeps.requires_expression( fzt_ );
   if( doDens_ )  exprDeps.requires_expression( d2rhodt2t_ );
+  exprDeps.requires_expression( dilatationt_ );
+  exprDeps.requires_expression( timestept_ );
 }
 
 //--------------------------------------------------------------------
@@ -177,6 +191,10 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doY_    )  fy_       = &yvfm.field_ref( fyt_       );
   if( doZ_    )  fz_       = &zvfm.field_ref( fzt_       );
   if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
+  dilatation_ = &svfm.field_ref( dilatationt_ );
+  
+  const Expr::FieldManager<double>& doublefm = fml.field_manager<double>();
+  timestep_ = &doublefm.field_ref( timestept_ );  
 }
 
 //--------------------------------------------------------------------
@@ -272,13 +290,17 @@ Pressure::evaluate()
   // we would only need one field, not two...
   SVolField& pressure = *results[0];
   SVolField& rhs      = *results[1];
-  rhs = 0.0;
-		//
-  namespace SS = SpatialOps::structured;
-  //const SS::MemoryWindow& w = rhs.window_with_ghost();
+
+  // start by subtracting the dilatation from the previous timestep or integrator
+  // stage. This is needed to account for any non-divergence free initial conditions
+  rhs <<= - *dilatation_/ *timestep_;
+		
+  //
+  namespace SS = SpatialOps::structured;  
   SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx;
   SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy;
   SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;
+  
   if (doX_) {
     const SS::MemoryWindow& wx = fx_->window_with_ghost();
     tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( wx );
@@ -323,9 +345,9 @@ Pressure::evaluate()
   if( doDens_ ){
     rhs <<= rhs - *d2rhodt2_;
   }
+  
   //
   // fix pressure rhs and modify pressure matrix
-  //std::cout << rhs[25] << std::endl;
   update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
   //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
 }
@@ -336,14 +358,18 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& fxtag,
                             const Expr::Tag& fytag,
                             const Expr::Tag& fztag,
+                            const Expr::Tag& dilatationtag,                           
                             const Expr::Tag& d2rhodt2tag,
+                            const Expr::Tag& timesteptag,
                             const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
    fxt_( fxtag ),
    fyt_( fytag ),
    fzt_( fztag ),
+   dilatationt_ ( dilatationtag ),
    d2rhodt2t_( d2rhodt2tag ),
+   timestept_( timesteptag ),
    sparams_( sparams ),
    solver_( solver )
 {}
@@ -354,7 +380,7 @@ Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
-  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, d2rhodt2t_, sparams_, solver_ );
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, sparams_, solver_ );
 }
 
 } // namespace Wasatch

@@ -75,7 +75,7 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  const Expr::Tag fxt_, fyt_, fzt_, d2rhodt2t_;
+  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
@@ -85,7 +85,10 @@ class Pressure
   const Uintah::VarLabel* matrixLabel_;
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
+  
+  const double* timestep_;
 
+  const SVolField* dilatation_;
   const SVolField* d2rhodt2_;
   const XVolField* fx_;
   const YVolField* fy_;
@@ -116,14 +119,16 @@ class Pressure
             const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
             const Expr::Tag& fztag,
+            const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
+            const Expr::Tag& timesteptag,
             const Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, d2rhodt2t_;
+    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
     const Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
@@ -131,7 +136,9 @@ public:
              const Expr::Tag& fxtag,
              const Expr::Tag& fytag,
              const Expr::Tag& fztag,
+             const Expr::Tag& diltationtag,            
              const Expr::Tag& d2rhodt2tag,
+             const Expr::Tag& timesteptag,
              const Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}

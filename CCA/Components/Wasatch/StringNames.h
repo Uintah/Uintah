@@ -49,7 +49,7 @@ namespace Wasatch{
      */
     static const StringNames& self();
 
-    const std::string time;
+    const std::string time, timestep;
 
     const std::string
       xsvolcoord,  ysvolcoord,  zsvolcoord,

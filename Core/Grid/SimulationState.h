@@ -250,6 +250,7 @@ public:
 
   bool d_switchState;
   double d_prev_delt;
+  double d_current_delt;
 
   SimulationTime* d_simTime;
 
