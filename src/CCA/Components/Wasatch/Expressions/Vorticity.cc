@@ -70,7 +70,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& vorticity = this->value();
-  vorticity = 0.0;
+  vorticity <<= 0.0;
 
   if( vel1t_ != Expr::Tag() ){
     SpatialOps::SpatFldPtr<Vel1FaceT> tmp1 = SpatialOps::SpatialFieldStore<Vel1FaceT>::self().get( vorticity );
