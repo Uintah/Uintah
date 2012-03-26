@@ -317,7 +317,7 @@
 
 
   <Time>
-    <maxTime>0.1</maxTime>
+    <maxTime>0.002</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.0001</delt_min>
     <delt_max>0.0001</delt_max>

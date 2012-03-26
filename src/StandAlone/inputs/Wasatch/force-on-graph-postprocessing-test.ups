@@ -14,6 +14,12 @@
     </Density>
 
     <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="vel_magnitude" state="STATE_N" />
       <Constant>1.0</Constant>

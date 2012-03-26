@@ -25,8 +25,10 @@
 #include "../TimeStepper.h"
 #include <CCA/Components/Wasatch/StringNames.h>
 #include "../ParseTools.h"
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- Add headers for individual transport equations here --//
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
 #include "TemperatureTransportEquation.h"
@@ -42,7 +44,7 @@
 #include <Core/Parallel/Parallel.h>
 
 //-- Expression Library includes --//
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <expression/ExpressionFactory.h>
 
 #include <iostream>
 
@@ -477,6 +479,25 @@ namespace Wasatch{
       }
       proc0cout << "------------------------------------------------" << std::endl;
     }
+    
+    //_____________________________________________________
+    // set up initial conditions on the pressure
+    try{
+      proc0cout << "Setting initial conditions for pressure: "
+      << pressure_tag().name()
+      << std::endl;
+      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( Expr::Tag(pressure_tag().name(), Expr::STATE_N) ) );
+    }
+    catch( std::runtime_error& e ){
+      std::ostringstream msg;
+      msg << e.what()
+      << std::endl
+      << "ERORR while setting initial conditions on pressure. When solving for the momentum equations, you must provide an initialization for the pressure from the input file."
+      << pressure_tag().name()
+      << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    proc0cout << "------------------------------------------------" << std::endl;    
     //
     return adaptors;
   }
