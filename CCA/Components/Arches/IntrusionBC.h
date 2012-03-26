@@ -254,7 +254,7 @@ namespace Uintah{
 
             return _C; 
 
-          } 
+          }; 
 
         private: 
 
@@ -262,6 +262,152 @@ namespace Uintah{
 
       }; 
 
+      class scalarFromInput : public scalarInletBase { 
+
+        public: 
+
+          typedef std::map<IntVector, double> CellToValuesMap; 
+          typedef std::map<std::string, CellToValuesMap> ScalarToBCValueMap; 
+
+          scalarFromInput(std::string label) : _label(label){};
+          ~scalarFromInput(){};
+
+          void problem_setup( ProblemSpecP& db ){ 
+
+            std::string inputfile; 
+            db->require("input_file",inputfile); 
+
+            for ( ProblemSpecP db_flux = db->findBlock("flux_dir"); 
+                db_flux != 0; db_flux = db_flux->findNextBlock("flux_dir") ){ 
+
+              std::string my_dir; 
+              my_dir = db_flux->getNodeValue(); 
+              if ( my_dir == "x-" || my_dir == "X-"){ 
+
+                _flux_i = 0; 
+                
+              } else if ( my_dir == "x+" || my_dir == "X+"){ 
+
+                _flux_i = 0; 
+
+              } else if ( my_dir == "y-" || my_dir == "Y-"){ 
+
+                _flux_i = 1; 
+
+              } else if ( my_dir == "y+" || my_dir == "Y+"){ 
+
+                _flux_i = 1; 
+
+              } else if ( my_dir == "z-" || my_dir == "Z-"){ 
+
+                _flux_i = 2; 
+
+              } else if ( my_dir == "z+" || my_dir == "Z+"){ 
+
+                _flux_i = 2; 
+
+              } else { 
+                proc0cout << "Warning: Intrusion flux direction = " << my_dir << " not recognized.  Ignoring...\n"; 
+              } 
+            }
+
+            gzFile file = gzopen( inputfile.c_str(), "r" );
+
+            if ( file == NULL ) { 
+              proc0cout << "Error opening file: " << inputfile << " for intrusion boundary conditions. Errno: " << errno << endl;
+              throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
+            }
+
+            int total_variables = getInt(file); 
+            std::string eqn_input_file; 
+            bool found_file = false; 
+            for ( int i = 0; i < total_variables; i++ ){
+
+              std::string varname  = getString( file );
+              eqn_input_file  = getString( file ); 
+
+              if ( varname == _label ){ 
+                found_file = true;
+                _filename = eqn_input_file; 
+              } 
+            }
+
+            if ( !found_file ){ 
+              throw ProblemSetupException("Unable to open scalar input file for: "+_label, __FILE__, __LINE__);
+            } else { 
+
+              _bc_values = readInputFile( _filename ); 
+
+            } 
+          };
+
+          inline void set_scalar_rhs( int dir,                 
+                                      IntVector c, 
+                                      CCVariable<double>& RHS, 
+                                      double face_den, 
+                                      double face_vel, 
+                                      std::vector<double> area ){
+
+            IntVector c_int = c; 
+            c_int[_flux_i] = 0; 
+            CellToValuesMap::iterator iter = _bc_values.find( c_int ); 
+            double scalar_value = iter->second; 
+
+            RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * scalar_value; 
+
+          };
+
+          inline double get_scalar( const IntVector c ){
+
+            IntVector c_int = c; 
+            c_int[_flux_i] = 0; 
+            CellToValuesMap::iterator iter = _bc_values.find( c_int ); 
+            double scalar_value = iter->second; 
+
+            return scalar_value; 
+
+          }; 
+
+        private: 
+
+          std::string _label; 
+          std::string _filename;
+          CellToValuesMap _bc_values; 
+          int _flux_i; 
+
+          //---- read the file ---
+          std::map<IntVector, double>
+          readInputFile( std::string file_name )
+          {
+          
+            gzFile file = gzopen( file_name.c_str(), "r" ); 
+            if ( file == NULL ) { 
+              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+            }
+          
+            std::string variable = getString( file ); 
+            int         num_points = getInt( file ); 
+            std::map<IntVector, double> result; 
+          
+            for ( int i = 0; i < num_points; i++ ) {
+              int I = getInt( file ); 
+              int J = getInt( file ); 
+              int K = getInt( file ); 
+              double v = getDouble( file ); 
+          
+              IntVector C(I,J,K);
+              C[_flux_i] = 0; 
+          
+              result.insert( std::make_pair( C, v )).first; 
+          
+            }
+          
+            gzclose( file ); 
+            return result; 
+
+          }
+      };
       //------------- velocity -----------------------
       //
 
@@ -422,6 +568,52 @@ namespace Uintah{
 
             db_v->require("input_file",_file_reference); 
 
+            int num_flux_dir = 0; // Only allow for ONE flux direction
+
+            for ( ProblemSpecP db_flux = db->findBlock("flux_dir"); 
+                db_flux != 0; db_flux = db_flux->findNextBlock("flux_dir") ){ 
+
+              std::string my_dir; 
+              my_dir = db_flux->getNodeValue(); 
+              if ( my_dir == "x-" || my_dir == "X-"){ 
+
+                _flux_i = 0; 
+                num_flux_dir += 1;
+                
+              } else if ( my_dir == "x+" || my_dir == "X+"){ 
+
+                _flux_i = 0; 
+                num_flux_dir += 1;
+
+              } else if ( my_dir == "y-" || my_dir == "Y-"){ 
+
+                _flux_i = 1; 
+                num_flux_dir += 1;
+
+              } else if ( my_dir == "y+" || my_dir == "Y+"){ 
+
+                _flux_i = 1; 
+                num_flux_dir += 1;
+
+              } else if ( my_dir == "z-" || my_dir == "Z-"){ 
+
+                _flux_i = 2; 
+                num_flux_dir += 1;
+
+              } else if ( my_dir == "z+" || my_dir == "Z+"){ 
+
+                _flux_i = 2; 
+                num_flux_dir += 1;
+
+              } else { 
+                proc0cout << "Warning: Intrusion flux direction = " << my_dir << " not recognized.  Ignoring...\n"; 
+              } 
+            }
+
+            if ( num_flux_dir == 0 || num_flux_dir > 1 ){ 
+              throw ProblemSetupException("Error: Only one flux_dir allowed. ", __FILE__, __LINE__);
+            } 
+
             //go out an load the velocity: 
             gzFile file = gzopen( _file_reference.c_str(), "r"); 
 
@@ -434,7 +626,6 @@ namespace Uintah{
 
             total_variables = getInt(file); 
             std::string eqn_input_file; 
-            bool found_file = false; 
             bool found_u = false; 
             bool found_v = false; 
             bool found_w = false; 
@@ -497,10 +688,13 @@ namespace Uintah{
                                constCCVariable<double>& density, 
                                double bc_density ){ 
 
+            IntVector c_int = c; 
+            c_int[_flux_i] = 0; 
+
             if ( dir == 0 || dir == 1 ) { 
 
               ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u"); 
-              CellToValuesMap::iterator u_iter = u_storage->second.find( c ); 
+              CellToValuesMap::iterator u_iter = u_storage->second.find( c_int ); 
 
               if ( u_iter == u_storage->second.end() ){ 
                 throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__); 
@@ -511,7 +705,7 @@ namespace Uintah{
             } else if ( dir == 2 || dir == 3 ) { 
 
               ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v"); 
-              CellToValuesMap::iterator v_iter = v_storage->second.find( c ); 
+              CellToValuesMap::iterator v_iter = v_storage->second.find( c_int ); 
 
               if ( v_iter == v_storage->second.end() ){ 
                 throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__); 
@@ -522,7 +716,7 @@ namespace Uintah{
             } else { 
 
               ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w"); 
-              CellToValuesMap::iterator w_iter = w_storage->second.find( c ); 
+              CellToValuesMap::iterator w_iter = w_storage->second.find( c_int ); 
 
               if ( w_iter == w_storage->second.end() ){ 
                 throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__); 
@@ -538,8 +732,10 @@ namespace Uintah{
           const inline Vector get_velocity( const IntVector c ){ 
             Vector vel_vec;
 
+            IntVector c_int = c; 
+            c_int[_flux_i] = 0; 
             ScalarToBCValueMap::iterator u_storage = _velocity_map.find("u"); 
-            CellToValuesMap::iterator u_iter = u_storage->second.find( c ); 
+            CellToValuesMap::iterator u_iter = u_storage->second.find( c_int ); 
             if ( u_iter == u_storage->second.end() ){ 
               throw InvalidValue("Error: Can't match input file u velocity with face iterator",__FILE__,__LINE__); 
             } else { 
@@ -547,7 +743,7 @@ namespace Uintah{
             } 
 
             ScalarToBCValueMap::iterator v_storage = _velocity_map.find("v"); 
-            CellToValuesMap::iterator v_iter = v_storage->second.find( c ); 
+            CellToValuesMap::iterator v_iter = v_storage->second.find( c_int ); 
             if ( v_iter == v_storage->second.end() ){ 
               throw InvalidValue("Error: Can't match input file v velocity with face iterator",__FILE__,__LINE__); 
             } else { 
@@ -555,7 +751,7 @@ namespace Uintah{
             } 
 
             ScalarToBCValueMap::iterator w_storage = _velocity_map.find("w"); 
-            CellToValuesMap::iterator w_iter = w_storage->second.find( c ); 
+            CellToValuesMap::iterator w_iter = w_storage->second.find( c_int ); 
             if ( w_iter == w_storage->second.end() ){ 
               throw InvalidValue("Error: Can't match input file w velocity with face iterator",__FILE__,__LINE__); 
             } else { 
@@ -575,6 +771,7 @@ namespace Uintah{
           std::map<IntVector, double> _u;
           std::map<IntVector, double> _v;
           std::map<IntVector, double> _w;
+          int _flux_i; 
 
           std::string _u_filename; 
           std::string _v_filename;
@@ -604,6 +801,7 @@ namespace Uintah{
               double v = getDouble( file ); 
           
               IntVector C(I,J,K);
+              C[_flux_i] = 0; 
           
               result.insert( std::make_pair( C, v )).first; 
           
@@ -642,6 +840,7 @@ namespace Uintah{
       
         //inlet generator
         IntrusionBC::VelInletBase* velocity_inlet_generator; 
+        bool has_velocity_model;
 
         //material properties
         double temperature; 
