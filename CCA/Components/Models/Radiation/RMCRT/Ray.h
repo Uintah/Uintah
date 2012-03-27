@@ -80,7 +80,8 @@ namespace Uintah{
                            SchedulerP& sched,
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
-                           bool modifies_divQ );
+                           bool modifies_divQ,
+                           bool modifies_VRFlux);
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
@@ -134,7 +135,8 @@ namespace Uintah{
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
                             const VarLabel* temperature,
-                            const VarLabel* divQ);
+                            const VarLabel* divQ,
+                            const VarLabel* VRFlux);
                             
     void setBC(CCVariable<double>& Q_CC,
                const string& desc,
@@ -181,6 +183,7 @@ namespace Uintah{
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_divQLabel;
+      const VarLabel* d_VRFluxLabel;
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -194,6 +197,7 @@ namespace Uintah{
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
+                     bool modifies_VRFlux,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW which_sigmaT4_dw );
 
