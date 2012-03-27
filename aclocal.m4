@@ -775,13 +775,7 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-NVCC_CFLAGS="-arch=sm_20 "
 NVCC_CXXFLAGS="-arch=sm_20 "
-
-# set up the -Xcompiler flag so that NVCC can pass CFLAGS to host C comiler
-for i in $CFLAGS; do
-  NVCC_CFLAGS="$NVCC_CFLAGS -Xcompiler $i"
-done
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
 for i in $CXXFLAGS; do
@@ -789,38 +783,14 @@ for i in $CXXFLAGS; do
 done
 
 if test "$debug" = "yes"; then
-  NVCC_CFLAGS="-G $NVCC_CFLAGS $_sci_includes"
   NVCC_CXXFLAGS="-G $NVCC_CXXFLAGS $_sci_includes"
 else
-  NVCC_CFLAGS="$NVCC_CFLAGS $_sci_includes"
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
 # check that the CUDA compiler works
 _file_base_name=`echo $8 | sed 's/\(.*\)\..*/\1/'`
-AC_MSG_CHECKING([for C compilation using nvcc])
-$NVCC $NVCC_CFLAGS -c $8
-if test -f $_file_base_name.o; then
-  AC_MSG_RESULT([yes])
-else
-	AC_MSG_RESULT([no])
-	AC_MSG_ERROR( [For some reason we could not compile using nvcc] )
-fi
-
-# check we can also link via C compiler
-AC_MSG_CHECKING([for linking nvcc compiled object code via C compiler])
-$CC $NVCC_LIBS -o $_file_base_name $_file_base_name.o
-
-# cleanup for C++ test
-rm $_file_base_name.o
-
-if test -f $_file_base_name; then
-  AC_MSG_RESULT([yes])
-else
-        AC_MSG_RESULT([no])
-        AC_MSG_ERROR( [For some reason we could not link via C compiler] )
-fi
 
 AC_MSG_CHECKING([for C++ compilation using nvcc])
 $NVCC $NVCC_CXXFLAGS -c $8
