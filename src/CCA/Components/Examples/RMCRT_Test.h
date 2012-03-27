@@ -128,6 +128,7 @@ WARNING
 
     VarLabel* d_colorLabel;
     VarLabel* d_divQLabel;
+    VarLabel* d_VRFluxLabel;
     VarLabel* d_abskgLabel;
     VarLabel* d_absorpLabel;
     VarLabel* d_sigmaT4Label;

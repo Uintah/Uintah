@@ -107,7 +107,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );             // if true, at least one virtual radiometer exists
   rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );               // view angle of the radiometer in degrees
-  rmcrt_ps->getWithDefault( "VROrientation " ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
+  rmcrt_ps->getWithDefault( "VROrientation" ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "VRLocation"     ,  _VRLocation,      IntVector(0,0,0) );  // location of the virtual radiometer
   rmcrt_ps->getWithDefault( "halo"      ,       _halo,            IntVector(10,10,10));
 
@@ -158,14 +158,15 @@ Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
                        const VarLabel* absorp,
                        const VarLabel* temperature,
-                       const VarLabel* divQ)
+                       const VarLabel* divQ,
+                       const VarLabel* VRFlux)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
   d_divQLabel        = divQ;
-
+  d_VRFluxLabel      = VRFlux;
   //__________________________________
   //  define the materialSet
   d_matlSet = scinew MaterialSet();
@@ -368,7 +369,8 @@ Ray::sched_rayTrace( const LevelP& level,
                      SchedulerP& sched,
                      Task::WhichDW abskg_dw,
                      Task::WhichDW sigma_dw,
-                     bool modifies_divQ )
+                     bool modifies_divQ,
+                     bool modifies_VRFlux)
 {
   std::string taskname = "Ray::sched_rayTrace";
 #ifdef HAVE_CUDA
@@ -377,7 +379,7 @@ Ray::sched_rayTrace( const LevelP& level,
                            &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, sigma_dw );
+                         modifies_divQ, modifies_VRFlux, abskg_dw, sigma_dw );
 #endif
 
   printSchedule(level,dbg,taskname);
@@ -391,9 +393,18 @@ Ray::sched_rayTrace( const LevelP& level,
 
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
+
   } else {
     tsk->computes( d_divQLabel );
   }
+
+  if( modifies_VRFlux ){
+    tsk->modifies( d_VRFluxLabel );
+
+  } else {
+    tsk->computes( d_VRFluxLabel );
+  }
+
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
 }
@@ -408,6 +419,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
                bool modifies_divQ,
+               bool modifies_VRFlux,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw )
 { 
@@ -438,12 +450,21 @@ Ray::rayTrace( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
 
-    CCVariable<double> divQ;    
+    CCVariable<double> divQ;
+    CCVariable<double> VRFlux;
+
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,  d_divQLabel, d_matl, patch );
     }else{
       new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, patch );
       divQ.initialize( 0.0 ); 
+    }
+
+    if( modifies_VRFlux ){
+      old_dw->getModifiable( VRFlux,  d_VRFluxLabel, d_matl, patch );
+    }else{
+      new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
+      VRFlux.initialize( 0.0 );
     }
 
     unsigned long int size = 0;                        // current size of PathIndex
@@ -460,12 +481,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
       int k = origin.z();
 
       // Allow for quick debugging test
-       /*IntVector pLow;
+       IntVector pLow;
        IntVector pHigh;
        level->findInteriorCellIndexRange(pLow, pHigh);
        int Nx = pHigh[0] - pLow[0];
-       if (i==Nx/2 && j==Nx/2){
-       */
+       //if (j==Nx/2 && k==Nx/2){
+
 
       double sumI = 0;
       double sumProjI = 0; // for virtual radiometer
@@ -473,7 +494,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       double sldAngl = 0; // solid angle of VR
       double VRTheta = 0; // the polar angle of each ray from the radiometer normal
       
-      if (origin == _VRLocation && _virtRad){
+      //if (origin == _VRLocation && _virtRad){
+      if (origin.x()%5==0 && origin.x()>=Nx/2 && origin.y()==Nx/2 && origin.z()==Nx/2 && _virtRad){
+
         solveVR = true;
       }
       // ray loop
@@ -511,9 +534,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
         }
  
         else if(solveVR){
-          ray_location[0] = _VRLocation[0] + 0.5;
-          ray_location[1] = _VRLocation[1] + 0.5 * DyDxRatio;//noncubic
-          ray_location[2] = _VRLocation[2] + 0.5 * DzDxRatio;//noncubic
+
+          ray_location[0] =   i +  0.5 ;
+          ray_location[1] =   j +  0.5 * DyDxRatio ; //noncubic
+          ray_location[2] =   k +  0.5 * DzDxRatio ; //noncubic
 
           double deltaTheta = _viewAng/360*_pi;//divides view angle by two and converts to radians
 
@@ -523,6 +547,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //positive axis about which the rotation is occurring.
 
           // Avoid division by zero by re-assigning orientations of 0
+
           if (_orient[0] == 0)
             _orient[0] = 1e-16;
           if (_orient[1] == 0)
@@ -605,10 +630,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       //__________________________________
       //  Compute VRFlux
-      double VRFlux; 
       if(solveVR){
-        VRFlux = sumProjI * sldAngl/_NoOfRays;
-        cout << "VRFlux: " << VRFlux << endl;
+
+        VRFlux[origin] = sumProjI * sldAngl/_NoOfRays;
+        //cout << endl << origin<< ":  VRFlux: " << VRFlux[origin] << endl;
+
         solveVR = false;
       }  
 
@@ -678,9 +704,12 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel );
+    tsk->modifies( d_VRFluxLabel );
+
   } else {
     
     tsk->computes( d_divQLabel );
+    tsk->computes( d_VRFluxLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }

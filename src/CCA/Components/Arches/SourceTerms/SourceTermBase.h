@@ -107,6 +107,7 @@ protected:
   std::string _type;                                 ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
   const VarLabel* _src_label;                        ///< Source varlabel
+  const VarLabel* _flux_label;                       ///< Flux varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
   SimulationStateP& _shared_state;                   ///< Local copy of sharedState
   vector<std::string> _required_labels;              ///< Vector of required labels

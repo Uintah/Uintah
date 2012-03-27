@@ -118,7 +118,8 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
                               _abskgLabel,
                               _absorpLabel,
                               _colorLabel,
-                              _src_label );  
+                              _src_label,
+                              _flux_label);
 
     _RMCRT->problemSetup( db, rmcrt_ps );
    
@@ -196,14 +197,20 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
   bool modifies_divQ =false;
+  bool modifies_VRFlux =false;
   Task::WhichDW temp_dw   = Task::NewDW;
   
   if (timeSubStep == 0 && !_label_sched_init) {
     modifies_divQ  = false;
+    modifies_VRFlux  = false;
   } else {
     modifies_divQ  = true;
+    modifies_VRFlux  = true;
     temp_dw        = Task::NewDW;
   }
+
+  
+
 
   
   //______________________________________________________________________
@@ -228,7 +235,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw   = Task::NewDW;
         Task::WhichDW sigmaT4_dw = Task::NewDW;
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
+        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, modifies_divQ, modifies_VRFlux);
       }
     }
 
