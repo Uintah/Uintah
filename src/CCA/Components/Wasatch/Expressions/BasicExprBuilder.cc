@@ -374,15 +374,19 @@ namespace Wasatch{
     Expr::ExpressionBuilder* builder = NULL;
     if( params->findBlock("VelocityMagnitude") ){
       Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
+      
       Expr::Tag xVelTag = Expr::Tag();
       if (valParams->findBlock("XVelocity"))
         xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
+      
       Expr::Tag yVelTag = Expr::Tag();
       if (valParams->findBlock("YVelocity"))
         yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
+      
       Expr::Tag zVelTag = Expr::Tag();
       if (valParams->findBlock("ZVelocity"))
-        Expr::Tag zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
+        zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
+      
       typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
       builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
     }

@@ -798,15 +798,20 @@ namespace Wasatch {
 
         if (foundIterator) {
 
+//          SS::IntVec faceOffset(0,0,0);
+          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+          const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
+//          get_face_offset( face, hasExtraCells, faceOffset );
+          
             SS::IntVec bcPointGhostOffset(0,0,0);
-            double denom = 0.0;
+            double denom = 1.0;
             switch( face ){
-              case Uintah::Patch::xminus:  bcPointGhostOffset[0] = -1;  denom = dx2;  break;
-              case Uintah::Patch::xplus :  bcPointGhostOffset[0] =  1;  denom = dx2;  break;
-              case Uintah::Patch::yminus:  bcPointGhostOffset[1] = -1;  denom = dy2;  break;
-              case Uintah::Patch::yplus :  bcPointGhostOffset[1] =  1;  denom = dy2;  break;
-              case Uintah::Patch::zminus:  bcPointGhostOffset[2] = -1;  denom = dz2;  break;
-              case Uintah::Patch::zplus :  bcPointGhostOffset[2] =  1;  denom = dz2;  break;
+              case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  denom = dx2;  break;
+              case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  denom = dx2;  break;
+              case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  denom = dy2;  break;
+              case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  denom = dy2;  break;
+              case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  denom = dz2;  break;
+              case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  denom = dz2;  break;
               case Uintah::Patch::numFaces:
                 throw Uintah::ProblemSetupException( "An invalid face of type Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                 break;
@@ -820,18 +825,22 @@ namespace Wasatch {
 
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
-              Uintah::Stencil4& coefs = pressureMatrix[bc_point_indices];
-
-              switch(face){
-              case Uintah::Patch::xminus: coefs.w = 0.0; break;
-              //case Uintah::Patch::xplus : coefs.e = 0.0; break;
-              case Uintah::Patch::yminus: coefs.s = 0.0; break;
-              //case Uintah::Patch::yplus : coefs.n = 0.0; break;
-              case Uintah::Patch::zminus: coefs.b = 0.0; break;
-              //case Uintah::Patch::zplus : coefs.t = 0.0; break;
-              }
 
               bc_point_indices = bc_point_indices - patchCellOffset;
+
+              //if (hasExtraCells) bc_point_indices = bc_point_indices - insideCellDir;
+              //std::cout << face << insideCellDir << std::endl;
+              Uintah::Stencil4& coefs = pressureMatrix[ hasExtraCells ? (bc_point_indices - insideCellDir) : bc_point_indices ];
+														//if (hasExtraCells) coefs = pressureMatrix[bc_point_indices - insideCellDir];
+              
+              switch(face){
+                case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
+                case Uintah::Patch::xplus : coefs.p +=1.0/dx2; break;
+                case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p +=1.0/dy2; break;
+                case Uintah::Patch::yplus : coefs.p +=1.0/dy2; break;
+                case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p +=1.0/dz2; break;
+                case Uintah::Patch::zplus : coefs.p +=1.0/dz2; break;
+              }
 
               const SS::IntVec   intCellIJK( bc_point_indices[0],
                                              bc_point_indices[1],
@@ -843,13 +852,86 @@ namespace Wasatch {
               const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
               const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
 
-              pressureRHS[iInterior] -= pressureField[iGhost]/denom;
+//              if (hasExtraCells)
+//                pressureRHS[iGhost] -= pressureField[iInterior]/denom;
+//              else 
+//                pressureRHS[iInterior] -= pressureField[iGhost]/denom;
             }
         }
       } // child loop
     } // face loop
   }
 
+  //-----------------------------------------------------------------------------
+  
+  void update_pressure_matrix( const Expr::Tag& pressureTag,
+                           Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+                           const Uintah::Patch* patch,
+                              const int material)
+  {
+    /*
+     ALGORITHM:
+     1. loop over the patches
+     2. For each patch, loop over materials
+     3. For each material, loop over boundary faces
+     4. For each boundary face, loop over its children
+     5. For each child, get the cell faces and set appropriate
+     boundary conditions
+     */    
+    // get the dimensions of this patch
+    namespace SS = SpatialOps::structured;
+    const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
+    const SS::IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const Uintah::Vector spacing = patch->dCell();
+    const double dx = spacing[0];
+    const double dy = spacing[1];
+    const double dz = spacing[2];
+    const double dx2 = dx*dx;
+    const double dy2 = dy*dy;
+    const double dz2 = dz*dz;
+    const std::string phiName = pressureTag.name();
+    
+    std::vector<Uintah::Patch::FaceType> bndFaces;
+    patch->getBoundaryFaces(bndFaces);
+    std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
+    
+    // loop over the boundary faces
+    for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
+      Uintah::Patch::FaceType face = *faceIterator;
+      //get the number of children
+      const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
+      
+      for( int child = 0; child<numChildren; ++child ){
+        
+        double bc_value = -9;
+        std::string bc_kind = "NotSet";
+        SCIRun::Iterator bound_ptr;
+
+        patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
+
+        SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+        const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
+        
+        // cell offset used to calculate local cell index with respect to patch.
+        const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+        for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+          SCIRun::IntVector bc_point_indices(*bound_ptr);
+          
+          Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];            
+          
+          switch(face){
+            case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
+            case Uintah::Patch::xplus : coefs.p -=1.0/dx2; break;
+            case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p -=1.0/dy2; break;
+            case Uintah::Patch::yplus : coefs.p -=1.0/dy2; break;
+            case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p -=1.0/dz2; break;
+            case Uintah::Patch::zplus : coefs.p -=1.0/dz2; break;
+          }  
+        }
+      } // child loop
+    } // face loop
+  }
+  
   //==================================================================
   // Explicit template instantiation
   #include <CCA/Components/Wasatch/FieldTypes.h>

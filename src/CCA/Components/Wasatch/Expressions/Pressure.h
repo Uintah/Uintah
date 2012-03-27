@@ -188,7 +188,7 @@ public:
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix( const Uintah::Patch* const patch );
+  void setup_matrix( const Uintah::Patch* const patch, const int material );
 
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
