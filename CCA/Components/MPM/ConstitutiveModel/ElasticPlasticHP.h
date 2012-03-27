@@ -376,8 +376,8 @@ namespace Uintah {
                                             const double& delT,
                                             const MPMMaterial* matl,
                                             const particleIndex idx,
-                                            Matrix3& Stilde,
                                             PlasticityState* state,
+                                            Matrix3& nn,
                                             double& delGamma);
 
     ////////////////////////////////////////////////////////////////////////
@@ -421,9 +421,8 @@ namespace Uintah {
     void computeEPlasticTangentModulus(const double& K,
                                        const double& mu,
                                        const double& delGamma,
-                                       const double& normTrialS,
+                                       const Matrix3& trialStess,
                                        const particleIndex idx,
-                                       const Matrix3& n,
                                        PlasticityState* state,
                                        double Cep[6][6],
                                        bool consistent);
