@@ -70,7 +70,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& velMag = this->value();
-  velMag=0.0;
+  velMag <<= 0.0;
   if( vel1t_ != Expr::Tag() ){
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( velMag );
     InpterpVel1T2FieldTOp_->apply_to_field( *vel1_, *tmp );

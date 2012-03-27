@@ -159,7 +159,7 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     //setup_matrix(patch);
   } else {
     dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
-    setup_matrix(patch);
+    setup_matrix(patch, material);
     didAllocateMatrix_=true;
   }
 }
@@ -215,7 +215,8 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 //--------------------------------------------------------------------
 
 void
-Pressure::setup_matrix(const Uintah::Patch* const patch)
+Pressure::setup_matrix(const Uintah::Patch* const patch,
+                       const int material)
 {
   // construct the coefficient matrix: \nabla^2
   // We should probably move the matrix construction to the evaluate() method.
@@ -265,15 +266,8 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
     //coefs.t = -t;
     coefs.p = -p;
   }
-
-  //
-//  typedef std::vector<SVolField*> SVolFieldVec;
-//  SVolFieldVec& results = this->get_value_vec();
-//  SVolField& pressureField = *results[0];
-//  SVolField& pRhs = *results[1];
-//  pRhs = 0.0;
-//
-//  set_pressure_bc(this->name(),matrix_, pressureField, pRhs, patch);
+  // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
+  update_pressure_matrix((this->names())[0], matrix_, patch, material);
 }
 
 //--------------------------------------------------------------------
@@ -348,7 +342,7 @@ Pressure::evaluate()
   
   //
   // fix pressure rhs and modify pressure matrix
-  update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
+  //update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
   //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
 }
 
