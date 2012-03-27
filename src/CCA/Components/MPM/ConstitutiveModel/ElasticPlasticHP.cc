@@ -957,9 +957,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // material configuration and calculate the deviatoric part
       sigma = pStress[idx];
       sigma = (tensorR.Transpose())*(sigma*tensorR);
-      double pressure = sigma.Trace()/3.0;
-      Matrix3 tensorP = one * pressure;
-      tensorS = sigma - tensorP;
+      double pressure = sigma.Trace()/3.0; 
+      tensorS = sigma - one * pressure;
 
       double temperature = pTemperature[idx];
 
@@ -1007,13 +1006,18 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 2:
       //-----------------------------------------------------------------------
-      // Integrate the stress rate equation to get a trial deviatoric stress
+      // Assume elastic deformation to get a trial deviatoric stress
+      // This is simply the previous timestep deviatoric stress plus a
+      // deviatoric elastic increment based on the shear modulus supplied by
+      // the strength routine in use.
       Matrix3 trialS = tensorS + tensorEta*(2.0*mu_cur*delT);
 
       // Calculate the equivalent stress
+      // this will be removed next, it should be computed in the flow stress routine
+      // the flow stress routines should be passed the entire stress (not just deviatoric)
       double equivStress = sqrtThreeTwo*trialS.Norm();
 
-      // Calculate flow stress (strain driven problem)
+      // Calculate flow stress
       double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
       state->yieldStress = flowStress;
@@ -1048,7 +1052,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         */
 
         if (flow_rule < 0.0) {
-          // Set the elastic stress to the trial stress
+          // Set the deviatoric stress to the trial stress
           tensorS = trialS;
 
           // Update the internal variables
@@ -1071,51 +1075,24 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           //__________________________________
           //
           Matrix3 Stilde(0.0);
-          if (normS > 0.0 ) {
+          if (normS > 0.0 || d_plasticConvergenceAlgo == biswajit) {
             doRadialReturn = computePlasticStateBiswajit(state, pPlasticStrain, pStrainRate, 
                                                          Stilde, sigma, tensorS, trialS, tensorEta, 
                                                          delGamma, flowStress, porosity, mu_cur, delT, matl, idx);
           }
           
-          //______________________________________________________________________
+          //__________________________________
           //
           if (doRadialReturn) {
 
-	    // computePlasticStateViaRadialReturn
-	    // Input: Strial, beginning of time step plastic state
-	    // Output: tensorS, final plastic strain and plastic strain rate.
-
-            /*
-            cout << "normS = 0 || gammadotplus <= 0 || delGamma <= 0.0" 
-                 << endl;
-            cout << " Before::idx = " << idx
-                 << " delGamma = " << delGamma  
-                 << " Tau_n+1 = " << state->yieldStress
-                 << " Tau_n = " << sqrtThreeTwo*normS
-                 << " ep_n = " << pPlasticStrain[idx]
-                 << " ep_n+1 = " << state->plasticStrain
-                 << " epdot_n = " << pPlasticStrainRate[idx]
-                 << " epdot_n+1 = " << state->plasticStrainRate
-                 << endl;
-            */
-
             // Compute Stilde using Newton iterations a la Simo
             state->plasticStrainRate = pStrainRate_new[idx];
-            state->plasticStrain = pPlasticStrain[idx];
-            computePlasticStateViaRadialReturn(trialS, delT, matl, idx, Stilde, state, delGamma);
-
-            /*
-            cout << "After:: patch = " << patch->getID() << " idx = " << idx
-                 << " delGamma = " << delGamma  
-                 << " Tau_n+1 = " << state->yieldStress
-                 << " Tau_n = " << sqrtThreeTwo*normS
-                 << " ep_n = " << pPlasticStrain[idx]
-                 << " ep_n+1 = " << state->plasticStrain
-                 << " epdot_n = " << pPlasticStrainRate[idx]
-                 << " epdot_n+1 = " << state->plasticStrainRate
-                 << endl;
-            */
-
+            state->plasticStrain     = pPlasticStrain[idx];
+            Matrix3 nn(0.0);
+            
+            computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
+            
+            Stilde = trialS - nn *(2.0 * state->shearModulus * delGamma);
           }
 
           // Do radial return adjustment
@@ -1535,22 +1512,18 @@ ElasticPlasticHP::computePlasticStateViaRadialReturn(const Matrix3& trialS,
                                                      const double& delT,
                                                      const MPMMaterial* matl,
                                                      const particleIndex idx,
-                                                     Matrix3& Stilde,
                                                      PlasticityState* state,
+                                                     Matrix3& nn,
                                                      double& delGamma)
 {
   double normTrialS = trialS.Norm();
   
-
   // Do Newton iteration to compute delGamma and updated 
   // plastic strain, plastic strain rate, and yield stress
   double tolerance = min(delT, 1.0e-6);
-  delGamma = computeDeltaGamma(delT, tolerance, normTrialS, matl,
-                               idx, state);
+  delGamma = computeDeltaGamma(delT, tolerance, normTrialS, matl, idx, state);
                                
-  Matrix3 nn = trialS/normTrialS;                             
-  Stilde = trialS - nn*(2.0*state->shearModulus*delGamma);
-
+  nn  = trialS/normTrialS;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1620,7 +1593,7 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
     }
 
     // Update local plastic strain rate
-    double stt_deltaGamma = max(stwothird*deltaGamma, 0.0);
+    double stt_deltaGamma    = max(stwothird*deltaGamma, 0.0);
     state->plasticStrainRate = stt_deltaGamma/delT;
 
     // Update local plastic strain 
@@ -1693,7 +1666,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv, Rotation, RightStretch; 
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
-  Matrix3 oldStress(0.0), trialStress(0.0), devTrialStress(0.0);
+  Matrix3 sigma(0.0), trialStress(0.0), trialS(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); Rotation.Identity(), RightStretch.Identity();
 
@@ -1865,9 +1838,9 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       
       // Compute pressure and deviatoric stress at t_n and
       // the volumetric strain and deviatoric strain increments at t_n+1
-      oldStress = pStress[idx];
-      double pressure = oldStress.Trace()/3.0;
-      //Matrix3 devStressOld = oldStress - One*pressure;
+      sigma = pStress[idx];
+      double pressure = sigma.Trace()/3.0;
+      //      tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state   = scinew PlasticityState();
@@ -1903,13 +1876,18 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double mu_cur = d_shear->computeShearModulus(state);
       state->shearModulus = mu_cur ;
 
-      // Compute trial stress
+      // Assume elastic deformation to get a trial deviatoric stress
+      // This is simply the previous timestep deviatoric stress plus a
+      // deviatoric elastic increment based on the shear modulus supplied by
+      // the strength routine in use.
       double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress    = oldStress + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
-      devTrialStress = trialStress - One*(trialStress.Trace()/3.0);
+      trialStress    = sigma + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
+      trialS         = trialStress - One*(trialStress.Trace()/3.0);
       
       // Calculate the equivalent stress
-      double equivStress = sqrt((devTrialStress.NormSquared())*1.5);
+      // this will be removed next, it should be computed in the flow stress routine
+      // the flow stress routines should be passed the entire stress (not just deviatoric)
+      double equivStress = sqrt((trialS.NormSquared())*1.5);
 
       // Calculate flow stress (strain driven problem)
       double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
@@ -1929,11 +1907,11 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       if (flow_rule < 0.0) {
 
         // Save the updated data
-        pStress_new[idx] = trialStress;
+        pStress_new[idx]        = trialStress;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
-        pDamage_new[idx] = pDamage[idx];
-        pPorosity_new[idx] = pPorosity[idx];
+        pDamage_new[idx]        = pDamage[idx];
+        pPorosity_new[idx]      = pPorosity[idx];
         
         // Update the internal variables
         d_plastic->updateElastic(idx);
@@ -1942,27 +1920,27 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pLocalized_new[idx] = pLocalized[idx];
 
       } else {
-
+        //__________________________________
+        // Radial Return
         // Do Newton iteration to compute delGamma and updated 
         // plastic strain, plastic strain rate, and yield stress
-        double normTrialS = devTrialStress.Norm();
-        double tolerance = min((double) delT, 1.0e-6);
-        double delGamma = computeDeltaGamma(delT, tolerance, normTrialS, matl,
-                                            idx, state);
-                                            
-        Matrix3 nn = devTrialStress/normTrialS;
-        pStress_new[idx] = trialStress - nn*(2.0*state->shearModulus*delGamma);
+        double delGamma = 0.0;
+        Matrix3 nn = (0.);
         
-        pPlasticStrain_new[idx] = state->plasticStrain;
+        computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma); 
+        
+        pStress_new[idx]            = trialStress - nn*(2.0*state->shearModulus*delGamma);
+        pPlasticStrain_new[idx]     = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
 
         // Update the porosity
+        
+        pPorosity_new[idx] = pPorosity[idx];
+        
         if (d_evolvePorosity) {
           Matrix3 tensorD = incStrain/delT;
           double ep = state->plasticStrain;
           pPorosity_new[idx] = updatePorosity(tensorD, delT, porosity, ep);
-        } else {
-          pPorosity_new[idx] = pPorosity[idx];
         }
 
         // Calculate the updated scalar damage parameter
@@ -2099,7 +2077,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv;
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
-  Matrix3 oldStress(0.0), trialStress(0.0), devTrialStress(0.0);
+  Matrix3 sigma(0.0), trialStress(0.0), trialS(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); 
 
@@ -2226,9 +2204,9 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       
       // Compute pressure and deviatoric stress at t_n and
       // the volumetric strain and deviatoric strain increments at t_n+1
-      oldStress = pStress[idx];
-      double pressure = oldStress.Trace()/3.0;
-      //Matrix3 devStressOld = oldStress - One*pressure;
+      sigma = pStress[idx];
+      double pressure = sigma.Trace()/3.0;
+      //Matrix3 tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state    = scinew PlasticityState();
@@ -2263,13 +2241,18 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double mu_cur = d_shear->computeShearModulus(state);
       state->shearModulus = mu_cur ;
 
-      // Compute trial stress
+      // Assume elastic deformation to get a trial deviatoric stress
+      // This is simply the previous timestep deviatoric stress plus a
+      // deviatoric elastic increment based on the shear modulus supplied by
+      // the strength routine in use.
       double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress = oldStress + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
-      devTrialStress = trialStress - One*(trialStress.Trace()/3.0);
+      trialStress = sigma + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
+      trialS      = trialStress - One*(trialStress.Trace()/3.0);
       
       // Calculate the equivalent stress
-      double equivStress = sqrt((devTrialStress.NormSquared())*1.5);
+      // this will be removed next, it should be computed in the flow stress routine
+      // the flow stress routines should be passed the entire stress (not just deviatoric)
+      double equivStress = sqrt((trialS.NormSquared())*1.5);
 
       // Calculate flow stress (strain driven problem)
       double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
@@ -2290,26 +2273,29 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Save the updated data
         pStress_new[idx] = trialStress;
-        pPlasticStrain_new[idx] = pPlasticStrain[idx];
+        pPlasticStrain_new[idx]     = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
         
         computeElasticTangentModulus(bulk, shear, D);
 
       } else {
 
+        //__________________________________
+        // Radial Return
         // Do Newton iteration to compute delGamma and updated 
         // plastic strain, plastic strain rate, and yield stress
-        double normTrialS = devTrialStress.Norm();
-        double tolerance = min((double)delT, 1.0e-6);
-        double delGamma = computeDeltaGamma(delT, tolerance, normTrialS, matl,
-                                            idx, state);
-        Matrix3 nn = devTrialStress/normTrialS;
-        pStress_new[idx] = trialStress - nn*(2.0*state->shearModulus*delGamma);
-        pPlasticStrain_new[idx] = state->plasticStrain;
+      
+        double delGamma = 0.;
+        Matrix3 nn=(0.);
+        
+        computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
+        
+        pStress_new[idx]            = trialStress - nn*(2.0*state->shearModulus*delGamma);
+        pPlasticStrain_new[idx]     = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
 
-        computeEPlasticTangentModulus(bulk, shear, delGamma, normTrialS,
-                                      idx, nn, state, D, true);
+        computeEPlasticTangentModulus(bulk, shear, delGamma, trialS,
+                                      idx, state, D, true);
       }
 
       // Compute K matrix = Kmat + Kgeo
@@ -2380,13 +2366,16 @@ void
 ElasticPlasticHP::computeEPlasticTangentModulus(const double& K,
                                               const double& mu,
                                               const double& delGamma,
-                                              const double& normTrialS,
+                                              const Matrix3& trialStress,
                                               const particleIndex idx,
-                                              const Matrix3& n,
                                               PlasticityState* state,
                                               double Cep[6][6],
                                               bool consistent)
 {
+
+  double normTrialS = trialStress.Norm();
+  Matrix3 n         = trialStress/normTrialS;
+  
   // Compute theta and theta_bar
   double twomu = 2.0*mu;
   double dsigYdep = d_plastic->evalDerivativeWRTPlasticStrain(state, idx);
