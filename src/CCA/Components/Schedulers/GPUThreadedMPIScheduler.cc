@@ -97,7 +97,7 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
   // disable memory windowing on variables.  This will ensure that
   // each variable is allocated its own memory on each patch,
   // precluding memory blocks being defined across multiple patches.
-  Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+//  Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 }
 
 GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {

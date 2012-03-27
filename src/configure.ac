@@ -4098,41 +4098,9 @@ if test "$sci_required_cuda" = "yes"; then
   fi  
 
 # code to compile and test various system GPU/CUDA properties
-# these files, etc will be deleted after tests)
-  cat > device_query.cu << EOF
-#include <stdio.h>
-#include <cutil.h>
-#include <cuda.h>
-int main(int argc, char** argv)
-{
-    int devCount;
-    cudaGetDeviceCount(&devCount);
-    printf("Checking CUDA capable devices...   (%d) devices\n", devCount);
- 
-    for (int i = 0; i < devCount; ++i)
-    {
-        cudaDeviceProp deviceProp;
-        cudaGetDeviceProperties(&deviceProp, i);
-        printf("Device %d: %s CC Maj/Min: %d.%d\n", i, deviceProp.name, deviceProp.major, deviceProp.minor);
-    }
-    return 0;
-}
-EOF
-
-  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
-                             CUDA capable devices,
-                             cuda.h cutil.h,
-                             $_cuda_inc $_cuda_sdk_inc,
-                             cudart $_cutil_lib,
-                             $_cuda_lib $_cuda_sdk_lib,
-                             ,
-                             device_query.cu,
-                             optional,
-                             no)
-
-rm -rf device_query*
-
-# test if nvcc can compile tr1/type_traits headers provided by host compiler
+# (these files, etc are deleted after tests)
+#------------------------------------------------------------------------------
+# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
 # there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
   cat > type_traits_test.cu << EOF
 #include <tr1/type_traits>
@@ -4156,6 +4124,7 @@ EOF
 rm -rf type_traits_test*
 
 
+# test CUDA and CUDA_SDK libraries and headers
   cat > cuda_conf_test.cu << EOF
 #include <stdlib.h>
 #include <cutil.h>

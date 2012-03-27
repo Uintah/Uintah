@@ -40,6 +40,8 @@
 #  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
 #  include <cutil_inline.h>
+#  include <curand.h>
+#  include <curand_kernel.h>
 #endif
 
 #endif
