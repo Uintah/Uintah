@@ -522,8 +522,8 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
     }   
   }
 
-
   // add a proc id enum variable for CC_Mesh
+  //<ctc> don't add proc id unless CC_Mesh exists (some only have SFCk_MESH)
   int max_proc = 0;
   for (int l=0; l<numLevels; l++) {
     for (int p=0; p<(int)stepInfo->levelInfo[l].patchInfo.size(); p++) {
@@ -938,21 +938,22 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     }
 
     // Node centered data uses the same mesh as cell centered,
-    // face centered meshes need an extra value for one axis.
+    // face centered meshes need an extra value for one axis
+    // (unless they are periodic on that axis).
     int extra_for_faces[3] = {0,0,0};
     if (meshName.find("SFCX") != string::npos) {
-      extra_for_faces[0]=1;
-      high[0]++;
+      extra_for_faces[0]=1-levelInfo.periodic[0];
+      high[0]+=extra_for_faces[0];
     }
 
     if (meshName.find("SFCY") != string::npos) {
-      extra_for_faces[1]=1;
-      high[1]++;
+      extra_for_faces[1]=1-levelInfo.periodic[1];
+      high[1]+=extra_for_faces[1];
     }
 
     if (meshName.find("SFCZ") != string::npos) {
-      extra_for_faces[2]=1;
-      high[2]++;
+      extra_for_faces[2]=1-levelInfo.periodic[2];
+      high[2]+=extra_for_faces[2];
     }
 
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
@@ -973,6 +974,10 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
         // for the first and last nodes, which have an extra half cell movement
         // to keep the spatial range the same as it otherwise would be.
         float face_offset=0;
+        // <ctc> creating the mesh coordinates... seems a little fishy compared
+        // to observed results on the outside boundary (shifted by -1 here, but
+        // looks like shifted by -0.5 there). The oberved results seem to be
+        // correct though.
         if (extra_for_faces[c]) {
           if (i==0)
             face_offset = 0;
@@ -1110,27 +1115,31 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     int qlow[3], qhigh[3]; // region we're going to ask uintah for (from qlow to qhigh-1)
 
     for (int i=0; i<3; i++) {
-      qlow[i]  = patchInfo.cc_low[i];
-      qhigh[i] = patchInfo.cc_high[i];
-    }
-
-    // Node centered data needs an extra value in each direction,
-    // face centered meshes need an extra value for one axis.
-    // This is bad because it requires reading data from neighboring
-    // patches, but there's no way around that right now.
-    if (varType.find("SFCX") != string::npos ||
-        varType.find("NC") != string::npos) {
-      qhigh[0]++;
-    }
-
-    if (varType.find("SFCY") != string::npos ||
-        varType.find("NC") != string::npos) {
-      qhigh[1]++;
-    }
-
-    if (varType.find("SFCZ") != string::npos ||
-        varType.find("NC") != string::npos) {
-      qhigh[2]++;
+      if (varType.find("CC") != string::npos)
+      {
+        qlow[i]  = patchInfo.cc_low[i];
+        qhigh[i] = patchInfo.cc_high[i];
+      }
+      else if (varType.find("NC") != string::npos)
+      {
+        qlow[i]  = patchInfo.nc_low[i];
+        qhigh[i] = patchInfo.nc_high[i];
+      }
+      else if (varType.find("SFCX") != string::npos)
+      {
+        qlow[i]  = patchInfo.sfcx_low[i];
+        qhigh[i] = patchInfo.sfcx_high[i];
+      }
+      else if (varType.find("SFCY") != string::npos)
+      {
+        qlow[i]  = patchInfo.sfcy_low[i];
+        qhigh[i] = patchInfo.sfcy_high[i];
+      }
+      else if (varType.find("SFCZ") != string::npos)
+      {
+        qlow[i]  = patchInfo.sfcz_low[i];
+        qhigh[i] = patchInfo.sfcz_high[i];
+      }
     }
 
     GridDataRaw *gd=NULL;

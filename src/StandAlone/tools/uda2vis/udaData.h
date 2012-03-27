@@ -62,11 +62,29 @@ public:
   int cc_extra_low[3];
   int cc_extra_high[3];
 
-  // node centered indices - can be combined with cc to get face centered indices
+  // node centered indices
   int nc_low[3];
   int nc_high[3];
   int nc_extra_low[3];
   int nc_extra_high[3];
+
+  // sfcx indices
+  int sfcx_low[3];
+  int sfcx_high[3];
+  int sfcx_extra_low[3];
+  int sfcx_extra_high[3];
+
+  // sfcy centered indices
+  int sfcy_low[3];
+  int sfcy_high[3];
+  int sfcy_extra_low[3];
+  int sfcy_extra_high[3];
+
+  // sfcz centered indices
+  int sfcz_low[3];
+  int sfcz_high[3];
+  int sfcz_extra_low[3];
+  int sfcz_extra_high[3];
 
   int proc_id;
 };
@@ -79,6 +97,7 @@ public:
   int extraCells[3];
   double spacing[3];
   double anchor[3];
+  int periodic[3];
 };
 
 
