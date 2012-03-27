@@ -496,6 +496,16 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
         mesh->minSpatialExtents[2] = box_min[2];
         mesh->maxSpatialExtents[2] = box_max[2];
 
+        int logical[3];
+        logical[0] = (int)((box_max[0]-box_min[0])/level0Info.spacing[0] + 0.5);
+        logical[1] = (int)((box_max[1]-box_min[1])/level0Info.spacing[1] + 0.5);
+        logical[2] = (int)((box_max[2]-box_min[2])/level0Info.spacing[2] + 0.5);
+          
+        mesh->hasLogicalBounds = true;
+        mesh->logicalBounds[0] = logical[0];
+        mesh->logicalBounds[1] = logical[1];
+        mesh->logicalBounds[2] = logical[2];
+
         md->Add(mesh);
         meshes_added.insert(mesh_for_this_var);
       }
@@ -596,6 +606,16 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
           mesh->maxSpatialExtents[1] = box_max[1];
           mesh->minSpatialExtents[2] = box_min[2];
           mesh->maxSpatialExtents[2] = box_max[2];
+
+          int logical[3];
+          logical[0] = (int)((box_max[0]-box_min[0])/level0Info.spacing[0] + 0.5);
+          logical[1] = (int)((box_max[1]-box_min[1])/level0Info.spacing[1] + 0.5);
+          logical[2] = (int)((box_max[2]-box_min[2])/level0Info.spacing[2] + 0.5);
+          
+          mesh->hasLogicalBounds = true;
+          mesh->logicalBounds[0] = logical[0];
+          mesh->logicalBounds[1] = logical[1];
+          mesh->logicalBounds[2] = logical[2];
 
           md->Add(mesh); 
           meshes_added.insert(mesh_for_this_var);
