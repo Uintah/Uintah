@@ -236,6 +236,7 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   } 
 }
 
+//<ctc> fix reading files with multiple compression types
 void
 Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
                 const string& compressionMode )

@@ -234,6 +234,7 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep, bool useExtraCe
     copyIntVector(levelInfo.extraCells, level->getExtraCells());
     copyVector(levelInfo.spacing, level->dCell());
     copyVector(levelInfo.anchor, level->getAnchor());
+    copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
 
     // patch info
     int numPatches = level->numPatches();
@@ -243,35 +244,46 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep, bool useExtraCe
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
-      // If the user wants to see the extra cells, just include them and let VisIt believe they are part
-      // of the original data. This is accomplished by simply setting cc_low and cc_high to the extra
-      // cell boundaries so that VisIt is none the wiser.
+      // If the user wants to see extra cells, just include them and let VisIt
+      // believe they are part of the original data. This is accomplished by
+      // simply setting cc_low and cc_high to the extra cell boundaries so that
+      // VisIt is none the wiser.
       if (useExtraCells)
       {
         copyIntVector(patchInfo.cc_low,  patch->getExtraCellLowIndex());  
         copyIntVector(patchInfo.cc_high, patch->getExtraCellHighIndex());
+        copyIntVector(patchInfo.nc_low,  patch->getExtraNodeLowIndex());  
+        copyIntVector(patchInfo.nc_high, patch->getExtraNodeHighIndex());
+        copyIntVector(patchInfo.sfcx_low,  patch->getExtraSFCXLowIndex());
+        copyIntVector(patchInfo.sfcx_high, patch->getExtraSFCXHighIndex());
+        copyIntVector(patchInfo.sfcy_low,  patch->getExtraSFCYLowIndex());  
+        copyIntVector(patchInfo.sfcy_high, patch->getExtraSFCYHighIndex());
+        copyIntVector(patchInfo.sfcz_low,  patch->getExtraSFCZLowIndex());  
+        copyIntVector(patchInfo.sfcz_high, patch->getExtraSFCZHighIndex());
       }
       else
       {
-        copyIntVector(patchInfo.cc_low, patch->getCellLowIndex());
+        copyIntVector(patchInfo.cc_low,  patch->getCellLowIndex());
         copyIntVector(patchInfo.cc_high, patch->getCellHighIndex());
+        copyIntVector(patchInfo.nc_low,  patch->getNodeLowIndex());
+        copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex());
+        copyIntVector(patchInfo.sfcx_low,  patch->getSFCXLowIndex());
+        copyIntVector(patchInfo.sfcx_high, patch->getSFCXHighIndex());
+        copyIntVector(patchInfo.sfcy_low,  patch->getSFCYLowIndex());
+        copyIntVector(patchInfo.sfcy_high, patch->getSFCYHighIndex());
+        copyIntVector(patchInfo.sfcz_low,  patch->getSFCZLowIndex());
+        copyIntVector(patchInfo.sfcz_high, patch->getSFCZHighIndex());
       }
       copyIntVector(patchInfo.cc_extra_low,  patch->getExtraCellLowIndex());
       copyIntVector(patchInfo.cc_extra_high, patch->getExtraCellHighIndex());
-
-      // nc indices
-      if (useExtraCells)
-      {
-        copyIntVector(patchInfo.nc_low,  patch->getExtraNodeLowIndex());  
-        copyIntVector(patchInfo.nc_high, patch->getExtraNodeHighIndex());
-      }
-      else 
-      {
-        copyIntVector(patchInfo.nc_low, patch->getNodeLowIndex());
-        copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex());
-      }
       copyIntVector(patchInfo.nc_extra_low,  patch->getExtraNodeLowIndex());
       copyIntVector(patchInfo.nc_extra_high, patch->getExtraNodeHighIndex());
+      copyIntVector(patchInfo.sfcx_extra_low,  patch->getExtraSFCXLowIndex());
+      copyIntVector(patchInfo.sfcx_extra_high, patch->getExtraSFCXHighIndex());
+      copyIntVector(patchInfo.sfcy_extra_low,  patch->getExtraSFCYLowIndex());
+      copyIntVector(patchInfo.sfcy_extra_high, patch->getExtraSFCYHighIndex());
+      copyIntVector(patchInfo.sfcz_extra_low,  patch->getExtraSFCZLowIndex());
+      copyIntVector(patchInfo.sfcz_extra_high, patch->getExtraSFCZHighIndex());
 
       patchInfo.proc_id = archive->queryPatchwiseProcessor(patch, timestep);
     }
