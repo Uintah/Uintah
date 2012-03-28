@@ -210,6 +210,7 @@ namespace Uintah{
                         DataWarehouse* new_dw,
                         int device,
                         bool modifies_divQ,
+                        bool modifies_VRFlux,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw );
 
