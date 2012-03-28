@@ -31,6 +31,7 @@
 //----- RayGPU.cu ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/DbgOutput.h>
 
 #include <sci_defs/cuda_defs.h>
@@ -38,9 +39,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg("RAY_GPU",       false);
-static DebugStream dbg2("RAY_GPU_DEBUG",false);
-static DebugStream dbg_BC("RAY_GPU_BC", false);
+static DebugStream dbggpu("RAY_GPU", false);
 
 
 //---------------------------------------------------------------------------
@@ -57,11 +56,9 @@ void Ray::rayTraceGPU( const ProcessorGroup* pc,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW which_sigmaT4_dw )
 {
-  cudaSetDevice(device);
+  // set the device for the kernels
+  CUDA_SAFE_CALL( cudaSetDevice(device) );
   initMTRandGPU();
-
-  // setup for and invoke RT GPU kernel
-
 }
 
 void Ray::initMTRandGPU()
@@ -70,22 +67,46 @@ void Ray::initMTRandGPU()
 }
 
 //---------------------------------------------------------------------------
-// Method:
-//---------------------------------------------------------------------------
-inline bool Ray::containsCellGPU(const dim3 &low,
-                                 const dim3 &high,
-                                 const dim3 &cell,
-                                 const int &face)
-{
-  // stub
-  return false;
-}
-
-//---------------------------------------------------------------------------
-// Function: The GPU ray tracer kernel
+// Kernel: The GPU ray tracer kernel
 //---------------------------------------------------------------------------
 __global__ void rayTraceKernel()
 {
-  // stub
+
 }
+
+//---------------------------------------------------------------------------
+// Device Function:
+//---------------------------------------------------------------------------
+__device__ void updateSumI(const dim3& inv_direction_vector,
+                            const dim3& ray_location,
+                            const dim3& origin,
+                            const dim3& Dx,
+                            const dim3& domainLo,
+                            const dim3& domainHi,
+                            double& sigmaT4Pi,
+                            double& abskg,
+                            unsigned long int& size,
+                            double& sumI)
+
+{
+
+}
+
+//---------------------------------------------------------------------------
+// Device Function:
+//---------------------------------------------------------------------------
+__device__ bool containsCellGPU(const dim3 &low,
+                                const dim3 &high,
+                                const dim3 &cell,
+                                const int &face)
+{
+  switch(face) {
+    case 0 : return low.x <= cell.x && high.x > cell.x;
+    case 1 : return low.y <= cell.y && high.y > cell.y;
+    case 2 : return low.z <= cell.z && high.z > cell.z;
+    default : return false;
+  }
+}
+
+
 

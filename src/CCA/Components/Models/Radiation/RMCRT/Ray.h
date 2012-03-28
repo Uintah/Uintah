@@ -40,7 +40,7 @@
 
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
-#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #endif
 
 #include <iostream>
@@ -66,7 +66,10 @@ namespace Uintah{
 
     public: 
 
-      Ray(); 
+      Ray();
+#ifdef HAVE_CUDA
+      Ray(GPUThreadedMPIScheduler* scheduler);
+#endif
       ~Ray(); 
 
       //__________________________________
@@ -202,7 +205,11 @@ namespace Uintah{
                      Task::WhichDW which_sigmaT4_dw );
 
 #ifdef HAVE_CUDA
+
+      GPUThreadedMPIScheduler* _gpuScheduler;
+
       //______________________________________________________________________
+      //
       void rayTraceGPU( const ProcessorGroup* pc,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -215,13 +222,9 @@ namespace Uintah{
                         Task::WhichDW which_sigmaT4_dw );
 
       //______________________________________________________________________
-      inline bool containsCellGPU(const dim3 &low,
-                                  const dim3 &high,
-                                  const dim3 &cell,
-                                  const int &face);
-
-      //______________________________________________________________________
+      //
       void initMTRandGPU();
+
 #endif
 
       //__________________________________
