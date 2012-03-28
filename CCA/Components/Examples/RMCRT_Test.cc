@@ -52,6 +52,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 
+#include <sci_defs/cuda_defs.h>
+
 using namespace std;
 using SCIRun::Point;
 using SCIRun::Vector;
@@ -85,8 +87,9 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
 //
 RMCRT_Test::~RMCRT_Test ( void )
 {
-  if ( d_RMCRT ) 
+  if ( d_RMCRT ) {
     delete d_RMCRT;
+  }
     
   VarLabel::destroy(d_colorLabel);
   VarLabel::destroy(d_divQLabel);
@@ -123,7 +126,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-    d_RMCRT = scinew Ray(); 
+#ifdef HAVE_CUDA
+    d_RMCRT = scinew Ray(dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler")));
+#else
+    d_RMCRT = scinew Ray();
+#endif
+
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
                                  d_colorLabel,

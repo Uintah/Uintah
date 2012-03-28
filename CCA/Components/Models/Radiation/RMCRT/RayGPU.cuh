@@ -37,6 +37,22 @@ extern "C" {
 
 __global__ void rayTraceKernel();
 
+__device__ bool containsCell(const dim3& low,
+                             const dim3& high,
+                             const dim3& cell,
+                             const int&  face);
+
+__device__ void updateSumI(const dim3& inv_direction_vector,
+                           const dim3& ray_location,
+                           const dim3& origin,
+                           const dim3& Dx,
+                           const dim3& domainLo,
+                           const dim3& domainHi,
+                           double& sigmaT4Pi,
+                           double& abskg,
+                           unsigned long int& size,
+                           double& sumI);
+
 #ifdef __cplusplus
 }
 #endif

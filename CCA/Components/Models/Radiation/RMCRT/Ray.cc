@@ -43,6 +43,8 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <time.h>
 
+#include <sci_defs/cuda_defs.h>
+
 //--------------------------------------------------------------
 //
 using namespace Uintah;
@@ -50,6 +52,7 @@ using namespace std;
 static DebugStream dbg("RAY",       false);
 static DebugStream dbg2("RAY_DEBUG",false);
 static DebugStream dbg_BC("RAY_BC", false);
+
 //---------------------------------------------------------------------------
 // Method: Constructor. he's not creating an instance to the class yet
 //---------------------------------------------------------------------------
@@ -71,6 +74,32 @@ Ray::Ray()
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
 }
+
+//---------------------------------------------------------------------------
+// Method: Constructor for GPU Version.
+//---------------------------------------------------------------------------
+#ifdef HAVE_CUDA
+Ray::Ray(GPUThreadedMPIScheduler* gpuScheduler)
+{
+  _gpuScheduler = gpuScheduler;
+
+  _pi = acos(-1);
+
+  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
+  d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
+  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
+  d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
+  d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
+  d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
+
+  d_matlSet       = 0;
+  _isDbgOn        = dbg2.active();
+
+  d_gac           = Ghost::AroundCells;
+  d_gn            = Ghost::None;
+  d_orderOfInterpolation = -9;
+}
+#endif
 
 //---------------------------------------------------------------------------
 // Method: Destructor

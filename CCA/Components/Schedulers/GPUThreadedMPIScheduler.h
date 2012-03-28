@@ -129,10 +129,10 @@ WARNING
     enum CopyType {H2D, D2H};
 
     ConditionVariable     d_nextsignal;
-    Mutex                 d_nextmutex;   //conditional wait mutex
+    Mutex                 d_nextmutex;            //conditional wait mutex
     GPUTaskWorker*        t_worker[MAX_THREADS];  //workers
     Thread*               t_thread[MAX_THREADS];
-    Mutex                 dlbLock;       //load balancer lock
+    Mutex                 dlbLock;                //load balancer lock
     
 
   private:
