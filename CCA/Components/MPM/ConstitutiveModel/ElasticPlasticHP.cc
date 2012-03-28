@@ -1075,7 +1075,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           //__________________________________
           //
           Matrix3 Stilde(0.0);
-          if (normS > 0.0 || d_plasticConvergenceAlgo == biswajit) {
+          if (normS > 0.0 && d_plasticConvergenceAlgo == biswajit) {
             doRadialReturn = computePlasticStateBiswajit(state, pPlasticStrain, pStrainRate, 
                                                          Stilde, sigma, tensorS, trialS, tensorEta, 
                                                          delGamma, flowStress, porosity, mu_cur, delT, matl, idx);
