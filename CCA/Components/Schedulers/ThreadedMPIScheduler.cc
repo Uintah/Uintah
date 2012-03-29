@@ -68,6 +68,7 @@ extern DebugStream execout;
 
 static double CurrentWaitTime=0;
 
+static DebugStream affinity("CPUAffinity", true);
 static DebugStream dbg("ThreadedMPIScheduler", false);
 static DebugStream timeout("ThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
@@ -157,7 +158,7 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-  Thread::self()->set_affinity(0); //bind main thread to cpu 0
+  if (affinity.active()) Thread::self()->set_affinity(0); //bind main thread to cpu 0
 
 }
 
@@ -886,7 +887,7 @@ TaskWorker::run()
 {
   threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
   Thread::self()->set_myid(d_id+1);
-  Thread::self()->set_affinity(d_id+1);
+  if (affinity.active()) Thread::self()->set_affinity(d_id+1);
 
   while(true) {
     //wait for main thread signal
