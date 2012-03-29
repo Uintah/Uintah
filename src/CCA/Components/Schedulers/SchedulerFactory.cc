@@ -72,9 +72,9 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     if (scheduler == "") {
       if (Uintah::Parallel::getNumThreads() > 0) {
         if (Threaded2.active())
-          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
+          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI2" : "ThreadedMPI2");
         else 
-          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI2");
+          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
       } else {
         scheduler = "MPIScheduler";
       }
