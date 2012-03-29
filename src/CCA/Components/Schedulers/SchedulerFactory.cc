@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <sci_defs/cuda_defs.h>
@@ -51,6 +52,8 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+
+static DebugStream Threaded2("Threaded2",false);
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps, 
                                           const ProcessorGroup* world,
@@ -68,7 +71,10 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   if (Uintah::Parallel::usingMPI()) {
     if (scheduler == "") {
       if (Uintah::Parallel::getNumThreads() > 0) {
-        scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
+        if (Threaded2.active())
+          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
+        else 
+          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI2");
       } else {
         scheduler = "MPIScheduler";
       }
