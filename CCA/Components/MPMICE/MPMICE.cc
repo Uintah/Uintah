@@ -284,7 +284,6 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 
 }
 
-
 //______________________________________________________________________
 //
 void MPMICE::scheduleInitialize(const LevelP& level,
@@ -585,8 +584,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                 ice_matls);
                                                                 
     d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
-                                                                ice_matls,
-                                                                "afterAdvection");
+                                                    ice_matls,"afterAdvection");
   }
   if(d_ice->d_canAddICEMaterial){
      for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
@@ -653,7 +651,6 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
-
 
 //______________________________________________________________________
 //
