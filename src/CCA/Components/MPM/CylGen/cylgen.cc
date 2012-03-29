@@ -43,11 +43,15 @@ bool doesCylIntersectOthers(double partDia, vector<vector<double> > diaLocs,
 void printCylLocs(vector<vector<double> > xLocs,
                      vector<vector<double> > yLocs,
                      vector<vector<double> > diaLocs,
-                     int n_bins, const double RVEsize, double diam_max);
+                     int n_bins, const double RVEsize, double diam_max,
+                     vector<double> sizes,vector<double> TVFS,double targetVF);
 int main()
 {
 
   // Parameters for user to change - BEGIN
+
+  // set RNG seed
+  srand48(0);
 
   bool uniform_size_distribution = false;
   bool specified_size_distribution = true;
@@ -80,9 +84,9 @@ int main()
   double RVE_area   =  (RVEsize*RVEsize);
 
   double diam_inc = (diam_max - diam_min)/((double) (n_sizes-1.));
-  double sizes[n_sizes];
+  vector<double> sizes(n_sizes);
+  vector<double>  TVFS(n_sizes);
   int num_cyls_this_size[n_sizes];
-  double TVFS[n_sizes];
   double targetArea = RVE_area*targetVF;
 
   if(uniform_size_distribution){
@@ -256,7 +260,8 @@ int main()
                  << total_intersections << endl;
             cout << "total_cyl_VF = " << total_cyl_VF << endl;
             cout << "TVFS[" << i << "] = " << TVFS[i] << endl;
-            printCylLocs(xLocs, yLocs, diaLocs,n_bins,RVEsize,diam_max);
+            printCylLocs(xLocs, yLocs, diaLocs,n_bins,RVEsize,diam_max,
+                         sizes,TVFS,targetVF);
           } // end if
         }   // if index...
       }     // else
@@ -270,8 +275,8 @@ int main()
     cout << total_cyl_area/RVE_area << endl;
   }
 
-  printCylLocs(xLocs, yLocs, diaLocs,n_bins,RVEsize,diam_max);
-
+  printCylLocs(xLocs, yLocs, diaLocs,n_bins,RVEsize,diam_max,
+               sizes,TVFS,targetVF);
 }
 
 bool isCylInsideRVE(double partDia, double RVEsize, 
@@ -432,7 +437,8 @@ bool doesCylIntersectOthers(double partDia, vector<vector<double> > diaLocs,
 
 void printCylLocs(vector<vector<double> > xLocs, vector<vector<double> > yLocs,
                   vector<vector<double> > diaLocs,
-                  int n_bins, const double RVEsize, double diam_max)
+                  int n_bins, const double RVEsize, double diam_max,
+                  vector<double> sizes,vector<double> TVFS, double targetVF)
 {
   //Open file to receive cyl descriptions
   string outfile_name = "Test2D.xml";
@@ -442,6 +448,16 @@ void printCylLocs(vector<vector<double> > xLocs, vector<vector<double> > yLocs,
   }
 
   dest << "<?xml version='1.0' encoding='ISO-8859-1' ?>" << endl;
+  dest << "<!--" << endl;
+  dest << "targetVF = " << targetVF << endl;
+  for(int i=0;i<sizes.size();i++){
+      dest << "sizes[" << i << "] = " << sizes[i] << endl;
+  }
+  for(int i=0;i<sizes.size();i++){
+      dest << "TVFS[" << i << "] = " << sizes[i] << endl;
+  }
+  dest << "-->" << endl; 
+
   dest << "<Uintah_Include>" << endl;
   dest << "<union>\n\n";
 
