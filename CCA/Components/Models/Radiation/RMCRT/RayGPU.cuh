@@ -35,23 +35,30 @@
 extern "C" {
 #endif
 
-__global__ void rayTraceKernel();
+__global__ void rayTraceKernel(uint3 domainLow,
+                               uint3 domainHigh,
+                               uint3 domainSize,
+                               double* d_absk,
+                               double* d_sigmaT4,
+                               double* d_divQ,
+                               double* d_VRFlux);
 
-__device__ bool containsCell(const dim3& low,
-                             const dim3& high,
-                             const dim3& cell,
-                             const int&  face);
+__device__ bool containsCellKernel(const int3& low,
+                                   const int3& high,
+                                   const int3& cell,
+                                   const int&  face);
 
-__device__ void updateSumI(const dim3& inv_direction_vector,
-                           const dim3& ray_location,
-                           const dim3& origin,
-                           const dim3& Dx,
-                           const dim3& domainLo,
-                           const dim3& domainHi,
-                           double& sigmaT4Pi,
-                           double& abskg,
-                           unsigned long int& size,
-                           double& sumI);
+__device__ void updateSumIKernel(const double3& inv_direction_vector,
+                                 const double3& ray_location,
+                                 const int3& origin,
+                                 const double3& Dx,
+                                 const int3& domainLo,
+                                 const int3& domainHi,
+                                 double* sigmaT4Pi,
+                                 double* abskg,
+                                 unsigned long int& size,
+                                 double threshold,
+                                 double& sumI);
 
 #ifdef __cplusplus
 }
