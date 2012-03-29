@@ -533,7 +533,6 @@ private:
   SwitchingCriteria* d_switchCriteria;
 
   double           d_nextOutputTime;
-  double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
