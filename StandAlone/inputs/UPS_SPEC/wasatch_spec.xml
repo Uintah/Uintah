@@ -3,6 +3,9 @@
   <Wasatch			spec="OPTIONAL NO_DATA">
 
     <!-- Specify time integrator. Defaults to forward euler (FE) if unspecified -->
+    <!-- NOTE: when using Wasatch in Arches, the Wasatch TimeIntegrator tag has no effect at all because Arches
+         handles the time integration of the Wasatch scalars in this case. It is only necessary to specify
+         the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
     <BasicExpression		spec="MULTIPLE" />
