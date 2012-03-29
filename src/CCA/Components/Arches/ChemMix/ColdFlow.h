@@ -145,7 +145,7 @@ public:
   struct DepVarCont {
 
     CCVariable<double>* var; 
-    int index; 
+    //int index; 
 
   }; 
 
