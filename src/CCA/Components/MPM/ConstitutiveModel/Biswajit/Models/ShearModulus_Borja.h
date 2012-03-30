@@ -71,13 +71,14 @@ namespace UintahBB {
     double d_alpha;      // Coupling constant (shear-pressure)
     double d_p0;         // Reference pressure
     double d_kappatilde; // Reference compressibility
+    double d_epse_v0;    // Reference volume strain
 
     ShearModulus_Borja& operator=(const ShearModulus_Borja &smm);
 
   public:
          
     /*! Construct a constant shear modulus model. */
-    ShearModulus_Borja(ProblemSpecP& ps);
+    ShearModulus_Borja(Uintah::ProblemSpecP& ps);
 
     /*! Construct a copy of constant shear modulus model. */
     ShearModulus_Borja(const ShearModulus_Borja* smm);
@@ -85,11 +86,12 @@ namespace UintahBB {
     /*! Destructor of constant shear modulus model.   */
     virtual ~ShearModulus_Borja();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     /*! Compute the shear modulus */
     double computeInitialShearModulus();
-    double computeShearModulus(const ModelState* state);
+    double computeShearModulus(const ModelState* state) ;
+    double computeShearModulus(const ModelState* state) const;
 
     /*! Compute the shear strain energy */
     double computeStrainEnergy(const ModelState* state);
@@ -104,21 +106,21 @@ namespace UintahBB {
                epse_v = tr(epse)
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeQ(const ModelState* state);
+    double computeQ(const ModelState* state) const;
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_s 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_s(const ModelState* state);
+    double computeDqDepse_s(const ModelState* state) const;
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_v 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_v(const ModelState* state);
+    double computeDqDepse_v(const ModelState* state) const;
 
   private:
 
@@ -127,16 +129,16 @@ namespace UintahBB {
                         double& epse_v, double& epse_s);
 
     //  Voilumetric part of shear modulus
-    double computeShearModulus(const double& epse_v);
+    double computeShearModulus(const double& epse_v) const;
 
     //  Shear stress magnitude computation
-    double computeQ(const double& epse_v, const double& epse_s);
+    double computeQ(const double& epse_v, const double& epse_s) const;
 
     //  Shear stress volume strain derivative computation
-    double computeDqDepse_v(const double& epse_v, const double& epse_s);
+    double computeDqDepse_v(const double& epse_v, const double& epse_s) const;
 
     //  Shear stress shear strain derivative computation
-    double computeDqDepse_s(const double& epse_v, const double& epse_s);
+    double computeDqDepse_s(const double& epse_v, const double& epse_s) const;
   };
 } // End namespace Uintah
       

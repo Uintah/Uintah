@@ -37,13 +37,12 @@ DEALINGS IN THE SOFTWARE.
 namespace UintahBB {
 
   class InternalVariableModel;
-  class MPMLabel;
 
   class InternalVariableModelFactory
   {
   public:
     // this function has a switch for all known mat_types
-    static InternalVariableModel* create(ProblemSpecP& ps);
+    static InternalVariableModel* create(Uintah::ProblemSpecP& ps);
     static InternalVariableModel* createCopy(const InternalVariableModel* pm);
   };
 } // End namespace Uintah

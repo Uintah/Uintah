@@ -67,11 +67,11 @@ namespace UintahBB {
   public:
 
     // Internal variables
-    constParticleVariable<double> pPc;
-    ParticleVariable<double> pPc_new;
+    Uintah::constParticleVariable<double> pPc;
+    Uintah::ParticleVariable<double> pPc_new;
 
-    // const VarLabel* pPcLabel; 
-    // const VarLabel* pPcLabel_preReloc; 
+    const Uintah::VarLabel* pPcLabel; 
+    const Uintah::VarLabel* pPcLabel_preReloc; 
 
   private:
 
@@ -87,61 +87,67 @@ namespace UintahBB {
 
   public:
     // constructors
-    InternalVar_BorjaPressure(ProblemSpecP& ps);
+    InternalVar_BorjaPressure(Uintah::ProblemSpecP& ps);
     InternalVar_BorjaPressure(const InternalVar_BorjaPressure* cm);
          
     // destructor 
     virtual ~InternalVar_BorjaPressure();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     // Computes and requires for internal evolution variables
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches);
+    virtual void addInitialComputesAndRequires(Uintah::Task* task,
+                                               const Uintah::MPMMaterial* matl,
+                                               const Uintah::PatchSet* patches);
 
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches);
+    virtual void addComputesAndRequires(Uintah::Task* task,
+                                        const Uintah::MPMMaterial* matl,
+                                        const Uintah::PatchSet* patches);
 
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb);
+    virtual void allocateCMDataAddRequires(Uintah::Task* task, 
+                                           const Uintah::MPMMaterial* matl,
+                                           const Uintah::PatchSet* patch, 
+                                           Uintah::MPMLabel* lb);
 
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
+    virtual void allocateCMDataAdd(Uintah::DataWarehouse* new_dw,
+                                   Uintah::ParticleSubset* addset,
+                                   std::map<const Uintah::VarLabel*, 
+                                     Uintah::ParticleVariableBase*>* newState,
+                                   Uintah::ParticleSubset* delset,
+                                   Uintah::DataWarehouse* old_dw);
 
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
+    virtual void addParticleState(std::vector<const Uintah::VarLabel*>& from,
+                                  std::vector<const Uintah::VarLabel*>& to);
 
-    virtual void initializeInternalVariable(ParticleSubset* pset,
-                                            DataWarehouse* new_dw);
+    virtual void initializeInternalVariable(Uintah::ParticleSubset* pset,
+                                            Uintah::DataWarehouse* new_dw);
 
-    virtual void getInternalVariable(ParticleSubset* pset,
-                                     DataWarehouse* old_dw);
+    virtual void getInternalVariable(Uintah::ParticleSubset* pset,
+                                     Uintah::DataWarehouse* old_dw);
 
-    virtual void allocateAndPutInternalVariable(ParticleSubset* pset,
-                                                DataWarehouse* new_dw); 
+    virtual void allocateAndPutInternalVariable(Uintah::ParticleSubset* pset,
+                                                Uintah::DataWarehouse* new_dw); 
+
+    virtual void allocateAndPutRigid(Uintah::ParticleSubset* pset, 
+                                     Uintah::DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief Compute and update the internal variable */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeInternalVariable(const ModelState* state,
                                            const double& delT,
-                                           const MPMMaterial* matl,
-                                           const particleIndex idx);
+                                           const Uintah::MPMMaterial* matl,
+                                           const Uintah::particleIndex idx);
 
     // Update the internal variable
-    virtual void updateInternalVariable(const particleIndex idx,
+    virtual void updateInternalVariable(const Uintah::particleIndex idx,
                                         const double& value); 
 
     // Compute derivative of internal variable with respect to volumetric
     // elastic strain
-    virtual double computeVolStrainDerivOfInternalVariable(const ModelState* state);
+    virtual double computeVolStrainDerivOfInternalVariable(const ModelState* state) const;
+
+ };
 
 } // End namespace Uintah
 

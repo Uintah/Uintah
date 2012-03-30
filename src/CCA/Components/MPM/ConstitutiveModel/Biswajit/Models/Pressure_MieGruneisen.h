@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __MIE_GRUNEISEN_EOS_ENERGY_MODEL_H__
-#define __MIE_GRUNEISEN_EOS_ENERGY_MODEL_H__
+#ifndef __BB_MIE_GRUNEISEN_EOS_ENERGY_MODEL_H__
+#define __BB_MIE_GRUNEISEN_EOS_ENERGY_MODEL_H__
 
 
 #include "PressureModel.h" 
@@ -100,7 +100,7 @@ namespace UintahBB {
 
   public:
     // constructors
-    Pressure_MieGruneisen(ProblemSpecP& ps); 
+    Pressure_MieGruneisen(Uintah::ProblemSpecP& ps); 
     Pressure_MieGruneisen(const Pressure_MieGruneisen* cm);
          
     // Special operator for computing internal energy
@@ -109,15 +109,15 @@ namespace UintahBB {
     // destructor 
     virtual ~Pressure_MieGruneisen();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
-    virtual double computePressure(const MPMMaterial* matl,
+    virtual double computePressure(const Uintah::MPMMaterial* matl,
                                    const ModelState* state,
-                                   const Matrix3& deformGrad,
-                                   const Matrix3& rateOfDeformation,
+                                   const Uintah::Matrix3& deformGrad,
+                                   const Uintah::Matrix3& rateOfDeformation,
                                    const double& delT);
 
     // Calculate rate of temperature change due to compression/expansion
@@ -126,7 +126,7 @@ namespace UintahBB {
                                             const double rho_cur,
                                             const double Dtrace);
   
-    double eval_dp_dJ(const MPMMaterial* matl,
+    double eval_dp_dJ(const Uintah::MPMMaterial* matl,
                       const double& delF,
                       const ModelState* state);
 
@@ -166,7 +166,7 @@ namespace UintahBB {
         where epse_v = tr(epse)
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_v(const ModelState* state)
+    double computeDpDepse_v(const ModelState* state) const
     {
       return 0.0;
     };
@@ -177,7 +177,7 @@ namespace UintahBB {
               ee = epse - 1/3 tr(epse) I
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_s(const ModelState* state)
+    double computeDpDepse_s(const ModelState* state) const
     {
       return 0.0;
     };

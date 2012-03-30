@@ -68,7 +68,7 @@ namespace UintahBB {
     /*! Virtual to ensure correct behavior */
     virtual ~YieldCondition();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps) = 0;
          
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -94,10 +94,10 @@ namespace UintahBB {
       with respect to \f$\sigma_{ij}\f$.
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual void evalDerivOfYieldFunction(const Matrix3& stress,
+    virtual void evalDerivOfYieldFunction(const Uintah::Matrix3& stress,
                                           const double flowStress,
                                           const double porosity,
-                                          Matrix3& derivative) = 0;
+                                          Uintah::Matrix3& derivative) = 0;
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -108,49 +108,49 @@ namespace UintahBB {
       the deviatoric stress.
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual void evalDevDerivOfYieldFunction(const Matrix3& stress,
+    virtual void evalDevDerivOfYieldFunction(const Uintah::Matrix3& stress,
                                              const double flowStress,
                                              const double porosity,
-                                             Matrix3& derivative) = 0;
+                                             Uintah::Matrix3& derivative) = 0;
 
     /*! Evaluate the yield condition - \f$ sigma \f$ is the Cauchy stress
     and \f$ \beta \f$ is the back stress */
-    virtual double evalYieldCondition(const Matrix3& xi,
+    virtual double evalYieldCondition(const Uintah::Matrix3& xi,
                                       const ModelState* state) = 0;
 
     /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)*/
-    virtual void eval_df_dsigma(const Matrix3& xi,
+    virtual void eval_df_dsigma(const Uintah::Matrix3& xi,
                                 const ModelState* state,
-                                Matrix3& df_dsigma) = 0;
+                                Uintah::Matrix3& df_dsigma) = 0;
 
     /*! Derivative with respect to the \f$xi\f$ where \f$\xi = s - \beta \f$  
         where \f$s\f$ is deviatoric part of Cauchy stress and 
         \f$\beta\f$ is the backstress */
-    virtual void eval_df_dxi(const Matrix3& xi,
+    virtual void eval_df_dxi(const Uintah::Matrix3& xi,
                              const ModelState* state,
-                             Matrix3& df_xi) = 0;
+                             Uintah::Matrix3& df_xi) = 0;
 
     /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
-    virtual void eval_df_ds_df_dbeta(const Matrix3& xi,
+    virtual void eval_df_ds_df_dbeta(const Uintah::Matrix3& xi,
                                      const ModelState* state,
-                                     Matrix3& df_ds,
-                                     Matrix3& df_dbeta) = 0;
+                                     Uintah::Matrix3& df_ds,
+                                     Uintah::Matrix3& df_dbeta) = 0;
 
     /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
-    virtual double eval_df_dep(const Matrix3& xi,
+    virtual double eval_df_dep(const Uintah::Matrix3& xi,
                                const double& d_sigy_dep,
                                const ModelState* state) = 0;
 
     /*! Derivative with respect to the porosity (\f$\epsilon^p \f$)*/
-    virtual double eval_df_dphi(const Matrix3& xi,
+    virtual double eval_df_dphi(const Uintah::Matrix3& xi,
                                 const ModelState* state) = 0;
 
     /*! Compute h_alpha  where \f$d/dt(ep) = d/dt(gamma)~h_{\alpha}\f$ */
-    virtual double eval_h_alpha(const Matrix3& xi,
+    virtual double eval_h_alpha(const Uintah::Matrix3& xi,
                                 const ModelState* state) = 0;
 
     /*! Compute h_phi  where \f$d/dt(phi) = d/dt(gamma)~h_{\phi}\f$ */
-    virtual double eval_h_phi(const Matrix3& xi,
+    virtual double eval_h_phi(const Uintah::Matrix3& xi,
                               const double& factorA,
                               const ModelState* state) = 0;
 
@@ -159,20 +159,20 @@ namespace UintahBB {
       \brief Compute the elastic-plastic tangent modulus.
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-                                               const Matrix3& sigma, 
+    virtual void computeElasPlasTangentModulus(const Uintah::TangentModulusTensor& Ce,
+                                               const Uintah::Matrix3& sigma, 
                                                double sigY,
                                                double dsigYdV,
                                                double porosity,
                                                double voidNuclFac,
-                                               TangentModulusTensor& Cep) = 0;
+                                               Uintah::TangentModulusTensor& Cep) = 0;
 
     /*! Compute continuum elastic-plastic tangent modulus.
        df_dsigma = r */ 
-    virtual void computeElasPlasTangentModulus(const Matrix3& r, 
-                                               const Matrix3& df_ds, 
-                                               const Matrix3& h_beta,
-                                               const Matrix3& df_dbeta, 
+    virtual void computeElasPlasTangentModulus(const Uintah::Matrix3& r, 
+                                               const Uintah::Matrix3& df_ds, 
+                                               const Uintah::Matrix3& h_beta,
+                                               const Uintah::Matrix3& df_dbeta, 
                                                const double& h_alpha,             
                                                const double& df_dep,
                                                const double& h_phi,             
@@ -180,7 +180,7 @@ namespace UintahBB {
                                                const double& J,
                                                const double& dp_dJ,
                                                const ModelState* state,
-                                               TangentModulusTensor& Cep);
+                                               Uintah::TangentModulusTensor& Cep);
 
     //--------------------------------------------------------------
     // Compute value of yield function

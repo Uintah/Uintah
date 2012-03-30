@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __BB_UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
 #define __BB_UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
 
-namespace UintahBB {
+namespace Uintah {
   // Structures for Plasticity 
 
 struct HyperelasticPlasticStateData {
@@ -181,7 +181,7 @@ namespace Uintah {
 
     // Model factories
     //bool d_useEOSFactory;
-    PressureModel* d_eos;
+    UintahBB::PressureModel* d_eos;
 
   ///////////////
   // Functions //

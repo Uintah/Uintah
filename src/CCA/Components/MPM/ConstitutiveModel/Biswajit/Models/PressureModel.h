@@ -60,7 +60,7 @@ namespace UintahBB {
     PressureModel();
     virtual ~PressureModel();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps) = 0;
          
     void setBulkModulus(const double& bulk) {d_bulk = bulk;}
     double initialBulkModulus() {return d_bulk;}
@@ -69,10 +69,10 @@ namespace UintahBB {
     /*! Calculate the hydrostatic component of stress (pressure)
         using an equation of state */
     ////////////////////////////////////////////////////////////////////////
-    virtual double computePressure(const MPMMaterial* matl,
+    virtual double computePressure(const Uintah::MPMMaterial* matl,
                                    const ModelState* state,
-                                   const Matrix3& deformGrad,
-                                   const Matrix3& rateOfDeformation,
+                                   const Uintah::Matrix3& deformGrad,
+                                   const Uintah::Matrix3& rateOfDeformation,
                                    const double& delT) = 0;
 
     // Compute bulk modulus
@@ -101,7 +101,7 @@ namespace UintahBB {
 
     /*! Calculate the derivative of \f$p(J)\f$ wrt \f$J\f$ 
         where \f$J = det(F) = rho_0/rho\f$ */
-    virtual double eval_dp_dJ(const MPMMaterial* matl,
+    virtual double eval_dp_dJ(const Uintah::MPMMaterial* matl,
                               const double& delF,
                               const ModelState* state) = 0;
 
@@ -110,7 +110,7 @@ namespace UintahBB {
         where epse_v = tr(epse)
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    virtual double computeDpDepse_v(const ModelState* state) = 0;
+    virtual double computeDpDepse_v(const ModelState* state) const = 0;
 
     ////////////////////////////////////////////////////////////////////////
     /*! Calculate the derivative of p with respect to epse_s
@@ -118,7 +118,7 @@ namespace UintahBB {
               ee = epse - 1/3 tr(epse) I
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    virtual double computeDpDepse_s(const ModelState* state) = 0;
+    virtual double computeDpDepse_s(const ModelState* state) const = 0;
 
     // Calculate rate of temperature change due to compression/expansion
     virtual double computeIsentropicTemperatureRate(const double T,

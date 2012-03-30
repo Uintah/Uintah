@@ -103,28 +103,28 @@ namespace UintahBB {
 
   public:
     // constructors
-    KinematicHardening_Prager(ProblemSpecP& ps);
+    KinematicHardening_Prager(Uintah::ProblemSpecP& ps);
     KinematicHardening_Prager(const KinematicHardening_Prager* cm);
          
     // destructor 
     virtual ~KinematicHardening_Prager();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     //////////
     /*! \brief Calculate the back stress */
     //////////
     virtual void computeBackStress(const ModelState* state,
                                    const double& delT,
-                                   const particleIndex idx,
+                                   const Uintah::particleIndex idx,
                                    const double& delLambda,
-                                   const Matrix3& df_dsigma_new,
-                                   const Matrix3& backStress_old,
-                                   Matrix3& backStress_new);
+                                   const Uintah::Matrix3& df_dsigma_new,
+                                   const Uintah::Matrix3& backStress_old,
+                                   Uintah::Matrix3& backStress_new);
 
-    void eval_h_beta(const Matrix3& df_dsigma,
+    void eval_h_beta(const Uintah::Matrix3& df_dsigma,
                      const ModelState* state,
-                     Matrix3& h_beta);
+                     Uintah::Matrix3& h_beta);
 
   };
 

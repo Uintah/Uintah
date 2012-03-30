@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "PressureModel.h"
 
-using namespace Uintah;
+using namespace UintahBB;
 
 PressureModel::PressureModel()
 {

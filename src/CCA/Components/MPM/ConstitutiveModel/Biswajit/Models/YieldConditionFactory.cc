@@ -39,9 +39,10 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace UintahBB;
 
 /// Create an instance of a Yield Condition.
-YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
+YieldCondition* YieldConditionFactory::create(Uintah::ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("yield_condition");
    if(!child)

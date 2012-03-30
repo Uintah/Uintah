@@ -44,6 +44,7 @@ using std::cerr;
 using std::ifstream;
 using std::ofstream;
 
+using namespace UintahBB;
 using namespace Uintah;
 
 PressureModel* PressureModelFactory::create(ProblemSpecP& ps)

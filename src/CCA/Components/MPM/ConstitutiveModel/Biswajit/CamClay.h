@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <cmath>
 
-namespace UintahBB {
+namespace Uintah {
 
   class MPMLabel;
   class MPMFlags;
@@ -67,10 +67,10 @@ namespace UintahBB {
 
   protected:
 
-    PressureModel*         d_eos;
-    ShearModulusModel*          d_shear;
-    YieldCondition*             d_yield;
-    InternalVariableModel*      d_intvar;
+    UintahBB::PressureModel*         d_eos;
+    UintahBB::ShearModulusModel*     d_shear;
+    UintahBB::YieldCondition*        d_yield;
+    UintahBB::InternalVariableModel* d_intvar;
          
   private:
     // Prevent copying of this class

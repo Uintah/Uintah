@@ -34,12 +34,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldCondition.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheck.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/YieldCondition.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/KinematicHardeningModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/PressureModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ShearModulusModel.h>
@@ -50,7 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
-namespace UintahBB {
+namespace Uintah {
 
   class MPMLabel;
   class MPMFlags;
@@ -152,13 +152,13 @@ namespace UintahBB {
     bool   d_setStressToZero;
     bool   d_allowNoTension;
 
-    PressureModel*         d_eos;
-    ShearModulusModel*          d_shear;
+    UintahBB::PressureModel*         d_eos;
+    UintahBB::ShearModulusModel*          d_shear;
     MeltingTempModel*           d_melt;
     SpecificHeatModel*          d_Cp;
-    YieldCondition*             d_yield;
+    UintahBB::YieldCondition*             d_yield;
     PlasticityModel*            d_plastic;
-    KinematicHardeningModel*    d_kinematic;
+    UintahBB::KinematicHardeningModel*    d_kinematic;
     DamageModel*                d_damage;
     StabilityCheck*             d_stable;
          
@@ -349,7 +349,7 @@ namespace UintahBB {
                                        const double& normTrialS,
                                        const particleIndex idx,
                                        const Matrix3& n,
-                                       ModelState* state,
+                                       UintahBB::ModelState* state,
                                        double Cep[6][6],
                                        bool consistent);
 

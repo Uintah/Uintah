@@ -36,20 +36,26 @@ SRCS   += \
 	$(SRCDIR)/ModelState.cc \
 	$(SRCDIR)/PressureModel.cc \
 	$(SRCDIR)/PressureModelFactory.cc \
+	$(SRCDIR)/Pressure_Borja.cc \
 	$(SRCDIR)/Pressure_Hypoelastic.cc \
 	$(SRCDIR)/Pressure_Hyperelastic.cc \
 	$(SRCDIR)/Pressure_MieGruneisen.cc \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
+	$(SRCDIR)/YieldCond_CamClay.cc \
 	$(SRCDIR)/YieldCond_Gurson.cc \
 	$(SRCDIR)/YieldCond_vonMises.cc \
 	$(SRCDIR)/ShearModulusModel.cc \
 	$(SRCDIR)/ShearModulusModelFactory.cc \
+	$(SRCDIR)/ShearModulus_Borja.cc \
 	$(SRCDIR)/ShearModulus_Constant.cc \
 	$(SRCDIR)/ShearModulus_Nadal.cc \
 	$(SRCDIR)/KinematicHardeningModel.cc \
 	$(SRCDIR)/KinematicHardeningModelFactory.cc \
 	$(SRCDIR)/KinematicHardening_None.cc \
 	$(SRCDIR)/KinematicHardening_Prager.cc \
-	$(SRCDIR)/KinematicHardening_Armstrong.cc 
+	$(SRCDIR)/KinematicHardening_Armstrong.cc \
+	$(SRCDIR)/InternalVariableModel.cc \
+	$(SRCDIR)/InternalVariableModelFactory.cc \
+	$(SRCDIR)/InternalVar_BorjaPressure.cc \
 

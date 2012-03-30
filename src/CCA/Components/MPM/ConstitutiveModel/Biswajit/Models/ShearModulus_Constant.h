@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __CONSTANT_SHEAR_MODEL_H__
-#define __CONSTANT_SHEAR_MODEL_H__
+#ifndef __BB_CONSTANT_SHEAR_MODEL_H__
+#define __BB_CONSTANT_SHEAR_MODEL_H__
 
 #include "ShearModulusModel.h"
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -53,7 +53,7 @@ namespace UintahBB {
          
     /*! Construct a constant shear modulus model. */
     ShearModulus_Constant();
-    ShearModulus_Constant(ProblemSpecP& ps);
+    ShearModulus_Constant(Uintah::ProblemSpecP& ps);
 
     /*! Construct a copy of constant shear modulus model. */
     ShearModulus_Constant(const ShearModulus_Constant* smm);
@@ -61,11 +61,12 @@ namespace UintahBB {
     /*! Destructor of constant shear modulus model.   */
     virtual ~ShearModulus_Constant();
          
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
 
     /*! Compute the shear modulus */
     double computeInitialShearModulus();
     double computeShearModulus(const ModelState* state);
+    double computeShearModulus(const ModelState* state) const;
 
     /*! Compute the shear strain energy */
     double computeStrainEnergy(const ModelState* state) {return 0.0;};
@@ -80,30 +81,30 @@ namespace UintahBB {
                epse_v = tr(epse)
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeQ(const ModelState* state)
+    double computeQ(const ModelState* state) const
     {
       return 0.0;
-    }
+    };
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_s 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_s(const ModelState* state)
+    double computeDqDepse_s(const ModelState* state) const
     {
       return 0.0;
-    }
+    };
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_v 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_v(const ModelState* state)
+    double computeDqDepse_v(const ModelState* state) const
     {
       return 0.0;
-    }
+    };
   };
 } // End namespace Uintah
       

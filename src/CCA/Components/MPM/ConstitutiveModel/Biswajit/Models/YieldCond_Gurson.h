@@ -107,13 +107,13 @@ namespace UintahBB {
 
     /*! Constructor
       Creates a Gurson Yield Function object */
-    YieldCond_Gurson(ProblemSpecP& ps);
+    YieldCond_Gurson(Uintah::ProblemSpecP& ps);
     YieldCond_Gurson(const YieldCond_Gurson* cm);
          
     //! Destructor 
     virtual ~YieldCond_Gurson();
          
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
 
     //! Evaluate the yield function.
     double evalYieldCondition(const double equivStress,
@@ -122,7 +122,7 @@ namespace UintahBB {
                               const double porosity,
                               double& sig);
 
-    double evalYieldCondition(const Matrix3& xi,
+    double evalYieldCondition(const Uintah::Matrix3& xi,
                               const ModelState* state);
 
     /////////////////////////////////////////////////////////////////////////
@@ -133,10 +133,10 @@ namespace UintahBB {
       This is for the associated flow rule.
     */
     /////////////////////////////////////////////////////////////////////////
-    void evalDerivOfYieldFunction(const Matrix3& stress,
+    void evalDerivOfYieldFunction(const Uintah::Matrix3& stress,
                                   const double flowStress,
                                   const double porosity,
-                                  Matrix3& derivative);
+                                  Uintah::Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -147,10 +147,10 @@ namespace UintahBB {
       the deviatoric stress.
     */
     /////////////////////////////////////////////////////////////////////////
-    void evalDevDerivOfYieldFunction(const Matrix3& stress,
+    void evalDevDerivOfYieldFunction(const Uintah::Matrix3& stress,
                                      const double flowStress,
                                      const double porosity,
-                                     Matrix3& derivative);
+                                     Uintah::Matrix3& derivative);
 
     /////////////////////////////////////////////////////////////////////////
     /*!
@@ -228,38 +228,38 @@ namespace UintahBB {
                                          double sigma_Y);
 
     /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)*/
-    void eval_df_dsigma(const Matrix3& xi,
+    void eval_df_dsigma(const Uintah::Matrix3& xi,
                         const ModelState* state,
-                        Matrix3& df_dsigma);
+                        Uintah::Matrix3& df_dsigma);
 
     /*! Derivative with respect to the \f$xi\f$ where \f$\xi = s - \beta \f$  
         where \f$s\f$ is deviatoric part of Cauchy stress and 
         \f$\beta\f$ is the backstress */
-    void eval_df_dxi(const Matrix3& xi,
+    void eval_df_dxi(const Uintah::Matrix3& xi,
                      const ModelState* state,
-                     Matrix3& df_xi);
+                     Uintah::Matrix3& df_xi);
 
     /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
-    void eval_df_ds_df_dbeta(const Matrix3& xi,
+    void eval_df_ds_df_dbeta(const Uintah::Matrix3& xi,
                              const ModelState* state,
-                             Matrix3& df_ds,
-                             Matrix3& df_dbeta);
+                             Uintah::Matrix3& df_ds,
+                             Uintah::Matrix3& df_dbeta);
 
     /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
-    double eval_df_dep(const Matrix3& xi,
+    double eval_df_dep(const Uintah::Matrix3& xi,
                        const double& d_sigy_dep,
                        const ModelState* state);
 
     /*! Derivative with respect to the porosity (\f$\epsilon^p \f$)*/
-    double eval_df_dphi(const Matrix3& xi,
+    double eval_df_dphi(const Uintah::Matrix3& xi,
                         const ModelState* state);
 
     /*! Compute h_alpha  where \f$d/dt(ep) = d/dt(gamma)~h_{\alpha}\f$ */
-    double eval_h_alpha(const Matrix3& xi,
+    double eval_h_alpha(const Uintah::Matrix3& xi,
                         const ModelState* state);
 
     /*! Compute h_phi  where \f$d/dt(phi) = d/dt(gamma)~h_{\phi}\f$ */
-    double eval_h_phi(const Matrix3& xi,
+    double eval_h_phi(const Uintah::Matrix3& xi,
                       const double& factorA,
                       const ModelState* state);
 
@@ -276,26 +276,26 @@ namespace UintahBB {
       \return TangentModulusTensor \f$ C_{ep} \f$.
     */
     /////////////////////////////////////////////////////////////////////////
-    void computeTangentModulus(const TangentModulusTensor& Ce,
-                               const Matrix3& f_sigma, 
+    void computeTangentModulus(const Uintah::TangentModulusTensor& Ce,
+                               const Uintah::Matrix3& f_sigma, 
                                double f_q1, 
                                double f_q2,
                                double h_q1,
                                double h_q2,
-                               TangentModulusTensor& Cep);
+                               Uintah::TangentModulusTensor& Cep);
 
     /////////////////////////////////////////////////////////////////////////
     /*! 
       \brief Compute the elastic-plastic tangent modulus.
     */
     /////////////////////////////////////////////////////////////////////////
-    void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-                                       const Matrix3& sigma, 
+    void computeElasPlasTangentModulus(const Uintah::TangentModulusTensor& Ce,
+                                       const Uintah::Matrix3& sigma, 
                                        double sigY,
                                        double dsigYdV,
                                        double porosity,
                                        double voidNuclFac,
-                                       TangentModulusTensor& Cep);
+                                       Uintah::TangentModulusTensor& Cep);
 
     //--------------------------------------------------------------
     // Compute value of yield function

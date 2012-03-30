@@ -35,11 +35,12 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/KinematicHardening_Prager.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/KinematicHardening_Prager.h>
 #include <cmath>
 
 
 using namespace Uintah;
+using namespace UintahBB;
 
 KinematicHardening_Prager::KinematicHardening_Prager(ProblemSpecP& ps)
 {

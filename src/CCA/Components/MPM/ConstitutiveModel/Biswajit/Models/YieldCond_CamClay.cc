@@ -33,8 +33,10 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 using namespace Uintah;
+using namespace UintahBB;
+using namespace std;
 
-YieldCond_CamClay::YieldCond_CamClay(ProblemSpecP&)
+YieldCond_CamClay::YieldCond_CamClay(Uintah::ProblemSpecP& ps)
 {
   ps->require("M",d_M);
 }
@@ -48,7 +50,7 @@ YieldCond_CamClay::~YieldCond_CamClay()
 {
 }
 
-void YieldCond_CamClay::outputProblemSpec(ProblemSpecP& ps)
+void YieldCond_CamClay::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP yield_ps = ps->appendChild("yield_condition");
   yield_ps->setAttribute("type","cam_clay");
@@ -66,7 +68,7 @@ YieldCond_CamClay::evalYieldCondition(const ModelState* state)
 {
   double p = state->p;
   double q = state->q;
-  double pc = state->p_c;
+  double p_c = state->p_c;
   return q*q/(d_M*d_M) + p*(p - p_c);
 }
 
@@ -102,12 +104,12 @@ YieldCond_CamClay::computeDevStressDerivOfYieldFunction(const ModelState* state)
 //--------------------------------------------------------------
 double
 YieldCond_CamClay::computeVolStrainDerivOfDfDp(const ModelState* state,
-                                                   const PressureModel* eos,
-                                                   const ShearModulusModel* ,
-                                                   const InternalVariableModel* intvar)
+                                               const PressureModel* eos,
+                                               const ShearModulusModel* ,
+                                               const InternalVariableModel* intvar)
 {
   double dpdepsev = eos->computeDpDepse_v(state);
-  double dpcdepsev = intvar->computeVolDerivOfInternalVariable(state);
+  double dpcdepsev = intvar->computeVolStrainDerivOfInternalVariable(state);
   return 2.0*dpdepsev - dpcdepsev;
 }
 
@@ -137,12 +139,12 @@ YieldCond_CamClay::computeDevStrainDerivOfDfDp(const ModelState* state,
 //--------------------------------------------------------------
 double
 YieldCond_CamClay::computeVolStrainDerivOfDfDq(const ModelState* state,
-                                                   const PressureModel* ,
-                                                   const ShearModulusModel* shear,
-                                                   const InternalVariableModel* )
+                                               const PressureModel* ,
+                                               const ShearModulusModel* shear,
+                                               const InternalVariableModel* )
 {
   double dqdepsev = shear->computeDqDepse_v(state);
-  return (2.0*dqdepses)/(d_M*d_m);
+  return (2.0*dqdepsev)/(d_M*d_M);
 }
 
 //--------------------------------------------------------------
@@ -159,7 +161,7 @@ YieldCond_CamClay::computeDevStrainDerivOfDfDq(const ModelState* state,
                                                    const InternalVariableModel* )
 {
   double dqdepses = shear->computeDqDepse_s(state);
-  return (2.0*dqdepses)/(d_M*d_m);
+  return (2.0*dqdepses)/(d_M*d_M);
 }
 
 //--------------------------------------------------------------
@@ -178,7 +180,7 @@ YieldCond_CamClay::computeVolStrainDerivOfYieldFunction(const ModelState* state,
   double dfdp = computeVolStressDerivOfYieldFunction(state);
   double dqdepsev = shear->computeDqDepse_v(state);
   double dpdepsev = eos->computeDpDepse_v(state);
-  double dpcdepsev = intvar->computeVolDerivOfInternalVariable(state);
+  double dpcdepsev = intvar->computeVolStrainDerivOfInternalVariable(state);
   double dfdepsev = dfdq*dqdepsev + dfdp*dpdepsev - state->p*dpcdepsev;
 
   return dfdepsev;
@@ -212,21 +214,22 @@ YieldCond_CamClay::computeDevStrainDerivOfYieldFunction(const ModelState* state,
 //                           p = state->p
 //                           p_c = state->p_c)
 double 
-YieldCond_CamClay::evalYieldCondition(const Matrix3& ,
-                                          const ModelState* state)
+YieldCond_CamClay::evalYieldCondition(const Uintah::Matrix3& ,
+                                      const ModelState* state)
 {
   double p = state->p;
   double q = state->q;
   double pc = state->p_c;
-  return evalYieldCondition(p, q, pc, 0.0, 0.0);
+  double dummy = 0.0;
+  return evalYieldCondition(p, q, pc, 0.0, dummy);
 }
 
 double 
 YieldCond_CamClay::evalYieldCondition(const double p,
-                                          const double q,
-                                          const double p_c,
-                                          const double,
-                                          double& )
+                                      const double q,
+                                      const double p_c,
+                                      const double,
+                                      double& )
 {
   return q*q/(d_M*d_M) + p*(p - p_c);
 }
@@ -241,14 +244,14 @@ YieldCond_CamClay::evalYieldCondition(const double p,
 // where
 //    s = sigma - 1/3 tr(sigma) I
 void 
-YieldCond_CamClay::evalDerivOfYieldFunction(const Matrix3& sig,
+YieldCond_CamClay::evalDerivOfYieldFunction(const Uintah::Matrix3& sig,
                                                 const double p_c,
                                                 const double ,
-                                                Matrix3& derivative)
+                                                Uintah::Matrix3& derivative)
 {
   Matrix3 One; One.Identity();
   double p = sig.Trace()/3.0;
-  Matrix3 sigDev = sig - One*(trSig/3.0);
+  Matrix3 sigDev = sig - One*p;
   double df_dp = 2.0*p - p_c;
   Matrix3 df_ds(0.0);
   evalDevDerivOfYieldFunction(sigDev, 0.0, 0.0, df_ds);
@@ -259,10 +262,10 @@ YieldCond_CamClay::evalDerivOfYieldFunction(const Matrix3& sig,
 // Compute df/ds  where s = deviatoric stress
 //    df/ds = sqrt(3/2) df/dq s/||s|| = sqrt(3/2) 2q/M^2 n
 void 
-YieldCond_CamClay::evalDevDerivOfYieldFunction(const Matrix3& sigDev,
+YieldCond_CamClay::evalDevDerivOfYieldFunction(const Uintah::Matrix3& sigDev,
                                                    const double ,
                                                    const double ,
-                                                   Matrix3& derivative)
+                                                   Uintah::Matrix3& derivative)
 {
   double sigDevNorm = sigDev.Norm();
   Matrix3 n = sigDev/sigDevNorm;

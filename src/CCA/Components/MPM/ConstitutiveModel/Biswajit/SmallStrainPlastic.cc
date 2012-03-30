@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
@@ -118,7 +118,7 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   d_checkStressTriax = true;
   ps->get("check_max_stress_failure",d_checkStressTriax);
 
-  d_eos = PressureModelFactory::create(ps);
+  d_eos = UintahBB::PressureModelFactory::create(ps);
   d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
     ostringstream desc;
@@ -128,7 +128,7 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_shear = ShearModulusModelFactory::create(ps);
+  d_shear = UintahBB::ShearModulusModelFactory::create(ps);
   if (!d_shear) {
     ostringstream desc;
     desc << "SmallStrainPlastic::Error in shear modulus model factory" << endl;
@@ -146,7 +146,7 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("compute_specific_heat",d_computeSpecificHeat);
   d_Cp = SpecificHeatModelFactory::create(ps);
 
-  d_yield = YieldConditionFactory::create(ps);
+  d_yield = UintahBB::YieldConditionFactory::create(ps);
   if(!d_yield){
     ostringstream desc;
     desc << "An error occured in the YieldConditionFactory that has \n"
@@ -164,7 +164,7 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_kinematic = KinematicHardeningModelFactory::create(ps);
+  d_kinematic = UintahBB::KinematicHardeningModelFactory::create(ps);
   if(!d_kinematic){
     ostringstream desc;
     desc << "An error occured in the KinematicHardeningModelFactory that has \n"
@@ -228,16 +228,16 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
   d_scalarDam.Dc = cm->d_scalarDam.Dc ;
   d_scalarDam.scalarDamageDist = cm->d_scalarDam.scalarDamageDist ;
 
-  d_eos = PressureModelFactory::createCopy(cm->d_eos);
+  d_eos = UintahBB::PressureModelFactory::createCopy(cm->d_eos);
   d_eos->setBulkModulus(d_initialData.Bulk);
-  d_shear = ShearModulusModelFactory::createCopy(cm->d_shear);
+  d_shear = UintahBB::ShearModulusModelFactory::createCopy(cm->d_shear);
   d_melt = MeltingTempModelFactory::createCopy(cm->d_melt);
   d_computeSpecificHeat = cm->d_computeSpecificHeat;
   d_Cp = SpecificHeatModelFactory::createCopy(cm->d_Cp);
 
-  d_yield = YieldConditionFactory::createCopy(cm->d_yield);
+  d_yield = UintahBB::YieldConditionFactory::createCopy(cm->d_yield);
   d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
-  d_kinematic = KinematicHardeningModelFactory::createCopy(cm->d_kinematic);
+  d_kinematic = UintahBB::KinematicHardeningModelFactory::createCopy(cm->d_kinematic);
   d_damage = DamageModelFactory::createCopy(cm->d_damage);
   d_stable = StabilityCheckFactory::createCopy(cm->d_stable);
   
@@ -854,7 +854,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       backStress_new = backStress_old;
       
       // Set up the ModelState (for t_n)
-      ModelState* state = scinew ModelState();
+      UintahBB::ModelState* state = scinew UintahBB::ModelState();
       state->strainRate          = pStrainRate_new[idx];
       state->plasticStrainRate   = pPlasticStrainRate_old[idx];
       state->plasticStrain       = pPlasticStrain_old[idx];
@@ -1409,7 +1409,7 @@ SmallStrainPlastic::computeEPlasticTangentModulus(const double& K,
                                               const double& normTrialS,
                                               const particleIndex idx,
                                               const Matrix3& n,
-                                              ModelState* state,
+                                              UintahBB::ModelState* state,
                                               double Cep[6][6],
                                               bool consistent)
 {

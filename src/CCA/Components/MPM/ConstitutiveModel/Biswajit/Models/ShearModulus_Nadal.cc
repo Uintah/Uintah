@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
+using namespace UintahBB;
 using namespace std;
 
 // Construct a shear modulus model.  

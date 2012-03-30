@@ -60,18 +60,18 @@ namespace UintahBB {
 
   public:
 
-    constParticleVariable<Matrix3> pBackStress;
-    ParticleVariable<Matrix3> pBackStress_new;
+    Uintah::constParticleVariable<Uintah::Matrix3> pBackStress;
+    Uintah::ParticleVariable<Uintah::Matrix3> pBackStress_new;
 
-    const VarLabel* pBackStressLabel;
-    const VarLabel* pBackStressLabel_preReloc;
+    const Uintah::VarLabel* pBackStressLabel;
+    const Uintah::VarLabel* pBackStressLabel_preReloc;
 
   public:
          
     KinematicHardeningModel();
     virtual ~KinematicHardeningModel();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps) = 0;
          
     //////////
     /*! \brief Calculate the back stress */
@@ -79,66 +79,67 @@ namespace UintahBB {
     //////////
     virtual void computeBackStress(const ModelState* state,
                                    const double& delT,
-                                   const particleIndex idx,
+                                   const Uintah::particleIndex idx,
                                    const double& delLambda,
-                                   const Matrix3& df_dsigma_normal_new,
-                                   const Matrix3& backStress_old,
-                                   Matrix3& backStress_new) = 0;
+                                   const Uintah::Matrix3& df_dsigma_normal_new,
+                                   const Uintah::Matrix3& backStress_old,
+                                   Uintah::Matrix3& backStress_new) = 0;
  
     /*! Compute the direction of back stress evolution (\f$h^beta\f$) 
         for the equation \f$ d/dt(\beta) = d/dt(\gamma) h^beta \f$ */
-    virtual void eval_h_beta(const Matrix3& df_dsigma,
+    virtual void eval_h_beta(const Uintah::Matrix3& df_dsigma,
                              const ModelState* state,
-                             Matrix3& h_beta) = 0;
+                             Uintah::Matrix3& h_beta) = 0;
 
     /*! Get the back stress */
-    void getBackStress(const particleIndex idx,
-                       Matrix3& backStress);
+    void getBackStress(const Uintah::particleIndex idx,
+                       Uintah::Matrix3& backStress);
 
     /*! Update the back stress */
-    void updateBackStress(const particleIndex idx,
-                          const Matrix3& backStress);
+    void updateBackStress(const Uintah::particleIndex idx,
+                          const Uintah::Matrix3& backStress);
 
     /*!  Data management apparatus */
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
+    virtual void addInitialComputesAndRequires(Uintah::Task* task,
+                                               const Uintah::MPMMaterial* matl,
+                                               const Uintah::PatchSet* patches) const;
 
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
+    virtual void addComputesAndRequires(Uintah::Task* task,
+                                        const Uintah::MPMMaterial* matl,
+                                        const Uintah::PatchSet* patches) const;
 
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
+    virtual void addComputesAndRequires(Uintah::Task* task,
+                                        const Uintah::MPMMaterial* matl,
+                                        const Uintah::PatchSet* patches,
                                         bool recurse) const;
 
 
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
+    virtual void allocateCMDataAddRequires(Uintah::Task* task, 
+                                           const Uintah::MPMMaterial* matl,
+                                           const Uintah::PatchSet* patch, 
+                                           Uintah::MPMLabel* lb) const;
 
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
+    virtual void allocateCMDataAdd(Uintah::DataWarehouse* new_dw,
+                                   Uintah::ParticleSubset* addset,
+                                   Uintah::map<const Uintah::VarLabel*, 
+                                     Uintah::ParticleVariableBase*>* newState,
+                                   Uintah::ParticleSubset* delset,
+                                   Uintah::DataWarehouse* old_dw);
 
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
+    virtual void addParticleState(std::vector<const Uintah::VarLabel*>& from,
+                                  std::vector<const Uintah::VarLabel*>& to);
 
-    virtual void initializeBackStress(ParticleSubset* pset,
-                                      DataWarehouse* new_dw);
+    virtual void initializeBackStress(Uintah::ParticleSubset* pset,
+                                      Uintah::DataWarehouse* new_dw);
 
-    virtual void getBackStress(ParticleSubset* pset,
-                               DataWarehouse* old_dw);
+    virtual void getBackStress(Uintah::ParticleSubset* pset,
+                               Uintah::DataWarehouse* old_dw);
 
-    virtual void allocateAndPutBackStress(ParticleSubset* pset,
-                                          DataWarehouse* new_dw); 
+    virtual void allocateAndPutBackStress(Uintah::ParticleSubset* pset,
+                                          Uintah::DataWarehouse* new_dw); 
 
-    virtual void allocateAndPutRigid(ParticleSubset* pset,
-                                     DataWarehouse* new_dw); 
+    virtual void allocateAndPutRigid(Uintah::ParticleSubset* pset,
+                                     Uintah::DataWarehouse* new_dw); 
 
   };
 } // End namespace Uintah

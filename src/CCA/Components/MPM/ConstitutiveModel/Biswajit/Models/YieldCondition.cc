@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
+using namespace UintahBB;
 
 YieldCondition::YieldCondition()
 {
@@ -48,25 +49,25 @@ YieldCondition::~YieldCondition()
        so we compute the full tensor (with lots of 
        inefficiencies) */ 
 void 
-YieldCondition::computeElasPlasTangentModulus(const Matrix3& r, 
-                                              const Matrix3& df_ds, 
-                                              const Matrix3& h_beta,
-                                              const Matrix3& df_dbeta, 
+YieldCondition::computeElasPlasTangentModulus(const Uintah::Matrix3& r, 
+                                              const Uintah::Matrix3& df_ds, 
+                                              const Uintah::Matrix3& h_beta,
+                                              const Uintah::Matrix3& df_dbeta, 
                                               const double& h_alpha,             
                                               const double& df_dep,
                                               const double& h_phi,             
                                               const double& df_phi,
                                               const double& J,
                                               const double& dp_dJ,
-                                              const PlasticityState* state,
-                                              TangentModulusTensor& C_ep)
+                                              const ModelState* state,
+                                              Uintah::TangentModulusTensor& C_ep)
 {
-  Matrix3 one; one.Identity();
+  Uintah::Matrix3 one; one.Identity();
 
   // Compute terms in the denominator of B_ep
   double mu = state->shearModulus;
-  Matrix3 dev_r = r - one*(r.Trace()/3.0);
-  Matrix3 dev_h_beta = h_beta - one*(h_beta.Trace()/3.0);
+  Uintah::Matrix3 dev_r = r - one*(r.Trace()/3.0);
+  Uintah::Matrix3 dev_h_beta = h_beta - one*(h_beta.Trace()/3.0);
   double term1 = (2.0*mu)*df_ds.Contract(dev_r);
   double term2 = df_dbeta.Contract(dev_h_beta);
   double term3 = df_dep*h_alpha;
@@ -75,7 +76,7 @@ YieldCondition::computeElasPlasTangentModulus(const Matrix3& r,
   double fac = (4.0*mu*mu)/denom;
 
   // Compute B_ep, i.e., Compute numerator/denom and subtract from 2*mu*I_4s
-  TangentModulusTensor B_ep;
+  Uintah::TangentModulusTensor B_ep;
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
@@ -92,7 +93,7 @@ YieldCondition::computeElasPlasTangentModulus(const Matrix3& r,
   double p_fac = J*dp_dJ;
 
   // Compute C_ep
-  Matrix3 p_term_2(0.0);
+  Uintah::Matrix3 p_term_2(0.0);
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int mm = 0; mm < 3; ++mm) {

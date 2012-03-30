@@ -42,7 +42,7 @@ namespace UintahBB {
   {
   public:
     // this function has a switch for all known mat_types
-    static PressureModel* create(ProblemSpecP& ps);
+    static PressureModel* create(Uintah::ProblemSpecP& ps);
     static PressureModel* createCopy(const PressureModel* cm);
   };
 } // End namespace Uintah
