@@ -70,7 +70,6 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
 {
   d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );          
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );          
-  d_VRFluxLabel   = VarLabel::create( "VRFlux",    CCVariable<double>::getTypeDescription() );
   d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );          
   d_absorpLabel   = VarLabel::create( "absorp",   CCVariable<double>::getTypeDescription() );
   d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
@@ -93,7 +92,6 @@ RMCRT_Test::~RMCRT_Test ( void )
     
   VarLabel::destroy(d_colorLabel);
   VarLabel::destroy(d_divQLabel);
-  VarLabel::destroy(d_VRFluxLabel);
   VarLabel::destroy(d_abskgLabel);
   VarLabel::destroy(d_absorpLabel);
   VarLabel::destroy(d_sigmaT4Label);
@@ -135,9 +133,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
                                  d_colorLabel,
-                                 d_divQLabel,
-                                 d_VRFluxLabel
-                                  );
+                                 d_divQLabel);
                                  
     rmcrt_ps->require("Temperature",  d_initColor);
     rmcrt_ps->require("abskg",        d_initAbskg);
