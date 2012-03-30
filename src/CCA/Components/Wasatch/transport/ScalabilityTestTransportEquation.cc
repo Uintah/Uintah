@@ -119,23 +119,18 @@ namespace Wasatch{
       typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
       typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
       builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-
     }
     else if( dir=="Y" ){
       proc0cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
       typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-
       typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
       builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-
     }
     else if( dir=="Z") {
       proc0cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
       typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-
       typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
       builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-
     }
 
     if( builder == NULL ){
