@@ -1487,160 +1487,182 @@ equation of state models.  Note that there are no checks
 to prevent users from mixing and matching inappropriate models.
 
 This section describes the current implementation of the hypoelastic-
-plastic model.  The stress update algorithm is a slightly modified
-version of the approach taken by
-Nemat-Nasser et al. (1991,1992)~\cite{Nemat91,Nemat92}, Wang (1994)~\cite{Wang94},
-Maudlin (1996)~\cite{Maudlin96}, and Zocher et al. (2000)~\cite{Zocher00}.
+plastic model.  The plastic state is obtained using an iterative
+radial return procedure as described in \cite{Simo98}, page 124,
+except that the Newton procedure has been generalized to allow flow
+stresses to be functions of both equivalent plastic strain and
+equivalent plastic strain rate.
 
-\paragraph{Simplified theory for hypoelastic-plasticity}
-A simplified version of the theory behind the stress update algorithm
-(in the contex of von Mises plasticity) is given below.
-
-  Following ~\cite{Maudlin96}, the rotated spatial rate of deformation
-  tensor ($\Bd$) is decomposed into an elastic part ($\Bd^e$) and a
-  plastic part ($\Bd^p$)
+\paragraph{Radial Return Algorithm}
+The rotated spatial rate of deformation tensor ($\Bd$) is additively
+decomposed into an elastic part, $\Bd^e$, and a plastic part, $\Bd^p$,
   \begin{equation}
      \Bd = \Bd^e + \Bd^p
   \end{equation}
-  If we assume plastic incompressibility ($\Tr{(\Bd^p)} = 0$), we get
+  It is convenient to work with the deviatoric parts of $\Bd$,
+  $\Bd^e$, and $\Bd^p$, denoted $\Beta$, $\Beta^e$, and
+  $\Beta^p$ respectively. The same additive decomposition obtains
   \begin{equation}
      \Beta = \Beta^e + \Beta^p
   \end{equation}
-  where $\Beta$, $\Beta^e$, and $\Beta^p$ are the deviatoric parts of $\Bd$,
-  $\Bd^e$, and $\Bd^p$, respectively.  For isotropic materials, the hypoelastic
-  constitutive equation for deviatoric stress is
-  \begin{equation}
+  Presently these models are limited to the case of plastic
+  incompressibility ($\Tr{(\Bd^p)} = 0$), so that $\Bd^p=\Beta^p$.
+
+The radial return algorithm assumes a yield condition of the form 
+  \begin{equation}\label{eq:yield_condition}
+    f(\Bs,\Ep,\dot{\Ep}) = \sqrt{3J_2} - \sigma_y(\Ep,\dot{\Ep})
+  \end{equation}
+where $\sigma_y$ is the flow stress, $J_2 = {1\over2}\Bs:\Bs$ is the
+second invariant of the deviatoric part of the Cauchy stress, $\Bs$,
+and the equivalent plastic strain is defined as
+  \begin{equation}\label{eq:ep}
+    \Ep = \int_0^t\sqrt{{2\over3}\Bd^p:\Bd^p}dt = \int_0^t\sqrt{{2\over3}\Beta^p:\Beta^p}dt
+  \end{equation}
+Assuming a state at the end of the previous time step, time $t^n$,
+satisfying $f(\Bs^n,\Ep^n,\Epdot{}^n)\le0$, a new state satisfying
+Eqn. \ref{eq:yield_condition} at time $t^{n+1}=t^n+\Delta t$, where
+$\Delta t$ is the time step size, is sought.
+
+Attention is further restricted to plastic flow associated with the yield condition,
+Eqn. \ref{eq:yield_condition}, i.e.
+  \begin{equation}\label{eq:associated_flow}
+    \Bd^p = \Beta^p \propto \Partial{f}{\Bsig} = \lambdadot{\Bs\over\norm{\Bs}} = \lambdadot\Bn
+  \end{equation}
+where $\Bsig$ is the Cauchy stress , $\Bn={\Bs/\norm{\Bs}}$ and
+$\lambdadot>0$ is a proportionality constant to be determined.
+Attention is also restricted to isotropic materials, for which the
+deviatoric response may be separated from the volumetric response.
+The linear hypoelastic/plastic constitutive equation for deviatoric
+response is
+  \begin{equation}\label{eq:linearhypoelasticity}
     \dot{\Bs} = 2\mu(\Beta - \Beta^p)
   \end{equation}
-  where $\Bs$ is the deviatoric part of the stress tensor and $\mu$ is the
-  shear modulus.  We assume that the flow stress obeys the Huber-von Mises
-  yield condition
+where $\mu$ is the shear modulus.  The shear modulus is required to be
+constant over the time step.  This permits evolution of the shear
+modulus based on the state at the beginning of the time step using the
+various shear modulus models described later, which are pressure and
+temperature dependent.  It also allows for a visoelastic deviatoric
+stress response provided an instantaneous shear modulus may be
+defined, as described later in this section for linear
+hypoviscoelasticity.
+
+A trial stress is calculated assuming no plastic deformation, i.e.
+  \begin{equation}\label{eq:strial}
+    {\Bs^{\text{trial}}} = \Bs^n + 2\mu\Beta\Delta t
+  \end{equation}
+If $f(\Bs^{\text{trial}},\Ep^n,0)\le0$, the deformation is purely
+elastic and the solution at time $t^{n+1}$ is
+$\Bs^{n+1}=\Bs^{\text{trial}}$, $\Ep^{n+1}=\Ep^n$.  If
+$f(\Bs^{\text{trial}},\Ep^n,0)>0$, the deformation is at least
+partially plastic.  In this case
+  \begin{equation}\label{eq:stress_update_0}
+    \Bs^{n+1} = \Bs^n + \dot{\Bs}\Delta t
+  \end{equation}
+where $\dot{\Bs}$ is given by Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:stress_update_0} may be rewritten in terms of the trial
+stress
+  \begin{equation}\label{eq:stress_update_1}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\Beta^p\Delta t = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t {\Bs^{n+1}\over\norm{\Bs^{n+1}}}
+  \end{equation}
+using Eqn.s \ref{eq:strial}, \ref{eq:linearhypoelasticity} and
+\ref{eq:associated_flow}.  This equation may be rearranged to give
   \begin{equation}
-    f := \sqrt{\frac{3}{2}}\norm{\Bs} - \sigma_y \le 0  ~~\text{or,}~~
-    F := \frac{3}{2} \Bs:\Bs - \sigma_y^2 \le 0 
+    \Bs^{\text{trial}} = \Bs^{n+1} \left[ 1 + {2\mu\lambdadot\Delta t\over\norm{\Bs^{n+1}}}\right]
   \end{equation}
-  where $\sigma_y$ is the flow stress.  Assuming an associated flow rule,
-  and noting that $\Bd^p = \Beta^p$, we have
+which gives the key result that $\Bs^{\text{trial}} \propto
+\Bs^{n+1}$, i.e. the trial stress and the updated stress are in the
+same direction.  Consequently the flow direction may be written
+  \begin{equation}\label{eq:flow_direction}
+    \Bn={\Bs^{n+1}\over\norm{\Bs^{n+1}}}={\Bs^{\text{trial}}\over\norm{\Bs^{\text{trial}}}}
+  \end{equation}
+and Eqn. \ref{eq:stress_update_1} may be rewritten
+  \begin{equation}\label{eq:stress_update_2}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t \Bn
+  \end{equation}
+or, contracting both sides with $\Bn$, and using Eqn. \ref{eq:flow_direction},
   \begin{equation}
-    \Beta^p = \Bd^p = \lambda\Partial{f}{\Bsig} 
-                    = \Lambda\Partial{F}{\Bsig} = 3\Lambda\Bs
+    \norm{\Bs^{n+1}} = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
   \end{equation}
-  where $\Bsig$ is the stress.  Let $\Bu$ be a tensor proportional to the
-  plastic straining direction, and define $\gamma$ as
+which is a scalar equation for the proportionality constant
+$\lambdadot$.  Using the yield condition
+$f(\Bs^{n+1},\Ep^{n+1},\Epdot{}^{n+1})=0$
+(Eqn. \ref{eq:yield_condition}), this equation may be written in terms
+of $\lambdadot$
+  \begin{equation}\label{eq:stress_update_3}
+     \sqrt{2\over3}\sigma_y(\Ep^{n+1},\Epdot{}^{n+1}) = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
+  \end{equation}
+where from Eqn.s \ref{eq:ep} and \ref{eq:associated_flow},
+$\Ep^{n+1}=\Ep^n+\sqrt{2\over3}\lambdadot\Delta t$ and $\dot{\Ep}^{n+1}=\sqrt{2\over3}\lambdadot$.
+
+For the special case of linear isotropic hardening,
+$\sigma_y(\Ep,\Epdot{})=\sigma_{y0}+k\Ep$, where $\sigma_{y0}$ is the
+initial yield stress and $k$ is the hardening modulus,
+Eqn. \ref{eq:stress_update_3} may be solved exactly.  More generally
+the solution may be found using Newton iteration.  Defining
+$\Delta\lambda = \lambdadot\Delta t$, and letting $j$ denote the
+iteration, define
   \begin{equation}
-    \Bu = \sqrt{3} \frac{\Bs}{\norm{\Bs}}; \quad
-    \gamma := \sqrt{3}\Lambda\norm{\Bs}  \quad \Longrightarrow
-    \gamma\Bu = 3\Lambda\Bs
+     g(\Delta\lambda_j) = \norm{\Bs^{\text{trial}}} - 2\mu\Delta\lambda_j - \sqrt{2\over3}\sigma_y(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1})
   \end{equation}
-  Therefore, we have
-  \begin{equation} \label{eq:stresseqn}
-    \Beta^p = \gamma\Bu; \quad  
-    \dot{\Bs} = 2\mu(\Beta - \gamma\Bu)
-  \end{equation}
-  From the consistency condition, if we assume that the deviatoric stress
-  remains constant over a timestep, we get
+and, using the chain rule, the derivative may be calculated
   \begin{equation}
-    \gamma = \frac{\Bs:\Beta}{\Bs:\Bu}
+     {dg\over d\Delta\lambda}(\Delta\lambda_j) = - 2\mu - {2\over3}\left[{\partial\sigma_y\over \partial\Ep}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}) + {\partial\sigma_y\over \partial{\dot{\epsilon}_{p,j}^{n+1}}}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}){1\over\Delta t} \right]
   \end{equation}
-  which provides an initial estimate of the plastic strain-rate.  To obtain
-  a semi-implicit update of the stress using equation (\ref{eq:stresseqn}), we
-  define
-  \begin{equation}\label{eq:taueqn}
-    \tau^2 := \frac{3}{2} \Bs:\Bs = \sigma_y^2
-  \end{equation}
-  Taking a time derivative of equation (\ref{eq:taueqn}) gives us
-  \begin{equation}\label{eq:taudot}
-    \sqrt{2} \dot{\tau} = \sqrt{3} \frac{\Bs:\dot{\Bs}}{\norm{\Bs}}
-  \end{equation}
-  Plugging equation (\ref{eq:taudot}) into equation (\ref{eq:stresseqn})$_2$
-  we get
-  \begin{equation}\label{eq:tau}
-    \dot{\tau} = \sqrt{2}\mu(\Bu:\Beta - \gamma\Bu:\Bu)
-               = \sqrt{2} \mu (d - 3\gamma)
-  \end{equation}
-  where $d = \Bu:\Beta$.  If the initial estimate of the plastic strain-rate
-  is that all of the deviatoric strain-rate is plastic, then we get an
-  approximation to $\gamma$, and the corresponding error
-  ($\gamma_{\text{er}}$) given by
-  \begin{equation}\label{eq:gammaer}
-    \gamma_{\text{approx}} = \frac{d}{3}; \quad
-    \gamma_{\text{er}} = \gamma_{\text{approx}} - \gamma = \frac{d}{3} - \gamma
-  \end{equation}
-  The incremental form of the above equation is
-  \begin{equation}\label{eq:delgamma}
-    \Delta\gamma = \frac{d^*\Delta t}{3} - \Delta\gamma_{\text{er}}
-  \end{equation}
-  Integrating equation (\ref{eq:tau}) from time $t_n$ to time $t_{n+1} = 
-  t_n + \Delta t$, and using equation (\ref{eq:delgamma}) we get
-  \begin{equation}\label{eq:taun}
-    \tau_{n+1} = \tau_n + \sqrt{2}\mu(d^*\Delta t - 3\Delta\gamma)
-               = \tau_n + 3\sqrt{2}\mu\Delta\gamma_{\text{er}}
-  \end{equation}
-  where $d^*$ is the average value of $d$ over the timestep.
-  Solving for $\Delta\gamma_{\text{er}}$ gives
-  \begin{equation}\label{eq:delgammaer}
-    \Delta\gamma_{\text{er}} = \cfrac{\tau_{n+1} - \tau_n}{3\sqrt{2}\mu}
-      = \cfrac{\sqrt{2}\sigma_y - \sqrt{3}\norm{\Bs_n}}{6\mu}
-  \end{equation}
-  The direction of the total strain-rate ($\Bu^{\eta}$) and the
-  direction of the plastic strain-rate ($\Bu^s$) are given by
+Then until $|g(\Delta\lambda_{j+1})| < \text{TOL}$, calculate
   \begin{equation}
-    \Bu^{\eta} = \frac{\Beta}{\norm{\Beta}} ; \quad
-    \Bu^{s} = \frac{\Bs}{\norm{\Bs}} 
+     \Delta\lambda_{j+1}=\Delta\lambda_j-{g(\Delta\lambda_j)\over{dg\over d\Delta\lambda}(\Delta\lambda_j)}
   \end{equation}
-  Let $\theta$ be the fraction of the time increment that sees elastic
-  straining.  Then
-  \begin{equation}\label{eq:theta}
-    \theta = \frac{d^* - 3\gamma_n}{d^*}
-  \end{equation}
-  where $\gamma_n = d_n/3$ is the value of $\gamma$ at the beginning of the
-  timestep.  We also assume that
-  \begin{equation}\label{eq:dstar}
-    d^* = \sqrt{3}\Beta:[(1-\theta)\Bu^{\eta} + \frac{\theta}{2}
-              (\Bu^{\eta}+\Bu^{s})]
-  \end{equation}
-  Plugging equation (\ref{eq:theta}) into equation (\ref{eq:dstar}) we get
-  a quadratic equation that can be solved for $d^*$ as follows
+where $\Delta\lambda_0=0$, $\Epo^{n+1}=\Ep^n$,
+$\dot{\epsilon}_{p,0}^{n+1}=0$, and, once $\Delta\lambda$ has been
+determined to a specified accuracy, the final values of plastic strain
+and strain rate are given by
   \begin{equation}
-    \frac{2}{\sqrt{3}} (d^*)^2 - (\Beta:\Bu^s + \norm{\Beta}) d^*
-       + 3\gamma_n (\Beta:\Bu^s - \norm{\Beta}) = 0
+    \Ep^{n+1}=\Ep^n+\sqrt{2\over3}\Delta\lambda_{j+1}
   \end{equation}
-  The real positive root of the above quadratic equation is taken as the
-  estimate for $d$.  The value of $\Delta\gamma$ can now be calculated
-  using equations (\ref{eq:delgamma}) and (\ref{eq:delgammaer}).  A
-  semi-implicit estimate of the deviatoric stress can be obtained at this
-  stage by integrating equation (\ref{eq:stresseqn})$_2$
-  \begin{align}
-    \tilde{\Bs}_{n+1} & = \Bs_n + 2\mu\left(\eta\Delta t  - \sqrt{3}\Delta\gamma
-         \cfrac{\tilde{\Bs}_{n+1}}{\norm{\Bs_{n+1}}}\right) \\
-     & = \Bs_n + 2\mu\left(\eta\Delta t  - \frac{3}{\sqrt{2}}\Delta\gamma
-         \cfrac{\tilde{\Bs}_{n+1}}{\sigma_y}\right)
-  \end{align}
-  Solving for $\tilde{\Bs}_{n+1}$, we get
   \begin{equation}
-    \tilde{\Bs}_{n+1} = \cfrac{\Bs_{n+1}^{\text{trial}}}
-           {1 + 3\sqrt{2}\mu\cfrac{\Delta\gamma}{\sigma_y}}
+    \dot{\Ep}^{n+1}=\sqrt{2\over3}{\Delta\lambda_{j+1}\over\Delta t}
   \end{equation}
-  where $\Bs_{n+1}^{\text{trial}} = \Bs_n + 2\mu\Delta t\Beta$.
-  A final radial return adjustment is used to move the stress to the yield
-  surface
+and the final value of $\Bs^{n+1}$ is calculated from Eqn. \ref{eq:stress_update_2}.
+
+While several of the allowed flow stresses are of the form
+$\sigma_y(\Ep,\dot{\Ep})$ as given in Eqn. \ref{eq:yield_condition},
+others include temperature and/or pressure dependence.  Similarly,
+several of the shear moduli models are functions of temperature and/or
+pressure.  Using the radial return algorithm in these cases amounts to
+convergence to the yield surface neglecting temperature changes, and
+assuming a non-associated flow rule of the form in
+Eqn. \ref{eq:associated_flow} (which is non-associated because the
+pressure dependence of the flow stress has been neglected,
+i.e. Eqn. \ref{eq:associated_flow} no longer holds).  This non
+associated flow rule results in zero plastic dilation (actually
+dilitation).  The end result is convergence to the flow stress with
+temperature and pressure held constant, i.e. to
+$\sigma_y(\Ep^{n+1},\dot{\Ep}^{n+1},p^n,T^n)$ with $\mu(p^n,T^n)$ and
+no plastic dilitation.  While holding pressure and temperature fixed
+over a time step is probably a good approximation for most explicit
+calculations, non-associated flow may not be.
+
+Finally, it was found that this return algorithm worked equally well
+for linear hypoviscoelastic deviatoric response, i.e.
+  \begin{equation}\label{eq:linearhypoviscoelasticity}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
+  \end{equation}
+rather than Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:linearhypoviscoelasticity} is the constitutive equation
+for $N$ linear Maxwell elements in parallel, each with shear modulus
+$\mu_i$, time constant $\tau_i$, and deviatoric stress $\Bs_i$, and
   \begin{equation}
-    \Bs_{n+1} = \sqrt{\frac{2}{3}}\sigma_y \cfrac{\tilde{\Bs}_{n+1}}
-                {\norm{\tilde{\Bs}_{n+1}}}
+    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
   \end{equation}
-  A pathological situation arises if $\gamma_n = \Bu_n:\Beta_n$ is less
-  than or equal to zero or
-  $\Delta\gamma_{\text{er}} \ge \frac{d^*}{3} \Delta t $.
-  This can occur is the rate of plastic deformation
-  is small compared to the rate of elastic deformation or if the timestep
-  size is too small (see~\cite{Nemat92}).  In such situations, we use a
-  locally implicit stress update that uses Newton iterations (as
-  discussed in \cite{Simo98}, page 124) to compute $\tilde{\Bs}$.
+This model is detailed in the Deviatoric Stress Models section.
+Combined with a yield condition, the combination results in a
+model for viscoplastic material response.
 
 \paragraph{Equation of State Models}
-The elastic-plastic stress update assumes that the volumetric part of the
-Cauchy stress can be calculated using an equation of state.  There are
-three equations of state that are implemented in Uintah.  These are
+The elastic-plastic stress update assumes that the volumetric part of
+the Cauchy stress can be calculated using an equation of state.  There
+are three equations of state that are implemented in Uintah.  These
+are
 \begin{enumerate}
     \item A default hypoelastic equation of state.
     \item A neo-Hookean equation of state.
