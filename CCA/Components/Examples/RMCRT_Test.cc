@@ -319,8 +319,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         Task::WhichDW abskg_dw   = Task::NewDW;
         Task::WhichDW sigmaT4_dw = Task::NewDW;
         bool modifies_divQ       = false;
-        bool modifies_VRFlux     = false;
-        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, modifies_divQ, modifies_VRFlux);
+        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
       }
     }
 

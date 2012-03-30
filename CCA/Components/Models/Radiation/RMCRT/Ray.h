@@ -83,8 +83,7 @@ namespace Uintah{
                            SchedulerP& sched,
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
-                           bool modifies_divQ,
-                           bool modifies_VRFlux);
+                           bool modifies_divQ );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
@@ -200,7 +199,6 @@ namespace Uintah{
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
-                     bool modifies_VRFlux,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW which_sigmaT4_dw );
 
