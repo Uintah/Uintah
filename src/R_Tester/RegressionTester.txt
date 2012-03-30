@@ -742,6 +742,7 @@ Valid options are:
 -ice                 :
 -arches              :
 -nthreads <#>        : Only good with MixedScheduler
+-gpu                 : Only goog with GPU MixedScheduler
 -scheduler <name>    : Don't specify, use system default!
 -loadbalancer <name> : Usually use system default.
           NirvanaLoadBalancer [or NLB for short]
