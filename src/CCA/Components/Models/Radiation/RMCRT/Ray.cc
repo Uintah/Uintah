@@ -176,13 +176,13 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   
   _sigma_over_pi = _sigma/_pi;
 
-  
-#if 0 
-  ProblemSpecP root_ps = prob_spec->getRootNode();
+  //__________________________________
+  // BC bulletproofing  
+  ProblemSpecP root_ps = rmcrt_ps->getRootNode();
   const MaterialSubset* mss = d_matlSet->getUnion();
   is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
   is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
-#endif
+
 }
 
 //______________________________________________________________________
@@ -1388,8 +1388,6 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)                
 { 
-  const Level* level = getLevel(patches);
-
   IntVector ROI_hi(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
   IntVector ROI_lo(SHRT_MAX,  SHRT_MAX, SHRT_MAX);
     

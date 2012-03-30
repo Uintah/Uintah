@@ -1,118 +1,261 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
 <Uintah_specification>
+
   <Meta>
-    <title>RMCRT Benchmark</title>
+    <title>"rmcrt benchmark 1 "</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
+
   <Time>
-    <maxTime>10.0</maxTime>
-    <max_Timesteps>1</max_Timesteps>
+    <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
-    <delt_max>0.01</delt_max>
-    <timestep_multiplier>0.35</timestep_multiplier>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>10</max_Timesteps>
   </Time>
 
   <DataArchiver>
-    <filebase>RMCRT_test.uda</filebase>
-    <outputInterval>0.01</outputInterval>
-    <save label="totalKineticEnergy"/>
-    <save label="pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="scalarSP"/>
-    <save label="densityCP"/>
-    <save label="tempIN"/>
-    <save label="viscosityCTS"/>
-    <save label="cellType"/>
-    <save label="radiationVolqIN"/>
-    <save label="radiationSRCIN"/>
-    <checkpoint cycle="2" interval="0.01"/>
-    <outputDoubleAsFloat/>
-    <compression>gzip</compression>
+    <filebase>rmcrt_bm1_1L.uda</filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="mixture_f"/>
+    <save label="divQ"/>
+    <save label="abskg"/>
+    <save label="color"/>        <!-- hack -->
+    <save label="sigmaT4"/>
+    <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
 
   <Grid>
+    <BoundaryConditions>
+      <Face side="x-" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="inlet">
+        <BCType id="all" label="velocity inlet" var="VelocityInlet">
+          <value>0.0</value>
+          <vecvalue>[0,0,0]</vecvalue>
+        </BCType>
+        <BCType id="all" label="mixture_f"  var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy"   var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all"  label = "color"   var="Dirichlet">
+          <value> 0. </value>
+        </BCType>
+        <BCType id="all"  label = "abskg"   var="Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
     <Level>
-      <Box label="1">
-        <lower>[0,0,0]</lower>
-        <upper>[1,1,1]</upper>
-        <resolution>[16,16,16]</resolution>
-        <extraCells>[1,1,1]</extraCells>
-        <patches>[1,1,1]</patches>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
+
   </Grid>
 
   <PhysicalConstants>
-    <gravity>[-9.8,0,0]</gravity>
+    <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
-    <viscosity>0.000020</viscosity>
+    <viscosity>0.</viscosity>
   </PhysicalConstants>
 
   <CFD>
+
+    <!-- ARCHES specification -->
     <ARCHES>
 
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_f" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn> 
+        
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
 
-      <Turbulence model="compdynamicprocedure">
+        <Sources>
+          <src label="divQ" type="rmcrt_radiation">
+            <calc_frequency>1</calc_frequency>
+            <RMCRT>
+                <randomSeed>         false     </randomSeed>
+                <Temperature>    64.804     </Temperature>  <!-- this is a hack -->
+                <abskg>             999        </abskg>
+                <NoOfRays>          25         </NoOfRays>
+                <Threshold>         0.05       </Threshold>
+                <Slice>             20         </Slice>
+                <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+                <property_calculator type="burns_christon">
+             
+                </property_calculator>
+            </RMCRT>
+          </src>
+       </Sources> 
+      </TransportEqns>
+
+      <Turbulence model="smagorinsky">
         <variance_coefficient>0.1</variance_coefficient>
+        <cf>0.0</cf> <!-- turn off turbulence model --> 
+        <fac_mesh>1.0</fac_mesh>
+        <filterl>0.000001</filterl>
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>true</use_mixing_model>
-        <NewStaticMixingTable>
-          <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn.gz</inputfile>
-        </NewStaticMixingTable>
+        <ColdFlow>
+          <mixture_fraction_label>mixture_f</mixture_fraction_label>
+          <Stream_1>
+            <density>1.18</density>
+            <temperature>64.804</temperature>
+          </Stream_1>
+          <Stream_2>
+            <density>1.18</density>
+            <temperature>64.804</temperature>
+          </Stream_2>
+        </ColdFlow>
       </Properties>
 
       <BoundaryConditions>
-        <WallBC>
-          <geom_object>
-            <box label="botwall">
-              <min>[-1,-1,-1]</min>
-              <max>[0,3,3]</max>
-            </box>
-            <box label="topWall">
-              <min>[1,-1,-1]</min>
-              <max>[2,2,2]</max>
-            </box>
-            <box label="posY_xzWall">
-              <min>[0,1,-1]</min>
-              <max>[1,2,2]</max>
-            </box>
-            <box label="zeroY_xzWall">
-              <min>[0,-1,-1]</min>
-              <max>[1,0,2]</max>
-            </box>
-            <box label="posZ_xyWall">
-              <min>[0,-1,1]</min>
-              <max>[1,2,2]</max>
-            </box>
-            <box label="zeroZ_xyWall">
-              <min>[0,-1,-1]</min>
-              <max>[1,2,0]</max>
-            </box>
-          </geom_object>
-        </WallBC>
+        <use_new_bcs/>
       </BoundaryConditions>
 
       <ExplicitSolver>
+
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
+
         <PressureSolver>
           <Parameters>
-            <solver>           cg     </solver>
-            <preconditioner>  pfmg    </preconditioner>
-            <tolerance>      1.0e-10  </tolerance>
-            <maxiterations>    75     </maxiterations>
-            <skip>              1     </skip>
+            <tolerance>1.0e-10</tolerance>
+            <solver>cg</solver>
+            <preconditioner>jacobi</preconditioner>
+            <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>
 
@@ -124,20 +267,8 @@
           <convection_scheme>central-upwind</convection_scheme>
         </MixtureFractionSolver>
 
-        <EnthalpySolver>
-          <convection_scheme>central-upwind</convection_scheme>
-          <radiationCalcFreq>1</radiationCalcFreq>
-          <radCalcForAllRKSteps>true</radCalcForAllRKSteps>
-          <RMCRT>
-<!-- ray tracer -->
-            <NoOfRays>100</NoOfRays>
-            <Threshold>0.05</Threshold>
-            <Slice>20</Slice>
-            <StefanBoltzmann> 5.67051e-8 </StefanBoltzmann>
-          </RMCRT>
-        </EnthalpySolver>
-
       </ExplicitSolver>
+
     </ARCHES>
 
   </CFD>
