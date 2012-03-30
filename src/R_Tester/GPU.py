@@ -26,12 +26,12 @@ from helpers.runSusTests import runSusTests
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
-NIGHTLYTESTS = [   ("poissonGPU1",       "poissonGPU1.ups",       1, "Linux", ["gpu"]),
-                   ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1, "Linux", ["gpu", "-nthreads 4 -gpu"]) ]
+NIGHTLYTESTS = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", ["gpu"]),
+                   ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1.1, "Linux", ["gpu", "-nthreads 4 -gpu"]) ]
 
 # Tests that are run during local regression testing
-LOCALTESTS   = [   ("poissonGPU1",       "poissonGPU1.ups",       1, "Linux", ["gpu"]),
-                   ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1, "Linux", ["gpu", "-nthreads 4 -gpu"]) ]
+LOCALTESTS   = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", ["gpu"]),
+                   ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1.1, "Linux", ["gpu", "-nthreads 4 -gpu"]) ]
 
 
 #__________________________________
