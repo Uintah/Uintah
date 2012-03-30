@@ -1,14 +1,9 @@
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
-#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ArchesVariables.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Components/Arches/Directives.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -117,7 +112,7 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
     _RMCRT->registerVarLabels(_matl, 
                               _abskgLabel,
                               _absorpLabel,
-                              _colorLabel,
+                               _colorLabel,
                               _src_label);
 
     _RMCRT->problemSetup( db, rmcrt_ps );
@@ -172,9 +167,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                                       SchedulerP& sched, 
                                       int timeSubStep )
 {
-
-  //__________________________________
-  //
   if(level->getIndex() > 0){  // only schedule once
     return;
   }
@@ -183,12 +175,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   if ( timestep%_radiation_calc_freq != 0 ) {  // is it the right timestep
     return;
   } 
-
   if ( timeSubStep != 0 ) {                   // only works on on RK step 0
     return;
-  }
-  
-     
+  } 
  
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
   printSchedule(level,dbg,"sched_computeSource: main task");
@@ -202,12 +191,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     modifies_divQ  = false;
   } else {
     modifies_divQ  = true;
-    temp_dw        = Task::NewDW;
   }
-
-  
-
-
   
   //______________________________________________________________________
   //   2 - L E V E L   A P P R O A C H
@@ -242,15 +226,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       _RMCRT->sched_Refine_Q (sched,  patches, _matlSet);
     }
   }
-  
-  // HACK until we figure out what to do with temperature
-  std::string taskname = "RMCRT_Radiation::computeSource";
-  Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::computeSource, timeSubStep);
-  printSchedule(level,dbg,"sched_computeSource HACK");
-  tsk->computes(_colorLabel);
-  sched->addTask(tsk, level->eachPatch(), _matlSet);
-
-  
 }
 
 
@@ -269,8 +244,10 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel ); 
+    tsk->computes( _colorLabel ); // HACK rip color out once temperatureLabel is known
   } else {  
-    tsk->modifies( _abskgLabel );  
+    tsk->modifies( _abskgLabel ); 
+    tsk->modifies( _colorLabel ); 
   }
 
   sched->addTask( tsk, level->eachPatch(), _matlSet ); 
@@ -293,14 +270,19 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
 
     CCVariable<double> abskg; 
-
+    CCVariable<double> color;     // HACK rip color out once temperatureLabel is known
     if ( time_sub_step == 0 ) { 
-      new_dw->allocateAndPut( abskg, _abskgLabel,  _matl, patch ); 
+      new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
+      new_dw->allocateAndPut( color, _colorLabel, _matl, patch );
     } else { 
       new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
+      new_dw->getModifiable( color,  _colorLabel,  _matl, patch );
     }
     _prop_calculator->compute( patch, abskg );
     
+    color.initialize( _initColor );
+    
+    _RMCRT->setBC(color,  _colorLabel->getName(), patch, _matl);
     _RMCRT->setBC(abskg, _abskgLabel->getName(), patch, _matl);
   }
   
@@ -372,9 +354,6 @@ RMCRT_Radiation::computeSource( const ProcessorGroup* ,
                             int timeSubStep ){
   // see sched_computeSource & CCA/Components/Models/Radiation/RMCRT/Ray.cc
   // for the actual tasks
-  
-  
   // HACK: until we start using the correct temperature.
-  new_dw->transferFrom(old_dw, _colorLabel, patches, matls);
-
+  throw InternalError("Stub Task: RMCRT_Radiation::computeSource you should never land here ", __FILE__, __LINE__);
 }
