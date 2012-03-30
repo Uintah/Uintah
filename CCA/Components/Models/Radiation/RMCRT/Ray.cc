@@ -66,6 +66,8 @@ Ray::Ray()
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
+  d_VRFluxLabel          = VarLabel::create( "VRFlux",           CCVariable<double>::getTypeDescription() );
+
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -112,6 +114,8 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
+  VarLabel::destroy(d_VRFluxLabel);
+
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -187,15 +191,13 @@ Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
                        const VarLabel* absorp,
                        const VarLabel* temperature,
-                       const VarLabel* divQ,
-                       const VarLabel* VRFlux)
+                       const VarLabel* divQ)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
   d_divQLabel        = divQ;
-  d_VRFluxLabel      = VRFlux;
   //__________________________________
   //  define the materialSet
   d_matlSet = scinew MaterialSet();

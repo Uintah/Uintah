@@ -137,8 +137,7 @@ namespace Uintah{
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
                             const VarLabel* temperature,
-                            const VarLabel* divQ,
-                            const VarLabel* VRFlux);
+                            const VarLabel* divQ);
                             
     void setBC(CCVariable<double>& Q_CC,
                const string& desc,

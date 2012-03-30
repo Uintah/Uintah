@@ -118,8 +118,7 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
                               _abskgLabel,
                               _absorpLabel,
                               _colorLabel,
-                              _src_label,
-                              _flux_label);
+                              _src_label);
 
     _RMCRT->problemSetup( db, rmcrt_ps );
    
