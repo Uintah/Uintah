@@ -93,6 +93,7 @@ Ray::Ray(GPUThreadedMPIScheduler* gpuScheduler)
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
+  d_VRFluxLabel          = VarLabel::create( "VRFlux",           CCVariable<double>::getTypeDescription() );
 
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -114,7 +115,7 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
-  VarLabel::destroy(d_VRFluxLabel);
+  VarLabel::destroy( d_VRFluxLabel);
 
 
   if(d_matlSet && d_matlSet->removeReference()) {
@@ -406,7 +407,7 @@ Ray::sched_rayTrace( const LevelP& level,
 #ifdef HAVE_CUDA
   std::string gputaskname = "Ray::sched_rayTraceGPU";
   Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
-                           &Ray::rayTrace, modifies_divQ, modifies_VRFlux, abskg_dw, sigma_dw );
+                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
                          modifies_divQ, abskg_dw, sigma_dw );

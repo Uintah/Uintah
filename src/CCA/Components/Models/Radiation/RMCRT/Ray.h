@@ -207,14 +207,13 @@ namespace Uintah{
 
       //______________________________________________________________________
       //
-      void rayTraceGPU( const ProcessorGroup* pc,
+      void rayTraceGPU( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
                         int device,
                         bool modifies_divQ,
-                        bool modifies_VRFlux,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw );
 
