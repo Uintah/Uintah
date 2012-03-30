@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "ModelState.h"
-using namespace Uintah;
+using namespace UintahBB;
 
-ModelState::ModelState()
+ModelState::ModelState():PlasticityState()
 {
   yieldStress = 0.0;
   strainRate = 0.0;
@@ -60,9 +60,9 @@ ModelState::ModelState()
   epse_s = 0.0;
   epse_v_tr = 0.0;
   epse_s_tr = 0.0;
-  backStress = Matrix3(0.0);
-  elasticStrain = Matrix3(0.0);
-  elasticStrainTrial = Matrix3(0.0);
+  backStress = Uintah::Matrix3(0.0);
+  elasticStrain = Uintah::Matrix3(0.0);
+  elasticStrainTrial = Uintah::Matrix3(0.0);
 }
 
 ModelState::ModelState(const ModelState& state)

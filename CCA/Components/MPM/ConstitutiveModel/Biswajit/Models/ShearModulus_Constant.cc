@@ -31,13 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #include "ShearModulus_Constant.h"
 
 using namespace Uintah;
+using namespace UintahBB;
          
 // Construct a shear modulus model.  
 ShearModulus_Constant::ShearModulus_Constant()
 {
 }
 
-ShearModulus_Constant::ShearModulus_Constant(ProblemSpecP& )
+ShearModulus_Constant::ShearModulus_Constant(Uintah::ProblemSpecP& )
 {
 }
 
@@ -52,7 +53,7 @@ ShearModulus_Constant::~ShearModulus_Constant()
 }
 
 
-void ShearModulus_Constant::outputProblemSpec(ProblemSpecP& ps)
+void ShearModulus_Constant::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model");
   shear_ps->setAttribute("type","constant_shear");
@@ -62,11 +63,18 @@ void ShearModulus_Constant::outputProblemSpec(ProblemSpecP& ps)
 double 
 ShearModulus_Constant::computeInitialShearModulus()
 {
+  return d_shear;
+}
+
+double 
+ShearModulus_Constant::computeShearModulus(const ModelState* state) 
+{
+  d_shear = state->initialShearModulus;
   return state->initialShearModulus;
 }
 
 double 
-ShearModulus_Constant::computeShearModulus(const ModelState* state)
+ShearModulus_Constant::computeShearModulus(const ModelState* state) const
 {
   return state->initialShearModulus;
 }

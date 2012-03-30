@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <CCA/Components/MPM/ConstitutiveModel/HyperelasticPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/HyperelasticPlastic.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/Models/PressureModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/PressureModelFactory.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -116,7 +116,7 @@ HyperelasticPlastic::HyperelasticPlastic(ProblemSpecP& ps, MPMFlags* Mflag)
   } 
 
   // Equation of state factory for pressure (default is DefaultHyperEOS)
-  d_eos = PressureModelFactory::create(ps);
+  d_eos = UintahBB::PressureModelFactory::create(ps);
   d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
     ostringstream desc;
@@ -195,7 +195,7 @@ HyperelasticPlastic::HyperelasticPlastic(ProblemSpecP& ps, MPMFlags* Mflag, bool
   } 
 
   // Equation of state factory for pressure
-  d_eos = PressureModelFactory::create(ps);
+  d_eos = UintahBB::PressureModelFactory::create(ps);
   d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
     ostringstream desc;
@@ -267,7 +267,7 @@ HyperelasticPlastic::HyperelasticPlastic(const HyperelasticPlastic* cm) : Consti
   d_init_pressure = cm->d_init_pressure;
 
   // EOS from factory
-  d_eos = PressureModelFactory::createCopy(cm->d_eos);
+  d_eos = UintahBB::PressureModelFactory::createCopy(cm->d_eos);
   d_eos->setBulkModulus(d_initialData.Bulk);
 
   // Universal Labels

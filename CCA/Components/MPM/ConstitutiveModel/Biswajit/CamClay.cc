@@ -77,8 +77,8 @@ static DebugStream cout_CC1("SSEP1",false);
 static DebugStream CSTi("SSEPi",false);
 static DebugStream CSTir("SSEPir",false);
 
-UintahBB::CamClay::CamClay(ProblemSpecP& ps, Uintah::MPMFlags* Mflag)
-  : Uintah::ConstitutiveModel(Mflag)
+CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
+  : ConstitutiveModel(Mflag)
 {
   d_eos = UintahBB::PressureModelFactory::create(ps);
   if(!d_eos){
@@ -118,7 +118,7 @@ UintahBB::CamClay::CamClay(ProblemSpecP& ps, Uintah::MPMFlags* Mflag)
 
 }
 
-UintahBB::CamClay::CamClay(const UintahBB::CamClay* cm) :
+CamClay::CamClay(const CamClay* cm) :
   ConstitutiveModel(cm)
 {
   d_eos = UintahBB::PressureModelFactory::createCopy(cm->d_eos);
@@ -129,7 +129,7 @@ UintahBB::CamClay::CamClay(const UintahBB::CamClay* cm) :
   initializeLocalMPMLabels();
 }
 
-UintahBB::CamClay::~CamClay()
+CamClay::~CamClay()
 {
   // Destructor 
   VarLabel::destroy(pStrainLabel);
@@ -147,7 +147,7 @@ UintahBB::CamClay::~CamClay()
 }
 
 
-void UintahBB::CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
@@ -162,14 +162,14 @@ void UintahBB::CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 }
 
 
-UintahBB::CamClay* UintahBB::CamClay::clone()
+CamClay* CamClay::clone()
 {
   return scinew CamClay(*this);
 }
 
 
 void
-UintahBB::CamClay::initializeLocalMPMLabels()
+CamClay::initializeLocalMPMLabels()
 {
   pStrainLabel = VarLabel::create("p.strain",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -187,7 +187,7 @@ UintahBB::CamClay::initializeLocalMPMLabels()
 }
 
 void 
-UintahBB::CamClay::addParticleState(std::vector<const VarLabel*>& from,
+CamClay::addParticleState(std::vector<const VarLabel*>& from,
                           std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
@@ -204,7 +204,7 @@ UintahBB::CamClay::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
-UintahBB::CamClay::addInitialComputesAndRequires(Task* task,
+CamClay::addInitialComputesAndRequires(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* patch) const
 {
@@ -219,7 +219,7 @@ UintahBB::CamClay::addInitialComputesAndRequires(Task* task,
 }
 
 void 
-UintahBB::CamClay::initializeCMData(const Patch* patch,
+CamClay::initializeCMData(const Patch* patch,
                           const MPMMaterial* matl,
                           DataWarehouse* new_dw)
 {
@@ -254,7 +254,7 @@ UintahBB::CamClay::initializeCMData(const Patch* patch,
 }
 
 void 
-UintahBB::CamClay::computeStableTimestep(const Patch* patch,
+CamClay::computeStableTimestep(const Patch* patch,
                                const MPMMaterial* matl,
                                DataWarehouse* new_dw)
 {
@@ -304,7 +304,7 @@ UintahBB::CamClay::computeStableTimestep(const Patch* patch,
 }
 
 void 
-UintahBB::CamClay::addComputesAndRequires(Task* task,
+CamClay::addComputesAndRequires(Task* task,
                                 const MPMMaterial* matl,
                                 const PatchSet* patches) const
 {
@@ -329,7 +329,7 @@ UintahBB::CamClay::addComputesAndRequires(Task* task,
 }
 
 void 
-UintahBB::CamClay::computeStressTensor(const PatchSubset* patches,
+CamClay::computeStressTensor(const PatchSubset* patches,
                              const MPMMaterial* matl,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
@@ -558,7 +558,7 @@ UintahBB::CamClay::computeStressTensor(const PatchSubset* patches,
       strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
       
       // Set up the ModelState (for t_n)
-      ModelState* state = scinew ModelState();
+      UintahBB::ModelState* state = scinew UintahBB::ModelState();
       state->density             = rho_cur;
       state->initialDensity      = rho_0;
       state->volume              = pVol_new[idx];
@@ -826,7 +826,7 @@ UintahBB::CamClay::computeStressTensor(const PatchSubset* patches,
 }
 
 void 
-UintahBB::CamClay::carryForward(const PatchSubset* patches,
+CamClay::carryForward(const PatchSubset* patches,
                       const MPMMaterial* matl,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
@@ -881,10 +881,10 @@ UintahBB::CamClay::carryForward(const PatchSubset* patches,
 }
 
 void 
-UintahBB::CamClay::allocateCMDataAddRequires(Task* task,
+CamClay::allocateCMDataAddRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet* patch,
-                                   Uintah::MPMLabel* lb) const
+                                   MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -902,7 +902,7 @@ UintahBB::CamClay::allocateCMDataAddRequires(Task* task,
 }
 
 void 
-UintahBB::CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
+CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
                            ParticleSubset* addset,
                            map<const VarLabel*, 
                            ParticleVariableBase*>* newState,
@@ -948,7 +948,7 @@ UintahBB::CamClay::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 
-double UintahBB::CamClay::computeRhoMicroCM(double pressure,
+double CamClay::computeRhoMicroCM(double pressure,
                                   const double p_ref,
                                   const MPMMaterial* matl,
                                   double temperature,
@@ -960,7 +960,7 @@ double UintahBB::CamClay::computeRhoMicroCM(double pressure,
   return rho_cur;
 }
 
-void UintahBB::CamClay::computePressEOSCM(double rho_cur,double& pressure,
+void CamClay::computePressEOSCM(double rho_cur,double& pressure,
                                 double p_ref,  
                                 double& dp_drho, double& csquared,
                                 const MPMMaterial* matl,
@@ -971,20 +971,20 @@ void UintahBB::CamClay::computePressEOSCM(double rho_cur,double& pressure,
   pressure += p_ref;
 }
 
-double UintahBB::CamClay::getCompressibility()
+double CamClay::getCompressibility()
 {
   return 1.0/d_eos->initialBulkModulus();
 }
 
 void
-UintahBB::CamClay::scheduleCheckNeedAddMPMMaterial(Task* task,
+CamClay::scheduleCheckNeedAddMPMMaterial(Task* task,
                                          const MPMMaterial* ,
                                          const PatchSet* ) const
 {
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 
-void UintahBB::CamClay::checkNeedAddMPMMaterial(const PatchSubset* patches,
+void CamClay::checkNeedAddMPMMaterial(const PatchSubset* patches,
                                       const MPMMaterial* matl,
                                       DataWarehouse* ,
                                       DataWarehouse* new_dw)

@@ -43,6 +43,7 @@ using std::ifstream;
 using std::ofstream;
 
 using namespace Uintah;
+using namespace UintahBB;
 
 KinematicHardeningModel* KinematicHardeningModelFactory::create(ProblemSpecP& ps)
 {

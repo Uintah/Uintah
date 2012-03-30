@@ -34,13 +34,14 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 using namespace Uintah;
+using namespace UintahBB;
 
 Pressure_Hypoelastic::Pressure_Hypoelastic()
 {
   d_bulk = -1.0;
 } 
 
-Pressure_Hypoelastic::Pressure_Hypoelastic(ProblemSpecP& )
+Pressure_Hypoelastic::Pressure_Hypoelastic(Uintah::ProblemSpecP& )
 {
   d_bulk = -1.0;
 } 
@@ -55,7 +56,7 @@ Pressure_Hypoelastic::~Pressure_Hypoelastic()
 }
 
 
-void Pressure_Hypoelastic::outputProblemSpec(ProblemSpecP& ps)
+void Pressure_Hypoelastic::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
   eos_ps->setAttribute("type","default_hypo");
@@ -65,10 +66,10 @@ void Pressure_Hypoelastic::outputProblemSpec(ProblemSpecP& ps)
 //////////
 // Calculate the pressure using the elastic constitutive equation
 double 
-Pressure_Hypoelastic::computePressure(const MPMMaterial* ,
+Pressure_Hypoelastic::computePressure(const Uintah::MPMMaterial* ,
                                        const ModelState* state,
-                                       const Matrix3& ,
-                                       const Matrix3& rateOfDeformation,
+                                       const Uintah::Matrix3& ,
+                                       const Uintah::Matrix3& rateOfDeformation,
                                        const double& delT)
 {
   // Get the state data
@@ -84,7 +85,7 @@ Pressure_Hypoelastic::computePressure(const MPMMaterial* ,
 }
 
 double 
-Pressure_Hypoelastic::eval_dp_dJ(const MPMMaterial* matl,
+Pressure_Hypoelastic::eval_dp_dJ(const Uintah::MPMMaterial* matl,
                                   const double& detF, 
                                   const ModelState* state)
 {

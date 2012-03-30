@@ -39,8 +39,9 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace UintahBB;
 
-ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
+ShearModulusModel* ShearModulusModelFactory::create(Uintah::ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("shear_modulus_model");
    if(!child) {

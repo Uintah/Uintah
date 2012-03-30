@@ -43,9 +43,10 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
+using namespace UintahBB;
 using namespace std;
 
-Pressure_MieGruneisen::Pressure_MieGruneisen(ProblemSpecP& ps)
+Pressure_MieGruneisen::Pressure_MieGruneisen(Uintah::ProblemSpecP& ps)
 {
   ps->require("C_0",d_const.C_0);
   ps->require("Gamma_0",d_const.Gamma_0);
@@ -67,7 +68,7 @@ Pressure_MieGruneisen::~Pressure_MieGruneisen()
 {
 }
          
-void Pressure_MieGruneisen::outputProblemSpec(ProblemSpecP& ps)
+void Pressure_MieGruneisen::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
   eos_ps->setAttribute("type","mie_gruneisen");
@@ -82,10 +83,10 @@ void Pressure_MieGruneisen::outputProblemSpec(ProblemSpecP& ps)
 //////////
 // Calculate the pressure using the Mie-Gruneisen equation of state
 double 
-Pressure_MieGruneisen::computePressure(const MPMMaterial* matl,
+Pressure_MieGruneisen::computePressure(const Uintah::MPMMaterial* matl,
                                  const ModelState* state,
-                                 const Matrix3& ,
-                                 const Matrix3& ,
+                                 const Uintah::Matrix3& ,
+                                 const Uintah::Matrix3& ,
                                  const double& )
 {
   // Get the current density
@@ -131,7 +132,7 @@ Pressure_MieGruneisen::computeIsentropicTemperatureRate(const double T,
 }
 
 double 
-Pressure_MieGruneisen::eval_dp_dJ(const MPMMaterial* matl,
+Pressure_MieGruneisen::eval_dp_dJ(const Uintah::MPMMaterial* matl,
                             const double& detF, 
                             const ModelState* state)
 {

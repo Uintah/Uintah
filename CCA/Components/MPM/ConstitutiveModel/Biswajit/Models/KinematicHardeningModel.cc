@@ -32,6 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #include "KinematicHardeningModel.h"
 
 using namespace Uintah;
+using namespace UintahBB;
+using namespace std;
 
 KinematicHardeningModel::KinematicHardeningModel()
 {

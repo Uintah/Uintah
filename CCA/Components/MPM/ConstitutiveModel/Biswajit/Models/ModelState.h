@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __BB_PLASTICITY_STATE_DATA_H__
 #define __BB_PLASTICITY_STATE_DATA_H__
 
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <Core/Math/Matrix3.h>
 
 namespace UintahBB {
@@ -46,33 +47,11 @@ namespace UintahBB {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ModelState {
+  class ModelState: public Uintah::PlasticityState {
 
   public:
-    double yieldStress;
-    double strainRate;
-    double plasticStrainRate;
-    double plasticStrain;
-    double pressure;
-    double temperature;
-    double initialTemperature;
-    double density;
-    double initialDensity;
-    double volume;
-    double initialVolume;
-    double bulkModulus;
-    double initialBulkModulus;
-    double shearModulus;
-    double initialShearModulus;
-    double meltingTemp;
-    double initialMeltTemp;
-    double specificHeat;
-    double porosity;
-    double energy;
-    Matrix3 backStress;
-
-    Matrix3 elasticStrain;
-    Matrix3 elasticStrainTrial;
+    Uintah::Matrix3 elasticStrain;
+    Uintah::Matrix3 elasticStrainTrial;
 
     double p;         // pressure = tr(sigma)
     double q;         // shear = sqrt(3J2); J2 = 1/2 s:s; s = sigma - p I

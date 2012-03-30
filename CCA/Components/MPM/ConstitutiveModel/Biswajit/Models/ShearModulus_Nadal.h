@@ -59,7 +59,7 @@ namespace UintahBB {
   public:
          
     /*! Construct a constant shear modulus model. */
-    ShearModulus_Nadal(ProblemSpecP& ps);
+    ShearModulus_Nadal(Uintah::ProblemSpecP& ps);
 
     /*! Construct a copy of constant shear modulus model. */
     ShearModulus_Nadal(const ShearModulus_Nadal* smm);
@@ -67,11 +67,12 @@ namespace UintahBB {
     /*! Destructor of constant shear modulus model.   */
     virtual ~ShearModulus_Nadal();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     /*! Compute the shear modulus */
     double computeInitialShearModulus();
     double computeShearModulus(const ModelState* state);
+    double computeShearModulus(const ModelState* state) const {return d_mu0;};
 
     /*! Compute the shear strain energy */
     double computeStrainEnergy(const ModelState* state) {return 0.0;};
@@ -86,7 +87,7 @@ namespace UintahBB {
                epse_v = tr(epse)
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeQ(const ModelState* state)
+    double computeQ(const ModelState* state) const
     {
       return 0.0;
     }
@@ -96,7 +97,7 @@ namespace UintahBB {
       Compute dq/depse_s 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_s(const ModelState* state)
+    double computeDqDepse_s(const ModelState* state) const
     {
       return 0.0;
     }
@@ -106,7 +107,7 @@ namespace UintahBB {
       Compute dq/depse_v 
     */
     /////////////////////////////////////////////////////////////////////////
-    double computeDqDepse_v(const ModelState* state)
+    double computeDqDepse_v(const ModelState* state) const
     {
       return 0.0;
     }

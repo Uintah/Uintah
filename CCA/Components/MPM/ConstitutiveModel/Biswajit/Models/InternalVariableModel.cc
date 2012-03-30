@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "InternalVariableModel.h"
 
-using namespace Uintah;
+using namespace UintahBB;
 
 InternalVariableModel::InternalVariableModel()
 {

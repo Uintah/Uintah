@@ -48,6 +48,9 @@ namespace UintahBB {
   */
   class ShearModulusModel {
 
+  protected:
+    double d_shear;  // the initial shear modulus
+
   public:
          
     //! Construct a shear modulus model.  
@@ -58,7 +61,7 @@ namespace UintahBB {
     /*! Virtual to ensure correct behavior */
     virtual ~ShearModulusModel();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps) = 0;
          
     /////////////////////////////////////////////////////////////////////////
     /*! 
@@ -67,6 +70,7 @@ namespace UintahBB {
     /////////////////////////////////////////////////////////////////////////
     virtual double computeInitialShearModulus() = 0;
     virtual double computeShearModulus(const ModelState* state) = 0;
+    virtual double computeShearModulus(const ModelState* state) const = 0;
 
     /*! Compute the shear strain energy */
     virtual double computeStrainEnergy(const ModelState* state)  = 0;
@@ -81,21 +85,21 @@ namespace UintahBB {
                epse_v = tr(epse)
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual double computeQ(const ModelState* state) = 0;
+    virtual double computeQ(const ModelState* state) const = 0;
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_s 
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual double computeDqDepse_s(const ModelState* state) = 0;
+    virtual double computeDqDepse_s(const ModelState* state) const = 0;
 
     /////////////////////////////////////////////////////////////////////////
     /* 
       Compute dq/depse_v 
     */
     /////////////////////////////////////////////////////////////////////////
-    virtual double computeDqDepse_v(const ModelState* state) = 0;
+    virtual double computeDqDepse_v(const ModelState* state) const = 0;
   };
 } // End namespace Uintah
       

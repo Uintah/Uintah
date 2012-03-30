@@ -31,10 +31,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ShearModulusModel.h"
 
-using namespace Uintah;
+using namespace UintahBB;
 
 ShearModulusModel::ShearModulusModel()
 {
+  d_shear = 0.0;
 }
 
 ShearModulusModel::~ShearModulusModel()

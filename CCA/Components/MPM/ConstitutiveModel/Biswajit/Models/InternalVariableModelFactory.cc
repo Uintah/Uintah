@@ -29,25 +29,27 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "InternalVariableModelFactory.h"                                             
-#include "InternalVar_BorjaPressure.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "InternalVar_BorjaPressure.h"
+
+using namespace UintahBB;
+using Uintah::ProblemSpecP;
+using Uintah::ProblemSetupException;
 using std::cerr;
 using std::ifstream;
 using std::ofstream;
-
-using namespace Uintah;
 
 InternalVariableModel* InternalVariableModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("internal_var_model");
    if(!child)
       throw ProblemSetupException("Cannot find internal_var_model tag", __FILE__, __LINE__);
-   string mat_type;
+   std::string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for internal_var_model", __FILE__, __LINE__);
    if (mat_type == "borja_p_c")
@@ -64,7 +66,7 @@ InternalVariableModelFactory::createCopy(const InternalVariableModel* pm)
       return(scinew InternalVar_BorjaPressure(dynamic_cast<const InternalVar_BorjaPressure*>(pm)));
 
    else {
-      throw ProblemSetupException("Cannot create copy of unknown internal var model", __FILE__, __LINE__);
+      throw Uintah::ProblemSetupException("Cannot create copy of unknown internal var model", __FILE__, __LINE__);
    }
 }
 

@@ -33,8 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 using namespace Uintah;
+using namespace UintahBB;
 
-YieldCond_vonMises::YieldCond_vonMises(ProblemSpecP&)
+YieldCond_vonMises::YieldCond_vonMises(Uintah::ProblemSpecP&)
 {
 }
          
@@ -46,7 +47,7 @@ YieldCond_vonMises::~YieldCond_vonMises()
 {
 }
 
-void YieldCond_vonMises::outputProblemSpec(ProblemSpecP& ps)
+void YieldCond_vonMises::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP yield_ps = ps->appendChild("yield_condition");
   yield_ps->setAttribute("type","vonMises");

@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <Core/Exceptions/InvalidValue.h>
 
+using namespace UintahBB;
 using namespace Uintah;
 using namespace std;
 
@@ -158,8 +159,8 @@ InternalVar_BorjaPressure::getInternalVariable(ParticleSubset* pset ,
 }
 
 void 
-InternalVar_BorjaPressure::allocateAndPutInternalVariables(ParticleSubset* pset,
-                                                     DataWarehouse* old_dw) 
+InternalVar_BorjaPressure::allocateAndPutInternalVariable(ParticleSubset* pset,
+                                                     DataWarehouse* new_dw) 
 {
   new_dw->allocateAndPut(pPc_new, pPcLabel_preReloc, pset);
 }
@@ -187,7 +188,7 @@ InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
   // Get the trial elastic strain and the updated elastic strain
   // (volumetric part)
   double strain_elast_v_tr = state->elasticStrainTrial.Trace();
-  double strain_elast_vr = state->elasticStrain.Trace();
+  double strain_elast_v = state->elasticStrain.Trace();
 
   // Calculate new p_c
   double pc = pc_n*exp(-(strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
@@ -205,7 +206,7 @@ InternalVar_BorjaPressure::updateInternalVariable(const particleIndex idx,
 // Compute derivative of internal variable with respect to volumetric
 // elastic strain
 double 
-InternalVar_BorjaPressure::computeVolStrainDerivOfInternalVariable(const ModelState* state)
+InternalVar_BorjaPressure::computeVolStrainDerivOfInternalVariable(const ModelState* state) const
 {
   // Get old p_c
   double pc_n = state->p_c;

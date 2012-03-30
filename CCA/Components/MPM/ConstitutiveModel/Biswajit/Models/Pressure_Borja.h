@@ -81,7 +81,7 @@ namespace UintahBB {
 
   public:
     // constructors
-    Pressure_Borja(ProblemSpecP& ps); 
+    Pressure_Borja(Uintah::ProblemSpecP& ps); 
     Pressure_Borja(const Pressure_Borja* cm);
          
     // Special operator for computing internal energy
@@ -90,15 +90,15 @@ namespace UintahBB {
     // destructor 
     virtual ~Pressure_Borja();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
-    virtual double computePressure(const MPMMaterial* matl,
+    virtual double computePressure(const Uintah::MPMMaterial* matl,
                                    const ModelState* state,
-                                   const Matrix3& deformGrad,
-                                   const Matrix3& rateOfDeformation,
+                                   const Uintah::Matrix3& deformGrad,
+                                   const Uintah::Matrix3& rateOfDeformation,
                                    const double& delT);
 
     // Compute the bulk modulus
@@ -107,7 +107,7 @@ namespace UintahBB {
     // Compute the volumetric strain energy 
     double computeStrainEnergy(const ModelState* state);
 
-    double eval_dp_dJ(const MPMMaterial* matl,
+    double eval_dp_dJ(const Uintah::MPMMaterial* matl,
                       const double& delF,
                       const ModelState* state);
 
@@ -116,7 +116,7 @@ namespace UintahBB {
         where epse_v = tr(epse)
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_v(const ModelState* state);
+    double computeDpDepse_v(const ModelState* state) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! Calculate the derivative of p with respect to epse_s
@@ -124,7 +124,7 @@ namespace UintahBB {
               ee = epse - 1/3 tr(epse) I
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_s(const ModelState* state);
+    double computeDpDepse_s(const ModelState* state) const;
 
     // Calculate rate of temperature change due to compression/expansion
     double computeIsentropicTemperatureRate(const double T,
@@ -144,6 +144,7 @@ namespace UintahBB {
                          double& csquared);
 
     // Compute bulk modulus
+    void setInitialBulkModulus();
     double computeInitialBulkModulus();
     double computeBulkModulus(const double& rho_orig,
                               const double& rho_cur);
@@ -163,13 +164,13 @@ namespace UintahBB {
                         double& epse_v, double& epse_s);
 
     //  Pressure computation
-    double computeP(const double& epse_v, const double& epse_s);
+    double computeP(const double& epse_v, const double& epse_s) const;
 
     //  Pressure derivative computation
-    double computeDpDepse_v(const double& epse_v, const double& epse_s);
+    double evalDpDepse_v(const double& epse_v, const double& epse_s) const;
 
     //  Shear derivative computation
-    double computeDpDepse_s(const double& epse_v, const double& epse_s);
+    double evalDpDepse_s(const double& epse_v, const double& epse_s) const;
   };
 
 } // End namespace Uintah

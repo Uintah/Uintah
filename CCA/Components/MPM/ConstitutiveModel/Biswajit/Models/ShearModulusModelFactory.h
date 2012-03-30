@@ -51,7 +51,7 @@ namespace UintahBB {
   public:
 
     //! Create a shear modulus model from the input file problem specification.
-    static ShearModulusModel* create(ProblemSpecP& ps);
+    static ShearModulusModel* create(Uintah::ProblemSpecP& ps);
     static ShearModulusModel* createCopy(const ShearModulusModel* yc);
   };
 } // End namespace Uintah

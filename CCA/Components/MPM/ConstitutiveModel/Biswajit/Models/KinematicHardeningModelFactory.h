@@ -37,13 +37,12 @@ DEALINGS IN THE SOFTWARE.
 namespace UintahBB {
 
   class KinematicHardeningModel;
-  class MPMLabel;
 
   class KinematicHardeningModelFactory
   {
   public:
     // this function has a switch for all known mat_types
-    static KinematicHardeningModel* create(ProblemSpecP& ps);
+    static KinematicHardeningModel* create(Uintah::ProblemSpecP& ps);
     static KinematicHardeningModel* createCopy(const KinematicHardeningModel* pm);
   };
 } // End namespace Uintah

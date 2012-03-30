@@ -68,23 +68,23 @@ namespace UintahBB {
     Pressure_Hyperelastic(); // This constructor is used when there is
                              // no equation_of_state tag in the input
                              // file  ** WARNING **
-    Pressure_Hyperelastic(ProblemSpecP& ps); 
+    Pressure_Hyperelastic(Uintah::ProblemSpecP& ps); 
     Pressure_Hyperelastic(const Pressure_Hyperelastic* cm);
          
     // destructor 
     virtual ~Pressure_Hyperelastic();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
     //////////
     // Calculate the pressure using a equation of state
-    double computePressure(const MPMMaterial* matl,
+    double computePressure(const Uintah::MPMMaterial* matl,
                            const ModelState* state,
-                           const Matrix3& deformGrad,
-                           const Matrix3& rateOfDeformation,
+                           const Uintah::Matrix3& deformGrad,
+                           const Uintah::Matrix3& rateOfDeformation,
                            const double& delT);
   
-    double eval_dp_dJ(const MPMMaterial* matl,
+    double eval_dp_dJ(const Uintah::MPMMaterial* matl,
                       const double& detF,
                       const ModelState* state);
 
@@ -123,7 +123,7 @@ namespace UintahBB {
         where epse_v = tr(epse)
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_v(const ModelState* state)
+    double computeDpDepse_v(const ModelState* state) const
     {
       return 0.0;
     };
@@ -134,7 +134,7 @@ namespace UintahBB {
               ee = epse - 1/3 tr(epse) I
               epse = total elastic strain */
     ////////////////////////////////////////////////////////////////////////
-    double computeDpDepse_s(const ModelState* state)
+    double computeDpDepse_s(const ModelState* state) const
     {
       return 0.0;
     };

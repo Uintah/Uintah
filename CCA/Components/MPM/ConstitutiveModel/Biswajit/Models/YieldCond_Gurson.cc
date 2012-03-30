@@ -36,8 +36,9 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 using namespace Uintah;
+using namespace UintahBB;
 
-YieldCond_Gurson::YieldCond_Gurson(ProblemSpecP& ps)
+YieldCond_Gurson::YieldCond_Gurson(Uintah::ProblemSpecP& ps)
 {
   ps->require("q1",d_CM.q1);
   ps->require("q2",d_CM.q2);
@@ -59,7 +60,7 @@ YieldCond_Gurson::~YieldCond_Gurson()
 {
 }
 
-void YieldCond_Gurson::outputProblemSpec(ProblemSpecP& ps)
+void YieldCond_Gurson::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP yield_ps = ps->appendChild("yield_condition");
   yield_ps->setAttribute("type","gurson");
