@@ -291,7 +291,6 @@ namespace Wasatch{
     Uintah::ProblemSpecP nameTagParam = convFluxParams->findBlock("NameTag");
     if( nameTagParam ){
       convFluxTag = parse_nametag( nameTagParam );
-
       // if no expression was specified, build one for the convective flux.
     } else {
       convFluxTag = Expr::Tag( solnVarName + "_convective_flux_" + dir, Expr::STATE_NONE );
@@ -300,68 +299,23 @@ namespace Wasatch{
       if( dir=="X" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
-
-        switch (convInterpMethod) {
-
-          case CENTRAL: // for central and upwind, use specified interpolants
-            typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
-            break;
-
-          case UPWIND:
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-
-          default: // for all other limiter types
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-        }
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::XFace>::type phiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, typename Ops::InterpC2FXUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-
-        switch (convInterpMethod) {
-
-          case CENTRAL: // for central and upwind, use specified interpolants
-            typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
-            break;
-
-          case UPWIND:
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-
-          default: // for all other limiter types
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-        }
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::YFace>::type phiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, typename Ops::InterpC2FYUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-
-        switch (convInterpMethod) {
-
-          case CENTRAL: // for central and upwind, use specified interpolants
-            typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
-            break;
-
-          case UPWIND:
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-
-          default: // for all other limiter types
-            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
-            break;
-        }
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::ZFace>::type phiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, typename Ops::InterpC2FZUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
       }
 
       if( builder == NULL ){

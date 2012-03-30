@@ -290,20 +290,17 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
       for (size_t i =1; i<=bndFaceCount_[0]; i++) { // count xCount times
 
         if ((*advVel) > 0.0) {
-          // for a minus face, if the velocity if positive, then use central approximation
-          //*destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
-          *destFld = *srcFieldMinus;
+          // for a minus face, if the velocity if positive, then use upwind
+          *destFld = 0.0;
         }
 
         else if ((*advVel) < 0.0) {
-          // calculate the gradient between successive cells
+          // calculate the ratio of gradients between successive cells
           const double r = (*srcFieldPlusPlus - *srcFieldPlus)/(*srcFieldPlus - *srcFieldMinus);
-          const double psi = calculate_flux_limiter_function(r, limiterType_);
-          *destFld = *srcFieldPlus + 0.5*psi*(*srcFieldMinus - *srcFieldPlus);
+          *destFld = calculate_flux_limiter_function(r, limiterType_);;
         }
 
-        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus); // may need a better condition here to account for
-        // a tolerance value for example.
+        else *destFld = 1.0; // default to central when velocity = 0.0
 
         srcFieldMinus += bndVolIncr_[0];
         srcFieldPlus += bndVolIncr_[0];
@@ -342,19 +339,17 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
       for (size_t i =1; i<=bndFaceCount_[0]; i++) { // count xCount times
 
         if ((*advVel) < 0.0) {
-          // for a minus face, if the velocity if positive, then use central approximation
-          //*destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
-          *destFld = *srcFieldPlus;
+          // for a minus face, if the velocity is negative, then use upwinded value
+          *destFld = 0.0;
         }
 
         else if ((*advVel) > 0.0) {
           // calculate the gradient between successive cells
           const double r = (*srcFieldMinus - *srcFieldMinusMinus)/(*srcFieldPlus - *srcFieldMinus);
-          const double psi = calculate_flux_limiter_function(r, limiterType_);
-          *destFld = *srcFieldMinus + 0.5*psi*(*srcFieldPlus - *srcFieldMinus);
+          *destFld = calculate_flux_limiter_function(r, limiterType_);;
         }
 
-        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
+        else *destFld = 1.0; // default to central when velocity = 0.0
 
         srcFieldMinus += bndVolIncr_[0];
         srcFieldPlus += bndVolIncr_[0];
@@ -392,21 +387,19 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
       for (size_t i=1; i<=faceCount_[0]; i++) { // count xCount times
 
         if ((*advVel) > 0.0) {
-          // calculate the gradient between successive cells
+          // calculate the ratio of gradient between successive cells
           const double r = (*srcFieldMinus - *srcFieldMinusMinus)/(*srcFieldPlus - *srcFieldMinus);
-          const double psi = calculate_flux_limiter_function(r, limiterType_);
-          *destFld = *srcFieldMinus + 0.5*psi*(*srcFieldPlus - *srcFieldMinus);
+          *destFld = calculate_flux_limiter_function(r, limiterType_);
         }
 
         else if ((*advVel) < 0.0) {
-          // calculate the gradient between successive cells
+          // calculate the ratio of gradients between successive cells
           const double r = (*srcFieldPlusPlus - *srcFieldPlus)/(*srcFieldPlus - *srcFieldMinus);
-          const double psi = calculate_flux_limiter_function(r, limiterType_);
-          *destFld = *srcFieldPlus + 0.5*psi*(*srcFieldMinus - *srcFieldPlus);
+          *destFld = calculate_flux_limiter_function(r, limiterType_);
         }
 
-        else *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
-
+        else *destFld = 1.0; // default to central when velocity = 0.0
+        
         ++srcFieldMinus;
         ++srcFieldMinusMinus;
         ++srcFieldPlus;

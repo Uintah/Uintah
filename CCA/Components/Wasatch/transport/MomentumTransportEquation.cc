@@ -27,6 +27,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/StringNames.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
@@ -34,6 +35,7 @@
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
@@ -184,9 +186,8 @@ namespace Wasatch{
   {
     typedef typename SpatialOps::structured::VolType<FluxT>::VolField  MomT;
     typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
-    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
-
-    typedef typename ConvectiveFlux< MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
+    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;   
+    typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
     return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
   }
 

@@ -113,29 +113,34 @@ ConvectiveFlux<PhiInterpT, VelInterpT>::Builder::build() const
 
 //====================================================================
 
-template< typename PhiInterpT, typename VelInterpT >
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                        const Expr::Tag& velTag,
                        const Wasatch::ConvInterpMethods limiterType )
   : Expr::Expression<PhiFaceT>(),
-    phiTag_( phiTag ),
-    velTag_( velTag ),
-    limiterType_( limiterType )
+    phiTag_     ( phiTag ),
+    velTag_     ( velTag ),
+    limiterType_( limiterType ),
+    isUpwind_   ( limiterType_ == Wasatch::UPWIND  ),
+    isCentral_  ( limiterType_ == Wasatch::CENTRAL )
 {}
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT >
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 ~ConvectiveFluxLimiter()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT >
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
 void
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression(phiTag_);
@@ -144,9 +149,10 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT >
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
 void
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<PhiVolT>& phiVolFM = fml.template field_manager<PhiVolT>();
@@ -158,34 +164,70 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT >
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
 void
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  velInterpOp_ = opDB.retrieve_operator<VelInterpT>();
-  phiInterpOp_ = opDB.retrieve_operator<PhiInterpT>();
+  if( !isCentral_ & !isUpwind_ ) psiInterpOp_    = opDB.retrieve_operator<LimiterInterpT>();
+  if( !isCentral_ )              phiInterpLowOp_ = opDB.retrieve_operator<PhiInterpLowT>();
+  if( !isUpwind_ )               phiInterpHiOp_  = opDB.retrieve_operator<PhiInterpHiT>();
+  velInterpOp_                                   = opDB.retrieve_operator<VelInterpT>();  
 }
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT >
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT, typename VelInterpT >
 void
-ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
+ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
+evaluate()
 {
   using namespace SpatialOps;
   PhiFaceT& result = this->value();
-
-  // note that PhiFaceT and VelFaceT should on the same mesh location
+  
+  // here we write the interpolated phi as follows:
+  // phi = phi_low - psi * (phi_low - phi_high)
+  // where phi is the interpolated value at the face
+  //       psi is the flux limiting function which depends on the ratio of successive gradients of phi
+  //       phi_low is a low order interpolant (e.g. Upwind)
+  //       phi_high is a high order interpolant (e.g. central)  
+  
+  // interpolated velocity scalar volume faces
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
-
+  // flux limiter function. This lives on scalar volume faces
+  SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );
+  // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
+  SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );  
+  // high order interpolant for phi (e.g. second order). This lives on scalar volume faces
+  SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );  
+  
   // move the velocity from staggered volume to phi faces
   velInterpOp_->apply_to_field( *vel_, *velInterp );
 
-  phiInterpOp_->set_advective_velocity( *velInterp );
-  phiInterpOp_->set_flux_limiter_type( limiterType_ );
-  phiInterpOp_->apply_to_field( *phi_, result );
-
+  // flux limiter function calculation. only calculate for flux limiters
+  if (!isCentral_ && !isUpwind_) {
+    psiInterpOp_->set_advective_velocity( *velInterp );
+    psiInterpOp_->set_flux_limiter_type( limiterType_ );
+    psiInterpOp_->apply_to_field( *phi_, *psi);    
+  }
+  
+  // upwind interpolant. needed for upwind and flux limiters. do not calculate if we're using central
+  if (!isCentral_) {
+    phiInterpLowOp_->set_advective_velocity( *velInterp );  
+    phiInterpLowOp_->apply_to_field( *phi_, *phiLow );
+  }
+  
+  // second order interpolant - for central and other flux limiters except upwind
+  if (!isUpwind_) {
+    phiInterpHiOp_->apply_to_field( *phi_, *phiHi );
+  }
+  
+  // result
+  if      ( isUpwind_  ) result <<= *phiLow;
+  else if ( isCentral_ ) result <<= *phiHi;
+  else                   result <<= *phiLow - *psi * (*phiLow - *phiHi);
   result <<= result * *velInterp;
 }
 
@@ -210,20 +252,10 @@ CONV_FLUX_DECLARE( XVolField );
 CONV_FLUX_DECLARE( YVolField );
 CONV_FLUX_DECLARE( ZVolField );
 
-#define CONV_FLUX_DECLARE_UPW( VOL )                                    \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXUpwind, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYUpwind, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >; \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZUpwind, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
-
-CONV_FLUX_DECLARE_UPW( SVolField );
-CONV_FLUX_DECLARE_UPW( XVolField );
-CONV_FLUX_DECLARE_UPW( YVolField );
-CONV_FLUX_DECLARE_UPW( ZVolField );
-
 #define CONV_FLUX_LIMITER_DECLARE_LIMITER( VOL )                        \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXLimiter, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYLimiter, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >; \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZLimiter, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXLimiter, OpTypes<VOL>::InterpC2FXUpwind, OperatorTypeBuilder<Interpolant,VOL,FaceTypes<VOL>::XFace>::type, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYLimiter, OpTypes<VOL>::InterpC2FYUpwind, OperatorTypeBuilder<Interpolant,VOL,FaceTypes<VOL>::YFace>::type, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type  >; \
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZLimiter, OpTypes<VOL>::InterpC2FZUpwind, OperatorTypeBuilder<Interpolant,VOL,FaceTypes<VOL>::ZFace>::type, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >; \
 
 CONV_FLUX_LIMITER_DECLARE_LIMITER( SVolField );
 CONV_FLUX_LIMITER_DECLARE_LIMITER( XVolField );

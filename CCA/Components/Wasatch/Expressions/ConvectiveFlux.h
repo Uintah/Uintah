@@ -42,9 +42,10 @@
  *  \date    July, 2010
  *
  *  \brief Creates an expression for the convective flux of a scalar
- *  given a velocity field \f$\mathbf{u}\f$. We write the convective
- *  flux in conservation form as \f$ J_i = \rho \varphi u_i = \phi u_i
- *  \f$ where \f$i=1,2,3\f$ is the coordinate direction. This requires
+ *  given a velocity field \f$\mathbf{u}\f$ using central interpolation. 
+ *  We write the convective flux in conservation form as 
+    \f$ J_i = \rho \varphi u_i = \phi u_i \f$ 
+ *  where \f$i=1,2,3\f$ is the coordinate direction. This requires
  *  knowledge of the velocity field.
  *
  *  Here, we are constructing the convective flux J_i, therefore, it
@@ -139,12 +140,13 @@ public:
  *        staggered volume field to scalar face field
  *  </ul>
  */
-template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
+template< typename LimiterInterpT, typename PhiInterpLowT, 
+          typename PhiInterpHiT  , typename VelInterpT >
 class ConvectiveFluxLimiter
-  : public Expr::Expression<typename PhiInterpT::DestFieldType>
+  : public Expr::Expression<typename PhiInterpHiT::DestFieldType>
 {
-  typedef typename PhiInterpT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
-  typedef typename PhiInterpT::DestFieldType PhiFaceT; ///< destination field is scalar face
+  typedef typename PhiInterpHiT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
+  typedef typename PhiInterpHiT::DestFieldType PhiFaceT; ///< destination field is scalar face
 
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
@@ -155,7 +157,12 @@ class ConvectiveFluxLimiter
   const PhiVolT* phi_;
   const VelVolT* vel_;
 
-  PhiInterpT* phiInterpOp_;
+  const bool isUpwind_;
+  const bool isCentral_;
+  
+  LimiterInterpT* psiInterpOp_;
+  PhiInterpLowT*  phiInterpLowOp_;
+  PhiInterpHiT*   phiInterpHiOp_;
   const VelInterpT* velInterpOp_;
 
   ConvectiveFluxLimiter( const Expr::Tag& phiTag,
@@ -191,7 +198,7 @@ public:
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, limiterType_ );
+      return new ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>( phiT_, velT_, limiterType_ );
     }
   };
 
