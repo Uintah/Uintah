@@ -250,6 +250,7 @@ namespace Wasatch{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarName,
+                                         const Expr::Tag volFracTag, // the volFracTag can be made optional. if you pass an empty tag, then nothing happens.
                                          Expr::ExpressionFactory& factory,
                                          typename ScalarRHS<FieldT>::FieldTagInfo& info );
 

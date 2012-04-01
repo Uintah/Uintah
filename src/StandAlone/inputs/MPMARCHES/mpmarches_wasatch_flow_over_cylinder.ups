@@ -31,6 +31,9 @@
     <save label="pressurePS"/>
     <save label="cellType"/>
     <save label = "wasatch_scalar"/>
+    <save label = "wasatch_scalar_convective_flux_X"/>
+    <save label = "wasatch_scalar_convective_flux_Y"/>
+    <save label = "wasatch_scalar_convective_flux_Z"/>
     <save label = "volFraction"/>
     <save label = "areaFractionFX"/>
     <save label = "areaFractionFY"/>
@@ -161,7 +164,7 @@
         <upper>[6,1,1]</upper>
         <resolution>[120,20,20]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[6,1,1]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
     </Level>
 
@@ -196,7 +199,7 @@
       <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
+        <Method>SUPERBEE</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
             <NameTag name="uVelocitySPBC" state="STATE_N"/>
@@ -204,7 +207,7 @@
       </ConvectiveFluxExpression>
 
       <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
+        <Method> SUPERBEE </Method>
         <Direction>Y</Direction>
         <AdvectiveVelocity>
             <NameTag name="vVelocitySPBC" state="STATE_N"/>
@@ -212,7 +215,7 @@
       </ConvectiveFluxExpression>
 
       <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
+        <Method> SUPERBEE </Method>
         <Direction>Z</Direction>
         <AdvectiveVelocity>
             <NameTag name="wVelocitySPBC" state="STATE_N"/>
@@ -307,7 +310,7 @@
 
       <BoundaryConditions>
         <intrusions>
-          <intrusion type="simple_wall" label="tonys intrusion">
+          <intrusion label="tonys intrusion">
             <geom_object>
               <cylinder>
                 <bottom>[4,0,.5]</bottom>

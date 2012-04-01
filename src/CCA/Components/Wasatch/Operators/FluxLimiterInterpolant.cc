@@ -252,10 +252,69 @@ double calculate_flux_limiter_function( double r, Wasatch::ConvInterpMethods lim
 }
 
 //--------------------------------------------------------------------
+
 template< typename PhiVolT, typename PhiFaceT >
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 ~FluxLimiterInterpolant()
 {}
+
+//--------------------------------------------------------------------
+
+template< typename PhiVolT, typename PhiFaceT >
+void
+FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
+apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
+  
+  // Source field on the minus side of a face
+  typename PhiVolT::const_iterator vFracMinus = src.begin() + stride_;    
+  typename PhiVolT::const_iterator vFracMinusMinus = src.begin();    
+  // Source field on the plus side of a face
+  typename PhiVolT::const_iterator vFracPlus = src.begin() + 2 * stride_;
+  // Source field on the plus, plus side of a face
+  typename PhiVolT::const_iterator vFracPlusPlus = src.begin() + 3*stride_;
+  // here the destination field is the flux limiting function
+  typename PhiFaceT::iterator      destFld       = dest.begin() + 2*stride_;
+  typename PhiFaceT::const_iterator advVel       = advectiveVelocity_->begin() + 2*stride_;
+  
+  for (size_t k=1; k<=faceCount_[2]; k++) { // count zCount times
+    
+    for (size_t j=1; j<=faceCount_[1]; j++) { // count yCount times
+      
+      for (size_t i=1; i<=faceCount_[0]; i++) { // count xCount times
+        
+        if ((*advVel) > 0.0) {
+          if ( *vFracMinusMinus == 0 ) *destFld = 0.0;
+        }
+        
+        else if ((*advVel) < 0.0) {
+          if ( *vFracPlusPlus == 0 ) *destFld = 0.0;            
+        }          
+        
+        ++vFracMinus;
+        ++vFracMinusMinus;
+        ++vFracPlus;
+        ++vFracPlusPlus;
+        ++destFld;
+        ++advVel;
+      }
+      
+      vFracMinus += volIncr_[1];
+      vFracMinusMinus += volIncr_[1];
+      vFracPlus  += volIncr_[1];
+      vFracPlusPlus += volIncr_[1];
+      destFld += faceIncr_[1];
+      advVel  += faceIncr_[1];
+    }
+    
+    vFracMinus += volIncr_[2];
+    vFracMinusMinus += volIncr_[2];
+    vFracPlus  += volIncr_[2];
+    vFracPlusPlus += volIncr_[2];
+    destFld += faceIncr_[2];
+    advVel  += faceIncr_[2];
+  }
+}
+
 
 //--------------------------------------------------------------------
 
@@ -423,6 +482,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
     destFld += faceIncr_[2];
     advVel  += faceIncr_[2];
   }
+  
 }
 
 //--------------------------------------------------------------------

@@ -250,6 +250,7 @@ namespace Wasatch{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarTag,
+                                         const Expr::Tag volFracTag,
                                          Expr::ExpressionFactory& factory,
                                          typename ScalarRHS<FieldT>::FieldTagInfo& info )
   {
@@ -301,21 +302,21 @@ namespace Wasatch{
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
         typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::XFace>::type phiInterpHiOpT;
         typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, typename Ops::InterpC2FXUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
-        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
         typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::YFace>::type phiInterpHiOpT;
         typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, typename Ops::InterpC2FYUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
-        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
         typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::ZFace>::type phiInterpHiOpT;
         typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, typename Ops::InterpC2FZUpwind, phiInterpHiOpT, VelInterpOpT >::Builder convFluxLim;
-        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
+        builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
       }
 
       if( builder == NULL ){
@@ -524,6 +525,28 @@ namespace Wasatch{
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag, solnVarTag, densityTag));
     }
 
+    //_____________
+    // volume fraction for embedded boundaries Terms
+    Expr::Tag volFracTag = Expr::Tag();
+    if (params->findBlock("VolumeFractionExpression")) {
+      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag xAreaFracTag = Expr::Tag();
+    if (params->findBlock("XAreaFractionExpression")) {
+      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag yAreaFracTag = Expr::Tag();
+    if (params->findBlock("YAreaFractionExpression")) {
+      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag zAreaFracTag = Expr::Tag();
+    if (params->findBlock("ZAreaFractionExpression")) {
+      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
     //_________________
     // Diffusive Fluxes
     if (!isConstDensity) {
@@ -550,7 +573,7 @@ namespace Wasatch{
       for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
            convFluxParams != 0;
            convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, factory, info );
       }
     }
     else {
@@ -573,27 +596,7 @@ namespace Wasatch{
     }
 
     //_____________
-    // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag = Expr::Tag();
-    if (params->findBlock("VolumeFractionExpression")) {
-      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag xAreaFracTag = Expr::Tag();
-    if (params->findBlock("XAreaFractionExpression")) {
-      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag yAreaFracTag = Expr::Tag();
-    if (params->findBlock("YAreaFractionExpression")) {
-      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag zAreaFracTag = Expr::Tag();
-    if (params->findBlock("ZAreaFractionExpression")) {
-      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
-    }
-
+    // Right Hand Side    
     if (isStrong){
       const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
       return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );
@@ -630,6 +633,7 @@ namespace Wasatch{
     template void setup_convective_flux_expression<FIELDT>(     \
        Uintah::ProblemSpecP convFluxParams,                     \
        const Expr::Tag solnVarName,                             \
+       const Expr::Tag volFracTag,                             \
        Expr::ExpressionFactory& factory,                        \
        ScalarRHS<FIELDT>::FieldTagInfo& info );
 

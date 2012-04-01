@@ -89,7 +89,7 @@ void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
   using namespace SpatialOps;
 
   PhiFaceT& result = this->value();
-
+  result <<= 0.0;
   // note that PhiFaceT and VelFaceT should on the same mesh location
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
 
@@ -118,13 +118,16 @@ template< typename LimiterInterpT, typename PhiInterpLowT,
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                        const Expr::Tag& velTag,
-                       const Wasatch::ConvInterpMethods limiterType )
+                       const Wasatch::ConvInterpMethods limiterType,
+                       const Expr::Tag& volFracTag )
   : Expr::Expression<PhiFaceT>(),
-    phiTag_     ( phiTag ),
-    velTag_     ( velTag ),
-    limiterType_( limiterType ),
-    isUpwind_   ( limiterType_ == Wasatch::UPWIND  ),
-    isCentral_  ( limiterType_ == Wasatch::CENTRAL )
+    phiTag_              ( phiTag ),
+    velTag_              ( velTag ),
+    volFracTag_         ( volFracTag ),
+    limiterType_         ( limiterType ),
+    isUpwind_            ( limiterType_ == Wasatch::UPWIND  ),
+    isCentral_           ( limiterType_ == Wasatch::CENTRAL ),
+    hasEmbeddedBoundary_ ( volFracTag != Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -145,6 +148,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression(phiTag_);
   exprDeps.requires_expression(velTag_);
+  if ( hasEmbeddedBoundary_ ) exprDeps.requires_expression( volFracTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -160,6 +164,8 @@ bind_fields( const Expr::FieldManagerList& fml )
 
   const Expr::FieldManager<VelVolT>& velVolFM = fml.template field_manager<VelVolT>();
   vel_ = &velVolFM.field_ref( velTag_ );
+  
+  if (hasEmbeddedBoundary_) volFrac_ = &phiVolFM.field_ref( volFracTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -196,10 +202,13 @@ evaluate()
   
   // interpolated velocity scalar volume faces
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
-  // flux limiter function. This lives on scalar volume faces
+
+  // flux limiter function. This lives on scalar volume faces  
   SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );
+  
   // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
   SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );  
+  
   // high order interpolant for phi (e.g. second order). This lives on scalar volume faces
   SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );  
   
@@ -210,7 +219,8 @@ evaluate()
   if (!isCentral_ && !isUpwind_) {
     psiInterpOp_->set_advective_velocity( *velInterp );
     psiInterpOp_->set_flux_limiter_type( limiterType_ );
-    psiInterpOp_->apply_to_field( *phi_, *psi);    
+    psiInterpOp_->apply_to_field( *phi_, *psi);
+    if (hasEmbeddedBoundary_) psiInterpOp_->apply_embedded_boundaries( *volFrac_, *psi);
   }
   
   // upwind interpolant. needed for upwind and flux limiters. do not calculate if we're using central

@@ -94,8 +94,9 @@ evaluate()
 {
   using namespace SpatialOps;
   StressT& stress = this->value();
-  SpatFldPtr<StressT> tmp = SpatialFieldStore<StressT>::self().get( stress );
+  stress <<= 0.0;
 
+  SpatFldPtr<StressT> tmp = SpatialFieldStore<StressT>::self().get( stress );
   vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
   vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
 
@@ -199,6 +200,8 @@ evaluate()
   using namespace SpatialOps;
 
   StressT& stress = this->value();
+  stress <<= 0.0;
+  
   SpatFldPtr<StressT> velgrad    = SpatialFieldStore<StressT>::self().get( stress );
   SpatFldPtr<StressT> dilatation = SpatialFieldStore<StressT>::self().get( stress );
 

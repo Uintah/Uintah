@@ -151,14 +151,16 @@ class ConvectiveFluxLimiter
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
 
-  const Expr::Tag phiTag_, velTag_;
+  const Expr::Tag phiTag_, velTag_, volFracTag_;
   const Wasatch::ConvInterpMethods limiterType_;
 
   const PhiVolT* phi_;
   const VelVolT* vel_;
+  const PhiVolT* volFrac_;
 
   const bool isUpwind_;
   const bool isCentral_;
+  const bool hasEmbeddedBoundary_;
   
   LimiterInterpT* psiInterpOp_;
   PhiInterpLowT*  phiInterpLowOp_;
@@ -167,12 +169,13 @@ class ConvectiveFluxLimiter
 
   ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                          const Expr::Tag& velTag,
-                         Wasatch::ConvInterpMethods limiterType );
+                         Wasatch::ConvInterpMethods limiterType,
+                         const Expr::Tag& volFracTag_ = Expr::Tag() );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag phiT_, velT_;
+    const Expr::Tag phiT_, velT_, volFracT_;
     Wasatch::ConvInterpMethods limiterType_;
   public:
     /**
@@ -190,15 +193,16 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
              const Expr::Tag& velTag,
-             Wasatch::ConvInterpMethods limiterType )
+             Wasatch::ConvInterpMethods limiterType,
+             const Expr::Tag& volFracTag = Expr::Tag() )
       : ExpressionBuilder(result),
-        phiT_( phiTag ), velT_( velTag ),
-        limiterType_( limiterType )
+        phiT_( phiTag ), velT_( velTag ), volFracT_ ( volFracTag ),
+        limiterType_( limiterType )        
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>( phiT_, velT_, limiterType_ );
+      return new ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>( phiT_, velT_, limiterType_, volFracT_ );
     }
   };
 
