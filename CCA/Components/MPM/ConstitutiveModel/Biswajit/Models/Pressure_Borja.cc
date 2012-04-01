@@ -87,7 +87,7 @@ Pressure_Borja::computePressure(const MPMMaterial* ,
                                     const Matrix3& ,
                                     const double& )
 {
-  double p = computeP(state->epse_v, state->epse_s);
+  double p = evalPressure(state->epse_v, state->epse_s);
   return p;
 }
 
@@ -131,7 +131,7 @@ Pressure_Borja::eval_dp_dJ(const MPMMaterial* ,
 void
 Pressure_Borja::setInitialBulkModulus()
 {
-  d_bulk = (d_p0/d_kappatilde)*exp((-d_epse_v0)/d_kappatilde);
+  d_bulk = evalDpDepse_v(0.0, 0.0);
   return;
 }
 
@@ -149,7 +149,7 @@ Pressure_Borja::computeBulkModulus(const ModelState* state)
 double 
 Pressure_Borja::computeStrainEnergy(const ModelState* state)
 {
-  double U = d_p0*d_kappatilde*exp((state->epse_v - d_epse_v0)/d_kappatilde);
+  double U = -d_p0*d_kappatilde*exp(-(state->epse_v - d_epse_v0)/d_kappatilde);
   return U;
 }
 
@@ -176,7 +176,7 @@ Pressure_Borja::computePressure(const double& rho_orig,
 {
   // Calculate epse_v
   double epse_v = rho_orig/rho_cur - 1.0;
-  double p = computeP(epse_v, 0.0);
+  double p = evalPressure(epse_v, 0.0);
   return p;
 }
 
@@ -196,7 +196,7 @@ Pressure_Borja::computePressure(const double& rho_orig,
   double J = rho_orig/rho_cur;
   double epse_v = J - 1.0;
 
-  pressure = computeP(epse_v, 0.0);
+  pressure = evalPressure(epse_v, 0.0);
   double K = computeBulkModulus(rho_orig, rho_cur);
   csquared = K/rho_cur;
   dp_drho = - J*csquared;
@@ -227,13 +227,14 @@ Pressure_Borja::computeBulkModulus(const double& rho_orig,
 }
 
 // Compute density given pressure (tension +ve)
-//  rho = rho0/[1 + epse_v0 + kappatilde ln(p/p0 beta)]
+//  rho = rho0/[1 + epse_v0 - kappatilde ln(p/p0 beta)]
 //  Assume epse_s = 0, i.e., beta = 1
 double 
 Pressure_Borja::computeDensity(const double& rho_orig,
-                                   const double& pressure)
+                               const double& pressure)
 {
-  double denom = 1.0 + d_epse_v0 + d_kappatilde*log(pressure/d_p0);
+  if (pressure > 0.0) return rho_orig;
+  double denom = 1.0 + d_epse_v0 - d_kappatilde*log(pressure/d_p0);
   double rho = rho_orig/denom;
   return rho;
 }
@@ -243,12 +244,11 @@ Pressure_Borja::computeDensity(const double& rho_orig,
 //      U(epse_v) = p0 kappatilde exp[(epse_v - epse_v0)/kappatilde]
 double 
 Pressure_Borja::computeStrainEnergy(const double& rho_orig,
-                                        const double& rho_cur)
+                                    const double& rho_cur)
 {
   // Calculate epse_v
   double epse_v = rho_orig/rho_cur - 1.0;
-
-  double U = d_p0*d_kappatilde*exp((epse_v - d_epse_v0)/d_kappatilde);
+  double U = -d_p0*d_kappatilde*exp(-(epse_v - d_epse_v0)/d_kappatilde);
   return U;
 }
 
@@ -258,10 +258,10 @@ Pressure_Borja::computeStrainEnergy(const double& rho_orig,
 
 //  Pressure computation
 double 
-Pressure_Borja::computeP(const double& epse_v, const double& epse_s) const
+Pressure_Borja::evalPressure(const double& epse_v, const double& epse_s) const
 {
   double beta = 1.0 + 1.5*d_alpha/d_kappatilde*epse_s*epse_s;
-  double p = d_p0*beta* exp((epse_v - d_epse_v0)/d_kappatilde);
+  double p = d_p0*beta*exp(-(epse_v - d_epse_v0)/d_kappatilde);
 
   return p;
 }
@@ -270,8 +270,8 @@ Pressure_Borja::computeP(const double& epse_v, const double& epse_s) const
 double 
 Pressure_Borja::evalDpDepse_v(const double& epse_v, const double& epse_s) const
 {
-  double p = computeP(epse_v, epse_s);
-  return p/d_kappatilde;
+  double p = evalPressure(epse_v, epse_s);
+  return -p/d_kappatilde;
 }
 
 //  Shear derivative computation
@@ -279,7 +279,7 @@ double
 Pressure_Borja::evalDpDepse_s(const double& epse_v, const double& epse_s) const
 {
   double dbetaDepse_s = 3.0*d_alpha/d_kappatilde*epse_s;
-  return d_p0*dbetaDepse_s*exp((epse_v - d_epse_v0)/d_kappatilde);
+  return d_p0*dbetaDepse_s*exp(-(epse_v - d_epse_v0)/d_kappatilde);
 }
 
 
