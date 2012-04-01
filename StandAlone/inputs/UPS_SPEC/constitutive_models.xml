@@ -685,31 +685,31 @@
     <pressure_model  spec="REQUIRED NO_DATA"
                      attribute1="type REQUIRED STRING 'borja_pressure'"
                      need_applies_to="type camclay">
-      <p0 spec="REQUIRED DOUBLE" need_applies_to="type borja_pressure"/>
-      <alpha spec="REQUIRED DOUBLE" need_applies_to="type borja_pressure"/>
-      <kappatilde spec="REQUIRED DOUBLE" need_applies_to="type borja_pressure"/>
+      <p0 spec="REQUIRED DOUBLE 'negative'" need_applies_to="type borja_pressure"/>
+      <alpha spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_pressure"/>
+      <kappatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_pressure"/>
       <epse_v0 spec="REQUIRED DOUBLE" need_applies_to="type borja_pressure"/>
     </pressure_model>
     <elastic_shear_modulus_model  spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'borja_shear_modulus'"
                                   need_applies_to="type camclay">
-      <mu0 spec="REQUIRED DOUBLE" need_applies_to="type borja_shear_modulus"/>
-      <p0 spec="REQUIRED DOUBLE" need_applies_to="type borja_shear_modulus"/>
-      <alpha spec="REQUIRED DOUBLE" need_applies_to="type borja_shear_modulus"/>
-      <kappatilde spec="REQUIRED DOUBLE" need_applies_to="type borja_shear_modulus"/>
+      <mu0 spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_shear_modulus"/>
+      <p0 spec="REQUIRED DOUBLE 'negative'" need_applies_to="type borja_shear_modulus"/>
+      <alpha spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_shear_modulus"/>
+      <kappatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_shear_modulus"/>
       <epse_v0 spec="REQUIRED DOUBLE" need_applies_to="type borja_shear_modulus"/>
     </elastic_shear_modulus_model>
     <plastic_yield_condition  spec="REQUIRED NO_DATA"
                               attribute1="type REQUIRED STRING 'camclay_yield_function'"
                               need_applies_to="type camclay">
-      <M spec="REQUIRED DOUBLE" need_applies_to="type camclay_yield_function"/>
+      <M spec="REQUIRED DOUBLE 'positive'" need_applies_to="type camclay_yield_function"/>
     </plastic_yield_condition>
     <internal_variable_model  spec="REQUIRED NO_DATA"
                               attribute1="type REQUIRED STRING 'borja_consolidation_pressure'"
                               need_applies_to="type camclay">
-      <pc0 spec="REQUIRED DOUBLE" need_applies_to="type borja_consolidation_pressure"/>
-      <lambdatilde spec="REQUIRED DOUBLE" need_applies_to="type borja_consolidation_pressure"/>
-      <kappatilde spec="REQUIRED DOUBLE" need_applies_to="type borja_consolidation_pressure"/>
+      <pc0 spec="REQUIRED DOUBLE 'negative'" need_applies_to="type borja_consolidation_pressure"/>
+      <lambdatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_consolidation_pressure"/>
+      <kappatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_consolidation_pressure"/>
     </internal_variable_model>
 
   </constitutive_model>
