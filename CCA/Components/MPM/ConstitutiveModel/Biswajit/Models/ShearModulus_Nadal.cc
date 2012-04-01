@@ -74,7 +74,7 @@ ShearModulus_Nadal::~ShearModulus_Nadal()
 
 void ShearModulus_Nadal::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP shear_ps = ps->appendChild("shear_modulus_model");
+  ProblemSpecP shear_ps = ps->appendChild("elastic_shear_modulus_model");
   shear_ps->setAttribute("type","np_shear");
 
   shear_ps->appendElement("mu_0",d_mu0);

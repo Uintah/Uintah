@@ -44,7 +44,7 @@ using namespace UintahBB;
 /// Create an instance of a Yield Condition.
 YieldCondition* YieldConditionFactory::create(Uintah::ProblemSpecP& ps)
 {
-   ProblemSpecP child = ps->findBlock("yield_condition");
+   ProblemSpecP child = ps->findBlock("plastic_yield_condition");
    if(!child)
       throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find yield condition.", __FILE__, __LINE__);
    string mat_type;
@@ -55,7 +55,7 @@ YieldCondition* YieldConditionFactory::create(Uintah::ProblemSpecP& ps)
       return(scinew YieldCond_vonMises(child));
    else if (mat_type == "gurson")
       return(scinew YieldCond_Gurson(child));
-   else if (mat_type == "cam_clay")
+   else if (mat_type == "camclay_yield_function")
       return(scinew YieldCond_CamClay(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")",

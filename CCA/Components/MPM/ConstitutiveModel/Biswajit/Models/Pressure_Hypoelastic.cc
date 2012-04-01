@@ -58,7 +58,7 @@ Pressure_Hypoelastic::~Pressure_Hypoelastic()
 
 void Pressure_Hypoelastic::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
+  ProblemSpecP eos_ps = ps->appendChild("pressure_model");
   eos_ps->setAttribute("type","default_hypo");
 }
          

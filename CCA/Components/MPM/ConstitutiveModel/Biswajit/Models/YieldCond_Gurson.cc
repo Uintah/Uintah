@@ -62,7 +62,7 @@ YieldCond_Gurson::~YieldCond_Gurson()
 
 void YieldCond_Gurson::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
-  ProblemSpecP yield_ps = ps->appendChild("yield_condition");
+  ProblemSpecP yield_ps = ps->appendChild("plastic_yield_condition");
   yield_ps->setAttribute("type","gurson");
   yield_ps->appendElement("q1",d_CM.q1);
   yield_ps->appendElement("q2",d_CM.q2);

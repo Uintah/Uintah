@@ -46,13 +46,13 @@ using std::ofstream;
 
 InternalVariableModel* InternalVariableModelFactory::create(ProblemSpecP& ps)
 {
-   ProblemSpecP child = ps->findBlock("internal_var_model");
+   ProblemSpecP child = ps->findBlock("internal_variable_model");
    if(!child)
       throw ProblemSetupException("Cannot find internal_var_model tag", __FILE__, __LINE__);
    std::string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for internal_var_model", __FILE__, __LINE__);
-   if (mat_type == "borja_p_c")
+   if (mat_type == "borja_consolidation_pressure")
       return(scinew InternalVar_BorjaPressure(child));
    else {
       throw ProblemSetupException("Unknown InternalVariable Model ("+mat_type+")", __FILE__, __LINE__);

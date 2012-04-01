@@ -43,7 +43,7 @@ using namespace UintahBB;
 
 ShearModulusModel* ShearModulusModelFactory::create(Uintah::ProblemSpecP& ps)
 {
-   ProblemSpecP child = ps->findBlock("shear_modulus_model");
+   ProblemSpecP child = ps->findBlock("elastic_shear_modulus_model");
    if(!child) {
       cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
       return(scinew ShearModulus_Constant());
@@ -57,7 +57,7 @@ ShearModulusModel* ShearModulusModelFactory::create(Uintah::ProblemSpecP& ps)
       return(scinew ShearModulus_Constant(child));
    else if (mat_type == "np_shear")
       return(scinew ShearModulus_Nadal(child));
-   else if (mat_type == "borja")
+   else if (mat_type == "borja_shear_modulus")
       return(scinew ShearModulus_Borja(child));
    else {
       cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
