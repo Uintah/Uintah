@@ -49,19 +49,13 @@ using namespace Uintah;
 
 PressureModel* PressureModelFactory::create(ProblemSpecP& ps)
 {
-   ProblemSpecP child = ps->findBlock("equation_of_state");
+   ProblemSpecP child = ps->findBlock("pressure_model");
    if(!child) {
-
-      cerr << "**WARNING** Creating default hyperelastic equation of state" << endl;
-      return(scinew Pressure_Hyperelastic(child));
-
-      //cerr << "**WARNING** Creating default linear equation of state" << endl;
-      //return(scinew Pressure_Hypoelastic(child));
-      //throw ProblemSetupException("Cannot find equation_of_state tag", __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot find pressure_model tag.", __FILE__, __LINE__);
    }
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for equation_of_state", __FILE__, __LINE__);
+      throw ProblemSetupException("No type for pressure_model", __FILE__, __LINE__);
    
    if (mat_type == "mie_gruneisen")
       return(scinew Pressure_MieGruneisen(child));
@@ -69,35 +63,26 @@ PressureModel* PressureModelFactory::create(ProblemSpecP& ps)
       return(scinew Pressure_Hypoelastic(child));
    else if (mat_type == "default_hyper")
       return(scinew Pressure_Hyperelastic(child));
-   else if (mat_type == "borja")
+   else if (mat_type == "borja_pressure")
       return(scinew Pressure_Borja(child));
    else {
-      cerr << "**WARNING** Creating default hyperelastic equation of state" << endl;
-      return(scinew Pressure_Hyperelastic(child));
-      //throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")", __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot create pressure_model.", __FILE__, __LINE__);
    }
- 
-
-   //return 0;
 }
 
 PressureModel* 
 PressureModelFactory::createCopy(const PressureModel* eos)
 {
-   if (dynamic_cast<const Pressure_MieGruneisen*>(eos))
-      return(scinew Pressure_MieGruneisen(dynamic_cast<const Pressure_MieGruneisen*>(eos)));
-
    if (dynamic_cast<const Pressure_Borja*>(eos))
       return(scinew Pressure_Borja(dynamic_cast<const Pressure_Borja*>(eos)));
+
+   else if (dynamic_cast<const Pressure_MieGruneisen*>(eos))
+      return(scinew Pressure_MieGruneisen(dynamic_cast<const Pressure_MieGruneisen*>(eos)));
 
    else if (dynamic_cast<const Pressure_Hypoelastic*>(eos))
       return(scinew Pressure_Hypoelastic(dynamic_cast<const Pressure_Hypoelastic*>(eos)));
 
    else {
-      cerr << "**WARNING** Creating a copy of the default hyperelastic equation of state" << endl;
-      return(scinew Pressure_Hyperelastic(dynamic_cast<const Pressure_Hyperelastic*>(eos)));
-      //throw ProblemSetupException("Cannot create copy of unknown MPM EOS", __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot create copy of pressure_model.", __FILE__, __LINE__);
    }
-
-   //return 0;
 }

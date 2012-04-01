@@ -70,7 +70,7 @@ Pressure_MieGruneisen::~Pressure_MieGruneisen()
          
 void Pressure_MieGruneisen::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
+  ProblemSpecP eos_ps = ps->appendChild("pressure_model");
   eos_ps->setAttribute("type","mie_gruneisen");
 
   eos_ps->appendElement("C_0",d_const.C_0);

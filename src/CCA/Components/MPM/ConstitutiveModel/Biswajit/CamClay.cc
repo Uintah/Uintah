@@ -67,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InternalError.h>
 
 
 using namespace std;
@@ -83,35 +84,29 @@ CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
   d_eos = UintahBB::PressureModelFactory::create(ps);
   if(!d_eos){
     ostringstream desc;
-    desc << "An error occured in the EquationOfStateFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+    desc << "**ERROR** Internal error while creating CamClay->PressureModelFactory." << endl;
+    throw InternalError(desc.str(), __FILE__, __LINE__);
   }
 
   d_shear = UintahBB::ShearModulusModelFactory::create(ps);
   if (!d_shear) {
     ostringstream desc;
-    desc << "CamClay::Error in shear modulus model factory" << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+    desc << "**ERROR** Internal error while creating CamClay->ShearModulusModelFactory." << endl;
+    throw InternalError(desc.str(), __FILE__, __LINE__);
   }
   
   d_yield = UintahBB::YieldConditionFactory::create(ps);
   if(!d_yield){
     ostringstream desc;
-    desc << "An error occured in the YieldConditionFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+    desc << "**ERROR** Internal error while creating CamClay->YieldConditionFactory." << endl;
+    throw InternalError(desc.str(), __FILE__, __LINE__);
   }
 
   d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
   if(!d_intvar){
     ostringstream desc;
-    desc << "An error occured in the InternalVariableModelFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+    desc << "**ERROR** Internal error while creating CamClay->InternalVariableModelFactory." << endl;
+    throw InternalError(desc.str(), __FILE__, __LINE__);
   }
 
   initializeLocalMPMLabels();

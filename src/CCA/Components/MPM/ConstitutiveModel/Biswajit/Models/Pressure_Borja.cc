@@ -68,8 +68,8 @@ Pressure_Borja::~Pressure_Borja()
          
 void Pressure_Borja::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
-  eos_ps->setAttribute("type","borja");
+  ProblemSpecP eos_ps = ps->appendChild("pressure_model");
+  eos_ps->setAttribute("type","borja_pressure");
 
   ps->appendElement("p0",d_p0);
   ps->appendElement("alpha",d_alpha);

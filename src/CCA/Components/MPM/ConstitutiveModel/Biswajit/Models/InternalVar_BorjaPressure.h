@@ -76,6 +76,7 @@ namespace UintahBB {
   private:
 
     // Model parameters
+    double d_pc0;
     double d_lambdatilde;
     double d_kappatilde;
 

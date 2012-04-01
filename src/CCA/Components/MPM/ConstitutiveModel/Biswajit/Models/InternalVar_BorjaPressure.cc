@@ -40,8 +40,9 @@ using namespace std;
 
 InternalVar_BorjaPressure::InternalVar_BorjaPressure(ProblemSpecP& ps)
 {
+  ps->require("pc0",d_pc0);
   ps->require("lambdatilde",d_lambdatilde);
-  ps->require("kappaatilde",d_kappatilde);
+  ps->require("kappatilde",d_kappatilde);
 
   // Initialize internal variable labels for evolution
   pPcLabel = VarLabel::create("p.p_c",
@@ -52,6 +53,7 @@ InternalVar_BorjaPressure::InternalVar_BorjaPressure(ProblemSpecP& ps)
          
 InternalVar_BorjaPressure::InternalVar_BorjaPressure(const InternalVar_BorjaPressure* cm)
 {
+  d_pc0 = cm->d_pc0;
   d_lambdatilde = cm->d_lambdatilde;
   d_kappatilde = cm->d_kappatilde;
 
@@ -71,9 +73,10 @@ InternalVar_BorjaPressure::~InternalVar_BorjaPressure()
 
 void InternalVar_BorjaPressure::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP int_var_ps = ps->appendChild("internal_var_model");
-  int_var_ps->setAttribute("type","borja_p_c");
+  ProblemSpecP int_var_ps = ps->appendChild("internal_variable_model");
+  int_var_ps->setAttribute("type","borja_consolidation_pressure");
 
+  int_var_ps->appendElement("pc0",d_pc0);
   int_var_ps->appendElement("lambdatilde",d_lambdatilde);
   int_var_ps->appendElement("kappatilde",d_kappatilde);
 }
@@ -147,7 +150,7 @@ InternalVar_BorjaPressure::initializeInternalVariable(ParticleSubset* pset,
   new_dw->allocateAndPut(pPc_new, pPcLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++) {
-    pPc_new[*iter] = 0.0;
+    pPc_new[*iter] = d_pc0;
   }
 }
 

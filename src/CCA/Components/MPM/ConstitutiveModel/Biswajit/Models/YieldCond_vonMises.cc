@@ -49,7 +49,7 @@ YieldCond_vonMises::~YieldCond_vonMises()
 
 void YieldCond_vonMises::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
-  ProblemSpecP yield_ps = ps->appendChild("yield_condition");
+  ProblemSpecP yield_ps = ps->appendChild("plastic_yield_condition");
   yield_ps->setAttribute("type","vonMises");
 
 }

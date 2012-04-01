@@ -58,7 +58,7 @@ Pressure_Hyperelastic::~Pressure_Hyperelastic()
 
 void Pressure_Hyperelastic::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
-  ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
+  ProblemSpecP eos_ps = ps->appendChild("pressure_model");
   eos_ps->setAttribute("type","default_Hyper");
 }
          
