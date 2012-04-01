@@ -235,6 +235,28 @@ namespace Wasatch {
     Expr::TagList rhsTags;
     typename ScalarRHS<FieldT>::FieldTagInfo info;
 
+    //_____________
+    // volume fraction for embedded boundaries Terms
+    Expr::Tag volFracTag = Expr::Tag();
+    if (params->findBlock("VolumeFractionExpression")) {
+      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag xAreaFracTag = Expr::Tag();
+    if (params->findBlock("XAreaFractionExpression")) {
+      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag yAreaFracTag = Expr::Tag();
+    if (params->findBlock("YAreaFractionExpression")) {
+      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag zAreaFracTag = Expr::Tag();
+    if (params->findBlock("ZAreaFractionExpression")) {
+      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
@@ -280,30 +302,8 @@ namespace Wasatch {
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
 
-      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, volFracTag, factory, info );
 
-    }
-
-    //_____________
-    // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag = Expr::Tag();
-    if (params->findBlock("VolumeFractionExpression")) {
-      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag xAreaFracTag = Expr::Tag();
-    if (params->findBlock("XAreaFractionExpression")) {
-      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag yAreaFracTag = Expr::Tag();
-    if (params->findBlock("YAreaFractionExpression")) {
-      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
-    }
-
-    Expr::Tag zAreaFracTag = Expr::Tag();
-    if (params->findBlock("ZAreaFractionExpression")) {
-      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
 
     //

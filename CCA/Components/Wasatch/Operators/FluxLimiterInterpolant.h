@@ -97,7 +97,6 @@ private:
   std::vector<size_t> bndFaceCount_; // counter for faces at the boundary
   std::vector<size_t> bndVolIncr_;
   std::vector<size_t> bndFaceIncr_;
-
   //
   int calculate_stride(const std::vector<int>& dim,
                        const std::vector<bool> hasPlusFace) const;
@@ -132,7 +131,7 @@ public:
    *         velocity field. This must be of the same type as the
    *         destination field, i.e. a face centered field.
    */
-  void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
+  void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);  
 
   /**
    *   \brief Sets the flux limiter type to be used by this interpolant.
@@ -152,6 +151,7 @@ public:
    */
   void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const;
 
+  void apply_embedded_boundaries(const PhiVolT &src, PhiFaceT &dest) const;
 };
 
 #endif // FluxLimiterInterpolant_h
