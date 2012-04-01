@@ -159,12 +159,8 @@ namespace UintahBB {
 
   private:
 
-    //  Strain computation
-    void computeStrains(const ModelState* state, 
-                        double& epse_v, double& epse_s);
-
     //  Pressure computation
-    double computeP(const double& epse_v, const double& epse_s) const;
+    double evalPressure(const double& epse_v, const double& epse_s) const;
 
     //  Pressure derivative computation
     double evalDpDepse_v(const double& epse_v, const double& epse_s) const;

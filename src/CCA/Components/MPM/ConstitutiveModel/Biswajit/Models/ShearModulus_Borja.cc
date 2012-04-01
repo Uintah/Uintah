@@ -81,21 +81,21 @@ void ShearModulus_Borja::outputProblemSpec(ProblemSpecP& ps)
 double 
 ShearModulus_Borja::computeInitialShearModulus()
 {
-  double mu_vol = computeShearModulus(0.0);
+  double mu_vol = evalShearModulus(0.0);
   return (d_mu0 + mu_vol);
 }
 
 double 
 ShearModulus_Borja::computeShearModulus(const ModelState* state) 
 {
-  double mu_vol = computeShearModulus(state->epse_v);
+  double mu_vol = evalShearModulus(state->epse_v);
   return (d_mu0 + mu_vol);
 }
 
 double 
 ShearModulus_Borja::computeShearModulus(const ModelState* state) const
 {
-  double mu_vol = computeShearModulus(state->epse_v);
+  double mu_vol = evalShearModulus(state->epse_v);
   return (d_mu0 + mu_vol);
 }
 
@@ -104,7 +104,7 @@ ShearModulus_Borja::computeShearModulus(const ModelState* state) const
 double
 ShearModulus_Borja::computeStrainEnergy(const ModelState* state)
 {
-  double mu_vol = computeShearModulus(state->epse_v);
+  double mu_vol = evalShearModulus(state->epse_v);
   double W = 1.5*(d_mu0 + mu_vol)*(state->epse_s*state->epse_s);
   return W;
 }
@@ -118,38 +118,38 @@ ShearModulus_Borja::computeStrainEnergy(const ModelState* state)
 double 
 ShearModulus_Borja::computeQ(const ModelState* state) const
 {
-  return computeQ(state->epse_v, state->epse_s);
+  return evalQ(state->epse_v, state->epse_s);
 }
 
 /* Compute dq/depse_s */
 double 
 ShearModulus_Borja::computeDqDepse_s(const ModelState* state) const
 {
-  return computeDqDepse_s(state->epse_v, state->epse_s);
+  return evalDqDepse_s(state->epse_v, state->epse_s);
 }
 
 /* Compute dq/depse_v */
 double 
 ShearModulus_Borja::computeDqDepse_v(const ModelState* state) const
 {
-  return computeDqDepse_v(state->epse_v, state->epse_s);
+  return evalDqDepse_v(state->epse_v, state->epse_s);
 }
 
 // Private methods below:
 
 //  Shear modulus computation (only pressure contribution)
 double 
-ShearModulus_Borja::computeShearModulus(const double& epse_v) const
+ShearModulus_Borja::evalShearModulus(const double& epse_v) const
 {
-  double mu = d_alpha*d_p0*exp((epse_v - d_epse_v0)/d_kappatilde);
+  double mu = d_alpha*d_p0*exp(-(epse_v - d_epse_v0)/d_kappatilde);
   return mu;
 }
 
 //  Shear stress magnitude computation
 double 
-ShearModulus_Borja::computeQ(const double& epse_v, const double& epse_s) const
+ShearModulus_Borja::evalQ(const double& epse_v, const double& epse_s) const
 {
-  double mu = computeShearModulus(epse_v);
+  double mu = evalShearModulus(epse_v);
   double q = 3.0*(d_mu0 + mu)*epse_s;
 
   return q;
@@ -157,19 +157,19 @@ ShearModulus_Borja::computeQ(const double& epse_v, const double& epse_s) const
 
 //  volumetric derivative computation
 double 
-ShearModulus_Borja::computeDqDepse_v(const double& epse_v, const double& epse_s) const
+ShearModulus_Borja::evalDqDepse_v(const double& epse_v, const double& epse_s) const
 {
-  double mu_vol = computeShearModulus(epse_v);
-  double dmu_depse_v = mu_vol/d_kappatilde;
+  double mu_vol = evalShearModulus(epse_v);
+  double dmu_depse_v = -mu_vol/d_kappatilde;
   double dq_depse_v = 3.0*dmu_depse_v*epse_s;
   return dq_depse_v;
 }
 
 //  deviatoric derivative computation
 double 
-ShearModulus_Borja::computeDqDepse_s(const double& epse_v, const double& epse_s) const
+ShearModulus_Borja::evalDqDepse_s(const double& epse_v, const double& epse_s) const
 {
-  double mu_vol = computeShearModulus(epse_v);
+  double mu_vol = evalShearModulus(epse_v);
   double dq_depse_s = 3.0*(d_mu0 + mu_vol);
   return dq_depse_s;
 }

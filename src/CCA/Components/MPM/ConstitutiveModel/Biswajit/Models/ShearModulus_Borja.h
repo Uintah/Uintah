@@ -124,21 +124,17 @@ namespace UintahBB {
 
   private:
 
-    //  Strain computation
-    void computeStrains(const ModelState* state, 
-                        double& epse_v, double& epse_s);
-
-    //  Voilumetric part of shear modulus
-    double computeShearModulus(const double& epse_v) const;
+    //  Compute shear modulus (volume strain dependent)
+    double evalShearModulus(const double& epse_v) const;
 
     //  Shear stress magnitude computation
-    double computeQ(const double& epse_v, const double& epse_s) const;
+    double evalQ(const double& epse_v, const double& epse_s) const;
 
     //  Shear stress volume strain derivative computation
-    double computeDqDepse_v(const double& epse_v, const double& epse_s) const;
+    double evalDqDepse_v(const double& epse_v, const double& epse_s) const;
 
     //  Shear stress shear strain derivative computation
-    double computeDqDepse_s(const double& epse_v, const double& epse_s) const;
+    double evalDqDepse_s(const double& epse_v, const double& epse_s) const;
   };
 } // End namespace Uintah
       

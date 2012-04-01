@@ -308,7 +308,7 @@ CamClay::addComputesAndRequires(Task* task,
   // base class.
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForExplicit(task, matlset, patches);
+  addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, pStrainLabel,      matlset, gnone);
@@ -450,6 +450,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     // GLOBAL
     ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
     ParticleVariable<double>  pVol_new;
+    ParticleVariable<double>  pdTdt;
 
     new_dw->allocateAndPut(pDefGrad_new,  
                            lb->pDeformationMeasureLabel_preReloc, pset);
@@ -457,6 +458,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVol_new, 
                            lb->pVolumeLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
 
     // LOCAL
     ParticleVariable<Matrix3>  pStrain_new, pElasticStrain_new; 
@@ -477,6 +479,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pdTdt[idx] = 0.0;
 
       //-----------------------------------------------------------------------
       // Stage 1:
@@ -747,7 +752,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         if ((delgamma < 0.0) && (fabs(delgamma) > 1.0e-10)) {
           delgammaneg = delgamma;
           ostringstream desc;
-          desc << "**ERROR** delgamma less that 0.0 in local converged solution." << endl;
+          desc << "**ERROR** delgamma less than 0.0 in local converged solution." << endl;
           throw ConvergenceFailure(desc.str(), klocal, delgamma, normrf, __FILE__, __LINE__);
         }
 
