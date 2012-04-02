@@ -39,6 +39,7 @@
 use strict;
 use XML::Simple;
 use Data::Dumper;
+use File::Path;
 use Cwd;
 
 my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
@@ -104,7 +105,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
  for($c = 0; $c<=$#components; $c++){
 
    my $component = $components[$c];
-   mkdir($component) || die "cannot mkdir($component) $!";
+   mkpath($component) || die "cannot mkpath($component) $!";
    chdir($component);
    print "----------------------------------------------------------------  $component \n";
          
@@ -147,7 +148,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
         chomp($otherFiles);
      }
     
-     mkdir($testName) || die "ERROR:masterScript.pl:cannot mkdir($testName) $!";
+     mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
      chdir($testName);
      
      print "\n\n=======================================================================================\n";
