@@ -121,6 +121,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
   doubleMap::iterator iter = d_constants.find("H_ox");
   if ( iter == d_constants.end() ){ 
     proc0cout << " WARNING: Cannot find #KEY H_ox=*value* in the table.\n"; 
+    proc0cout << "          Make sure that your case doesn't require it. \n"; 
     //throw ProblemSetupException( "H_ox (pure oxidizer enthalpy) required as an input.",__FILE__,__LINE__);
   } else { 
     _H_ox = iter->second; 
