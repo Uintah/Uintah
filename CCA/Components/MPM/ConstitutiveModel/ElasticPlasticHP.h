@@ -160,6 +160,8 @@ namespace Uintah {
     bool   d_doMelting;
     bool   d_checkStressTriax;
     
+    enum plasticConvergenceAlgo {biswajit, radialReturn};
+    int  d_plasticConvergenceAlgo;
     // Erosion algorithms
     bool   d_setStressToZero;
     bool   d_allowNoTension;
@@ -346,7 +348,25 @@ namespace Uintah {
     virtual double getCompressibility();
 
   protected:
- 
+  
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute Plastic State using Biswajit's approach */
+    ////////////////////////////////////////////////////////////////////////  
+    bool computePlasticStateBiswajit( PlasticityState* state, 
+                                      constParticleVariable<double>& pPlasticStrain,             
+                                      constParticleVariable<double>& pStrainRate,                
+                                      Matrix3& Stilde,                                          
+                                      const Matrix3& sigma,                                     
+                                      const Matrix3 tensorS,
+                                      const Matrix3 trialS,                                    
+                                      const Matrix3 tensorEta,                                  
+                                      double& delGamma,                                         
+                                      double& flowStress,                                       
+                                      double& porosity,                                         
+                                      double& mu_cur,                              
+                                      const double delT,                                        
+                                      const MPMMaterial* matl,                                  
+                                      const int idx); 
     
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute Stilde, epdot, ep, and delGamma using 

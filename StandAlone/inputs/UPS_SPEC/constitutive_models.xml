@@ -157,7 +157,7 @@
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
     <om                            spec="OPTIONAL DOUBLE" />
-    
+    <plastic_convergence_algo       spec="OPTIONAL STRING 'biswajit, radialReturn'" need_applies_to="type elastic_plastic_hp"/>
     <plasticity_model              spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'isotropic_hardening, johnson_cook, mts_model,
                                                                        preston_tonks_wallace, steinberg_cochran_guinan,
