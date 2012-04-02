@@ -5,6 +5,7 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/LevelP.h>
@@ -108,9 +109,8 @@ namespace Uintah {
 
         public: 
           BurnsChriston() {
-            notSet = Point(-9,-9,-9);
-            min    = notSet;
-            max    = notSet;
+            _notSetMin = Point(SHRT_MAX, SHRT_MAX, SHRT_MAX);
+            _notSetMax = Point(SHRT_MIN, SHRT_MIN, SHRT_MIN);
           }
           ~BurnsChriston() {}
           
@@ -119,8 +119,17 @@ namespace Uintah {
           bool problemSetup( const ProblemSpecP& db ) { 
             ProblemSpecP db_prop = db;
             
-            db_prop->get("min", min);  // optional
-            db_prop->get("max", max);
+            db_prop->getWithDefault("min", _min, _notSetMin);  // optional
+            db_prop->getWithDefault("max", _max, _notSetMax);
+            
+            // bulletproofing  min & max must be set
+            if( ( _min == _notSetMin && _max != _notSetMax) ||
+                ( _min != _notSetMin && _max == _notSetMax) ){
+              ostringstream warn;
+              warn << "\nERROR:<property_calculator type=burns_christon>\n "
+                   << "You must specify both a min: "<< _min << " & max point: "<< _max <<"."; 
+              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+            }
             
             bool property_on = true; 
             return property_on; 
@@ -130,19 +139,19 @@ namespace Uintah {
           //
           void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
             
-            BBox domain(min,max);
+            BBox domain(_min,_max);
             
             // if the user didn't specify the min and max 
             // use the grid's domain
-            if( min == notSet  &&  max == notSet ){
+            if( _min == _notSetMin  ||  _max == _notSetMax ){
               const Level* level = patch->getLevel();
               GridP grid  = level->getGrid();
               grid->getInteriorSpatialRange(domain);
-              min = domain.min();
-              max = domain.max();
+              _min = domain.min();
+              _max = domain.max();
             }
-
-            Point midPt((max - min)/2 + min);
+            
+            Point midPt((_max - _min)/2 + _min);
             
             for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
               IntVector c = *iter; 
@@ -159,10 +168,10 @@ namespace Uintah {
 
         private: 
           double _value;
-          Point notSet;
-          Point min;
-          Point max;
-           
+          Point _notSetMin;
+          Point _notSetMax;
+          Point _min;
+          Point _max;
       }; 
 
       RadPropertyCalculator::PropertyCalculatorBase* _calculator;
