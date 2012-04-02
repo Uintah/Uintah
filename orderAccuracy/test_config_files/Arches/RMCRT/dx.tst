@@ -2,7 +2,7 @@
 <upsFile>rmcrt_test.ups</upsFile>
 <gnuplot>
   <script>plotScript_dx.gp</script>s
-  <title> "RMCRT Order-Of-Accuracy \n Burns & Christon Benchmark \\n 1 timestep (100 Rays per cell), Random Seed"</title>
+  <title> RMCRT Order-Of-Accuracy \\n Burns and Christon Benchmark \\n 1 timestep (100 Rays per cell), Random Seed</title>
   <ylabel>L2norm Error</ylabel>
   <xlabel>Grid Cells On Each Axis</xlabel>
 </gnuplot>
