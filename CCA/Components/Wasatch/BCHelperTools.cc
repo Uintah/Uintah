@@ -116,11 +116,38 @@ namespace Wasatch {
                           const bool hasExtraCells)
   {
     namespace SS = SpatialOps::structured;
+    
+    // interiorCellIJK is the ijk boundary cell index returned by uintah. Depending
+    // on whether we use extra cells or not, interiorCellIJK may have different
+    // meanings. Two cases arise here.
+    // 1. Using ExtraCells: interiorCellIJK corresponds to the extra cell index  starting at [-1,-1,-1].
+    // 2. Using GhostCells: if we have ghost cells, then interiorCellIJK corresponds to the 
+    //    interior cell adjacent to the boundary starting at [0,0,0]. 
+    // NOTE: these are the indices of the scalar cells.
+    // One of the caveats of using ghostcells is that we will always miss setting BCs on the corner cells.
     const SS::IntVec interiorCellIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
+    
+    
+    // bndFaceIJK returns the index of boundary face starting at [0,0,0]
+    // This is done by offsetting the cell index returned by uintah. 
+    // Two cases arise here:
+    // 1. ExtraCells: When extra cells are present, we offset the MINUS-FACE cells
+    //    by +1 while the PLUS-FACE cells remain the same.
+    // 2. GhostCells: When using ghost cells, we offset the PLUS-FACE cells by
+    //    +1 while the MINUS-FACE cells remain the same.
     const SS::IntVec bndFaceIJK = interiorCellIJK + faceOffset;
+    
+    // insideCellDir returns the face direction:
+    // x-: [-1, 0, 0]
+    // x+: [ 1, 0, 0]
+    // y-: [ 0,-1, 0]
+    // y+: [ 0, 1, 0]
+    // z-: [ 0, 0,-1]
+    // z+: [ 0, 0, 1]
     const SS::IntVec stgrdBndFaceIJK( bc_point_indices[0] + insideCellDir[0],
                                       bc_point_indices[1] + insideCellDir[1],
                                       bc_point_indices[2] + insideCellDir[2] );
+    
     const SS::IntVec interiorStgrdCellIJK( bc_point_indices[0] - insideCellDir[0],
                                      bc_point_indices[1] - insideCellDir[1],
                                      bc_point_indices[2] - insideCellDir[2] );
@@ -133,7 +160,7 @@ namespace Wasatch {
       switch (bcSide) {
         case SpatialOps::structured::MINUS_SIDE: {
           if (hasExtraCells) {
-            bcPointIJK = interiorStgrdCellIJK;
+            bcPointIJK = bndFaceIJK;
             ghostPointIJK = interiorCellIJK;
           } else {
             // this stuff works with boundary layer cells
@@ -144,11 +171,13 @@ namespace Wasatch {
         }
         case SpatialOps::structured::PLUS_SIDE: {
           if (hasExtraCells) {
-            bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? interiorCellIJK : interiorStgrdCellIJK);
+            bcPointIJK = interiorCellIJK;
+            //bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? interiorCellIJK : interiorCellIJK);
             ghostPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : interiorCellIJK);
           } else {
+            bcPointIJK = bndFaceIJK;
             // this stuff works with boundary layer cells
-            bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : interiorCellIJK);
+            //bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : stgrdBndFaceIJK);
             ghostPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdGhostPlusBndFaceIJK : stgrdBndFaceIJK);
           }
           break;
@@ -203,8 +232,8 @@ namespace Wasatch {
       } else {
         BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
         phiExpr.process_after_evaluate(fieldName, bcOp );
-        BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
-        phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
+        //BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
+        //phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
       }
     } else {
       BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
@@ -213,28 +242,61 @@ namespace Wasatch {
   }
 
   //-----------------------------------------------------------------------------
-
   /**
-   *  @struct BCOpTypeSelector
+   *  @struct BCOpTypeSelectorBase
    *
    *  @brief This templated struct is used to simplify boundary
    *         condition operator selection.
    */
   template< typename FieldT, typename BCEvalT>
-  struct BCOpTypeSelector
+  struct BCOpTypeSelectorBase
   {
   private:
     typedef OpTypes<FieldT> Ops;
-
+    
   public:
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FX, BCEvalT >   DirichletX;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FY, BCEvalT >   DirichletY;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FZ, BCEvalT >   DirichletZ;
-
+    
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradX,      BCEvalT >   NeumannX;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradY,      BCEvalT >   NeumannY;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradZ,      BCEvalT >   NeumannZ;
   };
+  //
+  template< typename FieldT, typename BCEvalT>
+  struct BCOpTypeSelector : public BCOpTypeSelectorBase<FieldT, BCEvalT>
+  { };
+  // partial specialization with inheritance for ZVolFields
+  template< typename BCEvalT>
+  struct BCOpTypeSelector<XVolField,BCEvalT> : public BCOpTypeSelectorBase<XVolField,BCEvalT>
+  {
+  private:
+    typedef OpTypes<XVolField> Ops;
+    
+  public:
+    typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type, BCEvalT> NeumannX;
+  };
+  // partial specialization with inheritance for YVolFields
+  template< typename BCEvalT>
+  struct BCOpTypeSelector<YVolField,BCEvalT> : public BCOpTypeSelectorBase<YVolField,BCEvalT>
+  {
+  private:
+    typedef OpTypes<YVolField> Ops;
+    
+  public:
+    typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type, BCEvalT> NeumannY;
+  };  
+  // partial specialization with inheritance for ZVolFields
+  template< typename BCEvalT>
+  struct BCOpTypeSelector<ZVolField,BCEvalT> : public BCOpTypeSelectorBase<ZVolField,BCEvalT>
+  {
+  private:
+    typedef OpTypes<ZVolField> Ops;
+    
+  public:
+    typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type, BCEvalT> NeumannZ;
+  };    
   //
   template< typename BCEvalT >
   struct BCOpTypeSelector<FaceTypes<XVolField>::XFace,BCEvalT>
