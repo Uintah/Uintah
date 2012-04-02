@@ -209,9 +209,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
-    // dependent variables
-    CCVariable<double> mpmarches_denmicro; 
-
     for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
@@ -221,6 +218,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
       indep_storage.push_back( the_var ); 
 
     }
+
+    // dependent variables
+    CCVariable<double> mpmarches_denmicro; 
 
     DepVarMap depend_storage; 
     if ( initialize_me ) {
