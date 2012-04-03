@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __PLASTICITY_MODEL_H__
-#define __PLASTICITY_MODEL_H__
+#ifndef __FLOW_MODEL_H__
+#define __FLOW_MODEL_H__
 
 #include <Core/Math/Matrix3.h>
 #include <vector>
@@ -46,8 +46,8 @@ namespace Uintah {
 
   ///////////////////////////////////////////////////////////////////////////
   /*!
-    \class  PlasticityModel
-    \brief  Abstract Base class for plasticity models (calculate yield stress)
+    \class  FlowModel
+    \brief  Abstract Base class for flow models (calculate yield stress)
     \author Biswajit Banerjee, \n
             C-SAFE and Department of Mechanical Engineering, \n
             University of Utah,\n
@@ -57,14 +57,14 @@ namespace Uintah {
   */
   ///////////////////////////////////////////////////////////////////////////
 
-  class PlasticityModel {
+  class FlowModel {
 
   private:
 
   public:
          
-    PlasticityModel();
-    virtual ~PlasticityModel();
+    FlowModel();
+    virtual ~FlowModel();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
          
@@ -90,7 +90,7 @@ namespace Uintah {
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* addset,
                                    map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
+                                   ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw){};
 
@@ -209,5 +209,5 @@ namespace Uintah {
       
 
 
-#endif  // __PLASTICITY_MODEL_H__
+#endif  // __FLOW_MODEL_H__
 

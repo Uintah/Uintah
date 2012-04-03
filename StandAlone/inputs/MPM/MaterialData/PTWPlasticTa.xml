@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- Ta - Preston,Tonks,Wallace,JAP,93(1),2003 p.219 -->
 <Uintah_Include>
-  <plasticity_model type="preston_tonks_wallace">
+  <flow_model type="preston_tonks_wallace">
     <theta> 0.02 </theta> 
     <p> 0.0 </p>
     <s0> 0.012 </s0>
@@ -17,5 +17,5 @@
     <G0> 722e8 </G0>
     <alpha> 0.23 </alpha>
     <alphap> 0.48 </alphap>
-  </plasticity_model>
+  </flow_model>
 </Uintah_Include>

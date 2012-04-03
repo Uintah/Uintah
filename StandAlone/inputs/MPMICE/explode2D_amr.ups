@@ -256,7 +256,7 @@
           <compute_specific_heat>true</compute_specific_heat>
           <yield_condition type="vonMises"/>
           <stability_check type="drucker_becker"/>
-          <plasticity_model type="johnson_cook">
+          <flow_model type="johnson_cook">
             <A>792000000</A>
             <B>510000000</B>
             <C>0.014</C>
@@ -265,7 +265,7 @@
             <epdot_0>1</epdot_0>
             <T_r>298</T_r>
             <T_m>1793</T_m>
-          </plasticity_model>
+          </flow_model>
           <damage_model type="johnson_cook">
             <D1>0.050000000000000003</D1>
             <D2>3.4399999999999999</D2>

@@ -38,7 +38,7 @@ namespace Uintah {
 
 ////////////////////////////////////////////////////////////////////////////////
   /*!
-    \class ZAPlastic
+    \class ZAFlow
     \brief Zerilli-Armstrong Strain rate dependent plasticity model
     \author Anup Bhawalkar, 
     Department of Mechanical Engineering, 
@@ -104,7 +104,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ZAPlastic : public PlasticityModel {
+  class ZAFlow : public FlowModel {
 
   public:
 
@@ -130,16 +130,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    ZAPlastic& operator=(const ZAPlastic &cm);
+    ZAFlow& operator=(const ZAFlow &cm);
 
   public:
 
     // constructors
-    ZAPlastic(ProblemSpecP& ps);
-    ZAPlastic(const ZAPlastic* cm);
+    ZAFlow(ProblemSpecP& ps);
+    ZAFlow(const ZAFlow* cm);
          
     // destructor 
-    virtual ~ZAPlastic();
+    virtual ~ZAFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 

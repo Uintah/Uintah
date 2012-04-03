@@ -48,66 +48,66 @@ using std::ofstream;
 
 using namespace Uintah;
 
-PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
+FlowModel* FlowModelFactory::create(ProblemSpecP& ps)
 {
-   ProblemSpecP child = ps->findBlock("plasticity_model");
+   ProblemSpecP child = ps->findBlock("flow_model");
    if(!child)
-      throw ProblemSetupException("Cannot find plasticity_model tag", __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot find flow_model tag", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for plasticity_model", __FILE__, __LINE__);
+      throw ProblemSetupException("No type for flow_model", __FILE__, __LINE__);
    if (mat_type == "isotropic_hardening")
-      return(scinew IsoHardeningPlastic(child));
+      return(scinew IsoHardeningFlow(child));
    else if (mat_type == "johnson_cook")
-      return(scinew JohnsonCookPlastic(child));
+      return(scinew JohnsonCookFlow(child));
    else if (mat_type == "zerilli_armstrong")
-      return(scinew ZAPlastic(child));
+      return(scinew ZAFlow(child));
    else if (mat_type == "zerilli_armstrong_polymer")
-      return(scinew ZAPolymer(child));
+      return(scinew ZAPolymerFlow(child));
    else if (mat_type == "mts_model")
-      return(scinew MTSPlastic(child));
+      return(scinew MTSFlow(child));
    else if (mat_type == "steinberg_cochran_guinan")
-      return(scinew SCGPlastic(child));
+      return(scinew SCGFlow(child));
    else if (mat_type == "preston_tonks_wallace")
-      return(scinew PTWPlastic(child));
+      return(scinew PTWFlow(child));
    else {
-      //cerr << "**WARNING** Creating default isotropic hardening plasticity model" << endl;
-      //return(scinew IsoHardeningPlastic(child));
-      throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")", __FILE__, __LINE__);
+      //cerr << "**WARNING** Creating default isotropic hardening flow model" << endl;
+      //return(scinew IsoHardeningFlow(child));
+      throw ProblemSetupException("Unknown flow Model ("+mat_type+")", __FILE__, __LINE__);
    }
 }
 
-PlasticityModel* 
-PlasticityModelFactory::createCopy(const PlasticityModel* pm)
+FlowModel* 
+FlowModelFactory::createCopy(const FlowModel* pm)
 {
-   if (dynamic_cast<const IsoHardeningPlastic*>(pm))
-      return(scinew IsoHardeningPlastic(dynamic_cast<const 
-                                        IsoHardeningPlastic*>(pm)));
+   if (dynamic_cast<const IsoHardeningFlow*>(pm))
+      return(scinew IsoHardeningFlow(dynamic_cast<const 
+                                        IsoHardeningFlow*>(pm)));
 
-   else if (dynamic_cast<const JohnsonCookPlastic*>(pm))
-      return(scinew JohnsonCookPlastic(dynamic_cast<const 
-                                       JohnsonCookPlastic*>(pm)));
+   else if (dynamic_cast<const JohnsonCookFlow*>(pm))
+      return(scinew JohnsonCookFlow(dynamic_cast<const 
+                                       JohnsonCookFlow*>(pm)));
 
-   else if (dynamic_cast<const ZAPlastic*>(pm))
-      return(scinew ZAPlastic(dynamic_cast<const ZAPlastic*>(pm)));
+   else if (dynamic_cast<const ZAFlow*>(pm))
+      return(scinew ZAFlow(dynamic_cast<const ZAFlow*>(pm)));
       
-   else if (dynamic_cast<const ZAPolymer*>(pm))
-      return(scinew ZAPolymer(dynamic_cast<const ZAPolymer*>(pm)));
+   else if (dynamic_cast<const ZAPolymerFlow*>(pm))
+      return(scinew ZAPolymerFlow(dynamic_cast<const ZAPolymerFlow*>(pm)));
 
-   else if (dynamic_cast<const MTSPlastic*>(pm))
-      return(scinew MTSPlastic(dynamic_cast<const MTSPlastic*>(pm)));
+   else if (dynamic_cast<const MTSFlow*>(pm))
+      return(scinew MTSFlow(dynamic_cast<const MTSFlow*>(pm)));
    
-   else if (dynamic_cast<const SCGPlastic*>(pm))
-      return(scinew SCGPlastic(dynamic_cast<const SCGPlastic*>(pm)));
+   else if (dynamic_cast<const SCGFlow*>(pm))
+      return(scinew SCGFlow(dynamic_cast<const SCGFlow*>(pm)));
 
-   else if (dynamic_cast<const PTWPlastic*>(pm))
-      return(scinew PTWPlastic(dynamic_cast<const PTWPlastic*>(pm)));
+   else if (dynamic_cast<const PTWFlow*>(pm))
+      return(scinew PTWFlow(dynamic_cast<const PTWFlow*>(pm)));
    
    else {
-      //cerr << "**WARNING** Creating copy of default isotropic hardening plasticity model" << endl;
-      //return(scinew IsoHardeningPlastic(dynamic_cast<const 
-      //                                  IsoHardeningPlastic*>(pm)));
-      throw ProblemSetupException("Cannot create copy of unknown plasticity model", __FILE__, __LINE__);
+      //cerr << "**WARNING** Creating copy of default isotropic hardening flow model" << endl;
+      //return(scinew IsoHardeningFlow(dynamic_cast<const 
+      //                                  IsoHardeningFlow*>(pm)));
+      throw ProblemSetupException("Cannot create copy of unknown flow model", __FILE__, __LINE__);
    }
 }
 

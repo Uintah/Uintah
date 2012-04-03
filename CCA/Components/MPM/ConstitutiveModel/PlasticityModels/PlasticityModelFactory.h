@@ -28,24 +28,24 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef _PLASTICITYMODELFACTORY_H_
-#define _PLASTICITYMODELFACTORY_H_
+#ifndef _FLOWMODELFACTORY_H_
+#define _FLOWMODELFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
 namespace Uintah {
 
-  class PlasticityModel;
+  class FlowModel;
   class MPMLabel;
 
-  class PlasticityModelFactory
+  class FlowModelFactory
   {
   public:
     // this function has a switch for all known mat_types
-    static PlasticityModel* create(ProblemSpecP& ps);
-    static PlasticityModel* createCopy(const PlasticityModel* pm);
+    static FlowModel* create(ProblemSpecP& ps);
+    static FlowModel* createCopy(const FlowModel* pm);
   };
 } // End namespace Uintah
       
-#endif /* _PLASTICITYMODELFACTORY_H_ */
+#endif /* _FlowMODELFACTORY_H_ */

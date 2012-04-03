@@ -118,7 +118,7 @@
             <S_alpha> 1.5   </S_alpha>
           </equation_of_state>
           
-          <plasticity_model type = "mts_model">
+          <flow_model type = "mts_model">
             <mu_0>51.3e9</mu_0>
             <D>3.0e9</D>
             <T_0>165</T_0>
@@ -146,7 +146,7 @@
             <edot_es0>1.0e7</edot_es0>
             <g_0es>0.2625</g_0es>
             <sigma_es0>770.0e6</sigma_es0>
-          </plasticity_model>
+          </flow_model>
 
           <specific_heat_model type = "copper_Cp">
           </specific_heat_model>

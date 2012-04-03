@@ -37,7 +37,7 @@ using namespace Uintah;
 using namespace std;
 
 
-MTSPlastic::MTSPlastic(ProblemSpecP& ps)
+MTSFlow::MTSFlow(ProblemSpecP& ps)
 {
   ps->require("sigma_a",d_CM.sigma_a);
   ps->require("mu_0",d_CM.mu_0); //b1
@@ -88,7 +88,7 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
   //      ParticleVariable<double>::getTypeDescription());
 }
          
-MTSPlastic::MTSPlastic(const MTSPlastic* cm)
+MTSFlow::MTSFlow(const MTSFlow* cm)
 {
   d_CM.sigma_a = cm->d_CM.sigma_a;
   d_CM.mu_0 = cm->d_CM.mu_0;
@@ -129,54 +129,54 @@ MTSPlastic::MTSPlastic(const MTSPlastic* cm)
   //      ParticleVariable<double>::getTypeDescription());
 }
          
-MTSPlastic::~MTSPlastic()
+MTSFlow::~MTSFlow()
 {
   //VarLabel::destroy(pMTSLabel);
   //VarLabel::destroy(pMTSLabel_preReloc);
 }
 
 
-void MTSPlastic::outputProblemSpec(ProblemSpecP& ps)
+void MTSFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","mts_model");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","mts_model");
 
-  plastic_ps->appendElement("sigma_a",d_CM.sigma_a);
-  plastic_ps->appendElement("mu_0",d_CM.mu_0); //b1
-  plastic_ps->appendElement("D",d_CM.D); //b2
-  plastic_ps->appendElement("T_0",d_CM.T_0); //b3
-  plastic_ps->appendElement("koverbcubed",d_CM.koverbcubed);
-  plastic_ps->appendElement("g_0i",d_CM.g_0i);
-  plastic_ps->appendElement("g_0e",d_CM.g_0e); // g0
-  plastic_ps->appendElement("edot_0i",d_CM.edot_0i);
-  plastic_ps->appendElement("edot_0e",d_CM.edot_0e); //edot
-  plastic_ps->appendElement("p_i",d_CM.p_i);
-  plastic_ps->appendElement("q_i",d_CM.q_i);
-  plastic_ps->appendElement("p_e",d_CM.p_e); //p
-  plastic_ps->appendElement("q_e",d_CM.q_e); //q
-  plastic_ps->appendElement("sigma_i",d_CM.sigma_i);
-  plastic_ps->appendElement("a_0",d_CM.a_0);
-  plastic_ps->appendElement("a_1",d_CM.a_1);
-  plastic_ps->appendElement("a_2",d_CM.a_2);
-  plastic_ps->appendElement("a_3",d_CM.a_3);
-  plastic_ps->appendElement("theta_IV",d_CM.theta_IV);
-  plastic_ps->appendElement("alpha",d_CM.alpha);
-  plastic_ps->appendElement("edot_es0",d_CM.edot_es0);
-  plastic_ps->appendElement("g_0es",d_CM.g_0es); //A
-  plastic_ps->appendElement("sigma_es0",d_CM.sigma_es0);
+  flow_ps->appendElement("sigma_a",d_CM.sigma_a);
+  flow_ps->appendElement("mu_0",d_CM.mu_0); //b1
+  flow_ps->appendElement("D",d_CM.D); //b2
+  flow_ps->appendElement("T_0",d_CM.T_0); //b3
+  flow_ps->appendElement("koverbcubed",d_CM.koverbcubed);
+  flow_ps->appendElement("g_0i",d_CM.g_0i);
+  flow_ps->appendElement("g_0e",d_CM.g_0e); // g0
+  flow_ps->appendElement("edot_0i",d_CM.edot_0i);
+  flow_ps->appendElement("edot_0e",d_CM.edot_0e); //edot
+  flow_ps->appendElement("p_i",d_CM.p_i);
+  flow_ps->appendElement("q_i",d_CM.q_i);
+  flow_ps->appendElement("p_e",d_CM.p_e); //p
+  flow_ps->appendElement("q_e",d_CM.q_e); //q
+  flow_ps->appendElement("sigma_i",d_CM.sigma_i);
+  flow_ps->appendElement("a_0",d_CM.a_0);
+  flow_ps->appendElement("a_1",d_CM.a_1);
+  flow_ps->appendElement("a_2",d_CM.a_2);
+  flow_ps->appendElement("a_3",d_CM.a_3);
+  flow_ps->appendElement("theta_IV",d_CM.theta_IV);
+  flow_ps->appendElement("alpha",d_CM.alpha);
+  flow_ps->appendElement("edot_es0",d_CM.edot_es0);
+  flow_ps->appendElement("g_0es",d_CM.g_0es); //A
+  flow_ps->appendElement("sigma_es0",d_CM.sigma_es0);
 
-  plastic_ps->appendElement("T_c", d_CM.Tc);   
-  plastic_ps->appendElement("g_0i_c", d_CM.g_0i_c);
-  plastic_ps->appendElement("sigma_i_c", d_CM.sigma_i_c);
-  plastic_ps->appendElement("g_0es_c", d_CM.g_0es_c);
-  plastic_ps->appendElement("sigma_es0_c", d_CM.sigma_es0_c);
-  plastic_ps->appendElement("a_0_c", d_CM.a_0_c);
-  plastic_ps->appendElement("a_3_c", d_CM.a_3_c);
+  flow_ps->appendElement("T_c", d_CM.Tc);   
+  flow_ps->appendElement("g_0i_c", d_CM.g_0i_c);
+  flow_ps->appendElement("sigma_i_c", d_CM.sigma_i_c);
+  flow_ps->appendElement("g_0es_c", d_CM.g_0es_c);
+  flow_ps->appendElement("sigma_es0_c", d_CM.sigma_es0_c);
+  flow_ps->appendElement("a_0_c", d_CM.a_0_c);
+  flow_ps->appendElement("a_3_c", d_CM.a_3_c);
 }
 
          
 void 
-MTSPlastic::addInitialComputesAndRequires(Task* ,
+MTSFlow::addInitialComputesAndRequires(Task* ,
                                           const MPMMaterial* ,
                                           const PatchSet*)
 {
@@ -185,7 +185,7 @@ MTSPlastic::addInitialComputesAndRequires(Task* ,
 }
 
 void 
-MTSPlastic::addComputesAndRequires(Task* ,
+MTSFlow::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*)
 {
@@ -195,7 +195,7 @@ MTSPlastic::addComputesAndRequires(Task* ,
 }
 
 void 
-MTSPlastic::addComputesAndRequires(Task* ,
+MTSFlow::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*,
                                    bool ,
@@ -206,7 +206,7 @@ MTSPlastic::addComputesAndRequires(Task* ,
 }
 
 void 
-MTSPlastic::addParticleState(std::vector<const VarLabel*>& ,
+MTSFlow::addParticleState(std::vector<const VarLabel*>& ,
                              std::vector<const VarLabel*>& )
 {
   //from.push_back(pMTSLabel);
@@ -214,7 +214,7 @@ MTSPlastic::addParticleState(std::vector<const VarLabel*>& ,
 }
 
 void 
-MTSPlastic::allocateCMDataAddRequires(Task* ,
+MTSFlow::allocateCMDataAddRequires(Task* ,
                                       const MPMMaterial* ,
                                       const PatchSet* ,
                                       MPMLabel* )
@@ -224,7 +224,7 @@ MTSPlastic::allocateCMDataAddRequires(Task* ,
 }
 
 void 
-MTSPlastic::allocateCMDataAdd(DataWarehouse* ,
+MTSFlow::allocateCMDataAdd(DataWarehouse* ,
                               ParticleSubset* ,
                               map<const VarLabel*, 
                                 ParticleVariableBase*>* ,
@@ -253,7 +253,7 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* ,
 
 
 void 
-MTSPlastic::initializeInternalVars(ParticleSubset* ,
+MTSFlow::initializeInternalVars(ParticleSubset* ,
                                    DataWarehouse* )
 {
   //new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
@@ -264,21 +264,21 @@ MTSPlastic::initializeInternalVars(ParticleSubset* ,
 }
 
 void 
-MTSPlastic::getInternalVars(ParticleSubset* ,
+MTSFlow::getInternalVars(ParticleSubset* ,
                             DataWarehouse* ) 
 {
   //old_dw->get(pMTS, pMTSLabel, pset);
 }
 
 void 
-MTSPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+MTSFlow::allocateAndPutInternalVars(ParticleSubset* ,
                                        DataWarehouse* ) 
 {
   //new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
 }
 
 void
-MTSPlastic::allocateAndPutRigid(ParticleSubset* ,
+MTSFlow::allocateAndPutRigid(ParticleSubset* ,
                                 DataWarehouse* )
 {
   //new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
@@ -289,19 +289,19 @@ MTSPlastic::allocateAndPutRigid(ParticleSubset* ,
 }
 
 void
-MTSPlastic::updateElastic(const particleIndex )
+MTSFlow::updateElastic(const particleIndex )
 {
   //pMTS_new[idx] = pMTS[idx];
 }
 
 void
-MTSPlastic::updatePlastic(const particleIndex , const double& )
+MTSFlow::updatePlastic(const particleIndex , const double& )
 {
   //pMTS_new[idx] = pMTS_new[idx];
 }
 
 double 
-MTSPlastic::computeFlowStress(const PlasticityState* state,
+MTSFlow::computeFlowStress(const PlasticityState* state,
                               const double& ,
                               const double& ,
                               const MPMMaterial* ,
@@ -317,7 +317,7 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   double T = state->temperature;
   double mu = state->shearModulus;
   if ((mu <= 0.0) || (T <= 0.0) ) {
-    cerr << "**ERROR** MTSPlastic::computeFlowStress: mu = " << mu 
+    cerr << "**ERROR** MTSFlow::computeFlowStress: mu = " << mu 
          << " T = " << T  << endl;
   }
   double mu_mu_0 = mu/d_CM.mu_0;
@@ -414,7 +414,7 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 }
 
 double 
-MTSPlastic::computeSigma_e(const double& theta_0, 
+MTSFlow::computeSigma_e(const double& theta_0, 
                            const double& sigma_es,
                            const double& ,
                            const double& ep,
@@ -474,7 +474,7 @@ MTSPlastic::computeSigma_e(const double& theta_0,
 }
 
 double 
-MTSPlastic::computeEpdot(const PlasticityState* state,
+MTSFlow::computeEpdot(const PlasticityState* state,
                          const double& delT,
                          const double& ,
                          const MPMMaterial* ,
@@ -534,7 +534,7 @@ MTSPlastic::computeEpdot(const PlasticityState* state,
 }
 
 void 
-MTSPlastic::evalFAndFPrime(const double& tau,
+MTSFlow::evalFAndFPrime(const double& tau,
                            const double& epdot,
                            const double& T,
                            const double& mu,
@@ -596,7 +596,7 @@ MTSPlastic::evalFAndFPrime(const double& tau,
 
 
 void 
-MTSPlastic::computeTangentModulus(const Matrix3& ,
+MTSFlow::computeTangentModulus(const Matrix3& ,
                                   const PlasticityState* ,
                                   const double& ,
                                   const MPMMaterial* ,
@@ -604,11 +604,11 @@ MTSPlastic::computeTangentModulus(const Matrix3& ,
                                   TangentModulusTensor& ,
                                   TangentModulusTensor& )
 {
-  throw InternalError("Empty Function: MTSPlastic::computeTangentModulus", __FILE__, __LINE__);
+  throw InternalError("Empty Function: MTSFlow::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
-MTSPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+MTSFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                         const particleIndex idx,
                                         Vector& derivs)
 {
@@ -618,7 +618,7 @@ MTSPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 }
 
 double
-MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+MTSFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                            const particleIndex idx)
 {
   // Get the state data
@@ -681,7 +681,7 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-MTSPlastic::computeShearModulus(const PlasticityState* state)
+MTSFlow::computeShearModulus(const PlasticityState* state)
 {
   double T = state->temperature;
   ASSERT(T > 0.0);
@@ -702,13 +702,13 @@ MTSPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-MTSPlastic::computeMeltingTemp(const PlasticityState* state)
+MTSFlow::computeMeltingTemp(const PlasticityState* state)
 {
   return state->meltingTemp;
 }
 
 double
-MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+MTSFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
                                          const particleIndex )
 {
   // Get the state data
@@ -834,7 +834,7 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 }
 
 double
-MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
+MTSFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                         const particleIndex )
 {
   // Get the state data
@@ -937,7 +937,7 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 }
 
 double
-MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
+MTSFlow::evalDerivativeWRTSigmaE(const PlasticityState* state,
                                     const particleIndex )
 {
   // Get the state data

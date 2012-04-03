@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __SCG_PLASTICITY_MODEL_H__
-#define __SCG_PLASTICITY_MODEL_H__
+#ifndef __SCG_FLOW_MODEL_H__
+#define __SCG_FLOW_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -39,7 +39,7 @@ namespace Uintah {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 
-    \class SCGPlastic
+    \class SCGFlow
     \brief Steinberg-Cochran-Guinan-Lund plasticity model 
     \author Biswajit Banerjee, \n
     C-SAFE and Department of Mechanical Engineering, \n
@@ -97,7 +97,7 @@ namespace Uintah {
   */
   ////////////////////////////////////////////////////////////////////////////
 
-  class SCGPlastic : public PlasticityModel {
+  class SCGFlow : public FlowModel {
 
   public:
 
@@ -134,16 +134,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //SCGPlastic(const SCGPlastic &cm);
-    SCGPlastic& operator=(const SCGPlastic &cm);
+    //SCGFlow(const SCGFlow &cm);
+    SCGFlow& operator=(const SCGFlow &cm);
 
   public:
     // constructors
-    SCGPlastic(ProblemSpecP& ps);
-    SCGPlastic(const SCGPlastic* cm);
+    SCGFlow(ProblemSpecP& ps);
+    SCGFlow(const SCGFlow* cm);
          
     // destructor 
-    virtual ~SCGPlastic();
+    virtual ~SCGFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -357,4 +357,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __SCG_PLASTICITY_MODEL_H__ 
+#endif  // __SCG_FLOW_MODEL_H__ 

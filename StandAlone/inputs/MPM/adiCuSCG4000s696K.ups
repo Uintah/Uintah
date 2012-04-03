@@ -122,7 +122,7 @@
             <S_alpha> 1.489 </S_alpha>
           </equation_of_state>
           
-          <plasticity_model type="steinberg_cochran_guinan">
+          <flow_model type="steinberg_cochran_guinan">
             <mu_0> 47.7e9 </mu_0>
             <sigma_0> 0.125e9 </sigma_0>
             <Y_max> 0.64e9 </Y_max>
@@ -139,7 +139,7 @@
             <energy_to_form_kink_pair> 0.31 </energy_to_form_kink_pair>
             <Boltzmann_constant> 8.617385e-5 </Boltzmann_constant>
             <Peierls_stress> 0.5e8 </Peierls_stress>
-          </plasticity_model>
+          </flow_model>
 
           <shear_modulus_model type="scg_shear">
             <mu_0> 47.7e9 </mu_0>

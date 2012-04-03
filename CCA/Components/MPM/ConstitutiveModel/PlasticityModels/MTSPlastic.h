@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __MTS_PLASTICITY_MODEL_H__
-#define __MTS_PLASTICITY_MODEL_H__
+#ifndef __MTS_FLOW_MODEL_H__
+#define __MTS_FLOW_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -39,7 +39,7 @@ namespace Uintah {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 
-    \class MTSPlastic
+    \class MTSFlow
     \brief Mechanical Threshold Stress Internal Variable Plasticity Model 
     \author Biswajit Banerjee, \n
     C-SAFE and Department of Mechanical Engineering, \n
@@ -132,7 +132,7 @@ namespace Uintah {
   */
   ////////////////////////////////////////////////////////////////////////////
 
-  class MTSPlastic : public PlasticityModel {
+  class MTSFlow : public FlowModel {
 
   public:
 
@@ -185,16 +185,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //MTSPlastic(const MTSPlastic &cm);
-    MTSPlastic& operator=(const MTSPlastic &cm);
+    //MTSFlow(const MTSFlow &cm);
+    MTSFlow& operator=(const MTSFlow &cm);
 
   public:
     // constructors
-    MTSPlastic(ProblemSpecP& ps);
-    MTSPlastic(const MTSPlastic* cm);
+    MTSFlow(ProblemSpecP& ps);
+    MTSFlow(const MTSFlow* cm);
          
     // destructor 
-    virtual ~MTSPlastic();
+    virtual ~MTSFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -470,4 +470,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __MTS_PLASTICITY_MODEL_H__ 
+#endif  // __MTS_FLOW_MODEL_H__ 

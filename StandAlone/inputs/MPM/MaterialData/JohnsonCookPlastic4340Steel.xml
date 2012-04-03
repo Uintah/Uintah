@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- 4340 Steel -->
 <Uintah_Include>
-  <plasticity_model type="johnson_cook">
+  <flow_model type="johnson_cook">
     <A>792.0e6</A>
     <B>510.0e6</B>
     <C>0.014</C>
     <n>0.26</n>
     <m>1.03</m>
-  </plasticity_model>
+  </flow_model>
 </Uintah_Include>

@@ -176,13 +176,13 @@
                <S_alpha>1.92</S_alpha>
              </equation_of_state>
                   
-             <plasticity_model type = "johnson_cook">
+             <flow_model type = "johnson_cook">
                <A>792.0e6</A>
                <B>510.0e6</B>
                <C>0.014</C>
                <n>0.26</n>
                <m>1.03</m>
-             </plasticity_model>
+             </flow_model>
                   
              <yield_condition type = "gurson">
                <q1> 1.5 </q1>
