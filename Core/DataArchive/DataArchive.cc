@@ -814,7 +814,13 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   
   map<string, VarLabel*> varMap;
   for (unsigned i = 0; i < names.size(); i++) {
-    varMap[names[i]] = VarLabel::find(names[i]);
+    VarLabel * vl = VarLabel::find(names[i]);
+    if( vl == NULL ) {
+//      proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
+//          << "However, it is possible that this may cause problems down the road...\n";
+      vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(1,1,1) );
+    }
+    varMap[names[i]] = vl;
   }
 
   TimeData& timedata = getTimeData(index);
