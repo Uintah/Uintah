@@ -169,7 +169,7 @@ namespace Uintah {
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
-    PlasticityModel*    d_plastic;
+    FlowModel*          d_flow;
     DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
     ShearModulusModel*  d_shear;

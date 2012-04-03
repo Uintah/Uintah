@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 using namespace Uintah;
 
-IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
+IsoHardeningFlow::IsoHardeningFlow(ProblemSpecP& ps)
 {
   ps->require("K",d_CM.K);
   ps->require("sigma_Y",d_CM.sigma_0);
@@ -49,7 +49,7 @@ IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
         ParticleVariable<double>::getTypeDescription());
 }
          
-IsoHardeningPlastic::IsoHardeningPlastic(const IsoHardeningPlastic* cm)
+IsoHardeningFlow::IsoHardeningFlow(const IsoHardeningFlow* cm)
 {
   d_CM.K = cm->d_CM.K;
   d_CM.sigma_0 = cm->d_CM.sigma_0;
@@ -61,22 +61,22 @@ IsoHardeningPlastic::IsoHardeningPlastic(const IsoHardeningPlastic* cm)
         ParticleVariable<double>::getTypeDescription());
 }
          
-IsoHardeningPlastic::~IsoHardeningPlastic()
+IsoHardeningFlow::~IsoHardeningFlow()
 {
   VarLabel::destroy(pAlphaLabel);
   VarLabel::destroy(pAlphaLabel_preReloc);
 }
 
-void IsoHardeningPlastic::outputProblemSpec(ProblemSpecP& ps)
+void IsoHardeningFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","isotropic_hardening");
-  plastic_ps->appendElement("K",d_CM.K);
-  plastic_ps->appendElement("sigma_Y",d_CM.sigma_0);
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","isotropic_hardening");
+  flow_ps->appendElement("K",d_CM.K);
+  flow_ps->appendElement("sigma_Y",d_CM.sigma_0);
 }
          
 void 
-IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,
+IsoHardeningFlow::addInitialComputesAndRequires(Task* task,
                                                    const MPMMaterial* matl,
                                                    const PatchSet*)
 {
@@ -85,7 +85,7 @@ IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,
 }
 
 void 
-IsoHardeningPlastic::addComputesAndRequires(Task* task,
+IsoHardeningFlow::addComputesAndRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet*)
 {
@@ -95,7 +95,7 @@ IsoHardeningPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-IsoHardeningPlastic::addComputesAndRequires(Task* task,
+IsoHardeningFlow::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool /*recurse*/,
@@ -110,7 +110,7 @@ IsoHardeningPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-IsoHardeningPlastic::addParticleState(std::vector<const VarLabel*>& from,
+IsoHardeningFlow::addParticleState(std::vector<const VarLabel*>& from,
                                       std::vector<const VarLabel*>& to)
 {
   from.push_back(pAlphaLabel);
@@ -118,7 +118,7 @@ IsoHardeningPlastic::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
-IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
+IsoHardeningFlow::allocateCMDataAddRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* ,
                                                MPMLabel* )
@@ -128,7 +128,7 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
   //task->requires(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
 }
 
-void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
+void IsoHardeningFlow::allocateCMDataAdd(DataWarehouse* new_dw,
                                             ParticleSubset* addset,
                                             map<const VarLabel*, ParticleVariableBase*>* newState,
                                             ParticleSubset* delset,
@@ -155,7 +155,7 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void 
-IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
+IsoHardeningFlow::initializeInternalVars(ParticleSubset* pset,
                                             DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel, pset);
@@ -166,21 +166,21 @@ IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
 }
 
 void 
-IsoHardeningPlastic::getInternalVars(ParticleSubset* pset,
+IsoHardeningFlow::getInternalVars(ParticleSubset* pset,
                                      DataWarehouse* old_dw) 
 {
   old_dw->get(pAlpha, pAlphaLabel, pset);
 }
 
 void 
-IsoHardeningPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
+IsoHardeningFlow::allocateAndPutInternalVars(ParticleSubset* pset,
                                                 DataWarehouse* new_dw) 
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel_preReloc, pset);
 }
 
 void
-IsoHardeningPlastic::allocateAndPutRigid(ParticleSubset* pset,
+IsoHardeningFlow::allocateAndPutRigid(ParticleSubset* pset,
                                          DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel_preReloc, pset);
@@ -192,20 +192,20 @@ IsoHardeningPlastic::allocateAndPutRigid(ParticleSubset* pset,
 }
 
 void
-IsoHardeningPlastic::updateElastic(const particleIndex idx)
+IsoHardeningFlow::updateElastic(const particleIndex idx)
 {
   pAlpha_new[idx] = pAlpha[idx];
 }
 
 void
-IsoHardeningPlastic::updatePlastic(const particleIndex idx, 
+IsoHardeningFlow::updatePlastic(const particleIndex idx, 
                                    const double& delGamma)
 {
   pAlpha_new[idx] = pAlpha[idx] + sqrt(2.0/3.0)*delGamma;
 }
 
 double 
-IsoHardeningPlastic::computeFlowStress(const PlasticityState* ,
+IsoHardeningFlow::computeFlowStress(const PlasticityState* ,
                                        const double& ,
                                        const double& ,
                                        const MPMMaterial* ,
@@ -216,7 +216,7 @@ IsoHardeningPlastic::computeFlowStress(const PlasticityState* ,
 }
 
 double 
-IsoHardeningPlastic::computeEpdot(const PlasticityState* state,
+IsoHardeningFlow::computeEpdot(const PlasticityState* state,
                                   const double& ,
                                   const double& ,
                                   const MPMMaterial* ,
@@ -227,7 +227,7 @@ IsoHardeningPlastic::computeEpdot(const PlasticityState* state,
 
  
 void 
-IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
+IsoHardeningFlow::computeTangentModulus(const Matrix3& stress,
                                            const PlasticityState* ,
                                            const double& ,
                                            const MPMMaterial* ,
@@ -235,11 +235,11 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
                                            TangentModulusTensor& ,
                                            TangentModulusTensor& )
 {
-  throw InternalError("Empty Function: IsoHardeningPlastic::computeTangentModulus", __FILE__, __LINE__);
+  throw InternalError("Empty Function: IsoHardeningFlow::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
-IsoHardeningPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+IsoHardeningFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                                  const particleIndex idx,
                                                  Vector& derivs)
 {
@@ -249,7 +249,7 @@ IsoHardeningPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState*,
+IsoHardeningFlow::evalDerivativeWRTPlasticStrain(const PlasticityState*,
                                                     const particleIndex )
 {
   return d_CM.K;
@@ -259,7 +259,7 @@ IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState*,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-IsoHardeningPlastic::computeShearModulus(const PlasticityState* state)
+IsoHardeningFlow::computeShearModulus(const PlasticityState* state)
 {
   return state->shearModulus;
 }
@@ -268,27 +268,27 @@ IsoHardeningPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-IsoHardeningPlastic::computeMeltingTemp(const PlasticityState* state)
+IsoHardeningFlow::computeMeltingTemp(const PlasticityState* state)
 {
   return state->meltingTemp;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTTemperature(const PlasticityState* ,
+IsoHardeningFlow::evalDerivativeWRTTemperature(const PlasticityState* ,
                                                   const particleIndex )
 {
   return 0.0;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTStrainRate(const PlasticityState* ,
+IsoHardeningFlow::evalDerivativeWRTStrainRate(const PlasticityState* ,
                                                  const particleIndex )
 {
   return 0.0;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTAlpha(const PlasticityState* ,
+IsoHardeningFlow::evalDerivativeWRTAlpha(const PlasticityState* ,
                                             const particleIndex )
 {
   return d_CM.K;

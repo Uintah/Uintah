@@ -10,13 +10,13 @@
                   </yield_condition>
                   <stability_check type="none">
                   </stability_check>
-                  <plasticity_model type="johnson_cook">
+                  <flow_model type="johnson_cook">
                         <A>792.0e6</A>
                         <B>510.0e6</B>
                         <C>0.014</C>
                         <n>0.26</n>
                         <m>1.03</m>
-                  </plasticity_model>
+                  </flow_model>
                   <damage_model type="johnson_cook">
                         <D1>0.05</D1>
                         <D2>3.44</D2>

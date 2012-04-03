@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- Tungsten Alloy -->
 <Uintah_Include>
-  <plasticity_model type="johnson_cook">
+  <flow_model type="johnson_cook">
     <A>1.51e9</A>
     <B>0.177e9</B>
     <C>0.016</C>
     <n>0.12</n>
     <m>1.00</m>
-  </plasticity_model>
+  </flow_model>
 </Uintah_Include>

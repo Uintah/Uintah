@@ -132,7 +132,7 @@
             <S_alpha> 1.489 </S_alpha>
           </equation_of_state>
           
-          <plasticity_model type="zerilli_armstrong">
+          <flow_model type="zerilli_armstrong">
             <sigma_g>     46.5e6   </sigma_g>
             <k_H>         5.0e6    </k_H>
             <sqrt_l_inv>  3.7      </sqrt_l_inv>
@@ -144,7 +144,7 @@
             <alpha_1>     0.000115 </alpha_1>
             <K>           0.0      </K>
             <n>           0.0      </n>
-          </plasticity_model>
+          </flow_model>
 
           <shear_modulus_model type = "constant_shear">
           </shear_modulus_model>

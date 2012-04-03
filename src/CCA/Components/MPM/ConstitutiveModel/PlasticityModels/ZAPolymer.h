@@ -39,7 +39,7 @@ namespace Uintah {
 
 ////////////////////////////////////////////////////////////////////////////////
   /*!
-    \class ZAPolymer
+    \class ZAPolymerFlow
     \brief Zerilli-Armstrong 
     \author Todd Harman/Scott Bardenhagen 
     Department of Mechanical Engineering, 
@@ -51,7 +51,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ZAPolymer : public PlasticityModel {
+  class ZAPolymerFlow : public FlowModel {
 
   public:
 
@@ -80,16 +80,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    ZAPolymer& operator=(const ZAPolymer &cm);
+    ZAPolymerFlow& operator=(const ZAPolymerFlow &cm);
 
   public:
 
     // constructors
-    ZAPolymer(ProblemSpecP& ps);
-    ZAPolymer(const ZAPolymer* cm);
+    ZAPolymerFlow(ProblemSpecP& ps);
+    ZAPolymerFlow(const ZAPolymerFlow* cm);
          
     // destructor 
-    virtual ~ZAPolymer();
+    virtual ~ZAPolymerFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
@@ -131,19 +131,19 @@ namespace Uintah {
     //  Empty functions
     virtual double computeEpdot(const PlasticityState* ,
                             const double& ,const double& ,const MPMMaterial* ,const particleIndex ){
-      throw InternalError("ZAPolymer::ComputeEpdot has not been implemented",__FILE__,__LINE__);
+      throw InternalError("ZAPolymerFlow::ComputeEpdot has not been implemented",__FILE__,__LINE__);
     };
                             
     double computeMeltingTemp(const PlasticityState* ){
-      throw InternalError("ZAPolymer::computeMeltingTemp has not been implemented",__FILE__,__LINE__);
+      throw InternalError("ZAPolymerFlow::computeMeltingTemp has not been implemented",__FILE__,__LINE__);
     };
     
     void evalDerivativeWRTScalarVars(const PlasticityState*, const particleIndex, Vector&){
-      throw InternalError("ZAPolymer::evalDerivativeWRTScalarVars has not been implemented",__FILE__,__LINE__);
+      throw InternalError("ZAPolymerFlow::evalDerivativeWRTScalarVars has not been implemented",__FILE__,__LINE__);
     }
     
     double evalDerivativeWRTTemperature(const PlasticityState*, const particleIndex){
-      throw InternalError("ZAPolymer::evalDerivativeWRTTemperature has not been implemented",__FILE__,__LINE__);
+      throw InternalError("ZAPolymerFlow::evalDerivativeWRTTemperature has not been implemented",__FILE__,__LINE__);
     }
 
   };

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- Annealed Copper -->
 <Uintah_Include>
-  <plasticity_model type="mts_model">
+  <flow_model type="mts_model">
     <sigma_a>40.0e6</sigma_a>
     <mu_0>47.7e9</mu_0>
     <D>3.0e9</D>
@@ -25,5 +25,5 @@
     <edot_es0>1.0e7</edot_es0>
     <g_0es>0.2625</g_0es>
     <sigma_es0>770.0e6</sigma_es0>
-  </plasticity_model>
+  </flow_model>
 </Uintah_Include>

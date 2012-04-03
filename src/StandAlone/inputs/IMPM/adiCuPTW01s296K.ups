@@ -132,7 +132,7 @@
             <S_alpha> 1.489 </S_alpha>
           </equation_of_state>
           
-          <plasticity_model type="preston_tonks_wallace">
+          <flow_model type="preston_tonks_wallace">
             <theta> 0.025 </theta>
             <p> 2.0 </p>
             <s0> 0.0085 </s0>
@@ -148,7 +148,7 @@
             <G0> 518e8 </G0>
             <alpha> 0.20 </alpha>
             <alphap> 0.20 </alphap>
-          </plasticity_model>
+          </flow_model>
 
           <shear_modulus_model type="np_shear">
             <mu_0> 50.7e9 </mu_0>

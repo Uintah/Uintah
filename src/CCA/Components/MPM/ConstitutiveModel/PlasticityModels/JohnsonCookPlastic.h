@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __JOHNSONCOOK_PLASTICITY_MODEL_H__
-#define __JOHNSONCOOK_PLASTICITY_MODEL_H__
+#ifndef __JOHNSONCOOK_FLOW_MODEL_H__
+#define __JOHNSONCOOK_FLOW_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -39,7 +39,7 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
-    \class JohnsonCookPlastic
+    \class JohnsonCookFlow
     \brief Johnson-Cook Strain rate dependent plasticity model
     \author Biswajit Banerjee, 
     Department of Mechanical Engineering, 
@@ -67,7 +67,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class JohnsonCookPlastic : public PlasticityModel {
+  class JohnsonCookFlow : public FlowModel {
 
   public:
 
@@ -89,16 +89,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //JohnsonCookPlastic(const JohnsonCookPlastic &cm);
-    JohnsonCookPlastic& operator=(const JohnsonCookPlastic &cm);
+    //JohnsonCookFlow(const JohnsonCookFlow &cm);
+    JohnsonCookFlow& operator=(const JohnsonCookFlow &cm);
 
   public:
     // constructors
-    JohnsonCookPlastic(ProblemSpecP& ps);
-    JohnsonCookPlastic(const JohnsonCookPlastic* cm);
+    JohnsonCookFlow(ProblemSpecP& ps);
+    JohnsonCookFlow(const JohnsonCookFlow* cm);
          
     // destructor 
-    virtual ~JohnsonCookPlastic();
+    virtual ~JohnsonCookFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -281,4 +281,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __JOHNSONCOOK_PLASTICITY_MODEL_H__ 
+#endif  // __JOHNSONCOOK_FLOW_MODEL_H__ 

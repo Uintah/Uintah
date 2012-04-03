@@ -6,7 +6,7 @@
            Mater. Sci. Eng. 7 (1999), pp 333-354.
 -->
 <Uintah_Include>
-  <plasticity_model type="steinberg_cochran_guinan">
+  <flow_model type="steinberg_cochran_guinan">
     <mu_0>   10.0e9  </mu_0>     <!-- Pa^-1 -->
     <sigma_0> 0.6e9  </sigma_0>  <!-- Pa^-1 -->
     <Y_max>   1.0e9 </Y_max>    <!-- Pa^-1 -->
@@ -18,5 +18,5 @@
     <Gamma_0> 1.1    </Gamma_0>   
     <a>       0.0    </a>
     <epsilon_p0> 0.0 </epsilon_p0>
-  </plasticity_model>
+  </flow_model>
 </Uintah_Include>

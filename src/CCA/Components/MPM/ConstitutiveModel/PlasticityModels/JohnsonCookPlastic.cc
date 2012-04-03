@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 using namespace Uintah;
 
-JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
+JohnsonCookFlow::JohnsonCookFlow(ProblemSpecP& ps)
 {
   ps->require("A",d_CM.A);
   ps->require("B",d_CM.B);
@@ -57,7 +57,7 @@ JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
   ps->get("T_m",d_CM.TMelt);
 }
          
-JohnsonCookPlastic::JohnsonCookPlastic(const JohnsonCookPlastic* cm)
+JohnsonCookFlow::JohnsonCookFlow(const JohnsonCookFlow* cm)
 {
   d_CM.A = cm->d_CM.A;
   d_CM.B = cm->d_CM.B;
@@ -69,42 +69,42 @@ JohnsonCookPlastic::JohnsonCookPlastic(const JohnsonCookPlastic* cm)
   d_CM.TMelt = cm->d_CM.TMelt;
 }
          
-JohnsonCookPlastic::~JohnsonCookPlastic()
+JohnsonCookFlow::~JohnsonCookFlow()
 {
 }
 
-void JohnsonCookPlastic::outputProblemSpec(ProblemSpecP& ps)
+void JohnsonCookFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","johnson_cook");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","johnson_cook");
 
-  plastic_ps->appendElement("A",d_CM.A);
-  plastic_ps->appendElement("B",d_CM.B);
-  plastic_ps->appendElement("C",d_CM.C);
-  plastic_ps->appendElement("n",d_CM.n);
-  plastic_ps->appendElement("m",d_CM.m);
-  plastic_ps->appendElement("epdot_0", d_CM.epdot_0);
-  plastic_ps->appendElement("T_r",d_CM.TRoom);
-  plastic_ps->appendElement("T_m",d_CM.TMelt);
+  flow_ps->appendElement("A",d_CM.A);
+  flow_ps->appendElement("B",d_CM.B);
+  flow_ps->appendElement("C",d_CM.C);
+  flow_ps->appendElement("n",d_CM.n);
+  flow_ps->appendElement("m",d_CM.m);
+  flow_ps->appendElement("epdot_0", d_CM.epdot_0);
+  flow_ps->appendElement("T_r",d_CM.TRoom);
+  flow_ps->appendElement("T_m",d_CM.TMelt);
 }
 
          
 void 
-JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,
+JohnsonCookFlow::addInitialComputesAndRequires(Task* ,
                                            const MPMMaterial* ,
                                            const PatchSet*)
 {
 }
 
 void 
-JohnsonCookPlastic::addComputesAndRequires(Task* ,
+JohnsonCookFlow::addComputesAndRequires(Task* ,
                                     const MPMMaterial* ,
                                     const PatchSet*)
 {
 }
 
 void 
-JohnsonCookPlastic::addComputesAndRequires(Task* task,
+JohnsonCookFlow::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool /*recurse*/,
@@ -113,20 +113,20 @@ JohnsonCookPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& ,
+JohnsonCookFlow::addParticleState(std::vector<const VarLabel*>& ,
                                      std::vector<const VarLabel*>& )
 {
 }
 
 void 
-JohnsonCookPlastic::allocateCMDataAddRequires(Task* ,
+JohnsonCookFlow::allocateCMDataAddRequires(Task* ,
                                               const MPMMaterial* ,
                                               const PatchSet* ,
                                               MPMLabel* )
 {
 }
 
-void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* ,
+void JohnsonCookFlow::allocateCMDataAdd(DataWarehouse* ,
                                            ParticleSubset* ,
                                            map<const VarLabel*, 
                                            ParticleVariableBase*>* ,
@@ -136,41 +136,41 @@ void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* ,
 }
 
 void 
-JohnsonCookPlastic::initializeInternalVars(ParticleSubset* ,
+JohnsonCookFlow::initializeInternalVars(ParticleSubset* ,
                                            DataWarehouse* )
 {
 }
 
 void 
-JohnsonCookPlastic::getInternalVars(ParticleSubset* ,
+JohnsonCookFlow::getInternalVars(ParticleSubset* ,
                                     DataWarehouse* ) 
 {
 }
 
 void 
-JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+JohnsonCookFlow::allocateAndPutInternalVars(ParticleSubset* ,
                                                DataWarehouse* ) 
 {
 }
 
 void 
-JohnsonCookPlastic::allocateAndPutRigid(ParticleSubset* ,
+JohnsonCookFlow::allocateAndPutRigid(ParticleSubset* ,
                                         DataWarehouse* ) 
 {
 }
 
 void
-JohnsonCookPlastic::updateElastic(const particleIndex )
+JohnsonCookFlow::updateElastic(const particleIndex )
 {
 }
 
 void
-JohnsonCookPlastic::updatePlastic(const particleIndex , const double& )
+JohnsonCookFlow::updatePlastic(const particleIndex , const double& )
 {
 }
 
 double 
-JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
+JohnsonCookFlow::computeFlowStress(const PlasticityState* state,
                                       const double& ,
                                       const double& ,
                                       const MPMMaterial* matl,
@@ -210,7 +210,7 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
 }
 
 double 
-JohnsonCookPlastic::computeEpdot(const PlasticityState* state,
+JohnsonCookFlow::computeEpdot(const PlasticityState* state,
                                  const double& ,
                                  const double& ,
                                  const MPMMaterial* matl,
@@ -243,7 +243,7 @@ JohnsonCookPlastic::computeEpdot(const PlasticityState* state,
  
 
 void 
-JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
+JohnsonCookFlow::computeTangentModulus(const Matrix3& stress,
                                           const PlasticityState* ,
                                           const double& ,
                                           const MPMMaterial* ,
@@ -251,11 +251,11 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
                                           TangentModulusTensor& ,
                                           TangentModulusTensor& )
 {
-  throw InternalError("Empty Function: JohnsonCookPlastic::computeTangentModulus", __FILE__, __LINE__);
+  throw InternalError("Empty Function: JohnsonCookFlow::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
-JohnsonCookPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+JohnsonCookFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                                 const particleIndex idx,
                                                 Vector& derivs)
 {
@@ -266,7 +266,7 @@ JohnsonCookPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 
 double
-JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+JohnsonCookFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                                    const particleIndex )
 {
   // Get the state data
@@ -300,7 +300,7 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-JohnsonCookPlastic::computeShearModulus(const PlasticityState* state)
+JohnsonCookFlow::computeShearModulus(const PlasticityState* state)
 {
   return state->shearModulus;
 }
@@ -309,13 +309,13 @@ JohnsonCookPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-JohnsonCookPlastic::computeMeltingTemp(const PlasticityState* state)
+JohnsonCookFlow::computeMeltingTemp(const PlasticityState* state)
 {
   return state->meltingTemp;
 }
 
 double
-JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+JohnsonCookFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
                                                  const particleIndex )
 {
   // Get the state data
@@ -348,7 +348,7 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 }
 
 double
-JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
+JohnsonCookFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                                 const particleIndex )
 {
   // Get the state data

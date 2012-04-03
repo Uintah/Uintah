@@ -45,7 +45,7 @@ using namespace std;
 using namespace Uintah;
 ////////////////////////////////////////////////////////////////////////////////
 
-ZAPlastic::ZAPlastic(ProblemSpecP& ps)
+ZAFlow::ZAFlow(ProblemSpecP& ps)
 {
   d_CM.c_0 = 0.0;
   ps->get("c_0", d_CM.c_0);
@@ -65,7 +65,7 @@ ZAPlastic::ZAPlastic(ProblemSpecP& ps)
   ps->require("n",d_CM.n);  
 }
          
-ZAPlastic::ZAPlastic(const ZAPlastic* cm)
+ZAFlow::ZAFlow(const ZAFlow* cm)
 {
   d_CM.c_0 = cm->d_CM.c_0;
   d_CM.sigma_g = cm->d_CM.sigma_g;
@@ -81,34 +81,34 @@ ZAPlastic::ZAPlastic(const ZAPlastic* cm)
   d_CM.n = cm->d_CM.n;
 }
          
-ZAPlastic::~ZAPlastic()
+ZAFlow::~ZAFlow()
 {
 }
 
-void ZAPlastic::outputProblemSpec(ProblemSpecP& ps)
+void ZAFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","zerilli_armstrong");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","zerilli_armstrong");
 
-  plastic_ps->appendElement("c_0", d_CM.c_0);
+  flow_ps->appendElement("c_0", d_CM.c_0);
   if (d_CM.c_0 == 0.0) {
-    plastic_ps->appendElement("sigma_g",    d_CM.sigma_g);  
-    plastic_ps->appendElement("k_H",        d_CM.k_H);
-    plastic_ps->appendElement("sqrt_l_inv", d_CM.sqrt_l);  
+    flow_ps->appendElement("sigma_g",    d_CM.sigma_g);  
+    flow_ps->appendElement("k_H",        d_CM.k_H);
+    flow_ps->appendElement("sqrt_l_inv", d_CM.sqrt_l);  
   }
-  plastic_ps->appendElement("B",d_CM.B);  
-  plastic_ps->appendElement("beta_0",d_CM.beta_0);  
-  plastic_ps->appendElement("beta_1",d_CM.beta_1);  
-  plastic_ps->appendElement("B_0",d_CM.B_0);  
-  plastic_ps->appendElement("alpha_0",d_CM.alpha_0);  
-  plastic_ps->appendElement("alpha_1",d_CM.alpha_1);  
-  plastic_ps->appendElement("K",d_CM.K);  
-  plastic_ps->appendElement("n",d_CM.n);  
+  flow_ps->appendElement("B",d_CM.B);  
+  flow_ps->appendElement("beta_0",d_CM.beta_0);  
+  flow_ps->appendElement("beta_1",d_CM.beta_1);  
+  flow_ps->appendElement("B_0",d_CM.B_0);  
+  flow_ps->appendElement("alpha_0",d_CM.alpha_0);  
+  flow_ps->appendElement("alpha_1",d_CM.alpha_1);  
+  flow_ps->appendElement("K",d_CM.K);  
+  flow_ps->appendElement("n",d_CM.n);  
 }
 
 
 double 
-ZAPlastic::computeFlowStress(const PlasticityState* state,
+ZAFlow::computeFlowStress(const PlasticityState* state,
                              const double& ,
                              const double& ,
                              const MPMMaterial* ,
@@ -142,7 +142,7 @@ ZAPlastic::computeFlowStress(const PlasticityState* state,
 /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
 //////////
 double 
-ZAPlastic::computeEpdot(const PlasticityState* state ,
+ZAFlow::computeEpdot(const PlasticityState* state ,
                         const double& ,
                         const double& tolerance,
                         const MPMMaterial* ,
@@ -179,7 +179,7 @@ ZAPlastic::computeEpdot(const PlasticityState* state ,
 }
  
 void 
-ZAPlastic::computeTangentModulus(const Matrix3& stress,
+ZAFlow::computeTangentModulus(const Matrix3& stress,
                                  const PlasticityState* ,
                                  const double& ,
                                  const MPMMaterial* ,
@@ -187,11 +187,11 @@ ZAPlastic::computeTangentModulus(const Matrix3& stress,
                                  TangentModulusTensor& ,
                                  TangentModulusTensor& )
 {
-  throw InternalError("Empty Function: ZAPlastic::computeTangentModulus", __FILE__, __LINE__);
+  throw InternalError("Empty Function: ZAFlow::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
-ZAPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+ZAFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                        const particleIndex idx,
                                        Vector& derivs)
 {
@@ -202,7 +202,7 @@ ZAPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 
 double
-ZAPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+ZAFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex )
 {
   // Get the state data
@@ -225,7 +225,7 @@ ZAPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-ZAPlastic::computeShearModulus(const PlasticityState* state)
+ZAFlow::computeShearModulus(const PlasticityState* state)
 {
   return state->shearModulus;
 }
@@ -234,13 +234,13 @@ ZAPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-ZAPlastic::computeMeltingTemp(const PlasticityState* state)
+ZAFlow::computeMeltingTemp(const PlasticityState* state)
 {
   return state->meltingTemp;
 }
 
 double
-ZAPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+ZAFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
                                         const particleIndex )
 {
   // Get the state data
@@ -261,7 +261,7 @@ ZAPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 }
 
 double
-ZAPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
+ZAFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                        const particleIndex )
 {
   // Get the state data

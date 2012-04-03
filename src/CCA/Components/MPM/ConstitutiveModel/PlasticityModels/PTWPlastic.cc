@@ -38,7 +38,7 @@ using namespace Uintah;
 using namespace std;
 
 
-PTWPlastic::PTWPlastic(ProblemSpecP& ps)
+PTWFlow::PTWFlow(ProblemSpecP& ps)
 {
   ps->require("theta",d_CM.theta);
   ps->require("p",d_CM.p);
@@ -54,7 +54,7 @@ PTWPlastic::PTWPlastic(ProblemSpecP& ps)
   ps->require("M",d_CM.M);
 }
          
-PTWPlastic::PTWPlastic(const PTWPlastic* cm)
+PTWFlow::PTWFlow(const PTWFlow* cm)
 {
   d_CM.theta = cm->d_CM.theta;
   d_CM.p = cm->d_CM.p;
@@ -70,33 +70,33 @@ PTWPlastic::PTWPlastic(const PTWPlastic* cm)
   d_CM.M = cm->d_CM.M;
 }
          
-PTWPlastic::~PTWPlastic()
+PTWFlow::~PTWFlow()
 {
 }
 
 
-void PTWPlastic::outputProblemSpec(ProblemSpecP& ps)
+void PTWFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","preston_tonks_wallace");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","preston_tonks_wallace");
 
-  plastic_ps->appendElement("theta",d_CM.theta);
-  plastic_ps->appendElement("p",d_CM.p);
-  plastic_ps->appendElement("s0",d_CM.s0);
-  plastic_ps->appendElement("sinf",d_CM.sinf);
-  plastic_ps->appendElement("kappa",d_CM.kappa);
-  plastic_ps->appendElement("gamma",d_CM.gamma);
-  plastic_ps->appendElement("y0",d_CM.y0);
-  plastic_ps->appendElement("yinf",d_CM.yinf);
-  plastic_ps->appendElement("y1",d_CM.y1);
-  plastic_ps->appendElement("y2",d_CM.y2);
-  plastic_ps->appendElement("beta",d_CM.beta);
-  plastic_ps->appendElement("M",d_CM.M);
+  flow_ps->appendElement("theta",d_CM.theta);
+  flow_ps->appendElement("p",d_CM.p);
+  flow_ps->appendElement("s0",d_CM.s0);
+  flow_ps->appendElement("sinf",d_CM.sinf);
+  flow_ps->appendElement("kappa",d_CM.kappa);
+  flow_ps->appendElement("gamma",d_CM.gamma);
+  flow_ps->appendElement("y0",d_CM.y0);
+  flow_ps->appendElement("yinf",d_CM.yinf);
+  flow_ps->appendElement("y1",d_CM.y1);
+  flow_ps->appendElement("y2",d_CM.y2);
+  flow_ps->appendElement("beta",d_CM.beta);
+  flow_ps->appendElement("M",d_CM.M);
 }
 
          
 double 
-PTWPlastic::computeFlowStress(const PlasticityState* state,
+PTWFlow::computeFlowStress(const PlasticityState* state,
                               const double& ,
                               const double& ,
                               const MPMMaterial* ,
@@ -123,7 +123,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   // Compute invxidot - the time required for a transverse wave to cross 
   // an atom
   if ((mu <= 0.0) || rho < 0.0 || (T > Tm) || (T <= 0.0) ) {
-    cerr << "**ERROR** PTWPlastic::computeFlowStress: mu = " << mu 
+    cerr << "**ERROR** PTWFlow::computeFlowStress: mu = " << mu 
          << " rho = " << rho << " T = " << T << " Tm = " << Tm << endl;
   }
   
@@ -132,7 +132,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   // Compute the dimensionless plastic strain rate
   double edot = epdot/xidot;
   if (!(xidot > 0.0) || !(edot > 0.0)) {
-    cerr << "**ERROR** PTWPlastic::computeFlowStress: xidot = " << xidot 
+    cerr << "**ERROR** PTWFlow::computeFlowStress: xidot = " << xidot 
          << " edot = " << edot << endl;
   }
 
@@ -185,7 +185,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
 //             yield surface (i.e., no overdriven shock regime included)
 // (The derivative was computed using Maple)
 double 
-PTWPlastic::computeEpdot(const PlasticityState* state,
+PTWFlow::computeEpdot(const PlasticityState* state,
                          const double& delT,
                          const double& tolerance,
                          const MPMMaterial* ,
@@ -216,7 +216,7 @@ PTWPlastic::computeEpdot(const PlasticityState* state,
 //             yield surface (i.e., no overdriven shock regime included)
 // (The derivative was computed using Maple)
 void 
-PTWPlastic::evalFAndFPrime(const double& tau,
+PTWFlow::evalFAndFPrime(const double& tau,
                            const double& epdot,
                            const double& ep,
                            const double& rho,
@@ -232,7 +232,7 @@ PTWPlastic::evalFAndFPrime(const double& tau,
   // Compute the dimensionless plastic strain rate
   double edot = epdot/xidot;
   if (!(xidot > 0.0)) {
-    cerr << "**ERROR** PTWPlastic::computeFlowStress: xidot = " << xidot 
+    cerr << "**ERROR** PTWFlow::computeFlowStress: xidot = " << xidot 
          << " edot = " << edot << endl;
   }
 
@@ -279,7 +279,7 @@ PTWPlastic::evalFAndFPrime(const double& tau,
 
 
 void 
-PTWPlastic::computeTangentModulus(const Matrix3& stress,
+PTWFlow::computeTangentModulus(const Matrix3& stress,
                                   const PlasticityState*,
                                   const double& ,
                                   const MPMMaterial* ,
@@ -287,11 +287,11 @@ PTWPlastic::computeTangentModulus(const Matrix3& stress,
                                   TangentModulusTensor& ,
                                   TangentModulusTensor&)
 {
-  throw InternalError("Empty Function: PTWPlastic::computeTangentModulus", __FILE__, __LINE__);   
+  throw InternalError("Empty Function: PTWFlow::computeTangentModulus", __FILE__, __LINE__);   
 }
 
 void
-PTWPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+PTWFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                         const particleIndex idx,
                                         Vector& derivs)
 {
@@ -301,7 +301,7 @@ PTWPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 }
 
 double
-PTWPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+PTWFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                            const particleIndex )
 {
   // Retrieve plastic strain and strain rate
@@ -380,7 +380,7 @@ PTWPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-PTWPlastic::computeShearModulus(const PlasticityState* state)
+PTWFlow::computeShearModulus(const PlasticityState* state)
 {
   return state->initialShearModulus;
 }
@@ -389,13 +389,13 @@ PTWPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-PTWPlastic::computeMeltingTemp(const PlasticityState* state)
+PTWFlow::computeMeltingTemp(const PlasticityState* state)
 {
   return state->meltingTemp;
 }
 
 double
-PTWPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+PTWFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
                                          const particleIndex )
 {
   // Get the state data
@@ -413,7 +413,7 @@ PTWPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   double xidot = 0.5*pow(4.0*M_PI*rho/(3.0*Mkg),(1.0/3.0))*sqrt(mu/rho);
   double edot = epdot/xidot;
   if (!(xidot > 0.0)) {
-    cerr << "**ERROR** PTWPlastic::computeFlowStress: xidot = " << xidot 
+    cerr << "**ERROR** PTWFlow::computeFlowStress: xidot = " << xidot 
          << " edot = " << edot << endl;
   }
 
@@ -461,7 +461,7 @@ PTWPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 }
 
 double
-PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
+PTWFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                         const particleIndex )
 {
   // Get the state data
@@ -479,7 +479,7 @@ PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double xidot = 0.5*pow(4.0*M_PI*rho/(3.0*Mkg),(1.0/3.0))*sqrt(mu/rho);
   double edot = epdot/xidot;
   if (!(xidot > 0.0)) {
-    cerr << "**ERROR** PTWPlastic::computeFlowStress: xidot = " << xidot 
+    cerr << "**ERROR** PTWFlow::computeFlowStress: xidot = " << xidot 
          << " edot = " << edot << endl;
   }
 
@@ -535,21 +535,21 @@ PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 //  Methods needed by Uintah Computational Framework
 //------------------------------------------------------------------------------
 void 
-PTWPlastic::addInitialComputesAndRequires(Task* ,
+PTWFlow::addInitialComputesAndRequires(Task* ,
                                           const MPMMaterial* ,
                                           const PatchSet*) const
 {
 }
 
 void 
-PTWPlastic::addComputesAndRequires(Task* ,
+PTWFlow::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*) const
 {
 }
 
 void 
-PTWPlastic::addComputesAndRequires(Task* task,
+PTWFlow::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool ,
@@ -558,13 +558,13 @@ PTWPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-PTWPlastic::addParticleState(std::vector<const VarLabel*>& ,
+PTWFlow::addParticleState(std::vector<const VarLabel*>& ,
                              std::vector<const VarLabel*>& )
 {
 }
 
 void 
-PTWPlastic::allocateCMDataAddRequires(Task* ,
+PTWFlow::allocateCMDataAddRequires(Task* ,
                                       const MPMMaterial* ,
                                       const PatchSet* ,
                                       MPMLabel* ) const
@@ -572,7 +572,7 @@ PTWPlastic::allocateCMDataAddRequires(Task* ,
 }
 
 void 
-PTWPlastic::allocateCMDataAdd(DataWarehouse* ,
+PTWFlow::allocateCMDataAdd(DataWarehouse* ,
                               ParticleSubset* ,
                               map<const VarLabel*, 
                                 ParticleVariableBase*>* ,
@@ -582,36 +582,36 @@ PTWPlastic::allocateCMDataAdd(DataWarehouse* ,
 }
 
 void 
-PTWPlastic::initializeInternalVars(ParticleSubset* ,
+PTWFlow::initializeInternalVars(ParticleSubset* ,
                                    DataWarehouse* )
 {
 }
 
 void 
-PTWPlastic::getInternalVars(ParticleSubset* ,
+PTWFlow::getInternalVars(ParticleSubset* ,
                             DataWarehouse* ) 
 {
 }
 
 void 
-PTWPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+PTWFlow::allocateAndPutInternalVars(ParticleSubset* ,
                                        DataWarehouse* ) 
 {
 }
 
 void
-PTWPlastic::allocateAndPutRigid(ParticleSubset* ,
+PTWFlow::allocateAndPutRigid(ParticleSubset* ,
                                 DataWarehouse* )
 {
 }
 
 void
-PTWPlastic::updateElastic(const particleIndex )
+PTWFlow::updateElastic(const particleIndex )
 {
 }
 
 void
-PTWPlastic::updatePlastic(const particleIndex , const double& )
+PTWFlow::updatePlastic(const particleIndex , const double& )
 {
 }
 

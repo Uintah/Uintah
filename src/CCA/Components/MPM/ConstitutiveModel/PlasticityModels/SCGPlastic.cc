@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace std;
 
-SCGPlastic::SCGPlastic(ProblemSpecP& ps)
+SCGFlow::SCGFlow(ProblemSpecP& ps)
 {
   ps->require("mu_0",d_CM.mu_0); 
   ps->require("A",d_CM.A); 
@@ -93,7 +93,7 @@ SCGPlastic::SCGPlastic(ProblemSpecP& ps)
   ps->require("Peierls_stress",d_CM.peierlsStress);
 }
          
-SCGPlastic::SCGPlastic(const SCGPlastic* cm)
+SCGFlow::SCGFlow(const SCGFlow* cm)
 {
   d_CM.mu_0 = cm->d_CM.mu_0;
   d_CM.A = cm->d_CM.A;
@@ -120,66 +120,66 @@ SCGPlastic::SCGPlastic(const SCGPlastic* cm)
   d_CM.peierlsStress = cm->d_CM.peierlsStress;
 }
          
-SCGPlastic::~SCGPlastic()
+SCGFlow::~SCGFlow()
 {
 }
 
-void SCGPlastic::outputProblemSpec(ProblemSpecP& ps)
+void SCGFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","steinberg_cochran_guinan");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","steinberg_cochran_guinan");
 
-  plastic_ps->appendElement("mu_0",d_CM.mu_0); 
-  plastic_ps->appendElement("A",d_CM.A); 
-  plastic_ps->appendElement("B",d_CM.B); 
-  plastic_ps->appendElement("sigma_0",d_CM.sigma_0); 
-  plastic_ps->appendElement("beta",d_CM.beta); 
-  plastic_ps->appendElement("n",d_CM.n); 
-  plastic_ps->appendElement("epsilon_p0",d_CM.epsilon_p0); 
-  plastic_ps->appendElement("Y_max",d_CM.Y_max); 
-  plastic_ps->appendElement("T_m0",d_CM.T_m0); 
-  plastic_ps->appendElement("a",d_CM.a); 
-  plastic_ps->appendElement("Gamma_0",d_CM.Gamma_0); 
+  flow_ps->appendElement("mu_0",d_CM.mu_0); 
+  flow_ps->appendElement("A",d_CM.A); 
+  flow_ps->appendElement("B",d_CM.B); 
+  flow_ps->appendElement("sigma_0",d_CM.sigma_0); 
+  flow_ps->appendElement("beta",d_CM.beta); 
+  flow_ps->appendElement("n",d_CM.n); 
+  flow_ps->appendElement("epsilon_p0",d_CM.epsilon_p0); 
+  flow_ps->appendElement("Y_max",d_CM.Y_max); 
+  flow_ps->appendElement("T_m0",d_CM.T_m0); 
+  flow_ps->appendElement("a",d_CM.a); 
+  flow_ps->appendElement("Gamma_0",d_CM.Gamma_0); 
 
   // Compute C1 and C2
-  plastic_ps->appendElement("C1",d_CM.C1); 
-  plastic_ps->appendElement("C2",d_CM.C2); 
+  flow_ps->appendElement("C1",d_CM.C1); 
+  flow_ps->appendElement("C2",d_CM.C2); 
   double C1 = d_CM.C1;
   double C2 = d_CM.C2;
   if (C1 == 0.0 || C2 == 0.0) {
-    plastic_ps->appendElement("dislocation_density", d_CM.dislocationDensity);
-    plastic_ps->appendElement("length_of_dislocation_segment",
+    flow_ps->appendElement("dislocation_density", d_CM.dislocationDensity);
+    flow_ps->appendElement("length_of_dislocation_segment",
                 d_CM.lengthOfDislocationSegment);
-    plastic_ps->appendElement("distance_between_Peierls_valleys",
+    flow_ps->appendElement("distance_between_Peierls_valleys",
                 d_CM.distanceBetweenPeierlsValleys);
-    plastic_ps->appendElement("length_of_Burger_vector", 
+    flow_ps->appendElement("length_of_Burger_vector", 
                               d_CM.lengthOfBurgerVector);
-    plastic_ps->appendElement("Debye_frequency", d_CM.debyeFrequency);
-    plastic_ps->appendElement("width_of_kink_loop", d_CM.widthOfKinkLoop);
-    plastic_ps->appendElement("drag_coefficient", d_CM.dragCoefficient);
+    flow_ps->appendElement("Debye_frequency", d_CM.debyeFrequency);
+    flow_ps->appendElement("width_of_kink_loop", d_CM.widthOfKinkLoop);
+    flow_ps->appendElement("drag_coefficient", d_CM.dragCoefficient);
   }
-  plastic_ps->appendElement("energy_to_form_kink_pair",d_CM.kinkPairEnergy);
-  plastic_ps->appendElement("Boltzmann_constant",d_CM.boltzmannConstant);
-  plastic_ps->appendElement("Peierls_stress",d_CM.peierlsStress);
+  flow_ps->appendElement("energy_to_form_kink_pair",d_CM.kinkPairEnergy);
+  flow_ps->appendElement("Boltzmann_constant",d_CM.boltzmannConstant);
+  flow_ps->appendElement("Peierls_stress",d_CM.peierlsStress);
 }
 
          
 void 
-SCGPlastic::addInitialComputesAndRequires(Task* ,
+SCGFlow::addInitialComputesAndRequires(Task* ,
                                           const MPMMaterial* ,
                                           const PatchSet*)
 {
 }
 
 void 
-SCGPlastic::addComputesAndRequires(Task* ,
+SCGFlow::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*)
 {
 }
 
 void 
-SCGPlastic::addComputesAndRequires(Task* task,
+SCGFlow::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool ,
@@ -188,13 +188,13 @@ SCGPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
-SCGPlastic::addParticleState(std::vector<const VarLabel*>& ,
+SCGFlow::addParticleState(std::vector<const VarLabel*>& ,
                              std::vector<const VarLabel*>& )
 {
 }
 
 void 
-SCGPlastic::allocateCMDataAddRequires(Task* ,
+SCGFlow::allocateCMDataAddRequires(Task* ,
                                       const MPMMaterial* ,
                                       const PatchSet* ,
                                       MPMLabel* )
@@ -202,7 +202,7 @@ SCGPlastic::allocateCMDataAddRequires(Task* ,
 }
 
 void 
-SCGPlastic::allocateCMDataAdd(DataWarehouse* ,
+SCGFlow::allocateCMDataAdd(DataWarehouse* ,
                               ParticleSubset* ,
                               map<const VarLabel*, 
                                  ParticleVariableBase*>* ,
@@ -214,41 +214,41 @@ SCGPlastic::allocateCMDataAdd(DataWarehouse* ,
 
 
 void 
-SCGPlastic::initializeInternalVars(ParticleSubset* ,
+SCGFlow::initializeInternalVars(ParticleSubset* ,
                                    DataWarehouse* )
 {
 }
 
 void 
-SCGPlastic::getInternalVars(ParticleSubset* ,
+SCGFlow::getInternalVars(ParticleSubset* ,
                             DataWarehouse* ) 
 {
 }
 
 void 
-SCGPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+SCGFlow::allocateAndPutInternalVars(ParticleSubset* ,
                                        DataWarehouse* ) 
 {
 }
 
 void
-SCGPlastic::allocateAndPutRigid(ParticleSubset* ,
+SCGFlow::allocateAndPutRigid(ParticleSubset* ,
                                 DataWarehouse* )
 {
 }
 
 void
-SCGPlastic::updateElastic(const particleIndex )
+SCGFlow::updateElastic(const particleIndex )
 {
 }
 
 void
-SCGPlastic::updatePlastic(const particleIndex , const double& )
+SCGFlow::updatePlastic(const particleIndex , const double& )
 {
 }
 
 double 
-SCGPlastic::computeFlowStress(const PlasticityState* state,
+SCGFlow::computeFlowStress(const PlasticityState* state,
                               const double& ,
                               const double& ,
                               const MPMMaterial* ,
@@ -278,7 +278,7 @@ SCGPlastic::computeFlowStress(const PlasticityState* state,
 }
 
 double 
-SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
+SCGFlow::computeThermallyActivatedYieldStress(const double& epdot,
                                                  const double& T,
                                                  const double& tolerance)
 {
@@ -402,7 +402,7 @@ SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
 }
 
 double 
-SCGPlastic::computeEpdot(const PlasticityState* state,
+SCGFlow::computeEpdot(const PlasticityState* state,
                          const double& ,
                          const double& ,
                          const MPMMaterial* ,
@@ -437,7 +437,7 @@ SCGPlastic::computeEpdot(const PlasticityState* state,
 
 
 void 
-SCGPlastic::computeTangentModulus(const Matrix3& stress,
+SCGFlow::computeTangentModulus(const Matrix3& stress,
                                   const PlasticityState* state,
                                   const double& ,
                                   const MPMMaterial* ,
@@ -445,11 +445,11 @@ SCGPlastic::computeTangentModulus(const Matrix3& stress,
                                   TangentModulusTensor& Ce,
                                   TangentModulusTensor& Cep)
 {
-  throw InternalError("Empty Function: SCGPlastic::computeTangentModulus", __FILE__, __LINE__); 
+  throw InternalError("Empty Function: SCGFlow::computeTangentModulus", __FILE__, __LINE__); 
 }
 
 void
-SCGPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
+SCGFlow::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                         const particleIndex idx,
                                         Vector& derivs)
 {
@@ -459,7 +459,7 @@ SCGPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 }
 
 double
-SCGPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+SCGFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                            const particleIndex )
 {
   // Get the state data
@@ -483,7 +483,7 @@ SCGPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 /*  Compute the shear modulus. */
 ///////////////////////////////////////////////////////////////////////////
 double
-SCGPlastic::computeShearModulus(const PlasticityState* state)
+SCGFlow::computeShearModulus(const PlasticityState* state)
 {
   double eta = state->density/state->initialDensity;
   ASSERT(eta > 0.0);
@@ -498,7 +498,7 @@ SCGPlastic::computeShearModulus(const PlasticityState* state)
 /* Compute the melting temperature */
 ///////////////////////////////////////////////////////////////////////////
 double
-SCGPlastic::computeMeltingTemp(const PlasticityState* state)
+SCGFlow::computeMeltingTemp(const PlasticityState* state)
 {
   double eta = state->density/state->initialDensity;
   double power = 2.0*(d_CM.Gamma_0 - d_CM.a - 1.0/3.0);
@@ -512,7 +512,7 @@ SCGPlastic::computeMeltingTemp(const PlasticityState* state)
     The strain rate dependent term in the Steinberg-Lund version
     of the model has not been included and should be for correctness.*/
 double
-SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+SCGFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
                                          const particleIndex )
 {
   // Get the state data
@@ -527,7 +527,7 @@ SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 }
 
 double
-SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
+SCGFlow::evalDerivativeWRTPressure(const PlasticityState* state,
                                       const particleIndex )
 {
   // Get the state data
@@ -573,7 +573,7 @@ SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
     \f$ X4 = B2 epdot \f$.
 */
 double
-SCGPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
+SCGFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                         const particleIndex )
 {
   // Get the current state data

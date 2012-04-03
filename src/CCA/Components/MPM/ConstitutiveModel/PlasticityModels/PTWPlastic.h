@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __PTW_PLASTICITY_MODEL_H__
-#define __PTW_PLASTICITY_MODEL_H__
+#ifndef __PTW_FLOW_MODEL_H__
+#define __PTW_FLOW_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -39,7 +39,7 @@ namespace Uintah {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 
-    \class PTWPlastic
+    \class PTWFlow
     \brief Preston-Tonks-Wallace Plasticity Model 
     \author Biswajit Banerjee, \n
     C-SAFE and Department of Mechanical Engineering, \n
@@ -108,7 +108,7 @@ namespace Uintah {
   */
   ////////////////////////////////////////////////////////////////////////////
 
-  class PTWPlastic : public PlasticityModel {
+  class PTWFlow : public FlowModel {
 
   public:
 
@@ -134,16 +134,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //PTWPlastic(const PTWPlastic &cm);
-    PTWPlastic& operator=(const PTWPlastic &cm);
+    //PTWFlow(const PTWFlow &cm);
+    PTWFlow& operator=(const PTWFlow &cm);
 
   public:
     // constructors
-    PTWPlastic(ProblemSpecP& ps);
-    PTWPlastic(const PTWPlastic* cm);
+    PTWFlow(ProblemSpecP& ps);
+    PTWFlow(const PTWFlow* cm);
          
     // destructor 
-    virtual ~PTWPlastic();
+    virtual ~PTWFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -334,4 +334,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __PTW_PLASTICITY_MODEL_H__ 
+#endif  // __PTW_FLOW_MODEL_H__ 

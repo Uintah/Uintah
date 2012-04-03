@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __ISOHARDENING_PLASTICITY_MODEL_H__
-#define __ISOHARDENING_PLASTICITY_MODEL_H__
+#ifndef __ISOHARDENING_FLOW_MODEL_H__
+#define __ISOHARDENING_FLOW_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -39,8 +39,8 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*! 
-    \class IsoHardeningPlastic
-    \brief Isotropic Hardening plasticity model.
+    \class IsoHardeningFlow
+    \brief Isotropic Hardening flow model.
     (Simo and Hughes, 1998, Computational Inelasticity, p. 319)
     \author Biswajit Banerjee,
     \author Department of Mechanical Engineering,
@@ -65,7 +65,7 @@ namespace Uintah {
   */  
   /////////////////////////////////////////////////////////////////////////////
 
-  class IsoHardeningPlastic : public PlasticityModel {
+  class IsoHardeningFlow : public FlowModel {
 
     // Create datatype for storing model parameters
   public:
@@ -86,16 +86,16 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //IsoHardeningPlastic(const IsoHardeningPlastic &cm);
-    IsoHardeningPlastic& operator=(const IsoHardeningPlastic &cm);
+    //IsoHardeningFlow(const IsoHardeningFlow &cm);
+    IsoHardeningFlow& operator=(const IsoHardeningFlow &cm);
 
   public:
     // constructors
-    IsoHardeningPlastic(ProblemSpecP& ps);
-    IsoHardeningPlastic(const IsoHardeningPlastic* cm);
+    IsoHardeningFlow(ProblemSpecP& ps);
+    IsoHardeningFlow(const IsoHardeningFlow* cm);
          
     // destructor 
-    virtual ~IsoHardeningPlastic();
+    virtual ~IsoHardeningFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
@@ -297,4 +297,4 @@ namespace Uintah {
 
 } // End namespace Uintah
 
-#endif  // __ISOHARDENING_PLASTICITY_MODEL_H__ 
+#endif  // __ISOHARDENING_FLOW_MODEL_H__ 

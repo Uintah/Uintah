@@ -142,10 +142,10 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   d_stable = StabilityCheckFactory::create(ps);
   if(!d_stable) cerr << "Stability check disabled\n";
 
-  d_plastic = PlasticityModelFactory::create(ps);
-  if(!d_plastic){
+  d_flow = FlowModelFactory::create(ps);
+  if(!d_flow){
     ostringstream desc;
-    desc << "An error occured in the PlasticityModelFactory that has \n"
+    desc << "An error occured in the FlowModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
@@ -241,7 +241,7 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_Cp      = SpecificHeatModelFactory::createCopy(cm->d_Cp);
   d_yield   = YieldConditionFactory::createCopy(cm->d_yield);
   d_stable  = StabilityCheckFactory::createCopy(cm->d_stable);
-  d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
+  d_flow    = FlowModelFactory::createCopy(cm->d_flow);
   d_damage  = DamageModelFactory::createCopy(cm->d_damage);
   d_eos     = MPMEquationOfStateFactory::createCopy(cm->d_eos);
   d_eos->setBulkModulus(d_initialData.Bulk);
@@ -272,7 +272,7 @@ ElasticPlasticHP::~ElasticPlasticHP()
   VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pEnergyLabel_preReloc);
 
-  delete d_plastic;
+  delete d_flow;
   delete d_yield;
   delete d_stable;
   delete d_damage;
@@ -307,7 +307,7 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   d_yield->outputProblemSpec(cm_ps);
   d_stable->outputProblemSpec(cm_ps);
-  d_plastic->outputProblemSpec(cm_ps);
+  d_flow->outputProblemSpec(cm_ps);
   d_damage->outputProblemSpec(cm_ps);
   d_eos->outputProblemSpec(cm_ps);
   d_shear->outputProblemSpec(cm_ps);
@@ -485,8 +485,8 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pLocalizedLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
 
-  // Add the particle state for the plasticity model
-  d_plastic->addParticleState(from, to);
+  // Add the particle state for the flow model
+  d_flow->addParticleState(from, to);
 }
 //______________________________________________________________________
 //
@@ -506,8 +506,8 @@ ElasticPlasticHP::addInitialComputesAndRequires(Task* task,
   task->computes(pLocalizedLabel,     matlset);
   task->computes(pEnergyLabel,        matlset);
  
-  // Add internal evolution variables computed by plasticity model
-  d_plastic->addInitialComputesAndRequires(task, matl, patch);
+  // Add internal evolution variables computed by flow model
+  d_flow->addInitialComputesAndRequires(task, matl, patch);
 }
 //______________________________________________________________________
 //
@@ -586,8 +586,8 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
     }
   }
 
-  // Initialize the data for the plasticity model
-  d_plastic->initializeInternalVars(pset, new_dw);
+  // Initialize the data for the flow model
+  d_flow->initializeInternalVars(pset, new_dw);
 }
 //______________________________________________________________________
 //
@@ -679,8 +679,8 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->computes(pLocalizedLabel_preReloc,      matlset);
   task->computes(pEnergyLabel_preReloc,         matlset);
 
-  // Add internal evolution variables computed by plasticity model
-  d_plastic->addComputesAndRequires(task, matl, patches);
+  // Add internal evolution variables computed by flow model
+  d_flow->addComputesAndRequires(task, matl, patches);
 }
 //______________________________________________________________________
 //
@@ -850,8 +850,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
     // Get the plastic strain
-    d_plastic->getInternalVars(pset, old_dw);
-    d_plastic->allocateAndPutInternalVars(pset, new_dw);
+    d_flow->getInternalVars(pset, old_dw);
+    d_flow->allocateAndPutInternalVars(pset, new_dw);
 
     //______________________________________________________________________
     // Loop thru particles
@@ -1075,7 +1075,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double equivStress = sqrtThreeTwo*trialS.Norm();
 
       // Calculate flow stress
-      double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
+      double flowStress = d_flow->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
       state->yieldStress = flowStress;
 
@@ -1088,7 +1088,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         // Set the deviatoric stress to zero
         if (d_doMelting) tensorS = 0.0;
 
-        d_plastic->updateElastic(idx);
+        d_flow->updateElastic(idx);
 
       } else {
 
@@ -1113,7 +1113,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           tensorS = trialS;
 
           // Update the internal variables
-          d_plastic->updateElastic(idx);
+          d_flow->updateElastic(idx);
 
         } else {
 
@@ -1164,7 +1164,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           */
 
           // Update internal variables
-          d_plastic->updatePlastic(idx, delGamma);
+          d_flow->updatePlastic(idx, delGamma);
 
         } // end of flow_rule if
       } // end of temperature if
@@ -1298,12 +1298,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             state->meltingTemp = Tm_cur ;
             mu_cur = d_shear->computeShearModulus(state);
             state->shearModulus = mu_cur ;
-            double sigY = d_plastic->computeFlowStress(state, delT, d_tol, 
+            double sigY = d_flow->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
             if (!(sigY > 0.0)) isLocalized = true;
             else {
               double dsigYdep = 
-                d_plastic->evalDerivativeWRTPlasticStrain(state, idx);
+                d_flow->evalDerivativeWRTPlasticStrain(state, idx);
               double A = voidNucleationFactor(state->plasticStrain);
 
               // Calculate the elastic tangent modulus
@@ -1512,7 +1512,7 @@ bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state,
     // Calculate delGammaEr
     //state->plasticStrainRate = 
     //  (sqrtTwoThird*sqrtqq*gammadotplus)/sqrtqs;
-    //state->yieldStress = d_plastic->computeFlowStress(state, delT, 
+    //state->yieldStress = d_flow->computeFlowStress(state, delT, 
     //                                                  d_tol, matl, 
     //                                                  idx);
     double delGammaEr =  (sqrtTwo*state->yieldStress - sqrtqs)/
@@ -1530,7 +1530,7 @@ bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state,
         state->plasticStrain = pPlasticStrain[idx] + 
                                state->plasticStrainRate * delT;
 
-        state->yieldStress = d_plastic->computeFlowStress(state, delT,
+        state->yieldStress = d_flow->computeFlowStress(state, delT,
                                                           d_tol, matl,
                                                           idx);
 
@@ -1617,18 +1617,18 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
     ++count;
 
     // Compute the yield stress
-    sigma_y = d_plastic->computeFlowStress(state, delT, tolerance, 
+    sigma_y = d_flow->computeFlowStress(state, delT, tolerance, 
                                            matl, idx);
 
     // Compute g
     g = normTrialS - stwothird*sigma_y - twomu*deltaGamma;
 
     // Compute d(sigma_y)/d(epdot)
-    double dsigy_depdot = d_plastic->evalDerivativeWRTStrainRate(state,
+    double dsigy_depdot = d_flow->evalDerivativeWRTStrainRate(state,
                                                                  idx);
 
     // Compute d(sigma_y)/d(ep)
-    double dsigy_dep = d_plastic->evalDerivativeWRTPlasticStrain(state,
+    double dsigy_dep = d_flow->evalDerivativeWRTPlasticStrain(state,
                                                                  idx);
 
     // Compute d(g)/d(deltaGamma)
@@ -1660,7 +1660,7 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
   } while (fabs(g) > tolerance);
 
   // Compute the yield stress
-  state->yieldStress = d_plastic->computeFlowStress(state, delT, tolerance, 
+  state->yieldStress = d_flow->computeFlowStress(state, delT, tolerance, 
                                                     matl, idx);
 
   if (isnan(state->yieldStress)) {
@@ -1798,8 +1798,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                            pEnergyLabel_preReloc,                 pset);
 
     // Get the plastic strain
-    d_plastic->getInternalVars(pset, old_dw);
-    d_plastic->allocateAndPutInternalVars(pset, new_dw);
+    d_flow->getInternalVars(pset, old_dw);
+    d_flow->allocateAndPutInternalVars(pset, new_dw);
 
     //__________________________________
     // Special case for rigid materials
@@ -1946,7 +1946,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double equivStress = sqrt((trialS.NormSquared())*1.5);
 
       // Calculate flow stress (strain driven problem)
-      double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
+      double flowStress = d_flow->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
 
       // Get the current porosity 
@@ -1970,7 +1970,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pPorosity_new[idx]      = pPorosity[idx];
         
         // Update the internal variables
-        d_plastic->updateElastic(idx);
+        d_flow->updateElastic(idx);
 
         // Compute stability criterion
         pLocalized_new[idx] = pLocalized[idx];
@@ -2021,8 +2021,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         // No failure implemented for implcit time integration
         pLocalized_new[idx] = pLocalized[idx];
 
-        // Update internal variables in the plasticity model
-        d_plastic->updatePlastic(idx, delGamma);
+        // Update internal variables in the flow model
+        d_flow->updatePlastic(idx, delGamma);
       }
 
       // Compute the strain energy for non-localized particles
@@ -2080,8 +2080,8 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
   }
 
-  // Add internal evolution variables computed by plasticity model
-  d_plastic->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
+  // Add internal evolution variables computed by flow model
+  d_flow->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
 }
 //______________________________________________________________________
 //
@@ -2311,7 +2311,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double equivStress = sqrt((trialS.NormSquared())*1.5);
 
       // Calculate flow stress (strain driven problem)
-      double flowStress = d_plastic->computeFlowStress(state, delT, d_tol, 
+      double flowStress = d_flow->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
 
       // Get the current porosity 
@@ -2434,7 +2434,7 @@ ElasticPlasticHP::computeEPlasticTangentModulus(const double& K,
   
   // Compute theta and theta_bar
   double twomu = 2.0*mu;
-  double dsigYdep = d_plastic->evalDerivativeWRTPlasticStrain(state, idx);
+  double dsigYdep = d_flow->evalDerivativeWRTPlasticStrain(state, idx);
 
   double theta = 1.0;
   if (consistent) {
@@ -3263,8 +3263,8 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
                            pLocalizedLabel_preReloc,              pset);
 
     // Get the plastic strain
-    d_plastic->getInternalVars(pset, old_dw);
-    d_plastic->allocateAndPutRigid(pset, new_dw);
+    d_flow->getInternalVars(pset, old_dw);
+    d_flow->allocateAndPutRigid(pset, new_dw);
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -3311,7 +3311,7 @@ ElasticPlasticHP::allocateCMDataAddRequires(Task* task,
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
   task->requires(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
   task->requires(Task::NewDW, pEnergyLabel_preReloc,         matlset, gnone);
-  d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
+  d_flow->allocateCMDataAddRequires(task,matl,patch,lb);
 }
 //______________________________________________________________________
 //
@@ -3381,8 +3381,8 @@ ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[pPorosityLabel]   = pPorosity.clone();
   (*newState)[pEnergyLabel]     = pEnergy.clone();
   
-  // Initialize the data for the plasticity model
-  d_plastic->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
+  // Initialize the data for the flow model
+  d_flow->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
 }
 
 //______________________________________________________________________

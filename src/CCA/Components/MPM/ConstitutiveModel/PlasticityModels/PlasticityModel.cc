@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
-PlasticityModel::PlasticityModel()
+FlowModel::FlowModel()
 {
 }
 
-PlasticityModel::~PlasticityModel()
+FlowModel::~FlowModel()
 {
 }

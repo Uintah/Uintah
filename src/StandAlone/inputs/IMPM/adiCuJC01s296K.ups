@@ -132,13 +132,13 @@
             <S_alpha> 1.489 </S_alpha>
           </equation_of_state>
           
-          <plasticity_model type = "johnson_cook">
+          <flow_model type = "johnson_cook">
             <A> 90.0e6  </A>
             <B> 292.0e6 </B>
             <C> 0.025   </C>
             <n> 0.31    </n>
             <m> 1.09    </m>
-          </plasticity_model>
+          </flow_model>
 
           <shear_modulus_model type = "constant_shear">
           </shear_modulus_model>

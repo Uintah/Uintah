@@ -35,7 +35,7 @@ using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 
-ZAPolymer::ZAPolymer(ProblemSpecP& ps)
+ZAPolymerFlow::ZAPolymerFlow(ProblemSpecP& ps)
 {
   ps->require("sigma_g",  d_CM.sigma_g);   
   ps->require("B_pa",     d_CM.B_pa);      
@@ -53,7 +53,7 @@ ZAPolymer::ZAPolymer(ProblemSpecP& ps)
 }
  //__________________________________
  //        
-ZAPolymer::ZAPolymer(const ZAPolymer* cm)
+ZAPolymerFlow::ZAPolymerFlow(const ZAPolymerFlow* cm)
 {
   d_CM.sigma_g  =  cm->d_CM.sigma_g;
   d_CM.B_pa     =  cm->d_CM.B_pa;
@@ -72,36 +72,36 @@ ZAPolymer::ZAPolymer(const ZAPolymer* cm)
   d_CM.alpha_1  =  cm->d_CM.alpha_1;
 }
          
-ZAPolymer::~ZAPolymer()
+ZAPolymerFlow::~ZAPolymerFlow()
 {
 }
 //__________________________________
 //
-void ZAPolymer::outputProblemSpec(ProblemSpecP& ps)
+void ZAPolymerFlow::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP plastic_ps = ps->appendChild("plasticity_model");
-  plastic_ps->setAttribute("type","zerilli_armstrong_polymer");
+  ProblemSpecP flow_ps = ps->appendChild("flow_model");
+  flow_ps->setAttribute("type","zerilli_armstrong_polymer");
 
-  plastic_ps->appendElement("sigma_g",  d_CM.sigma_g);   
-  plastic_ps->appendElement("B_pa",     d_CM.B_pa);      
-  plastic_ps->appendElement("B_pb",     d_CM.B_pb);      
-  plastic_ps->appendElement("B_pn",     d_CM.B_pn);      
-  plastic_ps->appendElement("beta_0",   d_CM.beta_0);    
-  plastic_ps->appendElement("beta_1",   d_CM.beta_1);    
-  plastic_ps->appendElement("T_0",      d_CM.T_0);       
-  plastic_ps->appendElement("B_0pa",    d_CM.B_0pa);     
-  plastic_ps->appendElement("B_0pb",    d_CM.B_0pb);     
-  plastic_ps->appendElement("B_0pn",    d_CM.B_0pn);     
-  plastic_ps->appendElement("omega_a",  d_CM.omega_a);   
-  plastic_ps->appendElement("omega_b",  d_CM.omega_b);   
-  plastic_ps->appendElement("omega_p",  d_CM.omega_p);   
+  flow_ps->appendElement("sigma_g",  d_CM.sigma_g);   
+  flow_ps->appendElement("B_pa",     d_CM.B_pa);      
+  flow_ps->appendElement("B_pb",     d_CM.B_pb);      
+  flow_ps->appendElement("B_pn",     d_CM.B_pn);      
+  flow_ps->appendElement("beta_0",   d_CM.beta_0);    
+  flow_ps->appendElement("beta_1",   d_CM.beta_1);    
+  flow_ps->appendElement("T_0",      d_CM.T_0);       
+  flow_ps->appendElement("B_0pa",    d_CM.B_0pa);     
+  flow_ps->appendElement("B_0pb",    d_CM.B_0pb);     
+  flow_ps->appendElement("B_0pn",    d_CM.B_0pn);     
+  flow_ps->appendElement("omega_a",  d_CM.omega_a);   
+  flow_ps->appendElement("omega_b",  d_CM.omega_b);   
+  flow_ps->appendElement("omega_p",  d_CM.omega_p);   
 
 }
 
 //______________________________________________________________________
 //     Reference & equation number????
 double 
-ZAPolymer::computeFlowStress(const PlasticityState* state,
+ZAPolymerFlow::computeFlowStress(const PlasticityState* state,
                              const double& ,
                              const double& ,
                              const MPMMaterial* ,
@@ -116,7 +116,7 @@ ZAPolymer::computeFlowStress(const PlasticityState* state,
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
   
   if( ep < 0.0 || T < 0.0){
-    throw InternalError("ZAPolymer::computeFlowStress a negative temperature "
+    throw InternalError("ZAPolymerFlow::computeFlowStress a negative temperature "
                         "or equivalent plastic strain has been detected",__FILE__,__LINE__);
   }
 
@@ -137,7 +137,7 @@ ZAPolymer::computeFlowStress(const PlasticityState* state,
                  + B_0 * sqrt(omega * ep)* exp( -alpha * T_T0 );
   
   if (isnan(sigma_y)) {
-    cout << "WARNING::ZAPolymer::computeFlowStress:: idx = " << idx << " epdot = " << epdot
+    cout << "WARNING::ZAPolymerFlow::computeFlowStress:: idx = " << idx << " epdot = " << epdot
          << " ep = " << ep << " T = " << T << endl;
     cout << " idx = " << idx << " d_CM.sigma_g = " << d_CM.sigma_g
           << " alpha = " << alpha << " beta = " << beta
@@ -151,7 +151,7 @@ ZAPolymer::computeFlowStress(const PlasticityState* state,
 //______________________________________________________________________
 //  
 double
-ZAPolymer::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+ZAPolymerFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex )
 {
   // Get the state data
@@ -164,7 +164,7 @@ ZAPolymer::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
   
   if( ep < 0.0 || T < 0.0){
-    throw InternalError("ZAPolymer::evalDerivativeWRTPlasticStrain a negative temperature "
+    throw InternalError("ZAPolymerFlow::evalDerivativeWRTPlasticStrain a negative temperature "
                         "or equivalent plastic strain has been detected",__FILE__,__LINE__);
   }
   
@@ -184,7 +184,7 @@ ZAPolymer::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 //______________________________________________________________________
 //
 double
-ZAPolymer::computeShearModulus(const PlasticityState* state)
+ZAPolymerFlow::computeShearModulus(const PlasticityState* state)
 {
   return state->shearModulus;
 }
@@ -193,7 +193,7 @@ ZAPolymer::computeShearModulus(const PlasticityState* state)
 //______________________________________________________________________
 //
 double
-ZAPolymer::evalDerivativeWRTStrainRate(const PlasticityState* state,
+ZAPolymerFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
                                        const particleIndex )
 {
   // Get the state data
@@ -206,7 +206,7 @@ ZAPolymer::evalDerivativeWRTStrainRate(const PlasticityState* state,
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
   
   if( ep < 0.0 || T < 0.0){
-    throw InternalError("ZAPolymer::evalDerivativeWRTStrainRate a negative temperature "
+    throw InternalError("ZAPolymerFlow::evalDerivativeWRTStrainRate a negative temperature "
                         "or equivalent plastic strain has been detected",__FILE__,__LINE__);
   }
   
