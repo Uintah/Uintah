@@ -2,7 +2,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>A Square Boiler with non-mpm walls</title>
+    <title>IFRF Boiler</title>
   </Meta>
 
   <SimulationComponent type="mpmarches"/>
@@ -24,7 +24,9 @@
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
+    <save label="CCVelocity"/>
     <save label="enthalpy"/>
+    <save label="vorticity"/>
 <!-- Radiation variables -->
     <save label="divQ"/>
     <save label="heatLoss"/>
@@ -45,7 +47,6 @@
     <save label="O2" table_lookup="true"/>
     <save label="H2O" table_lookup="true"/>
     <save label="CO" table_lookup="true"/>
-    <save label="NC7H16" table_lookup="true"/>
     <save label="temperature" table_lookup="true"/>
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
@@ -81,6 +82,9 @@
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
         </BCType>
+        <BCType id="1" label="x-wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -100,10 +104,39 @@
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+      <Face side="x+" name="x+ wall">
+        <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
+          <value>1800</value>
+        </BCType>
+        <BCType id="1" label="x+wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="Velocity">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="Temperature">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face circle="y-" origin="0 0 0" radius=".2">
         <BCType id="all" label="enthalpy" var="Dirichlet">
-          <value>-1.8781499999999998e+06</value>
+          <value>-4.65039e+06</value>
 <!-- obtained from the table for f = 1 -->
+        </BCType>
+        <BCType id="1" label="burner" var="MassFlowInlet">
+          <value>0.50</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
@@ -121,17 +154,23 @@
           <value> 298.0 </value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+      <Face annulus="y-" origin="0 0 0" inner_radius=".2" outer_radius="0.4">
+        <BCType id="all" label="enthalpy" var="Dirichlet">
+          <value>-112.327</value>
+<!-- obtained from the table for f = 0 -->
+        </BCType>
+        <BCType id="1" label="burner" var="Swirl">
+          <value>1.0</value>
+          <swirl_no>0.5</swirl_no>
+          <swirl_centroid>[0,0,0]</swirl_centroid>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
-          <value>0.0</value>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>0.</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Neumann">
-          <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType id="all" label="scalar_variance" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="all" var="Dirichlet" label="Velocity">
@@ -144,6 +183,9 @@
       <Face side="y-" name="y- wall">
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
+        </BCType>
+        <BCType id="1" label="y-wall" var="WallBC">
+          <value>0.0</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
@@ -168,6 +210,9 @@
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
         </BCType>
+        <BCType id="1" label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -190,6 +235,9 @@
       <Face side="z-" name="z- wall">
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
+        </BCType>
+        <BCType id="1" label="z-wall" var="WallBC">
+          <value>0.0</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
@@ -214,6 +262,9 @@
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
         </BCType>
+        <BCType id="1" label="z+wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -237,9 +288,9 @@
 
     <Level>
       <Box label="1">
-        <lower>[0,0,0]</lower>
-        <upper>[3,3,3]</upper>
-        <resolution>[15,15,15]</resolution>
+        <lower>[-1,0,-1]</lower>
+        <upper>[1,6.0,1]</upper>
+        <resolution>[10,60,10]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -247,7 +298,7 @@
   </Grid>
 
   <PhysicalConstants>
-    <gravity>[-9.8,0,0]</gravity>
+    <gravity>[0,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
@@ -270,7 +321,7 @@
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="constant">
-            <constant>0.010</constant>
+            <constant>0.0</constant>
           </initialization>
           <Clipping>
             <low>0.0</low>
@@ -319,56 +370,12 @@
         <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>
-          <NOT_ADIABATIC/>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix.gz</inputfile>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
         </ClassicTable>
       </Properties>
 
       <BoundaryConditions>
-        <FlowInlet>
-          <Flow_rate>.10</Flow_rate>
-          <mixture_fraction>1.0</mixture_fraction>
-          <geom_object>
-            <cylinder label="inlet">
-              <bottom>[-5,1.5,1.5]</bottom>
-              <top>[0,1.5,1.5]</top>
-              <radius> .5 </radius>
-            </cylinder>
-          </geom_object>
-        </FlowInlet>
-        <WallBC>
-          <geom_object>
-            <box label="botWall">
-              <min>[-1,-1,-1]</min>
-              <max>[0,4,4]</max>
-            </box>
-            <box label="posY_xzWall">
-              <min>[0,3,-1]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroY_xzWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,0,4]</max>
-            </box>
-            <box label="posZ_xyWall">
-              <min>[0,-1,3]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroZ_xyWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,4,0]</max>
-            </box>
-          </geom_object>
-        </WallBC>
-        <OutletBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="outlet">
-              <min>[3,-1,-1]</min>
-              <max>[5,5,5]</max>
-            </box>
-          </geom_object>
-        </OutletBC>
+        <use_new_bcs/>
       </BoundaryConditions>
 
       <ExplicitSolver>

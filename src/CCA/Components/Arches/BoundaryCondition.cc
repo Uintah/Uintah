@@ -5987,8 +5987,14 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 
    double ave_u = (uVel[c] + uVel[cp])/2.0;
 
-   double y = c[index_map[dir][1]] * mDx.y() - swrl_cent[index_map[dir][1]];
-   double z = c[index_map[dir][2]] * mDx.z() + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
+   Point p = patch->cellPosition(c); 
+   vector<double> my_p; 
+   my_p.push_back(p.x());
+   my_p.push_back(p.y());
+   my_p.push_back(p.z());
+
+   double y = my_p[index_map[dir][1]] - swrl_cent[index_map[dir][1]];
+   double z = my_p[index_map[dir][2]] + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
 
    double denom = pow(y,2) + pow(z,2); 
    denom = pow(denom,0.5); 
