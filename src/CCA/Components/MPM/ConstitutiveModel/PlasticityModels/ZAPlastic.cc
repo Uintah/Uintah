@@ -180,52 +180,14 @@ ZAPlastic::computeEpdot(const PlasticityState* state ,
  
 void 
 ZAPlastic::computeTangentModulus(const Matrix3& stress,
-                                 const PlasticityState* state,
+                                 const PlasticityState* ,
                                  const double& ,
                                  const MPMMaterial* ,
-                                 const particleIndex idx,
-                                 TangentModulusTensor& Ce,
-                                 TangentModulusTensor& Cep)
+                                 const particleIndex ,
+                                 TangentModulusTensor& ,
+                                 TangentModulusTensor& )
 {
-  // Calculate the deviatoric stress and rate of deformation
-  Matrix3 one; one.Identity();
-  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
-
-  // Calculate the equivalent stress
-  double sigeqv = sqrt(sigdev.NormSquared()); 
-
-  // Calculate the direction of plastic loading (r)
-  Matrix3 rr = sigdev*(1.5/sigeqv);
-
-  // Get f_q = dsigma/dep (h = 1, therefore f_q.h = f_q)
-  double f_q = evalDerivativeWRTPlasticStrain(state, idx);
-
-  // Form the elastic-plastic tangent modulus
-  Matrix3 Cr, rC;
-  double rCr = 0.0;
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      Cr(ii,jj) = 0.0;
-      rC(ii,jj) = 0.0;
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cr(ii,jj) += Ce(ii,jj,kk,ll)*rr(kk,ll);
-          rC(ii,jj) += rr(kk,ll)*Ce(kk,ll,ii,jj);
-        }
-      }
-      rCr += rC(ii,jj)*rr(ii,jj);
-    }
-  }
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-                             Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
-        }  
-      }  
-    }  
-  }  
+  throw InternalError("Empty Function: ZAPlastic::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
