@@ -198,6 +198,11 @@ namespace Wasatch{
                              Uintah::SchedulerP& sched );
 
     /**
+     *  \brief Set up things that need to be done on a restart
+     */
+    void restartInitialize();
+
+    /**
      *  \brief Set up the Uintah::Task that will calculate the timestep.
      */
     void scheduleComputeStableTimestep( const Uintah::LevelP& level,
@@ -239,6 +244,7 @@ namespace Wasatch{
   private:
     bool buildTimeIntegrator_;
     bool buildWasatchMaterial_;
+    bool isRestarting_;
     int nRKStages_;
     std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
@@ -281,6 +287,9 @@ namespace Wasatch{
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
 
+
+    void setup_patchinfo_map( const Uintah::LevelP& level,
+                              Uintah::SchedulerP& sched );
 
     enum PatchsetSelector{
       USE_FOR_TASKS,

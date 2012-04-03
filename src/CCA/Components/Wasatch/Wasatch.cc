@@ -77,8 +77,8 @@ namespace Wasatch{
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld ),
-      buildTimeIntegrator_( true ),
-      buildWasatchMaterial_( true),
+      buildTimeIntegrator_ ( true ),
+      buildWasatchMaterial_( true ),
       nRKStages_(1)
   {
     proc0cout << std::endl
@@ -90,6 +90,8 @@ namespace Wasatch{
               << "             DATE: " << EXPR_REPO_DATE << std::endl
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
+
+    isRestarting_ = false;
 
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
@@ -387,32 +389,9 @@ namespace Wasatch{
       set_wasatch_materials(sharedState_->allWasatchMaterials());
     }
 
-    //_______________________________________________________________
-    // Set up the operators associated with the local patches.  We
-    // only need to do this once, so we choose to do it here.  It
-    // could just as well be done on any other schedule callback that
-    // has access to the levels (patches).
-    //
-    // Also save off the timestep label information.
-    //
-    {
-      const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
-
-      for( int ipss=0; ipss<patches->size(); ++ipss ){
-        const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-        for( int ip=0; ip<pss->size(); ++ip ){
-          SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-          const Uintah::Patch* const patch = pss->get(ip);
-          build_operators( *patch, *opdb );
-          PatchInfo& pi = patchInfoMap_[patch->getID()];
-          pi.operators = opdb;
-          pi.patchID = patch->getID();
-        }
-      }
-    }
+    setup_patchinfo_map( level, sched );
 
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
-    const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -435,12 +414,12 @@ namespace Wasatch{
                                                         level,
                                                         sched,
                                                         localPatches,
-                                                        materials,
+                                                        materials_,
                                                         patchInfoMap_,
                                                         true, 1, ioFieldSet_ );
 
       // set coordinate values as required by the IC graph.
-      icCoordHelper_->create_task( sched, localPatches, materials );
+      icCoordHelper_->create_task( sched, localPatches, materials_ );
 
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
@@ -453,7 +432,6 @@ namespace Wasatch{
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-      const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
       const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
@@ -465,7 +443,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper, localPatches, patchInfoMap_, materials->getUnion());
+          transEq->setup_initial_boundary_conditions(*icGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -483,13 +461,58 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
 
+  void Wasatch::restartInitialize()
+  {
+    isRestarting_ = true;
+
+    // accessing the sharedState_->allWasatchMaterials() must be done after
+    // problemSetup. The sharedstate class will create this material set
+    // in postgridsetup, which is called after problemsetup. This is dictated
+    // by Uintah.
+    if( buildWasatchMaterial_ ){
+      set_wasatch_materials( sharedState_->allWasatchMaterials() );
+    }
+  }
+
+  //--------------------------------------------------------------------
+
+  void Wasatch::setup_patchinfo_map( const Uintah::LevelP& level,
+                                     Uintah::SchedulerP& sched )
+  {
+    //_______________________________________________________________
+     // Set up the operators associated with the local patches.  We
+     // only need to do this once, so we choose to do it here.  It
+     // could just as well be done on any other schedule callback that
+     // has access to the levels (patches).
+     //
+     // Also save off the timestep label information.
+     //
+     {
+       const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+
+       for( int ipss=0; ipss<patches->size(); ++ipss ){
+         const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+         for( int ip=0; ip<pss->size(); ++ip ){
+           SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+           const Uintah::Patch* const patch = pss->get(ip);
+           build_operators( *patch, *opdb );
+           PatchInfo& pi = patchInfoMap_[patch->getID()];
+           pi.operators = opdb;
+           pi.patchID = patch->getID();
+           //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
+         }
+       }
+     }
+  }
+
+  //--------------------------------------------------------------------
+
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
     std::cout << "Scheduling compute stable timestep\n";
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
-    const Uintah::MaterialSet* materials = materials_;//sharedState_->allWasatchMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
       //_______________________________________________________
@@ -502,7 +525,7 @@ namespace Wasatch{
                                                         level,
                                                         sched,
                                                         localPatches,
-                                                        materials,
+                                                        materials_,
                                                         patchInfoMap_,
                                                         true, 1, ioFieldSet_ );
       task->schedule(1);
@@ -517,10 +540,10 @@ namespace Wasatch{
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
       	task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
-      //              materials->getUnion() );
+      //              materials_->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
 
-      sched->addTask( task, localPatches, materials_);//sharedState_->allWasatchMaterials() );
+      sched->addTask( task, localPatches, materials_ );
     }
 
     proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
@@ -532,15 +555,18 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
+    if( isRestarting_ ){
+      setup_patchinfo_map( level, sched );
+      isRestarting_ = false;
+    }
+
     for (int iStage=1; iStage<=nRKStages_; iStage++) {
       // jcs why do we need this instead of getting the level?
       const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
       const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
-      const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
-
       if( buildTimeIntegrator_ ){
-        create_timestepper_on_patches( allPatches, materials, level, sched, iStage );
+        create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
       }
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
@@ -573,7 +599,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials->getUnion());
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -610,7 +636,7 @@ namespace Wasatch{
       Expr::TagList timeTags;
       timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
       timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
-      const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );      
+      const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, rkStage), true );
     } else {
       timeID = exprFactory.get_id(timeTag);
