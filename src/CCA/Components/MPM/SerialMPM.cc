@@ -3642,7 +3642,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
 
         if (cout_heat.active()) {
-          cout_heat << "MPM::Particle = " << idx 
+          cout_heat << "MPM::Particle = " << pids[idx]
                     << " T_old = " << pTemperature[idx]
                     << " Tdot = " << tempRate
                     << " dT = " << (tempRate*delT)
@@ -3691,12 +3691,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
              (pLocalized[idx]==-999)){
           delset->addParticle(idx);
-//        cout << "Material = " << m << " Deleted Particle = " << idx 
+//        cout << "Material = " << m << " Deleted Particle = " << pids_new[idx] 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
 //             << " vold = " << pvelocity[idx] << " vnew = "<< pvelocitynew[idx]
 //             << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
 //             << " tempold = " << pTemperature[idx] 
 //             << " tempnew = " << pTempNew[idx]
+//             << " pLocalized = " << pLocalized[idx]
 //             << " volnew = " << pvolume[idx] << endl;
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
