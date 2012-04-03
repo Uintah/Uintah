@@ -3037,10 +3037,6 @@ also nearly identical:
            </contact>
 \end{Verbatim}
 
-{\bf Note, at this time, neither of these models works properly with 
-the axisymmetric formulation, due to the necessary gradient calculations.
-This will be fixed in subseqent releases of Uintah.}
-
 Finally, the contact infrastructure is also used to provide a moving
 displacement boundary condition.  Imagine a billet being smashed by a
 rigid platen, for example.  Usage of this model, known as
@@ -3083,7 +3079,9 @@ time2 velocity_x2 velocity_y2 velocity_z2
 \end{Verbatim}
 The velocity of the rigid material particles will be set to these values,
 based on linear interpolation between times, until \tt <stop\_time> \normalfont
-is reached.
+is reached.  Note, one should not try to apply traction boundary conditions
+(via the  \verb|<PhysicalBC>| tag), to the rigid material used in this type of contact, as this constitutes trying to mix displacement and traction boundary
+conditions. 
 
 Finally, it is possible to specify more than one contact model.  Suppose
 one has a simulation with three materials, one rigid, and the other two
