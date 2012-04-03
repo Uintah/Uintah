@@ -222,7 +222,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   Task* t = scinew Task("Relocate::relocateParticles",
                   this, &Relocate::relocateParticles);
   if(lb){
-    t->usesMPI();
+    t->usesMPI(true);
   }
   t->requires( Task::NewDW, old_posLabel, Ghost::None);
   
