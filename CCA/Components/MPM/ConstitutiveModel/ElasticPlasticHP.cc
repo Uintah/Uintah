@@ -924,6 +924,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         cerr << "**ERROR**: ElasticPlasticHP: " << endl;
         cerr << " Negative Jacobian of deformation gradient" 
              << " in particle " << pParticleID[idx] << endl;
+        cerr << " Consider using the compile time SUB_CYCLE_F option" << endl;
         cerr << "l =     " << tensorL << endl;
         cerr << "F_old = " << pDeformGrad[idx] << endl;
         cerr << "J_old = " << pDeformGrad[idx].Determinant() << endl;
