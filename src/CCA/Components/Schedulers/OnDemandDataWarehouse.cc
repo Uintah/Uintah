@@ -120,6 +120,8 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
      d_lock("DataWarehouse lock"),
      d_lvlock("DataWarehouse level lock"),
      d_plock("DataWarehouse particle lock"),
+     d_pvlock("DataWarehouse particle var lock"),
+     d_pslock("DataWarehouse particle subset&state lock"),
      d_finalized( false ),
      d_grid(grid),
      d_isInitializationDW(isInitializationDW),
@@ -170,6 +172,9 @@ void OnDemandDataWarehouse::clear()
   }
   d_varDB.clear();
   d_lock.writeUnlock();
+  d_pvlock.writeLock();
+  d_pvarDB.clear();
+  d_pvlock.writeUnlock();
   d_lvlock.writeLock();
   d_levelDB.clear();
   d_lvlock.writeUnlock();
@@ -185,10 +190,12 @@ bool OnDemandDataWarehouse::isFinalized() const
 void OnDemandDataWarehouse::finalize()
 {
    d_lock.writeLock();
-
    d_varDB.cleanForeign();
-   d_finalized=true;   
    d_lock.writeUnlock();
+   d_pvlock.writeLock();
+   d_pvarDB.cleanForeign();
+   d_pvlock.writeUnlock();
+   d_finalized=true;   
 }
 //__________________________________
 //
@@ -296,6 +303,13 @@ OnDemandDataWarehouse::exists(const VarLabel* label,
   }
   d_lvlock.readUnlock();
   
+  d_pvlock.readLock();
+  if (patch && d_pvarDB.exists(label, matlIndex, patch)) {
+    d_pvlock.readUnlock();
+    return true;
+  }
+  d_pvlock.readUnlock();
+
   return false;
 }
 //______________________________________________________________________
@@ -326,13 +340,13 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
         IntVector low = dep->low;
         IntVector high = dep->high;
 
-        d_lock.readLock();
-        if(!d_varDB.exists(label, matlIndex, patch)) {
+        d_pvlock.readLock();
+        if(!d_pvarDB.exists(label, matlIndex, patch)) {
           SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
                 "in sendMPI", __FILE__, __LINE__));
         }
-        ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
-        d_lock.readUnlock();
+        ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(d_pvarDB.get(label, matlIndex, patch));
+        d_pvlock.readUnlock();
 
         int dest = batch->toTasks.front()->getAssignedResourceIndex();
         ASSERTRANGE(dest, 0, d_myworld->size());
@@ -463,7 +477,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts,
           data[i] = -1; 
         }
         else {
-          if(!d_varDB.exists(pos_var, pmg.matl_, pmg.patch_)) {
+          if(!d_pvarDB.exists(pos_var, pmg.matl_, pmg.patch_)) {
             cout << d_myworld->myrank() << "  Naughty: patch " << pmg.patch_->getID() << " matl " << pmg.matl_ 
                  << " id " << pmg.dwid_  << endl;
             SCI_THROW(UnknownVariable(pos_var->getName(), getID(), pmg.patch_, pmg.matl_,
@@ -588,10 +602,10 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
       ASSERT(recvset);
 
       ParticleVariableBase* var = 0;
-      d_lock.readLock();
-      if (d_varDB.exists(label, matlIndex, patch)) {
-        var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
-        d_lock.readUnlock();
+      d_pvlock.readLock();
+      if (d_pvarDB.exists(label, matlIndex, patch)) {
+        var = dynamic_cast<ParticleVariableBase*>(d_pvarDB.get(label, matlIndex, patch));
+        d_pvlock.readUnlock();
         ASSERT(var->isForeign())
       }
       else {
@@ -612,10 +626,10 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
           int allocated_particles = old_dw->d_foreignParticleQuantities[make_pair(matlIndex, patch)];
           var->allocate(allocated_particles);
         }
-        d_lock.readUnlock();  //upgrade to write lock
-        d_lock.writeLock();
-        d_varDB.put(label, matlIndex, patch, var, true);
-        d_lock.writeUnlock();
+        d_pvlock.readUnlock();  //upgrade to write lock
+        d_pvlock.writeLock();
+        d_pvarDB.put(label, matlIndex, patch, var, true);
+        d_pvlock.writeUnlock();
       }
 
       if(recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment(0, patch, 0) == d_myworld->myrank() && this == old_dw)){
@@ -1234,15 +1248,15 @@ OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
 map<const VarLabel*, ParticleVariableBase*>* 
 OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
 {
-  d_lock.readLock();
+  d_pslock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   psetAddDBType::key_type key(matlIndex, realPatch);
   psetAddDBType::iterator iter = d_addsetDB.find(key);
   if(iter == d_addsetDB.end()){
-    d_lock.readUnlock();
+    d_pslock.readUnlock();
     return 0;
   }
-  d_lock.readUnlock();
+  d_pslock.readUnlock();
   return iter->second;
 }
 
@@ -1286,15 +1300,15 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
   checkGetAccess(label, matlIndex, patch);
   
-  d_lock.readLock();
+  d_pvlock.readLock();
 
-  if(!d_varDB.exists(label, matlIndex, patch)) {
+  if(!d_pvarDB.exists(label, matlIndex, patch)) {
     print();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
-  constVar = *dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
+  constVar = *dynamic_cast<ParticleVariableBase*>(d_pvarDB.get(label, matlIndex, patch));
    
-  d_lock.readUnlock();
+  d_pvlock.readUnlock();
 }
 //______________________________________________________________________
 //
@@ -1325,20 +1339,20 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
     vector<ParticleVariableBase*> neighborvars(neighborPatches.size());
 
-    d_lock.readLock();
+    d_pvlock.readLock();
     for(size_t i=0;i<neighborPatches.size();i++){
       const Patch* neighborPatch=neighborPatches[i];
 
-      if(!d_varDB.exists(label, matlIndex, neighborPatches[i])){
+      if(!d_pvarDB.exists(label, matlIndex, neighborPatches[i])){
         SCI_THROW(UnknownVariable(label->getName(), getID(), neighborPatch, matlIndex,
               neighborPatch == patch?"on patch":"on neighbor", __FILE__, __LINE__));
       }
 
       neighborvars[i] = var->cloneType();
 
-      d_varDB.get(label, matlIndex, neighborPatch, *neighborvars[i]);
+      d_pvarDB.get(label, matlIndex, neighborPatch, *neighborvars[i]);
     }
-    d_lock.readUnlock();    
+    d_pvlock.readUnlock();    
 
     // Note that when the neighbors are virtual patches (i.e. periodic
     // boundaries), then if var is a ParticleVariable<Point>, the points
@@ -1366,15 +1380,15 @@ OnDemandDataWarehouse::getModifiable(ParticleVariableBase& var,
    const Patch* patch = pset->getPatch();
    checkModifyAccess(label, matlIndex, patch);
    
-   d_lock.readLock();
+   d_pvlock.readLock();
    if(pset->getLow() == patch->getExtraCellLowIndex() && pset->getHigh() == patch->getExtraCellHighIndex()){
-     if(!d_varDB.exists(label, matlIndex, patch))
+     if(!d_pvarDB.exists(label, matlIndex, patch))
        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
-     d_varDB.get(label, matlIndex, patch, var);
+     d_pvarDB.get(label, matlIndex, patch, var);
    } else {
      SCI_THROW(InternalError("getModifiable (Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__));
    }
-   d_lock.readUnlock();
+   d_pvlock.readUnlock();
 }
 //______________________________________________________________________
 //
@@ -1406,12 +1420,12 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
   
    checkModifyAccess(label, matlIndex, patch);
    
-   d_lock.readLock();
-   if(!d_varDB.exists(label, matlIndex, patch))
+   d_pvlock.readLock();
+   if(!d_pvarDB.exists(label, matlIndex, patch))
      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
-   var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
+   var = dynamic_cast<ParticleVariableBase*>(d_pvarDB.get(label, matlIndex, patch));
 
-   d_lock.readUnlock();
+   d_pvlock.readUnlock();
    return var;
 }
 //______________________________________________________________________
@@ -1436,11 +1450,11 @@ OnDemandDataWarehouse::allocateAndPut(ParticleVariableBase& var,
   const Patch* patch = pset->getPatch();
   
   // Error checking
-  d_lock.readLock();   
-  if(d_varDB.exists(label, matlIndex, patch))
+  d_pvlock.readLock();   
+  if(d_pvarDB.exists(label, matlIndex, patch))
     SCI_THROW(InternalError("Particle variable already exists: " +
                             label->getName(), __FILE__, __LINE__));
-  d_lock.readUnlock();
+  d_pvlock.readUnlock();
   
   var.allocate(pset);
   put(var, label);
@@ -1477,10 +1491,10 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
 
   checkPutAccess(label, matlIndex, patch, replace);
 
-  d_lock.writeLock();   
+  d_pvlock.writeLock();   
   // Put it in the database
-  d_varDB.put(label, matlIndex, patch, var.clone(), replace);
-  d_lock.writeUnlock();
+  d_pvarDB.put(label, matlIndex, patch, var.clone(), replace);
+  d_pvlock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -2090,37 +2104,43 @@ OnDemandDataWarehouse::emit(OutputContext& oc,
     patch->computeVariableExtents( label->typeDescription()->getType(),
         label->getBoundaryLayer(), Ghost::None, 0,
         l, h );
-    //get list
-    vector<Variable*> varlist;
-    d_lock.readLock();
-    d_varDB.getlist(label, matlIndex, patch, varlist);
-    d_lock.readUnlock();
-
-    GridVariableBase* v=NULL;
-    switch(label->typeDescription()->getType())
+   switch(label->typeDescription()->getType())
     {
       case TypeDescription::NCVariable:
       case TypeDescription::CCVariable:
       case TypeDescription::SFCXVariable:
       case TypeDescription::SFCYVariable:
       case TypeDescription::SFCZVariable:
-        for (vector<Variable*>::reverse_iterator rit = varlist.rbegin(); ; ++rit){
+        //get list
+      {
+        vector<Variable*> varlist;
+        d_lock.readLock();
+        d_varDB.getlist(label, matlIndex, patch, varlist);
+        d_lock.readUnlock();
+
+        GridVariableBase* v = NULL;
+        for (vector<Variable*>::reverse_iterator rit = varlist.rbegin();; ++rit) {
           if (rit == varlist.rend()) {
             v = NULL;
             break;
           }
-          v = dynamic_cast<GridVariableBase*>(*rit);
+          v = dynamic_cast<GridVariableBase*> (*rit);
           //verify that the variable is valid and matches the dependencies requirements.
-          if (v && v->isValid() && Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
+          if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) //find a completed region
             break;
         }
-        var=v;
+        var = v;
+      }
+        break;
+      case TypeDescription::ParticleVariable:
+        d_lvlock.readLock();
+        var=d_pvarDB.get(label, matlIndex, patch);
+        d_lvlock.readUnlock();
         break;
       default:
-        ASSERT(varlist.size()==1);
-        //set to first item in list
-        var = *(varlist.begin());
-        break;
+        d_lock.readLock();
+        var=d_varDB.get(label, matlIndex, patch);
+        d_lock.readUnlock();
     }
   }
   else
@@ -2168,7 +2188,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
   Patch* patch = (Patch*) delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  d_lock.writeLock();
+  d_pslock.writeLock();
   psetDBType::key_type key(realPatch, matlIndex, getID());
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
@@ -2188,7 +2208,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
     d_delsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,delset));
     delset->addReference();
   }
-  d_lock.writeUnlock();
+  d_pslock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -2198,7 +2218,7 @@ OnDemandDataWarehouse::addParticles(const Patch* patch,
                                     map<const VarLabel*, 
                                     ParticleVariableBase*>* addedState)
 {
- d_lock.writeLock();
+ d_pslock.writeLock();
   psetAddDBType::key_type key(matlIndex, patch);
   psetAddDBType::iterator iter = d_addsetDB.find(key);
   if(iter  != d_addsetDB.end()) 
@@ -2208,7 +2228,7 @@ OnDemandDataWarehouse::addParticles(const Patch* patch,
   else
     d_addsetDB[key]=addedState;
   
- d_lock.writeUnlock();
+ d_pslock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -2225,7 +2245,6 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var,
   case TypeDescription::SFCXVariable:
   case TypeDescription::SFCYVariable:
   case TypeDescription::SFCZVariable:
-  case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
     //try {
       d_lock.readLock();
@@ -2236,6 +2255,11 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var,
       //cout << d_myworld->myrank() << " DW " << getID() << " caught exception.\n";
       //throw e;
       //}
+    break;
+  case TypeDescription::ParticleVariable:
+    d_pvlock.readLock();
+    count = d_pvarDB.decrementScrubCount(var, matlIndex, patch);
+    d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
   case TypeDescription::ReductionVariable:
@@ -2268,11 +2292,15 @@ OnDemandDataWarehouse::setScrubCount(const VarLabel* var,
   case TypeDescription::SFCXVariable:
   case TypeDescription::SFCYVariable:
   case TypeDescription::SFCZVariable:
-  case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
     d_lock.readLock();
     d_varDB.setScrubCount(var, matlIndex, patch, count);
     d_lock.readUnlock();
+    break;
+  case TypeDescription::ParticleVariable:
+    d_pvlock.readLock();
+    d_pvarDB.setScrubCount(var, matlIndex, patch, count);
+    d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
   case TypeDescription::ReductionVariable:
@@ -2295,11 +2323,15 @@ OnDemandDataWarehouse::scrub(const VarLabel* var,
   case TypeDescription::SFCXVariable:
   case TypeDescription::SFCYVariable:
   case TypeDescription::SFCZVariable:
-  case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
     d_lock.readLock();
     d_varDB.scrub(var, matlIndex, patch);
     d_lock.readUnlock();
+    break;
+  case TypeDescription::ParticleVariable:
+    d_pvlock.readLock();
+    d_pvarDB.scrub(var, matlIndex, patch);
+    d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
   case TypeDescription::ReductionVariable:
@@ -2318,6 +2350,9 @@ OnDemandDataWarehouse::initializeScrubs(int dwid,
   d_lock.readLock();
   d_varDB.initializeScrubs(dwid, scrubcounts, add);
   d_lock.readUnlock();
+  d_plock.readLock();
+  d_pvarDB.initializeScrubs(dwid, scrubcounts, add);
+  d_plock.readUnlock();
 }
 //______________________________________________________________________
 //
@@ -2510,11 +2545,13 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
                                       "in transferFrom", __FILE__, __LINE__));
           GridVariableBase* v = dynamic_cast<GridVariableBase*>(fromDW->d_varDB.get(var, matl, patch))->clone();
           d_varDB.put(var, matl, copyPatch, v, replace);
+          d_lock.writeUnlock();
         }
         break;
       case TypeDescription::ParticleVariable:
         {
-          if(!fromDW->d_varDB.exists(var, matl, patch))
+          d_plock.writeLock();
+          if(!fromDW->d_pvarDB.exists(var, matl, patch))
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
                                       "in transferFrom", __FILE__, __LINE__));
 
@@ -2526,17 +2563,16 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
           }
           else
             subset = getParticleSubset(matl, copyPatch);
-          d_lock.writeLock();
-          ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>(fromDW->d_varDB.get(var, matl, patch));
+          ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>(fromDW->d_pvarDB.get(var, matl, patch));
           if (patch == copyPatch)
-            d_varDB.put(var, matl, copyPatch, v->clone(), replace);
+            d_pvarDB.put(var, matl, copyPatch, v->clone(), replace);
           else {
             ParticleVariableBase* newv = v->cloneType();
             newv->copyPointer(*v);
             newv->setParticleSubset(subset);
-            d_varDB.put(var, matl, copyPatch, newv, replace);
+            d_pvarDB.put(var, matl, copyPatch, newv, replace);
           }
-          d_lock.writeUnlock();
+          d_pvlock.writeUnlock();
         }
         break;
       case TypeDescription::PerPatch:

@@ -431,6 +431,7 @@ private:
    void insertPSetRecord(psetDBType &subsetDB,const Patch* patch, IntVector low, IntVector high, int matlIndex, ParticleSubset *psubset);
 
    DWDatabase<Patch>  d_varDB;
+   DWDatabase<Patch>  d_pvarDB;
    DWDatabase<Level>  d_levelDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
@@ -457,6 +458,8 @@ private:
    mutable CrowdMonitor    d_lock;
    mutable CrowdMonitor    d_lvlock;
    mutable CrowdMonitor    d_plock;
+   mutable CrowdMonitor    d_pvlock;
+   mutable CrowdMonitor    d_pslock;
    bool                    d_finalized;
    GridP                   d_grid;
 
