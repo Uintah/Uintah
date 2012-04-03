@@ -301,7 +301,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     while(dts->numInternalReadyTasks() > 0) { 
       DetailedTask * task = dts->getNextInternalReadyTask();
 
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc)) {  //save the reduction task for later
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
         phaseSyncTask[task->getTask()->d_phase] = task;
         taskdbg << d_myworld->myrank() << " Task Reduction ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
       } else {
@@ -391,14 +391,10 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         initiateReduction(reducetask);
       }
       else { // Task::OncePerProc task
-        ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
+        ASSERT(reducetask->getTask()->usesMPI());
         initiateTask( reducetask, abort, abort_point, iteration );
         reducetask->markInitiated();
-        while(reducetask->getExternalDepCount() > 0) {
-          processMPIRecvs(WAIT_ONCE);
-          reducetask->checkExternalDepCount();
-        }
-
+        ASSERT(reducetask->getExternalDepCount() == 0);
         runTask(reducetask, iteration);
         taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
         printTask(taskdbg, reducetask); taskdbg << '\n';

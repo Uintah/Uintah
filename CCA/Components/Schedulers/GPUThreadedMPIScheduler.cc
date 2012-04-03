@@ -499,7 +499,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
       DetailedTask* task = dts->getNextInternalReadyTask();
 
       //save the reduction task and once per proc task for later execution
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc)) {
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {
         phaseSyncTask[task->getTask()->d_phase] = task;
         if (taskdbg.active()) {
           cerrLock.lock();
@@ -550,15 +550,10 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
           assignTask(reducetask, currcomm);
         }
       } else {  // Task::OncePerProc task
-        ASSERT(reducetask->getTask()->getType() == Task::OncePerProc);
+        ASSERT(reducetask->getTask()->usesMPI());
         initiateTask(reducetask, abort, abort_point, iteration);
         reducetask->markInitiated();
-
-        while (reducetask->getExternalDepCount() > 0) {
-          processMPIRecvs(WAIT_ONCE);
-          reducetask->checkExternalDepCount();
-        }
-
+        ASSERT(reducetask->getExternalDepCount() == 0) ;
         assignTask(reducetask, iteration);
         taskdbg << d_myworld->myrank() << " Running OPP task:  \t";
         printTask(taskdbg, reducetask);

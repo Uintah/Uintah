@@ -887,7 +887,8 @@ WARNING
     
     void hasSubScheduler(bool state = true);
     inline bool getHasSubScheduler() const { return d_hasSubScheduler; }
-    void usesMPI(bool state=true);
+    void usesMPI(bool state);
+    inline bool usesMPI() const {return d_usesMPI; }
     void usesThreads(bool state);
     inline bool usesThreads() const { return d_usesThreads; }
     void usesGPU(bool state);

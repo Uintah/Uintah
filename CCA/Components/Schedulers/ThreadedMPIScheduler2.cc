@@ -643,7 +643,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
     if (dts->numInternalReadyTasks()>0) {
       DetailedTask * task=dts->getNextInternalReadyTask();
       if (task==NULL) continue;
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI()))
       {
         schedulerLock.writeLock();
         phaseSyncTask[task->getTask()->d_phase]= task;
@@ -712,14 +712,10 @@ ThreadedMPIScheduler2::runTasks(int t_id)
           }
           else { // Task::OncePerProc task
             schedulerLock.writeUnlock();
-            ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
-            recvLock.writeLock();
+            ASSERT(reducetask->getTask()->usesMPI());
             initiateTask( reducetask, abort, abort_point, curriteration );
             reducetask->markInitiated();
-            while(reducetask->getExternalDepCount() > 0) {
-              processMPIRecvs(WAIT_ONCE);
-            }
-            recvLock.writeUnlock();
+            ASSERT(reducetask->getExternalDepCount() == 0) 
             taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
             printTask(taskdbg, reducetask); taskdbg << '\n';
             runTask(reducetask, curriteration, t_id);

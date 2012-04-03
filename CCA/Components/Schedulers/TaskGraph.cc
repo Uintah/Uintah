@@ -985,7 +985,7 @@ TaskGraph::createDetailedDependencies()
       task->task->d_comm=currcomm;
       currcomm++;
       currphase++;
-    } else if (task->task->getType() == Task::OncePerProc ) {
+    } else if (task->task->usesMPI()) {
       currphase++;
     }
   }

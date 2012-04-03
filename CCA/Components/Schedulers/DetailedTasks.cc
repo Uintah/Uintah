@@ -1010,7 +1010,7 @@ bool DetailedTask::addRequires(DependencyBatch* req)
 void DetailedTask::checkExternalDepCount()
 {
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && task->getType() != Task::OncePerProc) { 
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) { 
     taskGroup->mpiCompletedQueueLock_.writeLock();
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
 
