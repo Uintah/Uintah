@@ -228,38 +228,14 @@ IsoHardeningPlastic::computeEpdot(const PlasticityState* state,
  
 void 
 IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
-                                           const PlasticityState* state,
+                                           const PlasticityState* ,
                                            const double& ,
                                            const MPMMaterial* ,
                                            const particleIndex ,
-                                           TangentModulusTensor& Ce,
-                                           TangentModulusTensor& Cep)
+                                           TangentModulusTensor& ,
+                                           TangentModulusTensor& )
 {
-  // Calculate the deviatoric stress
-  Matrix3 one; one.Identity();
-  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
-
-  // Calculate the equivalent stress
-  double sigeqv = sqrt(sigdev.NormSquared()); 
-
-  // Calculate direction of plastic flow
-  Matrix3 nn = sigdev*(1.0/sigeqv);
-
-  // Calculate gamma
-  double shear = state->shearModulus;
-  double gamma = 1.0/(1+d_CM.K/(3.0*shear));
-
-  // Form the elastic-plastic tangent modulus
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-                             2.0*shear*gamma*nn(ii,jj)*nn(kk,ll);
-        }  
-      }  
-    }  
-  }  
+  throw InternalError("Empty Function: IsoHardeningPlastic::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void

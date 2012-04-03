@@ -435,18 +435,7 @@ SCGPlastic::computeEpdot(const PlasticityState* state,
   return epdot;
 }
 
-/*! The evolving internal variable is \f$q = \epsilon_p\f$.  If the 
-  evolution equation for internal variables is of the form 
-  \f$ \dot q = \gamma h (\sigma, q) \f$, then 
-  \f[
-  \dot q = \frac{d\epsilon_p}{dt} = \dot\epsilon_p .
-  \f] 
-  If \f$\dot\epsilon_p = \gamma\f$, then \f$ 1 = h \f$.
-  Also, \f$ f_q = \frac{\partial f}{\partial \epsilon_p} \f$.
-  For the von Mises yield condition, \f$(f)\f$, 
-  \f$ f_q = \frac{\partial \sigma}{\partial \epsilon_p} \f$
-  where \f$\sigma\f$ is the SCG flow stress.
-*/
+
 void 
 SCGPlastic::computeTangentModulus(const Matrix3& stress,
                                   const PlasticityState* state,
@@ -456,45 +445,7 @@ SCGPlastic::computeTangentModulus(const Matrix3& stress,
                                   TangentModulusTensor& Ce,
                                   TangentModulusTensor& Cep)
 {
-  // Get f_q = dsigma/dep (h = 1, therefore f_q.h = f_q)
-  double f_q = evalDerivativeWRTPlasticStrain(state, idx);
-
-  // Calculate the deviatoric stress and rate of deformation
-  Matrix3 one; one.Identity();
-  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
-
-  // Calculate the equivalent stress and strain rate
-  double sigeqv = sqrt(sigdev.NormSquared()); 
-
-  // Calculate the direction of plastic loading (r)
-  Matrix3 rr = sigdev*(1.5/sigeqv);
-
-  // Form the elastic-plastic tangent modulus
-  Matrix3 Cr, rC;
-  double rCr = 0.0;
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      Cr(ii,jj) = 0.0;
-      rC(ii,jj) = 0.0;
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cr(ii,jj) += Ce(ii,jj,kk,ll)*rr(kk,ll);
-          rC(ii,jj) += rr(kk,ll)*Ce(kk,ll,ii,jj);
-        }
-      }
-      rCr += rC(ii,jj)*rr(ii,jj);
-    }
-  }
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-            Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
-        }  
-      }  
-    }  
-  }  
+  throw InternalError("Empty Function: SCGPlastic::computeTangentModulus", __FILE__, __LINE__); 
 }
 
 void

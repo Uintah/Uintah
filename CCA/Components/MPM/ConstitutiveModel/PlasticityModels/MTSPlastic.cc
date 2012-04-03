@@ -594,125 +594,17 @@ MTSPlastic::evalFAndFPrime(const double& tau,
   fPrime =  - (t_i*sigma_i + t_e*sigma_e)*mu_mu_0;
 }
 
-/*! The evolving internal variable is \f$q = \hat\sigma_e\f$.  If the 
-  evolution equation for internal variables is of the form 
-  \f$ \dot q = \gamma h (\sigma, q) \f$, then 
-  \f[
-  \dot q = \frac{d\hat\sigma_e}{dt} 
-  = \frac{d\hat\sigma_e}{d\epsilon} \frac{d\epsilon}{dt}
-  = \theta \dot\epsilon .
-  \f] 
-  If \f$\dot\epsilon = \gamma\f$, then \f$ \theta = h \f$.
-  Also, \f$ f_q = \frac{\partial f}{\partial \hat\sigma_e} \f$.
-  For the von Mises yield condition, \f$(f)\f$, 
-  \f$ f_q = \frac{\partial \sigma}{\partial \hat\sigma_e} \f$
-  where \f$\sigma\f$ is the MTS flow stress.
-*/
+
 void 
-MTSPlastic::computeTangentModulus(const Matrix3& stress,
-                                  const PlasticityState* state,
+MTSPlastic::computeTangentModulus(const Matrix3& ,
+                                  const PlasticityState* ,
                                   const double& ,
                                   const MPMMaterial* ,
-                                  const particleIndex idx,
-                                  TangentModulusTensor& Ce,
-                                  TangentModulusTensor& Cep)
+                                  const particleIndex ,
+                                  TangentModulusTensor& ,
+                                  TangentModulusTensor& )
 {
-  // Calculate the deviatoric stress and rate of deformation
-  Matrix3 one; one.Identity();
-  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
-
-  // Calculate the equivalent stress and strain rate
-  double sigeqv = sqrt(sigdev.NormSquared()); 
-  //double edot = state->plasticStrainRate;
-  double edot = state->strainRate;
-  if (edot == 0.0) edot = 1.0e-7;
-
-  // Calculate the direction of plastic loading (r)
-  Matrix3 rr = sigdev*(1.5/sigeqv);
-
-  // Calculate mu and mu/mu_0
-  double mu = state->shearModulus;
-  double mu_mu_0 = mu/d_CM.mu_0;
-
-  // If temperature is greater than phase transition temperature
-  // then update the constants
-  double T = state->temperature;
-  double g_0es = 0.0;
-  double sigma_es0 = 0.0;
-  double a_0 = 0.0;
-  double a_3 = 0.0;
-  if (T > d_CM.Tc) {
-    g_0es = d_CM.g_0es_c;
-    sigma_es0 = d_CM.sigma_es0_c;
-    a_0 = d_CM.a_0_c;
-    a_3 = d_CM.a_3_c;
-  } else {
-    g_0es = d_CM.g_0es;
-    sigma_es0 = d_CM.sigma_es0;
-    a_0 = d_CM.a_0;
-    a_3 = d_CM.a_3;
-  }
-
-  // Calculate theta_0
-  double theta_0 = a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot) - a_3*T;
-
-  // Calculate sigma_es
-  double CC = d_CM.koverbcubed*T/mu;
-  double CCes = CC/g_0es;
-  double logees = log(edot/d_CM.edot_es0);
-  double sigma_es = sigma_es0*exp(CCes*logees);
-
-  // Compute sigma_e (total)
-  double sigma_e_old = 0.0;
-  double delEps = state->plasticStrain;
-  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 4);
-
-  // Calculate X and FX
-  //double X = pMTS_new[idx]/sigma_es;
-  double X = sigma_e/sigma_es;
-  double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
-
-  // Calculate theta
-  double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
-  double h0 = theta;
-
-  // Calculate f_q (h = theta, therefore f_q.h = f_q.theta)
-  double CCe = CC/d_CM.g_0e;
-  double logee = log(d_CM.edot_0e/edot);
-  double logee_q = 1.0 - pow((CCe*logee),(1.0/d_CM.q_e));
-  double S_e = 0.0;
-  if (logee_q > 0.0) S_e = pow(logee_q,(1.0/d_CM.p_e));
-  double f_q0 = mu_mu_0*S_e;
-
-  // Get f_q1 = dsigma/dep (h = 1, therefore f_q.h = f_q)
-  double f_q1 = evalDerivativeWRTPlasticStrain(state, idx);
-
-  // Form the elastic-plastic tangent modulus
-  Matrix3 Cr, rC;
-  double rCr = 0.0;
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      Cr(ii,jj) = 0.0;
-      rC(ii,jj) = 0.0;
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cr(ii,jj) += Ce(ii,jj,kk,ll)*rr(kk,ll);
-          rC(ii,jj) += rr(kk,ll)*Ce(kk,ll,ii,jj);
-        }
-      }
-      rCr += rC(ii,jj)*rr(ii,jj);
-    }
-  }
-  for (int ii = 0; ii < 3; ++ii) {
-    for (int jj = 0; jj < 3; ++jj) {
-      for (int kk = 0; kk < 3; ++kk) {
-        for (int ll = 0; ll < 3; ++ll) {
-          Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-            Cr(ii,jj)*rC(kk,ll)/(-f_q0*h0 - f_q1 + rCr);
-        }  
-      }  
-    }  
-  }  
+  throw InternalError("Empty Function: MTSPlastic::computeTangentModulus", __FILE__, __LINE__);
 }
 
 void
