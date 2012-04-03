@@ -70,6 +70,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
+//#define SUB_CYCLE_F
+#undef SUB_CYCLE_F
+
 
 using namespace std;
 using namespace Uintah;
@@ -900,6 +903,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         pDeformGrad_new[idx] = pDeformGrad[idx];
         J = pDeformGrad[idx].Determinant();
       }
+      // Carry forward the pLocalized tag for now, alter below
+      pLocalized_new[idx] = pLocalized[idx];
       
       //__________________________________
       //  bulletproofing
@@ -913,6 +918,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         cerr << " but the code is still probably going to crash soon." << endl;
       }
 
+#ifndef SUB_CYCLE_F
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << "**ERROR**: ElasticPlasticHP: " << endl;
@@ -928,8 +934,58 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         cerr << "Tm =    " << Tm << endl;
         cerr << "DWI =   " << matl->getDWIndex() << endl;
         cerr << "X =     " << px[idx] << endl;
-        throw InternalError("ElasticPlasticHP: Negative Jacobian",__FILE__,__LINE__);
+        throw InternalError("ElasticPlasticHP: Negative Jacobian",
+                                               __FILE__,__LINE__);
       }
+#endif
+
+#ifdef SUB_CYCLE_F
+        Matrix3 F=pDeformGrad[idx];
+        double Lnorm_dt = tensorL.Norm()*delT;
+        int num_scs = max(1,2*((int) Lnorm_dt));
+        if(num_scs > 1000){
+          cout << "NUM_SCS = " << num_scs << endl;
+        }
+        double dtsc = delT/(double (num_scs));
+        Matrix3 OP_tensorL_DT = one + tensorL*dtsc;
+        for(int n=0;n<num_scs;n++){
+          F=OP_tensorL_DT*F;
+//          if(num_scs >1000){
+//          cerr << "n = " << n << endl;
+//          cerr << "F = " << F << endl;
+//          cerr << "J = " << F.Determinant() << endl << endl;
+//          }
+        }
+        pDeformGrad_new[idx]=F;
+        tensorF_new=F;
+        J=pDeformGrad_new[idx].Determinant();
+        if(!(J > 0.)){
+          cerr << "**ERROR** Negative Jacobian of deformation gradient"
+               << " in particle " << pParticleID[idx] << endl;
+          cerr << "l = " << tensorL << endl;
+          cerr << "F_old = " << pDeformGrad[idx] << endl;
+          cerr << "J_old = " << pDeformGrad[idx].Determinant() << endl;
+          cerr << "F_inc = " << tensorFinc << endl;
+          cerr << "F_new = " << tensorF_new << endl;
+          cerr << "J = " << J << endl;
+          cerr << "Temp = " << pTemperature[idx] << endl;
+          cerr << "Tm = " << Tm << endl;
+          cerr << "DWI = " << matl->getDWIndex() << endl;
+          cerr << "X = " << px[idx] << endl;
+          cerr << "L.norm()*dt = " << tensorL.Norm()*delT << endl;
+          cerr << "numscs " << num_scs << endl;
+          pLocalized_new[idx]=-999;
+
+          tensorF_new=pDeformGrad[idx];
+          pDeformGrad_new[idx]=pDeformGrad[idx];
+//          throw InternalError("Negative Jacobian",__FILE__,__LINE__);
+        }
+//        else {
+//          cerr << "Recovered bad J by subcycling " << endl;
+//          cerr << "F_new = " << tensorF_new << endl;
+//        }
+//      }  // end if
+#endif
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
@@ -1214,7 +1270,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Stage 4:
       //-----------------------------------------------------------------------
       // Find if the particle has failed/localized
-      pLocalized_new[idx] = pLocalized[idx];
       bool isLocalized = false;
       double tepla = 0.0;
 
