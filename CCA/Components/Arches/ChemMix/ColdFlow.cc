@@ -203,9 +203,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
 {
   for (int p=0; p < patches->size(); p++){
 
-    const VarLabel* test = d_lab->getVarlabelByRole("temperature"); 
-    cout << " HELLO: " << *test << endl;
-
     Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
