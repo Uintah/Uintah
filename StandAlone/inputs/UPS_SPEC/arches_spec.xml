@@ -14,6 +14,12 @@
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
 
+      <VarID                            spec="OPTIONAL NO_DATA"> <!-- matches variables to specific CFD roles --> 
+        <var                            spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy'"/>
+      </VarID>
+
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
