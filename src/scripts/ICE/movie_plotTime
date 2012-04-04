@@ -1,0 +1,92 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plots a sequence of timesteps with gnuplot
+#  The sequence of movieXXX.ppm files can then be glued together.
+#
+#  Usage:
+#     movie_lineExtract <uda> 
+#  Dependencies:
+#    imagemagic
+#
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "movie_plotTime file"
+  exit(1)
+endif
+set uda = $argv[1]
+if ( !(-e $uda) ) then
+    echo "Couldn't find your uda $uda"
+  exit(1) 
+endif
+
+unalias rm
+# find the timestep to plot
+#set ts = (`puda -timesteps $uda | grep : | cut -f 2 -d":"`)
+set ts = (`cat $uda | cut -f 4 -d " "`)
+
+#echo $ts
+
+@ timestep = 1
+foreach X ( $ts[*]:q) 
+
+  echo "______________________________________________________________________"
+  echo "$timestep) $X"
+  
+  set fname = `printf 'movie.%04d.ppm\n' $timestep`
+  echo $fname
+  #__________________________________
+  # ExtractData from the data file
+
+head -$timestep $uda > data.dat
+
+  rm -f gp
+
+cat > gp << fin
+set terminal x11 1
+set terminal postscript portrait enhanced color solid "Times-Roman" 18 size 8.88889 in, 6.68 in
+set output "plot.ps"
+
+#__________________________________
+# generate the  plot script
+set ytics
+set xtics
+set mxtics
+set mytics
+set grid xtics ytics
+set pointsize 1.0
+set title ""
+
+#__________________________________
+#   Pressure
+#__________________________________
+set autoscale
+#set multiplot
+#set size 0.51,0.51  
+set origin 0.0,0.0
+
+set xlabel "Time (microseconds)"
+set ylabel "Force (microgram-cm/(microsecond^2))"
+set xrange[0:4]
+set yrange[0:50]
+#set y2tics
+plot 'data.dat'  using 1:3  t '' with line lw 2 lc 0, 22.25 lw 2 t 'Mean expected force'
+
+#set nomultiplot 
+fin
+  #__________________________________
+  # plot it up
+  gnuplot gp
+  
+  convert plot.ps $fname
+#  mogrify -rotate 90 $fname
+#  mogrify -geometry 700x500 $fname
+
+  @ timestep = $timestep + 1
+  rm -f data.dat
+end
+
+#__________________________________
+# clean up
+rm -f gp 
