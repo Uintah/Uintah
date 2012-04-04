@@ -33,9 +33,9 @@
 @DEF_GPERFTOOLS@
 
 #ifdef USE_GPERFTOOLS
-#include <google/profiler.h>
-#include <google/heap-profiler.h>
-#include <google/heap-checker.h>
+#  include <google/profiler.h>
+#  include <google/heap-profiler.h>
+#  include <google/heap-checker.h>
 #endif
 
 #endif
