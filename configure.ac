@@ -361,6 +361,12 @@ SCI_ARG_WITH(tabprops,
   [with_tabprops="$withval"
    sci_required_tabprops=yes],
   [with_tabprops=""])
+SCI_ARG_WITH(radprops,
+  AC_HELP_STRING(--with-radprops=DIR,
+                 Use the RadProps library in DIR),
+  [with_radprops="$withval"
+   sci_required_radprops=yes],
+  [with_radprops=""])
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
@@ -456,7 +462,7 @@ SCI_ARG_WITH(visit,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
+                 Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps.),
   [wasatch_3p="yes"],
   [wasatch_3p="no"])
 
@@ -3795,6 +3801,9 @@ if test "$wasatch_3p" = "yes"; then
 #  if test "$HAVE_HDF5" != "yes"; then
 #      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
 #  fi
+  if test "$with_radprops"; then
+     AC_MSG_ERROR( Do NOT specify both --with-radprops and --enable-wasatch_3p )
+  fi
   if test "$with_tabprops"; then
      AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
   fi
@@ -3816,6 +3825,7 @@ if test "$wasatch_3p" = "yes"; then
   with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
   with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
   with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+  with_radprops=`$sci_pwd`/Wasatch3P/install/RadProps
 fi
 
 ##  --  search for SpatialOps Library ------------------------
@@ -3937,6 +3947,36 @@ AC_SUBST(DEF_TABPROPS)
 AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
+
+##  --  search for RadProps ------------------------
+
+if test "$with_radprops"; then
+
+  if test "$with_radprops" = "yes"; then
+    AC_MSG_ERROR( --with-radprops=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for RadProps files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_radprops; then
+      AC_MSG_ERROR( '$with_radprops' directory does not exist. )
+    fi
+    for file in include/radprops/AbsCoeffGas.h include/radprops/Particles.h include/radprops/RadiativeSpecies.h lib/radprops/libradprops.a; do
+      if test ! -f $with_radprops/$file; then
+        AC_MSG_ERROR( '$with_radprops/$file' does not exist. )
+      fi
+    done
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_RADPROPS="#define HAVE_RADPROPS 1"
+  INC_RADPROPS_H="-I$with_radprops/include"
+  RADPROPS_LIB_DIR_FLAG="-L$with_radprops/lib/radprops"
+  RADPROPS_LIB_FLAG="-lradprops"
+  HAVE_RADPROPS="yes"
+fi
+AC_SUBST(HAVE_RADPROPS)
+AC_SUBST(DEF_RADPROPS)
+AC_SUBST(INC_RADPROPS_H)
+AC_SUBST(RADPROPS_LIB_FLAG)
+AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 

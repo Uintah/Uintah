@@ -650,6 +650,11 @@ HAVE_HYPRE
 BUILD_WASATCH
 BUILD_WASATCH_IN_ARCHES
 DEF_WASATCH_IN_ARCHES
+RADPROPS_LIB_DIR_FLAG
+RADPROPS_LIB_FLAG
+INC_RADPROPS_H
+DEF_RADPROPS
+HAVE_RADPROPS
 TABPROPS_LIB_DIR_FLAG
 TABPROPS_LIB_FLAG
 INC_TABPROPS_H
@@ -938,6 +943,7 @@ with_boost
 with_spatialops
 with_exprlib
 with_tabprops
+with_radprops
 with_zoltan
 with_tau
 with_papi
@@ -1607,7 +1613,7 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-wasatch_3p     Download and build the Wasatch Thirdparty libraries
-                          - TabProps oExprLibs SpatialOps.
+                          - TabProps ExprLibs SpatialOps RadProps.
 --enable-wasatch-in-arches
                           Turn on the use of Wasatch objects in the Arches
                           component.
@@ -1670,6 +1676,7 @@ Optional Packages:
 --with-spatialops=DIR   Use the SpatialOps library in DIR
 --with-exprlib=DIR      Use the ExprLib library in DIR
 --with-tabprops=DIR     Use the TabProps library in DIR
+--with-radprops=DIR     Use the RadProps library in DIR
 --with-zoltan=DIR       Use the Zoltan installation in DIR
 --with-tau=<tau-makefile>
                           Specify a Tau Makefile
@@ -3422,6 +3429,22 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-tabprops --without-tabprops"
   if test -n "$tabprops" -a ! -e "$tabprops"; then
     as_fn_error $? "The file or directory parameter ($tabprops) specified for --with-tabprops does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+# Check whether --with-radprops was given.
+if test "${with_radprops+set}" = set; then :
+  withval=$with_radprops; with_radprops="$withval"
+   sci_required_radprops=yes
+else
+  with_radprops=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-radprops --without-radprops"
+  if test -n "$radprops" -a ! -e "$radprops"; then
+    as_fn_error $? "The file or directory parameter ($radprops) specified for --with-radprops does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -41670,6 +41693,9 @@ if test "$wasatch_3p" = "yes"; then
 #  if test "$HAVE_HDF5" != "yes"; then
 #      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
 #  fi
+  if test "$with_radprops"; then
+     as_fn_error $? "Do NOT specify both --with-radprops and --enable-wasatch_3p " "$LINENO" 5
+  fi
   if test "$with_tabprops"; then
      as_fn_error $? "Do NOT specify both --with-tabprops and --enable-wasatch_3p " "$LINENO" 5
   fi
@@ -41691,6 +41717,7 @@ if test "$wasatch_3p" = "yes"; then
   with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
   with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
   with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+  with_radprops=`$sci_pwd`/Wasatch3P/install/RadProps
 fi
 
 ##  --  search for SpatialOps Library ------------------------
@@ -41812,6 +41839,38 @@ $as_echo "yes" >&6; }
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
   TABPROPS_LIB_FLAG="-ltabprops"
   HAVE_TABPROPS="yes"
+fi
+
+
+
+
+
+
+##  --  search for RadProps ------------------------
+
+if test "$with_radprops"; then
+
+  if test "$with_radprops" = "yes"; then
+    as_fn_error $? "--with-radprops=DIR requires a DIRectory be provided. " "$LINENO" 5
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for RadProps files (For now we are just verifying the existence of lib and .h files)" >&5
+$as_echo_n "checking for RadProps files (For now we are just verifying the existence of lib and .h files)... " >&6; }
+    if test ! -d $with_radprops; then
+      as_fn_error $? "'$with_radprops' directory does not exist. " "$LINENO" 5
+    fi
+    for file in include/radprops/AbsCoeffGas.h include/radprops/Particles.h include/radprops/RadiativeSpecies.h lib/radprops/libradprops.a; do
+      if test ! -f $with_radprops/$file; then
+        as_fn_error $? "'$with_radprops/$file' does not exist. " "$LINENO" 5
+      fi
+    done
+  fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  DEF_RADPROPS="#define HAVE_RADPROPS 1"
+  INC_RADPROPS_H="-I$with_radprops/include"
+  RADPROPS_LIB_DIR_FLAG="-L$with_radprops/lib/radprops"
+  RADPROPS_LIB_FLAG="-lradprops"
+  HAVE_RADPROPS="yes"
 fi
 
 
