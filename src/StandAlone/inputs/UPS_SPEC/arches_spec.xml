@@ -242,7 +242,7 @@
                                                                                        value= variable boundary value -->
 
            <velocity                    spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'flat, from_file'">
+                                        attribute1="type REQUIRED STRING 'flat, from_file, massflow'">
 
             <!-- flat velocity profile -->                             
             <u                          spec="OPTIONAL DOUBLE" 
@@ -252,8 +252,12 @@
             <w                          spec="OPTIONAL DOUBLE" 
                                         need_applies_to="type flat"/>
             <!-- from input file --> 
-            <input_file                spec="OPTIONAL STRING"
+            <input_file                 spec="REQUIRED STRING"
                                         need_applies_to="type from_file"/>
+
+            <!-- mass flow --> 
+            <flow_rate                  spec="REQUIRED DOUBLE"
+                                        need_applies_to="type massflow"/>
 
 
            </velocity>

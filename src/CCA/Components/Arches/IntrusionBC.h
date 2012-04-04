@@ -504,14 +504,19 @@ namespace Uintah{
 
             ProblemSpecP db_flat = db->findBlock("velocity"); 
 
-            db_flat->getWithDefault("u",u,0.0);
-            db_flat->getWithDefault("v",v,0.0);
-            db_flat->getWithDefault("w",w,0.0);
+            if ( db_flat ) { 
+              db_flat->getWithDefault("u",u,0.0);
+              db_flat->getWithDefault("v",v,0.0);
+              db_flat->getWithDefault("w",w,0.0);
+            } else { 
+              u=0.0;
+              v=0.0;
+              w=0.0;
+            }
 
             _bc_velocity[0] = u; 
             _bc_velocity[1] = v; 
             _bc_velocity[2] = w; 
-
 
           }; 
 

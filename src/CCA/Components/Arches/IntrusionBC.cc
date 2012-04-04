@@ -105,6 +105,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       // set up velocity:
       ProblemSpecP db_velocity = db_intrusion->findBlock("velocity"); 
       intrusion.has_velocity_model = false; 
+      intrusion.mass_flow_rate = 0.0; 
 
       if ( db_velocity ){ 
 
@@ -122,6 +123,15 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
           intrusion.type = IntrusionBC::INLET; 
           intrusion.velocity_inlet_generator = scinew InputFileVelocity(); 
+
+        } else if ( vel_type == "massflow" ){
+
+          intrusion.type = IntrusionBC::INLET; 
+          intrusion.velocity_inlet_generator = scinew FlatVelProf(); 
+
+          double flow_rate = 0.0; 
+          db_intrusion->findBlock("velocity")->getWithDefault("flow_rate",flow_rate, 0.0);
+          intrusion.mass_flow_rate = flow_rate; 
 
         } else { 
 
@@ -182,7 +192,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       ProblemSpecP geometry_db = db_intrusion->findBlock("geom_object");
       GeometryPieceFactory::create( geometry_db, intrusion.geometry ); 
 
-      intrusion.mass_flow_rate = 0.0; 
 
       //labels
       for ( ProblemSpecP db_labels = db_intrusion->findBlock("variable"); db_labels != 0; db_labels = db_labels->findNextBlock("variable") ){ 
