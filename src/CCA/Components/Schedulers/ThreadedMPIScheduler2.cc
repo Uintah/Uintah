@@ -656,7 +656,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase) currphase++;
         break;
       }
-      if (dts->numExternalReadyTasks() >0){
+      else if (dts->numExternalReadyTasks() >0){
         readyTask=dts->getNextExternalReadyTask();
         if (readyTask!=NULL) {
           havework=true;
@@ -666,7 +666,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
           break;
         }
       }
-      if (dts->numInternalReadyTasks() >0) {
+      else if (dts->numInternalReadyTasks() >0) {
          initTask=dts->getNextInternalReadyTask();
          if (initTask!=NULL) {
            if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI() ) {
@@ -688,15 +688,15 @@ ThreadedMPIScheduler2::runTasks(int t_id)
            }
          }
       }
-      
-      recvLock.readLock();
-      processMPIs = recvs_.numRequests();
-      recvLock.readUnlock();
-      if (processMPIs>0){
-        havework=true;
-        break;
+      else {
+        recvLock.readLock();
+        processMPIs = recvs_.numRequests();
+        recvLock.readUnlock();
+        if (processMPIs>0){
+          havework=true;
+          break;
+        }
       }
-
       if ( numTasksDone == ntasks){
         break;
       } 
