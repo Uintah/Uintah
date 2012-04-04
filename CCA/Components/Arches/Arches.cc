@@ -335,7 +335,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
   if( !(solngh->exprFactory->have_entry( xVelTag )) ) {
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
-    std::cout << xVelName << std::endl;
     typedef Expr::PlaceHolder<XVolField>  XVelT;
     solngh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
   }
