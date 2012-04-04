@@ -59,7 +59,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------- 
 // Default Constructor 
 //--------------------------------------------------------------------------- 
-ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
+ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
   _boundary_condition = scinew BoundaryCondition_new( labels ); 

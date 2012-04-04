@@ -88,7 +88,7 @@ class ColdFlow : public MixingRxnModel {
 
 public:
 
-  ColdFlow( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  ColdFlow( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~ColdFlow();
 

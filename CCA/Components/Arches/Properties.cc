@@ -75,7 +75,7 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for Properties
 //****************************************************************************
-Properties::Properties(const ArchesLabel* label, 
+Properties::Properties(ArchesLabel* label, 
                        const MPMArchesLabel* MAlb,
                        PhysicalConstants* phys_const, 
                        bool calcReactingScalar,

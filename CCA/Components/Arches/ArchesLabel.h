@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Components_Arches_ArchesLabel_h
 
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
 #include <map>
@@ -72,6 +73,15 @@ namespace Uintah {
       ArchesLabel();
       ~ArchesLabel();
       void setSharedState(SimulationStateP& sharedState);
+      void problemSetup( const ProblemSpecP& db );
+
+      typedef std::map<const std::string,const std::string> RLMAP; 
+
+      /** @brief Retrieve a label based on its CFD role **/
+      const VarLabel* getVarlabelByRole( const std::string role );
+
+      /** @brief Set a label to have a specific role **/ 
+      void setVarlabelToRole( const std::string label, const std::string role );
      
       SimulationStateP d_sharedState;
 
@@ -505,6 +515,11 @@ namespace Uintah {
         model_req_species.push_back( s ); };
 
       inline std::vector<std::string> get_species( ) { return model_req_species; }; 
+
+    private: 
+
+      RLMAP d_r_to_l; 
+      std::vector<std::string> d_allowed_roles; 
 
     }; // End class ArchesLabel
 } // End namespace Uintah

@@ -54,7 +54,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------- 
 // Default Constructor 
 //--------------------------------------------------------------------------- 
-ColdFlow::ColdFlow( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
+ColdFlow::ColdFlow( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
   d_coldflow = true; 
@@ -124,6 +124,11 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   proc0cout << "--- End Cold Flow information --- " << endl;
   proc0cout << endl;
+
+  //setting varlabels to roles: 
+  d_lab->setVarlabelToRole( "temperature", "temperature" ); 
+  d_lab->setVarlabelToRole( "density", "density" ); 
+
 }
 
 //--------------------------------------------------------------------------- 
@@ -197,6 +202,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
     const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
+
+    const VarLabel* test = d_lab->getVarlabelByRole("temperature"); 
+    cout << " HELLO: " << *test << endl;
 
     Ghost::GhostType gn = Ghost::None; 
     const Patch* patch = patches->get(p); 

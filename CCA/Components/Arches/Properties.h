@@ -94,7 +94,7 @@ public:
   // Constructor taking
   //   [in] 
 
-  Properties(const ArchesLabel* label, \
+  Properties(ArchesLabel* label, \
              const MPMArchesLabel* MAlb,
              PhysicalConstants* phys_const, 
              bool calcReactingScalar,
@@ -295,7 +295,7 @@ private:
 private:
 
       // Variable labels used by simulation controller
-      const ArchesLabel* d_lab;
+      ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
       const VarLabel* d_mf_label;
 

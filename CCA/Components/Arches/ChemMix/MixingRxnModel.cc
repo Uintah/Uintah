@@ -62,7 +62,7 @@ using namespace std;
 using namespace Uintah;
 
 //---------------------------------------------------------------------------
-MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlab ):
+MixingRxnModel::MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlab ):
   d_lab(labels), d_MAlab(MAlab)
 {
 }

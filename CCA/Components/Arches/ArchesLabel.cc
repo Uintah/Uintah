@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
 using namespace std;
@@ -51,6 +52,11 @@ using namespace std;
 //****************************************************************************
 ArchesLabel::ArchesLabel()
 {
+
+  // These are allowed CFD roles: 
+  d_allowed_roles.push_back("temperature"); 
+  d_allowed_roles.push_back("density");
+  d_allowed_roles.push_back("enthalpy"); 
 
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
@@ -793,3 +799,89 @@ void ArchesLabel::setSharedState(SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
 }
+
+void ArchesLabel::problemSetup( const ProblemSpecP& db )
+{ 
+
+  ProblemSpecP db_lab = db->findBlock("VarID"); 
+
+  if ( db_lab ){ 
+
+    for ( ProblemSpecP d = db_lab->findBlock("var"); d != 0; d = d->findNextBlock("var") ){ 
+
+      std::string label; 
+      std::string role; 
+      d->getAttribute("role", role);
+      d->getAttribute("label",label); 
+
+      setVarlabelToRole( label, role ); 
+
+    } 
+  } 
+} 
+/** @brief Retrieve a label based on its CFD role **/
+const VarLabel* ArchesLabel::getVarlabelByRole( const std::string role ){ 
+
+   RLMAP::iterator i = d_r_to_l.find(role);
+   const VarLabel* the_label; 
+
+   if ( i != d_r_to_l.end() ){
+
+     the_label = VarLabel::find(i->second); 
+
+     if ( the_label != NULL ){
+
+      return the_label; 
+
+     } else { 
+
+      std::string msg = "Error: Label not recognized in <VarID> storage for role = "+role+"\n";;
+      throw InvalidValue(msg,__FILE__,__LINE__);
+
+     } 
+
+   } else { 
+
+     std::string msg = "Error: Role not found in <VarID> storage for role = "+role+"\n";
+     throw InvalidValue(msg,__FILE__,__LINE__);
+
+   } 
+}; 
+
+/** @brief Set a label to have a specific role **/ 
+void ArchesLabel::setVarlabelToRole( const std::string label, const std::string role ){ 
+
+  //first make sure that the role is allowed: 
+  //allowed roles are defined in the constructor of this class. 
+  bool found_role = false; 
+  for ( std::vector<std::string>::iterator i_r = d_allowed_roles.begin(); i_r != d_allowed_roles.end(); i_r++){ 
+
+    if ( *i_r == role ){ 
+
+      found_role = true; 
+
+    } 
+  } 
+  if ( !found_role ){ 
+
+    std::string msg = "Error: Trying to assign a role "+role+" which is not defined as valid in ArchesLabel.cc\n";
+    throw InvalidValue(msg,__FILE__,__LINE__); 
+
+  } 
+
+
+  RLMAP::iterator i = d_r_to_l.find( role ); 
+
+  if ( i != d_r_to_l.end() ){ 
+    //if this role and found, make sure that the label is consistent with 
+    //what you are trying to load: 
+    if ( label != i->second ){ 
+      std::string msg = "Error: Trying to specify "+label+" for role "+role+" which already has the label"+i->second+"\n";
+      throw InvalidValue(msg, __FILE__,__LINE__); 
+    } // else the variable is already identified with its role so no need to do anything...
+  } else { 
+    //not found...so insert it
+    d_r_to_l.insert(std::make_pair(role,label)); 
+  } 
+
+}; 
