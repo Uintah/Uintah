@@ -203,9 +203,9 @@ __global__ void rayTraceKernel(const uint3 domainLow,
                                const uint3 domainSize,
                                const double3 cellSpacing,
                                int cellIndexRange,
-                               double* device_abskg,
-                               double* device_sigmaT4,
-                               double* device_divQ,
+                               double* __restrict__ device_abskg,
+                               double* __restrict__ device_sigmaT4,
+                               double* __restrict__ device_divQ,
                                bool virtRad,
                                bool isSeedRandom,
                                bool ccRays,
@@ -283,7 +283,7 @@ __global__ void rayTraceKernel(const uint3 domainLow,
 
       //__________________________________
       //  Compute divQ
-      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays));
+      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays)) * 0.95;
 
     } // end z-slice loop
   }  // end domain boundary check
@@ -299,8 +299,8 @@ __device__ void updateSumIDevice(const uint3& domainLow,
                                  const double3& cellSpacing,
                                  const double3& inv_direction_vector,
                                  const double3& ray_location,
-                                 double* device_sigmaT4,
-                                 double* device_abskg,
+                                 double* __restrict__ device_sigmaT4,
+                                 double* __restrict__ device_abskg,
                                  double threshold,
                                  unsigned long int* size,
                                  double* sumI)
@@ -435,8 +435,6 @@ __device__ void updateSumIDevice(const uint3& domainLow,
     }  // end if reflection
   }  // end threshold while loop.
 }  // end of updateSumI function
-
-
 
 
 //---------------------------------------------------------------------------

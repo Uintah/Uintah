@@ -1276,7 +1276,7 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   double* d_reqData;
-  int nbytes = size.x() * size.y() * size.z() * sizeof(double);
+  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
   const bool pinned = ( *(pinnedHostPtrs.find(h_reqData)) == h_reqData );
@@ -1314,7 +1314,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   CUDA_SAFE_CALL( retVal = cudaSetDevice(device));
 
   double* d_compData;
-  int nbytes = size.x() * size.y() * size.z() * sizeof(double);
+  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
   const bool pinned = ( *(pinnedHostPtrs.find(h_compData)) == h_compData );
@@ -1326,6 +1326,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
       pinnedHostPtrs.insert(h_compData);
     }
   }
+
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
   deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
@@ -1501,7 +1502,7 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   double* d_compData = deviceComputesPtrs.find(var)->second.ptr;
   double* h_compData = hostComputesPtrs.find(var)->second.ptr;
   IntVector size = hostComputesPtrs.find(var)->second.size;
-  int nbytes = size.x() * size.y() * size.z() * sizeof(double);
+  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
   // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
   CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDefault, *stream) );
