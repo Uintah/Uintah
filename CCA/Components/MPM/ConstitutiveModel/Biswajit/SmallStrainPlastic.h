@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheck.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModel.h>
@@ -152,13 +152,13 @@ namespace Uintah {
     bool   d_setStressToZero;
     bool   d_allowNoTension;
 
-    UintahBB::PressureModel*         d_eos;
+    UintahBB::PressureModel*              d_eos;
     UintahBB::ShearModulusModel*          d_shear;
+    UintahBB::KinematicHardeningModel*    d_kinematic;
+    UintahBB::YieldCondition*             d_yield;
     MeltingTempModel*           d_melt;
     SpecificHeatModel*          d_Cp;
-    UintahBB::YieldCondition*             d_yield;
-    PlasticityModel*            d_plastic;
-    UintahBB::KinematicHardeningModel*    d_kinematic;
+    FlowModel*                  d_plastic;
     DamageModel*                d_damage;
     StabilityCheck*             d_stable;
          

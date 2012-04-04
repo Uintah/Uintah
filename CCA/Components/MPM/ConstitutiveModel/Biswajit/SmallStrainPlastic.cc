@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
@@ -155,10 +155,10 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  d_plastic = PlasticityModelFactory::create(ps);
+  d_plastic = FlowStressModelFactory::create(ps);
   if(!d_plastic){
     ostringstream desc;
-    desc << "An error occured in the PlasticityModelFactory that has \n"
+    desc << "An error occured in the FlowStressModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
@@ -236,7 +236,7 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
   d_Cp = SpecificHeatModelFactory::createCopy(cm->d_Cp);
 
   d_yield = UintahBB::YieldConditionFactory::createCopy(cm->d_yield);
-  d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
+  d_plastic = FlowStressModelFactory::createCopy(cm->d_plastic);
   d_kinematic = UintahBB::KinematicHardeningModelFactory::createCopy(cm->d_kinematic);
   d_damage = DamageModelFactory::createCopy(cm->d_damage);
   d_stable = StabilityCheckFactory::createCopy(cm->d_stable);
