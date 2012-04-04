@@ -45,15 +45,15 @@ SRCS   += \
 	$(SRCDIR)/HyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
 	$(SRCDIR)/MieGruneisenEOSEnergy.cc \
-	$(SRCDIR)/PlasticityModel.cc \
-	$(SRCDIR)/PlasticityModelFactory.cc \
-	$(SRCDIR)/IsoHardeningPlastic.cc \
-	$(SRCDIR)/JohnsonCookPlastic.cc \
-	$(SRCDIR)/ZAPlastic.cc\
-	$(SRCDIR)/ZAPolymer.cc\
-	$(SRCDIR)/MTSPlastic.cc \
-	$(SRCDIR)/SCGPlastic.cc \
-	$(SRCDIR)/PTWPlastic.cc \
+	$(SRCDIR)/FlowModel.cc \
+	$(SRCDIR)/FlowStressModelFactory.cc \
+	$(SRCDIR)/IsoHardeningFlow.cc \
+	$(SRCDIR)/JohnsonCookFlow.cc \
+	$(SRCDIR)/ZAFlow.cc\
+	$(SRCDIR)/ZAPolymerFlow.cc\
+	$(SRCDIR)/MTSFlow.cc \
+	$(SRCDIR)/SCGFlow.cc \
+	$(SRCDIR)/PTWFlow.cc \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \

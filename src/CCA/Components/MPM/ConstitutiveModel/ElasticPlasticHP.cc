@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
@@ -142,7 +142,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   d_stable = StabilityCheckFactory::create(ps);
   if(!d_stable) cerr << "Stability check disabled\n";
 
-  d_flow = FlowModelFactory::create(ps);
+  d_flow = FlowStressModelFactory::create(ps);
   if(!d_flow){
     ostringstream desc;
     desc << "An error occured in the FlowModelFactory that has \n"
@@ -241,7 +241,7 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_Cp      = SpecificHeatModelFactory::createCopy(cm->d_Cp);
   d_yield   = YieldConditionFactory::createCopy(cm->d_yield);
   d_stable  = StabilityCheckFactory::createCopy(cm->d_stable);
-  d_flow    = FlowModelFactory::createCopy(cm->d_flow);
+  d_flow    = FlowStressModelFactory::createCopy(cm->d_flow);
   d_damage  = DamageModelFactory::createCopy(cm->d_damage);
   d_eos     = MPMEquationOfStateFactory::createCopy(cm->d_eos);
   d_eos->setBulkModulus(d_initialData.Bulk);

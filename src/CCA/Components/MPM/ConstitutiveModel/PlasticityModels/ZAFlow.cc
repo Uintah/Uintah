@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAFlow.h>
 
 #include <cmath>
 #include <Core/Exceptions/ProblemSetupException.h>

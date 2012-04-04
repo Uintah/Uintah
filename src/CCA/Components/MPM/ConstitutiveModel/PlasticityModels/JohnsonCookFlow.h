@@ -28,100 +28,59 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __ZERILLI_ARMSTRONG_MODEL_H__
-#define __ZERILLI_ARMSTRONG_MODEL_H__
+#ifndef __JOHNSONCOOK_FLOW_MODEL_H__
+#define __JOHNSONCOOK_FLOW_MODEL_H__
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
+
+#include "FlowModel.h"    
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
   /*!
-    \class ZAFlow
-    \brief Zerilli-Armstrong Strain rate dependent plasticity model
-    \author Anup Bhawalkar, 
+    \class JohnsonCookFlow
+    \brief Johnson-Cook Strain rate dependent plasticity model
+    \author Biswajit Banerjee, 
     Department of Mechanical Engineering, 
     University of Utah
-    Copyright (C) 2005 University of Utah
+    Copyright (C) 2002 University of Utah
    
-    Zerilli-Armstrong Plasticity Model 
-    (Zerilli, F.J. and Armstrong, R.W., 1987, J. Appl. Phys. 61(5), p.1816)
-    (Zerilli, F.J., 2004, Metall. Materials Trans. A, v. 35A, p.2547)
+    Johnson-Cook Plasticity Model \n
+    (Johnson and Cook, 1983, Proc. 7th Intl. Symp. Ballistics, The Hague) \n
+    The flow rule is given by
+    \f[
+    f(\sigma) = [A + B (\epsilon_p)^n][1 + C \ln(\dot{\epsilon_p^*})]
+    [1 - (T^*)^m]
+    \f]
 
-    Flow rule: (the general form implemented in Uintah) 
-	
-	sigma = sigma_a + B*exp(-beta*T) + B_0*sqrt(ep)*exp(-alpha*T)
-
-	where 
-		if(c_0 == 0)
-			sigma_a = sigma_g + (k_H/sqrt(l)) + K*(ep)^n;
-		else
-			sigma_a = c_0 + K*(ep)^n;
-		end
-		beta = beta_0 - beta_1*ln(epdot);
-		alpha = alpha_0 - alpha1*ln(epdot)
-
-   Flow rule : Original form (1987)
-
-	Y =  A + (C1 + C2*sqrt(ep))*(exp(-C3 + C4*ln(epdot))*T) + C5*(ep)^n
-
-  Corelation between these  two forms:
-		A  = c_0
-		C1 = B
-		C2 = B_0
-		C3 = beta_0 = alpha_0
-		C4 = beta_1 = alpha_1
-		C5 = K
-
-   
-  FCC Metals :
-
-	General Form : B = 0 ; K = 0; beta_0 = beta_1 = 0
-	Original From : C1 = 0; C5 = 0;
-
-  BCC Metals :
-
-	General Form : B_0 = 0 ; alpha_0 = alpha_1 = 0
-	Original From : C2 = 0; 
-
-  HCP Metals :
-
-	All constants are non-zero
-
-
-  Terms :
-
-	ep    =  equvivalent plastic strain
-	epdot =  equvivalent plastic strain rate
-        C1, C2, C3, C4, C5, A =  Constants, choose appropriately according to the model (fcc or bcc or hcp)
-	T     = Temperature
-	sigma_a = athermal component of the flow stress
-	k_H   = Microstructural stress intensity
-	l     = Average grain diameter
-	sigma_g = stres contribution due to solutes and initial dislocation density
-
+    where \f$ f(\sigma)\f$  = equivalent stress \n
+    \f$ \epsilon_p\f$  = plastic strain \n
+    \f$ \dot{\epsilon_p^{*}} = \dot{\epsilon_p}/\dot{\epsilon_{p0}}\f$  
+    where \f$ \dot{\epsilon_{p0}}\f$  = a user defined plastic 
+    strain rate,  \n
+    A, B, C, n, m are material constants \n
+    (for HY-100 steel tubes :
+    A = 316 MPa, B = 1067 MPa, C = 0.0277, n = 0.107, m = 0.7) \n
+    A is interpreted as the initial yield stress - \f$ \sigma_0 \f$ \n
+    \f$ T^* = (T-T_{room})/(T_{melt}-T_{room}) \f$ \n
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ZAFlow : public FlowModel {
+  class JohnsonCookFlow : public FlowModel {
 
   public:
 
     // Create datatype for storing model parameters
     struct CMData {
-      double c_0;  // c_0 = sigma_g + k_H*l^(-1/2)
-      double sigma_g;
-      double k_H;
-      double sqrt_l;
+      double A;
       double B;
-      double beta_0;
-      double beta_1;
-      double B_0;
-      double alpha_0;
-      double alpha_1;
-      double K;
+      double C;
       double n;
+      double m;
+      double TRoom;
+      double TMelt;
+      double epdot_0;
     };   
 
   private:
@@ -130,18 +89,64 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    ZAFlow& operator=(const ZAFlow &cm);
+    //JohnsonCookFlow(const JohnsonCookFlow &cm);
+    JohnsonCookFlow& operator=(const JohnsonCookFlow &cm);
 
   public:
-
     // constructors
-    ZAFlow(ProblemSpecP& ps);
-    ZAFlow(const ZAFlow* cm);
+    JohnsonCookFlow(ProblemSpecP& ps);
+    JohnsonCookFlow(const JohnsonCookFlow* cm);
          
     // destructor 
-    virtual ~ZAFlow();
+    virtual ~JohnsonCookFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
+         
+    // Computes and requires for internal evolution variables
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches);
+
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches);
+
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        bool recurse,
+                                        bool SchedParent);
+
+
+    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb);
+
+    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, 
+                                     ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
+
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
+
+    virtual void initializeInternalVars(ParticleSubset* pset,
+                                        DataWarehouse* new_dw);
+
+    virtual void getInternalVars(ParticleSubset* pset,
+                                 DataWarehouse* old_dw);
+
+    virtual void allocateAndPutInternalVars(ParticleSubset* pset,
+                                            DataWarehouse* new_dw); 
+
+    virtual void allocateAndPutRigid(ParticleSubset* pset,
+                                     DataWarehouse* new_dw); 
+
+    virtual void updateElastic(const particleIndex idx);
+
+    virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief  compute the flow stress */
@@ -193,14 +198,17 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to plastic strain
 
-      The derivative is given by
+      The Johnson-Cook yield stress is given by :
       \f[
-       \frac{\partial\sigma}{\partial\epsilon_p} = 
-
-        n K \epsilon_p^{n-1} + \frac{1}{2} B_0 exp(-alpha T) \epsilon_p^(-1/2)
+      \sigma_Y(\epsilon_p) := D\left[A+B\epsilon_p^n\right]
       \f]
 
-      \return Derivative \f$ d\sigma / d\epsilon\f$.
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\epsilon_p} := nDB\epsilon_p^{n-1}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\epsilon_p\f$.
 
       \warning Expect error when \f$ \epsilon_p = 0 \f$. 
     */
@@ -212,14 +220,18 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to strain rate.
 
-      The derivative is given by
+      The Johnson-Cook yield stress is given by :
       \f[
-       \frac{\partial\sigma}{\partial\dot\epsilon_p} = 
-         B \beta_1 T exp(-\beta T)/\dot\epsilon_p +
-         B_0 \sqrt{\epsilon_p} \alpha_1 T exp(-\alpha T)/\dot\epsilon_p 
+      \sigma_Y(\dot\epsilon_p) := E\left[1+C\ln\left(\frac{\dot\epsilon_p}
+      {\dot\epsilon_{p0}}\right)\right]
       \f]
 
-      \return Derivative \f$ d\sigma / d\dot\epsilon \f$.
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\dot\epsilon_p} := \frac{EC}{\dot\epsilon_p}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,
@@ -245,22 +257,28 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to temperature.
 
-      The derivative is given by
+      The Johnson-Cook yield stress is given by :
       \f[
-       \frac{\partial\sigma}{\partial T} = 
-          -B_0 \alpha sqrt{\epsilon_p} exp(-\alpha T) -
-          -B \beta exp(-\beta T)
+      \sigma_Y(T) := F\left[1-\left(\frac{T-T_r}{T_m-T_r}\right)^m\right]
       \f]
 
-      \return Derivative \f$ d\sigma / dT \f$.
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{dT} := -\frac{mF\left(\frac{T-T_r}{T_m-T_r}\right)^m}
+      {T-T_r}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / dT \f$.
  
+      \warning Expect error when \f$ T < T_{room} \f$. 
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTTemperature(const PlasticityState* state,
                                         const particleIndex idx);
 
+
   };
 
 } // End namespace Uintah
 
-#endif  // __ZERILLI_ARMSTRONG_MODEL_H__
+#endif  // __JOHNSONCOOK_FLOW_MODEL_H__ 

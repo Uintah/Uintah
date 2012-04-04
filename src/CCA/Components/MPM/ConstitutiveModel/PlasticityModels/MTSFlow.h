@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __MTS_FLOW_MODEL_H__
 
 
-#include "PlasticityModel.h"    
+#include "FlowModel.h"    
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {

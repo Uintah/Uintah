@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include "PlasticityModelFactory.h"                                             
-#include "IsoHardeningPlastic.h"
-#include "JohnsonCookPlastic.h"
-#include "ZAPlastic.h"
-#include "ZAPolymer.h"
-#include "MTSPlastic.h"
-#include "SCGPlastic.h"
-#include "PTWPlastic.h"
+#include "FlowStressModelFactory.h"                                             
+#include "IsoHardeningFlow.h"
+#include "JohnsonCookFlow.h"
+#include "ZAFlow.h"
+#include "ZAPolymerFlow.h"
+#include "MTSFlow.h"
+#include "SCGFlow.h"
+#include "PTWFlow.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -48,7 +48,7 @@ using std::ofstream;
 
 using namespace Uintah;
 
-FlowModel* FlowModelFactory::create(ProblemSpecP& ps)
+FlowModel* FlowStressModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("flow_model");
    if(!child)
@@ -78,7 +78,7 @@ FlowModel* FlowModelFactory::create(ProblemSpecP& ps)
 }
 
 FlowModel* 
-FlowModelFactory::createCopy(const FlowModel* pm)
+FlowStressModelFactory::createCopy(const FlowModel* pm)
 {
    if (dynamic_cast<const IsoHardeningFlow*>(pm))
       return(scinew IsoHardeningFlow(dynamic_cast<const 

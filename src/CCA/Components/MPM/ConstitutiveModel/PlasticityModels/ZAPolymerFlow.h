@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __ZERILLI_ARMSTRONG_POLYMER_MODEL_H__
 #define __ZERILLI_ARMSTRONG_POLYMER_MODEL_H__
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/InternalError.h>
 

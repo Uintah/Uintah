@@ -28,15 +28,24 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
+#ifndef _FLOWMODELFACTORY_H_
+#define _FLOWMODELFACTORY_H_
 
-#include "PlasticityModel.h"
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <string>
 
-using namespace Uintah;
+namespace Uintah {
 
-FlowModel::FlowModel()
-{
-}
+  class FlowModel;
+  class MPMLabel;
 
-FlowModel::~FlowModel()
-{
-}
+  class FlowStressModelFactory
+  {
+  public:
+    // this function has a switch for all known mat_types
+    static FlowModel* create(ProblemSpecP& ps);
+    static FlowModel* createCopy(const FlowModel* pm);
+  };
+} // End namespace Uintah
+      
+#endif /* _FlowMODELFACTORY_H_ */

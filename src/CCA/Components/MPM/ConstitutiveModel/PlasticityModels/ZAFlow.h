@@ -28,57 +28,101 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __ISOHARDENING_FLOW_MODEL_H__
-#define __ISOHARDENING_FLOW_MODEL_H__
+#ifndef __ZERILLI_ARMSTRONG_MODEL_H__
+#define __ZERILLI_ARMSTRONG_MODEL_H__
 
-
-#include "PlasticityModel.h"    
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowModel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
+////////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class ZAFlow
+    \brief Zerilli-Armstrong Strain rate dependent plasticity model
+    \author Anup Bhawalkar, 
+    Department of Mechanical Engineering, 
+    University of Utah
+    Copyright (C) 2005 University of Utah
+   
+    Zerilli-Armstrong Plasticity Model 
+    (Zerilli, F.J. and Armstrong, R.W., 1987, J. Appl. Phys. 61(5), p.1816)
+    (Zerilli, F.J., 2004, Metall. Materials Trans. A, v. 35A, p.2547)
+
+    Flow rule: (the general form implemented in Uintah) 
+	
+	sigma = sigma_a + B*exp(-beta*T) + B_0*sqrt(ep)*exp(-alpha*T)
+
+	where 
+		if(c_0 == 0)
+			sigma_a = sigma_g + (k_H/sqrt(l)) + K*(ep)^n;
+		else
+			sigma_a = c_0 + K*(ep)^n;
+		end
+		beta = beta_0 - beta_1*ln(epdot);
+		alpha = alpha_0 - alpha1*ln(epdot)
+
+   Flow rule : Original form (1987)
+
+	Y =  A + (C1 + C2*sqrt(ep))*(exp(-C3 + C4*ln(epdot))*T) + C5*(ep)^n
+
+  Corelation between these  two forms:
+		A  = c_0
+		C1 = B
+		C2 = B_0
+		C3 = beta_0 = alpha_0
+		C4 = beta_1 = alpha_1
+		C5 = K
+
+   
+  FCC Metals :
+
+	General Form : B = 0 ; K = 0; beta_0 = beta_1 = 0
+	Original From : C1 = 0; C5 = 0;
+
+  BCC Metals :
+
+	General Form : B_0 = 0 ; alpha_0 = alpha_1 = 0
+	Original From : C2 = 0; 
+
+  HCP Metals :
+
+	All constants are non-zero
+
+
+  Terms :
+
+	ep    =  equvivalent plastic strain
+	epdot =  equvivalent plastic strain rate
+        C1, C2, C3, C4, C5, A =  Constants, choose appropriately according to the model (fcc or bcc or hcp)
+	T     = Temperature
+	sigma_a = athermal component of the flow stress
+	k_H   = Microstructural stress intensity
+	l     = Average grain diameter
+	sigma_g = stres contribution due to solutes and initial dislocation density
+
+  */
   /////////////////////////////////////////////////////////////////////////////
-  /*! 
-    \class IsoHardeningFlow
-    \brief Isotropic Hardening flow model.
-    (Simo and Hughes, 1998, Computational Inelasticity, p. 319)
-    \author Biswajit Banerjee,
-    \author Department of Mechanical Engineering,
-    \author University of Utah,
-    Copyright (C) 2003 University of Utah
 
-    The flow rule is given by
-    \f[
-    f(\sigma) = K \alpha + \sigma_0
-    \f]
+  class ZAFlow : public FlowModel {
 
-    where \f$f(\sigma)\f$ = flow stress \n
-    \f$K\f$ = hardening modulus \n
-    \f$\alpha\f$ = evolution parameter for hardening law \n
-    \f$\sigma_0\f$ = initial yield stress \n
-
-    Evolution of alpha is given by
-    \f[
-    d\alpha/dt = \sqrt{2/3}*\gamma
-    \f]
-    where \f$\gamma\f$ = consistency parameter
-  */  
-  /////////////////////////////////////////////////////////////////////////////
-
-  class IsoHardeningFlow : public FlowModel {
+  public:
 
     // Create datatype for storing model parameters
-  public:
     struct CMData {
+      double c_0;  // c_0 = sigma_g + k_H*l^(-1/2)
+      double sigma_g;
+      double k_H;
+      double sqrt_l;
+      double B;
+      double beta_0;
+      double beta_1;
+      double B_0;
+      double alpha_0;
+      double alpha_1;
       double K;
-      double sigma_0;
+      double n;
     };   
-
-    constParticleVariable<double> pAlpha;
-    ParticleVariable<double> pAlpha_new;
-
-    const VarLabel* pAlphaLabel;  // For Isotropic Hardening Plasticity
-    const VarLabel* pAlphaLabel_preReloc;  // For Isotropic Hardening Plasticity
 
   private:
 
@@ -86,68 +130,21 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //IsoHardeningFlow(const IsoHardeningFlow &cm);
-    IsoHardeningFlow& operator=(const IsoHardeningFlow &cm);
+    ZAFlow& operator=(const ZAFlow &cm);
 
   public:
+
     // constructors
-    IsoHardeningFlow(ProblemSpecP& ps);
-    IsoHardeningFlow(const IsoHardeningFlow* cm);
+    ZAFlow(ProblemSpecP& ps);
+    ZAFlow(const ZAFlow* cm);
          
     // destructor 
-    virtual ~IsoHardeningFlow();
+    virtual ~ZAFlow();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    // Computes and requires for internal evolution variables
-    // Only one internal variable for Isotropic-Hardening :: plastic strain
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches);
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches);
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        bool recurse,
-                                        bool SchedParent);
-
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb);
-
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
-
-    virtual void initializeInternalVars(ParticleSubset* pset,
-                                        DataWarehouse* new_dw);
-
-    virtual void getInternalVars(ParticleSubset* pset,
-                                 DataWarehouse* old_dw);
-
-    virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-                                            DataWarehouse* new_dw); 
-
-    virtual void allocateAndPutRigid(ParticleSubset* pset,
-                                     DataWarehouse* new_dw); 
-
-    virtual void updateElastic(const particleIndex idx);
-
-    virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! compute the flow stress */
+    /*! \brief  compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
                                      const double& delT,
@@ -185,7 +182,7 @@ namespace Uintah {
       \return Three derivatives in Vector deriv 
       (deriv[0] = \f$d\sigma_Y/d\dot\epsilon\f$,
       deriv[1] = \f$d\sigma_Y/dT\f$, 
-      deriv[2] = \f$d\sigma_Y/d\alpha\f$)
+      deriv[2] = \f$d\sigma_Y/d\epsilon\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
     void evalDerivativeWRTScalarVars(const PlasticityState* state,
@@ -194,23 +191,18 @@ namespace Uintah {
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
-      \brief Evaluate derivative of flow stress with respect to plastic
-      strain.
-
-      The Isotropic-Hardening yield stress is given by :
-      \f[
-      \sigma_Y(\alpha) := \sigma_0 + K\alpha
-      \f]
+      \brief Evaluate derivative of flow stress with respect to plastic strain
 
       The derivative is given by
       \f[
-      \frac{d\sigma_Y}{d\epsilon_p} := K
+       \frac{\partial\sigma}{\partial\epsilon_p} = 
+
+        n K \epsilon_p^{n-1} + \frac{1}{2} B_0 exp(-alpha T) \epsilon_p^(-1/2)
       \f]
 
-      \return Derivative \f$ d\sigma_Y / d\alpha\f$.
+      \return Derivative \f$ d\sigma / d\epsilon\f$.
 
-      \warning Not implemented yet.
-
+      \warning Expect error when \f$ \epsilon_p = 0 \f$. 
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
@@ -220,17 +212,14 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to strain rate.
 
-      The Isotropic-Hardening yield stress is given by :
-      \f[
-      \sigma_Y(\dot\epsilon_p) := C
-      \f]
-
       The derivative is given by
       \f[
-      \frac{d\sigma_Y}{d\dot\epsilon_p} := 0
+       \frac{\partial\sigma}{\partial\dot\epsilon_p} = 
+         B \beta_1 T exp(-\beta T)/\dot\epsilon_p +
+         B_0 \sqrt{\epsilon_p} \alpha_1 T exp(-\alpha T)/\dot\epsilon_p 
       \f]
 
-      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
+      \return Derivative \f$ d\sigma / d\dot\epsilon \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,
@@ -256,45 +245,22 @@ namespace Uintah {
     /*!
       \brief Evaluate derivative of flow stress with respect to temperature.
 
-      The Isotropic-Hardening yield stress is given by :
-      \f[
-      \sigma_Y(T) := C
-      \f]
-
       The derivative is given by
       \f[
-      \frac{d\sigma_Y}{dT} := 0
+       \frac{\partial\sigma}{\partial T} = 
+          -B_0 \alpha sqrt{\epsilon_p} exp(-\alpha T) -
+          -B \beta exp(-\beta T)
       \f]
 
-      \return Derivative \f$ d\sigma_Y / dT \f$.
+      \return Derivative \f$ d\sigma / dT \f$.
+ 
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTTemperature(const PlasticityState* state,
                                         const particleIndex idx);
 
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Evaluate derivative of flow stress with respect to alpha
-
-      The Isotropic-Hardening yield stress is given by :
-      \f[
-      \sigma_Y(\alpha) := \sigma_0 + K\alpha
-      \f]
-
-      The derivative is given by
-      \f[
-      \frac{d\sigma_Y}{d\alpha} := K
-      \f]
-
-      \return Derivative \f$ d\sigma_Y / d\alpha\f$.
-
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTAlpha(const PlasticityState* state,
-                                  const particleIndex idx);
-
   };
 
 } // End namespace Uintah
 
-#endif  // __ISOHARDENING_FLOW_MODEL_H__ 
+#endif  // __ZERILLI_ARMSTRONG_MODEL_H__

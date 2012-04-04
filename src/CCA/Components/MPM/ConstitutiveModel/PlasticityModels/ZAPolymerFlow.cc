@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPolymer.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPolymerFlow.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <cmath>
 
