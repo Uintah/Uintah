@@ -27,7 +27,6 @@
 
  */
 
-
 #ifndef RAY_GPU_CUH
 #define RAY_GPU_CUH
 
@@ -35,30 +34,58 @@
 extern "C" {
 #endif
 
-__global__ void rayTraceKernel(uint3 domainLow,
-                               uint3 domainHigh,
-                               uint3 domainSize,
-                               double* d_absk,
-                               double* d_sigmaT4,
-                               double* d_divQ,
-                               double* d_VRFlux);
+/*
+ * NOTE ON DEVICE CODE:
+ *
+ *  CUDA does not have a linker for device code, therefore all called __device__ functions must
+ *  be visible from the calling function. This means the called function needs to be either in
+ *  the same file, or in a file included by the file from which the function is called.
+ */
 
-__device__ bool containsCellKernel(const int3& low,
-                                   const int3& high,
-                                   const int3& cell,
-                                   const int&  face);
+__global__ void rayTraceKernel(const uint3 domainLow,
+                               const uint3 domainHigh,
+                               const uint3 domainSize,
+                               const double3 cellSpacing,
+                               int cellIndexRange,
+                               double* device_abskg,
+                               double* device_sigmaT4,
+                               double* device_divQ,
+                               bool virtRad,
+                               bool isSeedRandom,
+                               bool ccRays,
+                               int numRays,
+                               double viewAngle,
+                               double threshold,
+                               unsigned long int* size,
+                               curandState* globalDevStates);
 
-__device__ void updateSumIKernel(const double3& inv_direction_vector,
+
+__device__ void updateSumIDevice(const uint3& domainLow,
+                                 const uint3& domainHigh,
+                                 const uint3& origin,
+                                 const double3& cellSpacing,
+                                 const double3& inv_direction_vector,
                                  const double3& ray_location,
-                                 const int3& origin,
-                                 const double3& Dx,
-                                 const int3& domainLo,
-                                 const int3& domainHi,
-                                 double* sigmaT4Pi,
-                                 double* abskg,
-                                 unsigned long int& size,
+                                 double* device_sigmaT4,
+                                 double* device_abskg,
                                  double threshold,
-                                 double& sumI);
+                                 unsigned long int* size,
+                                 double* sumI);
+
+
+__device__ bool containsCellDevice(const uint3& domainLow,
+                                   const uint3& domainHigh,
+                                   const uint3& cell,
+                                   const int& face);
+
+
+__device__ double randDblExcDevice(curandState* globalState);
+
+
+__device__ double randDevice(curandState* globalState);
+
+
+__device__ unsigned int hashDevice(unsigned int a);
 
 #ifdef __cplusplus
 }
