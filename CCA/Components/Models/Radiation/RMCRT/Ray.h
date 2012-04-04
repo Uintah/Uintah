@@ -217,10 +217,6 @@ namespace Uintah{
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw );
 
-      //______________________________________________________________________
-      //
-      void initMTRandGPU();
-
 #endif
 
       //__________________________________

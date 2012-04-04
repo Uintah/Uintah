@@ -27,9 +27,7 @@
 
  */
 
-
 //----- RayGPU.cu ----------------------------------------------
-#include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/DbgOutput.h>
@@ -43,9 +41,9 @@ static DebugStream dbggpu("RAY_GPU", false);
 
 
 //---------------------------------------------------------------------------
-// Method: The GPU ray tracer
+// Method: The GPU ray tracer - setup and invoke ray trace kernel
 //---------------------------------------------------------------------------
-void Ray::rayTraceGPU(const ProcessorGroup* pc,
+void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
@@ -57,12 +55,9 @@ void Ray::rayTraceGPU(const ProcessorGroup* pc,
 {
   // set the CUDA context
   cudaError_t retVal;
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
-
-  initMTRandGPU();
+  CUDA_SAFE_CALL( retVal = cudaSetDevice(device));
 
   const Level* level = getLevel(patches);
-  MTRand _mTwister;
 
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
@@ -86,58 +81,92 @@ void Ray::rayTraceGPU(const ProcessorGroup* pc,
   int matl = matls->getVector().front();
   int numPatches = patches->size();
 
-  // requires and computes
+  // requires and computes on device
   double* d_absk = NULL;
   double* d_sigmaT4 = NULL;
   double* d_divQ = NULL;
-  double* d_VRFlux = NULL;
 
   // patch loop
   for (int p = 0; p < numPatches; p++) {
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbggpu, "Doing Ray::rayTrace");
+    printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     d_absk    = _gpuScheduler->getDeviceRequiresPtr(d_abskgLabel, matl, patch);
     d_sigmaT4 = _gpuScheduler->getDeviceRequiresPtr(d_sigmaT4_label, matl, patch);
     d_divQ    = _gpuScheduler->getDeviceComputesPtr(d_divQLabel, matl, patch);
-    d_VRFlux  = _gpuScheduler->getDeviceComputesPtr(d_VRFluxLabel, matl, patch);
 
     // Calculate the memory block size
     IntVector nec = patch->getExtraCells();
     IntVector l = patch->getCellLowIndex();
     IntVector h = patch->getCellHighIndex();
     h += nec;
-    IntVector divQSize = _gpuScheduler->getDeviceRequiresSize(d_divQLabel, matl, patch);
-    IntVector VRFluxSize = _gpuScheduler->getDeviceRequiresSize(d_VRFluxLabel, matl, patch);
-    int xdim = divQSize.x(), ydim = divQSize.y();
 
-    unsigned long int size = 0;                        // current size of PathIndex
-    Vector dcell = patch->dCell();                     // cell spacing
-    double3 Dx = make_double3(dcell.x(), dcell.y(), dcell.z());
+    IntVector divQSize = _gpuScheduler->getDeviceComputesSize(d_divQLabel, matl, patch);
+    int xdim = divQSize.x();
+    int ydim = divQSize.y();
+    int zdim = divQSize.z();
+
+    Vector dcell = patch->dCell(); // cell spacing
+    const double3 cellSpacing = make_double3(dcell.x(), dcell.y(), dcell.z());
+
+    IntVector pLow;
+    IntVector pHigh;
+    level->findInteriorCellIndexRange(pLow, pHigh);
+    int cellIndexRange = pHigh[0] - pLow[0];
 
     // Domain extents used by the kernel to prevent out of bounds accesses.
-    uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
-    uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-    uint3 domainSize = make_uint3(divQSize.x(), divQSize.y(), divQSize.z());
+    const uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
+    const uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
+    const uint3 domainSize = make_uint3(xdim, ydim, zdim);
 
     int xBlocks = xdim / 8;
-    if (xdim % 8 != 0) { xBlocks++; }
+    if (xdim % 8 != 0) {
+      xBlocks++;
+    }
     int yBlocks = ydim / 8;
-    if (ydim % 8 != 0) { yBlocks++; }
+    if (ydim % 8 != 0) {
+      yBlocks++;
+    }
     dim3 totalBlocks(xBlocks, yBlocks);
-    dim3 threadsPerBlock(8, 8, 1);
+
+    int tpbX = 8;
+    int tpbY = 8;
+    int tpbZ = 1;
+    dim3 threadsPerBlock(tpbX, tpbY, tpbZ);
+
+    // setup random number generator states on the device
+    curandState* globalDevStates;
+    int numStates = totalBlocks.x * totalBlocks.y * tpbX * tpbY * tpbZ;
+    CUDA_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
+
+    // setup device-side "size"
+    unsigned long int size = 0;  // current size of PathIndex
+    unsigned long int* host_size = &size;
+    unsigned long int* device_size = NULL;
+    size_t nbytes = sizeof(unsigned long int);
+    CUDA_SAFE_CALL( cudaMalloc((void**)&device_size, nbytes) );
+    CUDA_SAFE_CALL( cudaMemset((void*)device_size, 0, nbytes) );
 
     // setup and launch kernel
     cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
-    cudaEvent_t* event   = _gpuScheduler->getCudaEvent(device);
+    cudaEvent_t* event = _gpuScheduler->getCudaEvent(device);
     rayTraceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
                                                                    domainHigh,
                                                                    domainSize,
+                                                                   cellSpacing,
+                                                                   cellIndexRange,
                                                                    d_absk,
                                                                    d_sigmaT4,
                                                                    d_divQ,
-                                                                   d_VRFlux);
+                                                                   this->_virtRad,
+                                                                   this->_isSeedRandom,
+                                                                   this->_CCRays,
+                                                                   this->_NoOfRays,
+                                                                   this->_viewAng,
+                                                                   this->_Threshold,
+                                                                   device_size,
+                                                                   globalDevStates);
 
     // Kernel error checking (for now)
     retVal = cudaGetLastError();
@@ -147,16 +176,18 @@ void Ray::rayTraceGPU(const ProcessorGroup* pc,
     }
 
     _gpuScheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
-    _gpuScheduler->requestD2HCopy(d_VRFluxLabel, matl, patch, stream, event);
+
+    CUDA_SAFE_CALL( retVal = cudaMemcpy(host_size, device_size, nbytes, cudaMemcpyDefault) );
+    CUDA_SAFE_CALL( cudaFree(globalDevStates) );
+    CUDA_SAFE_CALL( cudaFree(device_size) );
 
     double end = clock();
-    double efficiency = size / ((end - start) / CLOCKS_PER_SEC);
+    double efficiency = *host_size / ((end - start) / CLOCKS_PER_SEC);
     if (patch->getGridIndex() == 0) {
       cout << endl;
       cout << " RMCRT REPORT: Patch 0" << endl;
-      cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n"
-      << endl;  // Convert time to ms
-      cout << " Size: " << size << endl;
+      cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << endl;
+      cout << " Size: " << *host_size << endl;
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
       cout << endl;
     }
@@ -167,53 +198,123 @@ void Ray::rayTraceGPU(const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
 //---------------------------------------------------------------------------
-void Ray::initMTRandGPU()
+__global__ void rayTraceKernel(const uint3 domainLow,
+                               const uint3 domainHigh,
+                               const uint3 domainSize,
+                               const double3 cellSpacing,
+                               int cellIndexRange,
+                               double* device_abskg,
+                               double* device_sigmaT4,
+                               double* device_divQ,
+                               bool virtRad,
+                               bool isSeedRandom,
+                               bool ccRays,
+                               int numRays,
+                               double viewAngle,
+                               double threshold,
+                               unsigned long int* size,
+                               curandState* globalDevStates)
 {
+  // calculate the thread indices
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y;
 
-}
+  // Get the size of the data block in which the variables reside.
+  // This is essentially the stride in the index calculations.
+  int dx = domainSize.x;
+  int dy = domainSize.y;
 
+  // initialize device RNG states
+  curand_init(hashDevice(tidX), tidX, 0, &globalDevStates[tidX]);
 
-//---------------------------------------------------------------------------
-// Kernel: The GPU ray tracer kernel
-//---------------------------------------------------------------------------
-__global__ void rayTraceKernel(uint3 domainLow,
-                               uint3 domainHigh,
-                               uint3 domainSize,
-                               double* d_absk,
-                               double* d_sigmaT4,
-                               double* d_divQ,
-                               double* d_VRFlux)
-{
+  // GPU equivalent to GridIterator loop
+  if (tidX > 0 && tidY > 0 && tidX < domainHigh.x && tidY < domainHigh.y) { // domain boundary check
+    for (int z = domainLow.z; z < domainHigh.z; z++) { // loop through z slices
 
+      // calculate the index for individual threads
+      int idx = INDEX3D(dx,dy,tidX,tidY,z);
+
+      uint3 origin = make_uint3(tidX, tidY, z);  // for each thread
+      double sumI = 0;
+
+      //_______________________________________________________________________
+      // ray loop
+      for (int iRay = 0; iRay < numRays; iRay++) {
+
+//        // TODO Seed on device
+//        if (isSeedRandom == false) {
+//          _mTwister.seed((i + j + k) * iRay + 1);
+//        }
+
+        // for explanation see: http://www.cgafaq.info/wiki/Random_Points_On_Sphere
+        double plusMinus_one = 2 * randDblExcDevice(globalDevStates) - 1;
+        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+        double theta = 2 * M_PI * randDblExcDevice(globalDevStates);      // Uniform between 0-2Pi
+
+        // Convert to cartesian coordinates
+        double3 direction_vector;
+        direction_vector.x = r * cos(theta);
+        direction_vector.y = r * sin(theta);
+        direction_vector.z = plusMinus_one;
+
+        double3 inv_direction_vector;
+        inv_direction_vector.x = 1.0 / direction_vector.x;
+        inv_direction_vector.y = 1.0 / direction_vector.y;
+        inv_direction_vector.z = 1.0 / direction_vector.z;
+
+        double DyDxRatio = cellSpacing.y / cellSpacing.x;  //noncubic
+        double DzDxRatio = cellSpacing.z / cellSpacing.x;  //noncubic
+
+        double3 ray_location;
+
+        if (ccRays) {
+          ray_location.x = origin.x + 0.5;
+          ray_location.y = origin.y + 0.5 * DyDxRatio;  //noncubic
+          ray_location.z = origin.z + 0.5 * DzDxRatio;  //noncubic
+        } else {
+          ray_location.x = origin.x + randDevice(globalDevStates);
+          ray_location.y = origin.y + randDevice(globalDevStates) * DyDxRatio;  //noncubic
+          ray_location.z = origin.z + randDevice(globalDevStates) * DzDxRatio;  //noncubic
+        }
+
+        updateSumIDevice(domainLow, domainHigh, origin, cellSpacing, inv_direction_vector, ray_location, device_sigmaT4, device_abskg, threshold, size, &sumI);
+
+      } // end ray loop
+
+      //__________________________________
+      //  Compute divQ
+      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays));
+
+    } // end z-slice loop
+  }  // end domain boundary check
 }  // end ray trace kernel
 
 
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__device__ void updateSumIKernel(const double3& inv_direction_vector,
+__device__ void updateSumIDevice(const uint3& domainLow,
+                                 const uint3& domainHigh,
+                                 const uint3& origin,
+                                 const double3& cellSpacing,
+                                 const double3& inv_direction_vector,
                                  const double3& ray_location,
-                                 const int3& origin,
-                                 const double3& Dx,
-                                 const int3& domainLo,
-                                 const int3& domainHi,
-                                 double* sigmaT4Pi,
-                                 double* abskg,
-                                 unsigned long int& size,
+                                 double* device_sigmaT4,
+                                 double* device_abskg,
                                  double threshold,
-                                 double& sumI)
+                                 unsigned long int* size,
+                                 double* sumI)
 {
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y;
+  int dx = domainLow.x;
+  int dy = domainHigh.y;
 
-  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
-  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
-  int dx = domainLo.x;
-  int dy = domainHi.y;
+  uint3 cur = origin;
+  uint3 prevCell = cur;
 
-  int3 cur = origin;
-  int3 prevCell = cur;
-
-  // Step and sign for ray marching
-  int step[3];                                          // Gives +1 or -1 based on sign
+  // Step and sign for ray marching, gives +1 or -1 based on sign
+  int step[3];
   bool sign[3];
 
   // unrolled
@@ -241,8 +342,8 @@ __device__ void updateSumIKernel(const double3& inv_direction_vector,
     sign[2] = 0;
   }
 
-  double DyDxRatio = Dx.y / Dx.x;  //noncubic
-  double DzDxRatio = Dx.z / Dx.x;  //noncubic
+  double DyDxRatio = cellSpacing.y / cellSpacing.x;  //noncubic
+  double DzDxRatio = cellSpacing.z / cellSpacing.x;  //noncubic
 
   double tMaxX = (origin.x + sign[0] - ray_location.x) * inv_direction_vector.x;
   double tMaxY = (origin.y + sign[1] * DyDxRatio - ray_location.y) * inv_direction_vector.y;
@@ -260,17 +361,9 @@ __device__ void updateSumIKernel(const double3& inv_direction_vector,
   double fs = 1.0;
   double optical_thickness = 0;
 
-  //+++++++Begin ray tracing+++++++++++++++++++
-
-  // Vector temp_direction = direction_vector;   // Used for reflections
-
-  //save the direction vector so that it can get modified by...
-  //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
-  //the domain after it was updated following the first switch statement.
-
+  // begin ray tracing
   int nReflect = 0;  // Number of reflections that a ray has undergone
-  //Threshold while loop
-  while (intensity > threshold) {
+  while (intensity > threshold) { // threshold while loop
     int face = -9;
     while (in_domain) {
       prevCell = cur;
@@ -308,75 +401,104 @@ __device__ void updateSumIKernel(const double3& inv_direction_vector,
         }
       }
 
-      in_domain = containsCellKernel(domainLo, domainHi, cur, face);
+      in_domain = containsCellDevice(domainLow, domainHigh, cur, face);
 
       //__________________________________
       //  Update the ray location
-      //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
-      //ray_location_prev = ray_location;
-      //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
-
-      // The running total of alpha*length
       double optical_thickness_prev = optical_thickness;
-      //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
-      optical_thickness += Dx.x * abskg[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * disMin;
-      // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
-
+      optical_thickness += cellSpacing.x * device_abskg[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * disMin;
+      *sumI += device_sigmaT4[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
       size++;
 
-      //Eqn 3-15(see below reference) while
-      //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-      sumI += sigmaT4Pi[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * (exp(-optical_thickness_prev) - exp(-optical_thickness)) * fs;
-
-    }  //end domain while loop.  ++++++++++++++
+    } // end domain while loop
 
     intensity = exp(-optical_thickness);
-
-    //  wall emission 12/15/11
-    sumI += abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * sigmaT4Pi[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * intensity;
-
-    intensity = intensity * (1 - abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
+    *sumI += device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * device_sigmaT4[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * intensity;
+    intensity = intensity * (1 - device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
 
     //__________________________________
     //  Reflections
     if (intensity > threshold) {
 
       ++nReflect;
-      fs = fs * (1 - abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
+      fs = fs * (1 - device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
 
       //put cur back inside the domain
       cur = prevCell;
 
       // apply reflection condition
-      step[face] *= -1;                      // begin stepping in opposite direction
-      sign[face] = (sign[face] == 1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+      step[face] *= -1;                        // begin stepping in opposite direction
+      sign[face] = (sign[face] == 1) ? 0 : 1;  // swap sign from 1 to 0 or vice versa
 
-      in_domain = 1;
+      in_domain = true;
 
-    }  // if reflection
-  }  // threshold while loop.
+    }  // end if reflection
+  }  // end threshold while loop.
 }  // end of updateSumI function
+
+
 
 
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__device__ bool containsCellKernel(const int3& low,
-                                   const int3& high,
-                                   const int3& cell,
-                                   const int&  face)
+__device__ bool containsCellDevice(const uint3& domainLow,
+                                   const uint3& domainHigh,
+                                   const uint3& cell,
+                                   const int& face)
 {
   switch (face) {
     case 0 :
-      return low.x <= cell.x && high.x > cell.x;
+      return domainLow.x <= cell.x && domainHigh.x > cell.x;
     case 1 :
-      return low.y <= cell.y && high.y > cell.y;
+      return domainLow.y <= cell.y && domainHigh.y > cell.y;
     case 2 :
-      return low.z <= cell.z && high.z > cell.z;
+      return domainLow.z <= cell.z && domainHigh.z > cell.z;
     default :
       return false;
   }
 }
 
 
+//---------------------------------------------------------------------------
+// Device Function:
+//---------------------------------------------------------------------------
+__device__ double randDevice(curandState* globalState)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    curandState localState = globalState[tid];
+    double val = curand(&localState);
+    globalState[tid] = localState;
 
+    return (double)val * (1.0/4294967295.0);
+}
+
+
+//---------------------------------------------------------------------------
+// Device Function:
+//---------------------------------------------------------------------------
+__device__ double randDblExcDevice(curandState* globalState)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    curandState localState = globalState[tid];
+    double val = curand_uniform(&localState);
+    globalState[tid] = localState;
+
+    return ( (double)val + 0.5 ) * (1.0/4294967296.0);
+}
+
+
+//---------------------------------------------------------------------------
+// Device Function:
+//---------------------------------------------------------------------------
+__host__ __device__ unsigned int hashDevice(unsigned int a)
+{
+    a = (a+0x7ed55d16) + (a<<12);
+    a = (a^0xc761c23c) ^ (a>>19);
+    a = (a+0x165667b1) + (a<<5);
+    a = (a+0xd3a2646c) ^ (a<<9);
+    a = (a+0xfd7046c5) + (a<<3);
+    a = (a^0xb55a4f09) ^ (a>>16);
+
+    return a;
+}
