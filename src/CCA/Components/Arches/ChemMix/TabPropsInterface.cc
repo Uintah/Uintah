@@ -58,7 +58,7 @@ using namespace Uintah;
 //--------------------------------------------------------------------------- 
 // Default Constructor 
 //--------------------------------------------------------------------------- 
-TabPropsInterface::TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
+TabPropsInterface::TabPropsInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
 MixingRxnModel( labels, MAlabels )
 {}
 

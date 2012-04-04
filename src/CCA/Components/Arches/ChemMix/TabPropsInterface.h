@@ -96,7 +96,7 @@ class TabPropsInterface : public MixingRxnModel {
 
 public:
 
-  TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  TabPropsInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~TabPropsInterface();
 
