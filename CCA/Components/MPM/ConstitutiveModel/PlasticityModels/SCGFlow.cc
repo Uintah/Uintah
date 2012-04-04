@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGFlow.h>
 
 #include <cmath>
 

@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ImplicitCM.h"
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
-#include "PlasticityModels/PlasticityModel.h"
+#include "PlasticityModels/FlowModel.h"
 #include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
 #include "PlasticityModels/ShearModulusModel.h"
