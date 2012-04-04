@@ -209,6 +209,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
+  d_lab->problemSetup( db ); 
 
   // This will allow for changing the BC's on restart:
   if ( db->findBlock("new_BC_on_restart") )

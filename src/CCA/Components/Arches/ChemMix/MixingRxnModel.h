@@ -90,7 +90,7 @@ namespace Uintah {
       typedef std::map<string, CCVariable<double>* >       CCMap; 
       typedef std::map<string, double >                    doubleMap; 
 
-      MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+      MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
       virtual ~MixingRxnModel();
 
@@ -340,7 +340,7 @@ namespace Uintah {
       /** @brief Common problem setup work */ 
       void problemSetupCommon( const ProblemSpecP& params ); 
 
-      const ArchesLabel* d_lab;               ///< Arches labels
+      ArchesLabel* d_lab;                     ///< Arches labels
       const MPMArchesLabel* d_MAlab;          ///< MPMArches labels
       TransformBase* _iv_transform;           ///< Tool for mapping mixture fractions 
 

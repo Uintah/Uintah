@@ -92,7 +92,7 @@ class ClassicTableInterface : public MixingRxnModel {
 
 public:
 
-  ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~ClassicTableInterface();
 
