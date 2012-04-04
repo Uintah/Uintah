@@ -639,102 +639,107 @@ void
 ThreadedMPIScheduler2::runTasks(int t_id)
 {
   while( numTasksDone < ntasks) {
-      
-    if (dts->numInternalReadyTasks()>0) {
-      DetailedTask * task=dts->getNextInternalReadyTask();
-      if (task==NULL) continue;
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI()))
-      {
-        schedulerLock.writeLock();
-        phaseSyncTask[task->getTask()->d_phase]= task;
-        schedulerLock.writeUnlock();
-        if (taskdbg.active()){
-          cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-          cerrLock.unlock();
-        }
-      } else {
-        recvLock.writeLock();
-        initiateTask( task, abort, abort_point, curriteration );
-        task->markInitiated();
-        task->checkExternalDepCount();
-        recvLock.writeUnlock();
-        if (taskdbg.active()){
-          cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-          cerrLock.unlock();
+    DetailedTask* readyTask=NULL;
+    DetailedTask* initTask=NULL;
+    int processMPIs=0;
+    bool havework=false;
+
+   //Part 1. Check if anything this thread can do concurrently
+   //        If can update the scheduler counters. 
+    schedulerLock.lock();
+    while (!havework) {
+      if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+        readyTask= phaseSyncTask[currphase];
+        havework=true;
+        numTasksDone++;
+        phaseTasksDone[readyTask->getTask()->d_phase]++;
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase) currphase++;
+        break;
+      }
+      if (dts->numExternalReadyTasks() >0){
+        readyTask=dts->getNextExternalReadyTask();
+        if (readyTask!=NULL) {
+          havework=true;
+          numTasksDone++;
+          phaseTasksDone[readyTask->getTask()->d_phase]++;
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase) currphase++;
+          break;
         }
       }
+      if (dts->numInternalReadyTasks() >0) {
+         initTask=dts->getNextInternalReadyTask();
+         if (initTask!=NULL) {
+           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI() ) {
+             if (taskdbg.active()){
+               cerrLock.lock();
+                taskdbg << d_myworld->myrank() << " Task internal ready 1 " << *initTask << endl;
+               cerrLock.unlock();
+             }
+             phaseSyncTask[initTask->getTask()->d_phase]= initTask;
+             if (initTask->getTask()->usesMPI()){
+               initiateTask( initTask, abort, abort_point, curriteration );
+               initTask->markInitiated();
+               ASSERT(initTask->getExternalDepCount() == 0) 
+             }
+             initTask=NULL;
+           } else {
+             havework=true;
+             break;
+           }
+         }
+      }
+      
+      recvLock.readLock();
+      processMPIs = recvs_.numRequests();
+      recvLock.readUnlock();
+      if (processMPIs>0){
+        havework=true;
+        break;
+      }
+
+      if ( numTasksDone == ntasks){
+        break;
+      } 
+
     }
-    else if (dts->numExternalReadyTasks()>0){
-      DetailedTask* task = dts->getNextExternalReadyTask();
-      if (task==NULL) continue;
+    schedulerLock.unlock();
+
+
+   //Part 2. Concurrent Part
+
+    if (initTask!=NULL){
+      recvLock.writeLock();
+      initiateTask(initTask, abort, abort_point, curriteration );
       if (taskdbg.active()){
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task external ready " << *task << "(" << dts->numExternalReadyTasks() << " tasks in queue)"<<endl;
+        taskdbg << d_myworld->myrank() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount() << endl;
+        cerrLock.unlock();
+     }
+      recvLock.writeUnlock();
+      initTask->markInitiated();
+      initTask->checkExternalDepCount();
+    }
+    else if (readyTask!=NULL){
+      if (taskdbg.active()){
+        cerrLock.lock();
+        taskdbg << d_myworld->myrank() << " Task external ready " << *readyTask <<endl;
         cerrLock.unlock();
       }
-      ASSERTEQ(task->getExternalDepCount(), 0);
-      schedulerLock.writeLock();
-      numTasksDone++;
-      phaseTasksDone[task->getTask()->d_phase]++;
-      schedulerLock.writeUnlock();
-      runTask(task, curriteration, t_id);
-    } 
-    else {
-     //processing schedule logic
-     schedulerLock.readLock();
-     if (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
-       schedulerLock.readUnlock();
-       schedulerLock.writeLock();
-       while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
-         currphase++;
-         if (taskdbg.active()){
-          cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;          
-          cerrLock.unlock();
-          }
-       }
-       schedulerLock.writeUnlock();
-     } else if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
-       schedulerLock.readUnlock();
-       schedulerLock.writeLock(); //after switch to write lock, check again
-       if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)) {
-          DetailedTask *reducetask = phaseSyncTask[currphase];
-          ASSERT(reducetask->getTask()->d_phase==currphase);
-          numTasksDone++;
-          phaseTasksDone[reducetask->getTask()->d_phase]++;
-          taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
-          if (reducetask->getTask()->getType() == Task::Reduction){
-            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << reducetask->getTask()->d_comm <<  endl;
-            schedulerLock.writeUnlock();
-            initiateReduction(reducetask);
-          }
-          else { // Task::OncePerProc task
-            schedulerLock.writeUnlock();
-            ASSERT(reducetask->getTask()->usesMPI());
-            initiateTask( reducetask, abort, abort_point, curriteration );
-            reducetask->markInitiated();
-            ASSERT(reducetask->getExternalDepCount() == 0) 
-            taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
-            printTask(taskdbg, reducetask); taskdbg << '\n';
-            runTask(reducetask, curriteration, t_id);
-          }
-       } else schedulerLock.writeUnlock(); 
-    } // end read check
-    else { 
-       schedulerLock.readUnlock();
-       //processing MPI receives
-       recvLock.readLock();
-       if (recvs_.numRequests()>0) {
-          recvLock.readUnlock();
+      if (readyTask->getTask()->getType() == Task::Reduction){
+        initiateReduction(readyTask);
+      } else {
+        runTask(readyTask, curriteration, t_id);
+      }
+    } else if (processMPIs>0) {
           recvLock.writeLock();
           processMPIRecvs(TEST);
           recvLock.writeUnlock();
-       } else recvLock.readUnlock();
+    } else {
+      //This could only happen when finished all tasks
+      ASSERT( numTasksDone == ntasks);  
     }
-   }
-  } //end while tasks
+
+ } //end while tasks
 }
 
 void

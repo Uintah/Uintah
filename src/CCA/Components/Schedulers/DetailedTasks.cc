@@ -1302,17 +1302,16 @@ DetailedTasks::getNextInternalReadyTask()
     nextTask = readyTasks_.front();
     readyTasks_.pop();
   }
-  readyQueueLock_.readUnlock();
+  readyQueueLock_.writeUnlock();
   return nextTask;
 }
 
 int 
 DetailedTasks::numInternalReadyTasks() { 
   int size=0;
-  if (readyQueueLock_.readTrylock()){
-    size = readyTasks_.size();
-    readyQueueLock_.readUnlock();
-  }
+  readyQueueLock_.readLock();
+  size = readyTasks_.size();
+  readyQueueLock_.readUnlock();
   return size;
 }
 
@@ -1333,10 +1332,9 @@ int
 DetailedTasks::numExternalReadyTasks()
 {
   int size = 0;
-  if (mpiCompletedQueueLock_.readTrylock()){
-    size = mpiCompletedTasks_.size(); 
-    mpiCompletedQueueLock_.readUnlock();
-  }
+  mpiCompletedQueueLock_.readLock();
+  size = mpiCompletedTasks_.size(); 
+  mpiCompletedQueueLock_.readUnlock();
   return size;
 }
 

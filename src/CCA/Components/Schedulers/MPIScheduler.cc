@@ -317,8 +317,8 @@ MPIScheduler::runReductionTask( DetailedTask         * task)
   dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
   task->done(dws);
 
-  cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";
-  printTask(taskdbg, task); taskdbg << '\n'; cerrLock.unlock();
+ // cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";
+ //printTask(taskdbg, task); taskdbg << '\n'; cerrLock.unlock();
 
 }
 
