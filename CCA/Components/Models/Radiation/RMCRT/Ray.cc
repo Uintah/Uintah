@@ -141,8 +141,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );             // if true, at least one virtual radiometer exists
   rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );               // view angle of the radiometer in degrees
-  rmcrt_ps->getWithDefault( "VROrientation" ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
-  rmcrt_ps->getWithDefault( "VRLocation"     ,  _VRLocation,      IntVector(0,0,0) );  // location of the virtual radiometer
+  rmcrt_ps->getWithDefault( "VROrientation"  ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
+  rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
+  rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
+  rmcrt_ps->getWithDefault( "NoRadRays"  ,       _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "halo"      ,       _halo,            IntVector(10,10,10));
 
   if (_benchmark > 3 || _benchmark < 0  ){
@@ -157,6 +159,12 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     warn << "ERROR:  VRViewAngle ("<< _viewAng <<") exceeds the maximum acceptable value of 360 degrees." << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
+
+  if (_virtRad && _NoRadRays < int(15 + pow(5.4, _viewAng/40) ) ){
+    ostringstream warn;
+    warn << "Number of rays:  ("<< _NoRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+  } 
+
   //__________________________________
   //  Read in the AMR section
   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
@@ -496,9 +504,136 @@ Ray::rayTrace( const ProcessorGroup* pc,
     Vector Dx = patch->dCell();                        // cell spacing
  
 
-    //__________________________________
+    //_______Solve VRFlux___________________________
     //
-    bool solveVR = false;
+    if (_virtRad){
+
+      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+        
+        IntVector origin = *iter; 
+        int i = origin.x();
+        int j = origin.y();
+        int k = origin.z();
+        // loop over the VR extents
+        if ( i >= _VRLocationsMin.x() && i <= _VRLocationsMax.x() &&
+             j >= _VRLocationsMin.y() && j <= _VRLocationsMax.y() &&
+             k >= _VRLocationsMin.z() && k <= _VRLocationsMax.z() ){
+ 
+          double sumI = 0;
+          double sumProjI = 0; // for virtual radiometer
+          double sumI_prev = 0; // used for VR
+          double sldAngl = 0; // solid angle of VR
+          double VRTheta = 0; // the polar angle of each ray from the radiometer normal
+          // ray loop
+          for (int iRay=0; iRay < _NoRadRays; iRay++){
+
+            if(_isSeedRandom == false){
+              _mTwister.seed((i + j +k) * iRay +1);
+            }
+
+            Vector direction_vector;
+            Vector inv_direction_vector;
+
+            double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+            double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+            
+            Vector ray_location;
+            ray_location[0] =   i +  0.5 ;
+            ray_location[1] =   j +  0.5 * DyDxRatio ; //noncubic
+            ray_location[2] =   k +  0.5 * DzDxRatio ; //noncubic
+
+            double deltaTheta = _viewAng/360*_pi;//divides view angle by two and converts to radians
+
+            //_orient[0,1,2] represent the user specified vector normal of the radiometer.
+            // These will be converted to rotations about the x,y, and z axes, respectively.
+            //Each rotation is couterclockwise when the observer is looking from the
+            //positive axis about which the rotation is occurring.
+
+            // Avoid division by zero by re-assigning orientations of 0
+
+            if (_orient[0] == 0)
+              _orient[0] = 1e-16;
+            if (_orient[1] == 0)
+              _orient[1] = 1e-16;
+            if (_orient[2] == 0)
+              _orient[2] = 1e-16;
+
+            //  In spherical coordinates, the polar angle, theta_rot,
+            //  represents the counterclockwise rotation about the y axis,
+            //  The azimuthal angle represents the negative of the
+            //  counterclockwise rotation about the z axis.
+            // Convert the user specified radiometer vector normal into three axial
+            // rotations about the x,y, and z axes.
+            double thetaRot = acos(_orient[2]/sqrt(_orient[0]*_orient[0]+_orient[1]*_orient[1] +_orient[2]*_orient[2]));
+            double psiRot = acos(_orient[0]/sqrt(_orient[0]*_orient[0]+_orient[1]*_orient[1]));
+            const double phiRot = 0;
+            //  phiRot is alsays  0. There will never be a need for a rotation about the x axis.  All
+            // possible rotations can be accomplished using the other two.
+           
+            //  The calculated rotations must be adjusted if the x and y components of the normal vector
+            //  are in the 3rd or 4th quadrants due to the constraints on arccos
+            if (_orient[0] < 0 && _orient[1] < 0) //quadrant 3
+              psiRot = (_pi/2 + psiRot);
+            if (_orient[0] > 0 && _orient[1] < 0) //quadrant 4
+              psiRot = (2*_pi - psiRot);
+          
+            // x,y, and z represent the pre-rotated direction vector of a ray
+            double x;
+            double y;
+            double z;
+
+            double phi = 0; // the azimuthal angle of each ray
+            double range = 1 - cos(deltaTheta); // cos(0) to cos(deltaTheta) gives the range of possible vals
+            
+            sldAngl = 2*_pi*range; //the solid angle that the radiometer can view
+            //testProjI = 0; // used to test a view factor and give the user an approximate rayError
+
+            // Generate two uniformly-distributed-over-the-solid-angle random numbers
+            // Used in determining the ray direction
+            phi = 2 * _pi * _mTwister.randDblExc(); //azimuthal angle.  Range of 0 to 2pi
+            // This guarantees that the polar angle of the ray is within the delta_theta
+            VRTheta = acos(cos(deltaTheta)+range*_mTwister.randDblExc());
+            //Convert to Cartesian
+            x = sin(VRTheta)*cos(phi);
+            y = sin(VRTheta)*sin(phi);
+            z = cos(VRTheta);
+
+            // ++++++++ Apply the rotational offsets ++++++
+            direction_vector[0] = x*cos(thetaRot)*cos(psiRot) +
+              y*(-cos(phiRot)*sin(psiRot) + sin(phiRot)*sin(thetaRot)*cos(psiRot)) +
+              z*(sin(phiRot)*sin(psiRot) + cos(phiRot)*sin(thetaRot)*cos(psiRot));
+            
+            direction_vector[1] = x*cos(thetaRot)*sin(psiRot) +
+              y*(cos(phiRot)*cos(psiRot) + sin(phiRot)*sin(thetaRot)*sin(psiRot)) +
+              z *(-sin(phiRot)*cos(psiRot) + cos(phiRot)*sin(thetaRot)*sin(psiRot));
+            
+            direction_vector[2] = x*(-sin(thetaRot)) +
+              y*sin(phiRot)*cos(thetaRot) +
+              z*cos(phiRot)*cos(thetaRot);
+          
+             inv_direction_vector = Vector(1.0)/direction_vector;       
+            
+            // get the intensity for this ray
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+            sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                           // from all the rays up to that point
+            sumI_prev = sumI;
+
+          } // end VR ray loop
+       
+          //__________________________________
+          //  Compute VRFlux
+          VRFlux[origin] = sumProjI * sldAngl/_NoRadRays;
+          //cout <<  VRFlux[origin] << endl;
+          
+        } // end of VR extents
+      } // end if _virtRad
+    } // end VR cell iterator
+
+    //____________________________________________
+    //________Solve DivQ__________________________
+    //____________________________________________
+   
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
       IntVector origin = *iter; 
       int i = origin.x();
@@ -514,16 +649,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
       double sumI = 0;
-      double sumProjI = 0; // for virtual radiometer
-      double sumI_prev = 0; // used for VR
-      double sldAngl = 0; // solid angle of VR
-      double VRTheta = 0; // the polar angle of each ray from the radiometer normal
       
-      //if (origin == _VRLocation && _virtRad){
-      if (origin.x()%5==0 && origin.x()>=Nx/2 && origin.y()==Nx/2 && origin.z()==Nx/2 && _virtRad){
-
-        solveVR = true;
-      }
       // ray loop
       for (int iRay=0; iRay < _NoOfRays; iRay++){
 
@@ -558,84 +684,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         }
  
-        else if(solveVR){
-
-          ray_location[0] =   i +  0.5 ;
-          ray_location[1] =   j +  0.5 * DyDxRatio ; //noncubic
-          ray_location[2] =   k +  0.5 * DzDxRatio ; //noncubic
-
-          double deltaTheta = _viewAng/360*_pi;//divides view angle by two and converts to radians
-
-          //_orient[0,1,2] represent the user specified vector normal of the radiometer.
-          // These will be converted to rotations about the x,y, and z axes, respectively.
-          //Each rotation is couterclockwise when the observer is looking from the
-          //positive axis about which the rotation is occurring.
-
-          // Avoid division by zero by re-assigning orientations of 0
-
-          if (_orient[0] == 0)
-            _orient[0] = 1e-16;
-          if (_orient[1] == 0)
-            _orient[1] = 1e-16;
-          if (_orient[2] == 0)
-            _orient[2] = 1e-16;
-
-          //  In spherical coordinates, the polar angle, theta_rot,
-          //  represents the counterclockwise rotation about the y axis,
-          //  The azimuthal angle represents the negative of the
-          //  counterclockwise rotation about the z axis.
-          // Convert the user specified radiometer vector normal into three axial
-          // rotations about the x,y, and z axes.
-          double thetaRot = acos(_orient[2]/sqrt(_orient[0]*_orient[0]+_orient[1]*_orient[1] +_orient[2]*_orient[2]));
-          double psiRot = acos(_orient[0]/sqrt(_orient[0]*_orient[0]+_orient[1]*_orient[1]));
-          const double phiRot = 0;
-          //  phiRot is alsays  0. There will never be a need for a rotation about the x axis.  All
-          // possible rotations can be accomplished using the other two.
-         
-          //  The calculated rotations must be adjusted if the x and y components of the normal vector
-          //  are in the 3rd or 4th quadrants due to the constraints on arccos
-          if (_orient[0] < 0 && _orient[1] < 0) //quadrant 3
-            psiRot = (_pi/2 + psiRot);
-          if (_orient[0] > 0 && _orient[1] < 0) //quadrant 4
-            psiRot = (2*_pi - psiRot);
-        
-          // x,y, and z represent the pre-rotated direction vector of a ray
-          double x;
-          double y;
-          double z;
-
-          double phi = 0; // the azimuthal angle of each ray
-          double range = 1 - cos(deltaTheta); // cos(0) to cos(deltaTheta) gives the range of possible vals
-          
-          sldAngl = 2*_pi*range; //the solid angle that the radiometer can view
-          //testProjI = 0; // used to test a view factor and give the user an approximate rayError
-
-          // Generate two uniformly-distributed-over-the-solid-angle random numbers
-          // Used in determining the ray direction
-          phi = 2 * _pi * _mTwister.randDblExc(); //azimuthal angle.  Range of 0 to 2pi
-          // This guarantees that the polar angle of the ray is within the delta_theta
-          VRTheta = acos(cos(deltaTheta)+range*_mTwister.randDblExc());
-          //Convert to Cartesian
-          x = sin(VRTheta)*cos(phi);
-          y = sin(VRTheta)*sin(phi);
-          z = cos(VRTheta);
-
-          // ++++++++ Apply the rotational offsets ++++++
-          direction_vector[0] = x*cos(thetaRot)*cos(psiRot) +
-            y*(-cos(phiRot)*sin(psiRot) + sin(phiRot)*sin(thetaRot)*cos(psiRot)) +
-            z*(sin(phiRot)*sin(psiRot) + cos(phiRot)*sin(thetaRot)*cos(psiRot));
-          
-          direction_vector[1] = x*cos(thetaRot)*sin(psiRot) +
-            y*(cos(phiRot)*cos(psiRot) + sin(phiRot)*sin(thetaRot)*sin(psiRot)) +
-            z *(-sin(phiRot)*cos(psiRot) + cos(phiRot)*sin(thetaRot)*sin(psiRot));
-          
-          direction_vector[2] = x*(-sin(thetaRot)) +
-            y*sin(phiRot)*cos(thetaRot) +
-            z*cos(phiRot)*cos(thetaRot);
-        
-           inv_direction_vector = Vector(1.0)/direction_vector;       
-    
-         } // end of virtual radiometer "if"  
 
         else{
           ray_location[0] =   i +  _mTwister.rand() ;
@@ -646,23 +694,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
         updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
 
 
-        if(solveVR){
-          sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                         // from all the rays up to that point
-          sumI_prev = sumI;
-          }
       }  // Ray loop
       
-      //__________________________________
-      //  Compute VRFlux
-      if(solveVR){
-
-        VRFlux[origin] = sumProjI * sldAngl/_NoOfRays;
-        //cout << endl << origin<< ":  VRFlux: " << VRFlux[origin] << endl;
-
-        solveVR = false;
-      }  
-
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (sumI/_NoOfRays) );

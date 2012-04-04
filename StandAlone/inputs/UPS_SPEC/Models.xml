@@ -20,7 +20,9 @@
       <VirtRadiometer         spec="OPTIONAL BOOLEAN"/>
       <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>
       <VROrientation          spec="OPTIONAL VECTOR"/>
-      <VRLocation             spec="OPTIONAL VECTOR"/>
+      <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
+      <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
+      <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>        
       <halo                   spec="OPTIONAL VECTOR 'positive'"/>
     </RMCRT>
     

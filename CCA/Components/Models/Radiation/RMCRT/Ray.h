@@ -154,6 +154,7 @@ namespace Uintah{
       
        
       int    _NoOfRays;
+      int    _NoRadRays;
       int    _slice;
       int    d_matl;
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
@@ -174,7 +175,8 @@ namespace Uintah{
       bool _virtRad;
       double _viewAng;
       Vector _orient;
-      IntVector _VRLocation;
+      IntVector _VRLocationsMin;
+      IntVector _VRLocationsMax;
       
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
