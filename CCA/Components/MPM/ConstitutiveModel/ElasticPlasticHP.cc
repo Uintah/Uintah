@@ -114,7 +114,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("check_max_stress_failure",d_checkStressTriax);
   
   // plasticity convergence Algorithm
-  d_plasticConvergenceAlgo = biswajit;
+  d_plasticConvergenceAlgo = radialReturn;   // default
   string tmp = "empty";
   ps->get("plastic_convergence_algo",tmp);
   
@@ -1131,10 +1131,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           
           //__________________________________
           //
-          Matrix3 Stilde(0.0);
           if (normS > 0.0 && d_plasticConvergenceAlgo == biswajit) {
             doRadialReturn = computePlasticStateBiswajit(state, pPlasticStrain, pStrainRate, 
-                                                         Stilde, sigma, tensorS, trialS, tensorEta, 
+                                                         sigma, trialS, tensorEta, tensorS,
                                                          delGamma, flowStress, porosity, mu_cur, delT, matl, idx);
           }
           
@@ -1146,22 +1145,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             state->plasticStrainRate = pStrainRate_new[idx];
             state->plasticStrain     = pPlasticStrain[idx];
             Matrix3 nn(0.0);
-            
             computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
             
-            Stilde = trialS - nn *(2.0 * state->shearModulus * delGamma);
+            tensorS = trialS - nn *(2.0 * state->shearModulus * delGamma);
           }
-
-          // Do radial return adjustment
-          double stst = sqrtThreeTwo*Stilde.Norm();
-          ASSERT(stst != 0.0);
-          tensorS = Stilde*(state->yieldStress/stst);
-
-          /*
-          equivStress = sqrtThreeTwo*tensorS.Norm();
-          cout << "idx = " << idx << " sig_eq = " << equivStress
-                           << " sig_y = " << state->yieldStress << endl;
-          */
 
           // Update internal variables
           d_flow->updatePlastic(idx, delGamma);
@@ -1446,11 +1433,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state, 
                                                    constParticleVariable<double>& pPlasticStrain,
                                                    constParticleVariable<double>& pStrainRate,
-                                                   Matrix3& Stilde,
                                                    const Matrix3& sigma,
-                                                   const Matrix3 tensorS,
                                                    const Matrix3 trialS,
                                                    const Matrix3 tensorEta,
+                                                   Matrix3 tensorS,
                                                    double& delGamma,
                                                    double& flowStress,
                                                    double& porosity,
@@ -1467,6 +1453,8 @@ bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state,
   // Calculate the derivative of the yield function (using the 
   // previous time step (n) values)
   Matrix3 q(0.0);
+  Matrix3 Stilde(0.0);
+  
   double sqrtTwo      = sqrt(2.0);
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
@@ -1556,6 +1544,13 @@ bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state,
       } // end of epdot <= edot if
     } // end of delGamma > 0 if
   } // end of gammdotplus > 0 if
+
+  // Do radial return adjustment
+  double stst = sqrtThreeTwo*Stilde.Norm();
+  ASSERT(stst != 0.0);
+  Stilde = Stilde*(state->yieldStress/stst);
+  tensorS = Stilde;
+  
   return doRadialReturn;
 }
 
