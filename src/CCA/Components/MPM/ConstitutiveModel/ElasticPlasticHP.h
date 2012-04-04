@@ -353,20 +353,19 @@ namespace Uintah {
     /*! \brief Compute Plastic State using Biswajit's approach */
     ////////////////////////////////////////////////////////////////////////  
     bool computePlasticStateBiswajit( PlasticityState* state, 
-                                      constParticleVariable<double>& pPlasticStrain,             
-                                      constParticleVariable<double>& pStrainRate,                
-                                      Matrix3& Stilde,                                          
-                                      const Matrix3& sigma,                                     
-                                      const Matrix3 tensorS,
-                                      const Matrix3 trialS,                                    
-                                      const Matrix3 tensorEta,                                  
-                                      double& delGamma,                                         
-                                      double& flowStress,                                       
-                                      double& porosity,                                         
-                                      double& mu_cur,                              
-                                      const double delT,                                        
-                                      const MPMMaterial* matl,                                  
-                                      const int idx); 
+                                      constParticleVariable<double>& pPlasticStrain,
+                                      constParticleVariable<double>& pStrainRate,
+                                      const Matrix3& sigma,
+                                      const Matrix3 trialS,
+                                      const Matrix3 tensorEta,
+                                      Matrix3 tensorS,
+                                      double& delGamma,
+                                      double& flowStress,
+                                      double& porosity,
+                                      double& mu_cur,
+                                      const double delT,
+                                      const MPMMaterial* matl,
+                                      const int idx);
     
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute Stilde, epdot, ep, and delGamma using 
