@@ -128,8 +128,9 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
     d_params->require("toMaterial",  toMaterial);
     d_params->require("E0",          d_E0);
 
-    ProblemSpecP rateConstChild = d_params->findBlock("RateConstantModel");
-    ProblemSpecP rateModelChild = d_params->findBlock("RateModel"); 
+    ProblemSpecP models_ps = d_params->findBlock("SolidReactionModel");
+    ProblemSpecP rateConstChild = models_ps->findBlock("RateConstantModel");
+    ProblemSpecP rateModelChild = models_ps->findBlock("RateModel"); 
     if(!rateConstChild)
       throw ProblemSetupException("SolidReactionModel: Cannot find RateConstantModel", __FILE__, __LINE__);
     if(!rateModelChild)
@@ -149,19 +150,19 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
     if(!rateModelChild->getAttribute("type", modelType))
       throw ProblemSetupException("SolidReactionModel: Cannot find type for RateModel", __FILE__, __LINE__);
     if(modelType == "AvaramiErofeev")
-      rateModel = scinew AvaramiErofeevModel(rateConstChild);
+      rateModel = scinew AvaramiErofeevModel(rateModelChild);
     if(modelType == "ContractingCylinder")
-      rateModel = scinew ContractingCylinderModel(rateConstChild);
+      rateModel = scinew ContractingCylinderModel(rateModelChild);
     if(modelType == "ContractingSphere")
-      rateModel = scinew ContractingSphereModel(rateConstChild);
+      rateModel = scinew ContractingSphereModel(rateModelChild);
     if(modelType == "Diffusion")
-      rateModel = scinew DiffusionModel(rateConstChild);
+      rateModel = scinew DiffusionModel(rateModelChild);
     if(modelType == "Power")
-      rateModel = scinew PowerModel(rateConstChild);
+      rateModel = scinew PowerModel(rateModelChild);
     if(modelType == "ProutTompkins")
-      rateModel = scinew ProutTompkinsModel(rateConstChild);    
+      rateModel = scinew ProutTompkinsModel(rateModelChild);    
     if(modelType == "NthOrder")
-      rateModel = scinew NthOrderModel(rateConstChild);    
+      rateModel = scinew NthOrderModel(rateModelChild);    
 
     //__________________________________
     //  Are we saving the total burned mass and total burned energy

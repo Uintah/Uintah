@@ -29,7 +29,7 @@
     <Model                    spec="MULTIPLE NO_DATA"
                                 attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1, SolidReactionModel'" >
 
-      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0" />
+      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0 SolidReactionModel" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
       <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp Tillotson" />
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
@@ -137,7 +137,7 @@
       </RadiationModel>
      
       <!-- SolidReactionModel -->
-      <SolidReactionModel           spec="OPTIONAL NO_DATA">
+      <SolidReactionModel           spec="OPTIONAL NO_DATA"> 
         <RateConstantModel          spec="OPTIONAL NO_DATA"
                                       attribute="type REQUIRED STRING 'Arrhenius, ModifiedArrhenius'">
           <A                        spec="REQUIRED DOUBLE"/>
