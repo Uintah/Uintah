@@ -101,7 +101,7 @@ WARNING
     SchedulerWorker*            t_worker[MAX_THREADS];  //workers
     Thread*                t_thread[MAX_THREADS]; 
     Mutex                  dlbLock;   //load balancer lock
-    mutable CrowdMonitor   schedulerLock; //scheduler lock
+    Mutex                  schedulerLock; //scheduler lock
     mutable CrowdMonitor   recvLock;
     
     /* thread shared data, need lock protection when accessing them */
