@@ -37,7 +37,7 @@
       </TGVel3D>
 
       
-      <!-- Taylor Vortex Velocity field function in x direction with amplitude kinematic viscosity!-->
+      <!-- Taylor Vortex Velocity field function in x direction with amplitude kinematic viscosity -->
       <VelocityX          spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
@@ -50,7 +50,7 @@
 
       </VelocityX>
       
-      <!-- Taylor Vortex Velocity field function in y direction with amplitude and kinematic viscosity!-->
+      <!-- Taylor Vortex Velocity field function in y direction with amplitude and kinematic viscosity -->
       <VelocityY          spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
@@ -62,7 +62,7 @@
         </YCoordinate>
       </VelocityY>
       
-      <!-- Taylor Vortex Pressure field gradient function in x direction with amplitude and kinematic viscosity!-->
+      <!-- Taylor Vortex Pressure field gradient function in x direction with amplitude and kinematic viscosity -->
       <GradPX             spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
@@ -74,7 +74,7 @@
         </YCoordinate>
       </GradPX>
 
-      <!-- Taylor Vortex Pressure field gradient function in y direction with amplitude and kinematic viscosity!-->
+      <!-- Taylor Vortex Pressure field gradient function in y direction with amplitude and kinematic viscosity -->
       <GradPY             spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
