@@ -31,6 +31,9 @@ from helpers.modUPS import modUPS
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups", 1.1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups", 1.1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups", 1.1,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("BasicScalarTransportEquation",  "BasicScalarTransportEquation.ups",  1,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
   ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
@@ -71,8 +74,11 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups",   1, "All", ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1, "All", ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups", 1.1,  "All",   ["exactComparison","no_restart"] ),                   \
+  ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups", 1.1,  "All",   ["exactComparison","no_restart"] ),                   \
+  ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups", 1.1,  "All",   ["exactComparison","no_restart"] ),                   \
+  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test2",              "convection-test2.ups",              2,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test",               "convection-test.ups",               3,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
