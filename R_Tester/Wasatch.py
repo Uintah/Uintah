@@ -58,13 +58,13 @@ NIGHTLYTESTS = [
   ("bc-test-zvol-ydir",             "bc-test-zvol-ydir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("qmom-test",                     "qmom-test.ups",                     4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-xdir-bc",  "convection-test-svol-xdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
+  ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-xdir-bc",  "convection-test-svol-xdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart"] ),  \
+  ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "Linux",  ["exactComparison","no_restart"] ),  \
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
