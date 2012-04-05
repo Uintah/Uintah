@@ -38,7 +38,7 @@ SRCS += \
 	$(SRCDIR)/UintahZlibUtil.cc
 
 PSELIBS :=
-LIBS    := $(Z_LIBRARY)
+LIBS    := $(Z_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

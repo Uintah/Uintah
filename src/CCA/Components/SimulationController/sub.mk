@@ -58,7 +58,7 @@ PSELIBS := \
 	\
 	Core/Math
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
