@@ -130,9 +130,9 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           const Uintah::PatchSet* const localPatches,
-                                           const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials) = 0;
+                                                    const Uintah::PatchSet* const localPatches,
+                                                    const PatchInfoMap& patchInfoMap,
+                                                    const Uintah::MaterialSubset* const materials ) = 0;
 
 
     /**
@@ -146,7 +146,7 @@ namespace Wasatch{
     virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials) = 0;
+                                            const Uintah::MaterialSubset* const materials ) = 0;
 
     /**
      *  Return the ExpressionID that identifies an expression that will
@@ -162,9 +162,9 @@ namespace Wasatch{
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
   protected:
-    const std::string  solnVarName_;  ///< Name of the solution variable for this TransportEquation.
-    const Expr::ExpressionID rhsExprID_;    ///< The label for the rhs expression for this TransportEquation.
-    const Direction stagLoc_;
+    const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
+    const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
+    const Direction stagLoc_;             ///< staggered direction for this equation
   };
 
 } // namespace Wasatch

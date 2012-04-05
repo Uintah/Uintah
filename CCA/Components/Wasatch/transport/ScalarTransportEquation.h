@@ -169,18 +169,18 @@ namespace Wasatch{
      *  \brief setup the boundary conditions associated with this transport equation
      */
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                   const Uintah::PatchSet* const localPatches,
-                                   const PatchInfoMap& patchInfoMap,
-                                   const Uintah::MaterialSubset* const materials);
+                                            const Uintah::PatchSet* const localPatches,
+                                            const PatchInfoMap& patchInfoMap,
+                                            const Uintah::MaterialSubset* const materials );
 
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
     void setup_boundary_conditions( const GraphHelper& graphHelper,
-                                           const Uintah::PatchSet* const localPatches,
-                                           const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);
+                                    const Uintah::PatchSet* const localPatches,
+                                    const PatchInfoMap& patchInfoMap,
+                                    const Uintah::MaterialSubset* const materials );
 
     /**
      *  \brief setup the initial conditions for this transport equation.
@@ -255,4 +255,5 @@ namespace Wasatch{
                                          typename ScalarRHS<FieldT>::FieldTagInfo& info );
 
 } // namespace Wasatch
+
 #endif // Wasatch_ScalarTransportEquation_h
