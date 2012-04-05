@@ -964,9 +964,6 @@ namespace Wasatch {
       const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
       
       for( int child = 0; child<numChildren; ++child ){
-        
-        double bc_value = -9;
-        std::string bc_kind = "NotSet";
         SCIRun::Iterator bound_ptr;
 
         patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
