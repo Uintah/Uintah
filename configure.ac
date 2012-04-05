@@ -3549,17 +3549,23 @@ if test "$sci_required_gperftools" = "yes"; then
   else
     _sci_optional=specific
     _sci_lib="$with_gperftools"
+    # account for lib64 or lib32 or just lib...
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_inc="$with_gperftools/include"
   fi
   
-  # account for lib64 or lib32 or just lib...
   
+  if test "$IS_OSX" = "yes"; then
+     gperf_lib_list=tcmalloc_and_profiler
+  else
+     gperf_lib_list=tcmalloc profiler unwind
+  fi
+
   AC_LANG(C++)
   SCI_TRY_LINK(GPERFTOOLS, Google Perftools libraries and headers,
               google/heap-profiler.h google/profiler.h,
               $_sci_inc,
-              tcmalloc profiler unwind,
+              $gperf_lib_list,
               $_sci_lib,
               ,
               [ProfilerStart("prefixc");

@@ -9381,8 +9381,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested M library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested M library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -9787,8 +9787,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested RT library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested RT library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -10243,8 +10243,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested PTHREAD library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested PTHREAD library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -10869,8 +10869,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $dir/lib$i.so && test ! -e $dir/lib$i.a && test ! -e $dir/$i.lib; then
-     as_fn_error $? "Specifically requested OFED library file '$dir/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $dir/lib$i.so && test ! -e $dir/lib$i.a && test ! -e $dir/$i.lib && test ! -e $dir/lib$i.dylib; then
+     as_fn_error $? "Specifically requested OFED library file '$dir/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -11320,8 +11320,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $dir/lib$i.so && test ! -e $dir/lib$i.a && test ! -e $dir/$i.lib; then
-     as_fn_error $? "Specifically requested MX library file '$dir/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $dir/lib$i.so && test ! -e $dir/lib$i.a && test ! -e $dir/$i.lib && test ! -e $dir/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MX library file '$dir/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -11729,8 +11729,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested DL library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested DL library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -12175,8 +12175,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $sci_thirdparty_lib/lib$i.so && test ! -e $sci_thirdparty_lib/lib$i.a && test ! -e $sci_thirdparty_lib/$i.lib; then
-     as_fn_error $? "Specifically requested DL library file '$sci_thirdparty_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $sci_thirdparty_lib/lib$i.so && test ! -e $sci_thirdparty_lib/lib$i.a && test ! -e $sci_thirdparty_lib/$i.lib && test ! -e $sci_thirdparty_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested DL library file '$sci_thirdparty_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -12584,8 +12584,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested DL library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested DL library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -13000,8 +13000,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested STAT64 library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested STAT64 library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -13412,8 +13412,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -13817,8 +13817,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -14223,8 +14223,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested STD_HDRS library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -14642,8 +14642,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested STL_HEADERS library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested STL_HEADERS library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -15319,8 +15319,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $XML2_LIB_PATH/lib$i.so && test ! -e $XML2_LIB_PATH/lib$i.a && test ! -e $XML2_LIB_PATH/$i.lib; then
-     as_fn_error $? "Specifically requested XML2 library file '$XML2_LIB_PATH/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $XML2_LIB_PATH/lib$i.so && test ! -e $XML2_LIB_PATH/lib$i.a && test ! -e $XML2_LIB_PATH/$i.lib && test ! -e $XML2_LIB_PATH/lib$i.dylib; then
+     as_fn_error $? "Specifically requested XML2 library file '$XML2_LIB_PATH/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -15744,8 +15744,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested SSTREAM library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested SSTREAM library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -16212,8 +16212,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested EXC library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested EXC library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -16651,8 +16651,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested EXC library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested EXC library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -17126,8 +17126,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested Z library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested Z library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -17597,8 +17597,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested JPEG library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested JPEG library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -18053,8 +18053,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested TIFF library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested TIFF library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -18552,8 +18552,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested PNG library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PNG library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -19075,8 +19075,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $png_lib_dir/lib$i.so && test ! -e $png_lib_dir/lib$i.a && test ! -e $png_lib_dir/$i.lib; then
-     as_fn_error $? "Specifically requested PNG library file '$png_lib_dir/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $png_lib_dir/lib$i.so && test ! -e $png_lib_dir/lib$i.a && test ! -e $png_lib_dir/$i.lib && test ! -e $png_lib_dir/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PNG library file '$png_lib_dir/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -19547,8 +19547,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested MPEGE library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPEGE library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -20024,8 +20024,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested UNP library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested UNP library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -20455,8 +20455,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -20860,8 +20860,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -21262,8 +21262,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -21664,8 +21664,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -22066,8 +22066,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -22468,8 +22468,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -22872,8 +22872,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -23314,8 +23314,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -23753,8 +23753,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -24192,8 +24192,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -24597,8 +24597,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -24999,8 +24999,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested F library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -25429,8 +25429,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested ELECTRIC_FENCE library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested ELECTRIC_FENCE library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -25830,8 +25830,8 @@ if test "specific" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $with_electric_fence/lib$i.so && test ! -e $with_electric_fence/lib$i.a && test ! -e $with_electric_fence/$i.lib; then
-     as_fn_error $? "Specifically requested ELECTRIC_FENCE library file '$with_electric_fence/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $with_electric_fence/lib$i.so && test ! -e $with_electric_fence/lib$i.a && test ! -e $with_electric_fence/$i.lib && test ! -e $with_electric_fence/lib$i.dylib; then
+     as_fn_error $? "Specifically requested ELECTRIC_FENCE library file '$with_electric_fence/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -26304,8 +26304,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -26783,8 +26783,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -27221,8 +27221,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -27700,8 +27700,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -28144,8 +28144,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -28578,8 +28578,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -28980,8 +28980,8 @@ if test "required" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -29426,8 +29426,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -29873,8 +29873,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -30319,8 +30319,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -30724,8 +30724,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -31125,8 +31125,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -31528,8 +31528,8 @@ if test "specific" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -31976,8 +31976,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
-     as_fn_error $? "Specifically requested LAPACK library file '/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib && test ! -e /lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACK library file '/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -32381,8 +32381,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -32785,8 +32785,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -33197,8 +33197,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -33600,8 +33600,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested LAPACKMP library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested LAPACKMP library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -34203,8 +34203,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -34656,8 +34656,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -35107,8 +35107,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -35557,8 +35557,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -36008,8 +36008,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -36449,8 +36449,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -36890,8 +36890,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -37332,8 +37332,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -37773,8 +37773,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib; then
-     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.so && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.a && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/$i.lib && test ! -e $_sci_lib $MPI_EXTRA_LIB_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested MPI library file '$_sci_lib $MPI_EXTRA_LIB_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -38439,8 +38439,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib; then
-     as_fn_error $? "Specifically requested PETSC library file '$_sci_lib_dir/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib && test ! -e $_sci_lib_dir/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PETSC library file '$_sci_lib_dir/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -38880,8 +38880,8 @@ if test "optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib; then
-     as_fn_error $? "Specifically requested PETSC library file '$_sci_lib_dir/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib && test ! -e $_sci_lib_dir/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PETSC library file '$_sci_lib_dir/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -39541,8 +39541,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested PAPI library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PAPI library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -39594,6 +39594,7 @@ if test "$sci_required_gperftools" = "yes"; then
   else
     _sci_optional=specific
     _sci_lib="$with_gperftools"
+    # account for lib64 or lib32 or just lib...
 
 ##
 ## BASE_LIB_PATH:
@@ -39634,7 +39635,12 @@ if test "$sci_required_gperftools" = "yes"; then
     _sci_inc="$with_gperftools/include"
   fi
 
-  # account for lib64 or lib32 or just lib...
+
+  if test "$IS_OSX" = "yes"; then
+     gperf_lib_list=tcmalloc_and_profiler
+  else
+     gperf_lib_list=tcmalloc profiler unwind
+  fi
 
   ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -39679,7 +39685,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : Google Perftools libraries and headers
 ## arg 3 : google/heap-profiler.h google/profiler.h
 ## arg 4 : $_sci_inc
-## arg 5 : tcmalloc profiler unwind
+## arg 5 : $gperf_lib_list
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -39756,10 +39762,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "tcmalloc profiler unwind"; then
+if test -n "$gperf_lib_list"; then
 
    found_framework=no
-   for lib in tcmalloc profiler unwind; do
+   for lib in $gperf_lib_list; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -40054,7 +40060,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" tcmalloc profiler unwind; do
+  for i in "" $gperf_lib_list; do
     if test -z "$i"; then
        continue
     fi
@@ -40062,8 +40068,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested GPERFTOOLS library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested GPERFTOOLS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -40568,8 +40574,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested FREETYPE library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested FREETYPE library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -41109,8 +41115,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested TEEM library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested TEEM library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -41582,8 +41588,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested HDF5 library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested HDF5 library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -42372,8 +42378,8 @@ if test "$_sci_optional" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
-     as_fn_error $? "Specifically requested HYPRE library file '$_sci_lib/lib$i' (.so or .a) was not found" "$LINENO" 5
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested HYPRE library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
