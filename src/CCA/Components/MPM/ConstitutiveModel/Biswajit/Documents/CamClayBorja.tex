@@ -29,19 +29,80 @@
 \section{Introduction}
 Introduce the equations and how they differ from Fossum-Brannon.
 
-\section{Derivation of stress update based Rich Reguiero's notes}
+\section{Quantities that are needed in a Uintah implementation}
+\subsection{Elasticity}
 The elastic strain energy density in Borja's model has the form
 \[
-  W(\Ve^e_v,\Ve^e_s) = -p_0\kappatilde\,\exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right] 
-    + \tfrac{3}{2}\,\mu\,[\Ve^e_s]^2
+  W(\Ve^e_v,\Ve^e_s) = W_\Tvol(\Ve^e_v) + W_\Tdev(\Ve^e_v, Ve^e_s)
 \]
-where $\Ve^e_{v0}$ is the volumetric strain corresponding to a mean normal stress $p_0$, 
-$\kappatilde$ is the elastic compressibility index, and
+where
 \[
-  \mu = \mu_0 + \alpha p_0 \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]  \,.
+   \Bal
+    W_\Tvol(\Ve^e_v) & = -p_0\kappatilde\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \\
+    W_\Tdev(\Ve^e_v,\Ve^e_s) & =  \tfrac{3}{2}\,\mu\,(\Ve^e_s)^2
+   \Eal
+\]
+where $\Ve^e_{v0}$ is the volumetric strain corresponding to a mean normal compressive stress $p_0$ 
+(tension positive), $\kappatilde$ is the elastic compressibility index, and the shear modulus is given by
+\[
+  \mu = \mu_0 + \frac{\alpha}{\kappatilde}\,W_\Tvol(\Ve^e_v) 
+      = \mu_0 - \alpha p_0\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \,.
 \]
 The parameter $\alpha$ determines the extent of coupling between the volumetric and deviatoric 
-responses.  The volumetric and deviatoric components of the elastic strain $\Beps^e$ are defined
+responses.  For consistency with isotropic elasticity, Rebecca Brannon suggests that $\alpha = 0$ (citation?). 
+
+The stress invariants $p$ and $q$ are defined as
+\[
+  \Bal
+    p &= \Partial{W}{\Ve^e_v} = p_0\left[1 + \tfrac{3}{2}\,\frac{\alpha}{\kappatilde}\,(\Ve^e_s)^2\right]
+         \exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+       = p_0\,\beta\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \\
+    q &= \Partial{W}{\Ve^e_s} = 3\left[\mu_0 - \alpha p_0\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+         \right]\Ve^e_s  = 3\mu\,\Ve^e_s\,.
+  \Eal
+\]
+The derivatives of the stress invariants are
+\[
+  \Bal
+    \Partial{p}{\Ve^e_v} & = -\frac{p_0}{\kappatilde}
+         \left[1 + \tfrac{3}{2}\,\frac{\alpha}{\kappatilde}\,(\Ve^e_s)^2\right]
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+        = -\frac{p}{\kappatilde} \\
+    \Partial{p}{\Ve^e_s} & = \Partial{q}{\Ve^e_v} = \frac{3\alpha p_0 \Ve^e_s}{\kappatilde}
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) = \frac{3\alpha p}{\beta \kappatilde}\,\Ve^e_s \\
+    \Partial{q}{\Ve^e_s} & = 3 \left[\mu_0 - \alpha p_0
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \right] = 3 \mu\,.
+  \Eal
+\]
+
+\subsection{Plasticity}
+For plasticity we use a Cam-Clay yield function of the form
+\[
+   f = \left(\frac{q}{M}\right)^2 + p(p-p_c) 
+\]
+where $M$ is the slope of the critical state line and the consolidation pressure $p_c$ is an internal variable that 
+evolves according to 
+\[
+   \frac{1}{p_c}\,\Deriv{p_c}{t} = \frac{1}{\lambdatilde - \kappatilde}\,\Deriv{\Ve^p_v}{t} \,.
+\]
+The derivatives of $f$ that are of interest are
+\[
+   \Bal
+     \Partial{f}{p} & = 2p - p_c \\
+     \Partial{f}{q} & = \frac{2q}{M^2} \,.
+   \Eal
+\]
+If we integrate the equation for $p_c$ from $t_{n}$ to $t_{n+1}$, we can show that
+\[
+   (p_c)_{n+1} = (p_c)_n \exp\left[\frac{(\Ve_v^e)_\Trial - (\Ve_v^e)_{n+1}}{\lambdatilde - \kappatilde}\right] \,.
+\]
+The derivative of $p_c$ that is of interest is
+\[
+   \Partial{p_c}{(\Ve_v^e)_{n+1}} = -\frac{(p_c)_n}{\lambdatilde-\kappatilde}\,\exp\left[\frac{(\Ve^e_v)_\Trial - (\Ve_v^e)_{n+1}}{\lambdatilde-\kappatilde}\right] \,.
+\]
+
+\section{Why these quantities are needed: stress update based Rich Reguiero's notes}
+The volumetric and deviatoric components of the elastic strain $\Beps^e$ are defined
 as follows:
 \[
    \BeT^e = \Beps^e - \tfrac{1}{3}\Ve^e_v\,\Bone = \Beps^e - \tfrac{1}{3}\Tr(\Beps^e)\,\Bone
@@ -380,7 +441,7 @@ For the second row,
   \Partial{r_2}{x_2} & = \Partial{}{\Ve_s^e}\left[\Ve_s^e -  (\Ve_s^e)_\Trial + \Delta\gamma\,\frac{2q}{M^2}\right] 
      = 1 + \frac{2\Delta\gamma}{M^2}\,\Partial{q}{\Ve_s^e}\\
   \Partial{r_2}{x_3} & = \Partial{}{\Delta\gamma}\left[\Ve_s^e -  (\Ve_s^e)_\Trial + \Delta\gamma\,\frac{2q}{M^2}\right]
-     = \frac{2q}{M^2} = \partial{f}{q}
+     = \frac{2q}{M^2} = \Partial{f}{q}
   \Eal
 \]
 where
