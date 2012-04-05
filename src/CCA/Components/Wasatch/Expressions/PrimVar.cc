@@ -125,6 +125,7 @@ evaluate()
   using namespace SpatialOps;
   FieldT& phi = this->value();
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( phi );
+  *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
   interpOp_->apply_to_field( *rho_, *tmp );
   phi <<= *rhophi_ / *tmp;
 }
