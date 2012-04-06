@@ -155,56 +155,54 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-         <material name = "Steel Ring">
+        <material name = "Steel Ring">
        
-  <density>7830.0</density>
-  <thermal_conductivity>38</thermal_conductivity>
-  <specific_heat>477</specific_heat>
-  <room_temp>294.0</room_temp>
-  <melt_temp>1793.0</melt_temp>
+        <density>7830.0</density>
+        <thermal_conductivity>38</thermal_conductivity>
+        <specific_heat>477</specific_heat>
+        <room_temp>294.0</room_temp>
+        <melt_temp>1793.0</melt_temp>
 
         <constitutive_model type = "elastic_plastic_hp">
           <useModifiedEOS> true </useModifiedEOS>
           <tolerance>1.0e-10</tolerance>
+          <plastic_convergence_algo> biswajit </plastic_convergence_algo>
        
-  <shear_modulus>80.0e9</shear_modulus>
-  <bulk_modulus>173.33e9</bulk_modulus>
+          <shear_modulus>80.0e9</shear_modulus>
+          <bulk_modulus>173.33e9</bulk_modulus>
+          
+          <equation_of_state type = "mie_gruneisen">
+            <C_0>3574</C_0>
+            <Gamma_0>1.69</Gamma_0>
+            <S_alpha>1.92</S_alpha>
+          </equation_of_state>
 
-       
-  <equation_of_state type = "mie_gruneisen">
-    <C_0>3574</C_0>
-    <Gamma_0>1.69</Gamma_0>
-    <S_alpha>1.92</S_alpha>
-  </equation_of_state>
+          <flow_model type = "johnson_cook">
+            <A>792.0e6</A>
+            <B>510.0e6</B>
+            <C>0.014</C>
+            <n>0.26</n>
+            <m>1.03</m>
+          </flow_model>
 
-       
-  <flow_model type = "johnson_cook">
-    <A>792.0e6</A>
-    <B>510.0e6</B>
-    <C>0.014</C>
-    <n>0.26</n>
-    <m>1.03</m>
-  </flow_model>
-       
-  <yield_condition type = "gurson">
-    <q1> 1.5 </q1>
-    <q2> 1.0 </q2>
-    <q3> 2.25 </q3>
-    <k> 4.0 </k>
-    <f_c> 0.05 </f_c>
-  </yield_condition>
+          <yield_condition type = "gurson">
+            <q1> 1.5 </q1>
+            <q2> 1.0 </q2>
+            <q3> 2.25 </q3>
+            <k> 4.0 </k>
+            <f_c> 0.05 </f_c>
+          </yield_condition>
 
-       
-  <stability_check type = "drucker_becker">
-  </stability_check>
-       
-  <damage_model type = "johnson_cook">
-    <D1>0.05</D1>
-    <D2>3.44</D2>
-    <D3>-2.12</D3>
-    <D4>0.002</D4>
-    <D5>0.61</D5>
-  </damage_model>
+          <stability_check type = "drucker_becker">
+          </stability_check>
+
+          <damage_model type = "johnson_cook">
+            <D1>0.05</D1>
+            <D2>3.44</D2>
+            <D3>-2.12</D3>
+            <D4>0.002</D4>
+            <D5>0.61</D5>
+          </damage_model>
 
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -218,66 +216,68 @@
           <initial_std_scalar_damage>     0.005 </initial_std_scalar_damage>
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
-               </constitutive_model>
-                <geom_object>
-                   <difference>
-                    <cylinder label = "outer cylinder">
-                     <bottom>           [0.0,0.0,-.05715]   </bottom>
-                     <top>              [0.0,0.0, .05715]   </top>
-                     <radius>           0.05715            </radius>
-                   </cylinder>
-                   <cylinder label = "inner cylinder">
-                     <bottom>           [0.0,0.0,-.0508]   </bottom>
-                     <top>              [0.0,0.0, .0508]   </top>
-                     <radius>           0.0508             </radius>
-                   </cylinder>
-                   </difference>
-                 <res>                 [2,2,2]         </res>
-                 <velocity>            [0.0,0.0,0.0]   </velocity>
-                 <temperature>         600             </temperature>
-                </geom_object>
-         </material>
-         <material name = "reactant">
-                <density>   1840.0   </density>
-                <constitutive_model type = "visco_scram">
-                    <useModifiedEOS>     true             </useModifiedEOS>
-                    <PR>0.3</PR>
-                    <CrackParameterA>1.e-3</CrackParameterA>
-                    <CrackPowerValue>10.0</CrackPowerValue>
-                    <CrackMaxGrowthRate>300.0</CrackMaxGrowthRate>
-                    <StressIntensityF>500.0</StressIntensityF>
-                    <CrackFriction>0.35</CrackFriction>
-                    <InitialCrackRadius>3.e-5</InitialCrackRadius>
-                    <CrackGrowthRate>12.</CrackGrowthRate>
-                    <G1>3.5e8</G1>
-                    <G2>1.739e8</G2>
-                    <G3>5.212e8</G3>
-                    <G4>9.085e8</G4>
-                    <G5>6.875e8</G5>
-                    <RTau1>0.0</RTau1>
-                    <RTau2>7.32e3</RTau2>
-                    <RTau3>7.32e4</RTau3>
-                    <RTau4>7.32e5</RTau4>
-                    <RTau5>2.e6</RTau5>
-                    <Beta>1.5e-4</Beta>
-                    <Gamma>1.0</Gamma>
-                    <DCp_DTemperature>3.30773</DCp_DTemperature>
-                </constitutive_model>
-                <thermal_conductivity>  .452            </thermal_conductivity>
-                <specific_heat>        996.0            </specific_heat>
-                <geom_object>
-                   <cylinder label = "inner cylinder"> </cylinder>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         600.0           </temperature>
-                </geom_object>
-         </material>
+        </constitutive_model>
+         <geom_object>
+            <difference>
+             <cylinder label = "outer cylinder">
+              <bottom>           [0.0,0.0,-.05715]   </bottom>
+              <top>              [0.0,0.0, .05715]   </top>
+              <radius>           0.05715             </radius>
+            </cylinder>
+            <cylinder label = "inner cylinder">
+              <bottom>           [0.0,0.0,-.0508]   </bottom>
+              <top>              [0.0,0.0, .0508]   </top>
+              <radius>           0.0508             </radius>
+            </cylinder>
+            </difference>
+          <res>                 [2,2,2]         </res>
+          <velocity>            [0.0,0.0,0.0]   </velocity>
+          <temperature>         600             </temperature>
+         </geom_object>
+       </material>
+       <material name = "reactant">
+         <density>   1840.0   </density>
+         <constitutive_model type = "visco_scram">
+             <useModifiedEOS>     true             </useModifiedEOS>
+             <PR>0.3</PR>
+             <CrackParameterA>1.e-3</CrackParameterA>
+             <CrackPowerValue>10.0</CrackPowerValue>
+             <CrackMaxGrowthRate>300.0</CrackMaxGrowthRate>
+             <StressIntensityF>500.0</StressIntensityF>
+             <CrackFriction>0.35</CrackFriction>
+             <InitialCrackRadius>3.e-5</InitialCrackRadius>
+             <CrackGrowthRate>12.</CrackGrowthRate>
+             <G1>3.5e8</G1>
+             <G2>1.739e8</G2>
+             <G3>5.212e8</G3>
+             <G4>9.085e8</G4>
+             <G5>6.875e8</G5>
+             <RTau1>0.0</RTau1>
+             <RTau2>7.32e3</RTau2>
+             <RTau3>7.32e4</RTau3>
+             <RTau4>7.32e5</RTau4>
+             <RTau5>2.e6</RTau5>
+             <Beta>1.5e-4</Beta>
+             <Gamma>1.0</Gamma>
+             <DCp_DTemperature>3.30773</DCp_DTemperature>
+         </constitutive_model>
+         
+         <thermal_conductivity>  .452            </thermal_conductivity>
+         <specific_heat>        996.0            </specific_heat>
+         
+         <geom_object>
+            <cylinder label = "inner cylinder"> </cylinder>
+           <res>                 [2,2,2]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         600.0           </temperature>
+         </geom_object>
+       </material>
 
-            <contact>
-              <type>approach</type>
-              <materials>              [0,1]         </materials>
-              <mu> 0.0 </mu>
-            </contact>
+        <contact>
+          <type>approach</type>
+          <materials>              [0,1]         </materials>
+          <mu> 0.0 </mu>
+        </contact>
       </MPM>
 
        <ICE>
@@ -289,14 +289,14 @@
            <specific_heat>              716.0          </specific_heat>
            <gamma>                      1.4            </gamma>
            <geom_object>
-                  <box>
-                    <min>           [ 1.0, 1.0, 1.0] </min>
-                    <max>           [ 2.0, 2.0, 2.0] </max>
-                  </box>
+             <box>                                          
+               <min>           [ 1.0, 1.0, 1.0]        </min>  
+               <max>           [ 2.0, 2.0, 2.0]        </max>  
+             </box>                                         
              <res>                      [2,2,2]        </res>
-             <velocity>           [0.0,0.0,0.0]       </velocity>
-             <temperature>        300.0               </temperature>
-             <density>    1.1792946927374306000e+00   </density>
+             <velocity>           [0.0,0.0,0.0]        </velocity>
+             <temperature>        300.0                </temperature>
+             <density>    1.1792946927374306000e+00    </density>
              <pressure>           101325.0             </pressure>
            </geom_object>
          </material>
@@ -317,9 +317,9 @@
                  <cylinder label = "outer cylinder"> </cylinder>
                </difference>
              <res>                      [2,2,2]        </res>
-             <velocity>           [0.0,0.0,0.0]       </velocity>
-             <temperature>        300.0               </temperature>
-             <density>    1.1792946927374306000e+00   </density>
+             <velocity>           [0.0,0.0,0.0]        </velocity>
+             <temperature>        300.0                </temperature>
+             <density>    1.1792946927374306000e+00    </density>
              <pressure>           101325.0             </pressure>
            </geom_object>
          </material>
