@@ -775,7 +775,10 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-NVCC_CXXFLAGS="-arch=sm_20 "
+# Compile for Fermi GPUS:
+#   The line below will compile the kernels specifically for Fermi architecture once and for all.
+#   If the flag is not specified, then the kernels must be recompiled at runtime every time.
+NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
 for i in $CXXFLAGS; do
@@ -783,7 +786,10 @@ for i in $CXXFLAGS; do
 done
 
 if test "$debug" = "yes"; then
-  NVCC_CXXFLAGS="-G $NVCC_CXXFLAGS $_sci_includes"
+  # The "-g -G" option pair must be passed to NVCC when an application is compiled in
+  # order to debug with cuda‐gdb. This forces -O0 compilation, with the exception of
+  # very limited dead‐code eliminations and register‐spilling optimizations.
+  NVCC_CXXFLAGS="-g -G $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
