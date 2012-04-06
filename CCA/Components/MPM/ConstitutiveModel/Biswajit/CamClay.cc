@@ -695,6 +695,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           delvoldev[0] = -Ainvrvs[0] - AinvB[0]*deldelgamma;
           delvoldev[1] = -Ainvrvs[1] - AinvB[1]*deldelgamma;
 
+          std::cout << "deldelgamma = " << deldelgamma << " delvoldev = " << delvoldev[0] 
+                    << " , " << delvoldev[1] << endl;
+
+
           // update
           strain_elast_v = strain_elast_v_k + delvoldev[0];
           strain_elast_s = strain_elast_s_k + delvoldev[1];
@@ -720,6 +724,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
           dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
+          std::cout << "p = " << state->p << " q = " << state->q << " pc = " << state->p_c << endl;
           fyield = d_yield->evalYieldCondition(state);
 
           // update residual

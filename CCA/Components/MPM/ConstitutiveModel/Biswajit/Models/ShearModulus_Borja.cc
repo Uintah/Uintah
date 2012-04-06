@@ -82,21 +82,21 @@ double
 ShearModulus_Borja::computeInitialShearModulus()
 {
   double mu_vol = evalShearModulus(0.0);
-  return (d_mu0 + mu_vol);
+  return (d_mu0 - mu_vol);
 }
 
 double 
 ShearModulus_Borja::computeShearModulus(const ModelState* state) 
 {
   double mu_vol = evalShearModulus(state->epse_v);
-  return (d_mu0 + mu_vol);
+  return (d_mu0 - mu_vol);
 }
 
 double 
 ShearModulus_Borja::computeShearModulus(const ModelState* state) const
 {
   double mu_vol = evalShearModulus(state->epse_v);
-  return (d_mu0 + mu_vol);
+  return (d_mu0 - mu_vol);
 }
 
 // Compute the shear strain energy
@@ -105,7 +105,7 @@ double
 ShearModulus_Borja::computeStrainEnergy(const ModelState* state)
 {
   double mu_vol = evalShearModulus(state->epse_v);
-  double W = 1.5*(d_mu0 + mu_vol)*(state->epse_s*state->epse_s);
+  double W = 1.5*(d_mu0 - mu_vol)*(state->epse_s*state->epse_s);
   return W;
 }
 
@@ -141,16 +141,16 @@ ShearModulus_Borja::computeDqDepse_v(const ModelState* state) const
 double 
 ShearModulus_Borja::evalShearModulus(const double& epse_v) const
 {
-  double mu = d_alpha*d_p0*exp(-(epse_v - d_epse_v0)/d_kappatilde);
-  return mu;
+  double mu_vol = d_alpha*d_p0*exp(-(epse_v - d_epse_v0)/d_kappatilde);
+  return mu_vol;
 }
 
 //  Shear stress magnitude computation
 double 
 ShearModulus_Borja::evalQ(const double& epse_v, const double& epse_s) const
 {
-  double mu = evalShearModulus(epse_v);
-  double q = 3.0*(d_mu0 + mu)*epse_s;
+  double mu_vol = evalShearModulus(epse_v);
+  double q = 3.0*(d_mu0 - mu_vol)*epse_s;
 
   return q;
 }
@@ -160,7 +160,7 @@ double
 ShearModulus_Borja::evalDqDepse_v(const double& epse_v, const double& epse_s) const
 {
   double mu_vol = evalShearModulus(epse_v);
-  double dmu_depse_v = -mu_vol/d_kappatilde;
+  double dmu_depse_v = mu_vol/d_kappatilde;
   double dq_depse_v = 3.0*dmu_depse_v*epse_s;
   return dq_depse_v;
 }
@@ -170,7 +170,7 @@ double
 ShearModulus_Borja::evalDqDepse_s(const double& epse_v, const double& epse_s) const
 {
   double mu_vol = evalShearModulus(epse_v);
-  double dq_depse_s = 3.0*(d_mu0 + mu_vol);
+  double dq_depse_s = 3.0*(d_mu0 - mu_vol);
   return dq_depse_s;
 }
 
