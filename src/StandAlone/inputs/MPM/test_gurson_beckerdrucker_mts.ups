@@ -87,7 +87,7 @@
       </material>
       <material>
         <include href="inputs/MPM/MaterialData/MatConstHY100Steel.xml"/>
-        <constitutive_model type="elastic_plastic">
+        <constitutive_model type="elastic_plastic_hp">
           <include href="inputs/MPM/MaterialData/IsoElasticHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOSHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/MTSPlasticHY100Steel.xml"/>
@@ -106,6 +106,7 @@
           <initial_std_scalar_damage>     0.01  </initial_std_scalar_damage>
           <critical_scalar_damage>        0.7   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+          <plastic_convergence_algo>  biswajit  </plastic_convergence_algo>
         </constitutive_model>
         <geom_object>
           <cylinder label = "Cylinder">
