@@ -1425,238 +1425,167 @@ files calling for the first of these should be switched to the
 
 \subsubsection{Hypo-Elastic Plasticity in Uintah}  \label{Sec:ElasticPlastic}
 
-The hypoelastic-plastic stress update is based on an additive
-decomposition of the rate of deformation tensor into elastic
-and plastic parts.  Incompressibility is assumed
-for plastic deformations.  The volumetric response is therefore
-determined either by a bulk modulus and the trace of the rate
-of deformation tensor or using an equation of state.  The
-deviatoric response is determined either by an elastic constitutive
-equation or using a plastic flow rule in combination with a
-yield condition.
+The hypoelastic-plastic stress update is a mix and match combination
+of isotropic models.  The equation of state may be varied
+independently of the deviatoric response.  For elastic deviatoric
+response the shear moduli may be taken to be functions of temperature
+and pressure.  Plasticity is based on an additive decomposition of the
+rate of deformation tensor into elastic and plastic parts.
+Incompressibility is assumed for plastic deformations, i.e. the
+plastic strain rate is proportional to the deviatoric stress.  Various
+yield conditions and flow stresses may be mixed and matched.  There
+are also options for damage/melting modeling.  {\it Note that there
+  are few checks to prevent users from mixing and matching
+  inappropriate models}.
 
-The material models that can be varied in these stress update approaches
-are (this list is not exhaustive):
+Additional models can be added to this framework.  Presently, the
+material models available are:
 \begin{enumerate}
-    \item The elasticity model, for example,
+    \item Adiabatic Heating and Specific Heat:
       \begin{itemize}
-        \item Isotropic linear elastic model.
-        \item Anisotropic linear elastic models.
-        \item Isotropic nonlinear elastic models.
-        \item Anisotropic nonlinear elastic models.
+        \item Taylor-Quinney coefficient.
+        \item Constant Specific Heat ({\bf default}).
+        \item Specific Heat for Copper.
+        \item Specific Heat for Steel.
       \end{itemize}
-    \item Isotropic hardening or Kinematic hardening using a
-          back stress evolution rule, for example,
+    \item The equation of state (pressure/volume response):
       \begin{itemize}
-        \item Ziegler evolution rule   .
+        \item Hypoelastic ({\bf default}).
+        \item Neo-Hookean.
+        \item Mie-Gruneisen.
       \end{itemize}
-    \item The flow rule and hardening/softening law, for example,
+    \item The deviatoric stress model:
       \begin{itemize}
-        \item Perfect plasticity/power law hardening plasticity.
-        \item Johnson-Cook plasticity .
-        \item Mechanical Threshold Stress (MTS) plasticity .
-        \item Anand plasticity .
+        \item Linear hypoelasticity ({\bf default}).
+        \item Linear hypoviscoelasticity.
       \end{itemize}
-    \item The yield condition, for example,
+    \item The melting model:
       \begin{itemize}
-        \item von Mises yield condition.
-        \item Drucker-Prager yield condition.
-        \item Mohr-Coulomb yield condition.
+        \item Constant melt temperature ({\bf default}).
+        \item Steinberg-Cochran-Guinan (SCG) melt.
+        \item Burakovsky-Preston-Silbar (BPS) melt.
       \end{itemize}
-    \item A continuum or nonlocal damage model with damage evolution
-          given by, for example,
+    \item Temperature and pressure dependent shear moduli (only works
+      with linear hypoelastic deviatoric stress model):
+      \begin{itemize}
+        \item Constant shear modulus ({\bf default}).
+        \item Mechanical Threshold Stress (MTS) model.
+        \item Steinberg-Cochran-Guinan (SCG) model.
+        \item Nadal-LePoac (NP) model.
+        \item Preston-Tonks-Wallace (PTW) model.
+      \end{itemize}
+    \item The yield condition:
+      \begin{itemize}
+        \item von Mises.
+        \item Gurson-Tvergaard-Needleman (GTN).
+      \end{itemize}
+    \item The flow stress:
+      \begin{itemize}
+        \item the Isotropic Hardening model
+        \item the Johnson-Cook (JC) model
+        \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
+        \item the Zerilli-Armstrong (ZA) model.
+        \item the Zerilli-Armstrong for polymers model.
+        \item the Mechanical Threshold Stress (MTS) model.
+        \item the Preston-Tonks-Wallace (PTW) model.
+      \end{itemize}
+    \item The plastic return algorithm:
+      \begin{itemize}
+        \item Radial Return ({\bf default}).
+        \item Modified Nemat-Nasser/Maudlin.
+      \end{itemize}
+    \item The damage model:
       \begin{itemize}
         \item Johnson-Cook damage model.
-        \item Gurson-Needleman-Tvergaard model.
-        \item Sandia damage model.
-      \end{itemize}
-    \item An equation of state to determine the pressure (or
-          volumetric response), for example,
-      \begin{itemize}
-        \item Mie-Gruneisen equation of state.
       \end{itemize}
 \end{enumerate}
 
-The currently implemented stress update algorithms in Uintah
-do not allow for arbitrary elasticity models,
-kinematic hardening, arbitrary yield conditions and continuum or
-nonlocal damage (however a damage parameter is updated and
-used in the erosion algorithm).  The models that can be varied
-are the flow rule models, damage variable evolution models and the
-equation of state models.  Note that there are no checks
-to prevent users from mixing and matching inappropriate models.
+This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <constitutive_model="elastic_plastic_hp">
+        <shear_modulus>0.2845e4</shear_modulus>
+        <bulk_modulus>1.41e4</bulk_modulus>
+        <initial_material_temperature>298</initial_material_temperature>
+        <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
+        <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
 
-This section describes the current implementation of the hypoelastic-
-plastic model.  The plastic state is obtained using an iterative
-radial return procedure as described in \cite{Simo98}, page 124,
-except that the Newton procedure has been generalized to allow flow
-stresses to be functions of both equivalent plastic strain and
-equivalent plastic strain rate.
+        submodels
 
-\paragraph{Radial Return Algorithm}
-The rotated spatial rate of deformation tensor ($\Bd$) is additively
-decomposed into an elastic part, $\Bd^e$, and a plastic part, $\Bd^p$,
-  \begin{equation}
-     \Bd = \Bd^e + \Bd^p
-  \end{equation}
-  It is convenient to work with the deviatoric parts of $\Bd$,
-  $\Bd^e$, and $\Bd^p$, denoted $\Beta$, $\Beta^e$, and
-  $\Beta^p$ respectively. The same additive decomposition obtains
-  \begin{equation}
-     \Beta = \Beta^e + \Beta^p
-  \end{equation}
-  Presently these models are limited to the case of plastic
-  incompressibility ($\Tr{(\Bd^p)} = 0$), so that $\Bd^p=\Beta^p$.
+      </constitutive_model>
+  \end{Verbatim}
+  where ``submodels'' indicates subsets of tags corresponding to the
+  listed above (and detailed below).  {\it Note that the specified
+    bulk and shear moduli are used to calcuate a stable time step size
+    for the first time step (hence it is important that they be
+    consistent with EOS and deviatoric stress submodel material
+    constants).  However, if the default EOS and/or deviatoric stress
+    models are used, then these material constants are sufficient for
+    bulk and/or deviatoric stress response, and are automatically used
+    in those models.}  The bulk modulus is also used to determine
+  artificial viscosity parameters (throughout the simulation).
 
-The radial return algorithm assumes a yield condition of the form 
-  \begin{equation}\label{eq:yield_condition}
-    f(\Bs,\Ep,\dot{\Ep}) = \sqrt{3J_2} - \sigma_y(\Ep,\dot{\Ep})
+  \paragraph{Adiabatic Heating and Specific Heat}
+  A part of the plastic work done is converted into heat and used to update the
+  temperature of a particle.  The increase in temperature ($\Delta T$) due to
+  an increment in plastic strain ($\Delta\epsilon_p$) is given by the equation
+  \begin{equation}
+    \Delta T = \cfrac{\chi\sigma_y}{\rho C_p} \Delta \epsilon_p
   \end{equation}
-where $\sigma_y$ is the flow stress, $J_2 = {1\over2}\Bs:\Bs$ is the
-second invariant of the deviatoric part of the Cauchy stress, $\Bs$,
-and the equivalent plastic strain is defined as
-  \begin{equation}\label{eq:ep}
-    \Ep = \int_0^t\sqrt{{2\over3}\Bd^p:\Bd^p}dt = \int_0^t\sqrt{{2\over3}\Beta^p:\Beta^p}dt
-  \end{equation}
-Assuming a state at the end of the previous time step, time $t^n$,
-satisfying $f(\Bs^n,\Ep^n,\Epdot{}^n)\le0$, a new state satisfying
-Eqn. \ref{eq:yield_condition} at time $t^{n+1}=t^n+\Delta t$, where
-$\Delta t$ is the time step size, is sought.
+  where $\chi$ is the Taylor-Quinney coefficient, and $C_p$ is the specific
+  heat.  The value of the Taylor-Quinney coefficient is taken to be 0.9
+  in all our simulations (see \cite{Ravi01} for more details on the
+  variation of $\chi$ with strain and strain rate).
 
-Attention is further restricted to plastic flow associated with the yield condition,
-Eqn. \ref{eq:yield_condition}, i.e.
-  \begin{equation}\label{eq:associated_flow}
-    \Bd^p = \Beta^p \propto \Partial{f}{\Bsig} = \lambdadot{\Bs\over\norm{\Bs}} = \lambdadot\Bn
-  \end{equation}
-where $\Bsig$ is the Cauchy stress , $\Bn={\Bs/\norm{\Bs}}$ and
-$\lambdadot>0$ is a proportionality constant to be determined.
-Attention is also restricted to isotropic materials, for which the
-deviatoric response may be separated from the volumetric response.
-The linear hypoelastic/plastic constitutive equation for deviatoric
-response is
-  \begin{equation}\label{eq:linearhypoelasticity}
-    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
-  \end{equation}
-where $\mu$ is the shear modulus.  The shear modulus is required to be
-constant over the time step.  This permits evolution of the shear
-modulus based on the state at the beginning of the time step using the
-various shear modulus models described later, which are pressure and
-temperature dependent.  It also allows for a visoelastic deviatoric
-stress response provided an instantaneous shear modulus may be
-defined, as described later in this section for linear
-hypoviscoelasticity.
+  The Taylor-Quinney coefficient is taken as input in the ElasticPlastic model
+  using the tags
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
+  \end{Verbatim}
 
-A trial stress is calculated assuming no plastic deformation, i.e.
-  \begin{equation}\label{eq:strial}
-    {\Bs^{\text{trial}}} = \Bs^n + 2\mu\Beta\Delta t
-  \end{equation}
-If $f(\Bs^{\text{trial}},\Ep^n,0)\le0$, the deformation is purely
-elastic and the solution at time $t^{n+1}$ is
-$\Bs^{n+1}=\Bs^{\text{trial}}$, $\Ep^{n+1}=\Ep^n$.  If
-$f(\Bs^{\text{trial}},\Ep^n,0)>0$, the deformation is at least
-partially plastic.  In this case
-  \begin{equation}\label{eq:stress_update_0}
-    \Bs^{n+1} = \Bs^n + \dot{\Bs}\Delta t
-  \end{equation}
-where $\dot{\Bs}$ is given by Eqn. \ref{eq:linearhypoelasticity}.
-Eqn. \ref{eq:stress_update_0} may be rewritten in terms of the trial
-stress
-  \begin{equation}\label{eq:stress_update_1}
-    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\Beta^p\Delta t = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t {\Bs^{n+1}\over\norm{\Bs^{n+1}}}
-  \end{equation}
-using Eqn.s \ref{eq:strial}, \ref{eq:linearhypoelasticity} and
-\ref{eq:associated_flow}.  This equation may be rearranged to give
-  \begin{equation}
-    \Bs^{\text{trial}} = \Bs^{n+1} \left[ 1 + {2\mu\lambdadot\Delta t\over\norm{\Bs^{n+1}}}\right]
-  \end{equation}
-which gives the key result that $\Bs^{\text{trial}} \propto
-\Bs^{n+1}$, i.e. the trial stress and the updated stress are in the
-same direction.  Consequently the flow direction may be written
-  \begin{equation}\label{eq:flow_direction}
-    \Bn={\Bs^{n+1}\over\norm{\Bs^{n+1}}}={\Bs^{\text{trial}}\over\norm{\Bs^{\text{trial}}}}
-  \end{equation}
-and Eqn. \ref{eq:stress_update_1} may be rewritten
-  \begin{equation}\label{eq:stress_update_2}
-    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t \Bn
-  \end{equation}
-or, contracting both sides with $\Bn$, and using Eqn. \ref{eq:flow_direction},
-  \begin{equation}
-    \norm{\Bs^{n+1}} = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
-  \end{equation}
-which is a scalar equation for the proportionality constant
-$\lambdadot$.  Using the yield condition
-$f(\Bs^{n+1},\Ep^{n+1},\Epdot{}^{n+1})=0$
-(Eqn. \ref{eq:yield_condition}), this equation may be written in terms
-of $\lambdadot$
-  \begin{equation}\label{eq:stress_update_3}
-     \sqrt{2\over3}\sigma_y(\Ep^{n+1},\Epdot{}^{n+1}) = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
-  \end{equation}
-where from Eqn.s \ref{eq:ep} and \ref{eq:associated_flow},
-$\Ep^{n+1}=\Ep^n+\sqrt{2\over3}\lambdadot\Delta t$ and $\dot{\Ep}^{n+1}=\sqrt{2\over3}\lambdadot$.
+  \subparagraph{Default specific heat model}
+  The default model returns a constant specific heat and is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <specific_heat_model type="constant_Cp">
+    </specific_heat_model>
+  \end{Verbatim}
 
-For the special case of linear isotropic hardening,
-$\sigma_y(\Ep,\Epdot{})=\sigma_{y0}+k\Ep$, where $\sigma_{y0}$ is the
-initial yield stress and $k$ is the hardening modulus,
-Eqn. \ref{eq:stress_update_3} may be solved exactly.  More generally
-the solution may be found using Newton iteration.  Defining
-$\Delta\lambda = \lambdadot\Delta t$, and letting $j$ denote the
-iteration, define
-  \begin{equation}
-     g(\Delta\lambda_j) = \norm{\Bs^{\text{trial}}} - 2\mu\Delta\lambda_j - \sqrt{2\over3}\sigma_y(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1})
-  \end{equation}
-and, using the chain rule, the derivative may be calculated
-  \begin{equation}
-     {dg\over d\Delta\lambda}(\Delta\lambda_j) = - 2\mu - {2\over3}\left[{\partial\sigma_y\over \partial\Ep}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}) + {\partial\sigma_y\over \partial{\dot{\epsilon}_{p,j}^{n+1}}}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}){1\over\Delta t} \right]
-  \end{equation}
-Then until $|g(\Delta\lambda_{j+1})| < \text{TOL}$, calculate
-  \begin{equation}
-     \Delta\lambda_{j+1}=\Delta\lambda_j-{g(\Delta\lambda_j)\over{dg\over d\Delta\lambda}(\Delta\lambda_j)}
-  \end{equation}
-where $\Delta\lambda_0=0$, $\Epo^{n+1}=\Ep^n$,
-$\dot{\epsilon}_{p,0}^{n+1}=0$, and, once $\Delta\lambda$ has been
-determined to a specified accuracy, the final values of plastic strain
-and strain rate are given by
-  \begin{equation}
-    \Ep^{n+1}=\Ep^n+\sqrt{2\over3}\Delta\lambda_{j+1}
-  \end{equation}
-  \begin{equation}
-    \dot{\Ep}^{n+1}=\sqrt{2\over3}{\Delta\lambda_{j+1}\over\Delta t}
-  \end{equation}
-and the final value of $\Bs^{n+1}$ is calculated from Eqn. \ref{eq:stress_update_2}.
+  \subparagraph{Specific heat model for copper}
+  The specific heat model for copper is of the form
+  \Beq
+    Cp =
+    \begin{cases}
+      A_0~T^3 - B_0~T^2 + C_0~T - D_0 & \text{if} ~~T < T_0 \\
+      A_1~T + B_1 & \text{if} ~~T \ge T_0 ~.
+    \end{cases}
+  \Eeq
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <specific_heat_model type = "copper_Cp"> </specific_heat_model>
+  \end{Verbatim}
 
-While several of the allowed flow stresses are of the form
-$\sigma_y(\Ep,\dot{\Ep})$ as given in Eqn. \ref{eq:yield_condition},
-others include temperature and/or pressure dependence.  Similarly,
-several of the shear moduli models are functions of temperature and/or
-pressure.  Using the radial return algorithm in these cases amounts to
-convergence to the yield surface neglecting temperature changes, and
-assuming a non-associated flow rule of the form in
-Eqn. \ref{eq:associated_flow} (which is non-associated because the
-pressure dependence of the flow stress has been neglected,
-i.e. Eqn. \ref{eq:associated_flow} no longer holds).  This non
-associated flow rule results in zero plastic dilation (actually
-dilitation).  The end result is convergence to the flow stress with
-temperature and pressure held constant, i.e. to
-$\sigma_y(\Ep^{n+1},\dot{\Ep}^{n+1},p^n,T^n)$ with $\mu(p^n,T^n)$ and
-no plastic dilitation.  While holding pressure and temperature fixed
-over a time step is probably a good approximation for most explicit
-calculations, non-associated flow may not be.
+  \subparagraph{Specific heat model for steel}
+  A relation for the dependence of $C_p$ upon temperature is
+  used for the steel (\cite{Lederman74}).
+  \begin{align}
+    C_p & = \begin{cases}
+            A_1 + B_1~t + C_1~|t|^{-\alpha} & \text{if}~~ T < T_c \\
+            A_2 + B_2~t + C_2~t^{-\alpha^{'}} & \text{if}~~ T > T_c 
+          \end{cases} \label{eq:CpSteel}\\
+    t & = \cfrac{T}{T_c} - 1 
+  \end{align}
+  where $T_c$ is the critical temperature at which the phase transformation
+  from the $\alpha$ to the $\gamma$ phase takes place, and $A_1, A_2, B_1, B_2,
+  \alpha, \alpha^{'}$ are constants.
 
-Finally, it was found that this return algorithm worked equally well
-for linear hypoviscoelastic deviatoric response, i.e.
-  \begin{equation}\label{eq:linearhypoviscoelasticity}
-    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
-  \end{equation}
-rather than Eqn. \ref{eq:linearhypoelasticity}.
-Eqn. \ref{eq:linearhypoviscoelasticity} is the constitutive equation
-for $N$ linear Maxwell elements in parallel, each with shear modulus
-$\mu_i$, time constant $\tau_i$, and deviatoric stress $\Bs_i$, and
-  \begin{equation}
-    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
-  \end{equation}
-This model is detailed in the Deviatoric Stress Models section.
-Combined with a yield condition, the combination results in a
-model for viscoplastic material response.
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <specific_heat_model type = "steel_Cp"> </specific_heat_model>
+  \end{Verbatim}
+
+  The heat generated at a material point is conducted away at the end of a
+  time step using the transient heat equation.  The effect of conduction on
+  material point temperature is negligible (but non-zero) for the high
+  strain-rate problems simulated using Uintah.
 
 \paragraph{Equation of State Models}
 The elastic-plastic stress update assumes that the volumetric part of
@@ -1881,6 +1810,54 @@ exactly the same expansion for energy as derived in
 Wilkins, using a different approach.  The advantages of the approach outlined above are it's relative simplicity,
 and generality -- no assumption of constant specific heat is needed.
 
+\paragraph{Deviatoric Stress Models}
+The elastic-plastic stress update assumes that the deviatoric part of
+the Cauchy stress can be calculated independently of the equation of
+state.  There are two deviatoric stress models that are implemented in
+Uintah.  These are
+\begin{enumerate}
+    \item A default hypoelastic deviatoric stress.
+    \item A linear hypoviscooelastic deviatoric stress.
+\end{enumerate}
+
+\subparagraph{Default Hypoelastic Deviatoric Stress}
+  In this case the stress rate is given by
+  \begin{equation}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
+  \end{equation}
+  where $\mu$ is the shear modulus.  This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <deviatoric_stress_model type="default_hypo">
+      </deviatoric_stress_model>
+  \end{Verbatim}
+  If a deviatoric stress model is not specified then this model is the
+  {\bf default}.
+
+\subparagraph{Linear Hypoviscoelastic Deviatoric Stress}
+  This model is a three--dimensional version of a Generalized Maxwell
+  model, as presented in \cite{Zerilli07}.  It is specifically
+  implemented to be combined with the ZA for Polymers Flow Stress
+  Model described previously.  Together these models combine into a
+  hypoviscoplastic model.  The stress update is given by
+  \begin{equation}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
+  \end{equation}
+  where $\mu$ is the shear modulus and $\Bs_i$ are maxwell element
+  stresses which are tracked internally.  Also
+  \begin{equation}
+    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
+  \end{equation}
+  This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <deviatoric_stress_model type="hypo_viscoelasticity">
+        <N> 2 </N>
+        <shear_modulus_1> 3.0 </shear_modulus_1>
+        <tau_1> 1.67 </tau_1>
+        <shear_modulus_2> 40.0 </shear_modulus_2>
+        <tau_2> 8.2 </tau_2>
+      </deviatoric_stress_model>
+  \end{Verbatim}
+
 \paragraph{Melting Temperature}
   \subparagraph{Default model}
   The default model is to use a constant melting temperature.  This model
@@ -2051,17 +2028,150 @@ and generality -- no assumption of constant specific heat is needed.
   The PTW shear model is a simplified version of the SCG shear model.
   The inputs can be found in \verb|.../MPM/ConstitutiveModel/PlasticityModel/PTWShear.h|.
 
-  \paragraph{Flow Stress}
-  We have explored six temperature and strain rate dependent
-  models that can be used to compute the flow stress:
+\paragraph{Yield conditions}
+When failure is to be simulated we can use the
+Gurson-Tvergaard-Needleman yield condition instead of the von Mises
+condition.
+
+  \subparagraph{The von Mises yield condition}
+  The von Mises yield condition is the default.  It specifies a yield condition of
+  the form
+  \begin{equation}
+    \Phi = \sqrt{3J_2} - \sigma_y
+  \end{equation}
+  where $J_2$ is the second invariant of the deviatoric stress tensor
+  ($J_2={1\over2}\Bs:\Bs$) and $\sigma_y$ is the flow stress. Currently
+  the return algorithms are restricted to plastic flow in the
+  direction of the deviatoric stress
+  (Eqn. \ref{eq:associated_flow}). See the discussion in the Radial
+  Return algorithm description for details.  The von Mises yield
+  condition is invoked using the tags
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <yield_condition type="vonMises">
+    </yield_condition>
+  \end{Verbatim}
+
+  \subparagraph{The Gurson-Tvergaard-Needleman (GTN) yield condition}
+  The Gurson-Tvergaard-Needleman (GTN) yield
+  condition~\cite{Gurson77,Tver84} depends on porosity.  {\it This
+  model is for experts only!!!}  Here are some caveats: Formally,
+  you can replace the flow stress in Gurson’s model with the flow
+  stresses of Johnson-Cook, ZA, etc., but the internal variable
+  updates would have to be modified extensively.  For example, the JC
+  yield stress depends on the equivalent plastic strain, but this
+  needs to be the equivalent plastic strain of the matrix material,
+  which is very different from the equivalent plastic strain of the
+  porous composite. For example, under pure hydrostatic compression at
+  the macroscale, the matrix material will suffer massive amounts of
+  plastic SHEAR strains at the microscale (even though, for
+  hydrostatic loading, it has zero plastic shear strain at the
+  macroscale) and thus would need to harden. While the models should
+  run, they are unlikely to give realistic results.
+
+  The GTN yield condition is a fairly good bound in compression but a
+  TERRIBLE bound in tension (in fact using it in tension can produce
+  non-physical predictions of negative plastic work tantamount to
+  tension causing pore COLLAPSE; very few Gurson implementations catch
+  this problem because very few of them include run-time checks of
+  solution quality, including this one).
+
+  The GTN yield condition will not work with Radial Return.  An error
+  will be generated in this case.  Presently it only runs with the
+  modified Nemat-Nasser/Maudlin return algorithm.  Plastic flow is
+  assumed to be in the direction of deviatoric stress.  Hence this
+  is nonassociated flow for this pressure dependent yield condition.
+
+  The GTN yield condition can be written as
+  \begin{equation}
+    \Phi = \left(\frac{\sigma_{eq}}{\sigma_f}\right)^2 +
+    2 q_1 f_* \cosh \left(q_2 \frac{Tr(\sigma)}{2\sigma_f}\right) -
+    (1+q_3 f_*^2) = 0
+  \end{equation}
+  where $q_1,q_2,q_3$ are material constants and $f_*$ is the porosity
+  (damage) function given by
+  \begin{equation}
+    f* = 
+    \begin{cases}
+      f & \text{for}~~ f \le f_c,\\ 
+      f_c + k (f - f_c) & \text{for}~~ f > f_c 
+    \end{cases}
+  \end{equation}
+  where $k$ is a constant and $f$ is the porosity (void volume fraction).  The
+  flow stress in the matrix material is computed using either of the two
+  plasticity models discussed earlier.  Note that the flow stress in the matrix
+  material also remains on the undamaged matrix yield surface and uses an
+  associated flow rule.
+
+  This yield condition is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <yield_condition type="gurson">
+      <q1> 1.5 </q1>
+      <q2> 1.0 </q2>
+      <q3> 2.25 </q3>
+      <k> 4.0 </k>
+      <f_c> 0.05 </f_c>
+    </yield_condition>
+  \end{Verbatim}
+
+  \subparagraph{Porosity model}
+  The evolution of porosity is calculated as the sum of the rate of growth
+  and the rate of nucleation~\cite{Ramaswamy98a}.  The rate of growth of
+  porosity and the void nucleation rate are given by the following equations
+  ~\cite{Chu80}
+  \begin{align}
+    \dot{f} &= \dot{f}_{\text{nucl}} + \dot{f}_{\text{grow}} \\
+    \dot{f}_{\text{grow}} & = (1-f) \text{Tr}(\BD_p) \\
+    \dot{f}_{\text{nucl}} & = \cfrac{f_n}{(s_n \sqrt{2\pi})}
+            \exp\left[-\Half \cfrac{(\epsilon_p - \epsilon_n)^2}{s_n^2}\right]
+            \dot{\epsilon}_p
+  \end{align}
+  where $\BD_p$ is the rate of plastic deformation tensor, $f_n$ is the volume
+  fraction of void nucleating particles , $\epsilon_n$ is the mean of the
+  distribution of nucleation strains, and $s_n$ is the standard
+  deviation of the distribution.
+
+  The inputs tags for porosity are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <evolve_porosity> true </evolve_porosity>
+    <initial_mean_porosity>         0.005 </initial_mean_porosity>
+    <initial_std_porosity>          0.001 </initial_std_porosity>
+    <critical_porosity>             0.3   </critical_porosity>
+    <frac_nucleation>               0.1   </frac_nucleation>
+    <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+    <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+    <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+  \end{Verbatim}
+
+
+\paragraph{Flow Stress}
+  We have explored seven temperature and strain rate dependent
+  models that can be used to compute the flow stress.  Some of these are also
+  pressure dependent (note that plastic flow does is non-associative for
+  pressure dependent models):
   \begin{enumerate}
+    \item the Isotropic Hardening model
     \item the Johnson-Cook (JC) model
     \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
     \item the Zerilli-Armstrong (ZA) model.
-    \item the Zerilli-Armstrong for polymers model (which also has pressure dependence).
+    \item the Zerilli-Armstrong for polymers model.
     \item the Mechanical Threshold Stress (MTS) model.
     \item the Preston-Tonks-Wallace (PTW) model.
   \end{enumerate}
+
+  \subparagraph{Isotropic Hardening Flow Stress Model}
+  The Isotropic Hardening model is a simple linear relationship for the flow stress
+  \begin{equation}
+    \sigma_y(\Ep) = \sigma_y + K (\Ep)
+  \end{equation}
+  where $\Ep$ is the equivalent plastic strain, $\sigma_y$ and $k$ are material constants.
+
+  The inputs for this model are
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <flow_model type="isotropic_hardening">
+    <sigma_Y>792.0e6</sigma_y>
+    <K>510.0e6</K>
+  </flow_model>
+  \end{Verbatim}
 
   \subparagraph{JC Flow Stress Model}
   The Johnson-Cook (JC) model (\cite{Johnson83}) is purely empirical and gives
@@ -2083,7 +2193,7 @@ and generality -- no assumption of constant specific heat is needed.
 
   The inputs for this model are
   \begin{Verbatim}[fontsize=\footnotesize]
-  <plasticity_model type="johnson_cook">
+  <flow_model type="johnson_cook">
     <A>792.0e6</A>
     <B>510.0e6</B>
     <C>0.014</C>
@@ -2092,7 +2202,7 @@ and generality -- no assumption of constant specific heat is needed.
     <T_r>298.0</T_r>
     <T_m>1793.0</T_m>
     <epdot_0>1.0</epdot_0>
-  </plasticity_model>
+  </flow_model>
   \end{Verbatim}
 
   \subparagraph{SCG Flow Stress Model}
@@ -2139,7 +2249,7 @@ and generality -- no assumption of constant specific heat is needed.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
-    <plasticity_model type="steinberg_cochran_guinan">
+    <flow_model type="steinberg_cochran_guinan">
       <mu_0> 81.8e9 </mu_0>
       <sigma_0> 1.15e9 </sigma_0>
       <Y_max> 0.25e9 </Y_max>
@@ -2151,7 +2261,7 @@ and generality -- no assumption of constant specific heat is needed.
       <Gamma_0> 3.0 </Gamma_0>
       <a> 1.67 </a>
       <epsilon_p0> 0.0 </epsilon_p0>
-    </plasticity_model>
+    </flow_model>
   \end{Verbatim}
 
   \subparagraph{ZA Flow Stress Model}
@@ -2185,7 +2295,7 @@ and generality -- no assumption of constant specific heat is needed.
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
     
-    <plasticity_model type="zerilli_armstrong">
+    <flow_model type="zerilli_armstrong">
        <sigma_g>     50.0e6   </sigma_g>
        <k_H>         5.0e6    </k_H>
        <sqrt_l_inv>  5.0      </sqrt_l_inv>
@@ -2197,7 +2307,7 @@ and generality -- no assumption of constant specific heat is needed.
        <alpha_1>     0.0      </alpha_1>
        <K>           5.0e9    </K>
        <n>           1.0      </n>
-     </plasticity_model>
+     </flow_model>
   \end{Verbatim}
 
   \subparagraph{ZA for Polymers Flow Stress Model}
@@ -2237,7 +2347,7 @@ and generality -- no assumption of constant specific heat is needed.
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
     
-         <plasticity_model type="zerilli_armstrong_polymer">
+         <flow_model type="zerilli_armstrong_polymer">
            <sigma_g>     50.0e6      </sigma_g>
            <B_pa>        0.0      </B_pa>
            <B_pb>        0.0      </B_pb>
@@ -2253,7 +2363,7 @@ and generality -- no assumption of constant specific heat is needed.
            <omega_p>     0.0      </omega_p>
            <alpha_0>     0.0      </alpha_0>
            <alpha_1>     0.0      </alpha_1>
-         </plasticity_model>
+         </flow_model>
 
   \end{Verbatim}
 
@@ -2312,7 +2422,7 @@ and generality -- no assumption of constant specific heat is needed.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
-    <plasticity_model type="mts_model">
+    <flow_model type="mts_model">
       <sigma_a>363.7e6</sigma_a>
       <mu_0>28.0e9</mu_0>
       <D>4.50e9</D>
@@ -2336,7 +2446,7 @@ and generality -- no assumption of constant specific heat is needed.
       <edot_es0>3.42e8</edot_es0>
       <g_0es>0.15</g_0es>
       <sigma_es0>1679.3e6</sigma_es0>
-    </plasticity_model>
+    </flow_model>
   \end{Verbatim}
 
   \subparagraph{PTW Flow Stress Model}
@@ -2390,7 +2500,7 @@ and generality -- no assumption of constant specific heat is needed.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
-    <plasticity_model type="preston_tonks_wallace">
+    <flow_model type="preston_tonks_wallace">
       <theta> 0.025 </theta>
       <p> 2.0 </p>
       <s0> 0.0085 </s0>
@@ -2406,161 +2516,217 @@ and generality -- no assumption of constant specific heat is needed.
       <G0> 518e8 </G0>
       <alpha> 0.20 </alpha>
       <alphap> 0.20 </alphap>
-    </plasticity_model>
+    </flow_model>
   \end{Verbatim}
 
-  \paragraph{Adiabatic Heating and Specific Heat}
-  A part of the plastic work done is converted into heat and used to update the
-  temperature of a particle.  The increase in temperature ($\Delta T$) due to
-  an increment in plastic strain ($\Delta\epsilon_p$) is given by the equation
+\paragraph{Return Algorithms}
+
+Two return algorithms are presently available.  Both assume the direction
+of plastic flow is proportional to the current deviatoric stress.
+  \begin{enumerate}
+    \item Radial Return ({\bf default}).
+    \item Modified Nemat-Nasser/Maudlin Return Algorithm.
+  \end{enumerate}
+
+\subparagraph{Radial Return Algorithm}
+The plastic state is obtained using an iterative radial return
+procedure as described in \cite{Simo98}, page 124, except that the
+Newton procedure has been generalized to allow flow stresses to be
+functions of both equivalent plastic strain and equivalent plastic
+strain rate.
+
+The rotated spatial rate of deformation tensor ($\Bd$) is additively
+decomposed into an elastic part, $\Bd^e$, and a plastic part, $\Bd^p$,
   \begin{equation}
-    \Delta T = \cfrac{\chi\sigma_y}{\rho C_p} \Delta \epsilon_p
+     \Bd = \Bd^e + \Bd^p
   \end{equation}
-  where $\chi$ is the Taylor-Quinney coefficient, and $C_p$ is the specific
-  heat.  The value of the Taylor-Quinney coefficient is taken to be 0.9
-  in all our simulations (see \cite{Ravi01} for more details on the
-  variation of $\chi$ with strain and strain rate).
+  It is convenient to work with the deviatoric parts of $\Bd$,
+  $\Bd^e$, and $\Bd^p$, denoted $\Beta$, $\Beta^e$, and
+  $\Beta^p$ respectively. The same additive decomposition obtains
+  \begin{equation}
+     \Beta = \Beta^e + \Beta^p
+  \end{equation}
+  Presently these models are limited to the case of plastic
+  incompressibility ($\Tr{(\Bd^p)} = 0$), so that $\Bd^p=\Beta^p$.
 
-  The Taylor-Quinney coefficient is taken as input in the ElasticPlastic model
-  using the tags
+The radial return algorithm assumes a yield condition of the form 
+  \begin{equation}\label{eq:yield_condition}
+    f(\Bs,\Ep,\dot{\Ep}) = \sqrt{3J_2} - \sigma_y(\Ep,\dot{\Ep})
+  \end{equation}
+where $\sigma_y$ is the flow stress, $J_2 = {1\over2}\Bs:\Bs$ is the
+second invariant of the deviatoric part of the Cauchy stress, $\Bs$,
+and the equivalent plastic strain is defined as
+  \begin{equation}\label{eq:ep}
+    \Ep = \int_0^t\sqrt{{2\over3}\Bd^p:\Bd^p}dt = \int_0^t\sqrt{{2\over3}\Beta^p:\Beta^p}dt
+  \end{equation}
+Assuming a state at the end of the previous time step, time $t^n$,
+satisfying $f(\Bs^n,\Ep^n,\Epdot{}^n)\le0$, a new state satisfying
+Eqn. \ref{eq:yield_condition} at time $t^{n+1}=t^n+\Delta t$, where
+$\Delta t$ is the time step size, is sought.
+
+Attention is further restricted to plastic flow associated with the yield condition,
+Eqn. \ref{eq:yield_condition}, i.e.
+  \begin{equation}\label{eq:associated_flow}
+    \Bd^p = \Beta^p \propto \Partial{f}{\Bsig} = \lambdadot{\Bs\over\norm{\Bs}} = \lambdadot\Bn
+  \end{equation}
+where $\Bsig$ is the Cauchy stress , $\Bn={\Bs/\norm{\Bs}}$ and
+$\lambdadot>0$ is a proportionality constant to be determined.
+Attention is also restricted to isotropic materials, for which the
+deviatoric response may be separated from the volumetric response.
+The linear hypoelastic/plastic constitutive equation for deviatoric
+response is
+  \begin{equation}\label{eq:linearhypoelasticity}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
+  \end{equation}
+where $\mu$ is the shear modulus.  The shear modulus is required to be
+constant over the time step.  This permits evolution of the shear
+modulus based on the state at the beginning of the time step using the
+various shear modulus models described later, which are pressure and
+temperature dependent.  It also allows for a visoelastic deviatoric
+stress response provided an instantaneous shear modulus may be
+defined, as described later in this section for linear
+hypoviscoelasticity.
+
+A trial stress is calculated assuming no plastic deformation, i.e.
+  \begin{equation}\label{eq:strial}
+    {\Bs^{\text{trial}}} = \Bs^n + 2\mu\Beta\Delta t
+  \end{equation}
+If $f(\Bs^{\text{trial}},\Ep^n,0)\le0$, the deformation is purely
+elastic and the solution at time $t^{n+1}$ is
+$\Bs^{n+1}=\Bs^{\text{trial}}$, $\Ep^{n+1}=\Ep^n$.  If
+$f(\Bs^{\text{trial}},\Ep^n,0)>0$, the deformation is at least
+partially plastic.  In this case
+  \begin{equation}\label{eq:stress_update_0}
+    \Bs^{n+1} = \Bs^n + \dot{\Bs}\Delta t
+  \end{equation}
+where $\dot{\Bs}$ is given by Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:stress_update_0} may be rewritten in terms of the trial
+stress
+  \begin{equation}\label{eq:stress_update_1}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\Beta^p\Delta t = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t {\Bs^{n+1}\over\norm{\Bs^{n+1}}}
+  \end{equation}
+using Eqn.s \ref{eq:strial}, \ref{eq:linearhypoelasticity} and
+\ref{eq:associated_flow}.  This equation may be rearranged to give
+  \begin{equation}
+    \Bs^{\text{trial}} = \Bs^{n+1} \left[ 1 + {2\mu\lambdadot\Delta t\over\norm{\Bs^{n+1}}}\right]
+  \end{equation}
+which gives the key result that $\Bs^{\text{trial}} \propto
+\Bs^{n+1}$, i.e. the trial stress and the updated stress are in the
+same direction.  Consequently the flow direction may be written
+  \begin{equation}\label{eq:flow_direction}
+    \Bn={\Bs^{n+1}\over\norm{\Bs^{n+1}}}={\Bs^{\text{trial}}\over\norm{\Bs^{\text{trial}}}}
+  \end{equation}
+and Eqn. \ref{eq:stress_update_1} may be rewritten
+  \begin{equation}\label{eq:stress_update_2}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t \Bn
+  \end{equation}
+or, contracting both sides with $\Bn$, and using Eqn. \ref{eq:flow_direction},
+  \begin{equation}
+    \norm{\Bs^{n+1}} = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
+  \end{equation}
+which is a scalar equation for the proportionality constant
+$\lambdadot$.  Using the yield condition
+$f(\Bs^{n+1},\Ep^{n+1},\Epdot{}^{n+1})=0$
+(Eqn. \ref{eq:yield_condition}), this equation may be written in terms
+of $\lambdadot$
+  \begin{equation}\label{eq:stress_update_3}
+     \sqrt{2\over3}\sigma_y(\Ep^{n+1},\Epdot{}^{n+1}) = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
+  \end{equation}
+where from Eqn.s \ref{eq:ep} and \ref{eq:associated_flow},
+$\Ep^{n+1}=\Ep^n+\sqrt{2\over3}\lambdadot\Delta t$ and $\dot{\Ep}^{n+1}=\sqrt{2\over3}\lambdadot$.
+
+For the special case of linear isotropic hardening,
+$\sigma_y(\Ep,\Epdot{})=\sigma_{y0}+k\Ep$, where $\sigma_{y0}$ is the
+initial yield stress and $k$ is the hardening modulus,
+Eqn. \ref{eq:stress_update_3} may be solved exactly.  More generally
+the solution may be found using Newton iteration.  Defining
+$\Delta\lambda = \lambdadot\Delta t$, and letting $j$ denote the
+iteration, define
+  \begin{equation}
+     g(\Delta\lambda_j) = \norm{\Bs^{\text{trial}}} - 2\mu\Delta\lambda_j - \sqrt{2\over3}\sigma_y(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1})
+  \end{equation}
+and, using the chain rule, the derivative may be calculated
+  \begin{equation}
+     {dg\over d\Delta\lambda}(\Delta\lambda_j) = - 2\mu - {2\over3}\left[{\partial\sigma_y\over \partial\Ep}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}) + {\partial\sigma_y\over \partial{\dot{\epsilon}_{p,j}^{n+1}}}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}){1\over\Delta t} \right]
+  \end{equation}
+Then until $|g(\Delta\lambda_{j+1})| < \text{TOL}$, calculate
+  \begin{equation}
+     \Delta\lambda_{j+1}=\Delta\lambda_j-{g(\Delta\lambda_j)\over{dg\over d\Delta\lambda}(\Delta\lambda_j)}
+  \end{equation}
+where $\Delta\lambda_0=0$, $\Epo^{n+1}=\Ep^n$,
+$\dot{\epsilon}_{p,0}^{n+1}=0$, and, once $\Delta\lambda$ has been
+determined to a specified accuracy, the final values of plastic strain
+and strain rate are given by
+  \begin{equation}
+    \Ep^{n+1}=\Ep^n+\sqrt{2\over3}\Delta\lambda_{j+1}
+  \end{equation}
+  \begin{equation}
+    \dot{\Ep}^{n+1}=\sqrt{2\over3}{\Delta\lambda_{j+1}\over\Delta t}
+  \end{equation}
+and the final value of $\Bs^{n+1}$ is calculated from Eqn. \ref{eq:stress_update_2}.
+
+While several of the allowed flow stresses are of the form
+$\sigma_y(\Ep,\dot{\Ep})$ as given in Eqn. \ref{eq:yield_condition},
+others include temperature and/or pressure dependence.  Similarly,
+several of the shear moduli models are functions of temperature and/or
+pressure.  Using the radial return algorithm in these cases amounts to
+convergence to the yield surface neglecting temperature changes, and
+assuming a non-associated flow rule of the form in
+Eqn. \ref{eq:associated_flow} (which is non-associated because the
+pressure dependence of the flow stress has been neglected,
+i.e. Eqn. \ref{eq:associated_flow} no longer holds).  This non
+associated flow rule results in zero plastic dilation (actually
+dilitation).  The end result is convergence to the flow stress with
+temperature and pressure held constant, i.e. to
+$\sigma_y(\Ep^{n+1},\dot{\Ep}^{n+1},p^n,T^n)$ with $\mu(p^n,T^n)$ and
+no plastic dilitation.  While holding pressure and temperature fixed
+over a time step is probably a good approximation for most explicit
+calculations, non-associated flow may not be.
+
+Finally, it was found that this return algorithm worked equally well
+for linear hypoviscoelastic deviatoric response, i.e.
+  \begin{equation}\label{eq:linearhypoviscoelasticity}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
+  \end{equation}
+rather than Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:linearhypoviscoelasticity} is the constitutive equation
+for $N$ linear Maxwell elements in parallel, each with shear modulus
+$\mu_i$, time constant $\tau_i$, and deviatoric stress $\Bs_i$, and
+  \begin{equation}
+    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
+  \end{equation}
+This model is detailed in the Deviatoric Stress Models section.
+Combined with a yield condition, the combination results in a
+model for viscoplastic material response.
+
+The radial return algorith is the {\bf default}, and also may be
+explicitely invoked with the tag
   \begin{Verbatim}[fontsize=\footnotesize]
-    <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
+    <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
   \end{Verbatim}
 
-  \subparagraph{Default specific heat model}
-  The default model returns a constant specific heat and is invoked using
+\subparagraph{Modified Nemat-Nasser/Maudlin Return Algorithm}
+
+This stress update algorithm is a slightly modified version of the
+approach taken by Nemat-Nasser et
+al. (1991,1992)~\cite{Nemat91,Nemat92}, Wang (1994)~\cite{Wang94},
+Maudlin (1996)~\cite{Maudlin96}, and Zocher et
+al. (2000)~\cite{Zocher00}.  It is presently only documented in the
+code itself.  It is also known to give erroneous results under uniaxial
+stress conditions.
+
+The modified Nemat-Nasser/Maudlin return algorith is invoked with
+the tag
   \begin{Verbatim}[fontsize=\footnotesize]
-    <specific_heat_model type="constant_Cp">
-    </specific_heat_model>
+    <plastic_convergence_algo>biswajit</plastic_convergence_algo>
   \end{Verbatim}
-
-  \subparagraph{Specific heat model for copper}
-  The specific heat model for copper is of the form
-  \Beq
-    Cp =
-    \begin{cases}
-      A_0~T^3 - B_0~T^2 + C_0~T - D_0 & \text{if} ~~T < T_0 \\
-      A_1~T + B_1 & \text{if} ~~T \ge T_0 ~.
-    \end{cases}
-  \Eeq
-  The model is invoked using
-  \begin{Verbatim}[fontsize=\footnotesize]
-  <specific_heat_model type = "copper_Cp"> </specific_heat_model>
-  \end{Verbatim}
-
-  \subparagraph{Specific heat model for steel}
-  A relation for the dependence of $C_p$ upon temperature is
-  used for the steel (\cite{Lederman74}).
-  \begin{align}
-    C_p & = \begin{cases}
-            A_1 + B_1~t + C_1~|t|^{-\alpha} & \text{if}~~ T < T_c \\
-            A_2 + B_2~t + C_2~t^{-\alpha^{'}} & \text{if}~~ T > T_c 
-          \end{cases} \label{eq:CpSteel}\\
-    t & = \cfrac{T}{T_c} - 1 
-  \end{align}
-  where $T_c$ is the critical temperature at which the phase transformation
-  from the $\alpha$ to the $\gamma$ phase takes place, and $A_1, A_2, B_1, B_2,
-  \alpha, \alpha^{'}$ are constants.
-
-  The model is invoked using
-  \begin{Verbatim}[fontsize=\footnotesize]
-  <specific_heat_model type = "steel_Cp"> </specific_heat_model>
-  \end{Verbatim}
-
-  The heat generated at a material point is conducted away at the end of a
-  time step using the transient heat equation.  The effect of conduction on
-  material point temperature is negligible (but non-zero) for the high
-  strain-rate problems simulated using Uintah.
-
-\paragraph{Adding new models}
-  In the parallel implementation of the stress update algorithm, sockets have
-  been added to allow for the incorporation of a variety of plasticity, damage,
-  yield, and bifurcation models without requiring any change in the stress
-  update code.  The algorithm is shown in Algorithm~\ref{algo1}.  The
-  equation of state, plasticity model, yield condition, damage model, and
-  the stability criterion are all polymorphic objects created using a
-  factory idiom in C++~(\cite{Coplien92}).
-  \begin{table}[p]
-    \caption{Stress Update Algorithm} \label{algo1}
-    \vspace{12pt}
-    \begin{tabbing}
-    \quad \=\quad \=\quad \=\quad \=\quad \kill
-    {\bf Persistent}:Initial moduli, temperature, porosity, \\
-      \>\>        scalar damage, equation of state, plasticity model, \\
-      \>\>        yield condition, stability criterion, damage model\\
-    {\bf Temporary}:Particle state at time $t$ \\
-    {\bf Output:} Particle state at time $t+\Delta t$\\ \\
-
-    {\bf For} {\it all the patches in the domain}\\
-      \> Read the particle data and initialize updated data storage\\
-      \> {\bf For} {\it all the particles in the patch}\\
-      \>\>   Compute the velocity gradient and the rate of deformation tensor\\
-      \>\>   Compute the deformation gradient and the rotation tensor\\
-      \>\>   Rotate the Cauchy stress and the rate of deformation tensor \\
-      \>\>\> to the material configuration\\
-      \>\>   Compute the current shear modulus and melting temperature\\
-      \>\>   Compute the pressure using the equation of state,  \\
-      \>\>\>  update the hydrostatic stress, and  \\
-      \>\>\>  compute the trial deviatoric stress\\
-      \>\>   Compute the flow stress using the plasticity model\\
-      \>\>   Evaluate the yield function\\
-      \>\>   {\bf If} {\it particle is elastic} \\
-      \>\>\>     Update the elastic deviatoric stress from the trial stress\\
-      \>\>\>     Rotate the stress back to laboratory coordinates\\
-      \>\>\>     Update the particle state\\
-      \>\>   {\bf Else} \\
-      \>\>\>     Compute the elastic-plastic deviatoric stress\\
-      \>\>\>     Compute updated porosity, scalar damage, and \\
-      \>\>\>\>       temperature increase due to plastic work\\
-      \>\>\>     Compute elastic-plastic tangent modulus and
-                     evaluate stability condition\\
-      \>\>\>     Rotate the stress back to laboratory coordinates\\
-      \>\>\>     Update the particle state\\
-      \>\>   {\bf End If} \\
-      \>\>  {\bf If}
-             {\it Temperature $>$ Melt Temperature} or
-             {\it Porosity $>$ Critical Porosity} or
-             {\it Unstable}\\
-      \>\>\>       Tag particle as failed\\
-      \>\>  {\bf End If} \\
-      \>\> Convert failed particles into a material with a different
-           velocity field \\
-      \> {\bf End For} \\
-    {\bf End For}
-    \end{tabbing}
-  \end{table}
-
-Addition of a new model requires the following steps (the example below is only
-for the flow stress model but the same idea applies to other models) :
-\begin{enumerate}
-    \item Creation of a new class that encapsulates the plasticity
-    model.  The template for this class can be copied from the
-    existing plasticity models.  The data that is unique to
-    the new model are specified in the form of
-    \begin{itemize}
-      \item A structure containing the constants for the plasticity
-            model.
-      \item Particle variables that specify the variables that
-            evolve in the plasticity model.
-    \end{itemize}
-    \item The implementation of the plasticity model involves the
-    following steps.
-    \begin{itemize}
-      \item Reading the input file for the model constants in the
-            constructor.
-      \item Adding the variables that evolve in the plasticity model
-            appropriately to the task graph.
-      \item Adding the appropriate flow stress calculation method.
-    \end{itemize}
-    \item The \verb+PlasticityModelFactory+ is then modified so that
-          it recognizes the added plasticity model.
-\end{enumerate}
+{\it This is an experts only algorithm!!!}
 
 \paragraph{Damage Models and Failure}
 Only the Johnson-Cook damage evolution rule has been added to the
 DamageModelFactory so far.  The damage model framework is designed
 to be similar to the plasticity model framework.  New models can
-be added using the approach described in the previous section.
+be added using the approach described later in this section.
 
   A particle is tagged as ``failed'' when its temperature is greater than the
   melting point of the material at the applied pressure.  An additional
@@ -2573,82 +2739,6 @@ be added using the approach described in the previous section.
   which interacts with the remaining particles via contact.  Either approach
   leads to the simulation of a newly created surface.  More details of the
   approach can be found in ~\cite{Banerjee04a,Banerjee04c,Banerjee05}.
-
-  \paragraph{Yield conditions}
-  When failure is to be simulated we can use the Gurson-Tvergaard-Needleman
-  yield condition instead of the von Mises condition.
-
-  \subparagraph{The von Mises yield condition}
-  The von Mises yield condition is the default and is invoked using the tags
-  \begin{Verbatim}[fontsize=\footnotesize]
-    <yield_condition type="vonMises">
-    </yield_condition>
-  \end{Verbatim}
-
-  \subparagraph{The Gurson-Tvergaard-Needleman (GTN) yield condition}
-  The Gurson-Tvergaard-Needleman (GTN) yield
-  condition~\cite{Gurson77,Tver84} depends on porosity.  An associated
-  flow rule is used to determine the plastic rate parameter in either case.
-  The GTN yield condition can be written as
-  \begin{equation}
-    \Phi = \left(\frac{\sigma_{eq}}{\sigma_f}\right)^2 +
-    2 q_1 f_* \cosh \left(q_2 \frac{Tr(\sigma)}{2\sigma_f}\right) -
-    (1+q_3 f_*^2) = 0
-  \end{equation}
-  where $q_1,q_2,q_3$ are material constants and $f_*$ is the porosity
-  (damage) function given by
-  \begin{equation}
-    f* = 
-    \begin{cases}
-      f & \text{for}~~ f \le f_c,\\ 
-      f_c + k (f - f_c) & \text{for}~~ f > f_c 
-    \end{cases}
-  \end{equation}
-  where $k$ is a constant and $f$ is the porosity (void volume fraction).  The
-  flow stress in the matrix material is computed using either of the two
-  plasticity models discussed earlier.  Note that the flow stress in the matrix
-  material also remains on the undamaged matrix yield surface and uses an
-  associated flow rule.
-
-  This yield condition is invoked using
-  \begin{Verbatim}[fontsize=\footnotesize]
-    <yield_condition type="gurson">
-      <q1> 1.5 </q1>
-      <q2> 1.0 </q2>
-      <q3> 2.25 </q3>
-      <k> 4.0 </k>
-      <f_c> 0.05 </f_c>
-    </yield_condition>
-  \end{Verbatim}
-
-  \paragraph{Porosity model}
-  The evolution of porosity is calculated as the sum of the rate of growth
-  and the rate of nucleation~\cite{Ramaswamy98a}.  The rate of growth of
-  porosity and the void nucleation rate are given by the following equations
-  ~\cite{Chu80}
-  \begin{align}
-    \dot{f} &= \dot{f}_{\text{nucl}} + \dot{f}_{\text{grow}} \\
-    \dot{f}_{\text{grow}} & = (1-f) \text{Tr}(\BD_p) \\
-    \dot{f}_{\text{nucl}} & = \cfrac{f_n}{(s_n \sqrt{2\pi})}
-            \exp\left[-\Half \cfrac{(\epsilon_p - \epsilon_n)^2}{s_n^2}\right]
-            \dot{\epsilon}_p
-  \end{align}
-  where $\BD_p$ is the rate of plastic deformation tensor, $f_n$ is the volume
-  fraction of void nucleating particles , $\epsilon_n$ is the mean of the
-  distribution of nucleation strains, and $s_n$ is the standard
-  deviation of the distribution.
-
-  The inputs tags for porosity are of the form
-  \begin{Verbatim}[fontsize=\footnotesize]
-    <evolve_porosity> true </evolve_porosity>
-    <initial_mean_porosity>         0.005 </initial_mean_porosity>
-    <initial_std_porosity>          0.001 </initial_std_porosity>
-    <critical_porosity>             0.3   </critical_porosity>
-    <frac_nucleation>               0.1   </frac_nucleation>
-    <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
-    <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
-    <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-  \end{Verbatim}
 
   \paragraph{Damage model}
   After the stress state has been determined on the basis of the yield condition
@@ -2902,13 +2992,13 @@ hyperelastic-plastic stress update algorithm discussed below.
   \begin{Verbatim}[fontsize=\footnotesize]
   <?xml version='1.0' encoding='ISO-8859-1' ?>
   <Uintah_Include>
-    <plasticity_model type="johnson_cook">
+    <flow_model type="johnson_cook">
       <A>89.6e6</A>
       <B>292.0e6</B>
       <C>0.025</C>
       <n>0.31</n>
       <m>1.09</m>
-    </plasticity_model>
+    </flow_model>
   </Uintah_Include>
   \end{Verbatim}
 
@@ -2953,6 +3043,90 @@ hyperelastic-plastic stress update algorithm discussed below.
   stage material data for a range of materials is kept in the directory
   \verb|.../Uintah/StandAlone/inputs/MPM/MaterialData|.
 
+
+\paragraph{Adding new models}
+  In the parallel implementation of the stress update algorithm, sockets have
+  been added to allow for the incorporation of a variety of plasticity, damage,
+  yield, and bifurcation models without requiring any change in the stress
+  update code.  The algorithm is shown in Algorithm~\ref{algo1}.  The
+  equation of state, plasticity model, yield condition, damage model, and
+  the stability criterion are all polymorphic objects created using a
+  factory idiom in C++~(\cite{Coplien92}).
+  \begin{table}[p]
+    \caption{Stress Update Algorithm} \label{algo1}
+    \vspace{12pt}
+    \begin{tabbing}
+    \quad \=\quad \=\quad \=\quad \=\quad \kill
+    {\bf Persistent}:Initial moduli, temperature, porosity, \\
+      \>\>        scalar damage, equation of state, plasticity model, \\
+      \>\>        yield condition, stability criterion, damage model\\
+    {\bf Temporary}:Particle state at time $t$ \\
+    {\bf Output:} Particle state at time $t+\Delta t$\\ \\
+
+    {\bf For} {\it all the patches in the domain}\\
+      \> Read the particle data and initialize updated data storage\\
+      \> {\bf For} {\it all the particles in the patch}\\
+      \>\>   Compute the velocity gradient and the rate of deformation tensor\\
+      \>\>   Compute the deformation gradient and the rotation tensor\\
+      \>\>   Rotate the Cauchy stress and the rate of deformation tensor \\
+      \>\>\> to the material configuration\\
+      \>\>   Compute the current shear modulus and melting temperature\\
+      \>\>   Compute the pressure using the equation of state,  \\
+      \>\>\>  update the hydrostatic stress, and  \\
+      \>\>\>  compute the trial deviatoric stress\\
+      \>\>   Compute the flow stress using the plasticity model\\
+      \>\>   Evaluate the yield function\\
+      \>\>   {\bf If} {\it particle is elastic} \\
+      \>\>\>     Update the elastic deviatoric stress from the trial stress\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf Else} \\
+      \>\>\>     Compute the elastic-plastic deviatoric stress\\
+      \>\>\>     Compute updated porosity, scalar damage, and \\
+      \>\>\>\>       temperature increase due to plastic work\\
+      \>\>\>     Compute elastic-plastic tangent modulus and
+                     evaluate stability condition\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf End If} \\
+      \>\>  {\bf If}
+             {\it Temperature $>$ Melt Temperature} or
+             {\it Porosity $>$ Critical Porosity} or
+             {\it Unstable}\\
+      \>\>\>       Tag particle as failed\\
+      \>\>  {\bf End If} \\
+      \>\> Convert failed particles into a material with a different
+           velocity field \\
+      \> {\bf End For} \\
+    {\bf End For}
+    \end{tabbing}
+  \end{table}
+
+Addition of a new model requires the following steps (the example below is only
+for the flow stress model but the same idea applies to other models) :
+\begin{enumerate}
+    \item Creation of a new class that encapsulates the plasticity
+    model.  The template for this class can be copied from the
+    existing plasticity models.  The data that is unique to
+    the new model are specified in the form of
+    \begin{itemize}
+      \item A structure containing the constants for the plasticity
+            model.
+      \item Particle variables that specify the variables that
+            evolve in the plasticity model.
+    \end{itemize}
+    \item The implementation of the plasticity model involves the
+    following steps.
+    \begin{itemize}
+      \item Reading the input file for the model constants in the
+            constructor.
+      \item Adding the variables that evolve in the plasticity model
+            appropriately to the task graph.
+      \item Adding the appropriate flow stress calculation method.
+    \end{itemize}
+    \item The \verb+PlasticityModelFactory+ is then modified so that
+          it recognizes the added plasticity model.
+\end{enumerate}
 
 
 \subsubsection{Contact}  \label{Sec:Contact}
