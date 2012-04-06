@@ -82,10 +82,10 @@ void Pressure_Borja::outputProblemSpec(ProblemSpecP& ps)
 //  (look at the header file for the equation)
 double 
 Pressure_Borja::computePressure(const MPMMaterial* ,
-                                    const ModelState* state,
-                                    const Matrix3& ,
-                                    const Matrix3& ,
-                                    const double& )
+                                const ModelState* state,
+                                const Matrix3& ,
+                                const Matrix3& ,
+                                const double& )
 {
   double p = evalPressure(state->epse_v, state->epse_s);
   return p;
@@ -149,8 +149,8 @@ Pressure_Borja::computeBulkModulus(const ModelState* state)
 double 
 Pressure_Borja::computeStrainEnergy(const ModelState* state)
 {
-  double U = -d_p0*d_kappatilde*exp(-(state->epse_v - d_epse_v0)/d_kappatilde);
-  return U;
+  double Wvol = -d_p0*d_kappatilde*exp(-(state->epse_v - d_epse_v0)/d_kappatilde);
+  return Wvol;
 }
 
 // No isentropic increase in temperature with increasing strain
@@ -248,8 +248,8 @@ Pressure_Borja::computeStrainEnergy(const double& rho_orig,
 {
   // Calculate epse_v
   double epse_v = rho_orig/rho_cur - 1.0;
-  double U = -d_p0*d_kappatilde*exp(-(epse_v - d_epse_v0)/d_kappatilde);
-  return U;
+  double Wvol = -d_p0*d_kappatilde*exp(-(epse_v - d_epse_v0)/d_kappatilde);
+  return Wvol;
 }
 
 //-------------------------------------------------------------------------
@@ -260,8 +260,9 @@ Pressure_Borja::computeStrainEnergy(const double& rho_orig,
 double 
 Pressure_Borja::evalPressure(const double& epse_v, const double& epse_s) const
 {
-  double beta = 1.0 + 1.5*d_alpha/d_kappatilde*epse_s*epse_s;
+  double beta = 1.0 + 1.5*(d_alpha/d_kappatilde)*(epse_s*epse_s);
   double p = d_p0*beta*exp(-(epse_v - d_epse_v0)/d_kappatilde);
+  std::cout << "beta = " << beta << " epse_v = " << epse_v << " p = " << p << endl;
 
   return p;
 }
@@ -278,7 +279,7 @@ Pressure_Borja::evalDpDepse_v(const double& epse_v, const double& epse_s) const
 double 
 Pressure_Borja::evalDpDepse_s(const double& epse_v, const double& epse_s) const
 {
-  double dbetaDepse_s = 3.0*d_alpha/d_kappatilde*epse_s;
+  double dbetaDepse_s = 3.0*(d_alpha/d_kappatilde)*epse_s;
   return d_p0*dbetaDepse_s*exp(-(epse_v - d_epse_v0)/d_kappatilde);
 }
 

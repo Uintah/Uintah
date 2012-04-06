@@ -46,7 +46,8 @@ where $\Ve^e_{v0}$ is the volumetric strain corresponding to a mean normal compr
 (tension positive), $\kappatilde$ is the elastic compressibility index, and the shear modulus is given by
 \[
   \mu = \mu_0 + \frac{\alpha}{\kappatilde}\,W_\Tvol(\Ve^e_v) 
-      = \mu_0 - \alpha p_0\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \,.
+      = \mu_0 - \alpha p_0\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+      = \mu_0 - \mu_\Tvol\,.
 \]
 The parameter $\alpha$ determines the extent of coupling between the volumetric and deviatoric 
 responses.  For consistency with isotropic elasticity, Rebecca Brannon suggests that $\alpha = 0$ (citation?). 
@@ -69,7 +70,8 @@ The derivatives of the stress invariants are
          \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
         = -\frac{p}{\kappatilde} \\
     \Partial{p}{\Ve^e_s} & = \Partial{q}{\Ve^e_v} = \frac{3\alpha p_0 \Ve^e_s}{\kappatilde}
-         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) = \frac{3\alpha p}{\beta \kappatilde}\,\Ve^e_s \\
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) = \frac{3\alpha p}{\beta \kappatilde}\,\Ve^e_s 
+         = \frac{3\mu_\Tvol}{\kappatilde}\,\Ve^e_s\\
     \Partial{q}{\Ve^e_s} & = 3 \left[\mu_0 - \alpha p_0
          \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \right] = 3 \mu\,.
   \Eal
