@@ -283,8 +283,11 @@ Pressure::evaluate()
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
   SVolField& pressure = *results[0];
+  pressure <<= 0.0;
+  
   SVolField& rhs      = *results[1];
-
+  rhs <<= 0.0;
+  
   // start by subtracting the dilatation from the previous timestep or integrator
   // stage. This is needed to account for any non-divergence free initial conditions
   rhs <<= - *dilatation_/ *timestep_;
