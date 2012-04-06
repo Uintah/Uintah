@@ -13,8 +13,8 @@ if os.sys.version_info <= (2,5):
   print "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
         "       You must use version 2.5 or greater (but NOT version 3.x!). \n" + \
         "       If you're using either ember or updraft please add the following to your shell rc script: \n" + \
-        "           csh/tcsh:  source  /uufs/chpc.utah.edu/sys/pkg/python/2.6.5so/etc/python.csh \n" + \
-        "           bash:      source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5so/etc/python.sh\n\n"
+        "           csh/tcsh:  source  /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.csh \n" + \
+        "           bash:      source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.sh\n\n"
   print ""
   exit( 1 )
 
