@@ -53,7 +53,7 @@ namespace Uintah {
   public:
 
     //! Create a yield condition from the input file problem specification.
-    static YieldCondition* create(ProblemSpecP& ps);
+    static YieldCondition* create(ProblemSpecP& ps, const bool usingRR);
     static YieldCondition* createCopy(const YieldCondition* yc);
   };
 } // End namespace Uintah

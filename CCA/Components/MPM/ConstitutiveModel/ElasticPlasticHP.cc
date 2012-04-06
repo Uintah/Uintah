@@ -115,11 +115,14 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   
   // plasticity convergence Algorithm
   d_plasticConvergenceAlgo = radialReturn;   // default
+  bool usingRR = true;
   string tmp = "empty";
+  
   ps->get("plastic_convergence_algo",tmp);
   
-  if (tmp == "radialReturn"){
-    d_plasticConvergenceAlgo = radialReturn;
+  if (tmp == "biswajit"){
+    d_plasticConvergenceAlgo = biswajit;
+    usingRR = false;
   }
   if(tmp != "radialReturn" && tmp != "biswajit" && tmp != "empty"){
     ostringstream warn;
@@ -130,7 +133,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
 
   //__________________________________
   // 
-  d_yield = YieldConditionFactory::create(ps);
+  d_yield = YieldConditionFactory::create(ps, usingRR );
   if(!d_yield){
     ostringstream desc;
     desc << "An error occured in the YieldConditionFactory that has \n"
