@@ -77,6 +77,7 @@ evaluate()
     Vel1GradTOp_->apply_to_field( *vel1_, *tmp1 );
 
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( vorticity );
+    *tmp <<= 0.0;
     InpterpVel1FaceT2FieldTOp_->apply_to_field( *tmp1, *tmp );
 
     vorticity <<= *tmp;
@@ -86,6 +87,7 @@ evaluate()
     Vel2GradTOp_->apply_to_field( *vel2_, *tmp2 );
 
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( vorticity );
+    *tmp <<= 0.0;
     InpterpVel2FaceT2FieldTOp_->apply_to_field( *tmp2, *tmp );
 
     vorticity <<= vorticity - *tmp;
