@@ -380,7 +380,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression		spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra,Cylinder)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -441,6 +441,20 @@
         </Field2>
       </ExprAlgebra>
       
+      <!-- creates a circular cylinder "patch" in the doamin. this can be used for initialization of scalars for example  !-->
+      <Cylinder   spec="OPTIONAL NO_DATA"
+                    attribute1="radius       REQUIRED DOUBLE"
+                    attribute2="insideValue  REQUIRED DOUBLE"
+                    attribute3="outsideValue REQUIRED DOUBLE">
+        <Origin           spec="REQUIRED VECTOR" />                            
+        <Coordinate1      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate1>
+        <Coordinate2      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate2>
+      </Cylinder>
+
       
     </BasicExpression>
     

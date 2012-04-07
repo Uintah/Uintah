@@ -144,6 +144,20 @@ namespace Wasatch{
       typedef typename ExprAlgebra<FieldT>::Builder Builder;
       builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );
     }
+    
+    else if ( params->findBlock("Cylinder") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("Cylinder");
+      double radius, insideValue, outsideValue;
+      std::vector<double> origin;
+      valParams->getAttribute("radius",radius);
+      valParams->getAttribute("insideValue",insideValue);
+      valParams->getAttribute("outsideValue",outsideValue);
+      valParams->get("Origin",origin);
+      const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
+      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );      
+      typedef typename CylinderPatch<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, field1Tag, field2Tag, origin, insideValue, outsideValue, radius );
+    }        
 
     return builder;
   }

@@ -249,19 +249,164 @@ build() const
 
 //--------------------------------------------------------------------
 
+/**
+ *  \class CylinderPatch
+ *  \author Tony Saad
+ *  \date April, 2012
+ *  \brief Implements a cylindrical patch for initialization purposes among other things.
+ The user specifies two coordinates (XSVOL, YSVOL for example) through
+ the input file along with an inside and outside values. The coordinates
+ determine the plane perpendicular to the axis of the cylinder. The inside
+ value specifies the desired value inside the cylinder while the outside
+ value corresponds to that outside the cylinder. The user must also provide
+ an origin and a radius. Note that the first two coordinates in the origin
+ are of important as they correspond to the cylinder axis intersection with the
+ coordinate plane. For example, if the user specifies (x,y) as coordinates,
+ then the axis of the cylinder is aligned with the z-axis.
+ */
+template< typename FieldT >
+class CylinderPatch : public Expr::Expression<FieldT>
+{
+public:
+  
+  /**
+   *  \brief Builds a Taylor Vortex velocity function in x direction Expression.
+   */
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    Builder(const Expr::Tag& result, 
+            const Expr::Tag& tag1,
+            const Expr::Tag& tag2,
+            const std::vector<double> origin,
+            const double insideValue = 1.0,
+            const double outsideValue = 0.0,
+            const double radius=0.1);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag tag1_, tag2_;
+    const std::vector<double> origin_;
+    const double insidevalue_, outsidevalue_, radius_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  CylinderPatch( const Expr::Tag& tag1,
+                const Expr::Tag& tag2,
+                const std::vector<double> origin,        // origin on the minus face perpendicular to axis        
+                const double insideValue,
+                const double outsideValue,
+                const double radius);
+  const Expr::Tag tag1_, tag2_;
+  const std::vector<double> origin_;
+  const double insidevalue_, outsidevalue_, radius_;
+  const FieldT* field1_;
+  const FieldT* field2_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+CylinderPatch<FieldT>::
+CylinderPatch( const Expr::Tag& tag1,
+              const Expr::Tag& tag2,
+              const std::vector<double> origin,
+              const double insideValue,
+              const double outsideValue,              
+              const double radius)
+: Expr::Expression<FieldT>(),
+tag1_(tag1), tag2_(tag2), origin_(origin), insidevalue_(insideValue), 
+outsidevalue_(outsideValue), radius_(radius)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+CylinderPatch<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( tag1_ );
+  exprDeps.requires_expression( tag2_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+CylinderPatch<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  field1_ = &fm.field_ref( tag1_ );
+  field2_ = &fm.field_ref( tag2_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+CylinderPatch<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  const double orig0 = origin_[0];
+  const double orig1 = origin_[1];  
+  FieldT& result = this->value();
+  result <<= cond( (*field1_ - orig0) * (*field1_ - orig0) + (*field2_ - orig1)*(*field2_ - orig1) - radius_*radius_ <= 0, insidevalue_)
+  ( outsidevalue_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+CylinderPatch<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& tag1,
+        const Expr::Tag& tag2,
+        const std::vector<double> origin,
+        const double insideValue,
+        const double outsideValue,
+        const double radius )
+: ExpressionBuilder(result),
+tag1_(tag1),
+tag2_(tag2),
+origin_(origin),
+insidevalue_(insideValue),
+outsidevalue_(outsideValue),
+radius_(radius)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+CylinderPatch<FieldT>::Builder::
+build() const
+{
+  return new CylinderPatch<FieldT>( tag1_, tag2_, origin_, insidevalue_, outsidevalue_, radius_ );
+}
+
+//--------------------------------------------------------------------
+
 //====================================================================
 
 // Explicit template instantiation for supported versions of this expression
 #include <CCA/Components/Wasatch/FieldTypes.h>
 using namespace Wasatch;
 
-#define INSTANTIATE_EXPR_ALGEBRA( VOL ) 	\
-template class ExprAlgebra< VOL >;
+#define INSTANTIATE_MMS_EPR( VOL ) 	\
+template class ExprAlgebra< VOL >;  \
+template class CylinderPatch< VOL >;
 
-INSTANTIATE_EXPR_ALGEBRA( SVolField );
-INSTANTIATE_EXPR_ALGEBRA( XVolField );
-INSTANTIATE_EXPR_ALGEBRA( YVolField );
-INSTANTIATE_EXPR_ALGEBRA( ZVolField );
+INSTANTIATE_MMS_EPR( SVolField );
+INSTANTIATE_MMS_EPR( XVolField );
+INSTANTIATE_MMS_EPR( YVolField );
+INSTANTIATE_MMS_EPR( ZVolField );
 //==========================================================================
 
 
