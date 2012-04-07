@@ -1662,7 +1662,7 @@ Due to the complexity of ARCHES simulations, exact solutions (with the exception
 \subsubsection*{\underline{Problem Description}}
 
 Methods of Manufactured Solutions (MMS) are verification tools that are used with computer codes such as ARCHES that seek to solve the Navier-Stokes Equations.  They are extremely useful for finding programming errors and ensuring expected behavior of the computer code.   The Almgren MMS is especially easy to implement because of the absence of source terms that must be added to the transport equations.
-ARCHES uses a second-order spatial discretization scheme and a first-order scheme in the temporal direction.  Therefore, if the Almgren MMS problem is run in Arches at different mesh resolutions and the normalized error plotted on a semilog plot, the slope of the line should be 2.  To facilitate this exercise, a shell script has been written to perform this analysis \bf{[not done yet....]}  test %COMPLETE ME
+ARCHES uses a second-order spatial discretization scheme and a first-order scheme in the temporal direction.  Therefore, if the Almgren MMS problem is run in Arches at different mesh resolutions and the normalized error plotted on a semilog plot, the slope of the line should be 2.  To facilitate this exercise, a shell script has been written to perform this analysis.
 
 \subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -1685,7 +1685,8 @@ This is call to run the ARCHES via sus.
 \item [Example Runtimes:] \hfill \\
 113.2 seconds (1 processor, 2.4 GHz Intel Core 2)
 
-\item [Physical time simulated:] \hfill 1.0 sec.
+\item [Physical time simulated:] \hfill \\
+  1.0 sec.
 \end{description}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1698,7 +1699,14 @@ This is call to run the ARCHES via sus.
 \addcontentsline{toc}{subsection}{Periodic Box Problem}
 \subsubsection*{\underline{Problem Description}}
 
-The Periodic Box Problem indicates how well ARCHES is modeling the kinetic energy contained in the turbulence modeled on the grid and at a sub-grid level.  The LES algorithm transfers kinetic energy from cell to cell in the ARCHES structured grid. Turbulence models such as "compdynamicprocedure," "dynamicprocedure," and "smagorinsky" are used to model kinetic energy at the sub-grid level.  Ideally, there would be a seamless transition between the resolved turbulence and sub-grid models at the Nyquist limit.  \bf{SHOW SAMPLE PLOT}  Experience has shown that this is not normally the case.   By plotting the kinetic energy as a function of the wave number, it is possible to determine how well the kinetic energy dissipation is being modeled by the code.  The Periodic Box problem is initialized with a kinetic energy (turbulence) profile from Direct Numerical Simulation (DNS).  As the simulation proceeds that energy is dissipated.  
+The Periodic Box Problem indicates how well ARCHES is modeling the
+kinetic energy contained in the turbulence modeled on the grid and at
+a sub-grid level.  The LES algorithm transfers kinetic energy from
+cell to cell in the ARCHES structured grid. Turbulence models such as
+"compdynamicprocedure," "dynamicprocedure," and "smagorinsky" are used
+to model kinetic energy at the sub-grid level.  Ideally, there would
+be a seamless transition between the resolved turbulence and sub-grid
+models at the Nyquist limit.  {\bf SHOW SAMPLE PLOT}  Experience has shown that this is not normally the case.   By plotting the kinetic energy as a function of the wave number, it is possible to determine how well the kinetic energy dissipation is being modeled by the code.  The Periodic Box problem is initialized with a kinetic energy (turbulence) profile from Direct Numerical Simulation (DNS).  As the simulation proceeds that energy is dissipated.  
  % COMPLETE ME
 
 \subsubsection*{\underline{Simulation Specifics}}
@@ -1719,7 +1727,8 @@ This simulation, like many ARCHES simulations, requires another file, in additio
 \item [Example Runtimes:] \hfill \\
 2 minutes   (1 processor, 2.4 GHz Intel Core 2 )
 
-\item [Physical time simulated:] \hfill 0.1 sec.  % Is this time long enough???
+\item [Physical time simulated:] \hfill \\
+0.1 sec.  % Is this time long enough???
 \end{description}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1734,7 +1743,14 @@ This simulation, like many ARCHES simulations, requires another file, in additio
 \subsection*{\center Helium Plume}
 \addcontentsline{toc}{subsection}{Helium Plume}
 \subsubsection*{\underline{Problem Description}}
-Helium plumes are classical experiments that allow for the easy capture of turbulent mixing data that can be used to validate the turbulent mixing models used in LES algorithms such as Arches.  The non-reacting nature of the plume makes it easy to capture experimental data without damaging expensive equipment.  Reacting flows require special mixing tables that contain temperature, pressure and composition as a function of the transported scalars in Arches.  The coldFlowMixingModel is used to determine the mixing of \bf{isothermal?} streams.  After the mixing model is specific in the .ups file, the temperature and densities of the two mixing streams are specified.
+Helium plumes are classical experiments that allow for the easy
+capture of turbulent mixing data that can be used to validate the
+turbulent mixing models used in LES algorithms such as Arches.  The
+non-reacting nature of the plume makes it easy to capture experimental
+data without damaging expensive equipment.  Reacting flows require
+special mixing tables that contain temperature, pressure and
+composition as a function of the transported scalars in Arches.  The
+coldFlowMixingModel is used to determine the mixing of {\bf isothermal?} streams.  After the mixing model is specific in the .ups file, the temperature and densities of the two mixing streams are specified.
 
 \subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -1752,7 +1768,8 @@ Helium plumes are classical experiments that allow for the easy capture of turbu
 \item [Example Runtimes:] \hfill \\
  54 minutes   (8 processors, 2.8 GHz Xeon)
 
-\item [Physical time simulated:] \hfill 5.0 sec.
+\item [Physical time simulated:] \hfill \\
+  5.0 sec.
 \end{description}
 
 \subsubsection*{\underline{Results}}
@@ -1787,7 +1804,8 @@ Note that the input file is pointed to the mixing table (inputs/UintahRelease/AR
 \item [Example Runtimes:] \hfill \\
  2 hours 10 minutes   (8 processors, 2.8 GHz Xeon)
 
-\item [Physical time simulated:] \hfill 5.0 sec.
+\item [Physical time simulated:] \hfill \\
+  5.0 sec.
 \end{description}
 
 \subsubsection*{\underline{Results}}
@@ -1825,7 +1843,8 @@ To extract the incident heat flux to the cylinder, use the faceextract and timee
 \item [Example Runtimes:] \hfill \\
 7 hours 27 minutes   (64 processors, 2.8 GHz Xeon)  % UDA at /scratch/uintah/hinckley/ARCHES_examples
 
-\item [Physical time simulated:] \hfill 10.0 sec.
+\item [Physical time simulated:] \hfill \\
+  10.0 sec.
 \end{description}
 
 \subsubsection*{\underline{Results}}

@@ -143,7 +143,7 @@ and $i$ refers to individual nodes of the grid.  $m_p$ is the particle
 mass, $\bfv_p$ is the particle velocity, and $\bfF^{\rm{ext}}_p$ is the
 external force on the particle.  The external forces that start on the
 particles typically the result of tractions, the application of which will
-be discussed in Section \ref{PhysicalBCs}.
+be discussed in Section \ref{sec:PhysicalBCs}.
 $S_{ip}$ is the shape function of the $ith$ node evaluated at $\bfx_p$.
 The functional form of the shape functions differs between MPM and GIMP.
 This difference is discussed in Section \ref{gimp_mpm}.
@@ -197,7 +197,7 @@ v_p^{n+1} = \rm{Det}(\bfd\bfF_p^{n+1})v_p^n,  \;\;\;\;\;\;\;\;\;
 Finally, the velocity gradient, and/or the deformation gradient are
 provided to a constitutive model, which outputs a time advanced stress
 at the particles.  Specifics of this operation will be further discussed
-in Section~\ref{ConstitutiveModels}
+in Section~\ref{Sec:ConstitutiveModels}
 
 At this point in the timestep, the particle position and velocity are explicitly
 updated by:
@@ -234,7 +234,7 @@ multi-field simulations with frictional contact, or to impose displacement
 based boundary conditions, e.g. a rigid piston, additional steps must be
 taken.  These steps implement contact formulations such as that described
 by Bardenhagen, et al.\cite{bard_contact}.  The {\it use} of the contact
-algorithms is described in Section~\ref{Contact}, but the reader will be
+algorithms is described in Section~\ref{Sec:Contact}, but the reader will be
 referred to the relevant literature for their development.  Lastly, heat
 conduction is also available in the explicit MPM code, although it may be
 neglected via a run time option in the input file.  Explicit MPM is typically
@@ -685,7 +685,7 @@ of the contact models which can be found in the \tt Contact \normalfont director
 models has two main tasks. This is the the first of those. It is responsible
 for modifying the grid velocity computed by interpolateParticlesToGrid according
 to the rules for the particular contact model chosen in the input file.  These
-models are briefly described in Section~\ref{Contact}. 
+models are briefly described in Section~\ref{Sec:Contact}. 
 
 \item {\tt scheduleComputeInternalForce \normalfont} This task computes the volume
 integral of the divergence of stress.  Specifically, it carries out the
@@ -906,7 +906,7 @@ is optional.  The first field is the material \tt <density>. \normalfont
 The \tt <constitutive\_model> \normalfont field refers
 to the model used to generate a stress tensor on each material point.
 The use of these models is described in detail in
-Section~\ref{ConstitutiveModels}.  Next are the thermal transport properties,
+Section~\ref{Sec:ConstitutiveModels}.  Next are the thermal transport properties,
 \tt <thermal\_conductivity> \normalfont and 
 \tt <specific\_heat>. \normalfont  Note that these are required even if
 heat conduction is not being computed.  These are the required material
@@ -922,14 +922,14 @@ indicates how many particles per cell are to be used in each of the
 coordinate directions.  Following that are initial values for velocity and
 temperature.  Finally, the \tt <color> \normalfont designation has a number
 of uses, for example when one wishes to identify initially distinct regions
-of the same material.  In Section~\ref{OTFA_MPM} is a description of how
+of the same material.  In Section~\ref{Sec:OTFA_MPM} is a description of how
 this field is used to identify particles for on the fly data extraction.
 
 An arbitray number of \tt <material> \normalfont fields can be specified.
 As the calculation proceeds, each of these materials has their own field
 variables, and, as such, each material behaves independently of the others.
 Interactions between materials occur as a result of ``contact" models.
-Their use is described in detail in Section~\ref{Contact}.
+Their use is described in detail in Section~\ref{Sec:Contact}.
 
 \begin{Verbatim}[fontsize=\footnotesize]
     <MaterialProperties>
@@ -1398,7 +1398,7 @@ Usage is given by:
 \end{Verbatim}
 
 \item{\bf Rigid Material}  This model was designed for use with the
-\tt specified \normalfont contact model described in Section~\ref{Contact}.
+\tt specified \normalfont contact model described in Section~\ref{Sec:Contact}.
 It is designed to compute zero stress and deformation of the material,
 and is basically a fast place holder for materials that won't be developing
 a stress anyway.
@@ -3138,7 +3138,7 @@ interaction, each material would behave as if it were the only one in the
 domain.  Contact models provide the mechanism by which to specify rules
 for inter material interactions.  There are a number of contact models
 from which to choose, the use of each is described next.  See the input
-file segment in Section~\ref{mat_props} for an example of their proper
+file segment in Section~\ref{Sec:mat_props} for an example of their proper
 placement in the input file, namely, after all of the MPM materials have
 been described.
 
@@ -3344,7 +3344,7 @@ There is also the field \tt id = "all" \normalfont.  In principal, one could
 set different boundary condition types for different materials.  In practice,
 this is rarely used, so the usage illustrated here should be used.
 
-\subsubsection{Physical Boundary Conditions} \label{Sec:PhysicalBCs}
+\subsubsection{Physical Boundary Conditions} \label{sec:PhysicalBCs}
 
 It is often more convenient to apply a specified load at the MPM particles.
 The load may be a function of time.  Such a load versus time curve is called
@@ -3360,7 +3360,7 @@ of the the surface are tagged with a load curve ID, and those particles
 are assigned external forces such that the desired pressure is achieved.
 
 We invoke the load curve in the \verb|<MPM>| section
-(See Section~\ref{MPMFlags})of the input file
+(See Section~\ref{Sec:MPMFlags})of the input file
 using  \verb|<use_load_curves> true </use_load_curves>|.  The default value
 is \verb|<use_load_curves> false </use_load_curves>|.
 
@@ -3455,7 +3455,7 @@ tagged particle.  Each of these files contains the time and position for
 that particle, along with whatever other data is specified.  {\bf To use this
 feature, one must include the} \tt <withColor>   true   </withColor> \normalfont
 {\bf tag in the} \tt <MPM> \normalfont {\bf section of the input file.}
-(See Section~\ref{MPMFlags}.)
+(See Section~\ref{Sec:MPMFlags}.)
 
 The following input file snippet is taken from
 \tt inputs/MPM/disks.ups \normalfont  
