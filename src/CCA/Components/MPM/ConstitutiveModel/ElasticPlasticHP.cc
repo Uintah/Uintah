@@ -114,14 +114,14 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("check_max_stress_failure",d_checkStressTriax);
   
   // plasticity convergence Algorithm
-  d_plasticConvergenceAlgo = radialReturn;   // default
+  d_plasticConvergenceAlgo = "radialReturn";   // default
   bool usingRR = true;
   string tmp = "empty";
   
   ps->get("plastic_convergence_algo",tmp);
   
   if (tmp == "biswajit"){
-    d_plasticConvergenceAlgo = biswajit;
+    d_plasticConvergenceAlgo = "biswajit";
     usingRR = false;
   }
   if(tmp != "radialReturn" && tmp != "biswajit" && tmp != "empty"){
@@ -306,6 +306,7 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("check_TEPLA_failure_criterion", d_checkTeplaFailureCriterion);
   cm_ps->appendElement("do_melting",                    d_doMelting);
   cm_ps->appendElement("check_max_stress_failure",      d_checkStressTriax);
+  cm_ps->appendElement("plastic_convergence_algo",      d_plasticConvergenceAlgo);
   cm_ps->appendElement("compute_specific_heat",         d_computeSpecificHeat);
 
   d_yield->outputProblemSpec(cm_ps);
@@ -1134,7 +1135,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           
           //__________________________________
           //
-          if (normS > 0.0 && d_plasticConvergenceAlgo == biswajit) {
+          if (normS > 0.0 && d_plasticConvergenceAlgo == "biswajit") {
             doRadialReturn = computePlasticStateBiswajit(state, pPlasticStrain, pStrainRate, 
                                                          sigma, trialS, tensorEta, tensorS,
                                                          delGamma, flowStress, porosity, mu_cur, delT, matl, idx);

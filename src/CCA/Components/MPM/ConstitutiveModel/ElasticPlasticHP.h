@@ -159,9 +159,8 @@ namespace Uintah {
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
     bool   d_checkStressTriax;
-    
-    enum plasticConvergenceAlgo {biswajit, radialReturn};
-    int  d_plasticConvergenceAlgo;
+
+    std::string  d_plasticConvergenceAlgo;
     // Erosion algorithms
     bool   d_setStressToZero;
     bool   d_allowNoTension;
