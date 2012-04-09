@@ -3558,7 +3558,7 @@ if test "$sci_required_gperftools" = "yes"; then
   if test "$IS_OSX" = "yes"; then
      gperf_lib_list=tcmalloc_and_profiler
   else
-     gperf_lib_list=tcmalloc profiler unwind
+     gperf_lib_list="tcmalloc profiler unwind"
   fi
 
   AC_LANG(C++)
