@@ -45,7 +45,6 @@ NIGHTLYTESTS = [
                  ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
-                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
                  ("advect_3L_3D",                    "advect_3L_3D.ups",                  1,  "Linux", ["no_restart"]),    \
                  ("disks_complex",                "disks_complex.ups",                4,  "Darwin", ["doesTestRun"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
@@ -58,8 +57,7 @@ NIGHTLYTESTS = [
                  ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Darwin", ["doesTestRun"]),    \
                  ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Darwin", ["doesTestRun"]),    \
-                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"]),    \
-                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"])
+                 ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"])
             ]
               
 # Tests that are run during local regression testing              
