@@ -196,6 +196,20 @@ ThreadedMPIScheduler2::createSubScheduler()
 }
 
 void
+ThreadedMPIScheduler2::initiateTask( DetailedTask          * task,
+			    bool only_old_recvs, int abort_point, int iteration)
+{
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
+  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
+
+  postMPIRecvs(task, only_old_recvs, abort_point, iteration);
+  if(only_old_recvs) {
+    return;
+  }
+} // end initiateTask()
+
+
+void
 ThreadedMPIScheduler2::runTask( DetailedTask         * task, int iteration, int t_id /*=0*/)
 {
   TAU_PROFILE("ThreadedMPIScheduler2::runTask()", " ", TAU_USER); 
@@ -676,22 +690,20 @@ ThreadedMPIScheduler2::runTasks(int t_id)
                cerrLock.unlock();
              }
              phaseSyncTask[initTask->getTask()->d_phase]= initTask;
-             if (initTask->getTask()->usesMPI()){
-               initiateTask( initTask, abort, abort_point, curriteration );
-               initTask->markInitiated();
-               ASSERT(initTask->getExternalDepCount() == 0) 
-             }
+             ASSERT(initTask->getRequires().size() == 0)
              initTask=NULL;
-           } else {
+           } else if (initTask->getRequires().size() == 0 ) {  //if no ext deps,skip MPI sends
+             initTask->markInitiated();
+             initTask->checkExternalDepCount(); 
+             initTask=NULL;
+           } else { 
              havework=true;
              break;
            }
          }
       }
       else {
-        recvLock.readLock();
-        processMPIs = recvs_.numRequests();
-        recvLock.readUnlock();
+        processMPIs = pendingMPIRecvs();
         if (processMPIs>0){
           havework=true;
           break;
@@ -708,14 +720,12 @@ ThreadedMPIScheduler2::runTasks(int t_id)
    //Part 2. Concurrent Part
 
     if (initTask!=NULL){
-      recvLock.writeLock();
-      initiateTask(initTask, abort, abort_point, curriteration );
+      initiateTask(initTask, abort, abort_point, curriteration);
       if (taskdbg.active()){
         cerrLock.lock();
         taskdbg << d_myworld->myrank() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount() << endl;
         cerrLock.unlock();
      }
-      recvLock.writeUnlock();
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
@@ -731,9 +741,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         runTask(readyTask, curriteration, t_id);
       }
     } else if (processMPIs>0) {
-          recvLock.writeLock();
           processMPIRecvs(TEST);
-          recvLock.writeUnlock();
     } else {
       //This could only happen when finished all tasks
       ASSERT( numTasksDone == ntasks);  
@@ -741,6 +749,257 @@ ThreadedMPIScheduler2::runTasks(int t_id)
 
  } //end while tasks
 }
+
+
+struct CompareDep {
+bool operator()(DependencyBatch* a, DependencyBatch* b)
+{
+  return a->messageTag < b->messageTag;
+}
+};
+void
+ThreadedMPIScheduler2::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration)
+{
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
+  double recvstart = Time::currentSeconds();
+  TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
+
+  // Receive any of the foreign requires
+
+  if( dbg.active()) {
+    cerrLock.lock();dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
+    cerrLock.unlock();
+  }
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM)
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
+
+  // sort the requires, so in case there is a particle send we receive it with
+  // the right message tag
+
+  vector<DependencyBatch*> sorted_reqs;
+  map<DependencyBatch*, DependencyBatch*>::const_iterator iter = 
+    task->getRequires().begin();
+  for( ; iter != task->getRequires().end(); iter++) {
+    sorted_reqs.push_back(iter->first);
+  }
+  CompareDep comparator;;
+  sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
+  vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
+    recvLock.writeLock();
+  for( ; sorted_iter != sorted_reqs.end(); sorted_iter++) {
+    DependencyBatch* batch = *sorted_iter;
+
+    // The first thread that calls this on the batch will return true
+    // while subsequent threads calling this will block and wait for
+    // that first thread to receive the data.
+
+    task->incrementExternalDepCount();
+    //cout << d_myworld->myrank() << " Add dep count to task " << *task << " for ext: " << *batch->fromTask << ": " << task->getExternalDepCount() << endl;
+    if( !batch->makeMPIRequest() ) {
+      //externalRecvs.push_back( batch ); // no longer necessary
+
+      if( dbg.active() ) {
+        cerrLock.lock();dbg << "Someone else already receiving it\n";
+        cerrLock.unlock();
+      }
+
+      continue;
+    }
+
+    if(only_old_recvs){
+      if(dbg.active()){
+        dbg << "abort analysis: " << batch->fromTask->getTask()->getName()
+          << ", so=" << batch->fromTask->getTask()->getSortedOrder()
+          << ", abort_point=" << abort_point << '\n';
+        if(batch->fromTask->getTask()->getSortedOrder() <= abort_point)
+          dbg << "posting MPI recv for pre-abort message " 
+            << batch->messageTag << '\n';
+      }
+      if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
+        continue;
+      }
+    }
+    
+
+    // Prepare to receive a message
+    BatchReceiveHandler* pBatchRecvHandler = 
+      scinew BatchReceiveHandler(batch);
+    PackBufferInfo* p_mpibuff = 0;
+#ifdef USE_PACKING
+    p_mpibuff = scinew PackBufferInfo();
+    PackBufferInfo& mpibuff = *p_mpibuff;
+#else
+    BufferInfo mpibuff;
+#endif
+
+    ostringstream ostr;
+    ostr.clear();
+    // Create the MPI type
+    for(DetailedDep* req = batch->head; req != 0; req = req->next){
+      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      //dbg.setActive(req->req->lookInOldTG );
+      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+        // See comment in DetailedDep about CommCondition
+
+        dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << endl;
+        continue;
+      }
+      // if we send/recv to an output task, don't send/recv if not an output timestep
+      if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+        dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << endl;
+        continue;
+      }
+      if (dbg.active()) {
+        ostr << *req << ' ';
+        dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
+      }
+
+      OnDemandDataWarehouse* posDW;
+      const VarLabel* posLabel;
+
+      // the load balancer is used to determine where data was in the old dw on the prev timestep
+      // pass it in if the particle data is on the old dw
+      LoadBalancer* lb = 0;
+      if(!reloc_new_posLabel_ && parentScheduler){
+        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posLabel = parentScheduler->reloc_new_posLabel_;
+      } else {
+        // on an output task (and only on one) we require particle variables from the NewDW
+        if (req->toTasks.front()->getTask()->getType() == Task::Output)
+          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+        else {
+          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          lb = getLoadBalancer();
+        }
+        posLabel = reloc_new_posLabel_;
+      }
+
+      MPIScheduler* top = this;
+      while(top->parentScheduler) top = top->parentScheduler;
+
+      dw->recvMPI(batch, mpibuff, posDW, req, lb);
+
+      if (!req->isNonDataDependency()) {
+        graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
+      }
+
+    }
+
+    // Post the receive
+    if(mpibuff.count()>0){
+
+      ASSERT(batch->messageTag > 0);
+      double start = Time::currentSeconds();
+      void* buf;
+      int count;
+      MPI_Datatype datatype;
+#ifdef USE_PACKING
+      mpibuff.get_type(buf, count, datatype, d_myworld->getComm());
+#else
+      mpibuff.get_type(buf, count, datatype);
+#endif
+      //only recieve message if size is greater than zero
+      //we need this empty message to enforce modify after read dependencies 
+      //if(count>0)
+      //{
+        int from = batch->fromTask->getAssignedResourceIndex();
+        ASSERTRANGE(from, 0, d_myworld->size());
+        MPI_Request requestid;
+
+        if( dbg.active()) {
+          cerrLock.lock();
+          //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43)
+          dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
+            << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
+          //dbg.setActive(false);
+        }
+
+        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43) 
+        mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";
+        MPI_Irecv(buf, count, datatype, from, batch->messageTag,
+            d_myworld->getComm(), &requestid);
+        int bytes = count;
+        recvs_.add(requestid, bytes,
+            scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
+            ostr.str(), batch->messageTag);
+        mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
+      /*}
+      else
+      {
+        //no message was sent so clean up buffer and handler
+        delete p_mpibuff;
+        delete pBatchRecvHandler;
+      }*/
+    }
+    else {
+      // Nothing really need to be received, but let everyone else know
+      // that it has what is needed (nothing).
+      batch->received(d_myworld);
+#ifdef USE_PACKING
+      // otherwise, these will be deleted after it receives and unpacks
+      // the data.
+      delete p_mpibuff;
+      delete pBatchRecvHandler;
+#endif	        
+    }
+  } // end for
+    recvLock.writeUnlock();
+
+  double drecv = Time::currentSeconds() - recvstart;
+  mpi_info_.totalrecv += drecv;
+
+
+} // end postMPIRecvs()
+
+int 
+ThreadedMPIScheduler2::pendingMPIRecvs()
+{
+  int num=0;
+  recvLock.readLock();
+  num = recvs_.numRequests();
+  recvLock.readUnlock();
+  return num;
+}
+
+void
+ThreadedMPIScheduler2::processMPIRecvs(int how_much)
+{
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
+  TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
+
+  // Should only have external receives in the MixedScheduler version which
+  // shouldn't use this function.
+  // ASSERT(outstandingExtRecvs.empty());
+  //if (recvs_.numRequests() == 0) return;
+  double start = Time::currentSeconds();
+  recvLock.writeLock();
+  switch (how_much) {
+  case TEST:
+    recvs_.testsome(d_myworld);
+    break;
+  case WAIT_ONCE:
+    mpidbg << d_myworld->myrank() << " Start waiting once...\n";
+    recvs_.waitsome(d_myworld);
+    mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
+    break;
+  case WAIT_ALL:
+    // This will allow some receives to be "handled" by their
+    // AfterCommincationHandler while waiting for others.  
+    mpidbg << d_myworld->myrank() << "  Start waiting...\n";
+    while( (recvs_.numRequests() > 0)) {
+      bool keep_waiting = recvs_.waitsome(d_myworld);
+      if (!keep_waiting)
+        break;
+    }
+    mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
+  }
+  recvLock.writeUnlock();
+  mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
+  CurrentWaitTime+=Time::currentSeconds()-start;
+
+} // end processMPIRecvs()
 
 void
 ThreadedMPIScheduler2::postMPISends( DetailedTask         * task, int iteration, int t_id )
