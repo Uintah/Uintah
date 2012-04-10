@@ -203,6 +203,10 @@ private:
                               ArchesConstVariables* constvars);
   //______________________________________________________________________
   //
+  /** @brief Adjusts the neighbors of the fix pressure point to account for the 
+   * known pressure **/ 
+  void adjustForRefPoint( const Patch* patch, ArchesVariables* vars, ArchesConstVariables* constvars );
+
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
 
