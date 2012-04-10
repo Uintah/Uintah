@@ -344,6 +344,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   Matrix3 defGrad_new; defGrad_new.Identity(); 
   Matrix3 defGradInc; defGradInc.Identity();
   Matrix3 strainInc(0.0);
+  // Matrix3 rightStretch_old; rightStretch_old.Identity();
+  // Matrix3 rotation_old; rotation_old.Identity();
+  Matrix3 rightStretch_new; rightStretch_new.Identity();
+  Matrix3 rotation_new; rotation_new.Identity();
 
   // Strain variables
   Matrix3 strain(0.0);                  // Total strain
@@ -500,6 +504,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,px[idx]);
       }
 
+      // Calculate rate of deformation tensor (D)
+      rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
+
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
       // Update the deformation gradient tensor to its time n+1 value.
@@ -524,18 +531,22 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         throw ParameterNotFound("**ERROR**:InvalidValue: J < 0.0", __FILE__, __LINE__);
       }
 
-      // Calculate the current density and deformed volume
+      // Calculate the current mass density and deformed volume
       double rho_cur = rho_0/J_new;
       pVol_new[idx]=pMass[idx]/rho_cur;
 
-      // Compute polar decomposition of F (F = RU)
-      //pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
+      // Compute polar decompositions of F_old and F_new (F = RU)
+      // pDefGrad[idx].polarDecompositionRMB(rightStretch_old, rotation_old);
+      defGrad_new.polarDecompositionRMB(rightStretch_new, rotation_new);
 
-      // Calculate rate of deformation tensor (D)
-      rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
-      strainInc = rateOfDef_new*delT; // **WARNING** not rotationally corrected
+      // Unrotate the spatial rate of deformation tensor 
+      rateOfDef_new = (rotation_new.Transpose())*(rateOfDef_new*rotation_new);
 
-      // Calculate the total strain  (**WARNING** not rotationally corrected)
+      // Compute strain increment from rotationally corrected rate of deformation
+      // (Forward Euler)
+      strainInc = rateOfDef_new*delT; 
+
+      // Calculate the total strain  
       //   Volumetric strain &  Deviatoric strain
       strain = pStrain_old[idx] + strainInc;
       strain_v = strain.Trace();
@@ -695,8 +706,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           delvoldev[0] = -Ainvrvs[0] - AinvB[0]*deldelgamma;
           delvoldev[1] = -Ainvrvs[1] - AinvB[1]*deldelgamma;
 
-          std::cout << "deldelgamma = " << deldelgamma << " delvoldev = " << delvoldev[0] 
-                    << " , " << delvoldev[1] << endl;
+          //std::cout << "deldelgamma = " << deldelgamma << " delvoldev = " << delvoldev[0] 
+          //          << " , " << delvoldev[1] << endl;
 
 
           // update
@@ -724,7 +735,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
           dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
-          std::cout << "p = " << state->p << " q = " << state->q << " pc = " << state->p_c << endl;
+          //std::cout << "p = " << state->p << " q = " << state->q << " pc = " << state->p_c << endl;
           fyield = d_yield->evalYieldCondition(state);
 
           // update residual
@@ -787,17 +798,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 4:
       //-----------------------------------------------------------------------
-      // Rotate the stress/backStress back to the laboratory coordinates
-      // Update the stress/back stress
-
-      // Use new rotation
-      // defGrad_new.polarDecompositionRMB(rightStretch, rotation);
-
-      // sigma_new = (rotation*sigma_new)*(rotation.Transpose());
-      // pStress_new[idx] = sigma_new;
-        
-      // Rotate the deformation rate back to the laboratory coordinates
-      // rateOfDef_new = (rotation*rateOfDef_new)*(rotation.Transpose());
+      // Rotate back to spatial configuration
+      pStress_new[idx] = rotation_new*(pStress_new[idx]*rotation_new.Transpose());
+      pElasticStrain_new[idx] = rotation_new*(pElasticStrain_new[idx]*rotation_new.Transpose());
 
       // Compute the strain energy 
       double W_vol = d_eos->computeStrainEnergy(state);
