@@ -262,7 +262,7 @@ Pressure_Borja::evalPressure(const double& epse_v, const double& epse_s) const
 {
   double beta = 1.0 + 1.5*(d_alpha/d_kappatilde)*(epse_s*epse_s);
   double p = d_p0*beta*exp(-(epse_v - d_epse_v0)/d_kappatilde);
-  std::cout << "beta = " << beta << " epse_v = " << epse_v << " p = " << p << endl;
+  // std::cout << "beta = " << beta << " epse_v = " << epse_v << " p = " << p << endl;
 
   return p;
 }
