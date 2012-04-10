@@ -319,10 +319,9 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
-          IntVector ratio(1, 1, 1);
           IntVector ghost(maxGhost, maxGhost, maxGhost);
           for (int offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
-            ratio = ratio * coarseLevel->getRefinementRatio();
+            ghost = ghost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             Patch::selectType coarse;
 
