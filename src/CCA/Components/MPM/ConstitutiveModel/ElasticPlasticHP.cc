@@ -1574,7 +1574,7 @@ bool ElasticPlasticHP::computePlasticStateBiswajit(PlasticityState* state,
 
   // Do radial return adjustment
   double stst = sqrtThreeTwo*Stilde.Norm();
-  ASSERT(stst != 0.0);
+
   Stilde = Stilde*(state->yieldStress/stst);
   tensorS = Stilde;
   
