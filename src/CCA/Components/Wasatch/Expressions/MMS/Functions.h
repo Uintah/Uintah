@@ -254,6 +254,9 @@ build() const
  *  \author Tony Saad
  *  \date April, 2012
  *  \brief Implements a cylindrical patch for initialization purposes among other things.
+ By patch here we mean "patching a region of a domain with a specific value".
+ For a given field, This class allows users to "patch" a cylindrical region with 
+ a specific value for that field and also set its value outside the cylinder.
  The user specifies two coordinates (XSVOL, YSVOL for example) through
  the input file along with an inside and outside values. The coordinates
  determine the plane perpendicular to the axis of the cylinder. The inside
@@ -272,14 +275,22 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     /**
-     * \todo  Tony needs to document this.
-     * @param result
-     * @param tag1
-     * @param tag2
-     * @param origin
-     * @param insideValue
-     * @param outsideValue
-     * @param radius
+     * @param result Tag of the resulting expression.
+     * @param tag1   Tag of the first coordinate of the plane perpendicular
+                     to the cylinder axis.
+     * @param tag2   Tag of the second coordinate of the plane perpendicular
+                     to the cylinder axis. Note  that the order of coordinates
+                     is not important (tag1 = X, tag2 = Y) is equivalent to
+                     (tag1 = Y, tag2 = X).
+     * @param origin Coordinates of the intersection point between the cylinder axis
+                     and the plane of the supplied coordinates (tag1, tag2). Note,
+                     the order of the coordinates is important here and must match
+                     the order supplied in tag1 and tag2. The user may be required
+                     to set a third coordinate from the input file, but that will
+                     not affect the evaluation.
+     * @param insideValue Desired value of the resulting field inside the cylinder.
+     * @param outsideValue Desired value of the resulting field outside the cylinder.
+     * @param radius	Radius of the cylinder.
      */
     Builder(const Expr::Tag& result,
             const Expr::Tag& tag1,
