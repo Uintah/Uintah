@@ -340,6 +340,9 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
     echo "Now sending mail to John indicating that the GS has been replaced"
     tail -1 $logfile > message
     mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
+    # Also email Alan whenever there is a change to a GS (for GPU RT)
+    echo "Now sending mail to Alan indicating that the GS has been replaced"
+    mutt  -s "GoldStandard Change:$testname" ahumphrey@sci.utah.edu < message
     /bin/rm message
   fi
 
