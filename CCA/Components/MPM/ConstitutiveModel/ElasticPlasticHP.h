@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
 #include "PlasticityModels/SpecificHeatModel.h"
+#include "PlasticityModels/DeviatoricStressModel.h"
 #include <cmath>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/TangentModulusTensor.h>
@@ -174,6 +175,7 @@ namespace Uintah {
     ShearModulusModel*  d_shear;
     MeltingTempModel*   d_melt;
     SpecificHeatModel*  d_Cp;
+    DeviatoricStressModel*  d_devStress;
          
   private:
     // Prevent copying of this class

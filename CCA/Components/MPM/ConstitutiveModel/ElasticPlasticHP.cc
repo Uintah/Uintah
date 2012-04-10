@@ -45,6 +45,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -186,6 +188,14 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
     desc << "ElasticPlasticHP::Error in melting temp model factory" << endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
+  
+  d_devStress = scinew DeviatoricStressModel();
+  if (!d_devStress) {
+    ostringstream desc;
+    desc << "ElasticPlasticHP::Error creating deviatoric stress model" << endl;
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+  }  
+  d_devStress ->create(ps);
 
   d_computeSpecificHeat = false;
   ps->get("compute_specific_heat",d_computeSpecificHeat);
@@ -250,6 +260,7 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
   d_eos->setBulkModulus(d_initialData.Bulk);
   d_shear   = ShearModulusModelFactory::createCopy(cm->d_shear);
   d_melt    = MeltingTempModelFactory::createCopy(cm->d_melt);
+  d_devStress = 0;
   
   initializeLocalMPMLabels();
 }
@@ -283,6 +294,7 @@ ElasticPlasticHP::~ElasticPlasticHP()
   delete d_shear;
   delete d_melt;
   delete d_Cp;
+  delete d_devStress;
 }
 
 //______________________________________________________________________
@@ -1012,6 +1024,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
+      
       pStrainRate_new[idx] = sqrtTwoThird*tensorD.Norm();
 
       // Rotate the Cauchy stress back to the 
@@ -1046,7 +1059,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       state->initialMeltTemp     = Tm;
       state->specificHeat        = matl->getSpecificHeat();
       state->energy              = pEnergy[idx];
-
+      
       // Get or compute the specific heat
       if (d_computeSpecificHeat) {
         double C_p = d_Cp->computeSpecificHeat(state);
@@ -1071,8 +1084,18 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      Matrix3 trialS = tensorS + tensorEta*(2.0*mu_cur*delT);
+      DeformationState* defState = scinew DeformationState();
+      defState->tensorD   = tensorD;
+      defState->tensorEta = tensorEta;
+      d_devStress->computeDeviatoricStressInc(state, defState, delT);
 
+      Matrix3 trialS = tensorS + defState->devStressInc;
+      
+/*`==========TESTING==========*/
+      Matrix3 trialS_tmp = tensorS + tensorEta*(2.0*mu_cur*delT);
+      ASSERT(trialS_tmp != trialS);
+/*===========TESTING==========`*/
+      
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
       // the flow stress routines should be passed the entire stress (not just deviatoric)
