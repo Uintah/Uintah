@@ -441,7 +441,7 @@
         </Field2>
       </ExprAlgebra>
       
-      <!-- creates a circular cylinder "patch" in the doamin. this can be used for initialization of scalars for example  !-->
+      <!-- creates a circular cylinder "patch" in the domain. this can be used for initialization of scalars for example  !-->
       <Cylinder   spec="OPTIONAL NO_DATA"
                     attribute1="radius       REQUIRED DOUBLE"
                     attribute2="insideValue  REQUIRED DOUBLE"
