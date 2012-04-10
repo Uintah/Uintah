@@ -539,8 +539,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       // pDefGrad[idx].polarDecompositionRMB(rightStretch_old, rotation_old);
       defGrad_new.polarDecompositionRMB(rightStretch_new, rotation_new);
 
-      // Unrotate the spatial rate of deformation tensor 
+      // Unrotate the spatial rate of deformation tensor and elastic strain
       rateOfDef_new = (rotation_new.Transpose())*(rateOfDef_new*rotation_new);
+      Matrix3 elasticStrain_old = (rotation_new.Transpose())*(pElasticStrain_old[idx]*rotation_new);
 
       // Compute strain increment from rotationally corrected rate of deformation
       // (Forward Euler)
@@ -556,15 +557,15 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
       // Trial elastic strain
       //   Volumetric elastic strain &  Deviatoric elastic strain
-      strain_elast_tr = pElasticStrain_old[idx] + strainInc;
+      strain_elast_tr = elasticStrain_old + strainInc;
       strain_elast_v_tr = strain_elast_tr.Trace();
       strain_elast_devtr = strain_elast_tr - one*(strain_elast_v_tr/3.0);
       strain_elast_devtr_norm = strain_elast_devtr.Norm();
       strain_elast_s_tr = sqrtTwoThird*strain_elast_devtr_norm;
 
       // Previous volumetric and deviatoric elastic strains
-      strain_elast_v_n = pElasticStrain_old[idx].Trace();
-      strain_elast_dev_n = pElasticStrain_old[idx] - one*(strain_elast_v_n/3.0);
+      strain_elast_v_n = elasticStrain_old.Trace();
+      strain_elast_dev_n = elasticStrain_old - one*(strain_elast_v_n/3.0);
       strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
       strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
       
@@ -649,7 +650,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         int klocal = 0;
  
         // Do Newton iterations
-        state->elasticStrain = pElasticStrain_old[idx];
+        state->elasticStrain = elasticStrain_old;
         state->elasticStrainTrial = strain_elast_tr;
         while (( (rtolv > tolr) || (rtols > tolr) || (rtolf > tolr) ) 
               && ( (normrv > tola) || (normrs > tola) || (normrf > tola_f) ))
