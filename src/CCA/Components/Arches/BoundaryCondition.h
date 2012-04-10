@@ -106,6 +106,7 @@ namespace Uintah {
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
       enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
+      enum DIRECTION { CENTER, EAST, WEST, NORTH, SOUTH, TOP, BOTTOM }; 
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -991,6 +992,54 @@ namespace Uintah {
 
     private:
 
+      /** @brief Fix a stencil direction to a specified value **/ 
+      void fix_stencil_value( CCVariable<Stencil7>& stencil,  
+          DIRECTION dir, double value, IntVector c ){
+
+        switch ( dir ) { 
+          case CENTER: 
+            stencil[c].p = value; 
+            break;
+          case EAST: 
+            stencil[c].e = value; 
+            break; 
+          case WEST: 
+            stencil[c].w = value; 
+            break; 
+          case NORTH: 
+            stencil[c].n = value; 
+            break; 
+          case SOUTH: 
+            stencil[c].s = value; 
+            break; 
+          case TOP: 
+            stencil[c].t = value; 
+            break; 
+          case BOTTOM: 
+            stencil[c].b = value; 
+            break; 
+          default:
+            break; 
+        }
+      };
+
+      /** @brief Fix stencil to return a value ( v*x = c ), where x = solution variable **/ 
+      void fix_value( CCVariable<Stencil7>& stencil, CCVariable<double>& su, CCVariable<double>& sp, 
+          const double value, const double constant, IntVector c ){
+
+        su[c] = constant * value; 
+        sp[c] = -1.0 * constant;
+        stencil[c].e = 0.0; 
+        stencil[c].w = 0.0; 
+        stencil[c].n = 0.0; 
+        stencil[c].s = 0.0; 
+        stencil[c].t = 0.0; 
+        stencil[c].b = 0.0; 
+
+        //note that stencil.p = sum(off_diagonals) - sp 
+
+      };
+
       //-------------------------------------------------------------------
       // Flow Inlets
       //
@@ -1396,7 +1445,6 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
     }
   }
 }
-
 
 } // End namespace Uintah
 

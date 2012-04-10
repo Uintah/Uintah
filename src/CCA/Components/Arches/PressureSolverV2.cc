@@ -324,7 +324,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //__________________________________
     calculatePressureCoeff(patch, cellinfo, &vars, &constVars);
 
-
     // Modify pressure coefficients for multimaterial formulation
     if (d_MAlab) {
       new_dw->get(constVars.voidFraction, d_lab->d_mmgasVolFracLabel, d_indx, patch,gac, 1);
@@ -332,7 +331,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       mmModifyPressureCoeffs(patch, &vars,  &constVars);
 
     }
-    
+
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           cellinfo, &vars,
                                           &constVars);
@@ -370,6 +369,14 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     discrete->calculatePressDiagonal(patch, &vars);
 
+
+    if ( d_use_ref_point ){ 
+
+      adjustForRefPoint( patch, &vars, &constVars ); 
+
+    } 
+
+
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
 
     if( patch->containsCell(d_pressRef) && d_use_ref_point ){
@@ -386,7 +393,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       A.t = 0.0;
       A.b = 0.0;
       A.p = 1.0;
-      vars.pressNonlinearSrc[d_pressRef] = 1.0;
+      vars.pressNonlinearSrc[d_pressRef] = d_ref_value;
     }
   }
   delete discrete;
@@ -896,7 +903,7 @@ PressureSolver::mmModifyPressureCoeffs(const Patch* patch,
   for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
     Stencil7& A = coeff_vars->pressCoeff[c];
-    
+
     IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
     IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
     IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
@@ -909,3 +916,76 @@ PressureSolver::mmModifyPressureCoeffs(const Patch* patch,
     A.b *= 0.5 * (voidFrac[c] + voidFrac[B]);
   }
 }
+
+void 
+PressureSolver::adjustForRefPoint( const Patch* patch, 
+    ArchesVariables* vars, ArchesConstVariables* constvars )
+{ 
+
+  //DEVELOPER NOTE: (TODO) This only works when not next to a patch boundary. 
+  // We might want to figure out how to use this in any valid flow cell 
+  // and specify the physical location rather than the I,J,K index. 
+
+  Vector Dx = patch->dCell(); 
+
+  if ( patch->containsCell( d_pressRef ) ){ 
+
+    IntVector c = d_pressRef; 
+    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
+    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
+    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
+
+    if ( constvars->cellType[c] != -1 ) {
+      throw InvalidValue("Error: Your reference pressure point is not a flow cell.", __FILE__, __LINE__);
+    }
+
+    if ( constvars->cellType[E] == -1 ){ 
+      if ( patch->containsCell(E) ){ 
+        vars->pressCoeff[E].w = 0.0; 
+        vars->pressNonlinearSrc[E] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
+      } else { 
+        throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+    if ( constvars->cellType[W] == -1 ){ 
+      if ( patch->containsCell(W) ){  
+        vars->pressCoeff[W].e = 0.0; 
+        vars->pressNonlinearSrc[W] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
+      } else { 
+        throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+    if ( constvars->cellType[N] == -1 ){ 
+      if ( patch->containsCell(N) ){ 
+        vars->pressCoeff[N].s= 0.0; 
+        vars->pressNonlinearSrc[N] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
+      } else { 
+        throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+    if ( constvars->cellType[S] == -1 ){ 
+      if ( patch->containsCell(S) ){ 
+        vars->pressCoeff[S].n = 0.0; 
+        vars->pressNonlinearSrc[S] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
+      } else { 
+        throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+    if ( constvars->cellType[T] == -1 ){ 
+      if ( patch->containsCell(T) ){
+        vars->pressCoeff[T].b= 0.0; 
+        vars->pressNonlinearSrc[T] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
+      } else { 
+        throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+    if ( constvars->cellType[B] == -1 ){ 
+      if ( patch->containsCell(B) ){ 
+        vars->pressCoeff[B].t = 0.0; 
+        vars->pressNonlinearSrc[B] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
+      } else { 
+        throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+      } 
+    } 
+  }
+} 
