@@ -52,6 +52,9 @@
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
+//-- TabProps --//
+#include <tabprops/TabPropsConfig.h>
+
 //-- Wasatch includes --//
 #include "Wasatch.h"
 #include "WasatchMaterial.h"
@@ -88,6 +91,8 @@ namespace Wasatch{
               << "             DATE: " << SOPS_REPO_DATE << std::endl
               << "     ExprLib HASH: " << EXPR_REPO_HASH << std::endl
               << "             DATE: " << EXPR_REPO_DATE << std::endl
+              << "    TabProps HASH: " << TabPropsVersionHash << std::endl
+              << "             DATE: " << TabPropsVersionDate << std::endl
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
 
