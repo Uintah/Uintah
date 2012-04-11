@@ -213,8 +213,12 @@ namespace Wasatch{
     catch( std::exception& e ){
       std::ostringstream msg;
       msg << "*************************************************" << endl
-          << "Error building ExpressionTree for RHS evaluation." << endl << endl
-          << e.what() << endl
+          << "Error building ExpressionTree for RHS evaluation." << endl
+          << " root nodes: ";
+          for( IDSet::const_iterator id = solnGraphHelper_->rootIDs.begin(); id!=solnGraphHelper_->rootIDs.end(); ++id ){
+            msg << solnGraphHelper_->exprFactory->get_labels(*id);
+          }
+      msg << endl << e.what() << endl
           << "*************************************************" << endl << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
