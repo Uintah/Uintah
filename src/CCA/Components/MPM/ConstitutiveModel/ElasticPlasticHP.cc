@@ -1093,9 +1093,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       
 /*`==========TESTING==========*/
       Matrix3 trialS_tmp = tensorS + tensorEta*(2.0*mu_cur*delT);
-      ASSERT(trialS_tmp != trialS);
+      ASSERT(trialS_tmp == trialS);
 /*===========TESTING==========`*/
-      
+       delete defState;
+            
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
       // the flow stress routines should be passed the entire stress (not just deviatoric)
