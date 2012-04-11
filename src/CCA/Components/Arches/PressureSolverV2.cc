@@ -80,6 +80,7 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_iteration = 0;
   d_indx = -9;
   d_hypreSolver_parameters = NULL;
+  d_periodic_vector = IntVector(0,0,0); 
 }
 
 //______________________________________________________________________
@@ -150,6 +151,8 @@ void PressureSolver::sched_solve(const LevelP& level,
                                  const TimeIntegratorLabel* timelabels,
                                  bool extraProjection)
 {
+
+  d_periodic_vector = level->getPeriodicBoundaries(); 
 
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  lb->getPerProcessorPatchSet(level);
@@ -944,7 +947,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[E].w = 0.0; 
         vars->pressNonlinearSrc[E] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
       } else { 
-        throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[0] == 0 ){ 
+          cout << " Reference neighbor = " << E << endl;
+          throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
     if ( constvars->cellType[W] == -1 ){ 
@@ -952,7 +958,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[W].e = 0.0; 
         vars->pressNonlinearSrc[W] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
       } else { 
-        throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[0] == 0 ){ 
+          cout << " Reference neighbor = " << W << endl;
+          throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
     if ( constvars->cellType[N] == -1 ){ 
@@ -960,7 +969,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[N].s= 0.0; 
         vars->pressNonlinearSrc[N] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
       } else { 
-        throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[1] == 0 ){ 
+          cout << " Reference neighbor = " << N << endl;
+          throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
     if ( constvars->cellType[S] == -1 ){ 
@@ -968,7 +980,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[S].n = 0.0; 
         vars->pressNonlinearSrc[S] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
       } else { 
-        throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[1] == 0 ){ 
+          cout << " Reference neighbor = " << S << endl;
+          throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
     if ( constvars->cellType[T] == -1 ){ 
@@ -976,7 +991,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[T].b= 0.0; 
         vars->pressNonlinearSrc[T] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
       } else { 
-        throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[2] == 0 ){ 
+          cout << " Reference neighbor = " << T << endl;
+          throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
     if ( constvars->cellType[B] == -1 ){ 
@@ -984,7 +1002,10 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
         vars->pressCoeff[B].t = 0.0; 
         vars->pressNonlinearSrc[B] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
       } else { 
-        throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        if ( d_periodic_vector[2] == 0 ){ 
+          cout << " Reference neighbor = " << B << endl;
+          throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+        }
       } 
     } 
   }

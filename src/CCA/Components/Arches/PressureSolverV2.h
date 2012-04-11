@@ -209,6 +209,7 @@ private:
 
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
+  IntVector d_periodic_vector; 
 
   Source*             d_source;
   BoundaryCondition*  d_boundaryCondition;
