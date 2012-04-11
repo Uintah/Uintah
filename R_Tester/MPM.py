@@ -59,7 +59,8 @@ NIGHTLYTESTS = [
                  ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Darwin", ["doesTestRun"]),    \
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Darwin", ["doesTestRun"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"]),    \
-                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"])
+                 ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"]),    \
+                 ("Charpy",                         "Charpy.ups",                         8,  "Linux", ["exactComparison"])
             ]
               
 # Tests that are run during local regression testing              
