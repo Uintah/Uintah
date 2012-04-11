@@ -214,8 +214,6 @@ namespace Wasatch{
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
-    EqnTimestepAdaptorBase* adaptor = NULL;
-    Wasatch::TransportEquation* scaltesteqn = NULL;
 
     std::string basePhiName;
     params->get( "SolutionVariable", basePhiName );
@@ -229,100 +227,80 @@ namespace Wasatch{
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
 
-    if (stagLocParams) {
 
-      for (int iEq=0; iEq<nEqs; iEq++) {
-        std::stringstream ss;
-        ss << iEq;
-        std::string thisPhiName = basePhiName + ss.str();
-        // set initial condition and register it
-        Expr::Tag icTag( thisPhiName, Expr::STATE_N );
+    for( int iEq=0; iEq<nEqs; iEq++ ){
+
+      Wasatch::TransportEquation* scaltesteqn = NULL;
+
+      std::stringstream ss;
+      ss << iEq;
+      std::string thisPhiName = basePhiName + ss.str();
+      // set initial condition and register it
+      Expr::Tag icTag( thisPhiName, Expr::STATE_N );
+      Expr::ExpressionID rhsID;
+
+      if( stagLocParams ){
 
         // X-Staggered scalar
-        if (stagLoc=="X") {
+        if( stagLoc=="X" ){
           Expr::Tag indepVarTag( "XXVOL", Expr::STATE_NONE );
           typedef Expr::SinFunction<XVolField>::Builder Builder;
           icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
           // create the transport equation with all-to-all source term
           typedef ScalabilityTestTransportEquation< XVolField > ScalTestEqn;
-          const Expr::ExpressionID rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                                         *solnGraphHelper->exprFactory,
-                                                                         params );
-          scaltesteqn = scinew ScalTestEqn( basePhiName, thisPhiName, rhsID );
-          solnGraphHelper->rootIDs.insert(rhsID);
-
-          adaptor = scinew EqnTimestepAdaptor< XVolField >( scaltesteqn );
-          adaptors.push_back(adaptor);
-        } else if (stagLoc=="Y") {
+          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                                *solnGraphHelper->exprFactory,
+                                                params );
+          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
+          adaptors.push_back( scinew EqnTimestepAdaptor< XVolField >( scaltesteqn ) );
+        }
+        else if( stagLoc=="Y" ){
           Expr::Tag indepVarTag( "XYVOL", Expr::STATE_NONE );
           typedef Expr::SinFunction<YVolField>::Builder Builder;
           icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
           // create the transport equation with all-to-all source term
           typedef ScalabilityTestTransportEquation< YVolField > ScalTestEqn;
-          const Expr::ExpressionID rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                                         *solnGraphHelper->exprFactory,
-                                                                         params );
-          scaltesteqn = scinew ScalTestEqn( basePhiName, thisPhiName, rhsID );
-          solnGraphHelper->rootIDs.insert(rhsID);
-
-          adaptor = scinew EqnTimestepAdaptor< YVolField >( scaltesteqn );
-          adaptors.push_back(adaptor);
-        } else if (stagLoc=="Z") {
+          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                                *solnGraphHelper->exprFactory,
+                                                params );
+          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
+          adaptors.push_back( scinew EqnTimestepAdaptor< YVolField >( scaltesteqn ) );
+        }
+        else if(stagLoc=="Z" ){
           Expr::Tag indepVarTag( "ZZVOL", Expr::STATE_NONE );
           typedef Expr::SinFunction<ZVolField>::Builder Builder;
           icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
           // create the transport equation with all-to-all source term
           typedef ScalabilityTestTransportEquation< ZVolField > ScalTestEqn;
-          const Expr::ExpressionID rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                                         *solnGraphHelper->exprFactory,
-                                                                         params );
-          scaltesteqn = scinew ScalTestEqn( basePhiName, thisPhiName, rhsID );
-          solnGraphHelper->rootIDs.insert(rhsID);
-
-          adaptor = scinew EqnTimestepAdaptor< ZVolField >( scaltesteqn );
-          adaptors.push_back(adaptor);
+          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                                *solnGraphHelper->exprFactory,
+                                                params );
+          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
+          adaptors.push_back( scinew EqnTimestepAdaptor< ZVolField >( scaltesteqn ) );
         }
 
       }
-    } else if (!stagLocParams) {
-
-      for (int iEq=0; iEq<nEqs; iEq++) {
-
-        std::stringstream ss;
-        ss << iEq;
-        std::string thisPhiName = basePhiName + ss.str();
-
-        // set initial condition and register it
-        Expr::Tag icTag( thisPhiName, Expr::STATE_N );
+      else{
         Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
         typedef Expr::SinFunction<SVolField>::Builder Builder;
         icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
         // create the transport equation with all-to-all source term
         typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
-        const Expr::ExpressionID rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                                       *solnGraphHelper->exprFactory,
-                                                                       params );
-        scaltesteqn = scinew ScalTestEqn( basePhiName,
-                                          thisPhiName,
-                                          rhsID );
-        solnGraphHelper->rootIDs.insert(rhsID);
-
-        adaptor = scinew EqnTimestepAdaptor< SVolField >( scaltesteqn );
-        adaptors.push_back(adaptor);
+        rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                              *solnGraphHelper->exprFactory,
+                                              params );
+        scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
+        adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
       }
-    }
-    //
-    // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
-    for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
-      EqnTimestepAdaptorBase* const adaptor = *ia;
-      Wasatch::TransportEquation* scaltesteqn = adaptor->equation();
+
+      solnGraphHelper->rootIDs.insert(rhsID);
 
       //_____________________________________________________
-      // set up initial conditions on this momentum equation
+      // set up initial conditions on this equation
       try{
         proc0cout << "Setting initial conditions for scalability test equation: "
             << scaltesteqn->solution_variable_name()
