@@ -124,7 +124,9 @@ run \
 "cmake \
   $DEBUG \
   -DTabProps_PREPROCESSOR=OFF \
-  -DBoostOutput=ON \
+  -DTabProps_UTILS=ON \
+  -DTabProps_BSPLINE=OFF \
+  -DTabProps_ENABLE_IO=ON \
   -DBOOST_ROOT=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
