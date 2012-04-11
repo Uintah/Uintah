@@ -53,9 +53,9 @@
  *  Note: In the case that we are solving a scalar transport equation with
  *        constant density we move out the density by devision from all
  *        terms except the source term. For the source term in this case we
- *        devide the specified source term expression by density here in
+ *        divide the specified source term expression by density here in
  *        ScalarRHS.
- *        So, you should be carfule with the cases that source terms are
+ *        So, you should be careful with the cases that source terms are
  *        NOT defined in the INPUT FILE but they will be added to the RHS
  *        automatically during the solution process and they are almost
  *        impossible to track (e.g. in ODT solver)
