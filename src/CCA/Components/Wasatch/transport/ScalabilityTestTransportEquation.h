@@ -86,18 +86,13 @@ namespace Wasatch{
 
     /**
      *  \brief Construct a ScalabilityTestTransportEquation
-     *  \param basePhiName This equation will be created n-times where n is a user
-     *         specified number in the input file. The basePhiName refers to the
-     *         base name of the solution variable. The n-equations that are created
-     *         will correspond to basePhiName0, basePhiName1, etc...
      *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
      *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
      *
      *  Note that the static member method get_rhs_expr_id can be useful to
      *  obtain the appropriate input arguments here.
      */
-    ScalabilityTestTransportEquation( const std::string basePhiName,
-                                      const std::string thisPhiName,
+    ScalabilityTestTransportEquation( const std::string thisPhiName,
                                       const Expr::ExpressionID id );
 
     ~ScalabilityTestTransportEquation();
@@ -107,18 +102,17 @@ namespace Wasatch{
      *         associated with this transport equation
      */
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           const Uintah::PatchSet* const localPatches,
-                                           const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);
-
+                                            const Uintah::PatchSet* const localPatches,
+                                            const PatchInfoMap& patchInfoMap,
+                                            const Uintah::MaterialSubset* const materials);
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
     void setup_boundary_conditions( const GraphHelper& graphHelper,
-                                   const Uintah::PatchSet* const localPatches,
-                                   const PatchInfoMap& patchInfoMap,
-                                   const Uintah::MaterialSubset* const materials);
+                                    const Uintah::PatchSet* const localPatches,
+                                    const PatchInfoMap& patchInfoMap,
+                                    const Uintah::MaterialSubset* const materials);
 
     /**
      *  \brief setup the initial conditions for this transport equation.

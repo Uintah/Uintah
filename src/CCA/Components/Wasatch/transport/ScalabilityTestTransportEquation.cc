@@ -161,8 +161,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   ScalabilityTestTransportEquation<FieldT>::
-  ScalabilityTestTransportEquation( const std::string basePhiName,
-                                    const std::string thisPhiName,
+  ScalabilityTestTransportEquation( const std::string thisPhiName,
                                     const Expr::ExpressionID rhsID )
   : Wasatch::TransportEquation( thisPhiName, rhsID,
                                 get_staggered_location<FieldT>() )
