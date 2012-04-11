@@ -38,8 +38,7 @@
     <BoundaryConditions>
       <Face side="x-" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
@@ -56,8 +55,7 @@
       </Face>
       <Face side="x+" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
@@ -74,8 +72,7 @@
       </Face>
       <Face side="y-" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
@@ -92,8 +89,7 @@
       </Face>
       <Face side="y+" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
@@ -110,8 +106,7 @@
       </Face>
       <Face side="z-" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
@@ -128,8 +123,7 @@
       </Face>
       <Face side="z+" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,0,0]</vecvalue>
+          <value>[0,0,0]</value>
         </BCType>
         <BCType id="all" label="mixture_f"  var="Neumann">
           <value>0.0</value>
