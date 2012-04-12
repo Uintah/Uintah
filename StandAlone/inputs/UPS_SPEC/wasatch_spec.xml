@@ -15,6 +15,10 @@
     <PostProcessingExpression		spec="MULTIPLE" />
     <!-- ========================================= -->
     <!-- Spec for Taylor Vortex MMS types -->
+    <!-- IMPORTANT: THE TAYLOR VORTEX FORMULATIONS (2D & 3D) INCORPORATE PERIODICITY IN THE IMPLEMENTATION (i.e. 2*Pi*coordinate).
+                    TO REPRODUCE PERIODIC CONDITIONS CORRECTLY, YOUR DOMAIN SIZE SHOULD BE AN INTEGER MULTIPLE OF 2*PI
+                    THIS MAKES IT EASIER FOR USERS TO SPECIFY DOMAIN SIZE WITH HIGHER ACCURACY -->
+                        
     <TaylorVortexMMS			spec="MULTIPLE NO_DATA"
                           attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                           children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY,TGVel3D)" >

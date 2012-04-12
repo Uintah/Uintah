@@ -23,6 +23,7 @@
 #include <cmath>
 
 #include "TaylorVortex.h"
+#define PI 3.1415926535897932384626433832795
 
 //--------------------------------------------------------------------
 
@@ -73,7 +74,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= 1.0 - A_ * cos( *x_ - *t_ ) * sin( *y_ - *t_ ) * exp( -2.0 * nu_ * *t_ );
+  phi <<= 1.0 - A_ * cos( 2.0*PI * *x_ - *t_ ) * sin( 2.0*PI * *y_ - *t_ ) * exp( -2.0 * nu_ * *t_ );
 }
 
 //--------------------------------------------------------------------
@@ -157,7 +158,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= 1.0 + A_ * sin( *x_ - *t_ ) * cos( *y_ - *t_ ) * exp( -2.0*nu_ * *t_ );
+  phi <<= 1.0 + A_ * sin( 2.0*PI * *x_ - *t_ ) * cos( 2.0*PI * *y_ - *t_ ) * exp( -2.0*nu_ * *t_ );
 }
 
 //--------------------------------------------------------------------
@@ -241,7 +242,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*( *x_ - *t_ ) ) * exp( -4.0*nu_ * *t_ );
+  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*( 2.0*PI * *x_ - *t_ ) ) * exp( -4.0*nu_ * *t_ );
 }
 
 //--------------------------------------------------------------------
@@ -325,7 +326,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*(*y_-*t_) ) * exp(-4.0 * nu_ * *t_);
+  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*(2.0*PI * *y_-*t_) ) * exp(-4.0 * nu_ * *t_);
 }
 
 //--------------------------------------------------------------------
@@ -406,7 +407,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= (2/sqrt(3.0))*sin(angle_) * sin(*x_) * cos( *y_ ) * cos(*z_);
+  phi <<= (2/sqrt(3.0))*sin(angle_) * sin(2.0*PI * *x_) * cos( 2.0*PI * *y_ ) * cos(2.0*PI * *z_);
 }
 
 //--------------------------------------------------------------------

@@ -127,7 +127,7 @@
       <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[0.01,6.283185307179586,6.283185307179586]</upper>
+        <upper>[1,1,1]</upper>
         <resolution>[2,64,64]</resolution>
         <patches>[1,2,2]</patches>
       </Box>
