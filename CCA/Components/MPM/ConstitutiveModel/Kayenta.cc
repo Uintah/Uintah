@@ -704,252 +704,161 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad + velGrad.Transpose())*.5;
       pLocalized_new[idx]=0;
-      if (pLocalized[idx]!=0){
 
-	pLocalized_new[idx]= pLocalized[idx];
-	// the particle is localized and will be updated using a viscous model
-	// we need to caluclate: pstress_new, pvolume_new, deformationGradient_new
-	// we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
-	double viscosity = 1e-3;
-	double USM;
-	double rho_cur;
-	double dt=delT;
-	viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx], deformationGradient_new[idx], rho_cur,pvolume_new[idx],USM,c_dil);
+      // New Way using subcycling
+      Matrix3 one; one.Identity();
+      Matrix3 F=deformationGradient[idx];
+      double Lnorm_dt = velGrad.Norm()*delT;
+      int num_scs = max(1,2*((int) Lnorm_dt));
+      if(num_scs > 1000){
+        cout << "NUM_SCS = " << num_scs << endl;
+      }
+      double dtsc = delT/(double (num_scs));
+      Matrix3 OP_tensorL_DT = one + velGrad*dtsc;
+      for(int n=0;n<num_scs;n++){
+        F=OP_tensorL_DT*F;
+      }
+      deformationGradient_new[idx]=F;
 
-	// Compute The Strain Energy for all the particles
-	Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+      // Old First Order Way
+//    deformationGradientInc = velGrad * delT + Identity;
 
-	double e = (D(0,0)*AvgStress(0,0) +
-		  D(1,1)*AvgStress(1,1) +
-		  D(2,2)*AvgStress(2,2) +
-		  2.*(D(0,1)*AvgStress(0,1) +
-			D(0,2)*AvgStress(0,2) +
-			D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+//    Jinc = deformationGradientInc.Determinant();
 
-	se += e;
+      // Update the deformation gradient tensor to its time n+1 value.
+//    deformationGradient_new[idx] = deformationGradientInc *
+//                                   deformationGradient[idx];
 
-	// Compute wave speed at each particle, store the maximum
-	Vector pvelocity_idx = pvelocity[idx];
-	WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      // get the volumetric part of the deformation
+      double J = deformationGradient_new[idx].Determinant();
+      double Jold = deformationGradient[idx].Determinant();
+      Jinc = J/Jold;
 
-	// Compute artificial viscosity term
-	if (flag->d_artificial_viscosity) {
-	  double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-	  double c_bulk = sqrt(UI[0]/rho_cur);
-	  Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-	  p_q[idx] = artificialBulkViscosity(D.Trace(),c_bulk, rho_cur, dx_ave);
-	} else {
-	  p_q[idx] = 0.;
-	}
-      } else {  // particle is not previously localized
-	  // Compute the deformation gradient increment using the time_step
-	  // velocity gradient
-	  // F_n^np1 = dudx * dt + Identity
+      // Check 1: Look at Jacobian
+      if (J<=0.0 || J > d_hugeJ) {
+          double Jold = deformationGradient[idx].Determinant();
+          cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
+          cout << "pos = " << px[idx] << endl;
 
-          double J;
-//          if(velGrad.Norm() > 1e-10){
-//            Matrix3 F=deformationGradient[idx];
-//            int num_scs = 10;
-//            double dtsc = delT/(double (num_scs));
-//            Matrix3 finc = (Identity+velGrad*dtsc);
-//            for(int n=0;n<num_scs;n++){
-//              F=finc*F;
-//            }
-//            deformationGradient_new[idx] = F;
-//	    J = deformationGradient_new[idx].Determinant();
-//            double Jold = deformationGradient[idx].Determinant();
-//            Jinc = J/Jold;
-//          }
-//          else{
-            deformationGradientInc = velGrad * delT + Identity;
-
-            Jinc = deformationGradientInc.Determinant();
-
-            // Update the deformation gradient tensor to its time n+1 value.
-            deformationGradient_new[idx] = deformationGradientInc *
-                                           deformationGradient[idx];
-
-            // get the volumetric part of the deformation
-            J = deformationGradient_new[idx].Determinant();
-//          }
-
-	  // Check 1: Look at Jacobian
-	  if (J<=0.0 || J > d_hugeJ) {
-            double Jold = deformationGradient[idx].Determinant();
-	    cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
-            cout << "pos = " << px[idx] << endl;
-
-	    if(d_allowNoTension){
-	      pLocalized_new[idx]=1;
-	      cout<< "localizing (viscous) particle "<<pParticleID[idx]<<endl;
-	    }else if(d_removeMass){
-	      pLocalized_new[idx]=-999;
-	      cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
-              cout<< "material = " << dwi << endl << "Momentum deleted = "
-                                          << pvelocity[idx]*pmass[idx] <<endl;
-	    }else{
-	      cerr << getpid()
-		   << "**ERROR** Negative Jacobian of deformation gradient, no erosion algorithm set" << endl;
-	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);
-	    }
-
-	    // the particle is localized and will be updated using a viscous model
-	    // we need to calculate: pstress_new, pvolume_new, deformationGradient_new
-	    // we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
-	    double viscosity = 1e-3;
-	    double USM,rho_cur,dt;
-	    viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx],deformationGradient_new[idx],rho_cur,pvolume_new[idx],USM,c_dil);
-
-	    // Compute The Strain Energy for all the particles
-	    Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
-
-	    double e = (D(0,0)*AvgStress(0,0) +
-			   D(1,1)*AvgStress(1,1) +
-			   D(2,2)*AvgStress(2,2) +
-			   2.*(D(0,1)*AvgStress(0,1) +
-			   D(0,2)*AvgStress(0,2) +
-			   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
-
-	    se += e;
-
-	    // Compute wave speed at each particle, store the maximum
-	    Vector pvelocity_idx = pvelocity[idx];
-	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			    Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			    Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-
-	    // Compute artificial viscosity term
-	    if (flag->d_artificial_viscosity) {
-	      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-	      double c_bulk = sqrt(UI[0]/rho_cur);
-	      Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-	      p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
-	    } else {
-	      p_q[idx] = 0.;
-	    }
-	  }else{
-	    pvolume_new[idx]=Jinc*pvolume[idx];
-
-	    // Compute the local sound speed
-	    double rho_cur = rho_orig/J;
-
-            // NEED TO FIND R
-            Matrix3 tensorR, tensorU;
-
-            //Comment by KC: Computing tensorR at the beginning of the timestep
-            deformationGradient[idx].polarDecompositionAFFinvTran(tensorU,
-                                                                  tensorR);
-
-	    // This is the previous timestep Cauchy stress
-	    // unrotated tensorSig=R^T*pstress*R
-	    Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
-
-	    // Load into 1-D array for the fortran code
-	    double sigarg[6];
-	    sigarg[0]=tensorSig(0,0);
-	    sigarg[1]=tensorSig(1,1);
-	    sigarg[2]=tensorSig(2,2);
-	    sigarg[3]=tensorSig(0,1);
-	    sigarg[4]=tensorSig(1,2);
-	    sigarg[5]=tensorSig(2,0);
-
-	    // UNROTATE D: S=R^T*D*R
-	    D=(tensorR.Transpose())*(D*tensorR);
-
-	    // Load into 1-D array for the fortran code
-	    double Darray[6];
-	    Darray[0]=D(0,0);
-	    Darray[1]=D(1,1);
-	    Darray[2]=D(2,2);
-	    Darray[3]=D(0,1);
-	    Darray[4]=D(1,2);
-	    Darray[5]=D(2,0);
-	    double svarg[d_NINSV];
-	    double USM=9e99;
-	    double dt = delT;
-	    int nblk = 1;
-
-	    // Load ISVs into a 1D array for fortran code
-	    for(int i=0;i<d_NINSV;i++){
-	      svarg[i]=ISVs[i][idx];
-	    }
-	    // 'Hijack' FAIL1 = UI[41] with perturbed value if desired
-	    // put real value of UI[41] in tmp var just in case
-            double TFAIL_tmp = UI[41];
-
-            // Scale FAIL1 according to a characteristic particle length
-            UI[41]*=cbrt(pvolume_new[idx]);
-	    if (wdist.Perturb){
-	      double tempVar = UI[51];
-	      // 'Hijack' PEAKI1I = UI[51] with perturbed value if desired
-	      // put real value of UI[51] in tmp var just in case
-	      UI[51] = peakI1IDist[idx];
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
-                                 Darray, svarg, USM);
-	      UI[51]=tempVar;
-	    } else {
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
-                                 Darray, svarg, USM);
-	    }
-            // Put T1 back for now
-            UI[41]=TFAIL_tmp;
-
-	    // Unload ISVs from 1D array into ISVs_new
-	    for(int i=0;i<d_NINSV;i++){
-	      ISVs_new[i][idx]=svarg[i];
-	    }
-
-	    // This is the Cauchy stress, still unrotated
-	    tensorSig(0,0) = sigarg[0];
-	    tensorSig(1,1) = sigarg[1];
-	    tensorSig(2,2) = sigarg[2];
-	    tensorSig(0,1) = sigarg[3];
-	    tensorSig(1,0) = sigarg[3];
-	    tensorSig(2,1) = sigarg[4];
-	    tensorSig(1,2) = sigarg[4];
-	    tensorSig(2,0) = sigarg[5];
-	    tensorSig(0,2) = sigarg[5];
-
-           //Comment by KC : Computing tensorR at the end of the time-step
-           deformationGradient_new[idx].polarDecompositionAFFinvTran(tensorU,
-                                                                     tensorR);
-
-	    // ROTATE pstress_new: S=R*tensorSig*R^T
-	    pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
-	    c_dil = sqrt(USM/rho_cur);
-	    // Compute The Strain Energy for all the particles
-	    Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
-
-	    double e = (D(0,0)*AvgStress(0,0) +
-			D(1,1)*AvgStress(1,1) +
-			D(2,2)*AvgStress(2,2) +
-			2.*(D(0,1)*AvgStress(0,1) +
-			    D(0,2)*AvgStress(0,2) +
-			    D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
-
-	    se += e;
-
-	    // Compute wave speed at each particle, store the maximum
-	    Vector pvelocity_idx = pvelocity[idx];
-	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			   Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			   Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-
-	    // Compute artificial viscosity term
-	    if (flag->d_artificial_viscosity) {
-	      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-	      double c_bulk = sqrt(UI[0]/rho_cur);
-	      Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-	      p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
-	    } else {
-	      p_q[idx] = 0.;
-	    }
-	  }
+          pLocalized_new[idx]=-999;
+          cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+          cout<< "material = " << dwi << endl << "Momentum deleted = "
+                                        << pvelocity[idx]*pmass[idx] <<endl;
+          deformationGradient_new[idx]=one;
       }
 
+      pvolume_new[idx]=Jinc*pvolume[idx];
 
+      // Compute the local sound speed
+      double rho_cur = rho_orig/J;
+
+      // NEED TO FIND R
+      Matrix3 tensorR, tensorU;
+
+      //Comment by KC: Computing tensorR at the beginning of the timestep
+      deformationGradient[idx].polarDecompositionAFFinvTran(tensorU, tensorR);
+
+      // This is the previous timestep Cauchy stress
+      // unrotated tensorSig=R^T*pstress*R
+      Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
+
+      // Load into 1-D array for the fortran code
+      double sigarg[6];
+      sigarg[0]=tensorSig(0,0);
+      sigarg[1]=tensorSig(1,1);
+      sigarg[2]=tensorSig(2,2);
+      sigarg[3]=tensorSig(0,1);
+      sigarg[4]=tensorSig(1,2);
+      sigarg[5]=tensorSig(2,0);
+
+      // UNROTATE D: S=R^T*D*R
+      D=(tensorR.Transpose())*(D*tensorR);
+
+      // Load into 1-D array for the fortran code
+      double Darray[6];
+      Darray[0]=D(0,0);
+      Darray[1]=D(1,1);
+      Darray[2]=D(2,2);
+      Darray[3]=D(0,1);
+      Darray[4]=D(1,2);
+      Darray[5]=D(2,0);
+      double svarg[d_NINSV];
+      double USM=9e99;
+      double dt = delT;
+      int nblk = 1;
+  
+      // Load ISVs into a 1D array for fortran code
+      for(int i=0;i<d_NINSV;i++){
+        svarg[i]=ISVs[i][idx];
+      }
+      // 'Hijack' FAIL1 = UI[41] with perturbed value if desired
+      // put real value of UI[41] in tmp var just in case
+      double TFAIL_tmp = UI[41];
+
+      // Scale FAIL1 according to a characteristic particle length
+      UI[41]*=cbrt(pvolume_new[idx]);
+      if (wdist.Perturb){
+        double tempVar = UI[51];
+        // 'Hijack' PEAKI1I = UI[51] with perturbed value if desired
+        // put real value of UI[51] in tmp var just in case
+        UI[51] = peakI1IDist[idx];
+        KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+        UI[51]=tempVar;
+      } else {
+        KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+      }
+      // Put T1 back for now
+      UI[41]=TFAIL_tmp;
+
+      // Unload ISVs from 1D array into ISVs_new
+      for(int i=0;i<d_NINSV;i++){
+        ISVs_new[i][idx]=svarg[i];
+      }
+
+      // This is the Cauchy stress, still unrotated
+      tensorSig(0,0) = sigarg[0];
+      tensorSig(1,1) = sigarg[1];
+      tensorSig(2,2) = sigarg[2];
+      tensorSig(0,1) = sigarg[3];
+      tensorSig(1,0) = sigarg[3];
+      tensorSig(2,1) = sigarg[4];
+      tensorSig(1,2) = sigarg[4];
+      tensorSig(2,0) = sigarg[5];
+      tensorSig(0,2) = sigarg[5];
+
+      //Comment by KC : Computing tensorR at the end of the time-step
+      deformationGradient_new[idx].polarDecompositionAFFinvTran(tensorU,tensorR);
+
+      // ROTATE pstress_new: S=R*tensorSig*R^T
+      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
+      c_dil = sqrt(USM/rho_cur);
+      // Compute The Strain Energy for all the particles
+      Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+
+      double e = (D(0,0)*AvgStress(0,0) +
+                  D(1,1)*AvgStress(1,1) +
+                  D(2,2)*AvgStress(2,2) +
+              2.*(D(0,1)*AvgStress(0,1) +
+                  D(0,2)*AvgStress(0,2) +
+                  D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+
+      se += e;
+
+      // Compute wave speed at each particle, store the maximum
+      Vector pvelocity_idx = pvelocity[idx];
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(UI[0]/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
 
     }  // end loop over particles
 
