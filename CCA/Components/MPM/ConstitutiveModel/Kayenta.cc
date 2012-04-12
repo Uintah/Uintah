@@ -745,6 +745,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
           cout<< "material = " << dwi << endl << "Momentum deleted = "
                                         << pvelocity[idx]*pmass[idx] <<endl;
           deformationGradient_new[idx]=one;
+          D=Matrix3(0.);
       }
 
       pvolume_new[idx]=Jinc*pvolume[idx];
