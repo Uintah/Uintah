@@ -9,14 +9,14 @@
   <SimulationComponent type="RMCRT_Test" />
   
   <!--__________________________________-->
-  <!-- run for 10 timesteps for RT memory -->
+  <!-- run for 5 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
   <Time>
-    <maxTime>       1.0      </maxTime>
+    <maxTime>       5.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 5         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -79,7 +79,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [21,21,21]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -94,6 +94,7 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
+      <save label = "VRFlux" />
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -103,7 +104,7 @@
     <randomSeed>        false       </randomSeed>
     <Temperature>       64.804      </Temperature>
     <abskg>             999         </abskg>
-    <NoOfRays>          25          </NoOfRays>
+    <NoOfRays>          10          </NoOfRays>
     <Threshold>         0.05        </Threshold>
     <Slice>             20          </Slice>
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
@@ -111,8 +112,10 @@
     <solveBoundaryFlux> false       </solveBoundaryFlux>
     <CCRays>            false       </CCRays>
     <VirtRadiometer>    true        </VirtRadiometer>
-    <VRViewAngle>       180         </VRViewAngle>
+    <VRViewAngle>180</VRViewAngle>
     <VROrientation>     [-1,0,0]     </VROrientation>
-    <VRLocation>        [20,20,20]  </VRLocation>
+    <VRLocationsMin>    [0,0,0]      </VRLocationsMin>
+    <VRLocationsMax>    [20,20,20]   </VRLocationsMax>
+    <NoRadRays>          10          </NoRadRays>
   </RMCRT>
 </Uintah_specification>
