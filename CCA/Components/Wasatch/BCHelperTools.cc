@@ -20,6 +20,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <fstream>
+
 //-- Uintah framework includes --//
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -470,12 +472,6 @@ namespace Wasatch {
         case Uintah::Patch::zplus:
           set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
         default:
           break;
       }
@@ -499,12 +495,6 @@ namespace Wasatch {
           break;
         case Uintah::Patch::zplus:
           set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
-          break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
         default:
           break;
@@ -549,11 +539,7 @@ namespace Wasatch {
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
 
@@ -569,11 +555,7 @@ namespace Wasatch {
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
     }
@@ -616,11 +598,7 @@ namespace Wasatch {
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
 
@@ -636,11 +614,7 @@ namespace Wasatch {
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-       case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
     }
@@ -681,11 +655,7 @@ namespace Wasatch {
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
 
@@ -701,11 +671,7 @@ namespace Wasatch {
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
           throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
-        case Uintah::Patch::numFaces:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-          break;
-        case Uintah::Patch::invalidFace:
-          throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+        default:
           break;
       }
     }
@@ -873,12 +839,7 @@ namespace Wasatch {
               case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  denom = dy2;  break;
               case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  denom = dz2;  break;
               case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  denom = dz2;  break;
-              case Uintah::Patch::numFaces:
-                throw Uintah::ProblemSetupException( "An invalid face of type Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-                break;
-              case Uintah::Patch::invalidFace:
-                throw Uintah::ProblemSetupException( "An invalid face of type Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
-                break;
+              default:                                                                                    break;
             } // switch
 
             // cell offset used to calculate local cell index with respect to patch.
@@ -896,11 +857,12 @@ namespace Wasatch {
               
               switch(face){
                 case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
-                case Uintah::Patch::xplus : coefs.p +=1.0/dx2; break;
+                case Uintah::Patch::xplus : coefs.p +=1.0/dx2;                break;
                 case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p +=1.0/dy2; break;
-                case Uintah::Patch::yplus : coefs.p +=1.0/dy2; break;
+                case Uintah::Patch::yplus : coefs.p +=1.0/dy2;                break;
                 case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p +=1.0/dz2; break;
-                case Uintah::Patch::zplus : coefs.p +=1.0/dz2; break;
+                case Uintah::Patch::zplus : coefs.p +=1.0/dz2;                break;
+                default:                                                      break;
               }
 
               const SS::IntVec   intCellIJK( bc_point_indices[0],
@@ -979,16 +941,61 @@ namespace Wasatch {
           
           switch(face){
             case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
-            case Uintah::Patch::xplus : coefs.p -=1.0/dx2; break;
+            case Uintah::Patch::xplus :                coefs.p -=1.0/dx2; break;
             case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p -=1.0/dy2; break;
-            case Uintah::Patch::yplus : coefs.p -=1.0/dy2; break;
+            case Uintah::Patch::yplus :                coefs.p -=1.0/dy2; break;
             case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p -=1.0/dz2; break;
-            case Uintah::Patch::zplus : coefs.p -=1.0/dz2; break;
+            case Uintah::Patch::zplus :                coefs.p -=1.0/dz2; break;
+            default:                                                      break;
           }  
         }
       } // child loop
     } // face loop
   }
+  
+  //-----------------------------------------------------------------------------
+  
+  void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+                              const Uintah::Patch* patch,
+                              const SCIRun::IntVector refCell )
+  {
+    std::ostringstream msg;
+    
+    if (patch->containsCell(refCell)) {
+      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) && 
+                                        patch->containsCell(refCell + IntVector(0,1,0)) && 
+                                        patch->containsCell(refCell + IntVector(0,0,1));
+      // check if all cell neighbors are contained in this patch:
+      if ( !containsAllNeighbors ) {
+        msg << std::endl
+        << "  Invalid reference pressure cell." << std::endl
+        << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
+        << std::endl;
+        throw std::runtime_error( msg.str() );        
+      }
+      Uintah::Stencil4& refCoef = pressureMatrix[refCell];
+      refCoef.w = 0.0;
+      refCoef.s = 0.0;
+      refCoef.b = 0.0;
+      refCoef.p = 1.0;      
+      pressureMatrix[refCell + IntVector(1,0,0)].w = 0.0;
+      pressureMatrix[refCell + IntVector(0,1,0)].s = 0.0;
+      pressureMatrix[refCell + IntVector(0,0,1)].b = 0.0;      
+    }    
+  }
+  
+  //-----------------------------------------------------------------------------
+  
+  void set_ref_pressure_rhs( SVolField& pressureRHS,
+                             const Uintah::Patch* patch,
+                             const SCIRun::IntVector refCell ) {
+    if (patch->containsCell(refCell)) {
+      const SpatialOps::structured::IntVec refCellIJK(refCell.x(),refCell.y(),refCell.z());
+      const int irefCell = pressureRHS.window_without_ghost().flat_index(refCellIJK);
+      pressureRHS[irefCell] = 0.0;    
+    }    
+  }
+  
   
   //==================================================================
   // Explicit template instantiation

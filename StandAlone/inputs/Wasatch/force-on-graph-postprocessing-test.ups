@@ -96,6 +96,8 @@
       </Viscosity>
       
       <Pressure>
+        <UseReferencePoint>false</UseReferencePoint>
+        <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
 
             <!-- CGSolver options -->

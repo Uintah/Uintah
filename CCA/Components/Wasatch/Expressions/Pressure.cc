@@ -64,6 +64,8 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& dilatationtag,                   
                     const Expr::Tag& d2rhodt2tag,
                     const Expr::Tag& timesteptag,
+                    const bool       useRefPressure,
+                    const bool       use3DLaplacian,                   
                     const Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
@@ -84,7 +86,10 @@ Pressure::Pressure( const std::string& pressureName,
     doDens_( d2rhodt2tag != Expr::Tag() ),
 
     didAllocateMatrix_(false),
-
+  
+    useRefPressure_( useRefPressure ),
+    use3DLaplacian_( use3DLaplacian ),
+  
     solverParams_( solverParams ),
     solver_( solver ),
 
@@ -224,7 +229,6 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
   // p is current cell
   double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
-  //double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
   double w = 0.0, s = 0.0, b = 0.0;
   
   IntVector l,h;
@@ -232,21 +236,18 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
   h = patch->getCellHighIndex();
   const Uintah::Vector spacing = patch->dCell();
 
-  if (doX_) {
+  if ( doX_ || use3DLaplacian_ ) {
     const double dx2 = spacing[0]*spacing[0];
-    //e = 1.0/dx2;
     w = 1.0/dx2;
     p -= 2.0/dx2;
   }
-  if (doY_) {
+  if ( doY_ || use3DLaplacian_ ) {
     const double dy2 = spacing[1]*spacing[1];
-    //n = 1.0/dy2;
     s = 1.0/dy2;
     p -= 2.0/dy2;
   }
-  if (doZ_) {
+  if ( doZ_ || use3DLaplacian_ ) {
     const double dz2 = spacing[2]*spacing[2];
-    //t = 1.0/dz2;
     b = 1.0/dz2;
     p -= 2.0/dz2;
   }
@@ -259,15 +260,13 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
     IntVector iCell = *iter;
     Uintah::Stencil4&  coefs = matrix_[iCell];
     coefs.w = -w;
-    //coefs.e = -e;
-    //coefs.n = -n;
     coefs.s = -s;
     coefs.b = -b;
-    //coefs.t = -t;
     coefs.p = -p;
   }
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   update_pressure_matrix((this->names())[0], matrix_, patch, material);
+  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch);
 }
 
 //--------------------------------------------------------------------
@@ -343,6 +342,7 @@ Pressure::evaluate()
     rhs <<= rhs - *d2rhodt2_;
   }
   
+  if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_ );
   //
   // fix pressure rhs and modify pressure matrix
   //update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
@@ -358,6 +358,8 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& dilatationtag,                           
                             const Expr::Tag& d2rhodt2tag,
                             const Expr::Tag& timesteptag,
+                            const bool       userefpressure,
+                            const bool       use3dlaplacian,                           
                             const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
@@ -367,6 +369,8 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    dilatationt_ ( dilatationtag ),
    d2rhodt2t_( d2rhodt2tag ),
    timestept_( timesteptag ),
+   userefpressure_( userefpressure ),
+   use3dlaplacian_( use3dlaplacian ),
    sparams_( sparams ),
    solver_( solver )
 {}
@@ -377,7 +381,7 @@ Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
-  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, sparams_, solver_ );
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, userefpressure_, use3dlaplacian_, sparams_, solver_ );
 }
 
 } // namespace Wasatch
