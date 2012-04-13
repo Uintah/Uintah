@@ -328,7 +328,7 @@ namespace SCIRun {
     double getnextx1(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd)
   {
-    const double dx;
+    double dx;
     if (yd[0]) {
       dx= y/yd[0];
       x[0]-=dx;
@@ -350,7 +350,7 @@ namespace SCIRun {
     double getnextx2(std::vector<double> &x,  
 		     const T& y, const std::vector<T>& yd)
   {
-    const double dx, dy;
+    double dx, dy;
     if (yd[0]) {
       dx= y/yd[0];
       x[0]-=dx;
@@ -384,7 +384,7 @@ namespace SCIRun {
     double getnextx3(std::vector<double> &x, 
 		     const T& y, const std::vector<T>& yd)
   {
-    const double dx, dy, dz;
+    double dx, dy, dz;
     if (yd[0]) {
       dx= y/yd[0];
       x[0]-=dx;

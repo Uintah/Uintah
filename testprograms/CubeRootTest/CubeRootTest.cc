@@ -41,7 +41,7 @@ int main()
     double max_diff=0;
     double guess=guesses[r];
     Range range=ranges[r];
-    for(int n=0;n<NUMBERS;n++)
+    for(int nn=0;nn<NUMBERS;nn++)
     {
       double n=rand()/(double)INT_MAX*(range.high-range.low)+range.low;
       clock_t start,finish;

@@ -33,29 +33,29 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
+namespace SCIRun{ class IntVector; }
+
 namespace Uintah {
 
-  class IntVector;
   class Level;
 
-
   template<typename T>                                 
-    void coarsenDriver_std(const IntVector& cl, 
-                           const IntVector& ch,
-                           const IntVector& fl,
-                           const IntVector& fh,
-                           const IntVector& refinementRatio,
+    void coarsenDriver_std(const SCIRun::IntVector& cl,
+                           const SCIRun::IntVector& ch,
+                           const SCIRun::IntVector& fl,
+                           const SCIRun::IntVector& fh,
+                           const SCIRun::IntVector& refinementRatio,
                            const double ratio,
                            const Level* coarseLevel,
                            constCCVariable<T>& fine_q_CC,
                            CCVariable<T>& coarse_q_CC );
 
   template<typename T>
-    void coarsenDriver_massWeighted( const IntVector & cl, 
-                                     const IntVector & ch,
-                                     const IntVector & fl,
-                                     const IntVector & fh,
-                                     const IntVector & refinementRatio,
+    void coarsenDriver_massWeighted( const SCIRun::IntVector & cl,
+                                     const SCIRun::IntVector & ch,
+                                     const SCIRun::IntVector & fl,
+                                     const SCIRun::IntVector & fh,
+                                     const SCIRun::IntVector & refinementRatio,
                                      const Level* coarseLevel,
                                      constCCVariable<double>& cMass,
                                      constCCVariable<T>& fine_q_CC,

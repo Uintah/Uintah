@@ -126,21 +126,21 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                       T& value,                         
                       const Vector& cell_dx)                  
 {
- IntVector oneCell = patch->faceDirection(face);
- IntVector dir= patch->getFaceAxes(face);
+ SCIRun::IntVector oneCell = patch->faceDirection(face);
+ SCIRun::IntVector dir= patch->getFaceAxes(face);
  double dx = cell_dx[dir[0]];
 
  int nCells = 0;
 
  if (value == T(0)) {   //    Z E R O  N E U M A N N
    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
+     SCIRun::IntVector adjCell = *bound_ptr - oneCell;
      var[*bound_ptr] = var[adjCell];
    }
    nCells += bound_ptr.size();;
  }else{                //    N E U M A N N  First Order differencing
    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
+     SCIRun::IntVector adjCell = *bound_ptr - oneCell;
      var[*bound_ptr] = var[adjCell] - value * dx;
    }
    nCells += bound_ptr.size();;

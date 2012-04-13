@@ -1161,7 +1161,7 @@ WARNING
 
     // finds if it requires or modifies var
     bool hasRequires(const VarLabel* var, int matlIndex, const Patch* patch,
-                     IntVector lowOffset, IntVector highOffset,
+                     SCIRun::IntVector lowOffset, SCIRun::IntVector highOffset,
                      WhichDW dw) const;
 
     // finds if it modifies var

@@ -87,12 +87,12 @@ WARNING
                                void*& ptr) const = 0;
 
       // Only affects grid variables
-      void offsetGrid(const IntVector& /*offset*/);
+      void offsetGrid(const SCIRun::IntVector& /*offset*/);
  
-      virtual void emitNormal(std::ostream& out, const IntVector& l,
-                              const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
+      virtual void emitNormal(std::ostream& out, const SCIRun::IntVector& l,
+                              const SCIRun::IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
       virtual void readNormal(std::istream& in, bool swapbytes);      
-      virtual void allocate(const Patch* patch, const IntVector& boundary);
+      virtual void allocate(const Patch* patch, const SCIRun::IntVector& boundary);
 
    protected:
       PerPatchBase(const PerPatchBase&);
