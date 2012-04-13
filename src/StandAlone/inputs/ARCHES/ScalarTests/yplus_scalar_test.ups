@@ -38,6 +38,7 @@
       <Face side="y+" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <vecvalue>[0,-1,0]</vecvalue>
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_fraction_sb" var="Dirichlet">
           <value>1.0</value>
