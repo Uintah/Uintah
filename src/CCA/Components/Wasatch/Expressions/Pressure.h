@@ -79,7 +79,9 @@ class Pressure
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
-
+  const bool useRefPressure_;
+  const bool use3DLaplacian_;
+  
   const Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
   const Uintah::VarLabel* matrixLabel_;
@@ -122,6 +124,8 @@ class Pressure
             const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
             const Expr::Tag& timesteptag,
+            const bool       userefpressure,
+            const bool       use3dlaplacian,
             const Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
@@ -129,6 +133,7 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
+    const bool userefpressure_, use3dlaplacian_;
     const Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
@@ -139,6 +144,8 @@ public:
              const Expr::Tag& diltationtag,            
              const Expr::Tag& d2rhodt2tag,
              const Expr::Tag& timesteptag,
+             const bool       useRefPressure,
+             const bool       use3DLaplacian,            
              const Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}

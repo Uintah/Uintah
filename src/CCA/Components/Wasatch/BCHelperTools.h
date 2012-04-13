@@ -93,6 +93,47 @@ namespace Wasatch {
                                Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                                const Uintah::Patch* patch,
                                const int material);
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Function that updates pressure matrix coefficients when setting a
+             reference pressure. The reference cell defaults to [1,1,1] but the
+             user/developer can specify other reference locations. Caution must
+             be exercised when setting reference cell location so as to avoid
+             cells at patch boundaries.
+   *
+   *  \param pressureMatrix A reference to the pressure coefficient matrix which
+                            we intend to modify.
+   *
+   *  \param patch A pointer to the current patch. If the patch does NOT contain
+                   the reference cells, then nothing is set.
+   *
+   *  \param refCell A SCIRun::IntVector that designates the reference cell. 
+                     This defaults to [1,1,1].
+   */  
+  void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+                               const Uintah::Patch* patch,
+                               const SCIRun::IntVector refCell = SCIRun::IntVector(1,1,1) );
+
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Function that updates pressure RHS when setting a
+             reference pressure. The reference pressure value defaults to 0.0 
+             for convenience.   
+   *
+   *  \param pressureMatrix A reference to the pressure coefficient matrix which
+                            we intend to modify.
+   *
+   *  \param patch A pointer to the current patch. If the patch does NOT contain
+                   the reference cells, then nothing is set.
+   *
+   *  \param refCell A SCIRun::IntVector that designates the reference cell. 
+                     This defaults to [1,1,1].
+   */    
+  void set_ref_pressure_rhs  ( SVolField& pressureRHS,
+                               const Uintah::Patch* patch, 
+                               const SCIRun::IntVector refCell = SCIRun::IntVector(1,1,1));
   
 }
 
