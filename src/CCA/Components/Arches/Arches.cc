@@ -2859,7 +2859,7 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
       name += node;
 
       const VarLabel* tempVarLabel = VarLabel::create(name, CCVariable<Vector>::getTypeDescription());
-      d_lab->partVel.insert(make_pair(iqn, tempVarLabel)).first;
+      d_lab->partVel.insert(make_pair(iqn, tempVarLabel));
 
     }
   }
