@@ -71,22 +71,6 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS"            , "mms/constantMMS.ups"                     , 1.1 , "All"   , ["exactComparison"]) , 
-   ("almgrenMMS"             , "mms/almgrenMMS.ups"                      , 1.1 , "All"   , ["exactComparison"]) , 
-   ("periodic"               , "periodicTurb/periodic.ups"               , 1.1 , "All"   , ["exactComparison"]) , 
-   ("helium_RT"              , "helium_RT.ups"                           , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane_explicit_table" , "methane_explicit_table.ups"              , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane8patch"          , "methane8patch.ups"                       , 8   , "All"   , ["exactComparison"]) , 
-   ("methanePetscRadSolver"  , methanePetscRadSolver_ups                 , 8   , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_1"           , "DQMOM_regression/dqmom_test_1.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_2"           , "DQMOM_regression/dqmom_test_2.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_3"           , "DQMOM_regression/dqmom_test_3.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-   ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-   ("acidbase_jet_2D"        , "ClassicMixingTables/ups/acidbase_jet_2D.ups", 1.1, "All" , ["exactComparison", "no_restart"]) ,
-   ("1DTableTest"            , "ClassicMixingTables/ups/1DTableTest.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
    ("xplus_scalar_test"      , "ScalarTests/xplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yplus_scalar_test"      , "ScalarTests/yplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zplus_scalar_test"      , "ScalarTests/zplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 

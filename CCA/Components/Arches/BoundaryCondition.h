@@ -1305,11 +1305,18 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
          for (int child = 0; child < numChildren; child++){
 
            double bc_value = 0;
+           Vector bc_v_value(0,0,0); 
            string bc_kind = "NotSet";
            Iterator bound_ptr;
+           bool foundIterator = false; 
 
-           bool foundIterator = 
-             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+           if ( bc_iter->second.type == VELOCITY_INLET ){ 
+            foundIterator = 
+              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+           } else { 
+            foundIterator = 
+              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+           } 
 
            if ( foundIterator ) {
 
@@ -1356,11 +1363,18 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
          for (int child = 0; child < numChildren; child++){
 
            double bc_value = 0;
+           Vector bc_v_value(0,0,0); 
            string bc_kind = "NotSet";
            Iterator bound_ptr;
+           bool foundIterator = false; 
 
-           bool foundIterator = 
-             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+           if ( bc_iter->second.type == VELOCITY_INLET ){ 
+            foundIterator = 
+              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+           } else { 
+            foundIterator = 
+              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+           } 
 
            if ( foundIterator ) {
 
@@ -1418,6 +1432,7 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
             string bc_kind = "NotSet";
             Iterator bound_ptr;
 
+            // No need to check for vector since this is an outlet or pressure
             bool foundIterator = 
               getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
