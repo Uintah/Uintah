@@ -2710,20 +2710,12 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
         for (int child = 0; child < numChildren; child++){
 
-          double bc_double_value = 0;
-          Vector bc_vector_value = Vector(0,0,0); 
+          double bc_value = 0;
           string bc_kind = "NotSet";
           Iterator bound_ptr;
 
-          bool foundIterator = false; 
-
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
-            foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_vector_value, bound_ptr, bc_kind); 
-          } else { 
-            foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_double_value, bound_ptr, bc_kind); 
-          }
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           if ( foundIterator ) {
 
@@ -5354,7 +5346,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           my_info.type = VELOCITY_INLET; 
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
-          db_BCType->require("value", my_info.velocity);
+          db_BCType->require("vecvalue", my_info.velocity);
           found_bc = true; 
 
           //old: remove when this is cleaned up: 
@@ -5423,7 +5415,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = WALL;
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
-          db_BCType->getWithDefault("value", my_info.velocity, Vector(0,0,0)); // to allow for "moving" walls
+          db_BCType->getWithDefault("vecvalue", my_info.velocity, Vector(0,0,0)); // to allow for "moving" walls
           found_bc = true; 
 
         }
@@ -5498,20 +5490,13 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 
         for (int child = 0; child < numChildren; child++){
 
-          double bc_double_value = 0;
-          Vector bc_vector_value = Vector(0,0,0); 
+          double bc_value = 0;
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
-          bool foundIterator = false; 
-         
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
-            foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_vector_value, bound_ptr, bc_kind); 
-          } else { 
-            foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_double_value, bound_ptr, bc_kind); 
-          }
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           if ( foundIterator ) {
 
@@ -5590,21 +5575,13 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 
         for (int child = 0; child < numChildren; child++){
 
-          double bc_double_value = 0;
-          Vector bc_vector_value = Vector(0,0,0); 
+          double bc_value = 0;
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
 
-          bool foundIterator = false; 
-         
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
-            foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_vector_value, bound_ptr, bc_kind); 
-          } else { 
-            foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_double_value, bound_ptr, bc_kind); 
-          }
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           double dx_1 = 0.0;
           double dx_2 = 0.0; 
@@ -5736,22 +5713,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
         for (int child = 0; child < numChildren; child++){
 
-          double bc_double_value = 0;
-          Vector bc_vector_value = Vector(0,0,0); 
+          double bc_value = 0;
           int norm = getNormal( face ); 
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
 
-          bool foundIterator = false; 
-
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
-            foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_vector_value, bound_ptr, bc_kind); 
-          } else { 
-            foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_double_value, bound_ptr, bc_kind); 
-          }
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           if ( foundIterator ) {
 
@@ -5760,11 +5729,11 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             // so as to compute the average velocity.  As a result, we will just use the first iterator: 
             bound_ptr.reset(); 
             if ( (bc_iter->second).type == MASSFLOW_INLET ) {
-              (bc_iter->second).mass_flow_rate = bc_double_value; 
+              (bc_iter->second).mass_flow_rate = bc_value; 
               (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
                                                ( area * density[*bound_ptr] );
             } else if ( (bc_iter->second).type == SWIRL ) { 
-                (bc_iter->second).mass_flow_rate = bc_double_value; 
+                (bc_iter->second).mass_flow_rate = bc_value; 
                 (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
                                                  ( area * density[*bound_ptr] ); 
             } 
@@ -5775,12 +5744,12 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
                 break;
               case ( MASSFLOW_INLET ): 
-                bc_iter->second.mass_flow_rate = bc_double_value; 
+                bc_iter->second.mass_flow_rate = bc_value; 
                 bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                  ( area * density[*bound_ptr] );
                 break;
               case ( SWIRL ):
-                bc_iter->second.mass_flow_rate = bc_double_value; 
+                bc_iter->second.mass_flow_rate = bc_value; 
                 bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                  ( area * density[*bound_ptr] ); 
                 break; 
@@ -5902,21 +5871,14 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
         for (int child = 0; child < numChildren; child++){
 
-          double bc_double_value = 0;
-          Vector bc_vector_value = Vector(0,0,0); 
+          double bc_value = 0;
           //int norm = getNormal( face ); 
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
-          bool foundIterator = false; 
- 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
-            foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_vector_value, bound_ptr, bc_kind); 
-          } else { 
-            foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_double_value, bound_ptr, bc_kind); 
-          }
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           if ( foundIterator ) {
 
