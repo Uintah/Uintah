@@ -72,8 +72,7 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="movingwall_bottom" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,1,1]</vecvalue>
+          <value>[0,1,1]</value>
         </BCType>
         <BCType id="all" var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
@@ -84,8 +83,7 @@
       </Face>
       <Face side="x+" name="x+ wall">
         <BCType id="all" label="movingwall_top" var="VelocityInlet">
-          <value>0.0</value>
-          <vecvalue>[0,-1,-1]</vecvalue>
+          <value>[0,-1,-1]</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
