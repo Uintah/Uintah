@@ -227,7 +227,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           throw ProblemSetupException("Error: Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
         } 
 
-        d_prefill_map.insert(make_pair(which_boundary, geometry)).first;
+        d_prefill_map.insert(make_pair(which_boundary, geometry));
 
       } 
     }
@@ -445,7 +445,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           for ( int i = 0; i < total_variables; i++ ){
             std::string varname  = getString( file );
             std::string which_file  = getString( file ); 
-            input_files.insert( make_pair( varname, which_file)).first; 
+            input_files.insert( make_pair( varname, which_file)); 
           }
           gzclose( file ); 
 
@@ -5882,7 +5882,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
       constCCVariable<double> variable; 
       new_dw->get( variable, i->second, matl_index, patch, Ghost::None, 0 );
-      ivGridVarMap.insert( make_pair( i->first, variable)).first;
+      ivGridVarMap.insert( make_pair( i->first, variable));
     }
 
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
@@ -6402,7 +6402,7 @@ BoundaryCondition::readInputFile__NEW( std::string file_name )
 
     IntVector C(I,J,K);
 
-    result.insert( make_pair( C, v )).first; 
+    result.insert( make_pair( C, v )); 
 
   }
 

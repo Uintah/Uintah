@@ -399,7 +399,7 @@ namespace Uintah{
               IntVector C(I,J,K);
               C[_flux_i] = 0; 
           
-              result.insert( std::make_pair( C, v )).first; 
+              result.insert( std::make_pair( C, v ));
           
             }
           
@@ -808,7 +808,7 @@ namespace Uintah{
               IntVector C(I,J,K);
               C[_flux_i] = 0; 
           
-              result.insert( std::make_pair( C, v )).first; 
+              result.insert( std::make_pair( C, v )); 
           
             }
           
