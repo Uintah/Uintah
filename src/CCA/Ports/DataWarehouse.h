@@ -132,25 +132,25 @@ public:
   // everybody -- BJW, May 05
   virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
                                                  int matlIndex, const Patch*,
-                                                 IntVector low = IntVector(0,0,0),
-                                                 IntVector high = IntVector(0,0,0) ) = 0;
-  virtual void saveParticleSubset(ParticleSubset* psubset, 
+                                                 SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
+                                                 SCIRun::IntVector high = SCIRun::IntVector(0,0,0) ) = 0;
+  virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
-                                  IntVector low = IntVector(0,0,0),
-                                  IntVector high = IntVector(0,0,0)) = 0;
+                                  SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
+                                  SCIRun::IntVector high = SCIRun::IntVector(0,0,0)) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*,
-                                  IntVector low = IntVector(0,0,0),
-                                  IntVector high = IntVector(0,0,0), bool exact = false) = 0;
+                                  SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
+                                  SCIRun::IntVector high = SCIRun::IntVector(0,0,0), bool exact = false) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            IntVector low, IntVector high) = 0;
+                                            SCIRun::IntVector low, SCIRun::IntVector high) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
   virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
-					    Ghost::GhostType, 
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
+					    Ghost::GhostType,
 					    int numGhostCells,
 					    const VarLabel* posvar) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
+  virtual ParticleSubset* getParticleSubset(int matlIndex, SCIRun::IntVector low, SCIRun::IntVector high,
                                             const Patch* relPatch,
                                             const VarLabel* posvar, const Level* level=0) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
@@ -172,26 +172,26 @@ public:
 
   virtual void print() = 0;
   virtual void clear() = 0;
-  
-     
+
+
   virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 						    ParticleSubset*) = 0;
   virtual ParticleVariableBase*
   getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
   // Generic grid based variables
-     
+
   virtual void get( constGridVariableBase& var,
                     const VarLabel* label, int matlIndex, const Patch* patch,
                     Ghost::GhostType gtype, int numGhostCells ) = 0;
-  
+
   virtual void getModifiable( GridVariableBase& var,
                               const VarLabel* label, int matlIndex, const Patch* patch, Ghost::GhostType gtype=Ghost::None, int numGhostCells=0 ) = 0;
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
                                   Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
-//                                  const IntVector& boundaryLayer ) = 0;
-//                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
+//                                  const SCIRun::IntVector& boundaryLayer ) = 0;
+//                                const SCIRun::IntVector& boundaryLayer = SCIRun::IntVector(0,0,0)) = 0;
 
   virtual void allocateAndPut( GridVariableBase& var,
                                const VarLabel* label, int matlIndex,
@@ -203,10 +203,10 @@ public:
 
   virtual void getRegion(constGridVariableBase&, const VarLabel*,
                           int matlIndex, const Level* level,
-                          const IntVector& low, const IntVector& high,
+                          const SCIRun::IntVector& low, const SCIRun::IntVector& high,
                           bool useBoundaryCells = true) = 0;
 
-  // Copy out of the warehouse into an allocated variable. 
+  // Copy out of the warehouse into an allocated variable.
   virtual void copyOut(GridVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0) = 0;

@@ -104,7 +104,7 @@ WARNING
 
       virtual void copyData(const ParticleVariableBase* src) = 0;
       
-      virtual void allocate(const Patch*, const IntVector& boundary) = 0; // will throw an InternalError
+      virtual void allocate(const Patch*, const SCIRun::IntVector& boundary) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
       virtual void allocate(int totalParticles) = 0;
       virtual void gather(ParticleSubset* dest,

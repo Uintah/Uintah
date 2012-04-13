@@ -36,6 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Level.h>
 #include <Core/Util/DebugStream.h>
 
+using SCIRun::IntVector;
+
 namespace Uintah {
 
 static SCIRun::DebugStream cout_dbg("AMR_CoarsenRefine", false);

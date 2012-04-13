@@ -337,17 +337,17 @@ private:
     throw(InternalError);
 
   template<class SIZE_T>
-  inline void readSizeType(std::istream& in, bool needConversion, bool swapBytes,
+  static inline void readSizeType(std::istream& in, bool needConversion, bool swapBytes,
 			   int nByteMode, SIZE_T& s);
-  
+
   template<class SIZE_T>
-  inline void readSizeType(int fd, bool needConversion, bool swapBytes,
+  static inline void readSizeType(int fd, bool needConversion, bool swapBytes,
 			   int nByteMode, SIZE_T& s);
-  
+
   template<class SIZE_T>
   inline void pReadSizeType(int fd, bool needConversion, bool swapBytes,
 			    int nByteMode, off_t offset, SIZE_T& s);
-  
+
   void write(int fd, void* data, ssize_t size) throw(ErrnoException)
   {
     if (::write(fd, data, size) != size)

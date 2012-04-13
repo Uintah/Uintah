@@ -83,7 +83,7 @@ struct Group
   int size;
   int partner_group;
   int parent_group;
-  
+
   Group(int start, int s, int partner,int parent)
   {
     start_rank=start;
@@ -91,7 +91,7 @@ struct Group
     partner_group=partner;
     parent_group=parent;
   }
-  Group() 
+  Group()
   {
     size=-1;
     start_rank=-1;
@@ -205,7 +205,7 @@ template<class LOCS> struct Binner<3,LOCS>
   static inline unsigned char Bin(LOCS *point, LOCS *center)
   {
     unsigned char bin=0;
-    if(point[0]>=center[0]) 
+    if(point[0]>=center[0])
       bin|=4;
     if(point[1]<center[1])
       bin|=2;
@@ -220,7 +220,7 @@ template<class LOCS>
 class SFC
 {
 public:
-  SFC(const ProcessorGroup *d_myworld,int dim=0,Curve curve=HILBERT) : curve(curve),n(INT_MAX),refinements(-1), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
+  SFC(const ProcessorGroup *d_myworld,int dim=0,Curve curve=HILBERT) : curve(curve),n(INT_MAX),refinements(-1), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1)
   {
       dimensions[0]=INT_MAX;
       dimensions[1]=INT_MAX;
@@ -249,20 +249,20 @@ public:
   void SetDimensions(LOCS *dimensions);
   void SetCenter(LOCS *center);
   void SetRefinementsByDelta(LOCS *deltax);
-  
+
   template<int DIM> void ProfileMergeParameters(int repeat=21);
 protected:
-  
+
   int dim;
   Curve curve;
 
   SCIRun::Time *timer;
-  
+
   //order and orientation arrays
   int (*order)[8];
   int (*orientation)[8];
   int (*inverse)[8];
-  
+
   //direction array
   int (*dir)[3];
 
@@ -271,7 +271,7 @@ protected:
   LOCS center[3];
   unsigned int n;
   int refinements;
-  
+
 
   //XY(Z) locations of points
   std::vector<LOCS> *locsv;
@@ -279,19 +279,19 @@ protected:
 
   //Output vector
   std::vector<DistributedIndex> *orders;
-  
+
   const ProcessorGroup *d_myworld;
-  
+
   //Merge-Exchange Parameters
   unsigned int comm_block_size;
   unsigned int blocks_in_transit;
   unsigned int merge_block_size;
   float sample_percent;
-  
+
   CleanupType cleanup;
-  
+
   int rank, P;
-  MPI_Comm Comm;  
+  MPI_Comm Comm;
 
   //Parllel2 Parameters
   unsigned int buckets;
@@ -359,7 +359,7 @@ protected:
         }
       }
     }
-    
+
     return retval;
   }
 
@@ -378,11 +378,11 @@ protected:
 
   template<class BITS> void BlockedMerge(History<BITS>* start1, History<BITS>* end1, History<BITS>*start2,History<BITS>* end2,History<BITS>* out);
 
-  
+
   template<class BITS> void CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::vector<BITS> &cuts, std::vector<History<BITS> > &histories);
   template<class BITS> void ComputeLocalHistogram(BITS *histogram,std::vector<History<BITS> > &histories);
-  
-  template<class BITS> int MergeExchange(int to,std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf);  
+
+  template<class BITS> int MergeExchange(int to,std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf);
   template<class BITS> void PrimaryMerge(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf);
   template<class BITS> void PrimaryMerge2(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf,int  procs, int base=0);
   template<class BITS> void Cleanup(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf);
@@ -425,7 +425,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
     }
     ProfileMergeParametersT<DIM,unsigned long long>(repeat);
   }
-}  
+}
 
 #define sample(median,block_size, merge_size, blocks, sample_size)                                  \
 {                                                                                                   \
@@ -456,7 +456,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 {
   float sig=.01;
   int max_iter=20;
-  
+
   int block_size=100;
   int delta_block_size=50;
   int min_delta_block_size=25;
@@ -464,18 +464,18 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   int max_block_size;
   int blocks=1;
   float sample_size=.15;
-  
+
   MPI_Allreduce(&n,&max_block_size,1,MPI_UNSIGNED,MPI_MAX,Comm);
   std::vector<History<BITS> > rbuf(max_block_size), mbuf(max_block_size);
   std::vector<History<BITS> > histories(max_block_size);
   std::vector<History<BITS> > histories_original(max_block_size);
-  
+
   //sorting input and using it as our test case
   SerialH<BITS>(&histories_original[0]);  //Saves results in sendbuf
 
   //create merging search parameters...
   std::vector<float> times(repeat);
- 
+
   //determine block size
   float last,cur;
   int last_dir=0;
@@ -492,14 +492,14 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 
   sample(cur,block_size,block_size,blocks,sample_size);
   sample(last,block_size+delta_block_size,block_size,blocks,sample_size);
-  
+
 //  if(rank==0)
 //  {
 //    std::cout << "t1: " << block_size << " " << cur << std::endl;
 //    std::cout << "t2: " << block_size+delta_block_size << " " << last << std::endl;
 //    std::cout << "-----------------------\n";
 //  }
-  
+
   if(cur<last)
   {
     last=cur;
@@ -512,7 +512,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
     last_dir=1;
   }
   int last_count=1;
-  
+
   int iter=0;
   while(iter<max_iter)
   {
@@ -531,32 +531,32 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
    //   std::cout << "cur: " << block_size+delta_block_size*last_dir << " " << cur << std::endl;
    //   std::cout << "-----------------------\n";
    // }
-    
+
     if(fabs(1-cur/last)<sig)  //if t1 & t2 are not signifigantly different
     {
       //if(rank==0)
-      //  std::cout << "not signifigantly different\n"; 
+      //  std::cout << "not signifigantly different\n";
       //halve delta and switch directions
       delta_block_size/=2;
       last_dir*=-1;
       last_count=0;
-      continue;  
+      continue;
     }
-    
+
     if(cur<last)
     {
-      
+
       //continue in the same direction
 
       block_size+=delta_block_size*last_dir;
       if(last_count>1)
         delta_block_size*=2;    //double the delta
-      
+
       while(block_size+delta_block_size*last_dir>max_block_size)
         delta_block_size/=2;
       while(block_size+delta_block_size*last_dir<min_block_size)
         delta_block_size/=2;
-      
+
       std::swap(cur,last);
       last_count++;
     }
@@ -571,7 +571,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
       last_dir*=-1;
       last_count=1;
     }
-    
+
 
   }
 //  if(rank==0)
@@ -580,7 +580,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   blocks++;
   //determine number of blocks to send at a time
   sample(cur,block_size,block_size,blocks,sample_size);
-  
+
 //  if(rank==0)
 //    std::cout << "blocks:" << blocks << " " << cur << std::endl;
   //last=999999999;
@@ -598,8 +598,8 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   blocks--;
 //  if(rank==0)
 //    std::cout << "Using blocks:" << blocks << std::endl;
-  
-  
+
+
   //determine merge block size
   std::vector<int> merge_block_sizes;
 
@@ -620,7 +620,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   //if(rank==0)
   //  std::cout << "merge_block_size:" << block_size << " " << last << std::endl;
   int merge_size=block_size;
-  
+
   for(unsigned int i=0;i<merge_block_sizes.size();i++)
   {
     sample(cur,block_size,merge_block_sizes[i],blocks,sample_size);
@@ -640,7 +640,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   }
   //if(rank==0)
   //  std::cout << "Using merge_block_size:" << merge_size << std::endl;
-  
+
   SetMergeParameters(block_size,merge_size,blocks,sample_size);
  // if(rank==0)
  // {
@@ -655,8 +655,8 @@ template<class LOCS>
 void SFC<LOCS>::GenerateCurve(int mode)
 {
   P=d_myworld->size();
-  ASSERT(BulletProof(mode)); 
-  
+  ASSERT(BulletProof(mode));
+
   switch(dim)
   {
     case 1:
@@ -711,7 +711,7 @@ void SFC<LOCS>::GenerateDim(int mode)
         refinements=sizeof(unsigned long long)*8/DIM;
         if(rank==0)
           std::cerr << "Warning: Not enough bits to form full SFC lowering refinements to: " << refinements << std::endl;
-      }       
+      }
       Parallel<DIM,unsigned long long>();
     }
   }
@@ -725,7 +725,7 @@ void SFC<LOCS>::Serial()
     orders->resize(n);
 
     DistributedIndex *o=&(*orders)[0];
-  
+
     for(unsigned int i=0;i<n;i++)
     {
       o[i]=DistributedIndex(i,0);
@@ -749,7 +749,7 @@ void SFC<LOCS>::SerialH(History<BITS> *histories)
     orders->resize(n);
 
     DistributedIndex *o=&(*orders)[0];
-  
+
     for(unsigned int i=0;i<n;i++)
     {
       o[i]=DistributedIndex(i,rank);
@@ -807,7 +807,7 @@ void SFC<LOCS>::SerialR(DistributedIndex* orders,std::vector<DistributedIndex> *
   {
     for(int d=0;d<DIM;d++)
     {
-      newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];    
+      newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];
     }
 
     if(size[b]==n)
@@ -844,7 +844,7 @@ void SFC<LOCS>::SerialR(DistributedIndex* orders,std::vector<DistributedIndex> *
   }
 }
 
-template<class LOCS> template<int DIM, class BITS> 
+template<class LOCS> template<int DIM, class BITS>
 void SFC<LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,std::vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o, int r, BITS history)
 {
   LOCS newcenter[BINS][DIM], newdimension[DIM];
@@ -867,7 +867,7 @@ void SFC<LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,std::v
     {
       //calculate history
       b=inverse[o][Binner<DIM,LOCS>::Bin(&locs[orders[0].i*DIM],newcenter)];
-      
+
       //halve all dimensions and calculate newcenter
       for(int d=0;d<DIM;d++)
       {
@@ -883,7 +883,7 @@ void SFC<LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,std::v
     corders[0].bits=history;
     corders[0].index=orders[0];
     return;
-  }  
+  }
 
   //Empty bins
   for(b=0;b<BINS;b++)
@@ -918,7 +918,7 @@ void SFC<LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,std::v
   {
     for(int d=0;d<DIM;d++)
     {
-      newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];    
+      newcenter[b][d]=center[d]+dimension[d]*.25*dir[order[o][b]][d];
     }
 
     if(r==refinements)
@@ -955,14 +955,14 @@ void SFC<LOCS>::ComputeLocalHistogram(BITS *histogram,std::vector<History<BITS> 
   {
     mask<<=1;
     mask|=1;
-  } 
+  }
   int shift=refinements*dim-b;
   mask<<=shift;
-  
+
   for(unsigned int i=0;i<n;i++)
   {
     int bucket=(histories[i].bits&mask) >> shift;
-    
+
     histogram[bucket]++;
   }
 
@@ -975,26 +975,26 @@ void SFC<LOCS>::CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::v
   b=(int)ceil(log(2.0*P)/log(2.0));
   if(b>refinements*dim)
       b=refinements*dim;
- 
-  cuts.resize(P+1); 
+
+  cuts.resize(P+1);
   do
   {
     //calcualte buckets
     buckets=1<<(b);
-    
+
     //resize histograms
     histograms.resize( (P+1)*buckets );
 
     //compute histograms
     ComputeLocalHistogram<BITS>(&histograms[ rank*(buckets) ],histories);
-    
+
     //all gather histograms
-    MPI_Allgather(&histograms[rank*(buckets)],buckets*sizeof(BITS),MPI_BYTE,&histograms[0],buckets*sizeof(BITS),MPI_BYTE,Comm);        
+    MPI_Allgather(&histograms[rank*(buckets)],buckets*sizeof(BITS),MPI_BYTE,&histograms[0],buckets*sizeof(BITS),MPI_BYTE,Comm);
 
     //sum histogram
     BITS *sum=&histograms[P*buckets];
     int N=0;
-    for(unsigned int i=0;i<buckets;i++) 
+    for(unsigned int i=0;i<buckets;i++)
     {
       sum[i]=0;
       for(int p=0;p<P;p++)
@@ -1002,18 +1002,18 @@ void SFC<LOCS>::CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::v
         sum[i]+=histograms[p*buckets+i];
       }
       N+=sum[i];
-    } 
-    
-    //calculate cut points 
+    }
+
+    //calculate cut points
     float mean=float(N)/P;
     float target=mean;
     float remaining=N;
-    
+
     for(int p=0;p<P;p++)
       cuts[p]=0;
     int current=0;
     int p=1;
-    max_imbalance=0; 
+    max_imbalance=0;
     for(BITS bucket=0;bucket<buckets;bucket++)
     {
       double imb1=fabs(current-target);
@@ -1024,12 +1024,12 @@ void SFC<LOCS>::CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::v
         float imbalance=fabs(current/mean-1);
         if(imbalance>max_imbalance)
           max_imbalance=imbalance;
-        
+
         cuts[p]=bucket;
         remaining-=current;
         target=remaining/(P-p);
         p++;
-       
+
         current=sum[bucket];
       }
       else
@@ -1038,7 +1038,7 @@ void SFC<LOCS>::CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::v
       }
     }
     cuts[p]=buckets;
-   
+
     //increase b
     b+=dim;
     /*
@@ -1109,10 +1109,10 @@ void SFC<LOCS>::Parallel()
     case 2: case 3: case 4:
             Parallel1<DIM,BITS>();
             break;
-    case 5: 
+    case 5:
             Parallel2<DIM,BITS>();
             break;
-    case 6: 
+    case 6:
             Parallel3<DIM,BITS>();
             break;
     default:
@@ -1146,23 +1146,23 @@ void SFC<LOCS>::Parallel3()
 #endif
   std::vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
-  //calculate local curves 
+  //calculate local curves
   SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
-  
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[0]+=finish-start;
   start=timer->currentSeconds();
-#endif 
+#endif
   /*
   std::cout << rank << ": histories:";
   for(unsigned int i=0;i<n;i++)
   {
     std::cout << (int)myhistories[i].bits << " ";
-  } 
+  }
   std::cout << std::endl;
   */
-  
+
   //calculate b
   b=(int)ceil(log(2.0*P)/log(2.0));
   if(b>refinements*DIM)
@@ -1171,7 +1171,7 @@ void SFC<LOCS>::Parallel3()
   //calcualte buckets
   buckets=1<<b;
   //std::cout << rank << ": bits for histogram:" << b << " buckets:" << buckets << std::endl;
-  
+
   //create local histogram and cuts
   std::vector <BITS> histogram(buckets+P+1);
   std::vector <BITS> recv_histogram(buckets+P+1);
@@ -1180,7 +1180,7 @@ void SFC<LOCS>::Parallel3()
 
   histogram[buckets]=0;
   histogram[buckets+1]=buckets;
- 
+
   //std::cout << rank << ": creating histogram\n";
   ComputeLocalHistogram<BITS>(&histogram[0], myhistories);
   //std::cout << rank << ": done creating histogram\n";
@@ -1189,16 +1189,16 @@ void SFC<LOCS>::Parallel3()
   finish=timer->currentSeconds();
   timers[6]+=finish-start;
   start=timer->currentSeconds();
-#endif 
+#endif
 
- 
+
   //merging phase
   int stages=0;
   for(int p=1;p<P;p<<=1,stages++);
-  
+
   //create groups
   std::vector<std::vector<Group> > groups(stages+1);
-  
+
   groups[0].push_back(Group(0,P,-1,-1));
 
   //std::cout << rank << ": creating merging groups\n";
@@ -1208,19 +1208,19 @@ void SFC<LOCS>::Parallel3()
     {
         Group current=groups[stage][g];
         Group left,right;
-       
+
         left.parent_group=right.parent_group=g;
-        
+
         right.size=current.size/2;
         left.size=current.size-right.size;
-        
+
         right.partner_group=groups[stage+1].size();
         left.partner_group=groups[stage+1].size()+1;
-        
-         
+
+
         left.start_rank=current.start_rank;
         right.start_rank=left.start_rank+left.size;
-  
+
         if(right.size!=0)
         {
           groups[stage+1].push_back(left);
@@ -1232,20 +1232,20 @@ void SFC<LOCS>::Parallel3()
           groups[stage+1].push_back(left);
         }
     }
-  } 
-  
+  }
+
   std::vector<MPI_Request> hsreqs;
   MPI_Request rreq;
- 
-  //initialize next groups 
+
+  //initialize next groups
   Group next_group=groups[stages][rank];
   Group next_partner_group, next_parent_group;
   int next_local_rank=-1;
   int next_partner_rank=-1;
-  
+
   //place histgram into sum_histogram
   histogram.swap(sum_histogram);
-     
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[1]+=finish-start;
@@ -1258,7 +1258,7 @@ void SFC<LOCS>::Parallel3()
     //set next groups
     next_parent_group=groups[stages-1][next_group.parent_group];
     next_local_rank=rank-next_group.start_rank;
-    
+
     if(next_group.partner_group!=-1)
     {
     //set next status
@@ -1270,7 +1270,7 @@ void SFC<LOCS>::Parallel3()
       {
         //std::cout << rank << ": sending and recieving from: " << next_partner_rank << std::endl;
         MPI_Request request;
-          
+
         //start send
         MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
         hsreqs.push_back(request);
@@ -1287,8 +1287,8 @@ void SFC<LOCS>::Parallel3()
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
         MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
-      }       
-        
+      }
+
       if(next_group.size<next_partner_group.size && next_local_rank==0)
       {
         MPI_Request request;
@@ -1304,14 +1304,14 @@ void SFC<LOCS>::Parallel3()
   finish=timer->currentSeconds();
   timers[3]+=finish-start;
   start=timer->currentSeconds();
-#endif 
-  
+#endif
+
   std::vector<History<BITS> > recv_histories(n),merge_histories,temp_histories;
-  
+
   Group group;
   //std::cout << rank << ": merging phase start\n";
   for(int stage=stages;stage>0;stage--)
-  { 
+  {
     MPI_Status status;
     //update current group state
     group=next_group;
@@ -1322,21 +1322,21 @@ void SFC<LOCS>::Parallel3()
     //update next group state
     next_group=groups[stage-1][group.parent_group];
     next_local_rank=rank-next_group.start_rank;
-    
+
     if(next_group.partner_group!=-1)
     {
       next_partner_group=groups[stage-1][next_group.partner_group];
       next_partner_rank=next_partner_group.start_rank+next_local_rank;
     }
-    
+
     if(stage-2>=0)
     {
       next_parent_group=groups[stage-2][next_group.parent_group];
     }
-    
+
     //std::cout << rank << ": next group:  start_rank:" << next_group.start_rank << " size:" << next_group.size << " partner_group:" << next_group.partner_group << " next_local_rank:" << next_local_rank << " next_partner_rank:" << next_partner_rank <<std::endl;
-    
-   
+
+
     if(group.partner_group!=-1)
     {
 #ifdef _TIMESFC_
@@ -1348,7 +1348,7 @@ void SFC<LOCS>::Parallel3()
       MPI_Wait(&rreq,&status);
       MPI_Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
       hsreqs.clear();
-      
+
 #ifdef _TIMESFC_
       finish=timer->currentSeconds();
       timers[3]+=finish-start;
@@ -1358,7 +1358,7 @@ void SFC<LOCS>::Parallel3()
       //swap histograms, histogram is now the current histogram
       histogram.swap(sum_histogram);
       recv_histogram.swap(next_recv_histogram);
-      /*   
+      /*
       std::cout << rank << ": recieved histogram: ";
       for(unsigned int i=0;i<buckets;i++)
       {
@@ -1384,12 +1384,12 @@ void SFC<LOCS>::Parallel3()
       float mean=float(total)/parent_group.size;
       float target=ceil(mean);
       int remaining=total;
-        
+
       //std::cout << rank << ": mean:" << mean << " target: " << target << " total:" << total << std::endl;
       //initiliaze cuts to 0
       for(int p=0;p<P+1;p++)
         sum_histogram[buckets+p]=0;
-      
+
       int current=0;
       int p=1;
       for(unsigned int bucket=0;bucket<buckets;bucket++)
@@ -1398,13 +1398,13 @@ void SFC<LOCS>::Parallel3()
         float notakeimb=fabs(current-target);                     //amount away if p takes this work
         if(takeimb>notakeimb) //minimize imbalance
         {
-                
+
           //move to the next proc
           sum_histogram[buckets+p]=bucket;
           remaining-=current;
           target=ceil((float)remaining/(parent_group.size-p));
           p++;
- 
+
           current=sum_histogram[bucket];
         }
         else
@@ -1427,7 +1427,7 @@ void SFC<LOCS>::Parallel3()
       {
         //std::cout << rank << ": sending and recieving from: " << next_partner_rank << std::endl;
         MPI_Request request;
-          
+
         //start send
         MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
         hsreqs.push_back(request);
@@ -1443,8 +1443,8 @@ void SFC<LOCS>::Parallel3()
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
         MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
-      }       
-        
+      }
+
       if(next_group.size<next_partner_group.size && next_local_rank==0)
       {
         MPI_Request request;
@@ -1470,27 +1470,27 @@ void SFC<LOCS>::Parallel3()
       }
 */
       std::vector<int> sendcounts(parent_group.size,0), recvcounts(parent_group.size,0), senddisp(parent_group.size,0), recvdisp(parent_group.size,0);
-        
+
       BITS oldstart=histogram[buckets+local_rank],oldend=histogram[buckets+local_rank+1];
       //std::cout << rank << ": oldstart:" << oldstart << " oldend:" << oldend << std::endl;
-        
+
       //calculate send count
       for(int p=0;p<parent_group.size;p++)
       {
         //i own old histogram from buckets oldstart to oldend
         //any elements between oldstart and oldend that do not belong on me according to the new cuts must be sent
-        //std::cout << rank << ": sum_histogram[buckets+p]:" << sum_histogram[buckets+p] << " sum_histogram[buckets+p+1]:" << sum_histogram[buckets+p+1] << std::endl; 
-        BITS start=max(oldstart,sum_histogram[buckets+p]),end=min(oldend,sum_histogram[buckets+p+1]);
+        //std::cout << rank << ": sum_histogram[buckets+p]:" << sum_histogram[buckets+p] << " sum_histogram[buckets+p+1]:" << sum_histogram[buckets+p+1] << std::endl;
+        BITS start=std::max(oldstart,sum_histogram[buckets+p]),end=std::min(oldend,sum_histogram[buckets+p+1]);
         for(unsigned int bucket=start;bucket<end;bucket++)
         {
            sendcounts[p]+=histogram[bucket];
         }
       }
-        
+
       //calculate recv count
       //i will recieve from every processor that owns a bucket assigned to me
       //ownership is determined by that processors old histogram and old cuts
-       
+
       BITS newstart=sum_histogram[buckets+next_local_rank],newend=sum_histogram[buckets+next_local_rank+1];
       //std::cout << rank << ": newstart: " << newstart << " newend:" << newend << std::endl;
 
@@ -1511,35 +1511,35 @@ void SFC<LOCS>::Parallel3()
         lefthistogram=&recv_histogram[0];
         leftsize=partner_group.size;
       }
-        
+
       //old histogram and cuts is histogram
       for(int p=0;p<leftsize;p++)
       {
         //std::cout << rank << ": lefthistogram[buckets+p]:" << lefthistogram[buckets+p] << " lefthistogram[buckets+p+1]:" << lefthistogram[buckets+p+1] << std::endl;
-        BITS start=max(newstart,lefthistogram[buckets+p]), end=min(newend,lefthistogram[buckets+p+1]);
+        BITS start=std::max(newstart,lefthistogram[buckets+p]), end=std::min(newend,lefthistogram[buckets+p+1]);
         for(unsigned int bucket=start;bucket<end;bucket++)
         {
           recvcounts[p]+=lefthistogram[bucket];
         }
-      } 
+      }
       //old histogram and cuts is recv_histogram
       for(int p=0;p<rightsize;p++)
       {
-  int start=max(newstart,righthistogram[buckets+p]),end=min(newend,righthistogram[buckets+p+1]);
+  int start=std::max(newstart,righthistogram[buckets+p]),end=std::min(newend,righthistogram[buckets+p+1]);
         for(int bucket=start;bucket<end;bucket++)
         {
           recvcounts[p+leftsize]+=righthistogram[bucket];
         }
-      } 
+      }
       unsigned int newn=0;
       for(int p=0;p<parent_group.size;p++)
       {
         newn+=recvcounts[p];
       }
       //std::cout << rank << " resizing histories to:" << newn << std::endl;
-      
+
       recv_histories.resize(newn);
-      
+
 #if 0
       std::cout << rank << ": sendcounts: ";
       for(int p=0;p<parent_group.size;p++)
@@ -1560,17 +1560,17 @@ void SFC<LOCS>::Parallel3()
         senddisp[p]+=senddisp[p-1]+sendcounts[p-1];
         recvdisp[p]+=recvdisp[p-1]+recvcounts[p-1];
       }
-       
-      //redistribute keys 
+
+      //redistribute keys
      spartners.resize(0);
      rpartners.resize(0);
      //create merging partners
       for(int p=0;p<parent_group.size;p++)
       {
-          
+
         if(p==next_local_rank)
           continue;
-          
+
         //start send
         if(sendcounts[p]!=0)
         {
@@ -1580,7 +1580,7 @@ void SFC<LOCS>::Parallel3()
           partner.rank=parent_group.start_rank+p;
           spartners.push_back(partner);
         }
-          
+
         //start recv
         if(recvcounts[p]!=0)
         {
@@ -1604,42 +1604,42 @@ void SFC<LOCS>::Parallel3()
         {
           //create message
           Comm_Msg<BITS> msg;
-          msg.size=min(comm_block_size,spartners[i].remaining);
+          msg.size=std::min(comm_block_size,spartners[i].remaining);
           msg.buffer=spartners[i].buffer;
-          
+
           //adjust partner
           spartners[i].buffer+=msg.size;
           spartners[i].remaining-=msg.size;
 
           //start send
           MPI_Isend(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,spartners[i].rank,1,Comm,&msg.request);
-      
+
           //add msg to in transit queue
-          spartners[i].in_transit.push(msg);    
+          spartners[i].in_transit.push(msg);
 
           //std::cout << rank << ": started initial sending msg of size: " << msg.size << " to " << spartners[i].rank << std::endl;
         }
      }
-     //begin recvs 
+     //begin recvs
      for(unsigned int i=0;i<rpartners.size();i++)
      {
         for(unsigned int b=0;b<blocks_in_transit && rpartners[i].remaining>0;b++)
         {
           //create message
           Comm_Msg<BITS> msg;
-          msg.size=min(comm_block_size,rpartners[i].remaining);
+          msg.size=std::min(comm_block_size,rpartners[i].remaining);
           msg.buffer=rpartners[i].buffer;
-          
+
           //adjust partner
           rpartners[i].buffer+=msg.size;
           rpartners[i].remaining-=msg.size;
 
           //start send
           MPI_Irecv(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,rpartners[i].rank,1,Comm,&msg.request);
-      
+
           //add msg to in transit queue
-          rpartners[i].in_transit.push(msg);    
-          
+          rpartners[i].in_transit.push(msg);
+
           //std::cout << rank << ": started inital recieving msg of size: " << msg.size << " from " << rpartners[i].rank << std::endl;
         }
       }
@@ -1647,12 +1647,12 @@ void SFC<LOCS>::Parallel3()
       finish=timer->currentSeconds();
       timers[5]+=finish-start;
       start=timer->currentSeconds();
-#endif      
-      
+#endif
+
       temp_histories.reserve(newn);
       merge_histories.reserve(newn);
       merge_histories.resize(0);
-     
+
       rreqs.resize(rpartners.size());
       sreqs.resize(spartners.size());
       //fill initial requests
@@ -1660,19 +1660,19 @@ void SFC<LOCS>::Parallel3()
       {
         rreqs[i]=rpartners[i].in_transit.front().request;
       }
-     
+
       for(unsigned int i=0;i<sreqs.size();i++)
       {
         sreqs[i]=spartners[i].in_transit.front().request;
       }
-         
-     
+
+
       if(recvcounts[next_local_rank]!=0)
       {
         //copy my list to merge buffer
         merge_histories.assign(myhistories.begin()+senddisp[next_local_rank],myhistories.begin()+senddisp[next_local_rank]+sendcounts[next_local_rank]);
       }
-      
+
       //create status and index arrays for waitsome
       rindices.resize(rreqs.size());
       sindices.resize(sreqs.size());
@@ -1700,15 +1700,15 @@ void SFC<LOCS>::Parallel3()
           for(int i=0;i<completed;i++)
           {
             Comm_Partner<BITS> &partner=spartners[sindices[i]];
-            //std::cout << rank << ": completed send to " << partner.rank << std::endl; 
+            //std::cout << rank << ": completed send to " << partner.rank << std::endl;
             partner.in_transit.pop();
-            
+
             //start next send
             if(partner.remaining>0)
             {
               //create message
               Comm_Msg<BITS> new_msg;
-              new_msg.size=min(comm_block_size,partner.remaining);
+              new_msg.size=std::min(comm_block_size,partner.remaining);
               new_msg.buffer=partner.buffer;
 
               //adjust partner
@@ -1722,7 +1722,7 @@ void SFC<LOCS>::Parallel3()
               partner.in_transit.push(new_msg);
               //std::cout << rank << ": started sending msg of size: " << new_msg.size << " to " << partner.rank << std::endl;
             }
-            
+
             //reset sreqs
             if(!partner.in_transit.empty())
             {
@@ -1735,7 +1735,7 @@ void SFC<LOCS>::Parallel3()
             }
           }
         }
-    
+
         if(rdone<rreqs.size())
         {
           int completed;
@@ -1755,17 +1755,17 @@ void SFC<LOCS>::Parallel3()
           for(int i=0;i<completed;i++)
           {
             Comm_Partner<BITS> &partner=rpartners[rindices[i]];
-            //std::cout << rank << ": completed recieve from " << partner.rank << std::endl; 
+            //std::cout << rank << ": completed recieve from " << partner.rank << std::endl;
 
             Comm_Msg<BITS> msg=partner.in_transit.front();
             partner.in_transit.pop();
-            
+
             //start next recv
             if(partner.remaining>0)
             {
               //create message
               Comm_Msg<BITS> new_msg;
-              new_msg.size=min(comm_block_size,partner.remaining);
+              new_msg.size=std::min(comm_block_size,partner.remaining);
               new_msg.buffer=partner.buffer;
 
               //adjust partner
@@ -1777,9 +1777,9 @@ void SFC<LOCS>::Parallel3()
 
               //add msg to in transit queue
               partner.in_transit.push(new_msg);
-              
+
               //std::cout << rank << ": started recieving msg of size: " << new_msg.size << " from " << partner.rank << std::endl;
-            } 
+            }
             //reset rreqs
             if(!partner.in_transit.empty())
             {
@@ -1790,7 +1790,7 @@ void SFC<LOCS>::Parallel3()
               //std::cout << rank << ": done recieving from " << partner.rank << std::endl;
               rdone++;
             }
-           
+
             if(merge_histories.size()==0)
             {
                merge_histories.resize(msg.size);
@@ -1801,8 +1801,8 @@ void SFC<LOCS>::Parallel3()
               //merge in transit message
               History<BITS> *start1=&merge_histories[0], *end1=start1+merge_histories.size(), *start2=msg.buffer,*end2=start2+msg.size;
               temp_histories.resize( (end1-start1)+(end2-start2));
-              History<BITS> *out=&temp_histories[0]; 
-            
+              History<BITS> *out=&temp_histories[0];
+
               //copy whole list if possible
               if(*start1>=*(end2-1))
               {
@@ -1821,16 +1821,16 @@ void SFC<LOCS>::Parallel3()
                   if(*start2<*start1)
                     *out=*start2++;
                   else
-                    *out=*start1++;    
+                    *out=*start1++;
                 }
                 if(start1!=end1)
                   memcpy(out,start1,(end1-start1)*sizeof(History<BITS>));
                 else if(start2!=end2)
                   memcpy(out,start2,(end2-start2)*sizeof(History<BITS>));
-              }     
-              merge_histories.swap(temp_histories); 
+              }
+              merge_histories.swap(temp_histories);
             }
-            
+
           } //end for completed
 #ifdef _TIMESFC_
           finish=timer->currentSeconds();
@@ -1840,13 +1840,13 @@ void SFC<LOCS>::Parallel3()
         } //end if rdone!=rsize
       } //end while rdone!=rsize && sdone!=ssize
 
-      
+
 #ifdef _TIMESFC_
       finish=timer->currentSeconds();
       timers[5]+=finish-start;
       start=timer->currentSeconds();
 #endif
-      
+
       myhistories.swap(merge_histories);
     } //end no partner group
   } //end merging stages
@@ -1855,8 +1855,8 @@ void SFC<LOCS>::Parallel3()
   for(unsigned int i=0;i<myhistories.size();i++)
   {
     (*orders)[i]=myhistories[i].index;
-  } 
-  /* 
+  }
+  /*
   std::cout << rank << ": final list: ";
   for(unsigned int i=0;i<myhistories.size();i++)
   {
@@ -1881,7 +1881,7 @@ void SFC<LOCS>::Parallel3()
     std::cout << "averge recvs:" << avg_recvs << " max recvs:" << max << std::endl;
   }
 #endif
-  //std::cout << rank << ": all done!\n"; 
+  //std::cout << rank << ": all done!\n";
 }
 template<class LOCS> template<int DIM, class BITS>
 void SFC<LOCS>::Parallel2()
@@ -1893,23 +1893,23 @@ void SFC<LOCS>::Parallel2()
 #endif
   std::vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
-  //calculate local curves 
+  //calculate local curves
   SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
-  
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[0]+=finish-start;
   start=timer->currentSeconds();
-#endif 
+#endif
   /*
   std::cout << rank << ": histories:";
   for(unsigned int i=0;i<n;i++)
   {
     std::cout << (int)myhistories[i].bits << " ";
-  } 
+  }
   std::cout << std::endl;
   */
-  
+
   //calculate b
   b=(int)ceil(log(2.0*P)/log(2.0));
   if(b>refinements*DIM)
@@ -1918,7 +1918,7 @@ void SFC<LOCS>::Parallel2()
   //calcualte buckets
   buckets=1<<b;
   //std::cout << rank << ": bits for histogram:" << b << " buckets:" << buckets << std::endl;
-  
+
   //create local histogram and cuts
   std::vector <BITS> histogram(buckets+P+1);
   std::vector <BITS> recv_histogram(buckets+P+1);
@@ -1927,7 +1927,7 @@ void SFC<LOCS>::Parallel2()
 
   histogram[buckets]=0;
   histogram[buckets+1]=buckets;
- 
+
   //std::cout << rank << ": creating histogram\n";
   ComputeLocalHistogram<BITS>(&histogram[0], myhistories);
   //std::cout << rank << ": done creating histogram\n";
@@ -1936,16 +1936,16 @@ void SFC<LOCS>::Parallel2()
   finish=timer->currentSeconds();
   timers[6]+=finish-start;
   start=timer->currentSeconds();
-#endif 
+#endif
 
- 
+
   //merging phase
   int stages=0;
   for(int p=1;p<P;p<<=1,stages++);
-  
+
   //create groups
   std::vector<std::vector<Group> > groups(stages+1);
-  
+
   groups[0].push_back(Group(0,P,-1,-1));
 
   //std::cout << rank << ": creating merging groups\n";
@@ -1955,19 +1955,19 @@ void SFC<LOCS>::Parallel2()
     {
         Group current=groups[stage][g];
         Group left,right;
-       
+
         left.parent_group=right.parent_group=g;
-        
+
         right.size=current.size/2;
         left.size=current.size-right.size;
-        
+
         right.partner_group=groups[stage+1].size();
         left.partner_group=groups[stage+1].size()+1;
-        
-         
+
+
         left.start_rank=current.start_rank;
         right.start_rank=left.start_rank+left.size;
-  
+
         if(right.size!=0)
         {
           groups[stage+1].push_back(left);
@@ -1979,20 +1979,20 @@ void SFC<LOCS>::Parallel2()
           groups[stage+1].push_back(left);
         }
     }
-  } 
-  
+  }
+
   std::vector<MPI_Request> hsreqs;
   MPI_Request rreq;
- 
-  //initialize next groups 
+
+  //initialize next groups
   Group next_group=groups[stages][rank];
   Group next_partner_group, next_parent_group;
   int next_local_rank=-1;
   int next_partner_rank=-1;
-  
+
   //place histgram into sum_histogram
   histogram.swap(sum_histogram);
-     
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[1]+=finish-start;
@@ -2005,7 +2005,7 @@ void SFC<LOCS>::Parallel2()
     //set next groups
     next_parent_group=groups[stages-1][next_group.parent_group];
     next_local_rank=rank-next_group.start_rank;
-    
+
     if(next_group.partner_group!=-1)
     {
     //set next status
@@ -2017,7 +2017,7 @@ void SFC<LOCS>::Parallel2()
       {
         //std::cout << rank << ": sending and recieving from: " << next_partner_rank << std::endl;
         MPI_Request request;
-          
+
         //start send
         MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stages,Comm,&request);
         hsreqs.push_back(request);
@@ -2034,8 +2034,8 @@ void SFC<LOCS>::Parallel2()
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
         MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stages,Comm,&rreq);
-      }       
-        
+      }
+
       if(next_group.size<next_partner_group.size && next_local_rank==0)
       {
         MPI_Request request;
@@ -2051,13 +2051,13 @@ void SFC<LOCS>::Parallel2()
   finish=timer->currentSeconds();
   timers[3]+=finish-start;
   start=timer->currentSeconds();
-#endif 
+#endif
   std::vector<History<BITS> > recv_histories(n),merge_histories,temp_histories;
-  
+
   Group group;
   //std::cout << rank << ": merging phase start\n";
   for(int stage=stages;stage>0;stage--)
-  { 
+  {
     MPI_Status status;
     //update current group state
     group=next_group;
@@ -2068,21 +2068,21 @@ void SFC<LOCS>::Parallel2()
     //update next group state
     next_group=groups[stage-1][group.parent_group];
     next_local_rank=rank-next_group.start_rank;
-    
+
     if(next_group.partner_group!=-1)
     {
       next_partner_group=groups[stage-1][next_group.partner_group];
       next_partner_rank=next_partner_group.start_rank+next_local_rank;
     }
-    
+
     if(stage-2>=0)
     {
       next_parent_group=groups[stage-2][next_group.parent_group];
     }
-    
+
     //std::cout << rank << ": next group:  start_rank:" << next_group.start_rank << " size:" << next_group.size << " partner_group:" << next_group.partner_group << " next_local_rank:" << next_local_rank << " next_partner_rank:" << next_partner_rank <<std::endl;
-    
-   
+
+
     if(group.partner_group!=-1)
     {
 #ifdef _TIMESFC_
@@ -2094,7 +2094,7 @@ void SFC<LOCS>::Parallel2()
       MPI_Wait(&rreq,&status);
       MPI_Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
       hsreqs.clear();
-      
+
 #ifdef _TIMESFC_
       finish=timer->currentSeconds();
       timers[3]+=finish-start;
@@ -2104,7 +2104,7 @@ void SFC<LOCS>::Parallel2()
       //swap histograms, histogram is now the current histogram
       histogram.swap(sum_histogram);
       recv_histogram.swap(next_recv_histogram);
-      /*   
+      /*
       std::cout << rank << ": recieved histogram: ";
       for(unsigned int i=0;i<buckets;i++)
       {
@@ -2130,12 +2130,12 @@ void SFC<LOCS>::Parallel2()
       float mean=float(total)/parent_group.size;
       float target=ceil(mean);
       int remaining=total;
-        
+
       //std::cout << rank << ": mean:" << mean << " target: " << target << " total:" << total << std::endl;
       //initiliaze cuts to 0
       for(int p=0;p<P+1;p++)
         sum_histogram[buckets+p]=0;
-      
+
       int current=0;
       int p=1;
       for(unsigned int bucket=0;bucket<buckets;bucket++)
@@ -2144,13 +2144,13 @@ void SFC<LOCS>::Parallel2()
         float notakeimb=fabs(current-target);                     //amount away if p takes this work
         if(takeimb>notakeimb) //minimize imbalance
         {
-                
+
           //move to the next proc
           sum_histogram[buckets+p]=bucket;
           remaining-=current;
           target=ceil((float)remaining/(parent_group.size-p));
           p++;
- 
+
           current=sum_histogram[bucket];
         }
         else
@@ -2173,7 +2173,7 @@ void SFC<LOCS>::Parallel2()
       {
         //std::cout << rank << ": sending and recieving from: " << next_partner_rank << std::endl;
         MPI_Request request;
-          
+
         //start send
         MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stage-1,Comm,&request);
         hsreqs.push_back(request);
@@ -2189,8 +2189,8 @@ void SFC<LOCS>::Parallel2()
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
         MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stage-1,Comm,&rreq);
-      }       
-        
+      }
+
       if(next_group.size<next_partner_group.size && next_local_rank==0)
       {
         MPI_Request request;
@@ -2216,27 +2216,27 @@ void SFC<LOCS>::Parallel2()
       }
 */
       std::vector<int> sendcounts(parent_group.size,0), recvcounts(parent_group.size,0), senddisp(parent_group.size,0), recvdisp(parent_group.size,0);
-        
+
       BITS oldstart=histogram[buckets+local_rank],oldend=histogram[buckets+local_rank+1];
       //std::cout << rank << ": oldstart:" << oldstart << " oldend:" << oldend << std::endl;
-        
+
       //calculate send count
       for(int p=0;p<parent_group.size;p++)
       {
         //i own old histogram from buckets oldstart to oldend
         //any elements between oldstart and oldend that do not belong on me according to the new cuts must be sent
-        //std::cout << rank << ": sum_histogram[buckets+p]:" << sum_histogram[buckets+p] << " sum_histogram[buckets+p+1]:" << sum_histogram[buckets+p+1] << std::endl; 
-        BITS start=max(oldstart,sum_histogram[buckets+p]),end=min(oldend,sum_histogram[buckets+p+1]);
+        //std::cout << rank << ": sum_histogram[buckets+p]:" << sum_histogram[buckets+p] << " sum_histogram[buckets+p+1]:" << sum_histogram[buckets+p+1] << std::endl;
+        BITS start=std::max(oldstart,sum_histogram[buckets+p]),end=std::min(oldend,sum_histogram[buckets+p+1]);
         for(unsigned int bucket=start;bucket<end;bucket++)
         {
            sendcounts[p]+=histogram[bucket];
         }
       }
-        
+
       //calculate recv count
       //i will recieve from every processor that owns a bucket assigned to me
       //ownership is determined by that processors old histogram and old cuts
-       
+
       BITS newstart=sum_histogram[buckets+next_local_rank],newend=sum_histogram[buckets+next_local_rank+1];
       //std::cout << rank << ": newstart: " << newstart << " newend:" << newend << std::endl;
 
@@ -2257,35 +2257,35 @@ void SFC<LOCS>::Parallel2()
         lefthistogram=&recv_histogram[0];
         leftsize=partner_group.size;
       }
-        
+
       //old histogram and cuts is histogram
       for(int p=0;p<leftsize;p++)
       {
         //std::cout << rank << ": lefthistogram[buckets+p]:" << lefthistogram[buckets+p] << " lefthistogram[buckets+p+1]:" << lefthistogram[buckets+p+1] << std::endl;
-        BITS start=max(newstart,lefthistogram[buckets+p]), end=min(newend,lefthistogram[buckets+p+1]);
+        BITS start=std::max(newstart,lefthistogram[buckets+p]), end=std::min(newend,lefthistogram[buckets+p+1]);
         for(unsigned int bucket=start;bucket<end;bucket++)
         {
           recvcounts[p]+=lefthistogram[bucket];
         }
-      } 
+      }
       //old histogram and cuts is recv_histogram
       for(int p=0;p<rightsize;p++)
       {
-  int start=max(newstart,righthistogram[buckets+p]),end=min(newend,righthistogram[buckets+p+1]);
+  int start=std::max(newstart,righthistogram[buckets+p]),end=std::min(newend,righthistogram[buckets+p+1]);
         for(int bucket=start;bucket<end;bucket++)
         {
           recvcounts[p+leftsize]+=righthistogram[bucket];
         }
-      } 
+      }
       unsigned int newn=0;
       for(int p=0;p<parent_group.size;p++)
       {
         newn+=recvcounts[p];
       }
       //std::cout << rank << " resizing histories to:" << newn << std::endl;
-      
+
       recv_histories.resize(newn);
-      
+
 #if 0
       std::cout << rank << ": sendcounts: ";
       for(int p=0;p<parent_group.size;p++)
@@ -2306,23 +2306,23 @@ void SFC<LOCS>::Parallel2()
         senddisp[p]+=senddisp[p-1]+sendcounts[p-1];
         recvdisp[p]+=recvdisp[p-1]+recvcounts[p-1];
       }
-      
-      //redistribute keys 
+
+      //redistribute keys
       std::vector<MPI_Request> rreqs,sreqs;
-      
+
 #ifdef _TIMESFC_
      finish=timer->currentSeconds();
      timers[2]+=finish-start;
      start=timer->currentSeconds();
-#endif        
+#endif
       for(int p=0;p<parent_group.size;p++)
       {
-          
+
         if(p==next_local_rank)
           continue;
-          
+
         MPI_Request request;
-          
+
         //start send
         if(sendcounts[p]>0)
         {
@@ -2332,9 +2332,9 @@ void SFC<LOCS>::Parallel2()
             std::cout << rank << ": error sending, send size is bigger than buffer\n";
           }
           MPI_Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
-          sreqs.push_back(request); 
+          sreqs.push_back(request);
         }
-          
+
         //start recv
         if(recvcounts[p]>0)
         {
@@ -2346,21 +2346,21 @@ void SFC<LOCS>::Parallel2()
           MPI_Irecv(&recv_histories[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
           rreqs.push_back(request);
         }
-          
+
       }
 #ifdef _TIMESFC_
      finish=timer->currentSeconds();
      timers[5]+=finish-start;
      start=timer->currentSeconds();
-#endif      
+#endif
      total_recvs+=rreqs.size();
      num_recvs++;
-     
+
      temp_histories.reserve(newn);
      merge_histories.reserve(newn);
      merge_histories.resize(0);
-  
-      
+
+
      unsigned int i=0;
      //populate initial merge buffer
      if(recvcounts[next_local_rank]!=0)
@@ -2372,7 +2372,7 @@ void SFC<LOCS>::Parallel2()
      {
        MPI_Status status;
        int index;
-       
+
 #ifdef _TIMESFC_
        finish=timer->currentSeconds();
        timers[4]+=finish-start;
@@ -2385,15 +2385,15 @@ void SFC<LOCS>::Parallel2()
        timers[5]+=finish-start;
        start=timer->currentSeconds();
 #endif
-       
-       int p=status.MPI_SOURCE-parent_group.start_rank; 
+
+       int p=status.MPI_SOURCE-parent_group.start_rank;
        merge_histories.resize(recvcounts[p]);
        //copy list to merge buffer
        memcpy(&merge_histories[0],&recv_histories[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>));
        //merge_histories.assign(recv_histories.begin()+recvdisp[p],recv_histories.begin()+recvdisp[p]+recvcounts[p]);
        i++;
      }
-     
+
       std::vector<MPI_Status> statuses(rreqs.size());
       std::vector<int> indices(rreqs.size());
       for(;i<rreqs.size();i++)
@@ -2401,8 +2401,8 @@ void SFC<LOCS>::Parallel2()
         int completed;
         //MPI_Status status;
         //int index;
-       
-       
+
+
 #ifdef _TIMESFC_
         finish=timer->currentSeconds();
         timers[4]+=finish-start;
@@ -2418,12 +2418,12 @@ void SFC<LOCS>::Parallel2()
 #endif
         for(int j=0;j<completed;j++)
         {
-          int p=statuses[j].MPI_SOURCE-parent_group.start_rank; 
-        
+          int p=statuses[j].MPI_SOURCE-parent_group.start_rank;
+
           History<BITS> *start1=&merge_histories[0], *end1=start1+merge_histories.size(), *start2=&recv_histories[recvdisp[p]],*end2=start2+recvcounts[p], *out=&temp_histories[0];
 
           temp_histories.resize( (end1-start1)+(end2-start2));
-        
+
           //copy whole list if possible
           if(*start1>=*(end2-1))
           {
@@ -2442,15 +2442,15 @@ void SFC<LOCS>::Parallel2()
               if(*start2<*start1)
                 *out=*start2++;
               else
-                *out=*start1++;    
+                *out=*start1++;
             }
             if(start1!=end1)
               memcpy(out,start1,(end1-start1)*sizeof(History<BITS>));
             else if(start2!=end2)
               memcpy(out,start2,(end2-start2)*sizeof(History<BITS>));
           }
-            
-          merge_histories.swap(temp_histories); 
+
+          merge_histories.swap(temp_histories);
         }
       }
 
@@ -2459,17 +2459,17 @@ void SFC<LOCS>::Parallel2()
       timers[4]+=finish-start;
       start=timer->currentSeconds();
 #endif
-      
+
       //wait for sends
       if(sreqs.size()>0)
         MPI_Waitall(sreqs.size(), &sreqs[0], MPI_STATUSES_IGNORE);
-      
+
 #ifdef _TIMESFC_
       finish=timer->currentSeconds();
       timers[5]+=finish-start;
       start=timer->currentSeconds();
 #endif
-      
+
       myhistories.swap(merge_histories);
     } //end no partner group
   } //end merging stages
@@ -2478,8 +2478,8 @@ void SFC<LOCS>::Parallel2()
   for(unsigned int i=0;i<myhistories.size();i++)
   {
     (*orders)[i]=myhistories[i].index;
-  } 
-  /* 
+  }
+  /*
   std::cout << rank << ": final list: ";
   for(unsigned int i=0;i<myhistories.size();i++)
   {
@@ -2505,49 +2505,49 @@ void SFC<LOCS>::Parallel2()
   }
 #endif
 }
-        
+
 template<class LOCS> template<int DIM, class BITS>
 void SFC<LOCS>::Parallel1()
 {
- 
+
 #ifdef _TIMESFC_
   start=timer->currentSeconds();
-#endif  
+#endif
   std::vector<History<BITS> > myhistories(n), mergefrom(n), mergeto(n);
- 
-  
-  //calculate local curves 
+
+
+  //calculate local curves
   SerialH<DIM,BITS>(&myhistories[0]);
-  
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[0]+=finish-start;
   start=timer->currentSeconds();
 #endif
-  
+
   std::vector<BITS> histograms,cuts;
   CalculateHistogramsAndCuts<BITS>(histograms,cuts,myhistories);
-  
+
   //build send counts and displacements
   std::vector<int> sendcounts(P,0);
   std::vector<int> recvcounts(P,0);
   std::vector<int> senddisp(P,0);
   std::vector<int> recvdisp(P,0);
-  
+
   for(int p=0;p<P;p++)
   {
     //calculate send count
       //my row of the histogram summed up across buckets assigned to p
     for(BITS bucket=cuts[p];bucket<cuts[p+1];bucket++)
     {
-       sendcounts[p]+=histograms[rank*buckets+bucket];     
+       sendcounts[p]+=histograms[rank*buckets+bucket];
     }
-    
+
     //calculate recv count
       //my bucket colums of the histogram summed up for each processor
     for(BITS bucket=cuts[rank];bucket<cuts[rank+1];bucket++)
     {
-      recvcounts[p]+=histograms[p*buckets+bucket];            
+      recvcounts[p]+=histograms[p*buckets+bucket];
     }
 
   }
@@ -2556,7 +2556,7 @@ void SFC<LOCS>::Parallel1()
   {
     senddisp[p]+=senddisp[p-1]+sendcounts[p-1];
     recvdisp[p]+=recvdisp[p-1]+recvcounts[p-1];
-    
+
   }
   int newn=0;
   for(int p=0;p<P;p++)
@@ -2572,7 +2572,7 @@ void SFC<LOCS>::Parallel1()
   start=timer->currentSeconds();
 #endif
   /*
-  if(rank==0)   
+  if(rank==0)
   {
      for(int p=0;p<P+1;p++)
      {
@@ -2588,11 +2588,11 @@ void SFC<LOCS>::Parallel1()
   }
   */
   //std::cout << rank << ": newn:" << newn << std::endl;
-  
+
   myhistories.reserve(newn), mergefrom.reserve(newn); mergeto.reserve(newn);
-  
+
   //Recieve Keys
-  
+
   if(mergemode==2)
   {
     //scale counts by size of history
@@ -2611,7 +2611,7 @@ void SFC<LOCS>::Parallel1()
     timers[2]+=finish-start;
     start=timer->currentSeconds();
 #endif
-    /* 
+    /*
     if(rank==31)
     {
       std::cout << rank << ":" << "lists to merge: ";
@@ -2627,7 +2627,7 @@ void SFC<LOCS>::Parallel1()
     }
     */
 
-  
+
     std::vector<int> mergesizes(P),mergepointers(P);
     for(int p=0;p<P;p++)
     {
@@ -2636,7 +2636,7 @@ void SFC<LOCS>::Parallel1()
     }
     //Merge Keys using hypercube design
     int lists=P;
- 
+
     while(lists>1)
     {
       /*
@@ -2648,8 +2648,8 @@ void SFC<LOCS>::Parallel1()
         {
           std::cout <<  (int)mergefrom[i].bits << " ";
         }
-      } 
-      std::cout << std::endl << std::endl;   
+      }
+      std::cout << std::endl << std::endl;
       */
       int l=0;
       mergeto.resize(0);
@@ -2679,7 +2679,7 @@ void SFC<LOCS>::Parallel1()
           mergesizes[l]=mln;
           mergepointers[l]=mlp;
           /*
-          std::cout << " merged list:"; 
+          std::cout << " merged list:";
           for(std::vector<History<BITS> >::iterator iter=mergeto.begin()+mlp;iter<mergeto.begin()+mlp+mln;iter++)
           {
             std::cout << (int)iter->bits << " ";
@@ -2688,17 +2688,17 @@ void SFC<LOCS>::Parallel1()
           */
           l++;
         }
-      }          
+      }
       lists=l;
       //swap(mergeto,mergefrom);
       mergeto.swap(mergefrom);
-    } 
+    }
   }
   else if(mergemode==3 || mergemode==4)
   {
     std::vector<MPI_Request> sreqs;
     std::vector<MPI_Request> rreqs;
-  
+
     std::vector<History<BITS> > recvbuf(newn);
     MPI_Request empty;
     //start sends
@@ -2710,7 +2710,7 @@ void SFC<LOCS>::Parallel1()
         sreqs.push_back(empty);
         MPI_Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&sreqs.back());
       }
-    } 
+    }
     //start recieves
     for(int p=0;p<P;p++)
     {
@@ -2720,20 +2720,20 @@ void SFC<LOCS>::Parallel1()
         rreqs.push_back(empty);
         MPI_Irecv(&recvbuf[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&rreqs.back());
       }
-    } 
+    }
 #ifdef _TIMESFC_
     finish=timer->currentSeconds();
     timers[3]+=finish-start;
     start=timer->currentSeconds();
 #endif
     if(mergemode==3)
-    { 
+    {
       //move my list into merge from.
       mergefrom.assign(myhistories.begin()+senddisp[rank],myhistories.begin()+senddisp[rank]+sendcounts[rank]);
-  
+
       //wait for recvs
       for(unsigned int i=0;i<rreqs.size();i++)
-      { 
+      {
         MPI_Status status;
         int index;
         //std::cout << "doing waitany\n";
@@ -2749,12 +2749,12 @@ void SFC<LOCS>::Parallel1()
   timers[3]+=finish-start;
   start=timer->currentSeconds();
 #endif
-    
+
         mergeto.resize(0);
         //merge
-        int p=status.MPI_SOURCE; 
+        int p=status.MPI_SOURCE;
         //std::cout << "Recieved list from " << p << std::endl;
-        merge(mergefrom.begin(),mergefrom.end(),recvbuf.begin()+recvdisp[p],recvbuf.begin()+recvdisp[p]+recvcounts[p],std::back_inserter(mergeto));   
+        merge(mergefrom.begin(),mergefrom.end(),recvbuf.begin()+recvdisp[p],recvbuf.begin()+recvdisp[p]+recvcounts[p],std::back_inserter(mergeto));
         //std::cout << "done merging\n";
         mergeto.swap(mergefrom);
       }
@@ -2766,26 +2766,26 @@ void SFC<LOCS>::Parallel1()
        unsigned int rsize=rreqs.size();
        if(recvcounts[rank]!=0)
                rsize++;
-       
+
        //compute merging stages
        for(;l<rsize;stages++,l<<=1);
-       
+
        //create buffers
        std::vector<std::vector<std::vector<History<BITS> > > > done(stages);
-        
-       //std::cout << rank << ": stages: " << stages << std::endl; 
+
+       //std::cout << rank << ": stages: " << stages << std::endl;
 
        if(recvcounts[rank]!=0)
        {
-        //copy my list to buffers 
+        //copy my list to buffers
         done[0].push_back(std::vector<History<BITS > >(myhistories.begin()+senddisp[rank],myhistories.begin()+senddisp[rank]+sendcounts[rank]));
        }
       //wait for recvs
       for(unsigned int i=0;i<rreqs.size();i++)
-      { 
+      {
         MPI_Status status;
         int index;
-       
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[2]+=finish-start;
@@ -2798,23 +2798,23 @@ void SFC<LOCS>::Parallel1()
   timers[3]+=finish-start;
   start=timer->currentSeconds();
 #endif
-       
+
         int mstage=0;
-        int p=status.MPI_SOURCE; 
+        int p=status.MPI_SOURCE;
         //add list to done
-        done[0].push_back(std::vector<History<BITS> >(recvbuf.begin()+recvdisp[p],recvbuf.begin()+recvdisp[p]+recvcounts[p])); 
+        done[0].push_back(std::vector<History<BITS> >(recvbuf.begin()+recvdisp[p],recvbuf.begin()+recvdisp[p]+recvcounts[p]));
 
         //process done requests
         while(done[mstage].size()==2)
         {
           //create mergeto buffer
-          done[mstage+1].push_back(std::vector<History<BITS> >(done[mstage][0].size()+done[mstage][1].size()) ); 
-          done[mstage+1].back().resize(0); 
+          done[mstage+1].push_back(std::vector<History<BITS> >(done[mstage][0].size()+done[mstage][1].size()) );
+          done[mstage+1].back().resize(0);
           //std::cout << rank << ": merging:  mstage:" << mstage << " list sizes are:" << done[mstage][0].size() << " and " << done[mstage][1].size() << std::endl;
           //merge lists into new buffer
           merge(done[mstage][0].begin(),done[mstage][0].end(),done[mstage][1].begin(),done[mstage][1].end(),back_inserter(done[mstage+1].back()));
           /*
-          std::cout << rank << ": done merging, list is"; 
+          std::cout << rank << ": done merging, list is";
           for(unsigned int i=0;i<done[mstage+1][0].size();i++)
           {
              std::cout << (int)done[mstage+1][0][i].bits << " ";
@@ -2824,8 +2824,8 @@ void SFC<LOCS>::Parallel1()
           //clear buffers we merged from
           done[mstage].resize(0);
           //next merging stage
-          mstage++;   
-        } 
+          mstage++;
+        }
       }
       //finish remaining merges
       for(unsigned int mstage=0;mstage<stages-1;mstage++)
@@ -2838,23 +2838,23 @@ void SFC<LOCS>::Parallel1()
          else if(done[mstage].size()==2)
          {
           //create mergeto buffer
-          done[mstage+1].push_back(std::vector<History<BITS> >(done[mstage][0].size()+done[mstage][1].size()) ); 
-          done[mstage+1].back().resize(0); 
-          
+          done[mstage+1].push_back(std::vector<History<BITS> >(done[mstage][0].size()+done[mstage][1].size()) );
+          done[mstage+1].back().resize(0);
+
           //merge lists into new buffer
           merge(done[mstage][0].begin(),done[mstage][0].end(),done[mstage][1].begin(),done[mstage][1].end(),back_inserter(done[mstage+1].back()));
          }
       }
-     
 
-        
+
+
       //std::cout << rank << ": resizing mergefrom to size:" << done.back().back().size() << std::endl;
       mergefrom.resize(done.back().back().size());
-      //std::cout << rank << ": copying to mergefrom\n"; 
+      //std::cout << rank << ": copying to mergefrom\n";
       mergefrom.assign(done.back().back().begin(),done.back().back().end());
 
     }
-    
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[3]+=finish-start;
@@ -2877,8 +2877,8 @@ void SFC<LOCS>::Parallel1()
   for(int i=0;i<newn;i++)
   {
     (*orders)[i]=mergefrom[i].index;
-  } 
- /* 
+  }
+ /*
   std::cout << rank << ": final list: ";
   for(unsigned int i=0;i<mergefrom.size();i++)
   {
@@ -2900,7 +2900,7 @@ void SFC<LOCS>::Parallel0()
 #endif
   std::vector<History<BITS> > histories(n);
   unsigned int i;
- 
+
   SerialH<DIM,BITS>(&histories[0]);  //Saves results in sendbuf
 
 #ifdef _TIMESFC_
@@ -2908,7 +2908,7 @@ void SFC<LOCS>::Parallel0()
   timers[0]+=finish-start;
 #endif
   std::vector<History<BITS> > rbuf, mbuf(n);
-  
+
  if(mergemode==0)
  {
 #ifdef _TIMESFC_
@@ -2920,7 +2920,7 @@ void SFC<LOCS>::Parallel0()
     timers[1]+=finish-start;
 #endif
  }
-  
+
 #ifdef _TIMESFC_
   start=timer->currentSeconds();
 #endif
@@ -2929,15 +2929,15 @@ void SFC<LOCS>::Parallel0()
   finish=timer->currentSeconds();
   timers[2]+=finish-start;
 #endif
- 
+
   orders->resize(n);
-  
+
   //copy permutation to orders
   for(i=0;i<n;i++)
   {
     (*orders)[i]=histories[i].index;
   }
-  
+
   /*
   std::cout << rank << ": final list: ";
   for(unsigned int i=0;i<histories.size();i++)
@@ -2977,7 +2977,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
   MPI_Request srequest, rrequest;
   MPI_Status status;
-  
+
   myinfo.n=n;
   if(n!=0)
   {
@@ -2994,7 +2994,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   {
      return 0;
   }
-  
+
   //min_max exchange
   if(direction==ASCENDING)
   {
@@ -3020,7 +3020,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
         sendn=theirinfo.n;
         send_offset=diff;
       }
-      
+
        //send the elements to be merged
        MPI_Isend(&sendbuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
        //recv the elements to be merged
@@ -3048,17 +3048,17 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
         //move last elements to merge buf
         int diff=n-theirinfo.n;
-        
+
         for(int i=0;i<diff;i++)
         {
           mergebuf[i]=sendbuf[n-diff+i];
         }
-        
+
         sendn=theirinfo.n;
         send_offset=diff;
 
       }
-      
+
       //send the elements to be merged
       MPI_Isend(&sendbuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
       //recv the elements to be merged
@@ -3071,35 +3071,35 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   }
 
   //std::cout << rank << ": Max-min done\n";
- 
+
   recievebuf.resize(theirinfo.n);
-  
+
   History<BITS> *sbuf=&sendbuf[0], *rbuf=&recievebuf[0], *mbuf=&mergebuf[0];
   History<BITS> *msbuf=sbuf, *mrbuf=rbuf;
-  
+
   unsigned int nsend=n;
   unsigned int nrecv=theirinfo.n;
-  
+
   //final exchange
-  
-  
+
+
   if(direction==ASCENDING)
   {
     //Merge Ascending
-      
+
     History<BITS> *start1=msbuf,*start2=mrbuf,*end2=mrbuf+theirinfo.n,*out=mbuf, *outend=mbuf+n;
     //position buffers
-    
+
     //communicate lists
     MPI_Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
-    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);  
-  
+    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+
     //wait for recieve
     MPI_Wait(&rrequest,&status);
 
     //merge lists
 
-    //while there is more merging needed and I have recieved histories 
+    //while there is more merging needed and I have recieved histories
     for(;out<outend;out++)
     {
       //std::cout << rank << " start1:" << (unsigned int)start1->bits << " start2:" << (unsigned int)start2->bits;
@@ -3108,31 +3108,31 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
         *out=*start2++; //take from recieved buffer
       else
         *out=*start1++; //take from my buffer
-      
+
       //std::cout << " Ascending took:" << (unsigned int)out->bits << std::endl;
     }
-  
+
     //wait for send
     MPI_Wait(&srequest,&status);
-    
+
   }
   else
   {
     //Merge Descending
-      
+
     History<BITS> *start2=mrbuf,*end1=msbuf+n-1,*end2=mrbuf+theirinfo.n-1,*out=mbuf, *outend=mbuf+n-1;
     //position buffers
-    
+
     //communicate lists
     MPI_Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
-    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);  
-  
+    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+
     //wait for recieve
     MPI_Wait(&rrequest,&status);
 
     //merge lists
 
-    //while there is more merging needed and I have recieved histories 
+    //while there is more merging needed and I have recieved histories
     for(;outend>=out;outend--)
     {
       //std::cout << rank << " end1:" << (unsigned int)end1->bits << " end2:" << (unsigned int)end2->bits;
@@ -3143,7 +3143,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
         *outend=*end1--; //take from my buffer
       //std::cout << " Descending took:" << (unsigned int)out->bits << std::endl;
     }
-  
+
     //wait for send
     MPI_Wait(&srequest,&status);
   }
@@ -3179,7 +3179,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
   MPI_Request srequest, rrequest;
   MPI_Status status;
-  
+
   myinfo.n=n;
   if(n!=0)
   {
@@ -3197,11 +3197,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   {
      return 0;
   }
-  
+
   //min_max exchange
   if(direction==ASCENDING)
   {
-          
+
     if(myinfo.max<=theirinfo.min) //no exchange needed
         return 0;
     else if(myinfo.min>=theirinfo.max) //full exchange needed
@@ -3236,16 +3236,16 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   }
   n2=theirinfo.n;
   //std::cout << rank << ": Max-min done\n";
-  
+
   recievebuf.resize(n2);
-  
+
   History<BITS> *sbuf=&sendbuf[0], *rbuf=&recievebuf[0], *mbuf=&mergebuf[0];
   History<BITS> *msbuf=sbuf, *mrbuf=rbuf;
-  
+
   unsigned int nsend=n;
   unsigned int nrecv=n2;
   //sample exchange
-  unsigned int minn=min(n,n2);
+  unsigned int minn=std::min(n,n2);
   unsigned int sample_size=(int)(minn*sample_percent);
 
   if(sample_size>=5)
@@ -3268,7 +3268,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       stridelow=n2/(float)sample_size;
       mystride=stridehigh=n/(float)sample_size;
     }
-  
+
     //create sample
     for(unsigned int i=0;i<sample_size;i++)
     {
@@ -3279,10 +3279,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     //exchange samples
     MPI_Isend(mysample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&srequest);
     MPI_Irecv(theirsample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&rrequest);
-  
+
     MPI_Wait(&rrequest,&status);
     MPI_Wait(&srequest,&status);
-    
+
 //    std::cout << "done exchanging samples\n";
     //merge samples
     while(count<minn)
@@ -3297,7 +3297,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       }
       count=int(ilow*stridelow)+int(ihigh*stridehigh);
     }
-    
+
     if(ilow>sample_size) //handle case where ilow goes to far
     {
       ihigh+=(ilow-sample_size);
@@ -3312,10 +3312,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     {
       nrecv=n2;
     }
-  }  
+  }
   //final exchange
   //std::cout << rank << ": sample done\n";
-  
+
   int b;
   unsigned int block_count=0;
   int sremaining=nsend;
@@ -3323,42 +3323,42 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 //  std::cout << sremaining << " " << rremaining << std::endl;
   unsigned int sent=0, recvd=0;
   //unsigned int merged=0;
-//  std::cout << rank << " Block size: " << comm_block_size << std::endl;  
-  
-  
+//  std::cout << rank << " Block size: " << comm_block_size << std::endl;
+
+
   if(direction==ASCENDING)
   {
     //Merge Ascending
     //Send Descending
     //Recieve Ascending
-      
+
     History<BITS> *start1=msbuf,*start2=mrbuf,*end1=start1+n,*end2=mrbuf,*out=mbuf, *outend=mbuf+n;
     //position buffers
     sbuf+=n;
-    
+
     while(block_count<blocks_in_transit)
     {
       //send
       if(sremaining>0)
       {
-        int send=min(sremaining,(int)comm_block_size);
+        int send=std::min(sremaining,(int)comm_block_size);
         sbuf-=send;
         MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
       }
-      
+
       //recieve
       if(rremaining>0)
       {
-        int recv=min(rremaining,(int)comm_block_size);
+        int recv=std::min(rremaining,(int)comm_block_size);
         MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
       }
-    
+
       block_count++;
     }
     while(!rqueue.empty())
@@ -3369,41 +3369,41 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       //send next block
       if(sremaining>0)
       {
-        int send=min(sremaining,(int)comm_block_size);
+        int send=std::min(sremaining,(int)comm_block_size);
         sbuf-=send;
         MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
       }
-      
+
       if(rremaining>0)
       {
-        int recv=min(rremaining,(int)comm_block_size);
+        int recv=std::min(rremaining,(int)comm_block_size);
         MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
       }
-      
+
       rqueue.pop();
-      
+
       MPI_Get_count(&status,MPI_BYTE,&b);
       b=int(b*inv_denom);
       end2+=b;
-     
-      //while there is more merging needed and I have recieved histories 
+
+      //while there is more merging needed and I have recieved histories
       while(start2<end2 && out<outend)
       {
         //size of merge blocks
-        int mb=min(int(end1-start1),(int)merge_block_size);
-        int rb=min(int(end2-start2),(int)merge_block_size);
-        
-        BITS mmin=start1->bits, mmax=(start1+mb-1)->bits, bmin=start2->bits,bmax=(start2+rb-1)->bits; 
+        int mb=std::min(int(end1-start1),(int)merge_block_size);
+        int rb=std::min(int(end2-start2),(int)merge_block_size);
+
+        BITS mmin=start1->bits, mmax=(start1+mb-1)->bits, bmin=start2->bits,bmax=(start2+rb-1)->bits;
 
         if(mmax<=bmin) //take everything from mine
         {
-          int s=min(mb,int(outend-out));
+          int s=std::min(mb,int(outend-out));
           //std::cout << rank << ": take " << s << " from mine\n";
           memcpy(out,start1,s*sizeof(History<BITS>));
           start1+=s;
@@ -3411,7 +3411,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
         }
         else if (bmax<mmin) //take everything from theirs
         {
-          int s=min(rb,int(outend-out));
+          int s=std::min(rb,int(outend-out));
           //std::cout << rank << ": take " << s << " from theirs\n";
           memcpy(out,start2,s*sizeof(History<BITS>));
           start2+=s;
@@ -3429,8 +3429,8 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
           }
         }
       }
-  
-    
+
+
       //wait for a send, it should be done now
       MPI_Wait(&(squeue.front()),&status);
       squeue.pop();
@@ -3438,7 +3438,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     int rem=outend-out;
     if(rem>0)
     {
-      memcpy(out,start1,rem*sizeof(History<BITS>));    
+      memcpy(out,start1,rem*sizeof(History<BITS>));
     }
   }
   else
@@ -3455,13 +3455,13 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     mrbuf+=n2-1;
 
     History<BITS> *start1=msbuf,*start2=mrbuf,*end1=start1-n,*end2=mrbuf,*out=mbuf-1, *outend=out-n;
-      
+
     while(block_count<blocks_in_transit)
     {
       //send
       if(sremaining>0)
       {
-        int send=min(sremaining,(int)comm_block_size);
+        int send=std::min(sremaining,(int)comm_block_size);
         MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
@@ -3470,7 +3470,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
       if(rremaining>0)
       {
-        int recv=min(rremaining,(int)comm_block_size);
+        int recv=std::min(rremaining,(int)comm_block_size);
         rbuf-=recv;
         MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
@@ -3482,11 +3482,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     while(!rqueue.empty())
     {
       MPI_Wait(&(rqueue.front()),&status);
-    
+
       //start next communication
       if(sremaining>0)
       {
-        int send=min(sremaining,(int)comm_block_size);
+        int send=std::min(sremaining,(int)comm_block_size);
         MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
@@ -3494,39 +3494,39 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       }
       if(rremaining>0)
       {
-        int recv=min(rremaining,(int)comm_block_size);
+        int recv=std::min(rremaining,(int)comm_block_size);
         rbuf-=recv;
         MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
       }
-      
+
       rqueue.pop();
 
       MPI_Get_count(&status,MPI_BYTE,&b);
       b=int(b*inv_denom);
 
       end2-=b;
-      
+
       while(start2>end2 && out>outend)
       {
         //size of merge blocks
-        int mb=min(int(start1-end1),(int)merge_block_size);
-        int rb=min(int(start2-end2),(int)merge_block_size);
-      
-        BITS mmin=(start1-mb+1)->bits, mmax=start1->bits, bmin=(start2-rb+1)->bits,bmax=start2->bits; 
-        
+        int mb=std::min(int(start1-end1),(int)merge_block_size);
+        int rb=std::min(int(start2-end2),(int)merge_block_size);
+
+        BITS mmin=(start1-mb+1)->bits, mmax=start1->bits, bmin=(start2-rb+1)->bits,bmax=start2->bits;
+
         if(mmin>bmax) //take everything from mine
         {
-          int s=min(mb,int(out-outend));
+          int s=std::min(mb,int(out-outend));
           memcpy(out-s+1,start1-s+1,s*sizeof(History<BITS>));
           start1-=s;
           out-=s;
         }
         else if (bmin>=mmax) //take everything from theirs
         {
-          int s=min(rb,int(out-outend));
+          int s=std::min(rb,int(out-outend));
           memcpy(out-s+1,start2-s+1,s*sizeof(History<BITS>));
           start2-=s;
           out-=s;
@@ -3576,7 +3576,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     squeue.pop();
 //    std::cout << rank << " sent left over block\n";
   }
-  
+
   sendbuf.swap(mergebuf);
   //std::cout << rank << ": done ME\n";
   return 1;
@@ -3667,8 +3667,8 @@ void SFC<LOCS>::PrimaryMerge2(std::vector<History<BITS> > &histories, std::vecto
 
   PrimaryMerge2(histories,rbuf,mbuf,(P+1)/2,base+P/2);
   PrimaryMerge2(histories,rbuf,mbuf,P-(P+1)/2,base);
-  int to=-1;  
- 
+  int to=-1;
+
   if(rank>=base && rank<base+(P>>1))
   {
     to=rank+((P+1)>>1);
@@ -3682,8 +3682,8 @@ void SFC<LOCS>::PrimaryMerge2(std::vector<History<BITS> > &histories, std::vecto
   {
     MergeExchange<BITS>(to,histories,rbuf,mbuf);
   }
-  
-  
+
+
 }
 template<class LOCS> template<class BITS>
 void SFC<LOCS>::Cleanup(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf)
@@ -3750,14 +3750,14 @@ void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<Histo
     {
       if(rank!=P-1)
       {
-        val+=MergeExchange<BITS>(rank+1,histories,rbuf,mbuf);  
+        val+=MergeExchange<BITS>(rank+1,histories,rbuf,mbuf);
       }
 
       if(rank!=0)
       {
         val+=MergeExchange<BITS>(rank-1,histories,rbuf,mbuf);
       }
-      
+
     }
     else  //exchange left then right
     {
@@ -3765,14 +3765,14 @@ void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<Histo
       {
         val+=MergeExchange<BITS>(rank-1,histories,rbuf,mbuf);
       }
-      
+
       if(rank!=P-1)
       {
-        val+=MergeExchange<BITS>(rank+1,histories,rbuf,mbuf);  
+        val+=MergeExchange<BITS>(rank+1,histories,rbuf,mbuf);
       }
     }
     i++;
-   
+
     if(i%mod==0)
     {
       MPI_Allreduce(&val,&c,1,MPI_INT,MPI_MAX,Comm);

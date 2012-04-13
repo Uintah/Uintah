@@ -82,9 +82,9 @@ WARNING
   public:
     ParticleSubset(int num_particles, int matlIndex, const Patch*);
     ParticleSubset(int num_particles, int matlIndex, const Patch*,
-                   IntVector low, IntVector high);
+                   SCIRun::IntVector low, SCIRun::IntVector high);
     ParticleSubset(int num_particles, int matlIndex, const Patch*,
-                   IntVector low, IntVector high,
+                   SCIRun::IntVector low, SCIRun::IntVector high,
                    const std::vector<const Patch*>& neighbors,
                    const std::vector<ParticleSubset*>& subsets);
     ParticleSubset();
@@ -150,17 +150,17 @@ WARNING
       d_particles[idx] = value;
     }
 
-    void setLow(const IntVector low) {
+    void setLow(const SCIRun::IntVector low) {
       d_low=low;
     }
-    void setHigh(const IntVector high) {
+    void setHigh(const SCIRun::IntVector high) {
       d_high=high;
     }
 
-    IntVector getLow() const {
+    SCIRun::IntVector getLow() const {
       return d_low;
     }
-    IntVector getHigh() const {
+    SCIRun::IntVector getHigh() const {
       return d_high;
     }
     const Patch* getPatch() const {
@@ -194,7 +194,7 @@ WARNING
 
     int d_matlIndex;
     const Patch* d_patch;
-    IntVector d_low, d_high;
+    SCIRun::IntVector d_low, d_high;
 
     std::vector<const Patch*> neighbors;
     std::vector<ParticleSubset*> neighbor_subsets;

@@ -446,7 +446,7 @@ public:
   BasicBox(BoxP box)
     : SB(typename SB::Region(box->getLow(), box->getHigh()), box->getVolume()),
       available_(true)
-  { init(box); }
+  { this->init(box); }
 
   BoxP getBox() const
   { return this->getBoxes()[0]; }
@@ -509,7 +509,7 @@ public:
 	       typename SB::Region region, Volume totalVolume)
     : SB(region, totalVolume), isActive_( false ), basicBoxes_(basicBoxes), 
       activeSubSuperBoxMaxValue_(0), parent_(0)
-  { init(basicBoxes_); }
+  { this->init(basicBoxes_); }
 
   template <class BoxPIterator>
   static CB* makeCompositeBox(typename SBS::BoxHashMap& boxMap,
@@ -1284,13 +1284,13 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 	break;
       else if (minimalNeighbors[i].second.contains(newRegion)) {
 	// replace with smaller region
-	minimalNeighbors[i] = make_pair(neighbor, newRegion);
+	minimalNeighbors[i] = std::make_pair(neighbor, newRegion);
 	break;
       }
     }
     if (i == minimalNeighbors.size()) {
       // add a new one
-      minimalNeighbors.push_back(make_pair(neighbor, newRegion));
+      minimalNeighbors.push_back(std::make_pair(neighbor, newRegion));
     }
   }
   for (i = 0; i < minimalNeighbors.size(); i++) {

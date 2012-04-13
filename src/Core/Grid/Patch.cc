@@ -682,20 +682,17 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       highPt = getCellHighIndex();
 
       //select the face
-      switch(plusface)
-      {
-        case true:
+      if(plusface){
           //restrict dimension to the face
           lowPt[dim]=highPt[dim];
           //extend dimension by extra cells
           highPt[dim]=getExtraCellHighIndex()[dim];
-          break;
-        case false:
+      }
+      else{
           //restrict dimension to face
           highPt[dim]=lowPt[dim];
           //extend dimension by extra cells
           lowPt[dim]=getExtraCellLowIndex()[dim];
-          break;
       }
       break;
       //start with the loose fitting patch and contract the indices to exclude the unwanted regions
@@ -705,16 +702,13 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       highPt = getExtraCellHighIndex();
      
       //select the face
-      switch(plusface)
-      {
-        case true:
+      if(plusface){
           //move low point to plus face
           lowPt[dim]=getCellHighIndex()[dim];
-          break;
-        case false:
+      }
+      else{
           //move high point to minus face
           highPt[dim]=getCellLowIndex()[dim];
-          break;
       }
       break;
     case FaceNodes:
@@ -723,20 +717,17 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       highPt = getNodeHighIndex();
 
       //select the face
-      switch(plusface)
-      {
-        case true:
+      if(plusface){
           //restrict index to face
           lowPt[dim]=highPt[dim];
           //extend low point by 1 cell
           lowPt[dim]=lowPt[dim]-1;
-          break;
-        case false:
+      }
+      else{
           //restrict index to face
           highPt[dim]=lowPt[dim];
           //extend high point by 1 cell
           highPt[dim]=highPt[dim]+1;
-          break;
       }
       break;
     case SFCVars:
@@ -761,20 +752,17 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       }
 
       //select the face
-      switch(plusface)
-      {
-        case true:
+      if(plusface){
           //restrict index to face
           lowPt[dim]=highPt[dim];
           //extend low point by 1 cell
           lowPt[dim]=lowPt[dim]-1;
-          break;
-        case false:
+      }
+      else{
           //restrict index to face
           highPt[dim]=lowPt[dim];
           //extend high point by 1 cell
           highPt[dim]=highPt[dim]+1;
-          break;
       }
       break;
     case InteriorFaceCells:
@@ -782,20 +770,17 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       highPt = getCellHighIndex();
       
       //select the face
-      switch(plusface)
-      {
-        case true:
+      if(plusface){
           //restrict index to face
           lowPt[dim]=highPt[dim];
           //contract dimension by 1
           lowPt[dim]--;
-          break;
-        case false:
+      }
+      else{
           //restrict index to face
           highPt[dim]=lowPt[dim];
           //contract dimension by 1
           highPt[dim]++;
-          break;
       }
       break;
     default:

@@ -257,7 +257,7 @@ main(int,char **)
 #include <cstdio>
 
 int
-main(char **, int )
+main()
 {
     fprintf(stderr, "This program is designed for linux only.\n\n\n");
     return 0;
