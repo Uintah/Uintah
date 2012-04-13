@@ -37,7 +37,7 @@
     <BoundaryConditions>
       <Face side="x+" name="inlet">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[-1,0,0]</value>
+          <vecvalue>[-1,0,0]</vecvalue>
         </BCType>
         <BCType id="all" label="mixture_fraction_sb" var="Dirichlet">
           <value>1.0</value>
