@@ -614,6 +614,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       double ftrial = d_yield->evalYieldCondition(state);
 
       small = 1.0e-8; // **WARNING** Should not be hard coded (use d_tol)
+     
+      std::cout << " iter = 0" 
+                << " p = " << state->p << " q = " << state->q << " pc = " << state->p_c 
+                << " dfdp = 0" << " dfdq = 0" << " fyield = " << ftrial << endl;
       if (ftrial > small) { // Plastic loading
 
         fyield = ftrial;
@@ -736,8 +740,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
           dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
-          //std::cout << "p = " << state->p << " q = " << state->q << " pc = " << state->p_c << endl;
           fyield = d_yield->evalYieldCondition(state);
+          std::cout << " iter = " << klocal
+                    << " p = " << state->p << " q = " << state->q << " pc = " << state->p_c 
+                    << " dfdp = " << dfdp << " dfdq = " << dfdq << " fyield = " << fyield << endl;
 
           // update residual
           rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
@@ -966,6 +972,14 @@ double CamClay::computeRhoMicroCM(double pressure,
   double rho_orig = matl->getInitialDensity();
   pressure -= p_ref;
   double rho_cur = d_eos->computeDensity(rho_orig, pressure);
+
+  if (std::isnan(rho_cur)) {
+    ostringstream desc;
+    desc << "rho_cur = " << rho_cur << " pressure = " << pressure
+         << " p_ref = " << p_ref << " rho_orig = " << rho_orig << endl;
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
+  }
+
   return rho_cur;
 }
 
@@ -978,6 +992,13 @@ void CamClay::computePressEOSCM(double rho_cur,double& pressure,
   double rho_orig = matl->getInitialDensity();
   d_eos->computePressure(rho_orig, rho_cur, pressure, dp_drho, csquared);
   pressure += p_ref;
+
+  if (std::isnan(pressure)) {
+    ostringstream desc;
+    desc << "rho_cur = " << rho_cur << " pressure = " << pressure
+         << " p_ref = " << p_ref << " dp_drho = " << dp_drho << endl;
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
+  }
 }
 
 double CamClay::getCompressibility()
