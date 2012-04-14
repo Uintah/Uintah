@@ -677,17 +677,6 @@ namespace Wasatch{
                                 level,
                                 sched,
                                 rkStage, ioFieldSet_ );
-
-//     //________________________________________________________
-//     // add a task to populate a "field" with the current time.
-//     // This is required by the time integrator in general since
-//     // some things (e.g. boundary conditions) may be prescribed
-//     // functions of time.
-//     {
-//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, level, sched, localPatches, materials, patchInfoMap_, true );
-//       timeTask->schedule( sched );
-//       taskInterfaceList_.push_back( timeTask );
-//     }
   }
 
   //--------------------------------------------------------------------
@@ -746,9 +735,9 @@ namespace Wasatch{
  void
  Wasatch::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
                           Uintah::SchedulerP& /*sched*/)
-  {
-  // do nothing for now
-  }
+ {
+   // do nothing for now
+ }
 
  //------------------------------------------------------------------
 
@@ -756,9 +745,9 @@ namespace Wasatch{
  Wasatch::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                   Uintah::SchedulerP& /*scheduler*/,
                                   bool, bool)
-  {
-  // do nothing for now
-  }
+ {
+   // do nothing for now
+ }
 //------------------------------------------------------------------
 
 } // namespace Wasatch
