@@ -96,7 +96,6 @@ run \
 "cmake \
   $DEBUG \
   -DENABLE_TESTS=OFF \
-  -DBOOST_ROOT=$BOOST_DIR \
   \
   -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
   \
@@ -124,7 +123,7 @@ run \
 "cmake \
   $DEBUG \
   -DTabProps_PREPROCESSOR=OFF \
-  -DTabProps_UTILS=ON \
+  -DTabProps_UTILS=OFF \
   -DTabProps_BSPLINE=OFF \
   -DTabProps_ENABLE_IO=ON \
   -DBOOST_ROOT=$BOOST_DIR \
