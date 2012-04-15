@@ -786,10 +786,10 @@ for i in $CXXFLAGS; do
 done
 
 if test "$debug" = "yes"; then
-  # The "-g -G" option pair must be passed to NVCC when an application is compiled in
+  # The "-g -G0" option pair must be passed to NVCC when an application is compiled in
   # order to debug with cuda‐gdb. This forces -O0 compilation, with the exception of
   # very limited dead‐code eliminations and register‐spilling optimizations.
-  NVCC_CXXFLAGS="-g -G $NVCC_CXXFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="-g -G0 $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi

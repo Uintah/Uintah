@@ -74,9 +74,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   abskg_dw->getRegion(abskg, d_abskgLabel, d_matl, level, domainLo_EC, domainHi_EC);
   sigmaT4_dw->getRegion(sigmaT4Pi, d_sigmaT4_label, d_matl, level, domainLo_EC, domainHi_EC);
 
-  double start = clock();
-  //--------------------------------------------------
-
   // Single material now, but can't assume 0, need the specific ARCHES or ICE material here
   int matl = matls->getVector().front();
   int numPatches = patches->size();
@@ -140,14 +137,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     int numStates = totalBlocks.x * totalBlocks.y * tpbX * tpbY * tpbZ;
     CUDA_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
 
-    // setup device-side "size"
-    unsigned long int size = 0;  // current size of PathIndex
-    unsigned long int* host_size = &size;
-    unsigned long int* device_size = NULL;
-    size_t nbytes = sizeof(unsigned long int);
-    CUDA_SAFE_CALL( cudaMalloc((void**)&device_size, nbytes) );
-    CUDA_SAFE_CALL( cudaMemset((void*)device_size, 0, nbytes) );
-
     // setup and launch kernel
     cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
     cudaEvent_t* event = _gpuScheduler->getCudaEvent(device);
@@ -165,7 +154,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                                                                    this->_NoOfRays,
                                                                    this->_viewAng,
                                                                    this->_Threshold,
-                                                                   device_size,
                                                                    globalDevStates);
 
     // Kernel error checking (for now)
@@ -177,20 +165,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
 
     _gpuScheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
 
-    CUDA_SAFE_CALL( retVal = cudaMemcpy(host_size, device_size, nbytes, cudaMemcpyDefault) );
     CUDA_SAFE_CALL( cudaFree(globalDevStates) );
-    CUDA_SAFE_CALL( cudaFree(device_size) );
 
-    double end = clock();
-    double efficiency = *host_size / ((end - start) / CLOCKS_PER_SEC);
-    if (patch->getGridIndex() == 0) {
-      cout << endl;
-      cout << " RMCRT REPORT: Patch 0" << endl;
-      cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << endl;
-      cout << " Size: " << *host_size << endl;
-      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl;
-    }
   }  //end patch loop
 }  // end GPU ray trace method
 
@@ -212,7 +188,6 @@ __global__ void rayTraceKernel(const uint3 domainLow,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               unsigned long int* size,
                                curandState* globalDevStates)
 {
   // calculate the thread indices
@@ -277,7 +252,8 @@ __global__ void rayTraceKernel(const uint3 domainLow,
           ray_location.z = origin.z + randDevice(globalDevStates) * DzDxRatio;  //noncubic
         }
 
-        updateSumIDevice(domainLow, domainHigh, origin, cellSpacing, inv_direction_vector, ray_location, device_sigmaT4, device_abskg, threshold, size, &sumI);
+        updateSumIDevice(domainLow, domainHigh, domainSize, origin, cellSpacing, inv_direction_vector,
+                         ray_location, device_sigmaT4, device_abskg, threshold, &sumI);
 
       } // end ray loop
 
@@ -295,6 +271,7 @@ __global__ void rayTraceKernel(const uint3 domainLow,
 //---------------------------------------------------------------------------
 __device__ void updateSumIDevice(const uint3& domainLow,
                                  const uint3& domainHigh,
+                                 const uint3& domainSize,
                                  const uint3& origin,
                                  const double3& cellSpacing,
                                  const double3& inv_direction_vector,
@@ -302,13 +279,16 @@ __device__ void updateSumIDevice(const uint3& domainLow,
                                  double* __restrict__ device_sigmaT4,
                                  double* __restrict__ device_abskg,
                                  double threshold,
-                                 unsigned long int* size,
                                  double* sumI)
 {
+  // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y;
-  int dx = domainLow.x;
-  int dy = domainHigh.y;
+
+  // Get the size of the data block in which the variables reside.
+  // This is essentially the stride in the index calculations.
+  int dx = domainSize.x;
+  int dy = domainSize.y;;
 
   uint3 cur = origin;
   uint3 prevCell = cur;
@@ -406,22 +386,23 @@ __device__ void updateSumIDevice(const uint3& domainLow,
       //__________________________________
       //  Update the ray location
       double optical_thickness_prev = optical_thickness;
-      optical_thickness += cellSpacing.x * device_abskg[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * disMin;
-      *sumI += device_sigmaT4[INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z)] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
-      size++;
+      int prev_index = INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z) + (dx*dy);
+      optical_thickness += cellSpacing.x * device_abskg[prev_index] * disMin;
+      *sumI += device_sigmaT4[prev_index] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
     } // end domain while loop
 
     intensity = exp(-optical_thickness);
-    *sumI += device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * device_sigmaT4[INDEX3D(dx,dy,cur.x,cur.y,cur.z)] * intensity;
-    intensity = intensity * (1 - device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
+    int cur_index = INDEX3D(dx,dy,cur.x,cur.y,cur.z) + (dx*dy);
+    *sumI += device_abskg[cur_index] * device_sigmaT4[cur_index] * intensity;
+    intensity = intensity * (1 - device_abskg[cur_index]);
 
     //__________________________________
     //  Reflections
     if (intensity > threshold) {
 
       ++nReflect;
-      fs = fs * (1 - device_abskg[INDEX3D(dx,dy,cur.x,cur.y,cur.z)]);
+      fs = fs * (1 - device_abskg[cur_index]);
 
       //put cur back inside the domain
       cur = prevCell;

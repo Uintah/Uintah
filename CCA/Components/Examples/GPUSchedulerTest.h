@@ -46,8 +46,7 @@ __global__ void timeAdvanceTestKernel(uint3 domainLow,
                                       uint3 domainSize,
                                       int ghostLayers,
                                       double *phi,
-                                      double *newphi,
-                                      double *residual);
+                                      double *newphi);
 #ifdef __cplusplus
 }
 #endif
@@ -122,11 +121,23 @@ DESCRIPTION
 			                         DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
                                
-    void timeAdvance(const ProcessorGroup* pg,
-		                 const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+    void timeAdvanceCPU(const ProcessorGroup* pg,
+		                    const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    void timeAdvance1DP(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    void timeAdvance3DP(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
     void timeAdvanceGPU(const ProcessorGroup* pg,
                         const PatchSubset* patches,
