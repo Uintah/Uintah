@@ -56,12 +56,12 @@ __global__ void rayTraceKernel(const uint3 domainLow,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               unsigned long int* size,
                                curandState* globalDevStates);
 
 
 __device__ void updateSumIDevice(const uint3& domainLow,
                                  const uint3& domainHigh,
+                                 const uint3& domainSize,
                                  const uint3& origin,
                                  const double3& cellSpacing,
                                  const double3& inv_direction_vector,
@@ -69,7 +69,6 @@ __device__ void updateSumIDevice(const uint3& domainLow,
                                  double* __restrict__ device_sigmaT4,
                                  double* __restrict__ device_abskg,
                                  double threshold,
-                                 unsigned long int* size,
                                  double* sumI);
 
 

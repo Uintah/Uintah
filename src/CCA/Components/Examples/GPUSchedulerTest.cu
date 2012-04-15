@@ -93,13 +93,16 @@ void GPUSchedulerTest::scheduleComputeStableTimestep(const LevelP& level, Schedu
 //______________________________________________________________________
 //
 void GPUSchedulerTest::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched) {
-  Task* multiTask = scinew Task(&GPUSchedulerTest::timeAdvanceGPU, "GPUSchedulerTest::timeAdvanceGPU",
-                                "GPUSchedulerTest::timeAdvance", this, &GPUSchedulerTest::timeAdvance);
+  Task* task = scinew Task(&GPUSchedulerTest::timeAdvanceGPU, "GPUSchedulerTest::timeAdvanceGPU",
+                                "GPUSchedulerTest::timeAdvanceCPU", this, &GPUSchedulerTest::timeAdvanceCPU);
+//  Task* task = scinew Task("GPUSchedulerTest::timeAdvanceCPU", this, &GPUSchedulerTest::timeAdvanceCPU);
+//  Task* task = scinew Task("GPUSchedulerTest::timeAdvance1DP", this, &GPUSchedulerTest::timeAdvance1DP);
+//  Task* task = scinew Task("GPUSchedulerTest::timeAdvance3DP", this, &GPUSchedulerTest::timeAdvance3DP);
 
-  multiTask->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  multiTask->computes(phi_label);
-  multiTask->computes(residual_label);
-  sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
+  task->computes(residual_label);
+  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
 //______________________________________________________________________
@@ -155,11 +158,12 @@ void GPUSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw) {
+void GPUSchedulerTest::timeAdvanceCPU(const ProcessorGroup* pg,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
   int matl = 0;
 
   for (int p = 0; p < patches->size(); p++) {
@@ -200,6 +204,148 @@ void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
     }
     new_dw->put(sum_vartype(residual), residual_label);
   }
+}
+
+//______________________________________________________________________
+//
+void GPUSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw) {
+
+  int matl = 0;
+  int ghostLayers = 1;
+
+  // Do time steps
+  int numPatches = patches->size();
+  for (int p = 0; p < numPatches; p++) {
+    const Patch* patch = patches->get(p);
+    constNCVariable<double> phi;
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+
+    NCVariable<double> newphi;
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+
+    double residual = 0;
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    IntVector s = h - l;
+
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+    //__________________________________
+    // 1D-Pointer Stencil
+    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
+
+    int zhigh = h.z();
+    int yhigh = h.y();
+    int xhigh = h.x();
+    int ghostLayers = 1;
+    int ystride = yhigh + ghostLayers;
+    int xstride = xhigh + ghostLayers;
+
+//    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
+
+    for (int k = l.z(); k < zhigh; k++) {
+      for (int j = l.y(); j < yhigh; j++) {
+        for (int i = l.x(); i < xhigh; i++) {
+          cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+          // For an array of [ A ][ B ][ C ], we can index it thus:
+          // (a * B * C) + (b * C) + (c * 1)
+          int idx = i + (j * xstride) + (k * xstride * ystride);
+
+          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
+          int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
+          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
+          int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
+          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
+          int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
+
+          newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
+              + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
+
+          double diff = newphi_data[idx] - phi_data[idx];
+          residual += diff * diff;
+        }
+      }
+    }
+    new_dw->put(sum_vartype(residual), residual_label);
+  } // end patch for loop
+}
+
+//______________________________________________________________________
+//
+void GPUSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw) {
+
+  int matl = 0;
+  int ghostLayers = 1;
+
+  // Do time steps
+  int numPatches = patches->size();
+  for (int p = 0; p < numPatches; p++) {
+    const Patch* patch = patches->get(p);
+    constNCVariable<double> phi;
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+
+    NCVariable<double> newphi;
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+
+    double residual = 0;
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    IntVector s = h - l;
+
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+    //__________________________________
+    //  3D-Pointer Stencil
+    double*** phi_data = (double***)phi.getWindow()->getData()->get3DPointer();
+    double*** newphi_data = (double***)newphi.getWindow()->getData()->get3DPointer();
+
+    int zhigh = h.z();
+    int yhigh = h.y();
+    int xhigh = h.x();
+
+//    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
+
+    for (int i = l.z(); i < zhigh; i++) {
+      for (int j = l.y(); j < yhigh; j++) {
+        for (int k = l.x(); k < xhigh; k++) {
+
+          double xminus = phi_data[i-1][j][k];
+          double xplus  = phi_data[i+1][j][k];
+          double yminus = phi_data[i][j-1][k];
+          double yplus  = phi_data[i][j+1][k];
+          double zminus = phi_data[i][j][k-1];
+          double zplus  = phi_data[i][j][k+1];
+
+          newphi_data[i][j][k] = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
+
+          double diff = newphi_data[i][j][k] - phi_data[i][j][k];
+          residual += diff * diff;
+        }
+      }
+    }
+    new_dw->put(sum_vartype(residual), residual_label);
+  } // end patch for loop
 }
 
 //______________________________________________________________________
@@ -274,8 +420,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                                                           domainSize,
                                                                           NGC,
                                                                           d_phi,
-                                                                          d_newphi,
-                                                                          &residual);
+                                                                          d_newphi);
 
     // Kernel error checking (for now)
     retVal = cudaGetLastError();
@@ -301,14 +446,12 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 // @param ghostLayers the number of layers of ghost cells
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
-// @param residual the residual calculated by this individual kernel
 __global__ void timeAdvanceTestKernel(uint3 domainLow,
                                       uint3 domainHigh,
                                       uint3 domainSize,
                                       int ghostLayers,
                                       double *phi,
-                                      double *newphi,
-                                      double *residual) {
+                                      double *newphi) {
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
