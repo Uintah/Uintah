@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 
-#include   <cstring>
+#include <cstring>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -98,7 +98,7 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
   // disable memory windowing on variables.  This will ensure that
   // each variable is allocated its own memory on each patch,
   // precluding memory blocks being defined across multiple patches.
-//  Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+  Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 }
 
 GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {
@@ -699,7 +699,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
   if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
     freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
     freeDeviceComputesMem();         // call cudaFree on all device memory for task->computes
-    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
+//    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
     clearMaps();
   }
 
@@ -1147,11 +1147,19 @@ void GPUThreadedMPIScheduler::initiateH2DRequiresCopies(DetailedTask* dtask, int
 
       for (int i = 0; i < numPatches; i++) {
         for (int j = 0; j < numMatls; j++) {
-
-          // get the host memory that will be copied to the device
+          // a fix for when INF ghost cells are requested such as in RMCRT
+          //  e.g. tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
+          bool uses_SHRT_MAX = (req->numGhostCells == SHRT_MAX);
           if (type == TypeDescription::CCVariable) {
             constCCVariable<double> ccVar;
-            dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            if (uses_SHRT_MAX) {
+              const Level* level = getLevel(dtask->getPatches());
+              IntVector domainLo_EC, domainHi_EC;
+              level->findCellIndexRange(domainLo_EC, domainHi_EC); // including extraCells
+              dw->getRegion(ccVar, req->var, matls->get(j), level, domainLo_EC, domainHi_EC, true);
+            } else {
+              dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            }
             ccVar.getWindow()->getData()->addReference();
             h_reqData = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
