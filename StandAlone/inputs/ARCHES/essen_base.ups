@@ -151,8 +151,17 @@
               </Eqn>
             </TransportEqns>
 
-            <Turbulence model="compdynamicprocedure">
+            <!--Turbulence model="compdynamicprocedure">
               <variance_coefficient>0.1</variance_coefficient>
+              <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+            </Turbulence-->
+
+            <!-- turn off turbulence model by setting the coefficient to zero (cf=0)-->
+            <Turbulence model="smagorinsky">
+              <variance_coefficient>0.1</variance_coefficient>
+              <cf>0.0</cf>
+              <fac_mesh>1.0</fac_mesh>
+              <filterl>0.000001</filterl>
               <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
             </Turbulence>
 
