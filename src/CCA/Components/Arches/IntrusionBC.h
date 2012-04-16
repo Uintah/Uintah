@@ -504,7 +504,15 @@ namespace Uintah{
 
             ProblemSpecP db_flat = db->findBlock("velocity"); 
 
-            if ( db_flat ) { 
+            bool is_mass_flow_rate = false;
+            std::string kind; 
+            db_flat->getAttribute("type",kind); 
+
+            if ( kind == "massflow" ){ 
+              is_mass_flow_rate = true; 
+            } 
+
+            if ( db_flat && !is_mass_flow_rate ) { 
               db_flat->getWithDefault("u",u,0.0);
               db_flat->getWithDefault("v",v,0.0);
               db_flat->getWithDefault("w",w,0.0);
