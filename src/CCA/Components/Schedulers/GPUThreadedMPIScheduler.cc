@@ -1279,15 +1279,15 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-  const bool pinned = ( *(pinnedHostPtrs.find(h_reqData)) == h_reqData );
-  if (!pinned) {
-    // page-lock (pin) host memory for async copy to device
-    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
-    if(retVal == cudaSuccess) {
-      pinnedHostPtrs.insert(h_reqData);
-    }
-  }
+//  const bool pinned = ( *(pinnedHostPtrs.find(h_reqData)) == h_reqData );
+//  if (!pinned) {
+//    // page-lock (pin) host memory for async copy to device
+//    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
+//    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
+//    if(retVal == cudaSuccess) {
+//      pinnedHostPtrs.insert(h_reqData);
+//    }
+//  }
 
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
   hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
@@ -1317,15 +1317,15 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-  const bool pinned = ( *(pinnedHostPtrs.find(h_compData)) == h_compData );
-  if (!pinned) {
-    // page-lock (pin) host memory for async copy to device
-    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
-    if(retVal == cudaSuccess) {
-      pinnedHostPtrs.insert(h_compData);
-    }
-  }
+//  const bool pinned = ( *(pinnedHostPtrs.find(h_compData)) == h_compData );
+//  if (!pinned) {
+//    // page-lock (pin) host memory for async copy to device
+//    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
+//    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
+//    if(retVal == cudaSuccess) {
+//      pinnedHostPtrs.insert(h_compData);
+//    }
+//  }
 
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
