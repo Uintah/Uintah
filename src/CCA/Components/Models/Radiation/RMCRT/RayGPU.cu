@@ -107,11 +107,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     Vector dcell = patch->dCell(); // cell spacing
     const double3 cellSpacing = make_double3(dcell.x(), dcell.y(), dcell.z());
 
-    IntVector pLow;
-    IntVector pHigh;
-    level->findInteriorCellIndexRange(pLow, pHigh);
-    int cellIndexRange = pHigh[0] - pLow[0];
-
     // Domain extents used by the kernel to prevent out of bounds accesses.
     const uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
     const uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
@@ -125,39 +120,38 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     if (ydim % 8 != 0) {
       yBlocks++;
     }
-    dim3 totalBlocks(xBlocks, yBlocks);
+    dim3 dimGrid(xBlocks, yBlocks);
 
     int tpbX = 8;
     int tpbY = 8;
     int tpbZ = 1;
-    dim3 threadsPerBlock(tpbX, tpbY, tpbZ);
+    dim3 dimBlock(tpbX, tpbY, tpbZ);
 
     // setup random number generator states on the device
     curandState* globalDevStates;
-    int numStates = totalBlocks.x * totalBlocks.y * tpbX * tpbY * tpbZ;
+    int numStates = dimGrid.x * dimGrid.y * tpbX * tpbY * tpbZ;
     CUDA_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
 
     // setup and launch kernel
     cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
     cudaEvent_t* event = _gpuScheduler->getCudaEvent(device);
-    rayTraceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
-                                                                   domainHigh,
-                                                                   domainSize,
-                                                                   cellSpacing,
-                                                                   cellIndexRange,
-                                                                   d_absk,
-                                                                   d_sigmaT4,
-                                                                   d_divQ,
-                                                                   this->_virtRad,
-                                                                   this->_isSeedRandom,
-                                                                   this->_CCRays,
-                                                                   this->_NoOfRays,
-                                                                   this->_viewAng,
-                                                                   this->_Threshold,
-                                                                   globalDevStates);
+    rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(domainLow,
+                                                        domainHigh,
+                                                        domainSize,
+                                                        cellSpacing,
+                                                        d_absk,
+                                                        d_sigmaT4,
+                                                        d_divQ,
+                                                        this->_virtRad,
+                                                        this->_isSeedRandom,
+                                                        this->_CCRays,
+                                                        this->_NoOfRays,
+                                                        this->_viewAng,
+                                                        this->_Threshold,
+                                                        globalDevStates);
 
     // Kernel error checking (for now)
-    retVal = cudaGetLastError();
+    retVal = cudaPeekAtLastError();
     if (retVal != cudaSuccess) {
       fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(retVal));
       exit(-1);
@@ -178,7 +172,6 @@ __global__ void rayTraceKernel(const uint3 domainLow,
                                const uint3 domainHigh,
                                const uint3 domainSize,
                                const double3 cellSpacing,
-                               int cellIndexRange,
                                double* __restrict__ device_abskg,
                                double* __restrict__ device_sigmaT4,
                                double* __restrict__ device_divQ,
@@ -203,7 +196,7 @@ __global__ void rayTraceKernel(const uint3 domainLow,
   curand_init(hashDevice(tidX), tidX, 0, &globalDevStates[tidX]);
 
   // GPU equivalent to GridIterator loop
-  if (tidX > 0 && tidY > 0 && tidX < domainHigh.x && tidY < domainHigh.y) { // domain boundary check
+  if (tidX > domainLow.x && tidY > domainLow.y && tidX < domainSize.x && tidY < domainSize.y) { // domain boundary check
     for (int z = domainLow.z; z < domainHigh.z; z++) { // loop through z slices
 
       // calculate the index for individual threads
@@ -259,7 +252,7 @@ __global__ void rayTraceKernel(const uint3 domainLow,
 
       //__________________________________
       //  Compute divQ
-      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays)) * 0.95;
+      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays));
 
     } // end z-slice loop
   }  // end domain boundary check
