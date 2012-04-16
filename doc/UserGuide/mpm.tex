@@ -1445,6 +1445,7 @@ material models available are:
       \begin{itemize}
         \item Taylor-Quinney coefficient.
         \item Constant Specific Heat ({\bf default}).
+        \item Cubic Specific Heat.
         \item Specific Heat for Copper.
         \item Specific Heat for Steel.
       \end{itemize}
@@ -1549,10 +1550,45 @@ This model is invoked using
     </specific_heat_model>
   \end{Verbatim}
 
+  \subparagraph{Cubic specific heat model}
+  The specific heat model is of the form \cite{Menikoff2003}:
+  \Beq
+    C_v = \frac{\tilde{T}^3}{c_3\tilde{T}^3+c_2\tilde{T}^2+c_1\tilde{T}+c_0} 
+  \Eeq
+  where $\tilde{T}$ is the reduced temperature, and $c_0$-$c_3$ are fit parameters.
+  The reduced temperature is calculated using $\tilde{T}=T/\theta (V)$ and the
+  Debye temperature is:
+  \Beq
+    \theta (V)=\theta_0\left(\frac{V_0}{V}\right)^ae^{b\left(V_0-V\right)/V}
+  \Eeq
+  where $V$ is the specific volume and $\theta_0$ is the reference Debye temperature and
+  a and b are fit parameters.
+  The constant pressure specific heat is calculated via:
+  \Beq
+    C_p = C_v+\beta^2TVK_T
+  \Eeq
+  where $\beta$ and $K_T$ are the volumetric expansion coefficeint and 
+  isothermal bulk modulus respectively.
+  
+  The model is invoked using:
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <specific_heat_model type="cubic_Cp">
+      <a> 1.0 </a>
+      <b> 1.0 </b>
+      <beta> 1.0 </beta>
+      <c0> 1.0 </c0>
+      <c1> 1.0 </c1>
+      <c2> 1.0 </c2>
+      <c3> 1.0 </c3>
+    </specific_heat_model>
+  \end{Verbatim}
+  where all parameters but $\beta$, $a$ and $b$ are required.
+
+
   \subparagraph{Specific heat model for copper}
   The specific heat model for copper is of the form
   \Beq
-    Cp =
+    C_p =
     \begin{cases}
       A_0~T^3 - B_0~T^2 + C_0~T - D_0 & \text{if} ~~T < T_0 \\
       A_1~T + B_1 & \text{if} ~~T \ge T_0 ~.
