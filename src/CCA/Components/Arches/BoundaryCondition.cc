@@ -5422,7 +5422,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = WALL;
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
-          db_BCType->getWithDefault("vecvalue", my_info.velocity, Vector(0,0,0)); // to allow for "moving" walls
           found_bc = true; 
 
         }
