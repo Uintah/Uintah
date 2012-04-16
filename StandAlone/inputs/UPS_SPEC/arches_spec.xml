@@ -162,6 +162,7 @@
 
         <ColdFlow                       spec="OPTIONAL NO_DATA" >
           <mixture_fraction_label       spec="REQUIRED STRING"/>
+          <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
           <Stream_1                     spec="MULTIPLE NO_DATA">
             <density                    spec="REQUIRED DOUBLE 'positive'"/>
             <temperature                spec="REQUIRED DOUBLE 'positive'"/>
