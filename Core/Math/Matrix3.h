@@ -95,8 +95,10 @@ namespace Uintah {
     inline double operator() (int i,int j) const;
     inline double & operator() (int i,int j);
 
-    // multiply Matrix3 by a constant
+    // multiply Matrix3 by a constant: Mat * 3  
     inline Matrix3 operator * (const double value) const;
+    // multiply constant by Matrix3:   3 * Mat
+    UINTAHSHARE friend Matrix3 operator * (double c, const Matrix3 &m3);
 
     // divide Matrix3 by a constant
     inline Matrix3 operator / (const double value) const;
@@ -271,7 +273,7 @@ namespace Uintah {
     UINTAHSHARE bool solveParticularReduced(const Vector& rhs, Vector& xp,
                                 int num_zero_rows) const;
 
-    UINTAHSHARE friend std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
+    UINTAHSHARE friend std::ostream & operator << (std::ostream &out_file, const Matrix3 &m3);
   }; // end class Matrix3
 
   inline double Matrix3::Trace() const
@@ -467,7 +469,6 @@ namespace Uintah {
           mat3[i][j] *= value;
         }
       }
-
     }
 
   inline void Matrix3::operator += (const Matrix3 &m3)
@@ -514,6 +515,11 @@ namespace Uintah {
       return Matrix3(mat3[0][0]*value,mat3[0][1]*value,mat3[0][2]*value,
                      mat3[1][0]*value,mat3[1][1]*value,mat3[1][2]*value, 
                      mat3[2][0]*value,mat3[2][1]*value,mat3[2][2]*value); 
+    }
+
+  inline Matrix3 operator * ( double c, const Matrix3 &m3 )
+    {
+      return m3 * c;
     }
 
   inline Matrix3 Matrix3::operator * (const Matrix3 &m3) const
