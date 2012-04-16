@@ -103,11 +103,11 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   // See Kayenta_pnt.Blk to see where these numbers come from
   // User Inputs
   d_NBASICINPUTS=70;
-  d_NUMJNTS=0;
-  d_NUMJOINTINPUTS=0*d_NUMJNTS;
+  d_NUMJNTS=3;
+  d_NUMJOINTINPUTS=4*d_NUMJNTS;
   d_NTHERMOPLAST=5;
   d_NUIEOSMG=22;
-  d_IEOSMGCT=d_NBASICINPUTS+d_NTHERMOPLAST;
+  d_IEOSMGCT=d_NBASICINPUTS+ d_NUMJOINTINPUTS + d_NTHERMOPLAST;
   d_NUMEOSINPUTS=d_NUIEOSMG+d_NTHERMOPLAST;
   // Total number of User Inputs
   d_NKMMPROP=d_NBASICINPUTS+d_NUMJOINTINPUTS+d_NUMEOSINPUTS;
@@ -282,8 +282,22 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("CTPSF",   UI[67]);  // Fracture cutoff of principal stress (stress)
   cm_ps->appendElement("YSLOPEI", UI[68]);  // Intact high pressure slope ()
   cm_ps->appendElement("YSLOPEF", UI[69]);  // Failed high pressure slope ()
+  // Kayenta Joints User Inputs
+  int JJNT = d_NBASICINPUTS;
+  cm_ps->appendElement("CKN01",      UI[JJNT]);
+  cm_ps->appendElement("VMAX1",      UI[JJNT + 1]);
+  cm_ps->appendElement("SPACE1",     UI[JJNT + 2]);
+  cm_ps->appendElement("SHRSTIFF1",  UI[JJNT + 3]);
+  cm_ps->appendElement("CKN02",      UI[JJNT + 4]);
+  cm_ps->appendElement("VMAX2",      UI[JJNT + 5]);
+  cm_ps->appendElement("SPACE2",     UI[JJNT + 6]);
+  cm_ps->appendElement("SHRSTIFF2",  UI[JJNT + 7]);
+  cm_ps->appendElement("CKN03",      UI[JJNT + 8]);
+  cm_ps->appendElement("VMAX3",      UI[JJNT + 9]);
+  cm_ps->appendElement("SPACE3",     UI[JJNT + 10]);
+  cm_ps->appendElement("SHRSTIFF3",  UI[JJNT + 11]);
   // Kayenta EOSMG User Inputs
-  int IJTHERMPAR =d_NBASICINPUTS+d_NUMJOINTINPUTS;
+  int IJTHERMPAR = JJNT + d_NUMJOINTINPUTS;
   cm_ps->appendElement("TMPRXP",  UI[IJTHERMPAR]);
   cm_ps->appendElement("THERM01", UI[IJTHERMPAR + 1]);
   cm_ps->appendElement("THERM02", UI[IJTHERMPAR + 2]);
@@ -1090,10 +1104,24 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("CTPSF",   UI[67],0.0);
   ps->getWithDefault("YSLOPEI", UI[68],0.0);
   ps->getWithDefault("YSLOPEF", UI[69],0.0);
-
+//     ________________________________________________________________________
+// Kayenta Joints User Inputs
+  int JJNT = d_NBASICINPUTS;
+  ps->getWithDefault("CKN01",      UI[JJNT     ],0.0);
+  ps->getWithDefault("VMAX1",      UI[JJNT +  1],0.0);
+  ps->getWithDefault("SPACE1",     UI[JJNT +  2],0.0);
+  ps->getWithDefault("SHRSTIFF1",  UI[JJNT +  3],0.0);
+  ps->getWithDefault("CKN02",      UI[JJNT +  4],0.0);
+  ps->getWithDefault("VMAX2",      UI[JJNT +  5],0.0);
+  ps->getWithDefault("SPACE2",     UI[JJNT +  6],0.0);
+  ps->getWithDefault("SHRSTIFF2",  UI[JJNT +  7],0.0);
+  ps->getWithDefault("CKN03",      UI[JJNT +  8],0.0);
+  ps->getWithDefault("VMAX3",      UI[JJNT +  9],0.0);
+  ps->getWithDefault("SPACE3",     UI[JJNT + 10],0.0);
+  ps->getWithDefault("SHRSTIFF3",  UI[JJNT + 11],0.0);
   //     ________________________________________________________________________
   //     EOSMG inputs
-  int IJTHERMPAR =d_NBASICINPUTS+d_NUMJOINTINPUTS;
+  int IJTHERMPAR =JJNT + d_NUMJOINTINPUTS;
   ps->getWithDefault("TMPRXP",  UI[IJTHERMPAR    ],0.0);
   ps->getWithDefault("THERM01", UI[IJTHERMPAR + 1],0.0);
   ps->getWithDefault("THERM02", UI[IJTHERMPAR + 2],0.0);
