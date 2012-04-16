@@ -3630,7 +3630,7 @@ thickness in the out of plane direction.
 MPM has the ability to insert or transport blocks of particles into or
  around the computational domain.  The functionality uses a time threshold for 
 activation of the insertion. Currently, capabilities include translation some 
-distances x, y and z and initiation of a new "initial" velocity vector.  Particles, 
+distances x, y and z and initiation of a new ``initial" velocity vector.  Particles, 
 defined by color, specified as an integer, in the geometry object section of the 
 input file, can have a limitless number of transformations applied to them.  
 There are no limits to how many geometry objects can be specified, however,
@@ -3653,7 +3653,7 @@ for one particle color group.  For instance, if a file contained the line:
 0.1 1 10 10 0 0 0 8 
 \end{verbatim}
 
-\noindent after '0.1 s' of physical time any particle of color '1' will be translated 10 
+\noindent after `0.1 s' of physical time any particle of color `1' will be translated 10 
 units in the positive x and y direction, 0 units in the positive z direction 
 and given a new velocity of 8 units/s in the positive z direction, with no 
 velocity in the x or y direction.
@@ -3668,10 +3668,10 @@ MPM section of the input file:
 </MPM>
 \end{verbatim}
 
-An example problem exists in "inputs/MPM/" named Extrude that demonstrates 
-particle insertion.  "extrude.ups" defines the problem setup, "extrude.xml" defines 
+An example problem exists in ``inputs/MPM/" named Extrude that demonstrates 
+particle insertion.  ``extrude.ups" defines the problem setup, ``extrude.xml" defines 
 the geometry objects (also where the color is defined) and then pulled in to 
-"extrude.ups", and "insert.dat" which defines the times, translations and new 
+``extrude.ups", and ``insert.dat" which defines the times, translations and new 
 velocity of the particle blocks.  Figure ~\ref{figinsertparticles} shows an image 
 of a simulation in progress that uses particle insertion.  The image shows a stream 
 of rubbery material flying into the domain and folding on itself.  Another particularly 
