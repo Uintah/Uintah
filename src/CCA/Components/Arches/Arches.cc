@@ -1578,8 +1578,8 @@ Arches::MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched
   if ( doing_restart ) { 
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
-    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
     d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, doing_restart );
+    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
 
     recompile = true; 
   }
