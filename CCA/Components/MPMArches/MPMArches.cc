@@ -101,6 +101,7 @@ using namespace std;
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
+  d_doingRestart = false; 
 }
 
 // ****************************************************************************
@@ -234,6 +235,11 @@ void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
   d_mpm->outputProblemSpec(root_ps);
 }
 
+void
+MPMArches::restartInitialize()
+{
+  d_doingRestart = true;
+}
 
 
 // ****************************************************************************
@@ -1112,6 +1118,11 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   // to proceed independently with their solution
   // Arches steps are identical with those in single-material code
   // once exchange terms are determined
+
+  if ( d_doingRestart ) { 
+    d_arches->MPMArchesIntrusionSetupForResart( level, sched, d_recompile, d_doingRestart ); 
+    d_doingRestart = false; 
+  }
 
   d_arches->scheduleTimeAdvance( level, sched );
 
@@ -4617,7 +4628,13 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
 // ****************************************************************************
 bool MPMArches::needRecompile(double time, double dt, 
     const GridP& grid) {
-  return d_recompile;
+
+  if ( d_recompile ) { 
+    d_recompile = false; 
+    return true; 
+  } else { 
+    return d_recompile;
+  }
 }
 double MPMArches::recomputeTimestep(double current_dt) {
   return d_arches->recomputeTimestep(current_dt);

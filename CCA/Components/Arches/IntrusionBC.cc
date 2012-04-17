@@ -504,14 +504,16 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
 void 
 IntrusionBC::sched_setCellType( SchedulerP& sched, 
                                   const PatchSet* patches, 
-                                  const MaterialSet* matls )
+                                  const MaterialSet* matls, 
+                                  const bool doing_restart )
 {
-  Task* tsk = scinew Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType); 
+  Task* tsk = scinew Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType, doing_restart); 
 
-  tsk->modifies( _lab->d_cellTypeLabel ); 
-  tsk->modifies( _lab->d_areaFractionLabel ); 
-  tsk->modifies( _lab->d_volFractionLabel ); 
-
+  if ( !doing_restart ){ 
+    tsk->modifies( _lab->d_cellTypeLabel ); 
+    tsk->modifies( _lab->d_areaFractionLabel ); 
+    tsk->modifies( _lab->d_volFractionLabel ); 
+  }
   sched->addTask(tsk, patches, matls); 
 }
 void 
@@ -519,7 +521,8 @@ IntrusionBC::setCellType( const ProcessorGroup*,
                           const PatchSubset* patches, 
                           const MaterialSubset* matls, 
                           DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw )
+                          DataWarehouse* new_dw, 
+                          const bool doing_restart )
 { 
   for ( int p = 0; p < patches->size(); p++ ){ 
 
@@ -533,9 +536,12 @@ IntrusionBC::setCellType( const ProcessorGroup*,
     CCVariable<int> cell_type; 
     CCVariable<Vector> area_fraction; 
     CCVariable<double> vol_fraction; 
-    new_dw->getModifiable( cell_type, _lab->d_cellTypeLabel, index, patch ); 
-    new_dw->getModifiable( area_fraction, _lab->d_areaFractionLabel, index, patch ); 
-    new_dw->getModifiable( vol_fraction,  _lab->d_volFractionLabel, index, patch ); 
+
+    if ( !doing_restart ){ 
+      new_dw->getModifiable( cell_type, _lab->d_cellTypeLabel, index, patch ); 
+      new_dw->getModifiable( area_fraction, _lab->d_areaFractionLabel, index, patch ); 
+      new_dw->getModifiable( vol_fraction,  _lab->d_volFractionLabel, index, patch ); 
+    }
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
 
@@ -560,45 +566,42 @@ IntrusionBC::setCellType( const ProcessorGroup*,
           // check current cell
           // Initialize as a wall
           bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
-          if ( curr_cell ) { 
 
-            cell_type[c] = _WALL; 
-            vol_fraction[c] = 0.0; 
-            area_fraction[c] = Vector(0.,0.,0.); 
+          if ( !doing_restart ) { 
+            if ( curr_cell ) { 
 
-          } else { 
+              cell_type[c] = _WALL; 
+              vol_fraction[c] = 0.0; 
+              area_fraction[c] = Vector(0.,0.,0.); 
 
-            // this is flow...is the neighbor a solid? 
-            // -x direction 
-            IntVector n = c - IntVector(1,0,0); 
-            bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+            } else { 
 
-            Vector af = Vector(1.,1.,1.); 
+              // this is flow...is the neighbor a solid? 
+              // -x direction 
+              IntVector n = c - IntVector(1,0,0); 
+              bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
 
-            if ( neighbor_cell ){
-              af -= Vector(1.,0,0); 
-            } 
-            // -y direciton
-            n = c - IntVector(0,1,0); 
-            neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+              Vector af = Vector(1.,1.,1.); 
 
-            if ( neighbor_cell ){
-              af -= Vector(0,1.,0); 
-            } 
-            
-            // -z direciton
-            n = c - IntVector(0,0,1); 
-            neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+              if ( neighbor_cell ){
+                af -= Vector(1.,0,0); 
+              } 
+              // -y direciton
+              n = c - IntVector(0,1,0); 
+              neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
 
-            if ( neighbor_cell ){
-              af -= Vector(0,0,1.); 
-            } 
+              if ( neighbor_cell ){
+                af -= Vector(0,1.,0); 
+              } 
               
-          } 
+              // -z direciton
+              n = c - IntVector(0,0,1); 
+              neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
 
-          if ( c == IntVector(10,5,7) ){ 
-
-
+              if ( neighbor_cell ){
+                af -= Vector(0,0,1.); 
+              } 
+            } 
           }
 
           for ( int idir = 0; idir < 6; idir++ ){ 
@@ -648,24 +651,26 @@ IntrusionBC::setCellType( const ProcessorGroup*,
       // For this collection of  geometry pieces, the iterator is now established.  
       // loop through and repair all the relevant area fractions using 
       // the new boundary face iterator. 
-      if ( !(iter->second.bc_face_iterator.empty()) ){
+      if ( !doing_restart ) { 
+        if ( !(iter->second.bc_face_iterator.empty()) ){
 
-        BCIterator::iterator iBC_iter = (iter->second.bc_face_iterator).find(patchID); 
+          BCIterator::iterator iBC_iter = (iter->second.bc_face_iterator).find(patchID); 
 
-        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); 
-            i != iBC_iter->second.end(); i++){
+          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); 
+              i != iBC_iter->second.end(); i++){
 
-          IntVector c = *i; 
+            IntVector c = *i; 
 
-          for ( int idir = 0; idir < 6; idir++ ){ 
+            for ( int idir = 0; idir < 6; idir++ ){ 
 
-            if ( iter->second.directions[idir] == 1 ){ 
+              if ( iter->second.directions[idir] == 1 ){ 
 
-              if ( patch->containsCell( c ) ){ 
-              
-                area_fraction[c][_iHelp[idir]] = 0; 
+                if ( patch->containsCell( c ) ){ 
+                
+                  area_fraction[c][_iHelp[idir]] = 0; 
 
-              } 
+                } 
+              }
             }
           }
         }

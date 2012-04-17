@@ -112,13 +112,15 @@ namespace Uintah{
       /** @brief Sets the cell type, volume and area fractions @ boundaries */
       void sched_setCellType( SchedulerP& sched, 
                                 const PatchSet* patches, 
-                                const MaterialSet* matls ); 
+                                const MaterialSet* matls, 
+                                const bool doing_restart); 
 
       void setCellType( const ProcessorGroup*, 
                           const PatchSubset* patches, 
                           const MaterialSubset* matls, 
                           DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw ); 
+                          DataWarehouse* new_dw, 
+                          const bool doing_restart); 
 
 
       /** @brief Sets the hatted velocity boundary conditions */ 
