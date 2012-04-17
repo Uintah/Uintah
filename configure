@@ -768,6 +768,7 @@ DL_LIB_FLAG
 VISIT_INSTALL_DIR
 UINTAH_UDA_TO_VIS_LIB
 BUILD_VISIT
+ATOMIC_IMPL
 REFCOUNT_IMPL
 SEMAPHORE_LIB_FLAG
 DEF_THREAD
@@ -10785,9 +10786,12 @@ _sci_includes=''
 
 if test "$HAVE_GCCSYNC" = "yes"; then
   REFCOUNT_IMPL=RefCounted_gcc.cc
+  ATOMIC_IMPL=AtomicCounter_gcc.cc
 else
   REFCOUNT_IMPL=RefCounted.cc
+  ATOMIC_IMPL=AtomicCounter_default.cc
 fi
+
 
 
 

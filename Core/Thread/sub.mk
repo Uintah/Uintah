@@ -49,7 +49,7 @@ SRCS     += \
 	$(SRCDIR)/WorkQueue.cc \
 	$(SRCDIR)/CrashPad.cc
 
-SRCS += $(TIME_IMPL) $(THREAD_IMPL)
+SRCS += $(TIME_IMPL) $(THREAD_IMPL) $(ATOMIC_IMPL)
 
 PSELIBS := Core/Exceptions
 LIBS := $(THREAD_LIBRARY) $(TRACEBACK_LIB) $(SEMAPHORE_LIBRARY)

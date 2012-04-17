@@ -370,7 +370,7 @@ DESCRIPTION
     friend void Thread_shutdown(Thread* thread, bool actually_exit);
     friend unsigned long run_threads(void* priv_v);
 #endif
-            
+    friend class AtomicCounter;  
     friend struct Thread_private;
 
     Runnable* runner_;
