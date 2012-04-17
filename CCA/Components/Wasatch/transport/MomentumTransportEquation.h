@@ -69,6 +69,7 @@ namespace Wasatch{
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
+                               const Expr::Tag bodyForceTag,                              
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                const Expr::ExpressionID rhsID,

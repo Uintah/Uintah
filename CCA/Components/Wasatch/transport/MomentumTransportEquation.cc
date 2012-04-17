@@ -276,6 +276,7 @@ namespace Wasatch{
   MomentumTransportEquation( const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
+                             const Expr::Tag bodyForceTag,                            
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              const Expr::ExpressionID rhsID,
@@ -363,18 +364,13 @@ namespace Wasatch{
       if( stagLoc_ == ZDIR )  normalConvFluxID_ = id;
     }
 
-    /*
-      jcs still to do:
-      - create expression for body force
-    */
-    const Expr::Tag bodyForcet;//( "body-force", Expr::STATE_NONE);  // for now, this is empty.
     //_________________________________________________________
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
     const Expr::ExpressionID momRHSPartID= factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
                                                                            cfxt, cfyt, cfzt,
-                                                                           tauxt, tauyt, tauzt,
-                                                                           bodyForcet) );
+                                                                           tauxt, tauyt, tauzt, densTag,
+                                                                           bodyForceTag) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
 
