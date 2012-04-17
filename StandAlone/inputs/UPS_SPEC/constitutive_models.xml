@@ -311,6 +311,7 @@
       <n_HighT               spec="OPTIONAL DOUBLE" />
       <a                     spec="OPTIONAL DOUBLE" />
       <b                     spec="OPTIONAL DOUBLE" />
+      <beta                  spec="OPTIONAL DOUBLE" />
       <c0                    spec="OPTIONAL DOUBLE" />
       <c1                    spec="OPTIONAL DOUBLE" />
       <c2                    spec="OPTIONAL DOUBLE" />
