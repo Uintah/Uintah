@@ -171,6 +171,16 @@ namespace Wasatch{
     std::stringstream strRKStage;
     strRKStage << rkStage;
 
+    // need to explicitly make all RHS fields persistent.  This avoids the situation
+    // where they may be internal nodes in a graph and could thus turn into "temporary"
+    // fields, leading to non-exposure to Uintah and bad things...
+    std::set<std::string> persistentFields( ioFieldSet );
+    for( ScalarFields::const_iterator i=scalarFields_.begin(); i!=scalarFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
+    for(   XVolFields::const_iterator i=  xVolFields_.begin(); i!=  xVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
+    for(   YVolFields::const_iterator i=  yVolFields_.begin(); i!=  yVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
+    for(   ZVolFields::const_iterator i=  zVolFields_.begin(); i!=  zVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
+
+
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
@@ -180,7 +190,7 @@ namespace Wasatch{
                                                             *(solnGraphHelper_->exprFactory),
                                                             level, sched, patches, materials,
                                                             patchInfoMap,
-                                                            true, 1, ioFieldSet );
+                                                            true, 1, persistentFields );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time
@@ -204,7 +214,7 @@ namespace Wasatch{
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
                                                      true,
-                                                     rkStage, ioFieldSet );
+                                                     rkStage, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
       if(rkStage==1) coordHelper_->create_task( sched, patches, materials );

@@ -231,7 +231,6 @@ namespace Wasatch{
     Uintah::VarLabel* const rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
     std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
     fields.insert( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
-    //rhsIDs_.insert( rhsID );
     createdVarLabels_.push_back( solnVarLabel );
     createdVarLabels_.push_back( rhsVarLabel );
 
