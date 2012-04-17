@@ -1,28 +1,36 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Boundary Conditions</title>
+    <title>Hydrostatic Pressure in a Confined Volume</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
    <Solver type="hypre" />
   <Wasatch>
-    <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
-    </Density>
-    
+      <TimeIntegrator> FE </TimeIntegrator>
+
     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="pressure" state="STATE_N" />
        <Constant>0.0</Constant>
     </BasicExpression>
 
+    <BasicExpression type="ZVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="gravity" state="STATE_NONE" />
+       <Constant>-9.81</Constant>
+    </BasicExpression>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="x-mom" state="STATE_N" />
-       <Constant>1.0</Constant>
+       <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
@@ -30,11 +38,17 @@
        <NameTag name="y-mom" state="STATE_N" />
        <Constant>0.0</Constant>
     </BasicExpression>
-               
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="z-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+                   
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_NONE" />
-      <Constant>0.01</Constant>
+      <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
@@ -49,42 +63,49 @@
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <BodyForce>
+            <Direction>Z</Direction>
+            <NameTag name="gravity" state="STATE_NONE" />
+      </BodyForce>
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>false</UseReferencePoint>
-        <Use3DLaplacian>   false</Use3DLaplacian>
+        <UseReferencePoint>true</UseReferencePoint>
+        <Use3DLaplacian>    true</Use3DLaplacian>
         <Parameters>
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-14  </tolerance>
+            <tolerance>      1e-15  </tolerance>
             <maxiterations>  1000    </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
+
       </Pressure>
     </MomentumEquations>
-
 
   </Wasatch>
 
 
   <Time>
-    <maxTime>5</maxTime>
+    <maxTime>1</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.0001</delt_min>
     <delt_max>0.0001</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>momentum-test-bc-channel.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <filebase>hydrostatic_pressure.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -98,34 +119,46 @@
       <BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-">
-
+     
         <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
+          <value> 0.0 </value>
         </BCType>
         
         <BCType id="all" var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
-        
+                
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
-        </BCType>                                               
+        </BCType>        
 
       </Face>
       
       <Face side="x+">
 
-        <BCType id="all" var="Neumann" label="y-mom">
+        <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>                       
-        
+                        
       </Face>
       
-      <Face side="y-">
+      <Face side="y-">        
       
         <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
@@ -135,10 +168,14 @@
           <value> 0.0 </value>
         </BCType>
         
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
         <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>        
-                        
+
       </Face>
       
       <Face side="y+">
@@ -151,21 +188,67 @@
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType id="all" var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0</value>
         </BCType>     
+
+      </Face>
+
+      <Face side="z-">
+     
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+
+      </Face>
+      
+      <Face side="z+">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                       
                         
       </Face>
+
 
       </BoundaryConditions>
       <Level>
       <Box label="1">
-        <lower>[0,-0.5,-0.5]</lower>
-        <upper>[6, 0.5, 0.5]</upper>
-        <resolution>[256,44,2]</resolution>
-        <patches>[1,1,1]</patches>
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[12,12,12]</resolution>
+        <!--extraCells>[1,1,0]</extraCells-->
+        <patches>[2,2,2]</patches>
       </Box>
-      <periodic>[0,0,1]</periodic>
+      <periodic>[0,0,0]</periodic>
     </Level>
   </Grid>
 

@@ -207,6 +207,10 @@
       <X-Momentum             spec="OPTIONAL STRING" />
       <Y-Momentum             spec="OPTIONAL STRING" />
       <Z-Momentum             spec="OPTIONAL STRING" />
+      <BodyForce              spec="MULTIPLE NO_DATA">
+        <Direction            spec="REQUIRED STRING 'X,Y,Z'" />                               
+        <NameTag              spec="REQUIRED" />
+      </BodyForce>      
       <Viscosity              spec="OPTIONAL NO_DATA">
         <NameTag              spec="REQUIRED" />
       </Viscosity>

@@ -351,6 +351,18 @@ namespace Wasatch{
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
     }
 
+    // parse body force expression
+    std::string bodyForceDir;
+    Expr::Tag xBodyForceTag, yBodyForceTag, zBodyForceTag;
+    for( Uintah::ProblemSpecP bodyForceParams=params->findBlock("BodyForce");
+        bodyForceParams != 0;
+        bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){      
+      bodyForceParams->get("Direction", bodyForceDir );
+      if (bodyForceDir == "X") xBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
+      if (bodyForceDir == "Y") yBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
+      if (bodyForceDir == "Z") zBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
+    }
+    
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
 
@@ -367,6 +379,7 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
                                       densityTag,
+                                      xBodyForceTag,
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       rhsID,
@@ -384,6 +397,7 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( yvelname,
                                      ymomname,
                                      densityTag,
+                                     yBodyForceTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      rhsID,
@@ -401,6 +415,7 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( zvelname,
                                      zmomname,
                                      densityTag,
+                                     zBodyForceTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      rhsID,

@@ -120,7 +120,7 @@ namespace Wasatch{
    *    them has been constructed elsewhere.
    *
    *  - In the case that we are solving a scalar transport equation with
-   *    constant density we move out the density by devision from all
+   *    constant density we move out the density by division from all
    *    terms except the source term. For the source term in this case we
    *    devide the specified source term expression by density here in
    *    ScalarRHS.
