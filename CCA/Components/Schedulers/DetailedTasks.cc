@@ -388,16 +388,14 @@ void DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
             for (int m=0;m<matls->size();m++){
               int count;
               try {
-                // there are a few rare cases in an AMR framework where you require from an OldDW, but only
-                // ones internal to the W-cycle (and not the previous timestep) which can have variables not exist in the OldDW.
-                if (dws[dw]->exists(req->var, matls->get(m), neighbor)) {
+                  // there are a few rare cases in an AMR framework where you require from an OldDW, but only
+                  // ones internal to the W-cycle (and not the previous timestep) which can have variables not exist in the OldDW.
                   count = dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
                   if(scrubout.active() && 
                       (req->var->getName() == dbgScrubVar || dbgScrubVar == "") && 
                       (neighbor->getID() == dbgScrubPatch || dbgScrubPatch == -1)){
                     scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
                   }
-                }
               } catch (UnknownVariable& e) {
                 cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep() << endl;
                 throw e;
