@@ -28,12 +28,12 @@ from helpers.runSusTests import runSusTests
 #______________________________________________________________________
 NIGHTLYTESTS = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", ["gpu"]),
                    ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1.1, "Linux", ["gpu", "no_restart", "no_uda_comparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_test_1L",     "RMCRT_test_1L.ups",     1.1, "Linux", ["gpu", "exactComparison", "sus_options=-nthreads 4 -gpu"]) ]
+                   ("RMCRT_test_1L",     "RMCRT_test_1L.ups",     1.1, "Linux", ["gpu", "no_restart", "no_uda_comparison", "sus_options=-nthreads 4 -gpu"]) ]
 
 # Tests that are run during local regression testing
 LOCALTESTS   = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", ["gpu"]),
                    ("gpuSchedulerTest",  "gpuSchedulerTest.ups",  1.1, "Linux", ["gpu", "no_restart", "no_uda_comparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_test_1L",     "RMCRT_test_1L.ups",     1.1, "Linux", ["gpu", "exactComparison", "sus_options=-nthreads 4 -gpu"]) ]
+                   ("RMCRT_test_1L",     "RMCRT_test_1L.ups",     1.1, "Linux", ["gpu", "no_restart", "no_uda_comparison", "sus_options=-nthreads 4 -gpu"]) ]
 
 
 
