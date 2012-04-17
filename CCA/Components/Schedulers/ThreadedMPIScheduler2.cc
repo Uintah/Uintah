@@ -382,11 +382,11 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
   currphase=0;
   numPhase=tg->getNumTaskPhases();
   phaseTasks.clear();
-  phaseTasks.resize(numPhase);
+  phaseTasks.resize(numPhase, 0);
   phaseTasksDone.clear();
-  phaseTasksDone.resize(numPhase);
+  phaseTasksDone.resize(numPhase, 0);
   phaseSyncTask.clear();
-  phaseSyncTask.resize(numPhase);
+  phaseSyncTask.resize(numPhase, NULL);
   dts->setTaskPriorityAlg(taskQueueAlg_ );
   for (int i = 0; i < ntasks; i++){
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
