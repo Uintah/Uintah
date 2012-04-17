@@ -207,19 +207,22 @@ template<class DomainType>
 int DWDatabase<DomainType>::
 decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
 {
-  DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, dom));
   // Dav's conjectures on how this works:
   //   setScrubCount is called the first time with "count" set to some X.  
   //   This X represents the number of tasks that will use the var.  Later,
   //   after a task has used the var, it will call decrementScrubCount
   //   If scrubCount then is equal to 0, the var is scrubbed.
-
-  USE_IF_ASSERTS_ON(if (data.scrubCount <= 0) { std::cerr << "Var: " << *label << " matl " << matlIndex << " patch " << dom->getID() << std::endl; })
-  ASSERT(data.scrubCount > 0);
-  int count = data.scrubCount-1;
-  if(!--data.scrubCount)
-    scrub(label, matlIndex, dom);
-  return count;
+ 
+  ASSERT(matlIndex >= -1);
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  std::pair<typename varDBtype::iterator, typename varDBtype::iterator> ret = vars.equal_range(v);
+  for (typename varDBtype::iterator iter=ret.first; iter!=ret.second; ++iter){
+    if (iter->second.version == 0 ) {
+      if(!--iter->second.scrubCount) scrub(label, matlIndex, dom);
+      return iter->second.scrubCount;
+    }
+  }
+  return 0;
 }
 
 template<class DomainType>
