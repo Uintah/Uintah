@@ -155,7 +155,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
 
   nofTimeSteps                     =  0;
   init_timelabel_allocated         =  false;
-  d_analysisModule                 =  false;
+  d_analysisModule                 =  NULL;
   d_set_initial_condition          =  false;
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
@@ -209,7 +209,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
-  d_lab->problemSetup( db ); 
+  d_lab->problemSetup( db );
 
   // This will allow for changing the BC's on restart:
   if ( db->findBlock("new_BC_on_restart") )
@@ -311,7 +311,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     d_timeIntegrator->problemSetup(time_db);
   }
-  
+
 //------------------------------------------------------------------------------
 //   WASATCH CODE BLOCK
 //------------------------------------------------------------------------------
@@ -322,23 +322,23 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_wasatch->disable_wasatch_material();
   // let Wasatch parse its xml block to setup the transport equations. Here, we
   // should pass the entire uintah input file params.
-  d_wasatch->problemSetup( params, materials_ps, grid, sharedState );  
-  
-  Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
-  Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];    
+  d_wasatch->problemSetup( params, materials_ps, grid, sharedState );
+
+  Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
+  Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];
   // NOTE: WE ARE LIMITED TO SVOLFIELDS WHEN USING WASATCH-IN-ARCHES FOR THE TIME
   // BEING.
-  //____________________________________________________________________________  
-  // Register the velocity field from Arches as placeholder expressions. 
+  //____________________________________________________________________________
+  // Register the velocity field from Arches as placeholder expressions.
   // put these in the advance solution graph
   std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
   const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
   if( !(solngh->exprFactory->have_entry( xVelTag )) ) {
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
     typedef Expr::PlaceHolder<XVolField>  XVelT;
-    solngh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
+    solngh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );
   }
-  
+
   //
   std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
   const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
@@ -347,17 +347,17 @@ Arches::problemSetup(const ProblemSpecP& params,
     typedef Expr::PlaceHolder<YVolField>  YVelT;
     solngh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
   }
-  
+
   //
   std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
   const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
   if( !(solngh->exprFactory->have_entry( zVelTag )) ) {
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
     typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-    solngh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
+    solngh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );
   }
-  
-  //____________________________________________________________________________  
+
+  //____________________________________________________________________________
   // Register the volume and area fractions for embedded geometry
   // volume fraction
   std::string volFractionName = d_lab->d_volFractionLabel->getName();
@@ -365,22 +365,22 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(initgh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    initgh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );        
-  }  
-  
+    initgh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );
+  }
+
   if( !(solngh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    solngh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );            
+    solngh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );
   }
-  
+
   // x area fraction
   std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
   const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( xAreaFractionTag )) ) {
     // register placeholder expressions for x area fraction field: "areaFractionFX"
     typedef Expr::PlaceHolder<XVolField>  XAreaFractionT;
-    solngh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );
   }
 
   // y area fraction
@@ -389,7 +389,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(solngh->exprFactory->have_entry( yAreaFractionTag )) ) {
     // register placeholder expressions for y area fraction field: "areaFractionFY"
     typedef Expr::PlaceHolder<YVolField>  YAreaFractionT;
-    solngh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );
   }
 
   // z area fraction
@@ -398,11 +398,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(solngh->exprFactory->have_entry( zAreaFractionTag )) ) {
     // register placeholder expressions for z area fraction field: "areaFractionFZ"
     typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
-    solngh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );
   }
-  
-  //____________________________________________________________________________   
-  // Register the Wasatch transported variables as placeholder expressions. 
+
+  //____________________________________________________________________________
+  // Register the Wasatch transported variables as placeholder expressions.
   // Because we will NOT build a Wasatch timestepper, we should register the
   // transported Wasatch variables as placeholder expressions. We can grab those
   // from the equation adaptors after parsing the Wasatch xml block.
@@ -410,16 +410,16 @@ Arches::problemSetup(const ProblemSpecP& params,
   typedef Expr::PlaceHolder<SVolField>  FieldExpr;
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
     Wasatch::TransportEquation* transEq = (*ia)->equation();
-    std::string solnVarName = transEq->solution_variable_name();    
+    std::string solnVarName = transEq->solution_variable_name();
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
       solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
       solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
-  }      
-  
+  }
+
 # endif // WASATCH_IN_ARCHES
-//------------------------------------------------------------------------------  
-  
+//------------------------------------------------------------------------------
+
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
 
@@ -507,7 +507,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
   d_props->problemSetup(db);
-  
+
 #ifdef WASATCH_IN_ARCHES
   //create expressions to export dependent table vals into wasatch
   typedef std::vector<std::string> StringVec;
@@ -520,13 +520,13 @@ Arches::problemSetup(const ProblemSpecP& params,
         const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
         if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
           typedef Expr::PlaceHolder<SVolField>  FieldExpr;
-          solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTableTag));     
+          solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTableTag));
           proc0cout << " done" << endl;
         }
       }
       //create constant expressions for table header constants
-      typedef std::map< string, double > doubleMap;      
-      doubleMap d_mixconsts = d_mixingTable->getAllConstants();   
+      typedef std::map< string, double > doubleMap;
+      doubleMap d_mixconsts = d_mixingTable->getAllConstants();
       doubleMap::iterator ConstIter;
       for ( ConstIter = d_mixconsts.begin(); ConstIter != d_mixconsts.end(); ConstIter++) {
         std::string tabConst = ConstIter->first;
@@ -973,7 +973,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
-  
+
 }
 
 void
@@ -1010,10 +1010,10 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_areaFractionLabel);
     tsk->computes(d_lab->d_volFractionLabel);
 #ifdef WASATCH_IN_ARCHES
-    tsk->computes(d_lab->d_areaFractionFXLabel); 
-    tsk->computes(d_lab->d_areaFractionFYLabel); 
-    tsk->computes(d_lab->d_areaFractionFZLabel); 
-#endif 
+    tsk->computes(d_lab->d_areaFractionFXLabel);
+    tsk->computes(d_lab->d_areaFractionFYLabel);
+    tsk->computes(d_lab->d_areaFractionFZLabel);
+#endif
     tsk->computes(d_lab->d_densityGuessLabel);
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
@@ -1142,10 +1142,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<Vector> areaFraction;
     CCVariable<double> volFraction;
 #ifdef WASATCH_IN_ARCHES
-    SFCXVariable<double> areaFractionFX; 
-    SFCYVariable<double> areaFractionFY; 
-    SFCZVariable<double> areaFractionFZ; 
-#endif 
+    SFCXVariable<double> areaFractionFX;
+    SFCYVariable<double> areaFractionFY;
+    SFCZVariable<double> areaFractionFZ;
+#endif
 
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch );
 #ifdef WASATCH_IN_ARCHES
@@ -1155,7 +1155,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     areaFractionFX.initialize(1.0);
     areaFractionFY.initialize(1.0);
     areaFractionFZ.initialize(1.0);
-#endif 
+#endif
     new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch );
     areaFraction.initialize(Vector(1.,1.,1.));
     volFraction.initialize(1.0);
@@ -1346,7 +1346,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
 
     //----- momentum initial condition
-    d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity ); 
+    d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity );
 
   } // patches
 }
@@ -1591,7 +1591,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 #       ifdef WASATCH_IN_ARCHES
           , *d_wasatch, d_timeIntegrator
 #       endif // WASATCH_IN_ARCHES
-                          );      
+                          );
     }
     else
       d_nlSolver->nonlinearSolve(level, sched
@@ -1637,10 +1637,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
 #ifdef WASATCH_IN_ARCHES
   // disable Wasatch's time integrator because Arches is handling it.
-  d_wasatch->disable_timestepper_creation();  
-  d_wasatch->scheduleTimeAdvance( level, sched );        
-#endif // WASATCH_IN_ARCHES  
-  
+  d_wasatch->disable_timestepper_creation();
+  d_wasatch->scheduleTimeAdvance( level, sched );
+#endif // WASATCH_IN_ARCHES
+
 }
 
 // ****************************************************************************
@@ -1677,7 +1677,7 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
 
     printSchedule(level,dbg,"Arches::readCCInitialCondition");
 
-    tsk->modifies(d_lab->d_CCVelocityLabel); 
+    tsk->modifies(d_lab->d_CCVelocityLabel);
 
     tsk->modifies(d_lab->d_pressurePSLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -1700,7 +1700,7 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<Vector> VelocityCC; 
+    CCVariable<Vector> VelocityCC;
     CCVariable<double> pressure;
 
     new_dw->getModifiable(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch);
@@ -1719,13 +1719,13 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     IntVector low, high;
     level->findCellIndexRange(low, high);
     IntVector range = high-low;//-IntVector(2,2,2);
-    
+
     if (!(range == IntVector(nx,ny,nz))) {
       ostringstream warn;
       warn << "ERROR Arches::readCCInitialCondition: \nWrong grid size in input file " << range;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
+
     double tmp;
     fd >> tmp >> tmp >> tmp;
     fd >> tmp >> tmp >> tmp;
@@ -2337,13 +2337,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    constCCVariable<Vector> CCVelocity; 
+    constCCVariable<Vector> CCVelocity;
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(CCVelocity, d_lab->d_CCVelocityLabel, indx, patch, gac, 1); 
+    new_dw->get(CCVelocity, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
 
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
