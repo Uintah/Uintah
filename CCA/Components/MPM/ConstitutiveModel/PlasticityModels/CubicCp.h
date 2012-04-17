@@ -52,6 +52,7 @@ namespace Uintah {
 
     double d_a;
     double d_b;
+    double d_beta; // Volumetric coefficient of thermal expansion, K^-1
     double d_c0;   // kgK/J
     double d_c1;   // kgK/J
     double d_c2;   // kgK/J
