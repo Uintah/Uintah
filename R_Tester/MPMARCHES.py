@@ -33,7 +33,8 @@ NIGHTLYTESTS = [
                   ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison", "no_restart"]), 
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]), 
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]),
-                  ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["doesTestRun"])
+                  ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["exactComparison", "no_restart"])
+                  ("intrusion_test"        , "intrusion_test"            , 1.1 , "Linux" , ["exactComparison"])
                ]
                
 LOCALTESTS =   [  
@@ -41,7 +42,8 @@ LOCALTESTS =   [
                   ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
-                  ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["doesTestRun"])
+                  ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["exactComparison", "no_restart"]),
+                  ("intrusion_test"        , "intrusion_test"            , 1.1 , "All" , ["exactComparison"])
                ]  
 
 #__________________________________
