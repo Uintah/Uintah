@@ -121,6 +121,7 @@ private:
   const char* name_;
   AtomicCounter_private* priv_;
 
+  long long value_;
   // Cannot copy them
   AtomicCounter(const AtomicCounter&);
   AtomicCounter& operator=(const AtomicCounter&);

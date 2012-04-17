@@ -172,7 +172,6 @@ typedef void (*SIG_HANDLER_T)(int);
 
 #ifndef __ia64__
 #  include <Core/Thread/Barrier_default.cc>
-#  include <Core/Thread/AtomicCounter_default.cc>
 #endif
 
 #include <Core/Thread/CrowdMonitor_pthreads.cc>

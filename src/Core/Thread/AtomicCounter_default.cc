@@ -40,7 +40,12 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#include <cstdio>
+#include <cstdlib>
+
 #include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 
 namespace SCIRun {
 struct AtomicCounter_private {
