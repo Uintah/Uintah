@@ -133,45 +133,6 @@ namespace Wasatch{
                    const std::set<std::string>& ioFieldSet,
                    Expr::FieldManagerList* fml = NULL );
 
-    /**
-     *  \brief Create a TaskInterface from a list of root expressions
-     *
-     *  \param root The root node of the tree to create
-     *
-     *  \param taskName the name of this task
-     *
-     *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
-     *
-     *  \param sched The Scheduler that this task will be loaded on.
-     *
-     *  \param patches the patches to associate this task with.
-     *
-     *  \param materials the MaterialSet for the materials associated with this task
-     *
-     *  \param info The PatchInfoMap object.
-     *
-     *  \param createUniqueTreePerPatch if true, then a tree will be
-     *         constructed for each patch.  If false, one tree will be
-     *         used across all patches.
-     *
-     *  \param fml [OPTIONAL] the FieldManagerList to associate with
-     *         this expression.  If not supplied, one will be created.
-     *
-     *  This registers fields on the FieldManagerList (which is created if necessary).
-     */
-    TaskInterface( const Expr::ExpressionID& root,
-                   const std::string taskName,
-                   Expr::ExpressionFactory& factory,
-                   const Uintah::LevelP& level,
-                   Uintah::SchedulerP& sched,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials,
-                   const PatchInfoMap& info,
-                   const bool createUniqueTreePerPatch,
-                   const int RKStage,
-                   const std::set<std::string>& ioFieldSet,
-                   Expr::FieldManagerList* fml = NULL );
-
     ~TaskInterface();
 
     /**

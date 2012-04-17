@@ -185,7 +185,8 @@ namespace Wasatch{
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
     {
-      TaskInterface* const timeTask = scinew TaskInterface( timeID,
+      IDSet ids; ids.insert(timeID);
+      TaskInterface* const timeTask = scinew TaskInterface( ids,
                                                             "set_time",
                                                             *(solnGraphHelper_->exprFactory),
                                                             level, sched, patches, materials,

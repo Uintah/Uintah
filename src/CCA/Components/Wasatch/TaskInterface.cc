@@ -490,7 +490,7 @@ namespace Wasatch{
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
             pexpr.set_patch(patches->get(ip));
-            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );            
+            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
           }
 
           tree->bind_fields( *fml_ );
@@ -509,41 +509,6 @@ namespace Wasatch{
     }
   }
 
-
-  //------------------------------------------------------------------
-
-  TaskInterface::TaskInterface( const Expr::ExpressionID& root,
-                                const std::string taskName,
-                                Expr::ExpressionFactory& factory,
-                                const Uintah::LevelP& level,
-                                Uintah::SchedulerP& sched,
-                                const Uintah::PatchSet* const patches,
-                                const Uintah::MaterialSet* const materials,
-                                const PatchInfoMap& info,
-                                const bool createUniqueTreePerPatch,
-                                const int rkStage,
-                                const std::set<std::string>& ioFieldSet,
-                                Expr::FieldManagerList* fml )
-    : builtFML_( fml==NULL ),
-      fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
-  {
-    typedef Expr::ExpressionTree::TreeList TreeList;
-    Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( root, factory, -1, taskName ) );
-    TreeList treeList = tree->split_tree();
-    if( Uintah::Parallel::getMPIRank() == 0 ){
-      if( treeList.size() > 1 ){
-        std::ostringstream fnam;
-        fnam << tree->name() << "_original.dot";
-        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-        std::ofstream fout( fnam.str().c_str() );
-        tree->write_tree(fout);
-      }
-    }
-    for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
-      Expr::ExpressionTree::TreePtr tr = *itr;
-      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage, ioFieldSet ) );
-    }
-  }
 
   //------------------------------------------------------------------
 
