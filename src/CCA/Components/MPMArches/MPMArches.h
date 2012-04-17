@@ -106,6 +106,8 @@ public:
                             const ProblemSpecP& materials_ps,
                             GridP& grid, SimulationStateP&);
 
+  virtual void restartInitialize();
+
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
   // Set up initial conditions for MPMArches problem	 
@@ -396,6 +398,7 @@ public:
   bool calcVolFracMPM;
   bool calcVel;
   bool d_stairstep;
+  bool d_doingRestart; 
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};

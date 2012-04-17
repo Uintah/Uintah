@@ -184,6 +184,9 @@ public:
   // Schedule Compute if Stable time step
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
+  void 
+  MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, 
+      bool& recompile, bool doing_restart );
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule time advance

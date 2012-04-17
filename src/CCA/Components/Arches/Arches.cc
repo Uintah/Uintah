@@ -832,7 +832,7 @@ Arches::scheduleInitialize(const LevelP& level,
   //
   // compute the cell area fraction
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls );
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls );
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
 
   sched_scalarInit(level, sched);
 
@@ -1571,6 +1571,19 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(),getLevel(patches));
   }
 }
+
+void 
+Arches::MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, bool& recompile, bool doing_restart )
+{ 
+  if ( doing_restart ) { 
+    const PatchSet* patches= level->eachPatch();
+    const MaterialSet* matls = d_sharedState->allArchesMaterials();
+    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, doing_restart );
+
+    recompile = true; 
+  }
+} 
 
 // ****************************************************************************
 // Schedule time advance
