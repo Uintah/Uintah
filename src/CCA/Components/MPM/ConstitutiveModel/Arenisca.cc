@@ -450,7 +450,7 @@ cout<<"@@@@@pKappa1="<<pKappa1<<endl;
       // Compute the rate of deformation tensor
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
       Matrix3 tensorR, tensorU;
-      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+      deformationGradient[idx].polarDecompositionRMB(tensorU, tensorR);
       rotation[idx]=tensorR;
       D = (tensorR.Transpose())*(D*tensorR);
 
@@ -459,9 +459,9 @@ cout<<"@@@@@pKappa1="<<pKappa1<<endl;
 if (idx==idxNO-1){
 cout<<"bulk="<<bulk<<endl;
 }
-      bulk = bulk + fluid_B0*
-           ( exp(p3_crush_curve+p4_fluid_effect)-1.0 ) * bulk_temp
-           / ( (bulk_temp-1.0)*(bulk_temp-1.0) );
+      //bulk = bulk + fluid_B0*
+      //     ( exp(p3_crush_curve+p4_fluid_effect)-1.0 ) * bulk_temp
+      //     / ( (bulk_temp-1.0)*(bulk_temp-1.0) );
 if (idx==idxNO-1){
 cout<<"bulk="<<bulk<<endl;
 }
@@ -1313,6 +1313,9 @@ cout<<"(f_new_loop)="<<(f_new_loop)<<endl;
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
 
       particleIndex idx = *iter;
+      Matrix3 tensorU, tensorR;
+      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+      rotation[idx]=tensorR;
       stress_new[idx] = (rotation[idx]*stress_new[idx])*(rotation[idx].Transpose());
       // Compute wave speed + particle velocity at each particle,
       // store the maximum
