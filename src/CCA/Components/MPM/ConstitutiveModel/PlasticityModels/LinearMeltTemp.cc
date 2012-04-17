@@ -111,8 +111,7 @@ double
 LinearMeltTemp::computeMeltingTemp(const PlasticityState* state)
 {
   // Pressure form takes presidence because it is less computationally expensive (no divide)
-  if(d_usePressureForm)
-  {
+  if(d_usePressureForm) {
      return d_Tm0 + d_b * state->pressure;
   } else if(d_useVolumeForm) {
      return d_Tm0*(1.0+d_a*(state->initialDensity/state->density));
