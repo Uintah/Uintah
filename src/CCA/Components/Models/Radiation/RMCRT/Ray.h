@@ -105,7 +105,7 @@ namespace Uintah{
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched );
-      
+      /** @brief Update the running total of the incident intensity */
       void  updateSumI ( const Vector& inv_direction_vector,
       		             const Vector& ray_location,
       		             const IntVector& origin,
@@ -116,6 +116,20 @@ namespace Uintah{
       		             constCCVariable<double> abskg,
       		             unsigned long int& size,
       		             double& sumI);
+
+      /** @brief Adjust the location of a ray origin depending on the cell face */
+      void adjustLocation(Vector &location,
+    		                   const IntVector &indexOrder,
+    		                   const IntVector &shift,
+    		                   const double &DyDxRatio,
+    		                   const double &DzDxRatio);
+
+      /** @brief Adjust the direction of a ray depending on the cell face */
+      void adjustDirection(Vector &directionVector,
+    		                    const IntVector &indexOrder,
+    		                    const IntVector &signOrder);
+
+
 
       //__________________________________
       //  Multilevel tasks

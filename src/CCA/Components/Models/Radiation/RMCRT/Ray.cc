@@ -630,6 +630,154 @@ Ray::rayTrace( const ProcessorGroup* pc,
       } // end if _virtRad
     } // end VR cell iterator
 
+
+//_________________________________________________________________________________________________________________________
+
+
+
+   if( _solveBoundaryFlux){
+
+	     vector<Patch::FaceType> bf;
+	     patch->getBoundaryFaces(bf);
+
+	     if( bf.size() > 0){
+
+	       IntVector pLow;
+	       IntVector pHigh;
+	       level->findInteriorCellIndexRange(pLow, pHigh);
+
+	       int Nx = pHigh[0] - pLow[0];
+	       int Ny = pHigh[1] - pLow[1];
+	       int Nz = pHigh[2] - pLow[2];
+
+	       double boundFlux[Nx][Ny][Nz][6]; // Has order WESNBT, same as Uintah
+
+           //_____________________________________________
+           //   Ordering for Surface Method
+           vector <IntVector> dirIndexOrder(6);
+           vector <IntVector> dirSignSwap(6);
+           vector <IntVector> locationIndexOrder(6);
+           vector <IntVector> locationShift(6);
+
+           dirIndexOrder[0]  = IntVector(2, 1, 0);
+           dirIndexOrder[1]  = IntVector(2, 1, 0);
+           dirIndexOrder[2]  = IntVector(0, 2, 1);
+           dirIndexOrder[3]  = IntVector(0, 2, 1);
+           dirIndexOrder[4]  = IntVector(0, 1, 2);
+           dirIndexOrder[5]  = IntVector(0, 1, 2);
+
+           dirSignSwap[0]  = IntVector(-1, 1, 1);
+           dirSignSwap[1]  = IntVector(1, 1, 1);
+           dirSignSwap[2]  = IntVector(1, -1, 1);
+           dirSignSwap[3]  = IntVector(1, 1, 1);
+           dirSignSwap[4]  = IntVector(1, 1, -1);
+           dirSignSwap[5]  = IntVector(1, 1, 1);
+
+
+           locationIndexOrder[0] = IntVector(1,0,2);
+           locationIndexOrder[1] = IntVector(1,0,2);
+           locationIndexOrder[2] = IntVector(0,1,2);
+           locationIndexOrder[3] = IntVector(0,1,2);
+           locationIndexOrder[4] = IntVector(0,2,1);
+           locationIndexOrder[5] = IntVector(0,2,1);
+
+           locationShift[0] = IntVector(1, 0, 0);
+           locationShift[1] = IntVector(0, 0, 0);
+           locationShift[2] = IntVector(0, 1, 0);
+           locationShift[3] = IntVector(0, 0, 0);
+           locationShift[4] = IntVector(0, 0, 1);
+           locationShift[5] = IntVector(0, 0, 0);
+
+	       //__________________________________
+	       // Loop over boundary faces and compute incident radiative flux
+
+	       for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+	         Patch::FaceType face = *itr;
+
+	         int UintahFace[6] = {1,0,3,2,5,4};//Uintah face iterator is an enum with the order WESNBT
+	         int RayFace = UintahFace[face];  // All the Ray functions are based on the face order of EWNSTB
+	         Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
+
+	         for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+	           const IntVector& origin = *iter;
+
+	           int i = origin.x();
+	           int j = origin.y();
+	           int k = origin.z();
+
+		       double sumI = 0;
+	           double sumProjI = 0;
+	           double sumI_prev =0;
+
+	           // Flux ray loop
+	           for (int iRay=0; iRay < _NoOfRays; iRay++){
+
+
+	             IntVector cur = origin;
+
+	             if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
+	               _mTwister.seed((i + j +k) * iRay +1);
+	             }
+
+	             Vector direction_vector;
+
+
+	             // Surface Way to generate a ray direction from the positive z face
+	             double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
+	             double theta = acos(_mTwister.rand());  // polar angle for the hemisphere
+	             //Convert to Cartesian
+	             direction_vector[0] =  sin(theta) * cos(phi);
+	             direction_vector[1] =  sin(theta) * sin(phi);
+	             direction_vector[2] =  cos(theta);
+	             // Put direction vector as coming from correct face
+	             adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
+
+	             Vector inv_direction_vector = Vector(1.0)/direction_vector;
+
+
+	             double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+	             double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+
+	             Vector ray_location;
+
+	             // Surface way to generate a ray location from the negative y face
+	             ray_location[0] =  _mTwister.rand() ;
+	             ray_location[1] =  0;
+	             ray_location[2] =  _mTwister.rand() * DzDxRatio ;
+	             // Put point on correct face
+	             adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
+
+	             ray_location[0] += i;
+	             ray_location[1] += j;
+	             ray_location[2] += k;
+
+	             updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+
+	             sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                            // from all the rays up to that point
+	             sumI_prev = sumI;
+
+	           } // end of flux ray loop
+
+
+	           //__________________________________
+	           //  Compute Flux
+
+	           boundFlux[i][j][k][face] = sumProjI * 2*_pi/_NoOfRays;
+	           cout <<  "boundFlux: " << boundFlux[i][j][k][face] << endl;
+
+
+	         } // end of iterating through boundary cells
+	       } // end of iterating over faces
+	     } // end has a boundaryFace
+
+   } // end if _solveBoundaryFlux
+	 //__________________________________________________________________________________________________________________
+	 // End Solve Flux on Boundaries
+
+
+
+
     //____________________________________________
     //________Solve DivQ__________________________
     //____________________________________________
@@ -690,7 +838,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
         }
-
         updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
 
 
@@ -1149,6 +1296,29 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
 
 //______________________________________________________________________
+void Ray::adjustDirection(Vector &directionVector, const IntVector &indexOrder, const IntVector &signOrder){
+
+  Vector tmpry = directionVector;
+
+  directionVector[0] = tmpry[indexOrder[0]] * signOrder[0];
+  directionVector[1] = tmpry[indexOrder[1]] * signOrder[1];
+  directionVector[2] = tmpry[indexOrder[2]] * signOrder[2];
+
+}
+
+
+void Ray::adjustLocation(Vector &location, const IntVector &indexOrder, const IntVector &shift, const double &DyDxRatio, const double &DzDxRatio){
+
+  Vector tmpry = location;
+
+  location[0] = tmpry[indexOrder[0]] + shift[0];
+  location[1] = tmpry[indexOrder[1]] + shift[1] * DyDxRatio;
+  location[2] = tmpry[indexOrder[2]] + shift[2] * DzDxRatio;
+
+}
+
+
+//______________________________________________________________________
 inline bool
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell, const int &face)
 {
@@ -1311,7 +1481,6 @@ Ray::setBC(CCVariable<double>& Q_CC,
 #endif
   }  // faces loop
 }
-
 
 //______________________________________________________________________
 //
@@ -1578,7 +1747,7 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
 
 {
 
-    IntVector cur = origin;
+	IntVector cur = origin;
     IntVector prevCell = cur;
 
     // Step and sign for ray marching
