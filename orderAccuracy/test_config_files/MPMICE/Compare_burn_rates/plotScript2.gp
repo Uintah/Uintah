@@ -3,7 +3,7 @@ set output "orderAccuracy.png"
 
 # uncomment below for post script output
 set terminal postscript color solid "Times-Roman" 14
-set output "ME1e8.ps"
+set output "ME.ps"
 #set style line 1  lt 1 lw 0.6 lc 1
 #set style line 2  lt 1 lw 0.6 lc 3
 
@@ -21,9 +21,14 @@ set ylabel "Burn Rate (m/s)"
 
 
 plot  'ExpData.dat' using 1:2 t 'Experimental Data' with points,\
-      'DeterminingBurnRate_ME1e8HE1e5.uda.000/AP_mbr.dat'   using 1:2 t 'ME1e8HE1e5' with points,\
-      'DeterminingBurnRate_ME1e8HE3e5.uda.000/AP_mbr.dat'   using 1:2 t 'ME1e8HE3e5' with points,\
-      'DeterminingBurnRate_ME1e8HE0.8e5.uda.000/AP_mbr.dat' using 1:2 t 'MEME1e8HE0.8e5' with points
+      'DeterminingBurnRate_ME3e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME3e8' with points,\
+      'DeterminingBurnRate_ME4e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME4e8' with points,\
+       'DeterminingBurnRate_ME5e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME5e8' with points,\
+      'DeterminingBurnRate_ME6e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME6e8' with points,\
+       'DeterminingBurnRate_ME7e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME7e8' with points,\
+      'DeterminingBurnRate_ME8e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME8e8' with points,\
+       'DeterminingBurnRate_ME9e8.uda.000/AP_mbr.dat'   using 1:2 t 'ME9e8' with points,\
+      'DeterminingBurnRate_ME1e9.uda.000/AP_mbr.dat' using 1:2 t 'MEME1e9' with points
 
 
 #Plot Next Momentum Exchange
@@ -152,3 +157,26 @@ plot  'ExpData.dat' using 1:2 t 'Experimental Data' with points,\
       'DeterminingBurnRate_JWLEOS.uda.000/AP_mbr.dat'   using 1:2 t 'JWLEOS' with points,\
       'DeterminingBurnRate_ModifiedEOS.uda.000/AP_mbr.dat'   using 1:2 t 'ModifiedEOS' with points
 
+ # uncomment below for post script output
+set terminal postscript color solid "Times-Roman" 14
+set output "HighTemp.ps"
+#set style line 1  lt 1 lw 0.6 lc 1
+#set style line 2  lt 1 lw 0.6 lc 3
+
+set autoscale
+set logscale x
+set logscale y
+set grid xtics ytics
+set key left top
+set xrange [100000:1e8]
+
+set title "Burn Rate vs Pressure"
+set xlabel "Pressure (Pa)"
+set ylabel "Burn Rate (m/s)"
+     
+      
+plot  'Exp423.dat' using 1:2 t 'Experimental Data' with points,\
+ 'DeterminingBurnRate_Temp423Res1mm.uda.000/AP_mbr.dat'   using 1:2 t 'Temp423Res1mm' with points,\
+ 'DeterminingBurnRate_Temp423Res0.5mm.uda.000/AP_mbr.dat'   using 1:2 t 'Temp423Res0.5mm' with points,\
+ 'DeterminingBurnRate_Temp423Res0.25mm.uda.000/AP_mbr.dat'   using 1:2 t 'Temp423Res0.25mm' with points
+      

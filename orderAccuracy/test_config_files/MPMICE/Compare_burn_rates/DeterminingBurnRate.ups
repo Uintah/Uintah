@@ -22,7 +22,7 @@
        <delt_max>           1.0       </delt_max>
        <delt_init>          1e-9    </delt_init>
        <timestep_multiplier>0.2       </timestep_multiplier>
-       <max_Timesteps>      10000      </max_Timesteps>
+       <max_Timesteps>      500000      </max_Timesteps>
        <max_delt_increase>  0.5      </max_delt_increase>
    </Time>    
     <!--____________________________________________________________________-->
@@ -30,10 +30,24 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-       <Face side="x-">
-         <BCType id = "all" label = "Symmetric" var = "symmetry">
-         </BCType>
-       </Face>
+        <Face side = "x-">
+        
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <!--<BCType id="0" label="Pressure" var="Neumann">
+          <value> 1.38e6   </value>
+        </BCType>
+        <BCType id="all" label="Velocity" var="Neumann">
+          <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id="all" label="Temperature" var="Neumann">
+          <value> 0.0  </value>
+        </BCType>
+        <BCType id="all" label="Density" var="Neumann">
+          <value> 0.0  </value>
+        </BCType>
+       </Face>-->
        <Face side = "x+">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
@@ -59,10 +73,10 @@
        <Level>
            <Box label = "1">
               <lower>        [ 0.000, 0.000, 0.0000] </lower>
-              <upper>        [ 0.1, 0.001,  0.001]    </upper>
+              <upper>        [ 0.2, 0.001,  0.001]    </upper>
               <extraCells>   [1,1,1]                 </extraCells>
               <patches>      [1,1,1]       </patches> 
-              <resolution>   [100, 1, 1]               </resolution>
+              <resolution>   [200, 1, 1]               </resolution>
            </Box>
        </Level>
     </Grid>
@@ -208,12 +222,13 @@
            
            <geom_object>
 	      <box label="wholeDomain">
-		   <min>     [0.005, 0.0, 0.0]  </min>
-		   <max>     [.100, 0.001, 0.001] </max>
+		   <min>     [0.04, 0.0, 0.0]  </min>
+		   <max>     [.500, 0.1, 0.1] </max>
 		   </box>
 	       <res>                 [2,2,2]         </res>
               <velocity>            [0.0,0.0,0.0]   </velocity>
               <temperature>         298.0           </temperature>
+               <volumeFraction>      1.0            </volumeFraction>
 	     </geom_object>
 	     </material>
 
@@ -250,15 +265,25 @@
 	       <res>            [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
                <temperature>    300.0                   </temperature>
-               <density>        6.9467             </density>
+               <density>       13.8934929           </density>
 	      <!-- <density>        1.38934929              </density>-->
                <pressure>       101325.0                </pressure>
              </geom_object>
+             <geom_object>
+	      <box label="wholeDomain"/>
+            <res>            [2,2,2]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    300.0                   </temperature>
+               <density>        13.8934929            </density>
+	      <!-- <density>        1.38934929              </density>-->
+               <pressure>       101325.0                </pressure>
+               <volumeFraction>      0.0            </volumeFraction>
+               </geom_object>
             <geom_object>  
 	       <difference>
 	       <box label="1">
 		     <min>     [0.0, 0.0, 0.0]  </min>
-		     <max>     [0.1, 0.001, 0.001] </max>
+		     <max>     [0.5, 0.1, 0.1] </max>
 		     </box>
 		     <box label="wholeDomain">
 		     </box>
@@ -266,7 +291,7 @@
                <res>            [2,2,2]                 </res>
                <velocity>       [0.0,0.0,0.0]           </velocity>
                <temperature>    3000.0                  </temperature>
-               <density>         0.69467        </density>
+               <density>        1.38934929        </density>
                <pressure>       101325.0                </pressure>
              </geom_object>
            </material>
@@ -276,7 +301,7 @@
       <exchange_properties>
        <!-- <heatExchangeCoeff>  constant  </heatExchangeCoeff>-->
         <exchange_coefficients>
-          <momentum>  [ 1e15]   </momentum>
+          <momentum>  [ 1e8]   </momentum>
           <heat>      [  1e5]   </heat>
         </exchange_coefficients>
       </exchange_properties>
