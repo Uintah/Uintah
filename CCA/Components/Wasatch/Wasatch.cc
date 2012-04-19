@@ -244,7 +244,7 @@ namespace Wasatch{
         msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
         << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
         << std::endl;
-        throw std::runtime_error( msg.str() );        
+        throw std::runtime_error( msg.str() );
       }
     }
 
@@ -622,6 +622,33 @@ namespace Wasatch{
         }
       }
     }
+
+    // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
+    {
+      const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;
+      typedef std::list< TaskInterface* > TIList;
+      bool isOk = true;
+      Expr::TagList missingTags;
+      const TIList& tilist = timeStepper_->get_task_interfaces();
+      for( TIList::const_iterator iti=tilist.begin(); iti!=tilist.end(); ++iti ){
+        const Expr::TagList tags = (*iti)->collect_tags_in_task();
+        for( Expr::TagList::const_iterator itag=tags.begin(); iti!=tags.end(); ++iti ){
+          if( itag->context_ == Expr::CARRY_FORWARD ){
+            if( !icFactory->have_entry(*itag) ) missingTags.push_back( *itag );
+          }
+        }
+      }
+      if( !isOk ){
+        std::ostringstream msg;
+        msg << "ERORR: The following fields were marked 'CARRY_FORWARD' but were not initialized." << std::endl
+            << "       Ensure that all of these fields are present on the initialization graph:" << std::endl;
+        for( Expr::TagList::const_iterator it=missingTags.begin(); it!=missingTags.end(); ++it ){
+          msg << "         " << *it << std::endl;
+        }
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+
   }
 
   //--------------------------------------------------------------------

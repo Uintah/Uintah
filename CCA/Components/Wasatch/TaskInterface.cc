@@ -62,8 +62,10 @@ namespace Wasatch{
    */
   class TreeTaskExecute
   {
+  public:
     typedef Expr::ExpressionTree::TreePtr  TreePtr;
 
+  private:
     TreePtr masterTree_;
 
     typedef std::pair< TreePtr, Uintah::Task* > TreeTaskPair;
@@ -120,6 +122,8 @@ namespace Wasatch{
     void schedule( Expr::TagSet newDWFields, const int rkStage );
 
     PatchTreeMap get_patch_tree_map() {return patchTreeMap_;}
+
+    TreePtr get_tree() const{ return masterTree_; }
 
   };
 
@@ -595,6 +599,23 @@ namespace Wasatch{
       }
     }
     throw std::runtime_error( "TaskInterface::get_time_tree() could not resolve a valid tree");
+  }
+
+  //------------------------------------------------------------------
+
+  Expr::TagList
+  TaskInterface::collect_tags_in_task() const
+  {
+    Expr::TagList tags;
+    for( ExecList::const_iterator itte=execList_.begin(); itte!=execList_.end(); ++i ){
+      const ExpressionTree::TreePtr tree = itte->get_tree();
+      const ExpressionTree::ExprFieldMap& fieldMap = tree->field_map();
+      for( ExpressionTree::ExprFieldMap::const_iterator ifm=fieldMap.begin(); ifm!=fieldMap.end(); ++ifm ){
+        const Expr::TagList tl = tree->get_expression_factory().get_tags( ifm->first );
+        tags.insert( tags.end(), tl.begin(), tl.end() );
+      }
+    }
+    return tags;
   }
 
   //------------------------------------------------------------------

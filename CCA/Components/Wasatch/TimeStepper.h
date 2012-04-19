@@ -188,6 +188,9 @@ namespace Wasatch{
                        Uintah::SchedulerP& sched,
                        const int rkStage,
                        const std::set<std::string>& ioFieldSet);
+
+    const std::list< TaskInterface* >&
+    get_task_interfaces() const{ return taskInterfaceList_; }
   };
 
   //------------------------------------------------------------------
