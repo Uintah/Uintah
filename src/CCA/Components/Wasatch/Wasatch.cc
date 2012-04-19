@@ -238,7 +238,10 @@ namespace Wasatch{
     if(!linSolver_) {
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
-      proc0cout << "Detected solver port... \n";
+      proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
+      if ((linSolver_->getName()).compare("hypre") != 0) {
+        throw Uintah::InternalError("Wasatch currently works with hypre solver only. Please change your solver type", __FILE__, __LINE__);
+      }
     }
 
     //
