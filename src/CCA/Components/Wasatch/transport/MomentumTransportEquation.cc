@@ -386,18 +386,9 @@ namespace Wasatch{
     // pressure
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
     
-    bool usePressureRefPoint = false;
-    double refPressureValue = 0.0;
-    SCIRun::IntVector refPressureLocation(0,0,0);
-    if (pressureParams->findBlock("ReferencePressure")) {
-      usePressureRefPoint = true;
-      Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");      
-      refPressureParams->getAttribute("value", refPressureValue);
-      refPressureParams->get("ReferenceCell", refPressureLocation);
-    }
-    
+    bool usePressureRefPoint = true;
     pressureParams->getWithDefault("UseReferencePoint",usePressureRefPoint, true);
-
+    
     bool use3DLaplacian = true;
     pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
     
@@ -420,7 +411,7 @@ namespace Wasatch{
       ptags.push_back( pressure_tag() );
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
       const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
-                                                                                       d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
+                                                                                       d2rhodt2t, timestepTag, usePressureRefPoint, use3DLaplacian,
                                                                                        *sparams, linSolver);
       std::cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;

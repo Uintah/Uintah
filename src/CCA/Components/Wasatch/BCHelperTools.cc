@@ -960,6 +960,7 @@ namespace Wasatch {
                               const SCIRun::IntVector refCell )
   {
     std::ostringstream msg;
+    
     if (patch->containsCell(refCell)) {
       const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) && 
                                         patch->containsCell(refCell + IntVector(0,1,0)) && 
@@ -987,43 +988,11 @@ namespace Wasatch {
   
   void set_ref_pressure_rhs( SVolField& pressureRHS,
                              const Uintah::Patch* patch,
-                             const double refPressureValue,
                              const SCIRun::IntVector refCell ) {
-    std::ostringstream msg;    
     if (patch->containsCell(refCell)) {
-      std::cout << "patch id " << patch->getID() << std::endl;
-      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) && 
-                                        patch->containsCell(refCell + IntVector(0,1,0)) && 
-                                        patch->containsCell(refCell + IntVector(0,0,1)) &&
-                                        (patch->containsCell(refCell + IntVector(-1,0,0)) || refCell.x() == 0) &&
-                                        (patch->containsCell(refCell + IntVector(0,-1,0)) || refCell.y() == 0) &&
-                                        (patch->containsCell(refCell + IntVector(0,0,-1)) || refCell.z() == 0) ;
-      // check if all cell neighbors are contained in this patch:
-      if ( !containsAllNeighbors ) {
-        msg << std::endl
-        << "  Invalid reference pressure cell." << std::endl
-        << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
-        << std::endl;
-        throw std::runtime_error( msg.str() );        
-      }
-      // remember, indexing is local for SpatialOps
-      const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);      
-      const SpatialOps::structured::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
+      const SpatialOps::structured::IntVec refCellIJK(refCell.x(),refCell.y(),refCell.z());
       const int irefCell = pressureRHS.window_without_ghost().flat_index(refCellIJK);
-      std::cout << "reference pressure value " << refPressureValue << std::endl;
-      pressureRHS[irefCell] = refPressureValue;  
-      
-      // modify rhs for neighboring cells
-      const Uintah::Vector spacing = patch->dCell();
-      const double dx2 = spacing[0]*spacing[0];
-      const double dy2 = spacing[1]*spacing[1];
-      const double dz2 = spacing[2]*spacing[2];
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refPressureValue/dx2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refPressureValue/dy2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refPressureValue/dz2;        
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refPressureValue/dx2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refPressureValue/dy2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refPressureValue/dz2;              
+      pressureRHS[irefCell] = 0.0;    
     }    
   }
   
