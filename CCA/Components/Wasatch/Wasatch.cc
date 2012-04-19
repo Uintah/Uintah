@@ -240,7 +240,11 @@ namespace Wasatch{
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
       if ((linSolver_->getName()).compare("hypre") != 0) {
-        throw Uintah::InternalError("Wasatch currently works with hypre solver only. Please change your solver type", __FILE__, __LINE__);
+        std::ostringstream msg;
+        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
+        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+        << std::endl;
+        throw std::runtime_error( msg.str() );        
       }
     }
 
