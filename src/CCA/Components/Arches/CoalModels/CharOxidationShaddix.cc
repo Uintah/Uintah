@@ -565,8 +565,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
  
         PO2_inf = O2[c]/WO2/MWmix[c];
 
-        //if((PO2_inf < 1e-6) || ((unscaled_raw_coal_mass+unscaled_char_mass) < small)) {
-       if((PO2_inf < 1e-10) || (unscaled_char_mass < small)) {
+        if((PO2_inf < 1e-10) || ((unscaled_raw_coal_mass+unscaled_char_mass) < small)) {
+       //if((PO2_inf < 1e-10) || (unscaled_char_mass < small)) {
           PO2_surf = 0.0;
           CO2CO = 0.0;
           q = 0.0;
@@ -577,9 +577,11 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           gas_char_rate_ = 0.0;     
           particle_temp_rate_ = 0.0;
 
-          PO2_surf = oldPO2surf_[c];
+          //PO2_surf = oldPO2surf_[c];
 
-          d_totIter = 1000;
+          PO2_surf = PO2_inf;
+
+          d_totIter = 100;
           delta = PO2_inf/100.0;
           d_tol = 1e-15;
           f1 = 1.0;
@@ -671,14 +673,21 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 break;
               }
 
-              if(icount > d_totIter-2) {
+              if(icount > d_totIter+12-1) {
                 //cout << "CharOxidationShaddix::computeModel : problem with bisection convergence, reaction rate set to zero" << endl;
                 //cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
-                PO2_surf = 0.0;
-                CO2CO = 0.0;
-                q = 0.0;
+                //PO2_surf = 0.0;
+                //CO2CO = 0.0;
+                //q = 0.0;
+                PO2_surf = PO2_inf;
+                CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
+                OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
+                gamma = -(1.0-OF);
+                ks = As*exp(-Es/(R*unscaled_particle_temperature));
+                q = ks*(pow(PO2_surf,n));
                 break;
               }
+
 
               if(f2*f1<0){
                  lower_bound = PO2_surf;
@@ -688,9 +697,15 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 //cout << "CharOxidationShaddix::computeModel : problem with bisection, reaction rate set to zero" << endl;
                 //cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
                 //cout << "gamma " << gamma << " q " << q << " unscaled_length " << unscaled_length << endl;
-                PO2_surf = 0.0;
-                CO2CO = 0.0;
-                q = 0.0;
+                //PO2_surf = 0.0;
+                //CO2CO = 0.0;
+                //q = 0.0;
+                PO2_surf = PO2_inf;
+                CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
+                OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
+                gamma = -(1.0-OF);
+                ks = As*exp(-Es/(R*unscaled_particle_temperature));
+                q = ks*(pow(PO2_surf,n));
                 break;
               }
 
