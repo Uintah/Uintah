@@ -123,9 +123,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[0][1] = 1; 
   index_map[0][2] = 2; 
   // y-direction 
-  index_map[1][0] = 2;
-  index_map[1][1] = 0; 
-  index_map[1][2] = 1; 
+  index_map[1][0] = 1;
+  index_map[1][1] = 2; 
+  index_map[1][2] = 0; 
   // z-direction
   index_map[2][0] = 1;
   index_map[2][1] = 2; 
@@ -6036,8 +6036,8 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 
    vVel[c] = -1.0 * z * swrl_no * ave_u /denom; 
 
-   y = c[index_map[dir][1]]*mDx.y() + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
-   z = c[index_map[dir][2]]*mDx.z() - swrl_cent[index_map[dir][2]]; 
+   y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
+   z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]]; 
 
    denom = pow(y,2) + pow(z,2); 
    denom = pow(denom,0.5); 
