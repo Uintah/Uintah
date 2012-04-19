@@ -632,8 +632,8 @@ namespace Wasatch{
       const TIList& tilist = timeStepper_->get_task_interfaces();
       for( TIList::const_iterator iti=tilist.begin(); iti!=tilist.end(); ++iti ){
         const Expr::TagList tags = (*iti)->collect_tags_in_task();
-        for( Expr::TagList::const_iterator itag=tags.begin(); iti!=tags.end(); ++iti ){
-          if( itag->context_ == Expr::CARRY_FORWARD ){
+        for( Expr::TagList::const_iterator itag=tags.begin(); itag!=tags.end(); ++itag ){
+          if( itag->context() == Expr::CARRY_FORWARD ){
             if( !icFactory->have_entry(*itag) ) missingTags.push_back( *itag );
           }
         }

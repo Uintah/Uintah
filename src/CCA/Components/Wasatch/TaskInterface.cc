@@ -607,11 +607,11 @@ namespace Wasatch{
   TaskInterface::collect_tags_in_task() const
   {
     Expr::TagList tags;
-    for( ExecList::const_iterator itte=execList_.begin(); itte!=execList_.end(); ++i ){
-      const ExpressionTree::TreePtr tree = itte->get_tree();
-      const ExpressionTree::ExprFieldMap& fieldMap = tree->field_map();
-      for( ExpressionTree::ExprFieldMap::const_iterator ifm=fieldMap.begin(); ifm!=fieldMap.end(); ++ifm ){
-        const Expr::TagList tl = tree->get_expression_factory().get_tags( ifm->first );
+    for( ExecList::const_iterator itte=execList_.begin(); itte!=execList_.end(); ++itte ){
+      const Expr::ExpressionTree::TreePtr tree = (*itte)->get_tree();
+      const Expr::ExpressionTree::ExprFieldMap& fieldMap = tree->field_map();
+      for( Expr::ExpressionTree::ExprFieldMap::const_iterator ifm=fieldMap.begin(); ifm!=fieldMap.end(); ++ifm ){
+        const Expr::TagList tl = tree->get_expression_factory().get_labels( ifm->first );
         tags.insert( tags.end(), tl.begin(), tl.end() );
       }
     }
