@@ -161,6 +161,12 @@ namespace Wasatch{
 
     Expr::ExpressionTree::TreePtr get_time_tree();
 
+    /**
+     * Obtain a TagList containing all tags computed by the graph(s)
+     * associated with this TaskInterface.
+     */
+    Expr::TagList collect_tags_in_task() const;
+
   private:
 
     /**
