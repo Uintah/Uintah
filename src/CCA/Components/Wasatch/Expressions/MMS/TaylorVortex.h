@@ -39,7 +39,7 @@
  *  where
  *   - \f$A\f$ is the amplitude of the function
  *   - \f$t\f$ is the time variable
- *   - \f$\nu\f$ is kinematic viscousity
+ *   - \f$\nu\f$ is kinematic viscosity
  */
 template< typename ValT >
 class VelocityX : public Expr::Expression<ValT>
@@ -98,7 +98,7 @@ private:
  *  where
  *   - \f$A\f$ is the amplitude of the function
  *   - \f$t\f$ is the time variable
- *   - \f$\nu\f$ is kinematic viscousity
+ *   - \f$\nu\f$ is kinematic viscosity
  */
 template< typename ValT >
 class VelocityY : public Expr::Expression<ValT>
@@ -161,7 +161,7 @@ private:
  *  where
  *   - \f$A\f$ is the amplitude of the function
  *   - \f$t\f$ is the time variable
- *   - \f$\nu\f$ is kinematic viscousity
+ *   - \f$\nu\f$ is kinematic viscosity
  */
 template< typename ValT >
 class GradPX : public Expr::Expression<ValT>
@@ -177,8 +177,8 @@ public:
              const Expr::Tag& xTag,  ///< x-coordinate
              const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
-             const double A=1.0,    ///< Amplitude of the function
-             const double nu=0.1    ///< Kinematic viscosity of the fluid
+             const double A=1.0,     ///< Amplitude of the function
+             const double nu=0.1     ///< Kinematic viscosity of the fluid
              );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -224,7 +224,7 @@ private:
  *  where
  *   - \f$A\f$ is the amplitude of the function
  *   - \f$t\f$ is the time variable
- *   - \f$\nu\f$ is kinematic viscousity
+ *   - \f$\nu\f$ is kinematic viscosity
  */
 template< typename ValT >
 class GradPY : public Expr::Expression<ValT>
@@ -240,8 +240,8 @@ public:
              const Expr::Tag& xTag,  ///< x-coordinate
              const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
-             const double A=1.0,    ///< Amplitude of the function
-             const double nu=0.1    ///< Kinematic viscosity of the fluid
+             const double A=1.0,     ///< Amplitude of the function
+             const double nu=0.1     ///< Kinematic viscosity of the fluid
              );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -290,6 +290,10 @@ velocity field. This is usually used as an initial condition for the velocity.
  *  Note: that we implement only one expression for this velocity field. By merely
  *  shuffling the coordinates, we can generate all velocity components. This
  *  should be in processing the user input.
+ *
+ *  Citation:
+ *    Brachet et. al., Small-scale structure of the Taylor-Green vortex,
+ *    J. Fluid Mech, vol. 130, no. 41, p. 1452, 1983.
  */
 template< typename ValT >
 class TaylorGreenVel3D : public Expr::Expression<ValT>
@@ -305,7 +309,7 @@ public:
              const Expr::Tag& xTag,  ///< x coordinate
              const Expr::Tag& yTag,  ///< y coordinate
              const Expr::Tag& zTag,  ///< z
-             const double angle=0.1    ///< Kinematic viscosity of the fluid
+             const double angle=0.1  ///< Kinematic viscosity of the fluid
             );
     Expr::ExpressionBase* build() const;
   private:
