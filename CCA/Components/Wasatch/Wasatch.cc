@@ -239,7 +239,7 @@ namespace Wasatch{
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      if ((linSolver_->getName()).compare("hypre") != 0) {
+      if ((linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
         std::ostringstream msg;
         msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
         << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
