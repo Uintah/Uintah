@@ -65,6 +65,8 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& d2rhodt2tag,
                     const Expr::Tag& timesteptag,
                     const bool       useRefPressure,
+                    const double     refPressureValue,
+                    const SCIRun::IntVector refPressureLocation,
                     const bool       use3DLaplacian,                   
                     const Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
@@ -88,6 +90,9 @@ Pressure::Pressure( const std::string& pressureName,
     didAllocateMatrix_(false),
   
     useRefPressure_( useRefPressure ),
+    refPressureValue_( refPressureValue ),
+    refPressureLocation_( refPressureLocation ),
+  
     use3DLaplacian_( use3DLaplacian ),
   
     solverParams_( solverParams ),
@@ -266,7 +271,7 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
   }
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   update_pressure_matrix((this->names())[0], matrix_, patch, material);
-  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch);
+  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch, refPressureLocation_);
 }
 
 //--------------------------------------------------------------------
@@ -342,7 +347,7 @@ Pressure::evaluate()
     rhs <<= rhs - *d2rhodt2_;
   }
   
-  if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_ );
+  if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
   //
   // fix pressure rhs and modify pressure matrix
   //update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
@@ -359,6 +364,8 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& d2rhodt2tag,
                             const Expr::Tag& timesteptag,
                             const bool       userefpressure,
+                            const double     refPressureValue,
+                            const SCIRun::IntVector refPressureLocation,
                             const bool       use3dlaplacian,                           
                             const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
@@ -370,6 +377,8 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    d2rhodt2t_( d2rhodt2tag ),
    timestept_( timesteptag ),
    userefpressure_( userefpressure ),
+   refpressurevalue_( refPressureValue ),
+   refpressurelocation_( refPressureLocation ),
    use3dlaplacian_( use3dlaplacian ),
    sparams_( sparams ),
    solver_( solver )
@@ -381,7 +390,7 @@ Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
-  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, userefpressure_, use3dlaplacian_, sparams_, solver_ );
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, userefpressure_, refpressurevalue_, refpressurelocation_, use3dlaplacian_, sparams_, solver_ );
 }
 
 } // namespace Wasatch
