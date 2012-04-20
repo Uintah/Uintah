@@ -31,7 +31,6 @@
 #include "TransportEquation.h"
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
-#include "TemperatureTransportEquation.h"
 #include "MomentumTransportEquation.h"
 #include "MomentTransportEquation.h"
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
@@ -182,11 +181,6 @@ namespace Wasatch{
                                          rhsID );
         adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
       }
-
-    } else if( eqnLabel == sName.temperature ){
-      transeqn = scinew TemperatureTransportEquation( *solnGraphHelper->exprFactory );
-      adaptor = scinew EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn );
-
     } else {
       std::ostringstream msg;
       msg << "ERROR: No transport equation was specified '" << eqnLabel << "'. Please revise your input file" << std::endl;
