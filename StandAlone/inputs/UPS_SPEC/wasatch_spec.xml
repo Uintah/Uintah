@@ -107,7 +107,7 @@
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation		spec="MULTIPLE NO_DATA"
-                                attribute1="equation REQUIRED STRING 'generic,temperature">
+                                attribute1="equation REQUIRED STRING 'generic">
       
       <!-- An Optional Primitive variable tag: -->
       <!-- Sometimes we transport the solution variable and it is itself our primitive variable, So, we write   --> 
