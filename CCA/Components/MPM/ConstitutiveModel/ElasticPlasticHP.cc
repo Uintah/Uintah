@@ -1680,7 +1680,7 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
 
     if (fabs(deltaGamma-deltaGammaOld) < tolerance || count > 100) break;
 
-  } while (fabs(g) > tolerance);
+  } while (fabs(g) > sigma_y/1000.);
 
   // Compute the yield stress
   state->yieldStress = d_flow->computeFlowStress(state, delT, tolerance, 
