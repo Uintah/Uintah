@@ -55,7 +55,7 @@
 namespace SCIRun {
 
 // Needed template class properties:
-// 
+//
 // template class BoxP should provide these methods via "->"
 // Point getLow();
 // Point getHigh();
@@ -133,7 +133,7 @@ public:
     { return b1 < b2; }
 #  endif // __INTEL_COMPILER || _WIN32
   };
-  
+
   typedef hash_map<BoxP, BB*, BoxHash> BoxHashMap;
 #else
   typedef std::map<BoxP, BB*>          BoxHashMap;
@@ -144,7 +144,7 @@ public:
   : ownsSuperBoxes_(false), value_(0) {}
 
   ~SuperBoxSet();
-  
+
   template <class RangeQuerier>
   static SuperBoxSet* makeOptimalSuperBoxSet(std::vector<BoxP> boxes,
 					     RangeQuerier& rangeQuerier)
@@ -164,14 +164,14 @@ public:
 						 RangeQuerier& rangeQuerier)
   { return makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 				  rangeQuerier); }
- 
+
   template <class BoxIterator, class RangeQuerier>
   static SuperBoxSet*
   makeNearOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
 			     RangeQuerier& rangeQuerier)
   { return makeOptimalSuperBoxSet(begin, end, rangeQuerier, true /*greedy*/); }
 
-  
+
   void addSuperBox(SB* superBox)
   {
     ASSERT(superBox->isValid());
@@ -190,23 +190,23 @@ public:
 
   Value getValue() const
   { return value_; }
-  
+
   void takeOwnershipOfSuperBoxes()
   { ownsSuperBoxes_ = true; }
 
 #ifdef SUPERBOX_PERFORMANCE_TESTING
   static int biggerBoxCount;
   static int minBiggerBoxCount;
-#endif  
+#endif
 private:
   template <class BoxIterator, class RangeQuerier>
   static SuperBoxSet*
   makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
 			 RangeQuerier& rangeQuerier, bool useGreedyApproach);
-  
+
   SuperBoxSet(const SuperBoxSet&);
   SuperBoxSet& operator=(const SuperBoxSet&);
-  
+
   bool ownsSuperBoxes_;
   SuperBoxContainer superBoxes_;
   Value value_;
@@ -236,7 +236,7 @@ public:
     bool operator()(const SB* b1, const SB* b2) const
     {
       return b1->boxes_ < b2->boxes_;
-    } 
+    }
   };
 
   // if the values are the same, sort by the first box id, so that we can keep things
@@ -244,11 +244,11 @@ public:
   struct ValueCompare {
     bool operator()(const SB* b1, const SB* b2) const
     {
-      return b1->getValue() == b2->getValue() ? 
-        (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 : 
+      return b1->getValue() == b2->getValue() ?
+        (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 :
          b1->getBoxes()[0]->getID() > b2->getBoxes()[0]->getID()) :
 	b1->getValue() > b2->getValue();
-    } 
+    }
   };
 
 public:
@@ -258,14 +258,14 @@ public:
 
     Region& operator=(const Region& copy)
     { low_ = copy.low_; high_ = copy.high_; return *this; }
-    
+
     bool contains(const Region& region) const
     { return (Min(low_, region.low_) == low_ &&
 	      Max(high_, region.high_) == high_); }
 
     bool within(const Region& region) const
     { return region.contains(*this) && !contains(region); }
-    
+
     bool overlaps(const Region& region) const;
 
     Region enclosingRegion(const Region& region) const
@@ -276,18 +276,18 @@ public:
 
     bool operator==(const Region& region) const
     { return low_ == region.low_ && high_ == region.high_; }
-    
+
     Point low_;
     Point high_;
   };
 
   template <class SuperBoxPIterator>
   static Region computeEnclosingRegion(SuperBoxPIterator superBoxesBegin,
-				       SuperBoxPIterator superBoxesEnd);  
+				       SuperBoxPIterator superBoxesEnd);
 public:
   virtual ~SuperBox()
   {}
-  
+
   const Region& getRegion() const
   { return region_; }
 
@@ -307,26 +307,26 @@ public:
   { return boxes_; }
 
   virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap& boxMap);
-  
+
   // Returns true if this SuperBox conflicts with the given one
   // (if they have an incomplete overlap of Boxes -- some Boxes in
   // common but both have Boxes not in common between them).
   bool conflictsWith(const SB* other) const
   { return conflictsWith(other->getRegion()); }
-  
+
   bool conflictsWith(const Region& region) const;
 
   // Returns true if this SuperBox contains all of the boxes that
   // the given one contains (in other words, encloses)
   bool contains(const SB* other) const
-  { return getRegion().contains(other->getRegion()); }  
+  { return getRegion().contains(other->getRegion()); }
   bool contains(Region& region) const
   { return getRegion().contains(region); }
-  
+
   template <class SuperBoxPIterator>
   static Value valueSum(SuperBoxPIterator begin, SuperBoxPIterator end);
-  
-  template <class RangeQuerier>  
+
+  template <class RangeQuerier>
   void getNeighbors(RangeQuerier& rangeQuerier,
 		    typename RangeQuerier::ResultContainer& result) const
   { rangeQuerier.queryNeighbors(getLow(), getHigh(), result); }
@@ -343,7 +343,7 @@ public:
 				  typename SBS::BoxHashMap& boxMap,
 				  std::vector<SB*>& maximalSuperBoxes,
 				  std::set<CB*, LexCompare>& allExplored,
-				  const Region* withinRegion = 0);  
+				  const Region* withinRegion = 0);
 
   template <class BasicBoxPIterator, class RangeQuerier>
   static void
@@ -354,7 +354,7 @@ public:
 				  std::vector<SB*>& maximalSuperBoxes,
 				  const Region* withinRegion = 0);
 
-  
+
 protected:
   SuperBox(Region region, Volume volume)
     : region_(region), volume_(volume), value_(0)
@@ -367,7 +367,7 @@ protected:
 
   void init(BoxP box)
   { boxes_.push_back(box); init(); }
-  
+
   void init(const std::vector<BB*>& basicBoxes)
   {
     boxes_.reserve(basicBoxes.size());
@@ -377,7 +377,7 @@ protected:
     }
     init();
   }
-    
+
   void init();
 
   // helper for SuperBoxSet::makeOptimalSuperBoxSet()
@@ -399,23 +399,23 @@ protected:
   findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
 			     std::set<SB*, ValueCompare>& activeBoxes,
 			     Value maxPossibleValue);
-  
+
   // helper for findOptimalSuperBoxSet
   template <class RangeQuerier>
   static void
-  takePick(SB* pick, RangeQuerier& rangeQuerier, 
+  takePick(SB* pick, RangeQuerier& rangeQuerier,
 	   typename SBS::BoxHashMap& boxMap,
 	   std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 	   Value& maxPossibleValue);
-  // helper for findOptimalSuperBoxSet  
+  // helper for findOptimalSuperBoxSet
   static void undoPick(SB* pick,
 		       std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 		       Value& maxPossibleValue);
-  // helper for findOptimalSuperBoxSet  
+  // helper for findOptimalSuperBoxSet
   static void undoPicks(const std::vector<SB*>& picks,
 			std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 			Value& maxPossibleValue);
-  
+
   // helper for makeSmallestContainingSuperBox
   template <class RangeQuerier>
   CB*
@@ -457,9 +457,9 @@ public:
   buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 				  BoxHashMap& boxMap,
 				  std::vector<SB*>& maximalSuperBoxes,
-				  const Region* withinRegion = 0);    
+				  const Region* withinRegion = 0);
 #endif
-  
+
   bool isAvailable()
   { return available_; }
 
@@ -469,16 +469,16 @@ public:
   // Find any active enclosing SuperBox having the same region as
   // the given region.
   CB* getActiveEnclosingSuperBox(const typename SB::Region& region) const;
-  
+
   bool allActiveEnclosingSuperBoxesAlsoEnclose(SB* other) const;
 
   // If any of the ective enclosing superboxes also enclose other, it
   // will return that active enclosing superbox, otherwise return null.
   CB* anyActiveEnclosingSuperBoxAlsoEnclosing(SB* other)
     const;
-  
+
   void makeAvailable() { available_ = true; }
-  
+
   void makeUnavailable() { available_ = false; }
 
   void addActiveEnclosingSuperBox(CB* enclosingBox)
@@ -486,17 +486,17 @@ public:
     ASSERT(enclosingBox->contains(this));
     activeEnclosingSuperBoxes_.insert(enclosingBox);
   }
-  
+
   void removeActiveEnclosingSuperBox(CB* inactivatedBox)
   { activeEnclosingSuperBoxes_.erase(inactivatedBox); }
 
   virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&)
-  { return std::vector<BB*>(1, this); } 
+  { return std::vector<BB*>(1, this); }
 private:
   std::set<CB*,typename SB::ValueCompare> activeEnclosingSuperBoxes_;
   bool available_;
 };
-  
+
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class CompositeBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator>  {
   typedef SuperBoxSet<BoxP, Point, Volume, Value, Evaluator> SBS;
@@ -507,21 +507,21 @@ class CompositeBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator>  {
 public:
   CompositeBox(const std::vector<BB*>& basicBoxes,
 	       typename SB::Region region, Volume totalVolume)
-    : SB(region, totalVolume), isActive_( false ), basicBoxes_(basicBoxes), 
+    : SB(region, totalVolume), isActive_( false ), basicBoxes_(basicBoxes),
       activeSubSuperBoxMaxValue_(0), parent_(0)
   { this->init(basicBoxes_); }
 
   template <class BoxPIterator>
   static CB* makeCompositeBox(typename SBS::BoxHashMap& boxMap,
 			      BoxPIterator begin, BoxPIterator end);
-  
+
   ~CompositeBox();
 
   const std::set<CB*, typename SB::ValueCompare>& getActiveConflicts() const
   { return activeConflicts_; }
 
   virtual void makeActive();
-  
+
   bool isActive() const
   { return isActive_; }
 
@@ -529,13 +529,13 @@ public:
 
   // inactivate, but create the biggest valid sub-SuperBoxes to
   // make active in its place.
-  template <class RangeQuerier>  
+  template <class RangeQuerier>
   void inactivate(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
 		  std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 		  Value& maxPossibleValue);
   void reactivate(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 		  Value& maxPossibleValue);
-  
+
   // inactivate all conflicts and get back the value lost by doing so
   // (add the values of the conflicts and subtract the values of any
   // sub-SuperBoxes of the conflicts that can become active.
@@ -547,7 +547,7 @@ public:
   // reactivate the conflicts.
   void reactivateConflicts(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 			   Value& maxPossibleValue);
-  
+
   virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&)
   { return basicBoxes_; }
 
@@ -557,26 +557,26 @@ public:
   Value getCurrentMaximumPossibleSubValue() const
   { return activeSubSuperBoxMaxValue_ > this->getValue() ?
       this->getValue() : activeSubSuperBoxMaxValue_; }
-protected:  
+protected:
   void makeAvailable();
   void makeUnavailable();
   void setParent(CB* parent)
   { parent_ = parent; }
 
   static void propogateDeltaMaxValue(CB* parent, Value delta,
-				     Value& maxPossibleValue);  
+				     Value& maxPossibleValue);
 
   void addActiveConflict(CB* conflict) {
     activeConflicts_.insert(conflict);
     conflict->activeConflicts_.insert(this);
   }
-  
+
   void removeActiveConflict(CB* inactivatedBox)
   { activeConflicts_.erase(inactivatedBox); }
 
 private:
   void addCreatedSubSuperBoxes(const std::vector<SB*>& candidates);
-  
+
   bool isActive_;
   std::vector<BB*> basicBoxes_;
   std::set<CB*, typename SB::ValueCompare> activeConflicts_;
@@ -704,7 +704,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
        << ", maxPossibleValue = " << maxPossibleValue
        << ", currentlyKnownOptimalValue = " << currentlyKnownOptimalValue
        << endl;
-  
+
   /*
   for (std::set<SB*, ValueCompare>::iterator iter = activeBoxes.begin();
        iter != activeBoxes.end(); iter++) {
@@ -714,12 +714,12 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
 #endif
   if (activeBoxes.size() == 0)
     return scinew SBS();
-  
-  SB            * pick = 0;  
-  std::vector< SB* >   keepers;  
+
+  SB            * pick = 0;
+  std::vector< SB* >   keepers;
   SBS           * result = 0;
   CB            * compositePick;
-  
+
   // Loop to get all undisputed picks, called keepers.
   // Keepers are the "picked" SuperBoxes that we know are part of
   // the optimal solution at this point (locally optimal).
@@ -729,14 +729,14 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
       keepers.push_back(pick);
       preValue += pick->getValue();
     }
-    
+
     if (maxPossibleValue <= currentlyKnownOptimalValue
 	&& currentlyKnownOptimalValue > 0 /* make sure there is some other
 					     solution in the works */) {
 #ifdef SUPERBOX_DEBUGGING
       cerr << depth << "\tPruned\n";
 #endif
-       
+
       // Can't beat the current global solution, so don't bother
       // -- great for pruning the search tree.
       undoPicks(keepers, activeBoxes, maxPossibleValue);
@@ -749,7 +749,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
 #ifdef SUPERBOX_DEBUGGING
     cerr << depth << "\tPick: " << *pick << endl;
 #endif
-    
+
     takePick(pick, rangeQuerier, boxMap, activeBoxes, maxPossibleValue);
     compositePick = dynamic_cast<CB*>(pick);
   } while (activeBoxes.size() > 0 &&
@@ -758,8 +758,8 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
 
 #ifdef SUPERBOX_DEBUGGING
   ASSERT(storeMaxPossibleValue >= maxPossibleValue);
-#endif    
-  
+#endif
+
   // try with pick
   result = findOptimalSuperBoxSet(rangeQuerier, boxMap, activeBoxes,
 				  preValue + pick->getValue(),
@@ -770,18 +770,18 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
     if (preValue + result->getValue() > currentlyKnownOptimalValue)
       currentlyKnownOptimalValue = preValue + result->getValue();
   }
-  
+
   undoPick(pick, activeBoxes, maxPossibleValue);
-  
+
   // The only reason not to go with the pick is if it conflicts with
-  // something that works out better.  So try those.  
+  // something that works out better.  So try those.
   if (compositePick != 0 && compositePick->getActiveConflicts().size() > 0) {
 #ifdef SUPERBOX_DEBUGGING
     cerr << depth << "\tWithout: " << *pick << endl;
 #endif
     compositePick->inactivate(rangeQuerier, boxMap, activeBoxes,
 			      maxPossibleValue);
-    
+
     // Try picking conflicts of the pick starting with the one having the
     // greatest value.
     typename std::set<CB*, typename SB::ValueCompare>::const_iterator conflictIter;
@@ -793,13 +793,13 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
 #ifdef SUPERBOX_DEBUGGING
       cerr << depth << "\tConflict Pick: " << *conflict << endl;
 #endif
-      
+
       // Try each conflict as an alternate possibility to the pick
       takePick(conflict, rangeQuerier, boxMap, activeBoxes, maxPossibleValue);
 #ifdef SUPERBOX_DEBUGGING
       ASSERT(storeMaxPossibleValue >= maxPossibleValue);
-#endif    
-      
+#endif
+
       SBS* otherPossibility =
 	findOptimalSuperBoxSet(rangeQuerier, boxMap, activeBoxes,
 			       preValue + conflict->getValue(),
@@ -814,9 +814,9 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
 	if (preValue + result->getValue() > currentlyKnownOptimalValue)
 	  currentlyKnownOptimalValue = preValue + result->getValue();
       }
-      
+
       undoPick(conflict, activeBoxes, maxPossibleValue);
-      
+
       // inactivate this conflict so efforts won't be repeated when this
       // conflict works with other oonflicts.
       conflict->inactivate(rangeQuerier, boxMap, activeBoxes,
@@ -838,7 +838,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
   ASSERT(storeMaxPossibleValue == maxPossibleValue);
   ASSERT(storeActiveBoxes == activeBoxes);
 #endif
-  
+
   return result;
 }
 
@@ -853,14 +853,14 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap&
 #ifdef SUPERBOX_DEBUGGING
   Value storeMaxPossibleValue = maxPossibleValue;
 #endif
-  
+
   if (activeBoxes.size() == 0)
     return scinew SBS();
-  
-  SB* pick = 0;  
-  std::vector<SB*> keepers;  
+
+  SB* pick = 0;
+  std::vector<SB*> keepers;
   SBS* result = scinew SBS();
-  
+
   do {
     // pick the highest valued SuperBox
     pick = *activeBoxes.begin();
@@ -875,7 +875,7 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap&
 	    << " to " << maxPossibleValue;
     throw InternalError(msg_str.str(), __FILE__, __LINE__);
   }
-#endif    
+#endif
 
   undoPicks(result->getSuperBoxes(), activeBoxes, maxPossibleValue);
   return result;
@@ -887,9 +887,9 @@ void SuperBox<BoxP, Point, Volume, Value, Evaluator>::
 takePick(SB* pick, RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
 	 std::set<SB*, ValueCompare>& activeBoxes, Value& maxPossibleValue)
 {
-  ASSERT(pick != 0);  
-  activeBoxes.erase(pick); 
-    
+  ASSERT(pick != 0);
+  activeBoxes.erase(pick);
+
   // Make the pick's boxes unavailable for building
   // CompositeBoxes so no conflicts will be introduced.
   pick->makeUnavailable();
@@ -938,7 +938,7 @@ bool
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 allActiveEnclosingSuperBoxesAlsoEnclose(typename BasicBox::SB* other) const
 {
-  typename std::set<CB*, typename SB::ValueCompare>::iterator iter;  
+  typename std::set<CB*, typename SB::ValueCompare>::iterator iter;
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if (!(*iter)->contains(other))
@@ -952,7 +952,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 anyActiveEnclosingSuperBoxAlsoEnclosing(typename BasicBox::SB* other) const
 {
-  typename std::set<CB*, typename SB::ValueCompare>::const_iterator iter;  
+  typename std::set<CB*, typename SB::ValueCompare>::const_iterator iter;
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if ((*iter)->contains(other))
@@ -966,7 +966,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 getActiveEnclosingSuperBox(const typename SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region& region) const
 {
-  typename std::set<CB*, typename SB::ValueCompare>::const_iterator iter;  
+  typename std::set<CB*, typename SB::ValueCompare>::const_iterator iter;
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if ((*iter)->getRegion() == region)
@@ -987,7 +987,7 @@ makeCompositeBox(typename SBS::BoxHashMap& boxMap, BoxPIterator begin, BoxPItera
   BoxP box = *iter;
   Point low = box->getLow();
   Point high = box->getHigh();
-  std::vector<BB*> basicBoxes;  
+  std::vector<BB*> basicBoxes;
   BB* basicBox = boxMap[box];
   basicBoxes.push_back(basicBox);
   ASSERT(basicBox->isAvailable());
@@ -1059,13 +1059,13 @@ inactivate(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
   ASSERT(activeSubSuperBoxMaxValue_ == 0);
   inactivate();
   propogateDeltaMaxValue(parent_, -this->getValue(), maxPossibleValue);
-  
+
   SB::buildActivatedMaximalSuperBoxes(basicBoxes_.begin(),
 				      basicBoxes_.end(), rangeQuerier,
 				      boxMap, activatedSubSuperBoxes_,
 				      &this->getRegion());
 #if 0
-  std::vector<BB*>::iterator iter;    
+  std::vector<BB*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     if ((*iter)->isAvailable()) {
       (*iter)->buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap,
@@ -1074,8 +1074,8 @@ inactivate(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
     }
   }
 #endif
-  
-  activeBoxes.erase(this);  
+
+  activeBoxes.erase(this);
   activeBoxes.insert(activatedSubSuperBoxes_.begin(),
 		     activatedSubSuperBoxes_.end());
   for (typename std::vector<SB*>::iterator subIter = activatedSubSuperBoxes_.begin();
@@ -1107,8 +1107,8 @@ reactivate(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
   activeBoxes.insert(this);
   propogateDeltaMaxValue(parent_, this->getValue(), maxPossibleValue);
 
-  activatedSubSuperBoxes_.clear();  
-  
+  activatedSubSuperBoxes_.clear();
+
   typename std::vector<BB*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->addActiveEnclosingSuperBox(this);
@@ -1117,11 +1117,11 @@ reactivate(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
   typename std::set<CB*, typename SB::ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
-    ASSERT(conflictsWith(*conflictIter));
+    ASSERT(this->conflictsWith(*conflictIter));
     (*conflictIter)->activeConflicts_.insert(this);
   }
-  
-  ASSERT(activeSubSuperBoxMaxValue_ == 0);  
+
+  ASSERT(activeSubSuperBoxMaxValue_ == 0);
 }
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
@@ -1149,10 +1149,10 @@ makeAvailable()
   typename std::set<CB*, typename SB::ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
-    ASSERT(conflictsWith(*conflictIter));
+    ASSERT(this->conflictsWith(*conflictIter));
     (*conflictIter)->activeConflicts_.insert(this);
   }
-  
+
   typename std::vector<BB*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->makeAvailable();
@@ -1178,7 +1178,7 @@ addCreatedSubSuperBoxes(const std::vector<SB*>& candidates)
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class RangeQuerier>
 void BasicBox<BoxP, Point, Volume, Value, Evaluator>::
-buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, 
+buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 				typename SBS::BoxHashMap& boxMap,
 				std::vector<SB*>& maximalSuperBoxes,
 				const Region* withinRegion /* = 0 */)
@@ -1186,12 +1186,12 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 #ifdef SUPERBOX_PERFORMANCE_TESTING
   SuperBoxSet::minBiggerBoxCount++;
 #endif
-  
+
   std::set<CB*, LexCompare> allExploredBoxes;
-  
+
   SuperBox::buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap, maximalSuperBoxes,
 					    allExploredBoxes, withinRegion);
-  
+
   // delete temporary ones
   std::set<CB*, LexCompare>::iterator iter;
   for (iter = allExploredBoxes.begin(); iter != allExploredBoxes.end(); iter++)
@@ -1224,7 +1224,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
 					       allExploredBoxes, withinRegion);
     }
   }
-  
+
   // delete temporary ones
   typename std::set<CB*, LexCompare>::iterator iter;
   for (iter = allExploredBoxes.begin(); iter != allExploredBoxes.end(); iter++)
@@ -1237,7 +1237,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class RangeQuerier>
 void SuperBox<BoxP, Point, Volume, Value, Evaluator>::
-buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, 
+buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 				typename SBS::BoxHashMap& boxMap,
 				std::vector<SB*>& maximalSuperBoxes,
 				std::set<CB*, LexCompare>& allExplored,
@@ -1248,7 +1248,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 #endif
 
   bool hasBiggerBox = false;
-  
+
 #ifdef TRY_NEW_WAY
   ASSERT(getBasicBoxes(boxMap).size() >= 1);
   BB* anyBasicBox = getBasicBoxes(boxMap)[0];
@@ -1295,7 +1295,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
   }
   for (i = 0; i < minimalNeighbors.size(); i++) {
     BB* neighbor = minimalNeighbors[i].first;
-  
+
 #else
   RangeContainer neighbors;
   getNeighbors(rangeQuerier, neighbors);
@@ -1321,12 +1321,12 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
       continue;
     }
 #endif
-    
+
     CB* newSuperBox =
       makeSmallestContainingSuperBox(rangeQuerier, boxMap, neighbor,
-				     withinRegion);    
+				     withinRegion);
     if (newSuperBox != 0) {
-      hasBiggerBox = true;      
+      hasBiggerBox = true;
       if (neighbor->getActiveEnclosingSuperBox(newSuperBox->getRegion()) != 0){
 	// newSuperBox is nothing new
 	delete newSuperBox;
@@ -1364,7 +1364,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 // Composes the smallest SuperBox that contains both this SuperBox
 // and the BasicBox called neighbor.  If no such SuperBox exists that
 // is contained within the region called withinRegion or if any of the
-// boxes in this SuperBox are "unavailable" then NULL is returned. 
+// boxes in this SuperBox are "unavailable" then NULL is returned.
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class RangeQuerier>
 CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
@@ -1372,7 +1372,7 @@ SuperBox<BoxP, Point, Volume, Value, Evaluator>::
 makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
 			       typename SBS::BoxHashMap& boxMap, BB* neighbor,
 			       const Region* withinRegion /* = 0 */)
-{   
+{
   typedef typename RangeQuerier::ResultContainer RangeContainer;
 
   std::vector<BB*> basicBoxes;
@@ -1383,10 +1383,10 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
   Point high = Max(getHigh(), neighbor->getHigh());
   if (withinRegion != 0 && !Region(low, high).within(*withinRegion))
     return 0; // can't be larger than maximum region
-  
+
   Volume totalVolume = getVolume() + neighbor->getVolume();
   BoxP dummyBox = 0;
-  Volume enclosedVolume = dummyBox->getVolume(low, high) /* static Box 
+  Volume enclosedVolume = dummyBox->getVolume(low, high) /* static Box
 							    function */;
 
   if (totalVolume == enclosedVolume) {
@@ -1394,12 +1394,12 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
     basicBoxes.push_back(neighbor);
     return scinew CB(basicBoxes, Region(low, high), totalVolume);
   }
-  
+
   unsigned long prevNumBoxes = 2;
   do {
     if (withinRegion != 0 && !Region(low, high).within(*withinRegion))
       return 0; // can't be larger than maximum region
-    
+
     RangeContainer boxes;
     rangeQuerier.query(low, high, boxes);
     ASSERT(boxes.size()>=2);  //there must be at least 2 patches returned in this otherwise the range query is broken
@@ -1408,7 +1408,7 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
     prevNumBoxes = boxes.size();
     basicBoxes.clear();
     basicBoxes.reserve(boxes.size());
-    
+
     totalVolume = 0;
     typename RangeContainer::iterator iter = boxes.begin();
     for (; iter != boxes.end(); iter++) {
@@ -1442,16 +1442,16 @@ makeActive()
     typename std::set<CB*, typename SB::ValueCompare>::const_iterator conflictIter = conflicts.begin();
     for ( ; conflictIter != conflicts.end(); ++conflictIter) {
       CB* conflict = *conflictIter;
-      ASSERT(conflictsWith(conflict));
+      ASSERT(this->conflictsWith(conflict));
       addActiveConflict(conflict);
     }
-    
+
     (*iter)->addActiveEnclosingSuperBox(this);
   }
 }
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
-template <class RangeQuerier>  
+template <class RangeQuerier>
 void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 inactivateConflicts(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& boxMap,
 		    std::set<SB*, typename SB::ValueCompare>& activeBoxes,
@@ -1473,7 +1473,7 @@ void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 reactivateConflicts(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
 		    Value& maxPossibleValue)
 {
-  typename std::set<CB*, typename SB::ValueCompare>::reverse_iterator rIter;  
+  typename std::set<CB*, typename SB::ValueCompare>::reverse_iterator rIter;
   for (rIter = activeConflicts_.rbegin(); rIter != activeConflicts_.rend();
        rIter++) {
     (*rIter)->reactivate(activeBoxes, maxPossibleValue);
@@ -1493,7 +1493,7 @@ propogateDeltaMaxValue(CompositeBox* parent, Value delta,
     delta =
       ancestor->getCurrentMaximumPossibleSubValue() - prevMaxPossibleSubValue;
     ancestor = ancestor->parent_;
-  } 
+  }
   maxPossibleValue += delta;
 }
 
@@ -1512,14 +1512,14 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   typename std::vector<SB*>::iterator sb_iter;
 
   std::vector<BB*> basicBoxes(n);
-#if defined(HAVE_HASH_MAP) && !defined(_WIN32) 
+#if defined(HAVE_HASH_MAP) && !defined(_WIN32)
   // The above #if used to have this "&& !defined(__INTEL_COMPILER)"... However, this causes icc v12.0.0 to error out...
   // For now we will make the code compile by default for icc 12+...
   BoxHashMap boxMap(n);
 #else
   BoxHashMap boxMap;
 #endif
- 
+
   int i = 0;
   for (BoxIterator it = begin; it != end; it++, i++) {
     BoxP box = *it;
@@ -1532,7 +1532,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
 #if 0
   for (unsigned long i = 0; i < basicBoxes.size(); i++) {
     cerr << i << endl;
-    basicBoxes[i]->buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap, 
+    basicBoxes[i]->buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap,
 						   maximalSuperBoxes);
   }
 #endif
@@ -1565,7 +1565,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
 					     activeBoxes, 0,
 					     totalPossibleValue);
   }
-  
+
   // Copy the other SuperBoxes to a new SuperBoxSet.  These new SuperBoxes
   // will be simple SuperBoxes without the extraneous garbage of BasicBox
   // and CompositeBox.
@@ -1575,7 +1575,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
        const_iter != superBoxSet->getSuperBoxes().end(); const_iter++) {
     result->addSuperBox(scinew SB(**const_iter));
   }
-  
+
   // Take ownership of these super boxes so they will be deleted when the
   // result is deleted.
   result->takeOwnershipOfSuperBoxes();
@@ -1586,7 +1586,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
     // will be deleted.
     delete dynamic_cast<CB*>(*sb_iter);
   }
-  
+
   // delete the temporary SuperBoxes that were created
   for (b_iter = basicBoxes.begin(); b_iter != basicBoxes.end(); b_iter++)
     delete *b_iter;
@@ -1612,7 +1612,7 @@ getBasicBoxes(typename SBS::BoxHashMap& boxMap)
   // only really implemented for completeness
   std::vector<BB*> result;
   result.reserve(boxes_.size());
-    
+
   for (typename std::vector<BoxP>::iterator iter = boxes_.begin(); iter != boxes_.end();
        iter++) {
     result.push_back(boxMap[*iter]);
@@ -1635,7 +1635,7 @@ operator<<(std::ostream& out,
   out << " - ";
   //  ::operator<<(out, high);
   out << high;
-  
+
   if (superBox.getBoxes().size() == 0) {
     out << "()";
     return out;
@@ -1644,13 +1644,13 @@ operator<<(std::ostream& out,
   out << "(";
   typename std::vector<BoxP>::const_iterator iter = superBox.getBoxes().begin();
   out << (*iter)->getID();
-  
+
   for (++iter; iter != superBox.getBoxes().end(); ++iter) {
     out << ", " << (*iter)->getID();
   }
   out << ")";
-  
-  
+
+
   return out;
 }
 
@@ -1679,7 +1679,7 @@ operator()(BoxPIterator beginBoxes, BoxPIterator endBoxes,
   Value value = 0;
   for (BoxPIterator iter = beginBoxes; iter != endBoxes; iter++) {
     // Add each of the 3 low sides that are not on the edge.
-    
+
     // Only the low side is included because if both low and high
     // sides were considered than the area would just be counted twice
     // (each bit of internal area has a box on the low side and a box
@@ -1688,7 +1688,7 @@ operator()(BoxPIterator beginBoxes, BoxPIterator endBoxes,
     for (int i = 0; i < 3; i++) {
       if (box->getLow()[i] > low[i]) {
 	// low i-side is internal, so include its area.
-	
+
 	// get the area by multiplying the length of the two other edges
 	Value area = box->getArea(i);
 	value += area;
