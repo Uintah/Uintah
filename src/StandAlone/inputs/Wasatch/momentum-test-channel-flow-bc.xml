@@ -22,7 +22,7 @@
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="x-mom" state="STATE_N" />
-       <Constant>1.0</Constant>
+       <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
@@ -54,14 +54,16 @@
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>false</UseReferencePoint>
-        <Use3DLaplacian>   false</Use3DLaplacian>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-14  </tolerance>
-            <maxiterations>  1000    </maxiterations>
+            <tolerance>      1e-13  </tolerance>
+            <maxiterations>  200    </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
       </Pressure>
@@ -74,15 +76,15 @@
   <Time>
     <maxTime>5</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.0001</delt_min>
-    <delt_max>0.0001</delt_max>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>momentum-test-bc-channel.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
@@ -115,13 +117,29 @@
       
       <Face side="x+">
 
+        <BCType id="all" var="Neumann" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+
         <BCType id="all" var="Neumann" label="y-mom">
           <value> 0.0 </value>
         </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+
+        <BCType id="all" var="Neumann" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
+        
+        <BCType id="all" var="Neumann" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>      
+
+        <BCType id="all" var="Neumann" label="x-mom_convFlux_x">
+          <value> 0.0 </value>
+        </BCType>      
+        
+        <BCType id="all" var="Neumann" label="tau_xx">
+          <value> 0.0 </value>
+        </BCType>                                                                 
         
       </Face>
       
@@ -160,9 +178,10 @@
       </BoundaryConditions>
       <Level>
       <Box label="1">
-        <lower>[0,-0.5,-0.5]</lower>
-        <upper>[6, 0.5, 0.5]</upper>
-        <resolution>[256,44,2]</resolution>
+        <lower>[0, 0,  0]</lower>
+        <upper>[1, 1, 0.01]</upper>
+        <!-- extraCells>[1,1,0]</extraCells -->
+        <resolution>[16,16,2]</resolution>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,0,1]</periodic>

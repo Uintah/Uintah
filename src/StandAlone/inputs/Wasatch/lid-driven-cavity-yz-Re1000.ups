@@ -43,12 +43,8 @@
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="advance_solution">
-        <AnyExpression>
-           <NameTag name="vorticity_x" state="STATE_N" />
-        </AnyExpression>
-        <AnyExpression>
-           <NameTag name="vel_magnitude" state="STATE_N" />
-        </AnyExpression>       
+       <NameTag name="vorticity_x" state="STATE_N" />
+       <NameTag name="vel_magnitude" state="STATE_N" />
     </ForceOnGraph>
 
     <Density>
