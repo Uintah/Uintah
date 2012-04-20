@@ -144,27 +144,26 @@ namespace Wasatch{
 
   void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
                                    GraphCategories& gc,
-                                   const std::string taskListName ) {
-    for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("AnyExpression");
+                                   const std::string taskListName )
+  {
+    Category cat = INITIALIZATION;
+    if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+    else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+    else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+    else{
+      std::ostringstream msg;
+      msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+          << __FILE__ << " : " << __LINE__ << endl;
+    }
+
+    GraphHelper* const graphHelper = gc[cat];
+
+    for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("NameTag");
         exprParams != 0;
-        exprParams = exprParams->findNextBlock("AnyExpression") ){
-
-      const Expr::Tag anyExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
-
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-        << __FILE__ << " : " << __LINE__ << endl;
-      }
-
-      GraphHelper* const graphHelper = gc[cat];
-
-      const Expr::ExpressionID anyExpressionID = graphHelper->exprFactory->get_id(anyExpressionTag);
-      graphHelper->rootIDs.insert( anyExpressionID );
+        exprParams = exprParams->findNextBlock("NameTag") )
+    {
+      const Expr::Tag tag = parse_nametag( exprParams );
+      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(tag) );
     }
   }
 
