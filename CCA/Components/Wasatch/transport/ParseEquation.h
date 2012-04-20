@@ -30,6 +30,7 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
@@ -165,6 +166,27 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info );
 
+  /**
+   * \brief Build the convective flux expression
+   * \param dir the direction that this flux is associated with
+   * \param solnVarTag the solution variable tag
+   * \param convFluxTag the convective flux tag - leave empty to assemble a
+   *        flux, populate it to use a flux expression that already exists.
+   * \param volFracTag the volume fraction (optional, can leave empty)
+   * \param convMethod the upwind method to use
+   * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
+   * \param factory the factory to associate the convective flux expression with
+   * \param info this will be populated for use in the ScalarRHS expression if needed.
+   */
+  template< typename FieldT >
+  void setup_convective_flux_expression( const std::string dir,
+                                         const Expr::Tag solnVarTag,
+                                         Expr::Tag convFluxTag,
+                                         const Expr::Tag volFracTag,
+                                         const ConvInterpMethods convMethod,
+                                         const Expr::Tag advVelocityTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info );
 
   /**
    * \brief Register convective flux calculation for the given scalar quantity

@@ -28,6 +28,7 @@
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+#include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -89,73 +90,6 @@ namespace Wasatch{
 
     info[ fs ] = diffFluxTag;
   }
-
-  //------------------------------------------------------------------
-
-  template< typename FieldT >
-  void setup_convective_flux_expression( const std::string dir,
-                                         const std::string thisPhiName,
-                                         const Expr::Tag advVelocityTag,
-                                         Expr::ExpressionFactory& factory,
-                                         FieldTagInfo& info )
-  {
-    typedef OpTypes<FieldT> Ops;
-
-    Expr::Tag convFluxTag;
-
-    if (advVelocityTag == Expr::Tag()) {
-      std::ostringstream msg;
-      msg << "ERROR: no advective velocity set for transport equation '" << thisPhiName << "'" << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
-
-    convFluxTag = Expr::Tag( thisPhiName + "_convective_flux_" + dir, Expr::STATE_NONE );
-    const Expr::Tag phiTag( thisPhiName, Expr::STATE_N );
-    Expr::ExpressionBuilder* builder = NULL;
-
-    if( dir=="X" ){
-      proc0cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
-      typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
-      typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-    }
-    else if( dir=="Y" ){
-      proc0cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
-      typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-      typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-    }
-    else if( dir=="Z") {
-      proc0cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
-      typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-      typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
-    }
-
-    if( builder == NULL ){
-      std::ostringstream msg;
-      msg << "ERROR: Could not build a convective flux expression for '" << thisPhiName << "'" << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-
-    }
-
-    factory.register_expression( builder );
-
-
-    FieldSelector fs;
-    if      ( dir=="X" ) fs = CONVECTIVE_FLUX_X;
-    else if ( dir=="Y" ) fs = CONVECTIVE_FLUX_Y;
-    else if ( dir=="Z" ) fs = CONVECTIVE_FLUX_Z;
-    else{
-      std::ostringstream msg;
-      msg << "Invalid direction selection for convective flux expression" << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
-    info[ fs ] = convFluxTag;
-  }
-
 
   //------------------------------------------------------------------
 
@@ -228,15 +162,30 @@ namespace Wasatch{
     bool doConvection = true;
     params->get( "DoConvection", doConvection);
     if (doConvection) {
-
-      Expr::Tag advVelTag = parse_nametag( params->findBlock("X-Velocity" )->findBlock( "NameTag" ) );
-      setup_convective_flux_expression<FieldT>( "X", thisPhiName, advVelTag, factory, info );
-
-      advVelTag = parse_nametag( params->findBlock("Y-Velocity" )->findBlock( "NameTag" ) );
-      setup_convective_flux_expression<FieldT>( "Y", thisPhiName, advVelTag, factory, info );
-
-      advVelTag = parse_nametag( params->findBlock("Z-Velocity" )->findBlock( "NameTag" ) );
-      setup_convective_flux_expression<FieldT>( "Z", thisPhiName, advVelTag, factory, info );
+      setup_convective_flux_expression<FieldT>( "X",
+                                                Expr::Tag(thisPhiName,Expr::STATE_N),
+                                                Expr::Tag(), // convective flux (empty to build it)
+                                                Expr::Tag(), // volume fraction
+                                                CENTRAL,
+                                                parse_nametag( params->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
+                                                factory,
+                                                info );
+      setup_convective_flux_expression<FieldT>( "Y",
+                                                Expr::Tag(thisPhiName,Expr::STATE_N),
+                                                Expr::Tag(), // convective flux (empty to build it)
+                                                Expr::Tag(), // volume fraction
+                                                CENTRAL,
+                                                parse_nametag( params->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
+                                                factory,
+                                                info );
+      setup_convective_flux_expression<FieldT>( "Z",
+                                                Expr::Tag(thisPhiName,Expr::STATE_N),
+                                                Expr::Tag(), // convective flux (empty to build it)
+                                                Expr::Tag(), // volume fraction
+                                                CENTRAL,
+                                                parse_nametag( params->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
+                                                factory,
+                                                info );
     }
     //_____________
     // Source Terms

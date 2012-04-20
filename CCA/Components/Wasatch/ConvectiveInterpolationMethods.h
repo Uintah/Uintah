@@ -27,6 +27,10 @@
 #include <string>
 #include <algorithm>
 
+/**
+ * \file ConvectiveInterpolationMethods.h
+ */
+
 namespace Wasatch {
 
   /**
@@ -34,18 +38,18 @@ namespace Wasatch {
    *  \brief the supported flux limiters
    */
   enum ConvInterpMethods {
-    CENTRAL,
-    UPWIND,
-    SUPERBEE,
-    CHARM,
-    KOREN,
-    MC,
-    OSPRE,
-    SMART,
-    VANLEER,
-    HCUS,
-    MINMOD,
-    HQUICK
+    CENTRAL, //!< CENTRAL
+    UPWIND,  //!< UPWIND
+    SUPERBEE,//!< SUPERBEE
+    CHARM,   //!< CHARM
+    KOREN,   //!< KOREN
+    MC,      //!< MC
+    OSPRE,   //!< OSPRE
+    SMART,   //!< SMART
+    VANLEER, //!< VANLEER
+    HCUS,    //!< HCUS
+    MINMOD,  //!< MINMOD
+    HQUICK   //!< HQUICK
   };
 
   /**
@@ -53,10 +57,15 @@ namespace Wasatch {
    *
    *  \brief Given the string name for the interpolation method, this
    *         returns the associated enum.
-   *
-   *  \todo need to add exception handling for invalid arguments
    */
   ConvInterpMethods get_conv_interp_method( std::string key );
+
+  /**
+   * \ingroup WasatchParser
+   * \param method the ConvInterpMethods enum value
+   * \return the corresponding string name
+   */
+  std::string get_conv_interp_method( const ConvInterpMethods );
 
 } // namespace Wasatch
 
