@@ -113,7 +113,7 @@ namespace Wasatch {
    */  
   void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                                const Uintah::Patch* patch,
-                               const SCIRun::IntVector refCell = SCIRun::IntVector(1,1,1) );
+                               const SCIRun::IntVector refCell );
 
   /**
    *  \ingroup WasatchCore
@@ -133,7 +133,8 @@ namespace Wasatch {
    */    
   void set_ref_pressure_rhs  ( SVolField& pressureRHS,
                                const Uintah::Patch* patch, 
-                               const SCIRun::IntVector refCell = SCIRun::IntVector(1,1,1));
+                               const double referencePressureValue,
+                               const SCIRun::IntVector refCell );
   
 }
 

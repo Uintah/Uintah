@@ -64,14 +64,11 @@
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>false</UseReferencePoint>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
         <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
-
-            <!-- CGSolver options -->
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
-
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>

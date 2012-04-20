@@ -96,7 +96,9 @@
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>false</UseReferencePoint>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
         <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
 

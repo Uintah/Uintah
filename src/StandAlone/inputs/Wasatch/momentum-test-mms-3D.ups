@@ -80,8 +80,10 @@
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>false</UseReferencePoint>
-        <Use3DLaplacian>    false</Use3DLaplacian>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian> true</Use3DLaplacian>
         <Parameters>
 
             <!-- CGSolver options -->

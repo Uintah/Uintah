@@ -215,9 +215,13 @@
         <NameTag              spec="REQUIRED" />
       </Viscosity>
       <Pressure      			    spec="OPTIONAL NO_DATA">
-          <!-- Specify whether Wasatch should use a reference point or not. Currently, the reference point is set at [1,1,1] with a value of 0.0 for ref pressure -->
-          <UseReferencePoint  spec="OPTIONAL BOOLEAN"/>
-          <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix. This affects all 2D momentum transport cases. For 3D cases, the code will always use a 3D Laplacian regardless of the value set here -->
+          <!-- Specify whether Wasatch should use a reference point or not. Set the ref pressure value and the ref cell IJK location. -->
+          <!-- NOTE: the Reference pressure is turned off by default. If you don't want to use it, simply do NOT include the following block. -->   
+          <ReferencePressure	    spec="OPTIONAL NO_DATA"
+                                    attribute1="value    REQUIRED DOUBLE">
+             <ReferenceCell         spec="REQUIRED VECTOR" />                       
+          </ReferencePressure>
+          <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix. This affects all 2D momentum transport cases. 3D Laplacian is turned on by default for all cases. To turned it off set the following to false. For 3D cases, the code will always use a 3D Laplacian regardless of the value set here -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>          
           <Parameters         spec="OPTIONAL NO_DATA">      
             <criteria         spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />                     

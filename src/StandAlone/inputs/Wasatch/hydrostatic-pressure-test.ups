@@ -74,7 +74,9 @@
       </Viscosity>
       
       <Pressure>
-        <UseReferencePoint>true</UseReferencePoint>
+        <ReferencePressure value="0.0">
+              <ReferenceCell>[1,1,1]</ReferenceCell>
+        </ReferencePressure>
         <Use3DLaplacian>    true</Use3DLaplacian>
         <Parameters>
             <!-- Hypre options -->
