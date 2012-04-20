@@ -47,7 +47,7 @@ namespace Wasatch{
   void setup_diffusive_velocity_expression( const std::string dir,
                                             const std::string thisPhiName,
                                             Expr::ExpressionFactory& factory,
-                                            typename ScalarRHS<FieldT>::FieldTagInfo& info )
+                                            FieldTagInfo& info )
   {
     typedef OpTypes<FieldT> MyOpTypes;
 
@@ -77,10 +77,10 @@ namespace Wasatch{
 
     factory.register_expression( builder );
 
-    typename ScalarRHS<FieldT>::FieldSelector fs;
-    if     ( dir=="X" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X;
-    else if( dir=="Y" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y;
-    else if( dir=="Z" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z;
+    FieldSelector fs;
+    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
+    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
+    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
     else{
       std::ostringstream msg;
       msg << "Invalid direction selection for diffusive flux expression" << endl;
@@ -97,7 +97,7 @@ namespace Wasatch{
                                          const std::string thisPhiName,
                                          const Expr::Tag advVelocityTag,
                                          Expr::ExpressionFactory& factory,
-                                         typename ScalarRHS<FieldT>::FieldTagInfo& info )
+                                         FieldTagInfo& info )
   {
     typedef OpTypes<FieldT> Ops;
 
@@ -143,10 +143,10 @@ namespace Wasatch{
     factory.register_expression( builder );
 
 
-    typename ScalarRHS<FieldT>::FieldSelector fs;
-    if      ( dir=="X" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_X;
-    else if ( dir=="Y" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_Y;
-    else if ( dir=="Z" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_Z;
+    FieldSelector fs;
+    if      ( dir=="X" ) fs = CONVECTIVE_FLUX_X;
+    else if ( dir=="Y" ) fs = CONVECTIVE_FLUX_Y;
+    else if ( dir=="Z" ) fs = CONVECTIVE_FLUX_Z;
     else{
       std::ostringstream msg;
       msg << "Invalid direction selection for convective flux expression" << endl;
@@ -212,7 +212,7 @@ namespace Wasatch{
                   Expr::ExpressionFactory& factory,
                   Uintah::ProblemSpecP params )
   {
-    typename ScalarRHS<FieldT>::FieldTagInfo info;
+    FieldTagInfo info;
 
     //_________________
     // Diffusive Velocities

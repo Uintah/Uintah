@@ -28,8 +28,11 @@
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 
+//-- SpatialOps Includes --//
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
+
+#include "RHSTerms.h"
 
 
 /**
@@ -85,27 +88,6 @@ protected:
 
 public:
 
-  /**
-   *  \enum FieldSelector
-   *  \brief Use this enum to populate information in the FieldTagInfo type.
-   */
-  enum FieldSelector{
-    CONVECTIVE_FLUX_X,
-    CONVECTIVE_FLUX_Y,
-    CONVECTIVE_FLUX_Z,
-    DIFFUSIVE_FLUX_X,
-    DIFFUSIVE_FLUX_Y,
-    DIFFUSIVE_FLUX_Z,
-    SOURCE_TERM
-  };
-
-  /**
-   * \todo currently we only allow one of each info type.  But there
-   *       are cases where we may want multiple ones.  Example:
-   *       diffusive terms in energy equation.  Expand this
-   *       capability.
-   */
-  typedef std::map< FieldSelector, Expr::Tag > FieldTagInfo; //< Defines a map to hold information on ExpressionIDs for the RHS.
 
 
   /**
@@ -223,8 +205,8 @@ protected:
 
   void nullify_fields();
 
-  static Expr::Tag resolve_field_tag( const typename ScalarRHS<FieldT>::FieldSelector field,
-                                      const typename ScalarRHS<FieldT>::FieldTagInfo& info );
+  static Expr::Tag resolve_field_tag( const FieldSelector field,
+                                      const FieldTagInfo& info );
 
   ScalarRHS( const FieldTagInfo& fieldTags,
              const std::vector<Expr::Tag>& srcTags,

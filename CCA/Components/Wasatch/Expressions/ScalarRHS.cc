@@ -29,11 +29,11 @@
 #include <Core/Exceptions/InvalidValue.h>
 
 template< typename FieldT >
-Expr::Tag ScalarRHS<FieldT>::resolve_field_tag( const typename ScalarRHS<FieldT>::FieldSelector field,
-                                                const typename ScalarRHS<FieldT>::FieldTagInfo& info )
+Expr::Tag ScalarRHS<FieldT>::resolve_field_tag( const FieldSelector field,
+                                                const FieldTagInfo& info )
 {
   Expr::Tag tag;
-  const typename ScalarRHS<FieldT>::FieldTagInfo::const_iterator ifld = info.find( field );
+  const FieldTagInfo::const_iterator ifld = info.find( field );
   if( ifld != info.end() ) tag = ifld->second;
   return tag;
 }

@@ -233,27 +233,6 @@ namespace Wasatch{
 
   };
 
-
-  template< typename FieldT>
-  void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
-                                        const Expr::Tag densityTag,
-                                        const Expr::Tag primVarTag,
-                                        const bool isStrong,
-                                        Expr::ExpressionFactory& factory,
-                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );
-  template< typename FieldT>
-  void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
-                                            const Expr::Tag primVarTag,
-                                            Expr::ExpressionFactory& factory,
-                                            typename ScalarRHS<FieldT>::FieldTagInfo& info );
-
-  template< typename FieldT >
-  void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                         const Expr::Tag solnVarName,
-                                         const Expr::Tag volFracTag, // the volFracTag can be made optional. if you pass an empty tag, then nothing happens.
-                                         Expr::ExpressionFactory& factory,
-                                         typename ScalarRHS<FieldT>::FieldTagInfo& info );
-
 } // namespace Wasatch
 
 #endif // Wasatch_ScalarTransportEquation_h

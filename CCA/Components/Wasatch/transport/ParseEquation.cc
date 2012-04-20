@@ -22,19 +22,25 @@
 
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
-#include "../TimeStepper.h"
+#include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/StringNames.h>
-#include "../ParseTools.h"
+#include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- Add headers for individual transport equations here --//
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include "TransportEquation.h"
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
 #include "TemperatureTransportEquation.h"
 #include "MomentumTransportEquation.h"
 #include "MomentTransportEquation.h"
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
+
+//-- includes for the expressions built here --//
+#include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
@@ -356,13 +362,13 @@ namespace Wasatch{
     Expr::Tag xBodyForceTag, yBodyForceTag, zBodyForceTag;
     for( Uintah::ProblemSpecP bodyForceParams=params->findBlock("BodyForce");
         bodyForceParams != 0;
-        bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){      
+        bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){
       bodyForceParams->get("Direction", bodyForceDir );
       if (bodyForceDir == "X") xBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
       if (bodyForceDir == "Y") yBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
       if (bodyForceDir == "Z") zBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
     }
-    
+
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
 
@@ -681,5 +687,293 @@ namespace Wasatch{
     //
     return adaptors;
   }
+
+  //-----------------------------------------------------------------
+
+  template< typename FieldT >
+  void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
+                                         const Expr::Tag solnVarTag,
+                                         const Expr::Tag volFracTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info )
+  {
+    typedef SpatialOps::structured::XVolField XVolField;  ///< field type for x-staggered volume
+    typedef SpatialOps::structured::YVolField YVolField;  ///< field type for y-staggered volume
+    typedef SpatialOps::structured::ZVolField ZVolField;  ///< field type for z-staggered volume
+    typedef OpTypes<FieldT> Ops;
+    const std::string& solnVarName = solnVarTag.name();
+    Expr::Tag convFluxTag, advVelocityTag;
+
+    std::string dir;
+    convFluxParams->get("Direction",dir);
+
+    std::string interpMethod;
+    convFluxParams->get("Method",interpMethod);
+    const Wasatch::ConvInterpMethods convInterpMethod = Wasatch::get_conv_interp_method(interpMethod);
+
+    // get the tag for the advective velocity
+    Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
+
+    if( advVelocityTagParam ){
+      advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
+    }
+    else{
+      // advective velocity is not specified - either take on default velocity
+      // from momentum or throw exception
+      std::ostringstream msg;
+      msg << "ERROR: no advective velocity set for transport equation '" << solnVarName << "'" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+
+    // see if we have an expression set for the advective flux.
+    Uintah::ProblemSpecP nameTagParam = convFluxParams->findBlock("NameTag");
+    if( nameTagParam ){
+      convFluxTag = parse_nametag( nameTagParam );
+      // if no expression was specified, build one for the convective flux.
+    } else {
+      convFluxTag = Expr::Tag( solnVarName + "_convective_flux_" + dir, Expr::STATE_NONE );
+      Expr::ExpressionBuilder* builder = NULL;
+
+      if( dir=="X" ){
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
+        typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::XFace>::type PhiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, typename Ops::InterpC2FXUpwind, PhiInterpHiOpT, VelInterpOpT >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
+      }
+      else if( dir=="Y" ){
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
+        typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::YFace>::type PhiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, typename Ops::InterpC2FYUpwind, PhiInterpHiOpT, VelInterpOpT >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
+      }
+      else if( dir=="Z") {
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
+        typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
+        typedef typename OperatorTypeBuilder<Interpolant,FieldT,typename FaceTypes<FieldT>::ZFace>::type PhiInterpHiOpT;
+        typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, typename Ops::InterpC2FZUpwind, PhiInterpHiOpT, VelInterpOpT >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod, volFracTag);
+      }
+
+      if( builder == NULL ){
+        std::ostringstream msg;
+        msg << "ERROR: Could not build a convective flux expression for '"
+            << solnVarName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      factory.register_expression( builder );
+    }
+
+    FieldSelector fs;
+    if      ( dir=="X" ) fs = CONVECTIVE_FLUX_X;
+    else if ( dir=="Y" ) fs = CONVECTIVE_FLUX_Y;
+    else if ( dir=="Z" ) fs = CONVECTIVE_FLUX_Z;
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for convective flux expression" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    info[ fs ] = convFluxTag;
+  }
+
+  //-----------------------------------------------------------------
+
+  template< typename OpT >
+  Expr::ExpressionBuilder*
+  build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
+                        const Expr::Tag& diffFluxTag,
+                        const Expr::Tag& primVarTag,
+                        const Expr::Tag& densityTag )
+  {
+    if( diffFluxParams->findBlock("ConstantDiffusivity") ){
+      double coef;
+      diffFluxParams->get("ConstantDiffusivity",coef);
+      typedef typename DiffusiveFlux< typename OpT::SrcFieldType,
+                                      typename OpT::DestFieldType
+                                      >::Builder Flux;
+      return scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
+    }
+    else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+      /**
+       *  \todo need to ensure that the type that the user gives
+       *        for the diffusion coefficient field matches the
+       *        type implied here.  Alternatively, we don't let
+       *        the user specify the type for the diffusion
+       *        coefficient.  But there is the matter of what
+       *        independent variable is used when calculating the
+       *        coefficient...  Arrrgghh.
+       */
+      const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+      typedef typename DiffusiveFlux2< typename OpT::SrcFieldType,
+                                       typename OpT::DestFieldType
+                                       >::Builder Flux;
+      return scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
+    }
+    return NULL;
+  }
+
+  template< typename FieldT>
+  void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
+                                        const Expr::Tag densityTag,
+                                        const Expr::Tag primVarTag,
+                                        const bool isStrong,
+                                        Expr::ExpressionFactory& factory,
+                                        FieldTagInfo& info )
+  {
+    typedef OpTypes<FieldT> MyOpTypes;
+    const std::string& primVarName = primVarTag.name();
+    Expr::Tag diffFluxTag;  // we will populate this.
+
+    std::string dir;
+    diffFluxParams->get("Direction",dir);
+
+    // see if we have an expression set for the diffusive flux.
+    Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
+    if( nameTagParam ){
+      diffFluxTag = parse_nametag( nameTagParam );
+    }
+    else{ // build an expression for the diffusive flux.
+
+      diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir, Expr::STATE_NONE );
+
+      Expr::ExpressionBuilder* builder = NULL;
+      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
+      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
+      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
+
+      if( builder == NULL ){
+        std::ostringstream msg;
+        msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      factory.register_expression( builder );
+    }
+
+    FieldSelector fs;
+    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
+    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
+    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for diffusive flux expression" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+
+    info[ fs ] = diffFluxTag;
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename GradT, typename InterpT >
+  Expr::ExpressionBuilder*
+  build_diff_vel_expr( Uintah::ProblemSpecP diffVelParams,
+                       const Expr::Tag& diffVelTag,
+                       const Expr::Tag& primVarTag )
+  {
+    if( diffVelParams->findBlock("ConstantDiffusivity") ){
+      typedef typename DiffusiveVelocity<GradT>::Builder Velocity;
+      double coef;
+      diffVelParams->get("ConstantDiffusivity",coef);
+      return scinew Velocity( diffVelTag, primVarTag, coef );
+    }
+    else if( diffVelParams->findBlock("DiffusionCoefficient") ){
+      /**
+       *  \todo need to ensure that the type that the user gives
+       *        for the diffusion coefficient field matches the
+       *        type implied here.  Alternatively, we don't let
+       *        the user specify the type for the diffusion
+       *        coefficient.  But there is the matter of what
+       *        independent variable is used when calculating the
+       *        coefficient...  Arrrgghh.
+       */
+      typedef typename DiffusiveVelocity2< GradT, InterpT >::Builder Velocity;
+      const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+      return scinew Velocity( diffVelTag, primVarTag, coef );
+    }
+    return NULL;
+  }
+
+  template< typename FieldT>
+  void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
+                                            const Expr::Tag primVarTag,
+                                            Expr::ExpressionFactory& factory,
+                                            FieldTagInfo& info )
+  {
+    typedef OpTypes<FieldT> MyOpTypes;
+    const std::string& primVarName = primVarTag.name();
+    Expr::Tag diffVelTag;  // we will populate this.
+
+    std::string dir;
+    diffVelParams->get("Direction",dir);
+
+    // see if we have an expression set for the diffusive velocity.
+    Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
+    if( nameTagParam ){
+      diffVelTag = parse_nametag( nameTagParam );
+    }
+    else{ // build an expression for the diffusive velocity.
+
+      diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
+
+      Expr::ExpressionBuilder* builder = NULL;
+      if( dir=="X" )       builder = build_diff_vel_expr<typename MyOpTypes::GradX,typename MyOpTypes::InterpC2FX>(diffVelParams,diffVelTag,primVarTag);
+      else if( dir=="Y" )  builder = build_diff_vel_expr<typename MyOpTypes::GradY,typename MyOpTypes::InterpC2FY>(diffVelParams,diffVelTag,primVarTag);
+      else if( dir=="Z")   builder = build_diff_vel_expr<typename MyOpTypes::GradZ,typename MyOpTypes::InterpC2FZ>(diffVelParams,diffVelTag,primVarTag);
+
+      if( builder == NULL ){
+        std::ostringstream msg;
+        msg << "Could not build a diffusive velocity expression for '"
+            << primVarName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      factory.register_expression( builder );
+    }
+
+    FieldSelector fs;
+    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
+    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
+    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for diffusive velocity expression" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    info[ fs ] = diffVelTag;
+  }
+
+  //------------------------------------------------------------------
+
+  //==================================================================
+  // explicit template instantiation
+#define INSTANTIATE( FIELDT )                                   \
+                                                                \
+    template void setup_diffusive_flux_expression<FIELDT>(      \
+       Uintah::ProblemSpecP diffFluxParams,                     \
+       const Expr::Tag densityTag,                              \
+       const Expr::Tag primVarTag,                              \
+       const bool isStrong,                                     \
+       Expr::ExpressionFactory& factory,                        \
+       FieldTagInfo& info );                                    \
+                                                                \
+    template void setup_diffusive_velocity_expression<FIELDT>(  \
+       Uintah::ProblemSpecP diffVelParams,                      \
+       const Expr::Tag primVarTag,                              \
+       Expr::ExpressionFactory& factory,                        \
+       FieldTagInfo& info );                                    \
+       \
+    template void setup_convective_flux_expression<FIELDT>(     \
+        Uintah::ProblemSpecP convFluxParams,                    \
+        const Expr::Tag solnVarName,                            \
+        const Expr::Tag volFracTag,                             \
+        Expr::ExpressionFactory& factory,                       \
+        FieldTagInfo& info );
+
+  INSTANTIATE( SVolField )
+  INSTANTIATE( XVolField )
+  INSTANTIATE( YVolField )
+  INSTANTIATE( ZVolField )
+
+  //-----------------------------------------------------------------
 
 } // namespace Wasatch
