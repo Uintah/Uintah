@@ -57,23 +57,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   cudaError_t retVal;
   CUDA_SAFE_CALL( retVal = cudaSetDevice(device));
 
-  const Level* level = getLevel(patches);
-
-  // Determine the size of the domain.
-  IntVector domainLo, domainHi;
-  IntVector domainLo_EC, domainHi_EC;
-
-  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
-  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
-
-  DataWarehouse* abskg_dw = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-
-  constCCVariable<double> sigmaT4Pi;
-  constCCVariable<double> abskg;
-  abskg_dw->getRegion(abskg, d_abskgLabel, d_matl, level, domainLo_EC, domainHi_EC);
-  sigmaT4_dw->getRegion(sigmaT4Pi, d_sigmaT4_label, d_matl, level, domainLo_EC, domainHi_EC);
-
   // Single material now, but can't assume 0, need the specific ARCHES or ICE material here
   int matl = matls->getVector().front();
   int numPatches = patches->size();
