@@ -22,26 +22,31 @@
 
 #include "ConvectiveInterpolationMethods.h"
 
+#include <boost/bimap.hpp>
+
+#include <stdexcept>
+
 namespace Wasatch {
-  typedef std::map<std::string,ConvInterpMethods> ConvInterpStringMap;
+
+  typedef boost::bimap<std::string,ConvInterpMethods> ConvInterpStringMap;
   static ConvInterpStringMap validConvInterpStrings;
 
   void set_conv_interp_string_map()
   {
     if( !validConvInterpStrings.empty() ) return;
-
-    validConvInterpStrings["CENTRAL" ] = CENTRAL;
-    validConvInterpStrings["UPWIND"  ] = UPWIND;
-    validConvInterpStrings["SUPERBEE"] = SUPERBEE;
-    validConvInterpStrings["CHARM"   ] = CHARM;
-    validConvInterpStrings["KOREN"   ] = KOREN;
-    validConvInterpStrings["MC"      ] = MC;
-    validConvInterpStrings["OSPRE"   ] = OSPRE;
-    validConvInterpStrings["SMART"   ] = SMART;
-    validConvInterpStrings["VANLEER" ] = VANLEER;
-    validConvInterpStrings["HCUS"    ] = HCUS;
-    validConvInterpStrings["MINMOD"  ] = MINMOD;
-    validConvInterpStrings["HQUICK"  ] = HQUICK;
+    typedef ConvInterpStringMap::left_value_type LVT;
+    validConvInterpStrings.left.insert( LVT("CENTRAL" , CENTRAL ) );
+    validConvInterpStrings.left.insert( LVT("UPWIND"  , UPWIND  ) );
+    validConvInterpStrings.left.insert( LVT("SUPERBEE", SUPERBEE) );
+    validConvInterpStrings.left.insert( LVT("CHARM"   , CHARM   ) );
+    validConvInterpStrings.left.insert( LVT("KOREN"   , KOREN   ) );
+    validConvInterpStrings.left.insert( LVT("MC"      , MC      ) );
+    validConvInterpStrings.left.insert( LVT("OSPRE"   , OSPRE   ) );
+    validConvInterpStrings.left.insert( LVT("SMART"   , SMART   ) );
+    validConvInterpStrings.left.insert( LVT("VANLEER" , VANLEER ) );
+    validConvInterpStrings.left.insert( LVT("HCUS"    , HCUS    ) );
+    validConvInterpStrings.left.insert( LVT("MINMOD"  , MINMOD  ) );
+    validConvInterpStrings.left.insert( LVT("HQUICK"  , HQUICK  ) );
   }
 
   //------------------------------------------------------------------
@@ -50,6 +55,19 @@ namespace Wasatch {
   {
     set_conv_interp_string_map();
     std::transform( key.begin(), key.end(), key.begin(), ::toupper );
-    return validConvInterpStrings[key];
+    ConvInterpStringMap::left_const_iterator ii = validConvInterpStrings.left.find(key);
+    if( ii == validConvInterpStrings.left.end() ){
+      std::ostringstream msg;
+      msg << __FILE__ << " : " << __LINE__ << std::endl
+          << "No matching upwind method for '" << key << "'" << std::endl;
+    }
+    return ii->second;
   }
+
+  std::string get_conv_interp_method( const ConvInterpMethods key )
+  {
+    set_conv_interp_string_map();
+    return validConvInterpStrings.right.find(key)->second;
+  }
+
 } // namespace Wasatch

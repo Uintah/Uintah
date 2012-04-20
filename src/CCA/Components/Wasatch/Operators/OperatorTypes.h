@@ -23,7 +23,7 @@
 #ifndef Wasatch_OperatorTypes_h
 #define Wasatch_OperatorTypes_h
 
-#include "../FieldTypes.h"
+#include <CCA/Components/Wasatch/FieldTypes.h>
 #include "UpwindInterpolant.h"
 #include "FluxLimiterInterpolant.h"
 
