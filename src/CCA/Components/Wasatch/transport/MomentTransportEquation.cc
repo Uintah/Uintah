@@ -35,7 +35,9 @@
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/QuadratureClosure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+
 #include <CCA/Components/Wasatch/transport/ScalarTransportEquation.h>
+#include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -233,7 +235,7 @@ namespace Wasatch {
     // start setting up the right-hand-side terms: these include expressions
     // for growth, nucleation, birth, death, and any other fancy source terms
     Expr::TagList rhsTags;
-    typename ScalarRHS<FieldT>::FieldTagInfo info;
+    FieldTagInfo info;
 
     //_____________
     // volume fraction for embedded boundaries Terms
@@ -241,22 +243,22 @@ namespace Wasatch {
     if (params->findBlock("VolumeFractionExpression")) {
       volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag xAreaFracTag = Expr::Tag();
     if (params->findBlock("XAreaFractionExpression")) {
       xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag yAreaFracTag = Expr::Tag();
     if (params->findBlock("YAreaFractionExpression")) {
       yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     Expr::Tag zAreaFracTag = Expr::Tag();
     if (params->findBlock("ZAreaFractionExpression")) {
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
-    
+
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
@@ -293,7 +295,6 @@ namespace Wasatch {
         diffFluxParams != 0;
         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
       setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, factory, info );
-
     }
 
     //__________________
@@ -301,9 +302,7 @@ namespace Wasatch {
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-
       setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, volFracTag, factory, info );
-
     }
 
     //

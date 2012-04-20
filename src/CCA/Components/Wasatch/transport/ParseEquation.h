@@ -27,8 +27,11 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include "../GraphHelperTools.h"
+//-- Wasatch includes --//
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
+
+#include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
 /**
  *  \file ParseEquation.h
@@ -139,13 +142,44 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                         GraphCategories& gc);
 
-//  template<typename FieldT>
-//  void process_moment_transport_qmom(Uintah::ProblemSpecP params,
-//                                     Expr::ExpressionFactory& factory,
-//                                     Expr::TagList& transportedMomentTags,
-//                                     Expr::TagList& abscissaeTags,
-//                                     Expr::TagList& weightsTags);
 
+  /**
+   * \brief Register diffusive flux calculation, \f$J_\phi = -\rho \Gamma_\phi \nabla \phi\f$,
+   *        for the scalar quantity \f$ \phi \f$.
+   * \param convFluxParams Parser block "DiffusiveFluxExpression"
+   * \param solnVarTag the solution variable to be advected (\f$ \phi \f$).
+   * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
+   * \param factory the factory to register the resulting expression on
+   * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
+   */
+  template< typename FieldT>
+  void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
+                                        const Expr::Tag densityTag,
+                                        const Expr::Tag primVarTag,
+                                        const bool isStrong,
+                                        Expr::ExpressionFactory& factory,
+                                        FieldTagInfo& info );
+  template< typename FieldT>
+  void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
+                                            const Expr::Tag primVarTag,
+                                            Expr::ExpressionFactory& factory,
+                                            FieldTagInfo& info );
+
+
+  /**
+   * \brief Register convective flux calculation for the given scalar quantity
+   * \param convFluxParams Parser block "ConvectiveFluxExpression"
+   * \param solnVarTag the solution variable to be advected
+   * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
+   * \param factory the factory to register the resulting expression on
+   * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
+   */
+  template< typename FieldT >
+  void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
+                                         const Expr::Tag solnVarTag,
+                                         const Expr::Tag volFracTag,
+                                         Expr::ExpressionFactory& factory,
+                                         FieldTagInfo& info );
 
   /** @} */
 

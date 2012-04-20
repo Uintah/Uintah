@@ -116,14 +116,14 @@ namespace Wasatch{
   {
     const StringNames& sName = StringNames::self();
 
-    ScalarRHS<FieldT>::FieldTagInfo info;
+    FieldTagInfo info;
     using Expr::Tag;  using Expr::STATE_NONE;
 
-    //    info[ ScalarRHS::CONVECTIVE_FLUX_X ] = ???
+    //    info[ CONVECTIVE_FLUX_X ] = ???
 
-    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X ] = Tag( sName.xHeatFlux, STATE_NONE );
-    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y ] = Tag( sName.yHeatFlux, STATE_NONE );
-    info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
+    info[ DIFFUSIVE_FLUX_X ] = Tag( sName.xHeatFlux, STATE_NONE );
+    info[ DIFFUSIVE_FLUX_Y ] = Tag( sName.yHeatFlux, STATE_NONE );
+    info[ DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
 
     //
     // Because of the forms that the ScalarRHS expression builders are defined,

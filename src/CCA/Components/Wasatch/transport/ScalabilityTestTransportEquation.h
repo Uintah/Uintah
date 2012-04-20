@@ -152,7 +152,7 @@ namespace Wasatch{
                                          const std::string thisPhiName,
                                          const Expr::Tag advVelocityTag,
                                          Expr::ExpressionFactory& factory,
-                                         typename ScalarRHS<FieldT>::FieldTagInfo& info );
+                                         FieldTagInfo& info );
 
 } // namespace Wasatch
 #endif // Wasatch_ScalabilityTestTransportEquation_h
