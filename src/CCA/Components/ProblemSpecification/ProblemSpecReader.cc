@@ -1211,7 +1211,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 
   const Tag * testIfTag = dynamic_cast<const Tag*>( this );
   if( testIfTag ) {
-    classType == "Tag";
+    classType = "Tag";
   }
 
   // Verify that 'the text' of the node exists or doesn't exist as required... 
