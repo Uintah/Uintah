@@ -25,7 +25,7 @@
 #include <boost/bimap.hpp>
 
 #include <stdexcept>
-#include <ostream>
+#include <sstream>
 
 namespace Wasatch {
 
