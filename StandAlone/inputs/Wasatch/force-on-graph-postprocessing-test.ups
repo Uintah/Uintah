@@ -121,18 +121,12 @@
     </MomentumEquations>
 
     <ForceOnGraph tasklist="initialization">
-        <AnyExpression>
-           <NameTag name="vel_magnitude" state="STATE_N" />
-        </AnyExpression>
+      <NameTag name="vel_magnitude" state="STATE_N" />
     </ForceOnGraph>
 
     <ForceOnGraph tasklist="advance_solution">
-        <AnyExpression>
-           <NameTag name="vel_magnitude" state="STATE_N" />
-        </AnyExpression>
-        <AnyExpression>
-           <NameTag name="vorticity_z" state="STATE_N" />
-        </AnyExpression>
+      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="vorticity_z" state="STATE_N" />
     </ForceOnGraph>
 
   </Wasatch>
