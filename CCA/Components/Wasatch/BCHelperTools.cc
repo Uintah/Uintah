@@ -118,27 +118,27 @@ namespace Wasatch {
                           const bool hasExtraCells)
   {
     namespace SS = SpatialOps::structured;
-    
+
     // interiorCellIJK is the ijk boundary cell index returned by uintah. Depending
     // on whether we use extra cells or not, interiorCellIJK may have different
     // meanings. Two cases arise here.
     // 1. Using ExtraCells: interiorCellIJK corresponds to the extra cell index  starting at [-1,-1,-1].
-    // 2. Using GhostCells: if we have ghost cells, then interiorCellIJK corresponds to the 
-    //    interior cell adjacent to the boundary starting at [0,0,0]. 
+    // 2. Using GhostCells: if we have ghost cells, then interiorCellIJK corresponds to the
+    //    interior cell adjacent to the boundary starting at [0,0,0].
     // NOTE: these are the indices of the scalar cells.
     // One of the caveats of using ghostcells is that we will always miss setting BCs on the corner cells.
     const SS::IntVec interiorCellIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-    
-    
+
+
     // bndFaceIJK returns the index of boundary face starting at [0,0,0]
-    // This is done by offsetting the cell index returned by uintah. 
+    // This is done by offsetting the cell index returned by uintah.
     // Two cases arise here:
     // 1. ExtraCells: When extra cells are present, we offset the MINUS-FACE cells
     //    by +1 while the PLUS-FACE cells remain the same.
     // 2. GhostCells: When using ghost cells, we offset the PLUS-FACE cells by
     //    +1 while the MINUS-FACE cells remain the same.
     const SS::IntVec bndFaceIJK = interiorCellIJK + faceOffset;
-    
+
     // insideCellDir returns the face direction:
     // x-: [-1, 0, 0]
     // x+: [ 1, 0, 0]
@@ -149,7 +149,7 @@ namespace Wasatch {
     const SS::IntVec stgrdBndFaceIJK( bc_point_indices[0] + insideCellDir[0],
                                       bc_point_indices[1] + insideCellDir[1],
                                       bc_point_indices[2] + insideCellDir[2] );
-    
+
     const SS::IntVec interiorStgrdCellIJK( bc_point_indices[0] - insideCellDir[0],
                                      bc_point_indices[1] - insideCellDir[1],
                                      bc_point_indices[2] - insideCellDir[2] );
@@ -254,12 +254,12 @@ namespace Wasatch {
   {
   private:
     typedef OpTypes<FieldT> Ops;
-    
+
   public:
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FX, BCEvalT >   DirichletX;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FY, BCEvalT >   DirichletY;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FZ, BCEvalT >   DirichletZ;
-    
+
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradX,      BCEvalT >   NeumannX;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradY,      BCEvalT >   NeumannY;
     typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradZ,      BCEvalT >   NeumannZ;
@@ -274,7 +274,7 @@ namespace Wasatch {
   {
   private:
     typedef OpTypes<XVolField> Ops;
-    
+
   public:
     typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type, BCEvalT> NeumannX;
   };
@@ -284,20 +284,20 @@ namespace Wasatch {
   {
   private:
     typedef OpTypes<YVolField> Ops;
-    
+
   public:
     typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type, BCEvalT> NeumannY;
-  };  
+  };
   // partial specialization with inheritance for ZVolFields
   template< typename BCEvalT>
   struct BCOpTypeSelector<ZVolField,BCEvalT> : public BCOpTypeSelectorBase<ZVolField,BCEvalT>
   {
   private:
     typedef OpTypes<ZVolField> Ops;
-    
+
   public:
     typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type, BCEvalT> NeumannZ;
-  };    
+  };
   //
   template< typename BCEvalT >
   struct BCOpTypeSelector<FaceTypes<XVolField>::XFace,BCEvalT>
@@ -829,7 +829,7 @@ namespace Wasatch {
           SCIRun::IntVector insideCellDir = patch->faceDirection(face);
           const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
 //          get_face_offset( face, hasExtraCells, faceOffset );
-          
+
             SS::IntVec bcPointGhostOffset(0,0,0);
             double denom = 1.0;
             switch( face ){
@@ -854,7 +854,7 @@ namespace Wasatch {
               //std::cout << face << insideCellDir << std::endl;
               Uintah::Stencil4& coefs = pressureMatrix[ hasExtraCells ? (bc_point_indices - insideCellDir) : bc_point_indices ];
 														//if (hasExtraCells) coefs = pressureMatrix[bc_point_indices - insideCellDir];
-              
+
               switch(face){
                 case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
                 case Uintah::Patch::xplus : coefs.p +=1.0/dx2;                break;
@@ -877,7 +877,7 @@ namespace Wasatch {
 
 //              if (hasExtraCells)
 //                pressureRHS[iGhost] -= pressureField[iInterior]/denom;
-//              else 
+//              else
 //                pressureRHS[iInterior] -= pressureField[iGhost]/denom;
             }
         }
@@ -886,7 +886,7 @@ namespace Wasatch {
   }
 
   //-----------------------------------------------------------------------------
-  
+
   void update_pressure_matrix( const Expr::Tag& pressureTag,
                            Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                            const Uintah::Patch* patch,
@@ -900,7 +900,7 @@ namespace Wasatch {
      4. For each boundary face, loop over its children
      5. For each child, get the cell faces and set appropriate
      boundary conditions
-     */    
+     */
     // get the dimensions of this patch
     namespace SS = SpatialOps::structured;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
@@ -913,17 +913,17 @@ namespace Wasatch {
     const double dy2 = dy*dy;
     const double dz2 = dz*dz;
     const std::string phiName = pressureTag.name();
-    
+
     std::vector<Uintah::Patch::FaceType> bndFaces;
     patch->getBoundaryFaces(bndFaces);
     std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
-    
+
     // loop over the boundary faces
     for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
       Uintah::Patch::FaceType face = *faceIterator;
       //get the number of children
       const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
-      
+
       for( int child = 0; child<numChildren; ++child ){
         SCIRun::Iterator bound_ptr;
 
@@ -931,14 +931,14 @@ namespace Wasatch {
 
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
-        
+
         // cell offset used to calculate local cell index with respect to patch.
         const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
         for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
           SCIRun::IntVector bc_point_indices(*bound_ptr);
-          
-          Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];            
-          
+
+          Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+
           switch(face){
             case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
             case Uintah::Patch::xplus :                coefs.p -=1.0/dx2; break;
@@ -947,23 +947,23 @@ namespace Wasatch {
             case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p -=1.0/dz2; break;
             case Uintah::Patch::zplus :                coefs.p -=1.0/dz2; break;
             default:                                                      break;
-          }  
+          }
         }
       } // child loop
     } // face loop
   }
-  
+
   //-----------------------------------------------------------------------------
-  
+
   void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                               const Uintah::Patch* patch,
                               const SCIRun::IntVector refCell )
   {
+    using SCIRun::IntVector;
     std::ostringstream msg;
-    
     if (patch->containsCell(refCell)) {
-      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) && 
-                                        patch->containsCell(refCell + IntVector(0,1,0)) && 
+      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) &&
+                                        patch->containsCell(refCell + IntVector(0,1,0)) &&
                                         patch->containsCell(refCell + IntVector(0,0,1));
       // check if all cell neighbors are contained in this patch:
       if ( !containsAllNeighbors ) {
@@ -971,65 +971,67 @@ namespace Wasatch {
         << "  Invalid reference pressure cell." << std::endl
         << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
         << std::endl;
-        throw std::runtime_error( msg.str() );        
+        throw std::runtime_error( msg.str() );
       }
       Uintah::Stencil4& refCoef = pressureMatrix[refCell];
       refCoef.w = 0.0;
       refCoef.s = 0.0;
       refCoef.b = 0.0;
-      refCoef.p = 1.0;      
+      refCoef.p = 1.0;
       pressureMatrix[refCell + IntVector(1,0,0)].w = 0.0;
       pressureMatrix[refCell + IntVector(0,1,0)].s = 0.0;
-      pressureMatrix[refCell + IntVector(0,0,1)].b = 0.0;      
-    }    
+      pressureMatrix[refCell + IntVector(0,0,1)].b = 0.0;
+    }
   }
-  
+
   //-----------------------------------------------------------------------------
-  
+
   void set_ref_pressure_rhs( SVolField& pressureRHS,
                              const Uintah::Patch* patch,
                              const double refPressureValue,
-                             const SCIRun::IntVector refCell ) {
-    std::ostringstream msg;    
+                             const SCIRun::IntVector refCell )
+  {
+    using SCIRun::IntVector;
+    std::ostringstream msg;
     if (patch->containsCell(refCell)) {
       // NOTE: for some reason, for the [0,0,0] cell, we are able to set the RHS of the "ghost" or "extra" cells although
       // the patch reports that those cells are not contained in that patch... Hence the crazy logic in the following lines to
       // take care of the [0,0,0] cell.
-      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) && 
-                                        patch->containsCell(refCell + IntVector(0,1,0)) && 
+      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) &&
+                                        patch->containsCell(refCell + IntVector(0,1,0)) &&
                                         patch->containsCell(refCell + IntVector(0,0,1)) &&
-                                        (patch->containsCell(refCell + IntVector(-1,0,0)) || refCell.x() == 0) &&
-                                        (patch->containsCell(refCell + IntVector(0,-1,0)) || refCell.y() == 0) &&
-                                        (patch->containsCell(refCell + IntVector(0,0,-1)) || refCell.z() == 0) ;
+                                       (patch->containsCell(refCell + IntVector(-1,0,0)) || refCell.x() == 0) &&
+                                       (patch->containsCell(refCell + IntVector(0,-1,0)) || refCell.y() == 0) &&
+                                       (patch->containsCell(refCell + IntVector(0,0,-1)) || refCell.z() == 0) ;
       // check if all cell neighbors are contained in this patch:
       if ( !containsAllNeighbors ) {
         msg << std::endl
         << "  Invalid reference pressure cell." << std::endl
         << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
         << std::endl;
-        throw std::runtime_error( msg.str() );        
+        throw std::runtime_error( msg.str() );
       }
       // remember, indexing is local for SpatialOps so we must offset by the patch's low index
-      const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);      
+      const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);
       const SpatialOps::structured::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
       const int irefCell = pressureRHS.window_without_ghost().flat_index(refCellIJK);
-      pressureRHS[irefCell] = refPressureValue;  
-      
+      pressureRHS[irefCell] = refPressureValue;
+
       // modify rhs for neighboring cells
       const Uintah::Vector spacing = patch->dCell();
       const double dx2 = spacing[0]*spacing[0];
       const double dy2 = spacing[1]*spacing[1];
       const double dz2 = spacing[2]*spacing[2];
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refPressureValue/dx2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refPressureValue/dy2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refPressureValue/dz2;        
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refPressureValue/dx2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refPressureValue/dy2;  
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refPressureValue/dz2;              
-    }    
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refPressureValue/dx2;
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refPressureValue/dy2;
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refPressureValue/dz2;
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refPressureValue/dx2;
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refPressureValue/dy2;
+      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refPressureValue/dz2;
+    }
   }
-  
-  
+
+
   //==================================================================
   // Explicit template instantiation
   #include <CCA/Components/Wasatch/FieldTypes.h>

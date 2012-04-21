@@ -24,6 +24,7 @@
 #include "Properties.h"
 #include "GraphHelperTools.h"
 #include "ParseTools.h"
+#include "FieldAdaptor.h"
 #include "Expressions/TabPropsEvaluator.h"
 #include "Expressions/DensityCalculator.h"
 
