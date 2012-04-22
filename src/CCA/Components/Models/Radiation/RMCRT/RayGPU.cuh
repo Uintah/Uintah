@@ -42,13 +42,15 @@ extern "C" {
  *  the same file, or in a file included by the file from which the function is called.
  */
 
-__global__ void rayTraceKernel(const uint3 domainLow,
-                               const uint3 domainHigh,
-                               const uint3 domainSize,
+__global__ void rayTraceKernel(const uint3 patchLo,
+                               const uint3 patchHi,
+                               const uint3 patchSize,
+                               const uint3 domainLo,
+                               const uint3 domainHi,
                                const double3 cellSpacing,
-                               double* __restrict__ device_abskg,
-                               double* __restrict__ device_sigmaT4,
-                               double* __restrict__ device_divQ,
+                               double* device_abskg,
+                               double* device_sigmaT4,
+                               double* device_divQ,
                                bool virtRad,
                                bool isSeedRandom,
                                bool ccRays,
@@ -65,9 +67,9 @@ __device__ void updateSumIDevice(const uint3& domainLow,
                                  const double3& cellSpacing,
                                  const double3& inv_direction_vector,
                                  const double3& ray_location,
-                                 double* __restrict__ device_sigmaT4,
-                                 double* __restrict__ device_abskg,
-                                 double threshold,
+                                 double* device_sigmaT4,
+                                 double* device_abskg,
+                                 double* threshold,
                                  double* sumI);
 
 
