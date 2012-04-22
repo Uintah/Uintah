@@ -1463,6 +1463,7 @@ material models available are:
     \item The melting model:
       \begin{itemize}
         \item Constant melt temperature ({\bf default}).
+        \item Linear melt temperature.
         \item Steinberg-Cochran-Guinan (SCG) melt.
         \item Burakovsky-Preston-Silbar (BPS) melt.
       \end{itemize}
@@ -1902,6 +1903,41 @@ Uintah.  These are
       <melting_temp_model type="constant_Tm">
       </melting_temp_model>
   \end{Verbatim}
+
+  \subparagraph{Linear melt model}
+  A melting temperature model designed to be linear in pressure can be invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+      <melting_temp_model type="linear_Tm">
+        <T_m0> </T_m0>
+        <a>   </a>
+        <b> </b>
+        <Gamma_0> </Gamma_0>
+        <K_T> </K_T>
+      </melting_temp_model>
+  \end{Verbatim}
+
+  where T\_m0 is required, and either a or Gamma\_0 along with K\_T, or b.  
+  T\_m0 is the initial melting temperature in Kelvin, a is the Kraut-Kennedy coefficient,
+  Gamma\_0 is the Gruniesen Gamma, b is the pressure coefficient in Kelvin per Pascal, and K\_T
+  is the isothermal bulk modulus in Pascals.
+  The pressure is calculated using either
+  \begin{equation}
+    T_{m}=T_{m0}+bP
+  \end{equation}
+  or
+  \begin{equation}
+    T_{m}=T_{m0}\left(1+a\frac{\rho_0}{\rho}\right)
+  \end{equation}
+  The constants in these equations are linked together via the following equation
+  \begin{equation}
+   b=\frac{aT_{m0}}{K_T}
+  \end{equation}
+  and a is related to the Gruneisen Gamma by the Lindemann Law \cite{Poirier91}:
+  \begin{equation}
+   a=2\left(\Gamma_0-\frac{1}{3}\right)
+  \end{equation}
+
+  
 
   \subparagraph{SCG melt model}
   We use a pressure dependent relation to determine the melting
