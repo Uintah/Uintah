@@ -623,7 +623,7 @@ namespace Wasatch{
     }
 
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
-    {
+    if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;
       typedef std::list< TaskInterface* > TIList;
       bool isOk = true;
