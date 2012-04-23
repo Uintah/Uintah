@@ -37,12 +37,12 @@ class OstwaldRipening
   const double rCutOff_;                 // size to swap r correlation 1/r to r^2
   const double constCoef_;							 // this is the same constant coefficient used for the growth expression
   const int nPts_;                       // number of qudarature nodes in closure
-  
+
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec weights_;
   FieldVec abscissae_;
   const FieldT* growthCoef_;
-  
+
   OstwaldRipening( const Expr::Tag growthCoefTag,
                    const Expr::TagList weightsTagList_,
                    const Expr::TagList abscissaeTagList_,
@@ -51,7 +51,7 @@ class OstwaldRipening
                    const double rCutOff,
                    const double constCoef,
                    const int nPts);
-  
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -80,25 +80,25 @@ public:
     {
       return new OstwaldRipening<FieldT>( growthcoeft_, weightstaglist_,abscissaetaglist_, momentorder_, expcoef_, rcutoff_, constcoef_, npts_ );
     }
-    
+
   private:
     const Expr::Tag growthcoeft_;          //growth coefficient g0 expr
     const Expr::TagList weightstaglist_;   // these are the tags of all the known moments
     const Expr::TagList abscissaetaglist_; // these are the tags of all the known moments
-    const double momentorder_; 
+    const double momentorder_;
     const double expcoef_;
     const double rcutoff_;
     const double constcoef_;
     const int npts_;
   };
-  
+
   ~OstwaldRipening();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
+
 };
 
 // ###################################################################
@@ -163,7 +163,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
-  
+
   const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
   growthCoef_ = &fm.field_ref( growthCoefTag_ );
 }
@@ -183,13 +183,11 @@ void
 OstwaldRipening<FieldT>::
 evaluate()
 {
-  using namespace SpatialOps;
   FieldT& result = this->value();
-  result = 0.0;
 
   typename FieldT::const_interior_iterator growthCoefIter = growthCoef_->interior_begin();
   typename FieldT::interior_iterator resultsIterator = result.interior_begin();
-  
+
   std::vector<typename FieldT::const_interior_iterator> weightsIterators;
   std::vector<typename FieldT::const_interior_iterator> abscissaeIterators;
   for (int i=0; i < nPts_; i++) {
@@ -199,26 +197,26 @@ evaluate()
     typename FieldT::const_interior_iterator otherIterator = abscissae_[i]->interior_begin();
     abscissaeIterators.push_back(otherIterator);
   }
-  
+
   double SumVal;
   while (growthCoefIter!=growthCoef_->interior_end() ) {
     SumVal = 0.0;
     for (int i = 0; i < nPts_; i++) {
       if (*abscissaeIterators[0] > rCutOff_ ) {
-        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ - 2 ) * exp(expCoef_ / *abscissaeIterators[i] );  
+        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ - 2 ) * exp(expCoef_ / *abscissaeIterators[i] );
       } else {
-        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ + 1 ) * exp(expCoef_ / *abscissaeIterators[i] );        
+        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ + 1 ) * exp(expCoef_ / *abscissaeIterators[i] );
       }
     }
     *resultsIterator = -( SumVal ); //this term is negative when appearing on RHS
-    
+
     for (int i = 0; i < nPts_; i++) {
       ++weightsIterators[i];
       ++abscissaeIterators[i];
     }
     ++resultsIterator;
     ++growthCoefIter;
-  } 
-}  
+  }
+}
 
 #endif // OstwaldRipening_Expr_h
