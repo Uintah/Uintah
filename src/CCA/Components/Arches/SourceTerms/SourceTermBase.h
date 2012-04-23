@@ -63,6 +63,9 @@ public:
   /** @brief Get the labels for the MPMARCHES dummy solve. */
   virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0;
 
+  /** @brief Work to be performed after properties are setup */ 
+  virtual void extraSetup(){ };
+
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 

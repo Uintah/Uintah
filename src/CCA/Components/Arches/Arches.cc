@@ -762,6 +762,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
+  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
+
+    SourceTermBase* src = iter->second;
+    src->extraSetup();
+
+  }
+
 
   // Add extra species to table lookup as required by models
   d_props->addLookupSpecies();
