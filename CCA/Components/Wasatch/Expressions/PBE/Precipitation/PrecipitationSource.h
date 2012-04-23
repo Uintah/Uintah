@@ -150,10 +150,10 @@ evaluate()
   typename FieldT::const_interior_iterator etaScaleIter = etaScale_->interior_begin();
   typename FieldT::const_interior_iterator densityIter = density_->interior_begin();
   typename FieldT::interior_iterator resultsIterator = result.interior_begin();
-  double nSources_ = molecVols_.size();
+  const size_t nSources_ = molecVols_.size();
   
   std::vector<typename FieldT::const_interior_iterator> sourceIterators;
-  for (int i=0; i < nSources_; i++) {
+  for (size_t i=0; i < nSources_; i++) {
     typename FieldT::const_interior_iterator thisIterator = sources_[i]->interior_begin();
     sourceIterators.push_back(thisIterator);
   }
