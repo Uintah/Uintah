@@ -35,14 +35,13 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
-#include <CCA/Components/Parent/uintahshare.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class UintahParallelComponent;
 
-  class UINTAHSHARE ComponentFactory  {
+  class ComponentFactory  {
   
   public:
     // this function has a switch for all known components

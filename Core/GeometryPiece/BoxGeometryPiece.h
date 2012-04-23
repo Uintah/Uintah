@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Box.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -77,7 +76,7 @@ WARNING
 ****************************************/
 
 
-      class UINTAHSHARE BoxGeometryPiece : public GeometryPiece {
+      class BoxGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

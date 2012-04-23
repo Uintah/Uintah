@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -71,7 +70,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE HeatEquation : public UintahParallelComponent, public SimulationInterface {
+  class HeatEquation : public UintahParallelComponent, public SimulationInterface {
   public:
     HeatEquation(const ProcessorGroup* myworld);
     virtual ~HeatEquation();

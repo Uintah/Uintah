@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_PROCESSORGROUP_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <Core/Parallel/uintahshare.h>
 #include <vector>
 
 namespace Uintah {
@@ -67,7 +66,7 @@ WARNING
 
    class Parallel;
 
-   class UINTAHSHARE ProcessorGroup {
+   class ProcessorGroup {
    public:
       ~ProcessorGroup();
       

@@ -67,7 +67,6 @@ DEALINGS IN THE SOFTWARE.
 
 #define MAX_MATLS 16
 
-#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 
@@ -94,7 +93,7 @@ namespace Uintah {
       vector<EqPress_dbgMatl> matl;
     };
     
-    class UINTAHSHARE ICE : public UintahParallelComponent, public SimulationInterface {
+    class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
       ICE(const ProcessorGroup* myworld, const bool doAMR = false);
       virtual ~ICE();

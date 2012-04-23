@@ -42,9 +42,8 @@ DEALINGS IN THE SOFTWARE.
  ****************************************/
 
 #include <string>
-#include <testprograms/TestSuite/uintahshare.h>
 
-class UINTAHSHARE Test
+class Test
 {
 public:
   Test(const std::string name);

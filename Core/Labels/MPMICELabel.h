@@ -33,11 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <Core/Labels/uintahshare.h>
-
 namespace Uintah {
 
-    class UINTAHSHARE MPMICELabel {
+    class MPMICELabel {
     public:
 
       MPMICELabel();

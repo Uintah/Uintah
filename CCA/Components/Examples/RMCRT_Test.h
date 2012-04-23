@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Components/Examples/uintahshare.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Patch.h>
@@ -76,7 +75,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE RMCRT_Test: public UintahParallelComponent, public SimulationInterface {
+  class RMCRT_Test: public UintahParallelComponent, public SimulationInterface {
   public:
     RMCRT_Test ( const ProcessorGroup* myworld );
     virtual ~RMCRT_Test ( void );

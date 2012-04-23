@@ -47,12 +47,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
    using namespace SCIRun;
 
-   class UINTAHSHARE InvalidValue : public Exception {
+   class InvalidValue : public Exception {
    public:
       InvalidValue(const std::string&, const char* file, int line);
       InvalidValue(const InvalidValue&);

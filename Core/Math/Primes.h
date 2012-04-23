@@ -33,9 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_Primes_H
 
 #include <Core/Math/TntJama/tnt.h>
-#include <Core/Math/uintahshare.h>
+
 namespace Uintah {
-  class UINTAHSHARE Primes {
+  class Primes {
   public:
     static const int MaxFactors = 64;
     typedef unsigned long FactorType[MaxFactors];

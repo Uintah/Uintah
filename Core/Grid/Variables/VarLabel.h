@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -75,7 +74,7 @@ namespace Uintah {
       
       ****************************************/
     
-  class UINTAHSHARE VarLabel : public RefCounted {
+  class VarLabel : public RefCounted {
   public:
     enum VarType {
       Normal,
@@ -151,7 +150,7 @@ namespace Uintah {
      
     string                 d_name;
 
-    UINTAHSHARE friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
+     friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
 
   private:
     // You must use VarLabel::create.

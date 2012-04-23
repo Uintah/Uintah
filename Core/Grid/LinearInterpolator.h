@@ -39,14 +39,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NCVariable.h>
 #include <vector>
 
-#include <Core/Grid/uintahshare.h>
-
 namespace Uintah {
 
   using namespace SCIRun;
   using std::vector;
 
-  class UINTAHSHARE LinearInterpolator : public ParticleInterpolator {
+  class LinearInterpolator : public ParticleInterpolator {
     
   public:
     

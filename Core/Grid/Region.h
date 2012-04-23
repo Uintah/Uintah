@@ -40,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <iosfwd>
 #include   <iostream>
 
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -75,7 +74,7 @@ WARNING
      
 ****************************************/
     
-  class UINTAHSHARE Region {
+  class Region {
     public:
     
    inline Region()

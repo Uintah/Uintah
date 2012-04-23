@@ -90,7 +90,7 @@ class Level;
       
 ****************************************/
 
-class UINTAHSHARE SimulationState : public RefCounted {
+class SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
   ~SimulationState();

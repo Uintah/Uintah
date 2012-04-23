@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <list>
 #include   <string>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -96,7 +95,7 @@ namespace Uintah {
   using std::string;
   using std::list;
 
-  class UINTAHSHARE FileGeometryPiece : public SmoothGeomPiece {
+  class FileGeometryPiece : public SmoothGeomPiece {
     
   public:
     //////////////////////////////////////////////////////////////////////

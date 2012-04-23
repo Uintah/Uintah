@@ -38,10 +38,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Parallel/uintahshare.h>
 namespace Uintah {
   
-  class UINTAHSHARE PackedBuffer : public RefCounted
+  class PackedBuffer : public RefCounted
   {
   public:
     PackedBuffer(int bytes)
@@ -55,7 +54,7 @@ namespace Uintah {
     int bufsize;
   };
 
-  class UINTAHSHARE PackBufferInfo : public BufferInfo {
+  class PackBufferInfo : public BufferInfo {
   public:
     PackBufferInfo();
     ~PackBufferInfo();

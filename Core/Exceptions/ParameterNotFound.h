@@ -46,10 +46,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
-   class UINTAHSHARE ParameterNotFound : public ProblemSetupException {
+   class ParameterNotFound : public ProblemSetupException {
    public:
       ParameterNotFound(const std::string&, const char* file, int line);
       ParameterNotFound(const ParameterNotFound&);

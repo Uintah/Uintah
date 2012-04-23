@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <CCA/Components/Examples/uintahshare.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,7 +82,7 @@ DESCRIPTION
 
 ****************************************/
 
-  class UINTAHSHARE GPUSchedulerTest : public UintahParallelComponent, public SimulationInterface {
+  class GPUSchedulerTest : public UintahParallelComponent, public SimulationInterface {
 
   public:
     GPUSchedulerTest(const ProcessorGroup* myworld);

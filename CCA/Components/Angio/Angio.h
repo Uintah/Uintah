@@ -80,7 +80,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE Angio : public SimulationInterface, public UintahParallelComponent {
+class Angio : public SimulationInterface, public UintahParallelComponent {
 public:
   Angio(const ProcessorGroup* myworld);
   virtual ~Angio();

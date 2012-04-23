@@ -47,7 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Exception;
@@ -55,7 +54,7 @@ namespace Uintah {
   class Level; 
   class Patch;
 
-  class UINTAHSHARE UnknownVariable : public Exception {
+  class UnknownVariable : public Exception {
   public:
     UnknownVariable(const std::string& varname, int dwid, const Patch* patch,
                     int matlIndex, const std::string& extramsg, 

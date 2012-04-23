@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <vector>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 /**************************************
 	
@@ -83,7 +82,7 @@ WARNING
 	
 ****************************************/
 
-      class UINTAHSHARE UnionGeometryPiece : public GeometryPiece {
+      class UnionGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

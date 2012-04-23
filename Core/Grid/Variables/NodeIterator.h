@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
@@ -70,7 +69,7 @@ namespace Uintah {
 
    ****************************************/
 
-  class UINTAHSHARE NodeIterator  :
+  class NodeIterator  :
     public BaseIterator {
       public:
         inline ~NodeIterator() {}

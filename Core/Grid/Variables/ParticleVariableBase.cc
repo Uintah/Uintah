@@ -42,11 +42,6 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
-#else
-#define UINTAHSHARE
-#endif
 
 ParticleVariableBase::~ParticleVariableBase()
 {       

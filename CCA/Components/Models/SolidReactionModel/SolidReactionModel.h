@@ -36,7 +36,6 @@
 #include <CCA/Components/Models/SolidReactionModel/RateModel.h>
 #include <CCA/Ports/ModelInterface.h>
 
-#include <CCA/Components/Models/uintahshare.h>
 namespace Uintah {
     class ICELabel;
     

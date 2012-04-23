@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
-#include <CCA/Ports/uintahshare.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 using namespace SCIRun;
@@ -119,34 +118,34 @@ inline bool operator>(const History<BITS> &a, const History<BITS> &b)
 {
   return a.bits>b.bits;
 }
-extern UINTAHSHARE int dir3[][3];
-extern UINTAHSHARE int dir2[][3];
-extern UINTAHSHARE int dir1[][3];
+extern  int dir3[][3];
+extern  int dir2[][3];
+extern  int dir1[][3];
 
-extern UINTAHSHARE int hinv3[][8];
-extern UINTAHSHARE int ginv3[][8];
-extern UINTAHSHARE int minv3[][8];
-extern UINTAHSHARE int hinv2[][8];
-extern UINTAHSHARE int ginv2[][8];
-extern UINTAHSHARE int minv2[][8];
+extern  int hinv3[][8];
+extern  int ginv3[][8];
+extern  int minv3[][8];
+extern  int hinv2[][8];
+extern  int ginv2[][8];
+extern  int minv2[][8];
 
-extern UINTAHSHARE int horder3[][8];
-extern UINTAHSHARE int gorder3[][8];
-extern UINTAHSHARE int morder3[][8];
-extern UINTAHSHARE int horder2[][8];
-extern UINTAHSHARE int gorder2[][8];
-extern UINTAHSHARE int morder2[][8];
+extern  int horder3[][8];
+extern  int gorder3[][8];
+extern  int morder3[][8];
+extern  int horder2[][8];
+extern  int gorder2[][8];
+extern  int morder2[][8];
 
-extern UINTAHSHARE int horient3[][8];
-extern UINTAHSHARE int gorient3[][8];
-extern UINTAHSHARE int morient3[][8];
-extern UINTAHSHARE int horient2[][8];
-extern UINTAHSHARE int gorient2[][8];
-extern UINTAHSHARE int morient2[][8];
+extern  int horient3[][8];
+extern  int gorient3[][8];
+extern  int morient3[][8];
+extern  int horient2[][8];
+extern  int gorient2[][8];
+extern  int morient2[][8];
 
-extern UINTAHSHARE int orient1[][8];
-extern UINTAHSHARE int order1[][8];
-extern UINTAHSHARE int inv1[][8];
+extern  int orient1[][8];
+extern  int order1[][8];
+extern  int inv1[][8];
 
 #define EPSILON 1e-6
 #define BINS (1<<DIM)

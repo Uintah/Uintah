@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -50,7 +49,7 @@ using namespace SCIRun;
   */
   /////////////////////////////////////////////////////////////////////////////
 
-class UINTAHSHARE ShellMPM : public SerialMPM {
+class ShellMPM : public SerialMPM {
 
 public:
 

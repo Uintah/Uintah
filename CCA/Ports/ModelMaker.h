@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <vector>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 /**************************************
@@ -72,7 +71,7 @@ WARNING
 ****************************************/
 
   class ModelInterface;
-   class UINTAHSHARE ModelMaker : public UintahParallelPort {
+   class ModelMaker : public UintahParallelPort {
    public:
      ModelMaker();
      virtual ~ModelMaker();

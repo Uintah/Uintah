@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -79,7 +78,7 @@ WARNING
 
 ****************************************/
 
-  class UINTAHSHARE TorusGeometryPiece : public GeometryPiece {
+  class TorusGeometryPiece : public GeometryPiece {
     
   public:
     //////////

@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <list>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -95,7 +94,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
+class ImpMPM : public MPMCommon, public UintahParallelComponent, 
   public SimulationInterface {
 public:
   ImpMPM(const ProcessorGroup* myworld);

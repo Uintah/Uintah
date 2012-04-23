@@ -56,7 +56,6 @@ DEALINGS IN THE SOFTWARE.
 #endif
 #include <iostream>
 
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -374,7 +373,7 @@ private:
   
   // specialization for T=Point
   template <>
-  UINTAHSHARE void ParticleVariable<Point>::gather(ParticleSubset* pset,
+   void ParticleVariable<Point>::gather(ParticleSubset* pset,
                                        const vector<ParticleSubset*> &subsets,
                                        const vector<ParticleVariableBase*> &srcs,
                                        const vector<const Patch*>& srcPatches,
@@ -457,7 +456,7 @@ template<class T>
   
   // specialized for T=Point
   template<>
-  UINTAHSHARE void
+   void
     ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
                                      const ProcessorGroup* pg,
                                      ParticleSubset* pset,
@@ -510,7 +509,7 @@ template<class T>
 
   // Specialized in ParticleVariable_special.cc
   template<>
-  UINTAHSHARE void
+   void
   ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
                                   const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
 

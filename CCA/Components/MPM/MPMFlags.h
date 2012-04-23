@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class UINTAHSHARE MPMFlags {
+  class MPMFlags {
 
   public:
 

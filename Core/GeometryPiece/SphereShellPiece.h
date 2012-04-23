@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Point.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -70,7 +69,7 @@ namespace Uintah {
 */
 /////////////////////////////////////////////////////////////////////////////
 
-  class UINTAHSHARE SphereShellPiece : public ShellGeometryPiece {
+  class SphereShellPiece : public ShellGeometryPiece {
 	 
   public:
     //////////

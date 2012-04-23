@@ -48,14 +48,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
 class GeometryObject;
 
-class UINTAHSHARE AMRMPM : public SerialMPM {
+class AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld);

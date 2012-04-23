@@ -55,7 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <map>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -101,7 +100,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE Level : public RefCounted {
+class Level : public RefCounted {
 public:
   Level(Grid* grid, const Point& anchor, const Vector& dcell, int index, 
         IntVector refinementRatio,
@@ -317,10 +316,10 @@ private:
   mutable CrowdMonitor    d_cachelock;
 };
 
-  UINTAHSHARE const Level* getLevel(const PatchSubset* subset);
-  UINTAHSHARE const Level* getLevel(const PatchSet* set);
+   const Level* getLevel(const PatchSubset* subset);
+   const Level* getLevel(const PatchSet* set);
 
-  UINTAHSHARE const LevelP& getLevelP(const PatchSubset* subset);
+   const LevelP& getLevelP(const PatchSubset* subset);
 
 } // End namespace Uintah
 

@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
 
-#include <CCA/Components/DataArchiver/uintahshare.h>
 namespace Uintah {
 class DataWarehouse;
 using SCIRun::ConsecutiveRangeSet;
@@ -78,7 +77,7 @@ using SCIRun::Mutex;
      ****************************************/
     
    //! Handles outputting the data.
-   class UINTAHSHARE DataArchiver : public Output, public UintahParallelComponent {
+   class DataArchiver : public Output, public UintahParallelComponent {
      public:
        DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
        virtual ~DataArchiver();

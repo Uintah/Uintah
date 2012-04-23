@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -88,7 +87,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE FractureMPM : public SerialMPM {
+class FractureMPM : public SerialMPM {
 public:
   FractureMPM(const ProcessorGroup* myworld);
    virtual ~FractureMPM();

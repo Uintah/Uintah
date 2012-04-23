@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iosfwd>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -89,7 +88,7 @@ WARNING
 	
 ****************************************/
       
-class UINTAHSHARE DataWarehouse : public RefCounted {
+class DataWarehouse : public RefCounted {
 
 public:
   virtual ~DataWarehouse();

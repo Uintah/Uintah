@@ -149,7 +149,7 @@ namespace Wasatch{
    *       equation.
    *
    */
-  class UINTAHSHARE Wasatch :
+  class Wasatch :
     public Uintah::UintahParallelComponent,
     public Uintah::SimulationInterface
   {

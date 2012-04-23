@@ -65,15 +65,9 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#undef UINTAHSHARE
-#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
-#else
-#define UINTAHSHARE
-#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern UINTAHSHARE SCIRun::Mutex       cerrLock;
+extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler",             false);

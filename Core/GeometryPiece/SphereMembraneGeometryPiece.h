@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Point.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -83,7 +82,7 @@ WARNING
         
 ****************************************/
 
-class UINTAHSHARE SphereMembraneGeometryPiece : public GeometryPiece {
+class SphereMembraneGeometryPiece : public GeometryPiece {
          
 public:
   //////////

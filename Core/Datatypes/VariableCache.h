@@ -54,14 +54,13 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
-#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
   using std::vector;
   using std::string;
   using std::map;
   using namespace SCIRun;
 
-class UINTAHSHARE VariableCache: public Datatype {
+class VariableCache: public Datatype {
 protected:
   map< string, string > data_cache;
 public:

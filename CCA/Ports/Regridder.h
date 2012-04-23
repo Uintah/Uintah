@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/uintahshare.h>
 #include <vector>
 
 using SCIRun::IntVector;
@@ -75,7 +74,7 @@ WARNING
 ****************************************/
 
   //! Takes care of AMR Regridding.
-  class UINTAHSHARE Regridder : public UintahParallelPort {
+  class Regridder : public UintahParallelPort {
   public:
     Regridder();
     virtual ~Regridder();

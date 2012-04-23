@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __PROBLEM_SPEC_READER_H__ 
 #define __PROBLEM_SPEC_READER_H__
 
-#include <CCA/Components/ProblemSpecification/uintahshare.h>
 #include <CCA/Ports/ProblemSpecInterface.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -45,7 +44,7 @@ namespace Uintah {
       
   struct Tag;
 
-  class UINTAHSHARE ProblemSpecReader : public ProblemSpecInterface {
+  class ProblemSpecReader : public ProblemSpecInterface {
   public:
     ProblemSpecReader();
     ~ProblemSpecReader();

@@ -47,7 +47,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -90,7 +89,7 @@ WARNING
 
 ****************************************/
 
- class UINTAHSHARE AngioMaterial : public Material {
+ class AngioMaterial : public Material {
  public:
 
    // Default Constructor

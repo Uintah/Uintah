@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <set>
 #include <vector>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -82,7 +81,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE Scheduler : public UintahParallelPort {
+  class Scheduler : public UintahParallelPort {
   public:
     Scheduler();
     virtual ~Scheduler();

@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
 
@@ -72,7 +71,7 @@ WARNING
 ****************************************/
 
 
-  class UINTAHSHARE Burger : public UintahParallelComponent, public SimulationInterface {
+  class Burger : public UintahParallelComponent, public SimulationInterface {
   public:
     Burger(const ProcessorGroup* myworld);
     virtual ~Burger();

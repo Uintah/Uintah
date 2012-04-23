@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <vector>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using std::vector;
@@ -84,7 +83,7 @@ WARNING
         
 ****************************************/
 
-      class UINTAHSHARE TriGeometryPiece : public GeometryPiece {
+      class TriGeometryPiece : public GeometryPiece {
       public:
          //////////
          //  Constructor that takes a ProblemSpecP argument.   It reads the xml 

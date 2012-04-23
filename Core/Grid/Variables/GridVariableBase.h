@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/Variables/Variable.h>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Grid/uintahshare.h>
 #include <Core/Geometry/IntVector.h>
 namespace Uintah {
 
@@ -68,7 +67,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE GridVariableBase : public Variable {
+  class GridVariableBase : public Variable {
   public:
     virtual ~GridVariableBase() {}
       

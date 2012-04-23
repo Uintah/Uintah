@@ -37,11 +37,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
-  class UINTAHSHARE SwitchingCriteria : public UintahParallelPort {
+  class SwitchingCriteria : public UintahParallelPort {
     
   public:
     

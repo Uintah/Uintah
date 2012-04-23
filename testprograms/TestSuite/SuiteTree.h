@@ -47,9 +47,8 @@ DEALINGS IN THE SOFTWARE.
 #include <list>
 #include <string>
 
-#include <testprograms/TestSuite/uintahshare.h>
 
-class UINTAHSHARE SuiteTree
+class SuiteTree
 {
 public:
   SuiteTree() {}
@@ -68,7 +67,7 @@ public:
   { bool dummy; return composeSummary("", expandAll, dummy); }
 };
 
-class UINTAHSHARE SuiteTreeNode : public SuiteTree
+class SuiteTreeNode : public SuiteTree
 {
 public:
   SuiteTreeNode(std::string name)
@@ -103,7 +102,7 @@ private:
   std::list<SuiteTree*> mySubTrees;
 };
 
-class UINTAHSHARE SuiteTreeLeaf : public SuiteTree
+class SuiteTreeLeaf : public SuiteTree
 {
 public:
   SuiteTreeLeaf(Suite* suite)

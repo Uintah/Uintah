@@ -47,7 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Level;
@@ -83,12 +82,12 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE Task {
+  class Task {
 
   protected:
 
     // base CPU Action class
-    class UINTAHSHARE ActionBase {
+    class ActionBase {
     public:
       virtual ~ActionBase();
       virtual void doit(const ProcessorGroup* pg,
@@ -99,7 +98,7 @@ WARNING
     };
 
     // base GPU Action class
-    class UINTAHSHARE ActionGPUBase {
+    class ActionGPUBase {
     public:
       virtual ~ActionGPUBase();
       virtual void doitGPU(const ProcessorGroup* pg,
@@ -1060,7 +1059,7 @@ WARNING
       Modifies, Computes, Requires
     };
     
-    struct UINTAHSHARE Dependency {
+    struct  Dependency {
       Dependency* next;
       DepType deptype;
       Task* task;
@@ -1122,7 +1121,7 @@ WARNING
     }; // end struct Dependency
     
     
-    struct UINTAHSHARE Edge {
+    struct  Edge {
       const Dependency* comp;
       Edge* compNext;
       const Dependency* req;
@@ -1248,9 +1247,9 @@ private:
     int dwmap[TotalDWs];
     int sortedOrder;
 
-    UINTAHSHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
-    UINTAHSHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
-    UINTAHSHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
+     friend std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
+     friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
+     friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
 
   }; // end class Task
   

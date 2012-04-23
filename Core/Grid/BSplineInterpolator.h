@@ -33,12 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/ParticleInterpolator.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Patch;
 
-  class UINTAHSHARE BSplineInterpolator : public ParticleInterpolator {
+  class BSplineInterpolator : public ParticleInterpolator {
     
   public:
     

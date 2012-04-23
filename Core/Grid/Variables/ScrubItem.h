@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/Containers/TrivialAllocator.h>
 
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -66,7 +65,7 @@ struct ScrubItem {
     return label == d.label && matl == d.matl && patch == d.patch && dw == d.dw;
   }
 
-  UINTAHSHARE static TrivialAllocator scrub_alloc;
+   static TrivialAllocator scrub_alloc;
 
 #ifndef MALLOC_TRACE //disable new/delete overloads if MALLOC_TRACE is on
   void* operator new(size_t)

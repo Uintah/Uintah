@@ -64,10 +64,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 
-#include <Core/Math/uintahshare.h>
 namespace Uintah {
 
-  class UINTAHSHARE FastMatrix {
+  class FastMatrix {
   public:
     FastMatrix(int rows, int cols);
     ~FastMatrix();

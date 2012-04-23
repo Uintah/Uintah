@@ -29,8 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "../TestSuite/SuiteTree.h"
-#include <testprograms/TestBoxGrouper/uintahshare.h>
 
 namespace Uintah {
-UINTAHSHARE SuiteTree* BoxGrouperTestTree(bool verbose);
+ SuiteTree* BoxGrouperTestTree(bool verbose);
 }

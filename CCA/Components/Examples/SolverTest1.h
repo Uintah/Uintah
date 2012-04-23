@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -71,7 +70,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE SolverTest1 : public UintahParallelComponent, public SimulationInterface {
+  class SolverTest1 : public UintahParallelComponent, public SimulationInterface {
   public:
     SolverTest1(const ProcessorGroup* myworld);
     virtual ~SolverTest1();

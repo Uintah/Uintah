@@ -39,12 +39,6 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
 
-#undef UINTAHSHARE
-#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#  define UINTAHSHARE __declspec(dllimport)
-#else
-#  define UINTAHSHARE
-#endif
 
 void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
                                     const IntVector& low, const IntVector& high)

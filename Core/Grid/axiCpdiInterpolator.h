@@ -32,12 +32,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/ParticleInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
-#include <Core/Grid/uintahshare.h>
+
 namespace Uintah {
 
   class Patch;
 
-  class UINTAHSHARE axiCpdiInterpolator : public cpdiInterpolator {
+  class axiCpdiInterpolator : public cpdiInterpolator {
     
   public:
     

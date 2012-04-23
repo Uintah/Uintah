@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -79,7 +78,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE RigidMPM : public SerialMPM {
+class RigidMPM : public SerialMPM {
 public:
   RigidMPM(const ProcessorGroup* myworld);
   virtual ~RigidMPM();

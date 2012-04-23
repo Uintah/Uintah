@@ -60,7 +60,6 @@ DEALINGS IN THE SOFTWARE.
 #  include <unistd.h>
 #endif
 
-#include <Core/DataArchive/uintahshare.h>
 
 namespace Uintah {
 
@@ -100,7 +99,7 @@ namespace Uintah {
    ****************************************/
 
   //! Container to hold UCF data when read in from disk.
-  class UINTAHSHARE DataArchive {
+  class DataArchive {
     private:
 
       // what we need to store on a per-variable basis

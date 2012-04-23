@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iosfwd>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 
@@ -69,7 +68,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE ReductionVariableBase : public Variable {
+   class ReductionVariableBase : public Variable {
    public:
       
       virtual ~ReductionVariableBase();

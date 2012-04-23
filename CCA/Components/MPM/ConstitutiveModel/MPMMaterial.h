@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -91,7 +90,7 @@ WARNING
 
 ****************************************/
 
- class UINTAHSHARE MPMMaterial : public Material {
+ class MPMMaterial : public Material {
  public:
 
    // Default Constructor

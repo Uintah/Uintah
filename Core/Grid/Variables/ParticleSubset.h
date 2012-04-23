@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 using std::ostream;
 using SCIRun::IntVector;
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
   typedef int particleIndex;
   typedef int particleId;
@@ -78,7 +77,7 @@ WARNING
 
   class ParticleVariableBase;
 
-  class UINTAHSHARE ParticleSubset : public RefCounted {
+  class ParticleSubset : public RefCounted {
   public:
     ParticleSubset(int num_particles, int matlIndex, const Patch*);
     ParticleSubset(int num_particles, int matlIndex, const Patch*,
@@ -182,7 +181,7 @@ WARNING
       return neighbor_subsets;
     }
     
-    UINTAHSHARE friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
+    friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
 
    private:
     //////////

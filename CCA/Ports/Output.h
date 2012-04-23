@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/OS/Dir.h>
 #include <string>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -78,7 +77,7 @@ WARNING
 
 class SimulationState;
 
-  class UINTAHSHARE Output : public UintahParallelPort {
+  class Output : public UintahParallelPort {
   public:
     Output();
     virtual ~Output();

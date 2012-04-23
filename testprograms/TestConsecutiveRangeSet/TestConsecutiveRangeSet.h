@@ -29,6 +29,5 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "../TestSuite/SuiteTree.h"
-#include <testprograms/TestConsecutiveRangeSet/uintahshare.h>
 
-UINTAHSHARE SuiteTree* ConsecutiveRangeSetTestTree();
+SuiteTree* ConsecutiveRangeSetTestTree();

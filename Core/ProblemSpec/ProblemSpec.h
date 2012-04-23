@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 
 typedef struct _xmlNode xmlNode;
 
-#include <Core/ProblemSpec/uintahshare.h>
 namespace Uintah {
 
 class TypeDescription;
@@ -89,7 +88,7 @@ WARNING
 
 /// A Problem Spec class.
 /// This really is a problem Spec class.
-   class UINTAHSHARE ProblemSpec : public RefCounted {
+   class ProblemSpec : public RefCounted {
    public:
      
       // 'checkForInputError()' determines if the input string is a valid int or float.

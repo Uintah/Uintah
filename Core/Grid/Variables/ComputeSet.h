@@ -42,8 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <algorithm>
 #include   <sstream>
 
-#include <Core/Grid/uintahshare.h>
-
 namespace Uintah {
 
   using SCIRun::InternalError;
@@ -250,17 +248,17 @@ namespace Uintah {
         ComputeSet(const ComputeSet&);
         ComputeSet& operator=(const ComputeSet&);
 
-        UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-        UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-        UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-        UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
     };  // end class ComputeSet
 
-  UINTAHSHARE std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-  UINTAHSHARE std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-  UINTAHSHARE std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-  UINTAHSHARE std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+   std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+   std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+   std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+   std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
   template<class T>
     ComputeSet<T>::ComputeSet()
@@ -379,7 +377,7 @@ namespace Uintah {
   // Note: sort is specialized in ComputeSet_special for const Patch*'s
   // to use Patch::Compare.
   template<>
-    UINTAHSHARE void ComputeSubset<const Patch*>::sort();
+     void ComputeSubset<const Patch*>::sort();
 
   template<class T>
     void ComputeSubset<T>::sort() {
@@ -388,7 +386,7 @@ namespace Uintah {
 
   // specialized for patch in ComputeSet_special.cc
   template<>  
-    UINTAHSHARE bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
+     bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
         const Patch* e2);
 
   template<class T>

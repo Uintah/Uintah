@@ -35,12 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/Output.h>
 
-#include <CCA/Components/Schedulers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
  
-  class UINTAHSHARE SchedulerFactory
+  class SchedulerFactory
   {
   public:
     // this function has a switch for all known Schedulers

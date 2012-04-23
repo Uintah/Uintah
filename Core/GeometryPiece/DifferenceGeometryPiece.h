@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -83,7 +82,7 @@ WARNING
 	
 ****************************************/
 
-      class UINTAHSHARE DifferenceGeometryPiece : public GeometryPiece {
+      class DifferenceGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

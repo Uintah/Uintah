@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 
 #include <Core/Disclosure/TypeUtils.h>
-#include <Core/Grid/uintahshare.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -47,7 +46,7 @@ namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Min<double> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -59,7 +58,7 @@ ReductionVariable<double, Reductions::Min<double> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Min<double> >
 ::getMPIData(vector<char>& data, int& index)
 {
@@ -73,7 +72,7 @@ ReductionVariable<double, Reductions::Min<double> >
 #  if !defined(__digital__) || defined(__GNUC__)
 template<>
 #  endif
-UINTAHSHARE void
+ void
 ReductionVariable<long long, Reductions::Min<long long> >
 ::getMPIData(vector<char>& data, int& index)
 {
@@ -86,7 +85,7 @@ ReductionVariable<long long, Reductions::Min<long long> >
 #  if !defined(__digital__) || defined(__GNUC__)
 template<>
 #  endif
-UINTAHSHARE void
+ void
 ReductionVariable<long long, Reductions::Sum<long long> >
 ::getMPIData(vector<char>& data, int& index)
 {
@@ -100,7 +99,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Min<double> >
 ::putMPIData(vector<char>& data, int& index)
 {
@@ -114,7 +113,7 @@ ReductionVariable<double, Reductions::Min<double> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Max<double> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -127,7 +126,7 @@ ReductionVariable<double, Reductions::Max<double> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Max<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -140,7 +139,7 @@ ReductionVariable<double, Reductions::Max<double> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Max<double> >
 ::putMPIData(vector<char>& data, int& index)
 {
@@ -153,7 +152,7 @@ ReductionVariable<double, Reductions::Max<double> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Sum<double> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -166,7 +165,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 #  if !defined(__digital__) || defined(__GNUC__)
 template<>
 #  endif
-UINTAHSHARE void
+ void
 ReductionVariable<long long, Reductions::Sum<long long> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -179,7 +178,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Sum<double> >
 ::getMPIData(vector<char>& data, int& index)
 {
@@ -193,7 +192,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<double, Reductions::Sum<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -207,7 +206,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -220,7 +219,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -233,7 +232,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<bool, Reductions::And<bool> >
 ::putMPIData(vector<char>& data, int& index)
 {
@@ -249,7 +248,7 @@ ReductionVariable<bool, Reductions::And<bool> >
   #if !defined(__digital__) || defined(__GNUC__)
 template<>
   #endif
-UINTAHSHARE void
+ void
 ReductionVariable<long64, Reductions::Sum<long64> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -261,7 +260,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 #  if !defined(__digital__) || defined(__GNUC__)
 template<>
 #  endif
-UINTAHSHARE void
+ void
 ReductionVariable<long64, Reductions::Sum<long64> >
 ::getMPIData(vector<char>& data, int& index)
 {
@@ -275,7 +274,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<long64, Reductions::Sum<long64> >
 ::putMPIData(vector<char>& data, int& index)
 {
@@ -290,7 +289,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 #    if !defined(__digital__) || defined(__GNUC__)
 template<>
 #    endif
-UINTAHSHARE void
+ void
 ReductionVariable<long long, Reductions::Sum<long long> >
 ::putMPIData(vector<char>& data, int& index)
 {
@@ -305,7 +304,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -317,7 +316,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
 ::getMPIData(vector<char>& data, int& index)
 {       
@@ -332,7 +331,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -346,7 +345,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Min<Vector> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -358,7 +357,7 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Min<Vector> >
 ::getMPIData(vector<char>& data, int& index)
 {       
@@ -373,7 +372,7 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Min<Vector> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -387,7 +386,7 @@ ReductionVariable<Vector, Reductions::Min<Vector> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Max<Vector> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -399,7 +398,7 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Max<Vector> >
 ::getMPIData(vector<char>& data, int& index)
 {       
@@ -414,7 +413,7 @@ ReductionVariable<Vector, Reductions::Max<Vector> >
 template<>
 #endif
 
-UINTAHSHARE void
+ void
 ReductionVariable<Vector, Reductions::Max<Vector> >
    ::putMPIData(vector<char>& data, int& index)
 {

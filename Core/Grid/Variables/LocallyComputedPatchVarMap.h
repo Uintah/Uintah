@@ -56,7 +56,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <map>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   inline int getVolume(const IntVector& low, const IntVector& high)
@@ -69,7 +68,7 @@ namespace Uintah {
     SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
   typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
 
-  class UINTAHSHARE LocallyComputedPatchVarMap {
+  class LocallyComputedPatchVarMap {
   public:
     LocallyComputedPatchVarMap();
     ~LocallyComputedPatchVarMap();

@@ -48,10 +48,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
   
-  class UINTAHSHARE VariableNotFoundInGrid : public SCIRun::Exception {
+  class VariableNotFoundInGrid : public SCIRun::Exception {
   public:
     VariableNotFoundInGrid(const std::string& varname, long particleID,
 			   int matlIndex, const std::string& extramsg, 

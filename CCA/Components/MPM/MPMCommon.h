@@ -39,14 +39,13 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
   using namespace SCIRun;
   
-  class UINTAHSHARE MPMCommon {
+  class MPMCommon {
 
   public:
 

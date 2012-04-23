@@ -40,11 +40,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <string>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
   class VarLabel;
-  class UINTAHSHARE SolverParameters {
+  class SolverParameters {
   public:
     SolverParameters() : useStencil4(false), solveOnExtraCells(false), residualNormalizationFactor(1), 
                         restartableTimestep(false), outputFileName("NULL") {}
@@ -103,7 +102,7 @@ namespace Uintah {
     std::string outputFileName;
   };
   
-  class UINTAHSHARE SolverInterface : public UintahParallelPort {
+  class SolverInterface : public UintahParallelPort {
   public:
     SolverInterface();
     virtual ~SolverInterface();

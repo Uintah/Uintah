@@ -46,11 +46,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
   using namespace SCIRun;
 
-  class UINTAHSHARE InvalidCompressionMode : public Exception {
+  class InvalidCompressionMode : public Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
 			   const std::string& vartype,

@@ -68,12 +68,11 @@ WARNING
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SolverInterface.h>
 
-#include <CCA/Components/Solvers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class UINTAHSHARE SolverFactory
+  class SolverFactory
     {
     public:
       // this function has a switch for all known solvers

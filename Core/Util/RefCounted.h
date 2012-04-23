@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_REFCOUNTED_H
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
-#include <Core/Util/uintahshare.h>
 namespace Uintah {
 /**************************************
 
@@ -62,7 +61,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE RefCounted {
+   class RefCounted {
    public:
       RefCounted();
       virtual ~RefCounted();

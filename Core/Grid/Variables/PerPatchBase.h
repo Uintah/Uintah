@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Variable.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -74,7 +73,7 @@ WARNING
 ****************************************/
 
   // inherits from Variable solely for the purpose of stuffing it in the DW
-  class UINTAHSHARE PerPatchBase : public Variable {
+  class PerPatchBase : public Variable {
    public:
       
       virtual ~PerPatchBase();

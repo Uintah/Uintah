@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #define ALL_CELLS 268435455 /*= MAX_INT/8*/
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
    /**************************************
      
@@ -68,7 +67,7 @@ namespace Uintah {
       
      ****************************************/
 
-   class UINTAHSHARE Ghost {
+   class Ghost {
    public:
       enum GhostType {
          None,

@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <string>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -79,7 +78,7 @@ WARNING
 	
 ****************************************/
       
-class UINTAHSHARE GeometryPiece : public RefCounted {
+class GeometryPiece : public RefCounted {
 	 
 public:
   //////////

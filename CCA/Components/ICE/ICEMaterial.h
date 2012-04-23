@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
   using namespace SCIRun;
   class ICELabel;
@@ -79,7 +78,7 @@ WARNING
 
 ****************************************/
  
- class UINTAHSHARE ICEMaterial : public Material {
+ class ICEMaterial : public Material {
  public:
    ICEMaterial(ProblemSpecP&);
    

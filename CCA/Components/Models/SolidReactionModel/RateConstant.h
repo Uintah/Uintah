@@ -44,7 +44,6 @@
 
 #include <Core/Grid/Variables/CCVariable.h>
 
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
     /**************************************

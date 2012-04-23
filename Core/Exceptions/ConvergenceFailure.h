@@ -48,10 +48,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
-  class UINTAHSHARE ConvergenceFailure : public SCIRun::Exception {
+  class ConvergenceFailure : public SCIRun::Exception {
   public:
     ConvergenceFailure(const std::string& msg,
 		       int numiterations, double final_residual,

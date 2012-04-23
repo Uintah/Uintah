@@ -34,12 +34,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Regridder/RegridderCommon.h>
 
-#include <CCA/Components/Regridder/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class UINTAHSHARE RegridderFactory
+  class RegridderFactory
   {
   public:
     // this function has a switch for all known regridders
