@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah
 {
   class SimpleMaterial;
@@ -71,7 +70,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE RegridderTest: public UintahParallelComponent, public SimulationInterface {
+  class RegridderTest: public UintahParallelComponent, public SimulationInterface {
   public:
     RegridderTest ( const ProcessorGroup* myworld );
     virtual ~RegridderTest ( void );

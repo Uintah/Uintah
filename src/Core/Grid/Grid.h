@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <list>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -80,7 +79,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE Grid : public RefCounted {
+  class Grid : public RefCounted {
   public:
     Grid();
     virtual ~Grid();
@@ -131,7 +130,7 @@ WARNING
     //Assigns the boundary conditions to the grid
     void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
            
-    UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids
     enum Axis {

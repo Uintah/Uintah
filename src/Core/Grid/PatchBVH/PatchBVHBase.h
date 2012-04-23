@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 

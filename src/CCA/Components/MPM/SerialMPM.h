@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 
-#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 
@@ -93,7 +92,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
+class SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();

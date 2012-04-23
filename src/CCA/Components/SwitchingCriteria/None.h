@@ -36,13 +36,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 
-#include <CCA/Components/SwitchingCriteria/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
-  class UINTAHSHARE None : public SwitchingCriteria
+  class None : public SwitchingCriteria
     {
     public:
       // this function has a switch for all known SwitchingCriteria

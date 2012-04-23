@@ -44,7 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <iostream>
 
-#include <Core/Grid/uintahshare.h>
 
 #define OVERHEAD_WINDOW 40
 namespace Uintah {
@@ -92,7 +91,7 @@ class Level;
       
 ****************************************/
 
-class UINTAHSHARE SimulationState : public RefCounted {
+class SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
   ~SimulationState();

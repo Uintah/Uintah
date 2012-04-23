@@ -40,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/OS/Dir.h>
-#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -75,7 +74,7 @@ WARNING
 ****************************************/
 
   class DataWarehouse;
-   class UINTAHSHARE SimulationInterface : public UintahParallelPort {
+   class SimulationInterface : public UintahParallelPort {
    public:
      SimulationInterface();
      virtual ~SimulationInterface();

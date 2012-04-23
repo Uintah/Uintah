@@ -47,13 +47,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <string>
 
-#include <Core/Exceptions/uintahshare.h>
 
 namespace Uintah {
 
    using namespace SCIRun;
 
-   class UINTAHSHARE ProblemSetupException : public Exception {
+   class ProblemSetupException : public Exception {
    public:
       ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait=false);
       ProblemSetupException(const ProblemSetupException&);

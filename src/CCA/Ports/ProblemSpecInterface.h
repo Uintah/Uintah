@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <CCA/Ports/uintahshare.h>
 
 #include <string>
 
@@ -70,7 +69,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE ProblemSpecInterface : public UintahParallelPort {
+   class ProblemSpecInterface : public UintahParallelPort {
    public:
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();

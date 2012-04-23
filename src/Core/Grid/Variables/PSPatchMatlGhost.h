@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 using SCIRun::IntVector;
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 
@@ -72,7 +71,7 @@ namespace Uintah {
       
       ****************************************/
 
-struct UINTAHSHARE PSPatchMatlGhost {
+struct  PSPatchMatlGhost {
   PSPatchMatlGhost(const Patch* patch, int matl, int dwid, int count=1)
     : patch_(patch), matl_(matl), dwid_(dwid), count_(count)
   {}

@@ -29,7 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "../TestSuite/SuiteTree.h"
-#include <testprograms/TestRangeTree/uintahshare.h>
 
-UINTAHSHARE SuiteTree* RangeTreeTestTree(bool verbose = false, int n = 100000,
+SuiteTree* RangeTreeTestTree(bool verbose = false, int n = 100000,
 			     int seed = 0);

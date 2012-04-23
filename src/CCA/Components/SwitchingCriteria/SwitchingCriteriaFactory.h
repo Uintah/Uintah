@@ -34,12 +34,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SwitchingCriteria.h>
 
-#include <CCA/Components/SwitchingCriteria/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class UINTAHSHARE SwitchingCriteriaFactory
+  class SwitchingCriteriaFactory
     {
     public:
       // this function has a switch for all known SwitchingCriteria

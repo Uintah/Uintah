@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <vector>
 
-#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/NCVariable.h>
 namespace Uintah {
 
@@ -47,7 +46,7 @@ namespace Uintah {
   using SCIRun::Point;
   using std::vector;
 
-  class UINTAHSHARE ParticleInterpolator {
+  class ParticleInterpolator {
     
   public:
     

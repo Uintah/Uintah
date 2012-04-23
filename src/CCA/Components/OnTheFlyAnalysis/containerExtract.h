@@ -132,7 +132,7 @@ namespace Uintah {
         vector<extractCell*> extractCells; 
       };
 
-      UINTAHSHARE friend std::ostream& operator<<(std::ostream& ostr, const extractCell& exc) {
+       friend std::ostream& operator<<(std::ostream& ostr, const extractCell& exc) {
         return ostr << *(exc.vl) << "_" << exc.c.x() << "_" << exc.c.y() << "_" << exc.c.z() << ".dat";
       }
 

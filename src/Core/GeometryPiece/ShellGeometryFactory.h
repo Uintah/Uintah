@@ -33,12 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   class GeometryPiece;
 
-  class UINTAHSHARE ShellGeometryFactory
+  class ShellGeometryFactory
   {
   public:
     // This function has a switch for all shell go_types It returns a

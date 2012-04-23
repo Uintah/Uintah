@@ -46,10 +46,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
-   class UINTAHSHARE InvalidGrid : public SCIRun::Exception {
+   class InvalidGrid : public SCIRun::Exception {
    public:
       InvalidGrid(const std::string& msg, const char* file, int line);
       InvalidGrid(const InvalidGrid&);

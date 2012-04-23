@@ -40,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <map>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 /*!
@@ -65,7 +64,7 @@ namespace Uintah {
   using std::vector;
   using std::map;
 
-   class UINTAHSHARE BCDataArray {
+   class BCDataArray {
    public:
 
      /// Constructor

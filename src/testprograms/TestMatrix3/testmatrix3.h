@@ -30,5 +30,4 @@ DEALINGS IN THE SOFTWARE.
 
 #include "../TestSuite/SuiteTree.h"
 
-#include <testprograms/TestMatrix3/uintahshare.h>
-UINTAHSHARE SuiteTree* matrix3TestTree();
+SuiteTree* matrix3TestTree();

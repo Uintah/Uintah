@@ -34,13 +34,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
-#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
 
-  class UINTAHSHARE MPMBoundCond {
+  class MPMBoundCond {
 
   public:
     

@@ -40,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <vector>
 
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
   class BufferInfo;
@@ -81,7 +80,7 @@ WARNING
 
   typedef constVariableBase<ParticleVariableBase> constParticleVariableBase;
 
-   class UINTAHSHARE ParticleVariableBase : public Variable {
+   class ParticleVariableBase : public Variable {
    public:
       
       virtual ~ParticleVariableBase();

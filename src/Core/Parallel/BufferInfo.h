@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
-#include <Core/Parallel/uintahshare.h>
 
 #include <vector>
 
@@ -41,13 +40,13 @@ namespace Uintah {
   class RefCounted;
   class ProcessorGroup;
 
-  class UINTAHSHARE AfterCommunicationHandler {
+  class AfterCommunicationHandler {
   public:
     virtual ~AfterCommunicationHandler() {}
     virtual void finishedCommunication(const ProcessorGroup*, MPI_Status &status) = 0;
   };
 
-  class UINTAHSHARE Sendlist : public AfterCommunicationHandler {
+  class Sendlist : public AfterCommunicationHandler {
   public:
     Sendlist(Sendlist* next, RefCounted* obj)
       : next(next), obj(obj)
@@ -63,7 +62,7 @@ namespace Uintah {
 
   };
 
-  class UINTAHSHARE BufferInfo {
+  class BufferInfo {
   public:
     BufferInfo();
     virtual ~BufferInfo();

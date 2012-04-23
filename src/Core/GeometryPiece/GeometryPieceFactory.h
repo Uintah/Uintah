@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {
 
-  class UINTAHSHARE GeometryPieceFactory
+  class GeometryPieceFactory
   {
   public:
     // this function has a switch for all known go_types

@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Core/Grid/uintahshare.h>
 
 #include   <iostream>
 
@@ -76,7 +75,7 @@ namespace Uintah {
 
    ****************************************/
 
-  class UINTAHSHARE GridIterator : public BaseIterator {
+  class GridIterator : public BaseIterator {
     friend ostream& operator<<( ostream& out,  const GridIterator& c );
     public:
     inline ~GridIterator() {}

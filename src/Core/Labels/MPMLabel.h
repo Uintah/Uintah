@@ -34,14 +34,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <Core/Labels/uintahshare.h>
-
 namespace Uintah {
 
 using std::vector;
   class VarLabel;
 
-    class UINTAHSHARE MPMLabel {
+    class MPMLabel {
     public:
 
       MPMLabel();

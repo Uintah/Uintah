@@ -44,7 +44,6 @@ DEALINGS IN THE SOFTWARE.
 using std::vector;
 using std::list;
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -95,7 +94,7 @@ WARNING
    Plane d_plane;
  };
  
- class UINTAHSHARE UniformGrid {
+ class UniformGrid {
    
  public:
    UniformGrid(Box& bound_box);

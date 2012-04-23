@@ -44,7 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <CCA/Components/SimulationController/uintahshare.h>
 
 namespace Uintah {
 
@@ -87,7 +86,7 @@ class DataArchive;
 
    //! The main component that controls the execution of the 
    //! entire simulation. 
-   class UINTAHSHARE SimulationController : public UintahParallelComponent {
+   class SimulationController : public UintahParallelComponent {
    public:
       SimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
       virtual ~SimulationController();

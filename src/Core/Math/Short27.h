@@ -48,11 +48,11 @@ namespace SCIRun {
   class Piostream;
 }
 #include <Core/Math/TntJama/tnt.h>
-#include <Core/Math/uintahshare.h>
+
 namespace Uintah {
 using namespace SCIRun;
 
-class UINTAHSHARE Short27 {
+class Short27 {
 
  private:
   short s[27];
@@ -98,10 +98,10 @@ inline short &Short27::operator [] (int i)
 #include <string>
 namespace SCIRun {
   using namespace Uintah;
-UINTAHSHARE void swapbytes( Uintah::Short27& s );
-template<> UINTAHSHARE const string find_type_name(Short27*);
-UINTAHSHARE const TypeDescription* get_type_description(Short27*);
-UINTAHSHARE void Pio( Piostream&, Uintah::Short27& );
+ void swapbytes( Uintah::Short27& s );
+template<>  const string find_type_name(Short27*);
+ const TypeDescription* get_type_description(Short27*);
+ void Pio( Piostream&, Uintah::Short27& );
 
 } // namespace SCIRun
 

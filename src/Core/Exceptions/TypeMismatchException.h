@@ -46,10 +46,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
-   class UINTAHSHARE TypeMismatchException : public SCIRun::Exception {
+   class TypeMismatchException : public SCIRun::Exception {
    public:
       TypeMismatchException(const std::string& msg, const char* file, int line);
       TypeMismatchException(const TypeMismatchException&);

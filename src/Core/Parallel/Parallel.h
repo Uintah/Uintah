@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-#include <Core/Parallel/uintahshare.h>
 
 // Macro used by components to eliminate excess spew on large parallel runs...
 //
@@ -74,7 +73,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE Parallel {
+   class Parallel {
    public:
       enum Circumstances {
           NormalShutdown,

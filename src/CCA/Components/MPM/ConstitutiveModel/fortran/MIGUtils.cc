@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <Core/Parallel/uintahshare.h>
 #include <Core/Parallel/Parallel.h>
 
 using namespace std;

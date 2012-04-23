@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/SimulationStateP.h>
 
-#include <CCA/Components/PatchCombiner/uintahshare.h>
 
 #include <vector>
 
@@ -75,7 +74,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE UdaReducer : public SimulationInterface, public UintahParallelComponent {
+   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
    public:
      UdaReducer(const ProcessorGroup* myworld, string udaDir);
      

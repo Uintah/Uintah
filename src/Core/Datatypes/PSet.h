@@ -44,7 +44,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;
@@ -82,7 +81,7 @@ WARNING
 class PSet;
 typedef LockingHandle<PSet> PSetHandle;
 
-class UINTAHSHARE PSet : public Datatype {
+class PSet : public Datatype {
  public:
 
   // GROUP: Constructors:

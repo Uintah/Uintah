@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 
-#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah { 
   class DataWarehouse;
   
@@ -49,7 +48,7 @@ namespace Uintah {
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
 
-  UINTAHSHARE void scalarDiffusionOperator(DataWarehouse* new_dw,
+   void scalarDiffusionOperator(DataWarehouse* new_dw,
                          const Patch* patch,
                          const bool use_vol_frac,
                          const CCVariable<double>& q_CC,

@@ -36,10 +36,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
   class TypeDescription;
-  struct UINTAHSHARE Stencil7 {
+  struct Stencil7 {
     // The order of this is designed to match the order of faces in Patch
     // Do not change it!
     //     -x +x -y +y -z +z
@@ -56,12 +55,12 @@ namespace Uintah {
     }
   };
 
-  UINTAHSHARE std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
+  std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
 
 }
 
 namespace SCIRun {
-  UINTAHSHARE void swapbytes( Uintah::Stencil7& );
+   void swapbytes( Uintah::Stencil7& );
 } // namespace SCIRun
 
 #endif

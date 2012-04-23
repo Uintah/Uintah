@@ -49,7 +49,6 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <string>
 
-#include <Core/Math/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -86,7 +85,7 @@ namespace Uintah {
     inline void set(double val);
 
     // assign a value to components of the Matrix3
-    UINTAHSHARE void set(int i, int j, double val);
+     void set(int i, int j, double val);
 
     // assignment operator
     inline void operator = (const Matrix3 &m3);
@@ -98,7 +97,7 @@ namespace Uintah {
     // multiply Matrix3 by a constant: Mat * 3  
     inline Matrix3 operator * (const double value) const;
     // multiply constant by Matrix3:   3 * Mat
-    UINTAHSHARE friend Matrix3 operator * (double c, const Matrix3 &m3);
+     friend Matrix3 operator * (double c, const Matrix3 &m3);
 
     // divide Matrix3 by a constant
     inline Matrix3 operator / (const double value) const;
@@ -142,7 +141,7 @@ namespace Uintah {
     inline bool solveCramer(Vector& rhs, Vector& x) const;
 
     //Inverse
-    UINTAHSHARE Matrix3 Inverse() const;
+     Matrix3 Inverse() const;
 
     //Trace
     inline double Trace() const;
@@ -168,32 +167,32 @@ namespace Uintah {
     // Get a left or right polar decomposition of a non-singular square matrix
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
-    UINTAHSHARE void polarDecomposition(Matrix3& stretch,
+     void polarDecomposition(Matrix3& stretch,
                                         Matrix3& rotation,
                                         double tolerance,
                                         bool rightFlag) const;
 
-    UINTAHSHARE void polarDecompositionRMB(Matrix3& U, Matrix3& R) const;
+     void polarDecompositionRMB(Matrix3& U, Matrix3& R) const;
 
-    UINTAHSHARE void polarRotationRMB(Matrix3& R) const;
+     void polarRotationRMB(Matrix3& R) const;
 
-    UINTAHSHARE void polarDecompositionAFFinvTran(Matrix3& U, Matrix3& R) const;
+     void polarDecompositionAFFinvTran(Matrix3& U, Matrix3& R) const;
 
-    UINTAHSHARE void polarRotationAFFinvTran(Matrix3& R) const;
+     void polarRotationAFFinvTran(Matrix3& R) const;
 
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
     // in e1.  If it returns 2, the values are passed back in e1
     // and e2 such that e1 > e2.  If 3, then e1 > e2 > e3.
-    UINTAHSHARE int getEigenValues(double& e1, double& e2, double& e3) const;
+     int getEigenValues(double& e1, double& e2, double& e3) const;
 
     // Get the eigen values of the 2x2 sub-matrix specified by
     // the appropriate plane, returning the number of different real
     // values.  If there is only 1 (unique) eigenvalue, it is
     // passed back in e1.  If 2, then e1 > e2.
-    UINTAHSHARE int getXYEigenValues(double& e1, double& e2) const;
-    UINTAHSHARE int getYZEigenValues(double& e1, double& e2) const;
-    UINTAHSHARE int getXZEigenValues(double& e1, double& e2) const;
+     int getXYEigenValues(double& e1, double& e2) const;
+     int getYZEigenValues(double& e1, double& e2) const;
+     int getXZEigenValues(double& e1, double& e2) const;
   
     // Returns an array of eigenvectors that form the basis
     // of eigenvectors corresponding to the given eigenvalue.
@@ -244,10 +243,10 @@ namespace Uintah {
                       std::vector<Vector>& xg_basis,
                       double relative_scale /* MaxAbsElem() suggested */) const;
     //! support dynamic compilation
-    UINTAHSHARE static const std::string& get_h_file_path();
+     static const std::string& get_h_file_path();
 
     /*! Calculate eigenvalues */
-    UINTAHSHARE void eigen(Vector& eval, Matrix3& evec);
+     void eigen(Vector& eval, Matrix3& evec);
 
     /*! Return a TNT Array2D */
     inline TNT::Array2D<double> toTNTArray2D() const;
@@ -263,17 +262,17 @@ namespace Uintah {
     // any row has zeroes in every other row and a one in that row.
     // If rhs == NULL, then the rhs is assumed to be
     // the zero vector and thus will not need to change.
-    UINTAHSHARE static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
+     static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
                                  double relative_scale);
 
     // solveHomogenous for a Matrix that has already by triangularReduced
-    UINTAHSHARE std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
+     std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
 
     // solveHomogenous for a Matrix that has already by triangularReduced
-    UINTAHSHARE bool solveParticularReduced(const Vector& rhs, Vector& xp,
+     bool solveParticularReduced(const Vector& rhs, Vector& xp,
                                 int num_zero_rows) const;
 
-    UINTAHSHARE friend std::ostream & operator << (std::ostream &out_file, const Matrix3 &m3);
+     friend std::ostream & operator << (std::ostream &out_file, const Matrix3 &m3);
   }; // end class Matrix3
 
   inline double Matrix3::Trace() const
@@ -726,10 +725,10 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 
-  UINTAHSHARE void swapbytes( Uintah::Matrix3& m);
-  template<> UINTAHSHARE const std::string find_type_name(Uintah::Matrix3*);
-  UINTAHSHARE const TypeDescription* get_type_description(Uintah::Matrix3*);
-  UINTAHSHARE void Pio( Piostream&, Uintah::Matrix3& );
+   void swapbytes( Uintah::Matrix3& m);
+  template<>  const std::string find_type_name(Uintah::Matrix3*);
+   const TypeDescription* get_type_description(Uintah::Matrix3*);
+   void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace SCIRun
 
 

@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <deque>
 #include   <iosfwd>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using std::deque;
@@ -97,12 +96,12 @@ using namespace SCIRun;
       // stored in p1 and the greater value in p2.
       void fixBoundingBox();
 
-      UINTAHSHARE bool overlaps(const Box&, double epsilon=1.e-6) const;
+       bool overlaps(const Box&, double epsilon=1.e-6) const;
       
       
       // Do not use this for determining if a point is within a patch
       // The logic is incorrect if there are multiple patches
-      UINTAHSHARE bool contains(const Point& p) const {
+       bool contains(const Point& p) const {
          return p.x() >= d_lower.x() && p.y() >= d_lower.y()
             && p.z() >= d_lower.z() && p.x() < d_upper.x()
             && p.y() < d_upper.y() && p.z() < d_upper.z();
@@ -122,10 +121,10 @@ using namespace SCIRun;
          return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
 
-      UINTAHSHARE static deque<Box> difference(const Box& b1, const Box& b2);
-      UINTAHSHARE static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
+       static deque<Box> difference(const Box& b1, const Box& b2);
+       static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
 
-      UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
+       friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
    private:
       Point d_lower;

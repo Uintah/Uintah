@@ -36,8 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 
-
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -73,7 +71,7 @@ WARNING
 //using ::Interface::DataWarehouseP;
 
 
-   class UINTAHSHARE Material {
+   class Material {
    public:
      Material(ProblemSpecP& ps);
      Material();

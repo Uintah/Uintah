@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/AMRICE.h>
 
 namespace Uintah {
-  class UINTAHSHARE impAMRICE : public AMRICE{
+  class impAMRICE : public AMRICE{
   public:
     impAMRICE(const ProcessorGroup* myworld);
     virtual ~impAMRICE();

@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -76,7 +75,7 @@ namespace Uintah {
 
    ****************************************/
 
-  class UINTAHSHARE BaseIterator : 
+  class BaseIterator : 
     public std::iterator<std::forward_iterator_tag, IntVector> 
   {
     friend class Iterator;

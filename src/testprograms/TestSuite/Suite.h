@@ -45,13 +45,12 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <list>
 
-#include <testprograms/TestSuite/uintahshare.h>
 
 typedef std::map<std::string, Test*> testMap;
 typedef std::map<std::string, Test*>::iterator testMapIterator;
 typedef std::map<std::string, Test*>::value_type testMapPair;
 
-class UINTAHSHARE Suite
+class Suite
 {
 public:
   // construct a Suite with the given name

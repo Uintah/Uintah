@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 namespace Uintah {
 
@@ -72,7 +71,7 @@ namespace Uintah {
 
    ****************************************/
 
-  class UINTAHSHARE ListOfCellsIterator : public BaseIterator {
+  class ListOfCellsIterator : public BaseIterator {
 
     friend std::ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b);
 

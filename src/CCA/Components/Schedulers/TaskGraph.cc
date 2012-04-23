@@ -71,15 +71,9 @@ static DebugStream dbg0("TaskGraph", false);
 static DebugStream dbg("TaskGraphDetailed", false);
 static DebugStream compdbg("FindComp", false);
 
-#undef UINTAHSHARE
-#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
-#else
-#define UINTAHSHARE
-#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern UINTAHSHARE SCIRun::Mutex       cerrLock;
+extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 0

@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace SCIRun {
   class IntVector;
 }
@@ -79,7 +78,7 @@ namespace Uintah {
       
   ****************************************/
     
-class UINTAHSHARE Variable {
+class Variable {
 
 public:
   virtual ~Variable();

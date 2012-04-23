@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
-#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
   using std::vector;
   using namespace SCIRun;
@@ -82,7 +81,7 @@ WARNING
 class ScalarParticles;
 typedef LockingHandle<ScalarParticles> ScalarParticlesHandle;
 
-class UINTAHSHARE ScalarParticles : public Datatype {
+class ScalarParticles : public Datatype {
 
 public:
   // GROUP: Constructors:

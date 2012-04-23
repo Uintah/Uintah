@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Task.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -72,7 +71,7 @@ WARNING
 ****************************************/
 
   class VarLabel;
-  class UINTAHSHARE Wave : public UintahParallelComponent, public SimulationInterface {
+  class Wave : public UintahParallelComponent, public SimulationInterface {
   public:
     Wave(const ProcessorGroup* myworld);
     virtual ~Wave();

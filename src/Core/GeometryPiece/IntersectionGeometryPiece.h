@@ -32,10 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #define __INTERSECTION_GEOMETRY_OBJECT_H__      
 
 #include <Core/GeometryPiece/GeometryPiece.h>
-
 #include <vector>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 
@@ -85,7 +83,7 @@ WARNING
         
 ****************************************/
 
-      class UINTAHSHARE IntersectionGeometryPiece : public GeometryPiece {
+      class IntersectionGeometryPiece : public GeometryPiece {
          
       public:
          //////////

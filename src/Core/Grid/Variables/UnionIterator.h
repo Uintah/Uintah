@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 
-#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/ListOfCellsIterator.h>
@@ -72,7 +71,7 @@ namespace Uintah {
 
    ****************************************/
 
-  class UINTAHSHARE UnionIterator : public ListOfCellsIterator {
+  class UnionIterator : public ListOfCellsIterator {
     friend std::ostream& operator<<(std::ostream& out, const Uintah::UnionIterator& b);
     public:
 

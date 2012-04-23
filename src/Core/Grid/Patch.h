@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <iosfwd>
 #include   <vector>
 
-#include <Core/Grid/uintahshare.h>
 
 
 #if defined( __PGI )
@@ -105,10 +104,10 @@ WARNING
 ****************************************/
      
     
-  class UINTAHSHARE Patch {
+  class Patch {
     public:
 
-      UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
       enum BCType {
         None=0,

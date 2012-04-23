@@ -47,7 +47,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class UINTAHSHARE ImpMPMFlags : public MPMFlags {
+  class ImpMPMFlags : public MPMFlags {
 
   public:
 

@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
 
@@ -71,7 +70,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE PoissonGPU1 : public UintahParallelComponent, public SimulationInterface {
+  class PoissonGPU1 : public UintahParallelComponent, public SimulationInterface {
   public:
     PoissonGPU1(const ProcessorGroup* myworld);
     virtual ~PoissonGPU1();

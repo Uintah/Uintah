@@ -34,12 +34,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <CCA/Components/LoadBalancers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class UINTAHSHARE LoadBalancerFactory
+  class LoadBalancerFactory
   {
   public:
     // this function has a switch for all known load balancers

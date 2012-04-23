@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <Core/Disclosure/uintahshare.h>
 
 namespace Uintah {
 
@@ -72,7 +71,7 @@ class Variable;
       
 ****************************************/
     
-class UINTAHSHARE TypeDescription {
+class TypeDescription {
 public:
   enum Type {
     CCVariable,
@@ -125,7 +124,7 @@ public:
 
   MPI_Datatype getMPIType() const;
 
-  struct UINTAHSHARE Register {
+  struct  Register {
     Register(const TypeDescription*);
     ~Register();
   };

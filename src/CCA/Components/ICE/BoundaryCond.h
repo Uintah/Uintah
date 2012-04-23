@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 #include <time.h>
 
-#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
 
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
@@ -63,7 +62,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
   
   //__________________________________
   //  Temperature, pressure and other CCVariables
-  UINTAHSHARE void setBC(CCVariable<double>& var,     
+   void setBC(CCVariable<double>& var,     
                       const std::string& type,
                       const CCVariable<double>&gamma,
                       const CCVariable<double>&cv, 
@@ -73,7 +72,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
                       DataWarehouse* new_dw,
                       customBC_var_basket* C_BC_basket);
             
-  UINTAHSHARE void setBC(CCVariable<double>& var,     
+   void setBC(CCVariable<double>& var,     
                       const std::string& type,     // stub function
                       const Patch* patch,  
                       SimulationStateP& sharedState,
@@ -81,7 +80,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
                       DataWarehouse* new_dw); 
   //__________________________________
   //  P R E S S U R E        
-  UINTAHSHARE void setBC(CCVariable<double>& press_CC,          
+   void setBC(CCVariable<double>& press_CC,          
                       StaticArray<CCVariable<double> >& rho_micro,
                       StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
@@ -93,7 +92,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
                       DataWarehouse* new_dw,
                       customBC_var_basket* C_BC_basket);
              
-  UINTAHSHARE void setBC(CCVariable<double>& press_CC,          
+   void setBC(CCVariable<double>& press_CC,          
                       StaticArray<CCVariable<double> >& rho_micro,
                       StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
@@ -106,7 +105,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
              
   //__________________________________
   //    V E C T O R   
-  UINTAHSHARE void setBC(CCVariable<Vector>& variable,
+   void setBC(CCVariable<Vector>& variable,
                       const std::string& type,
                       const Patch* patch,
                       SimulationStateP& sharedState,
@@ -114,7 +113,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
                       DataWarehouse* new_dw, 
                       customBC_var_basket* C_BC_basket);
              
-  UINTAHSHARE void setBC(CCVariable<Vector>& variable,  // stub function
+   void setBC(CCVariable<Vector>& variable,  // stub function
                       const std::string& type,
                       const Patch* patch,
                       SimulationStateP& sharedState,
@@ -123,7 +122,7 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
 
   //__________________________________
   //    SPECIFC VOLUME
-  UINTAHSHARE void setSpecificVolBC(CCVariable<double>& sp_vol,
+   void setSpecificVolBC(CCVariable<double>& sp_vol,
                                  const string& kind,
                                  const bool isMassSp_vol,
                                  constCCVariable<double> rho_CC,

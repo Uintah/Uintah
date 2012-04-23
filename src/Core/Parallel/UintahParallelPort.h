@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Util/RefCounted.h>
 
-#include <Core/Parallel/uintahshare.h>
 
 namespace Uintah {
 
@@ -66,7 +65,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE UintahParallelPort : public RefCounted {
+class UintahParallelPort : public RefCounted {
 public:
            UintahParallelPort();
   virtual ~UintahParallelPort();

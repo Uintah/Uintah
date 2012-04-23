@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_gl.h>
 
-#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -81,7 +80,7 @@ struct streamerNode {
 #define STREAM_LIGHT_WIRE 0
 #define STREAM_LIGHT_CURVE 1
   
-class UINTAHSHARE GLAnimatedStreams : public GeomObj
+class GLAnimatedStreams : public GeomObj
 {
 public:
 

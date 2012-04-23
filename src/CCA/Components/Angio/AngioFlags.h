@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include <CCA/Components/Angio/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class UINTAHSHARE AngioFlags {
+  class AngioFlags {
 
   public:
 

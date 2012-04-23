@@ -2,7 +2,6 @@
 #define Wasatch_Material_h
 
 #include <Core/Grid/Material.h>
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -14,7 +13,7 @@ namespace Uintah {
    *  \brief Create a simple wasatch material.
    */
 
-  class UINTAHSHARE WasatchMaterial : public Material {
+  class WasatchMaterial : public Material {
   public:
     WasatchMaterial(){}
     ~WasatchMaterial(){}

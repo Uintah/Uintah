@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #define Packages_Uintah_Core_Grid_SimpleMaterial_h
 
 #include <Core/Grid/Material.h>
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -65,7 +64,7 @@ WARNING
 
 ****************************************/
 
-      class UINTAHSHARE SimpleMaterial : public Material {
+      class SimpleMaterial : public Material {
       public:
          SimpleMaterial();
          

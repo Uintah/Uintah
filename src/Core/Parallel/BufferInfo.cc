@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Parallel/uintahshare.h>
 using namespace Uintah;
 using std::vector;
 

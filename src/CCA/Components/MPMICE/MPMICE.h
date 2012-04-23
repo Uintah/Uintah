@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/Geometry/Vector.h>
 
-#include <CCA/Components/MPMICE/uintahshare.h>
 namespace Uintah {
   class ICE;
   class ICELabel;
@@ -89,7 +88,7 @@ WARNING
 
 enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 
-class UINTAHSHARE MPMICE : public SimulationInterface, public UintahParallelComponent {
+class MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
 //  MPMICE(const ProcessorGroup* myworld, const bool doAMR);

@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <map>
 #include   <sstream>
 
-#include <Core/GeometryPiece/uintahshare.h>
 #include <Core/Exceptions/InternalError.h>
 namespace Uintah {
 
@@ -83,7 +82,7 @@ WARNING
 	
 ****************************************/
 
-class UINTAHSHARE GeometryObject {
+class GeometryObject {
  
 public:
   enum DataType

@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <valarray>
 #include <numeric>
 
-#include <Core/Math/uintahshare.h>
 namespace Uintah {
 
 template<class ValueType, class IndexType, class ContainerType> 
@@ -182,12 +181,12 @@ template<class ValueType, class IndexType> class SparseMatrix {
   
 };
 
-UINTAHSHARE std::valarray<double> cgSolve(SparseMatrix<double,int>& A, std::valarray<double>& b,
+ std::valarray<double> cgSolve(SparseMatrix<double,int>& A, std::valarray<double>& b,
 	  		          int conflag);
 
-UINTAHSHARE double eigenvalue(SparseMatrix<double,int>& A, std::valarray<double>& eigenvector);
+ double eigenvalue(SparseMatrix<double,int>& A, std::valarray<double>& eigenvector);
 
-UINTAHSHARE double conditionNum(SparseMatrix<double,int>& A);
+ double conditionNum(SparseMatrix<double,int>& A);
 
 }
 

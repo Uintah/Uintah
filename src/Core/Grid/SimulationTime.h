@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -65,7 +64,7 @@ namespace Uintah {
      
 ****************************************/
     
-class UINTAHSHARE SimulationTime {
+class SimulationTime {
 public:
   SimulationTime(const ProblemSpecP& params);
 

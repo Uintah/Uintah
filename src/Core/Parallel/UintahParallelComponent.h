@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <vector>
 
-#include <Core/Parallel/uintahshare.h>
 namespace Uintah {
    using std::string;
    class UintahParallelPort;
@@ -70,7 +69,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE UintahParallelComponent {
+   class UintahParallelComponent {
       struct PortRecord {
 	 PortRecord(UintahParallelPort* conn);
 	 std::vector<UintahParallelPort*> connections;

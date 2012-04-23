@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -73,7 +72,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class UINTAHSHARE GUVSphereShellPiece : public ShellGeometryPiece {
+  class GUVSphereShellPiece : public ShellGeometryPiece {
          
   public:
     //////////

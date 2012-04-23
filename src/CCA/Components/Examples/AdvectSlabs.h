@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
-#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -77,7 +76,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE AdvectSlabs : public UintahParallelComponent, public SimulationInterface {
+  class AdvectSlabs : public UintahParallelComponent, public SimulationInterface {
   public:
     AdvectSlabs(const ProcessorGroup* myworld);
     virtual ~AdvectSlabs();

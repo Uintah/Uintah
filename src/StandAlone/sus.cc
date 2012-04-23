@@ -114,12 +114,6 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-#undef UINTAHSHARE
-#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#  define UINTAHSHARE __declspec(dllimport)
-#else
-#  define UINTAHSHARE
-#endif
 
 #if defined( USE_LENNY_HACK )
   // See Core/Malloc/Allocator.cc for more info.
@@ -141,9 +135,9 @@ using namespace std;
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-extern UINTAHSHARE Mutex cerrLock;
-extern UINTAHSHARE DebugStream mixedDebug;
-extern UINTAHSHARE DebugStream fullDebug;
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
+extern DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
 static DebugStream dbgwait("WaitForDebugger", false);
 

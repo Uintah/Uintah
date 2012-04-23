@@ -35,12 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/Output.h>
 
-#include <CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 
 namespace Uintah {
   class AnalysisModule;
   
-  class UINTAHSHARE AnalysisModuleFactory{
+  class AnalysisModuleFactory{
     public:
       AnalysisModuleFactory();
       ~AnalysisModuleFactory();

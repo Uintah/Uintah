@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/ModelMaker.h>
 
-#include <CCA/Components/Models/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -67,7 +66,7 @@ WARNING
   
 ****************************************/
 
-  class UINTAHSHARE ModelFactory : public UintahParallelComponent, public ModelMaker {
+  class ModelFactory : public UintahParallelComponent, public ModelMaker {
   public:
     ModelFactory(const ProcessorGroup* myworld);
     virtual ~ModelFactory();

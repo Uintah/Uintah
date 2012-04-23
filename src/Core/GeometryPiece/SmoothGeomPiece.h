@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   using std::vector;
@@ -67,7 +66,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class UINTAHSHARE SmoothGeomPiece : public GeometryPiece {
+  class SmoothGeomPiece : public GeometryPiece {
 	 
   public:
     //////////////////////////////////////////////////////////////////////

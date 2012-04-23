@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 #include <iterator>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/GridIterator.h>
 namespace Uintah {
 
@@ -88,7 +87,7 @@ WARNING
   
 ****************************************/
 
- class UINTAHSHARE GridSurfaceIterator : 
+ class GridSurfaceIterator : 
  public BaseIterator {
    public:
      inline ~GridSurfaceIterator() {}

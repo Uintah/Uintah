@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/SimulationStateP.h>
 
-#include <CCA/Components/PatchCombiner/uintahshare.h>
 namespace Uintah {
 
   class Scheduler;
@@ -73,7 +72,7 @@ WARNING
   
 ****************************************/
 
-   class UINTAHSHARE PatchCombiner : public SimulationInterface, public UintahParallelComponent {
+   class PatchCombiner : public SimulationInterface, public UintahParallelComponent {
    public:
      PatchCombiner(const ProcessorGroup* myworld, string udaDir);
      

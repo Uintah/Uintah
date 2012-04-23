@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 
-#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -81,7 +80,7 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE PatchRangeTree
+class PatchRangeTree
 {
 public:
   PatchRangeTree(const std::vector<Patch*>& patches);

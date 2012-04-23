@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 
-#include <CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 namespace Uintah {
 
   class DataWarehouse;
@@ -50,7 +49,7 @@ namespace Uintah {
   class Patch;
   
 
-  class UINTAHSHARE AnalysisModule {
+  class AnalysisModule {
 
   public:
     
