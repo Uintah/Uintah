@@ -35,7 +35,7 @@ InterpolateExpression<SrcT, DestT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<SrcT>&  srcfm  = fml.template field_manager<SrcT>();
-  
+
   if( srct_ != Expr::Tag() )  src_ = &srcfm.field_ref( srct_ );
 }
 
@@ -46,7 +46,7 @@ void
 InterpolateExpression<SrcT, DestT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( srct_ != Expr::Tag() )  
+  if( srct_ != Expr::Tag() )
     InpterpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
 }
 
@@ -57,9 +57,8 @@ void
 InterpolateExpression<SrcT, DestT>::
 evaluate()
 {
-  using namespace SpatialOps;
+  using SpatialOps::operator<<=;
   DestT& destResult = this->value();
-  destResult=0.0;
   InpterpSrcT2DestTOp_->apply_to_field(*src_, destResult);
 }
 

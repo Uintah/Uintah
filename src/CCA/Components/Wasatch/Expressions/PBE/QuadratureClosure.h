@@ -158,7 +158,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result = 0.0;
+  result <<= 0.0;
   typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
   for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
        weightsIterator!=weights_.end();
