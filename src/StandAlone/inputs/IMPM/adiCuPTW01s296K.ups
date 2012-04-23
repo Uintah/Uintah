@@ -13,7 +13,8 @@
     <maxTime>9.0e0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.0</delt_min>
-    <delt_max>1.0e-1</delt_max>
+    <delt_max>1.000000000000001e-1</delt_max> 
+    <!-- Added fuzz so restart RTs would dump correct number of timesteps --> 
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
