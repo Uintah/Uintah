@@ -34,7 +34,7 @@ NIGHTLYTESTS = [
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]), 
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]),
                   ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["exactComparison", "no_restart"]),
-                  ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "Linux" , ["exactComparison"])
+                  ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "Linux" , ["exactComparison", "no_restart"])
                ]
                
 LOCALTESTS =   [  
@@ -43,7 +43,7 @@ LOCALTESTS =   [
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
                   ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["exactComparison", "no_restart"]),
-                  ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "All" , ["exactComparison"])
+                  ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "All" , ["exactComparison", "no_restart"])
                ]  
 
 #__________________________________
