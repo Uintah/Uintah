@@ -556,14 +556,14 @@ namespace Wasatch{
 //                                         patchInfoMap,
 //                                         materials );
 
-//    // set bcs for pressure
-//    process_boundary_conditions<SVolField>( pressure_tag(),
-//                                            "pressure",
-//                                            NODIR,
-//                                            graphHelper,
-//                                            localPatches,
-//                                            patchInfoMap,
-//                                            materials );
+    // set bcs for pressure
+    process_boundary_conditions<SVolField>( pressure_tag(),
+                                            "pressure",
+                                            NODIR,
+                                            graphHelper,
+                                            localPatches,
+                                            patchInfoMap,
+                                            materials );
     // set bcs for partial rhs
     process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
                                          rhs_part_tag(mom_tag(thisMomName_)).name(),
