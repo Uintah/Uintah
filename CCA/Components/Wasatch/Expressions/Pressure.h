@@ -79,6 +79,7 @@ class Pressure
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
+  int  materialID_;
   const bool useRefPressure_;
   const double refPressureValue_;
   const SCIRun::IntVector refPressureLocation_;
@@ -204,7 +205,7 @@ public:
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix( const Uintah::Patch* const patch, const int material );
+  void setup_matrix();
 
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
