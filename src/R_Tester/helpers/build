@@ -140,8 +140,8 @@ rm -f "$BUILDROOT"/${mode}/configure.log
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 
-chgrp $COMMON_GROUP *
-chmod g+rwX * 
+chgrp -R $COMMON_GROUP *
+chmod -R g+rwX * 
 
 
 #__________________________________
