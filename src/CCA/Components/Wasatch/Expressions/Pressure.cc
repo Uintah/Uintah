@@ -160,16 +160,17 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const int material,
                            const int RKStage )
 {
+  materialID_ = material;
   if (didAllocateMatrix_) {
     //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
-    if (RKStage==1 ) dw->put( matrix_, matrixLabel_, material, patch );
-    else   dw->getModifiable( matrix_, matrixLabel_, material, patch );
+    if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
+    else   dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
     //setup_matrix(patch);
   } else {
-    dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
-    setup_matrix(patch, material);
+    dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
+    setup_matrix();
     didAllocateMatrix_=true;
   }
 }
@@ -225,8 +226,7 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 //--------------------------------------------------------------------
 
 void
-Pressure::setup_matrix(const Uintah::Patch* const patch,
-                       const int material)
+Pressure::setup_matrix()
 {
   // construct the coefficient matrix: \nabla^2
   // We should probably move the matrix construction to the evaluate() method.
@@ -236,10 +236,9 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
   
-  IntVector l,h;
-  l = patch->getCellLowIndex();
-  h = patch->getCellHighIndex();
-  const Uintah::Vector spacing = patch->dCell();
+  const SCIRun::IntVector l    = patch_->getCellLowIndex();
+  const SCIRun::IntVector h    = patch_->getCellHighIndex();
+  const Uintah::Vector spacing = patch_->dCell();
 
   if ( doX_ || use3DLaplacian_ ) {
     const double dx2 = spacing[0]*spacing[0];
@@ -257,7 +256,7 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
     p -= 2.0/dz2;
   }
 
-  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+  for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
     // NOTE: for the conjugate gradient solver in Hypre, we must pass a positive
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
@@ -270,8 +269,8 @@ Pressure::setup_matrix(const Uintah::Patch* const patch,
     coefs.p = -p;
   }
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
-  update_pressure_matrix((this->names())[0], matrix_, patch, material);
-  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch, refPressureLocation_);
+  update_pressure_matrix((this->names())[0], matrix_, patch_, materialID_);
+  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch_, refPressureLocation_);
 }
 
 //--------------------------------------------------------------------
@@ -350,7 +349,7 @@ Pressure::evaluate()
   if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
   //
   // fix pressure rhs and modify pressure matrix
-  //update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
+  update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_, materialID_);
   //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
 }
 

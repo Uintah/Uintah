@@ -87,7 +87,8 @@ namespace Wasatch {
                             Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                             SVolField& pressureField,
                             SVolField& pressureRHS,
-                            const Uintah::Patch* patch);
+                            const Uintah::Patch* patch,
+                            const int material);
 
   void update_pressure_matrix( const Expr::Tag& pressureTag,
                                Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
