@@ -849,10 +849,7 @@ namespace Wasatch {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
               
               bc_point_indices = bc_point_indices - patchCellOffset;
-              
-              //if (hasExtraCells) bc_point_indices = bc_point_indices - insideCellDir;
-              Uintah::Stencil4& coefs = pressureMatrix[ hasExtraCells ? (bc_point_indices - insideCellDir) : bc_point_indices ];
-              
+                            
               const SS::IntVec   intCellIJK( bc_point_indices[0],
                                             bc_point_indices[1],
                                             bc_point_indices[2] );
