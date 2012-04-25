@@ -59,6 +59,8 @@ for i = 1:2:nargin
     mat = str2num(opt_value);
   elseif (strcmp(option,"-rho_CC") )
     rho_CC = str2num(opt_value);
+  elseif (strcmp(option,"-intTemp") )
+    intTemp = str2num(opt_value);
   elseif (strcmp(option,"-o") )  
     output_file = opt_value;    
   end                                      

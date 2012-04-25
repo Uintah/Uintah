@@ -20,10 +20,10 @@ set ylabel "Burn Rate (m/s)"
      
       
 plot  'Exp373.dat' using 1:2 t 'Experimental Data' with points,\
-      'DeterminingBurnRate_Resolution0.25mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution0.25mm' with points,\
+      
       'DeterminingBurnRate_Resolution1mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution1mm' with points,\
       'DeterminingBurnRate_Resolution4mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution4mm' with points,\
       'DeterminingBurnRate_Resolution8mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution8mm' with points,\
       'DeterminingBurnRate_Resolution10mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution10mm' with points,\
-      'DeterminingBurnRate_Resolution14mm.uda.000/AP_mbr.dat'   using 1:2 t 'Resolution14mm' with points
+      'DeterminingBurnRate_Resolution14mm.uda.002/AP_mbr.dat'   using 1:2 t 'Resolution14mm' with points
       
