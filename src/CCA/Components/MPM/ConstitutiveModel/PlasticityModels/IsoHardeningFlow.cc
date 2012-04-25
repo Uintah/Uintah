@@ -205,13 +205,15 @@ IsoHardeningFlow::updatePlastic(const particleIndex idx,
 }
 
 double 
-IsoHardeningFlow::computeFlowStress(const PlasticityState* ,
+IsoHardeningFlow::computeFlowStress(const PlasticityState* state,
                                        const double& ,
                                        const double& ,
                                        const MPMMaterial* ,
                                        const particleIndex idx)
 {
-  double flowStress = d_CM.sigma_0 + d_CM.K*pAlpha[idx];
+  //  double flowStress = d_CM.sigma_0 + d_CM.K*pAlpha[idx];
+  
+  double flowStress = d_CM.sigma_0 + d_CM.K*state->plasticStrain;
   return flowStress;
 }
 
