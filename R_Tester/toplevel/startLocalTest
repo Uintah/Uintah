@@ -162,6 +162,7 @@ for componentTest in $selectedCompTests; do
   echo "setenv OS $OS"                                       >> "$doTestScript"
   echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
   echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+  echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
   echo "setenv SCI_MALLOC_ENABLED $SCI_MALLOC_ENABLED"       >> "$doTestScript"
 
   BUILD_TYPE="opt"
