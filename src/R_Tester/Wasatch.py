@@ -31,10 +31,6 @@ from helpers.modUPS import modUPS
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("taylor-flow-porous-channel",    "taylor-flow-porous-channel.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                  \
-  ("channel-flow-xy-pressure-outlet",   "channel-flow-xy-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),         \
-  ("channel-flow-xz-pressure-outlet",   "channel-flow-xz-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),         \
-  ("channel-flow-yz-pressure-outlet",   "channel-flow-yz-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),         \
   ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -80,10 +76,6 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("taylor-flow-porous-channel",    "taylor-flow-porous-channel.ups",   6,  "All",  ["exactComparison","no_restart"] ),                     \
-  ("channel-flow-xy-pressure-outlet",   "channel-flow-xy-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),            \
-  ("channel-flow-xz-pressure-outlet",   "channel-flow-xz-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),            \
-  ("channel-flow-yz-pressure-outlet",   "channel-flow-yz-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),            \
   ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
