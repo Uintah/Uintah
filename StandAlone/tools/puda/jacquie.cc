@@ -82,7 +82,7 @@ Uintah::jacquie( DataArchive * da, CommandLineFlags & clf )
 	double total_burned_mass = 0.0;
 	double SA = 0.001*0.001;
 	int count;
-	double minVol_frac = 0.1;  // the min volume fraction at any time
+	double minVol_frac = 0.9;  // the min volume fraction at any time
 	
 	
 	for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){

@@ -21,7 +21,7 @@
          /Uintah_specification/Grid/Level/Box/resolution :[800,1,1]
          /Uintah_specification/MaterialProperties/MPM/material/geom_object/temperature :373
     </replace_values>
-</Test>-->
+</Test>
 <Test>
     <Title>Resolution1mm</Title>
     <sus_cmd>mpirun -np 1 ./sus -svnDiff -svnStat </sus_cmd>
@@ -31,7 +31,7 @@
          /Uintah_specification/Grid/Level/Box/resolution :[200,1,1]
          /Uintah_specification/MaterialProperties/MPM/material/geom_object/temperature :373
     </replace_values>
-</Test>
+</Test>-->
 <Test>
     <Title>Resolution4mm</Title>
     <sus_cmd>mpirun -np 1 ./sus -svnDiff -svnStat </sus_cmd>
