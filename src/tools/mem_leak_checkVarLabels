@@ -12,8 +12,8 @@ if ( ($#argv != 1) || (! -e $out ) ) then
   exit(1)
 endif
 
-set created   = ( `grep Created $out | cut -f2 -d:` )
-set destroyed = ( `grep Deleted $out | cut -f2 -d:` )
+set created   = ( `grep ^"Created VarLabel" $out | cut -f2 -d:` )
+set destroyed = ( `grep ^"Deleted VarLabel" $out | cut -f2 -d:` )
 
 if ( $#created == 0 ) then
   echo "You must set the environmental variable:"
