@@ -727,7 +727,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
           print "\t*** Warning, test %s failed memory leak test." % (testname)
           print memory_msg
           # check that all VarLabels were deleted
-          rc = system("mem_leak_checkVarLabels sus.log.txt")  
+          rc = system("mem_leak_checkVarLabels sus.log.txt >> mem_leak_check.log.txt 2>&1")  
       elif memory_RC == 2*256:
           print "\t*** Warning, test %s failed memory highwater test." % (testname)
           if short_message != "":
