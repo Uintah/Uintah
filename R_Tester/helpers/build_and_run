@@ -50,7 +50,7 @@ if [ ! -d TestScripts ]; then
 fi
 
 if [ ! -d tools ]; then
-  ln -s ${SRCTOP}/tools tools
+  ln -s ../src/tools tools
 fi
 
 if [ ! -f replace_all_GS ]; then
