@@ -29,6 +29,7 @@
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Expressions/MonolithicRHS.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -210,13 +211,29 @@ namespace Wasatch{
       srcTags.push_back( srcTag );
     }
 
-    const Expr::Tag densT = Expr::Tag();
-    //const Expr::Tag volFracTag = Expr::Tag();
-    const Expr::Tag emptyTag = Expr::Tag();
-    const bool tempConstDens = false;
-    return factory.register_expression(
-        scinew typename ScalarRHS<FieldT>::Builder(Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                                   info,srcTags,densT,emptyTag, emptyTag, emptyTag, emptyTag,tempConstDens) );
+    if( params->findBlock("MonolithicRHS") ){
+      proc0cout << "ScalabilityTestTransportEquation " << thisPhiName << " MONOLITHIC RHS ACTIVE - diffusion is always on!" << endl;
+      const Expr::Tag dcoefTag( thisPhiName+"DiffCoeff", Expr::STATE_NONE );
+      factory.register_expression( scinew typename Expr::ConstantExpr<FieldT>::Builder( dcoefTag, 1.0 ) );
+      return factory.register_expression(
+          scinew typename MonolithicRHS<FieldT>::
+          Builder( Expr::Tag(thisPhiName+"_rhs", Expr::STATE_NONE),
+                   dcoefTag,
+                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_X],
+                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_Y],
+                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_Z],
+                   Expr::Tag( thisPhiName, Expr::STATE_NONE ),
+                   info[ScalarRHS<FieldT>::SOURCE_TERM] ) );
+    }
+    else{
+      const Expr::Tag densT = Expr::Tag();
+      //const Expr::Tag volFracTag = Expr::Tag();
+      const Expr::Tag emptyTag = Expr::Tag();
+      const bool tempConstDens = false;
+      return factory.register_expression(
+          scinew typename ScalarRHS<FieldT>::Builder(Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
+              info,srcTags,densT,emptyTag, emptyTag, emptyTag, emptyTag,tempConstDens) );
+    }
   }
 
   //------------------------------------------------------------------

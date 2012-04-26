@@ -183,6 +183,7 @@
     </TransportEquation>
 
     <ScalabilityTest spec="OPTIONAL NO_DATA">
+        <MonolithicRHS      spec="OPTIONAL BOOLEAN"/>
         <SolutionVariable   spec="REQUIRED STRING" />
         <NumberOfEquations  spec="REQUIRED INTEGER"/>
         <StaggeredDirection spec="OPTIONAL STRING 'X,Y,Z'"/>
