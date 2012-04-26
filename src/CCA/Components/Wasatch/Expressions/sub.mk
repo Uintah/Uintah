@@ -38,8 +38,9 @@ SRCS     +=                         \
 	$(SRCDIR)/Dilatation.cc			\
 	$(SRCDIR)/MomentumPartialRHS.cc \
 	$(SRCDIR)/MomentumRHS.cc 		\
-	$(SRCDIR)/PrimVar.cc			\
+	$(SRCDIR)/MonolithicRHS.cc	\
 	$(SRCDIR)/Multiplier.cc			\
+	$(SRCDIR)/PrimVar.cc			\
 	$(SRCDIR)/ScalarRHS.cc			\
 	$(SRCDIR)/ScalabilityTestSrc.cc	\
 	$(SRCDIR)/SetCurrentTime.cc		\
