@@ -975,13 +975,13 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
     for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     
       cout_tabledbg << " In TabProps::dummyInit, getting " << i->first << " for initializing. " << endl;
-      CCVariable<double>* the_var = new CCVariable<double>; 
-      new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
-      (*the_var).initialize(0.0);
+      CCVariable<double> the_var;
+      new_dw->allocateAndPut( the_var, i->second, matlIndex, patch ); 
+      the_var.initialize(0.0);
       constCCVariable<double> old_var; 
       old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
 
-      the_var->copyData( old_var ); 
+      the_var.copyData( old_var ); 
       
     }
   }
