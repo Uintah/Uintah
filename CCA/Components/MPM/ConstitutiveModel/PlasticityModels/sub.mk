@@ -90,5 +90,9 @@ SRCS   += \
 	$(SRCDIR)/KinematicHardeningModelFactory.cc \
 	$(SRCDIR)/NoKinematicHardening.cc \
 	$(SRCDIR)/PragerKinematicHardening.cc \
-	$(SRCDIR)/ArmstrongFrederickKinematicHardening.cc 
+	$(SRCDIR)/ArmstrongFrederickKinematicHardening.cc \
+	$(SRCDIR)/DevStressModel.cc \
+	$(SRCDIR)/DevStressModelFactory.cc \
+	$(SRCDIR)/HypoViscoElasticDevStress.cc \
+	$(SRCDIR)/HypoElasticDevStress.cc \
 
