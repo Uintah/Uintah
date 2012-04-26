@@ -219,11 +219,11 @@ namespace Wasatch{
           scinew typename MonolithicRHS<FieldT>::
           Builder( Expr::Tag(thisPhiName+"_rhs", Expr::STATE_NONE),
                    dcoefTag,
-                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_X],
-                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_Y],
-                   info[ScalarRHS<FieldT>::CONVECTIVE_FLUX_Z],
-                   Expr::Tag( thisPhiName, Expr::STATE_NONE ),
-                   info[ScalarRHS<FieldT>::SOURCE_TERM] ) );
+                   info[CONVECTIVE_FLUX_X],
+                   info[CONVECTIVE_FLUX_Y],
+                   info[CONVECTIVE_FLUX_Z],
+                   Expr::Tag( thisPhiName, Expr::STATE_N ),
+                   info[SOURCE_TERM] ) );
     }
     else{
       const Expr::Tag densT = Expr::Tag();
