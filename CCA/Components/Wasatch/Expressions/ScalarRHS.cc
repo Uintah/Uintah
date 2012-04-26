@@ -83,6 +83,30 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
+
+  if( !doXDir_ && haveXAreaFrac_ ){
+    std::ostringstream msg;
+    msg << "ERROR from " __FILE__ << std::endl
+        << "      xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+        << std::endl;
+    throw std::invalid_argument( msg.str() );
+  }
+
+  if( !doXDir_ && haveYAreaFrac_ ){
+    std::ostringstream msg;
+    msg << "ERROR from " __FILE__ << std::endl
+        << "      yAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+        << std::endl;
+    throw std::invalid_argument( msg.str() );
+  }
+
+  if( !doZDir_ && haveZAreaFrac_ ){
+    std::ostringstream msg;
+    msg << "ERROR from " __FILE__ << std::endl
+        << "      zAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+        << std::endl;
+    throw std::invalid_argument( msg.str() );
+  }
 }
 
 //------------------------------------------------------------------
@@ -136,7 +160,6 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   if ( haveYAreaFrac_ ) yareafrac_ = &yVolFM.field_ref( yAreaFracTag_ );
   if ( haveZAreaFrac_ ) zareafrac_ = &zVolFM.field_ref( zAreaFracTag_ );
 
-
   srcTerm_.clear();
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
     if( isrc->context() != Expr::INVALID_CONTEXT ) {
@@ -166,15 +189,15 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
     if( doZDir_ )  exprDeps.requires_expression( diffTagZ_ );
   }
 
-  if (haveVolFrac_) exprDeps.requires_expression( volFracTag_ );
-  if ( haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
-  if ( haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
-  if ( haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
+  if( haveVolFrac_   ) exprDeps.requires_expression( volFracTag_   );
+  if( haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
+  if( haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
+  if( haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
 
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
     if( isrc->context() != Expr::INVALID_CONTEXT ){
       exprDeps.requires_expression( *isrc );
-      if (isConstDensity_)
+      if ( isConstDensity_ )
         exprDeps.requires_expression( densityTag_ );
     }
   }
@@ -193,10 +216,10 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
     if( (isrc->context() != Expr::INVALID_CONTEXT) && isConstDensity_)
       densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
   }
-  if ( haveVolFrac_   ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
-  if ( haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
-  if ( haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
-  if ( haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
+  if( haveVolFrac_   ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
+  if( haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
+  if( haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
+  if( haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
 
 }
 
@@ -208,170 +231,65 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
 
   FieldT& rhs = this->value();
-  rhs <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( rhs );
 
-
-  namespace SS = SpatialOps::structured;
-
-  SpatialOps::SpatFldPtr<XFluxT> tmpx;
-  SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterpolated;
-
-  SpatialOps::SpatFldPtr<YFluxT> tmpy;
-  SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterpolated;
-
-  SpatialOps::SpatFldPtr<ZFluxT> tmpz;
-  SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterpolated;
-
-  // get a few memory windows
-  if (doXDir_ && haveXAreaFrac_) {
-    if (haveDiffusion_) {
-      const SS::MemoryWindow& wx = xDiffFlux_->window_with_ghost();
-      tmpx  = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
-      xAreaFracInterpolated = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
-    }
-    else if (haveConvection_) {
-      const SS::MemoryWindow& wx = xConvFlux_->window_with_ghost();
-      tmpx  = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
-      xAreaFracInterpolated = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
-    }
-    else {
-      std::ostringstream msg;
-      msg << "ERROR: xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file." << std::endl;
-      throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
-    }
-  }
-
-  if (doYDir_ && haveYAreaFrac_) {
-    if (haveDiffusion_) {
-      const SS::MemoryWindow& wy = yDiffFlux_->window_with_ghost();
-      tmpy  = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );
-      yAreaFracInterpolated = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );
-    }
-    else if (haveConvection_) {
-      const SS::MemoryWindow& wy = yConvFlux_->window_with_ghost();
-      tmpy  = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );
-      yAreaFracInterpolated = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );
-    }
-    else {
-      std::ostringstream msg;
-      msg << "ERROR: xAreaFraction specified without convection or diffusion Scalar RHS. Please revise your input file." << std::endl;
-      throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
-    }
-  }
-
-  if (doZDir_ && haveZAreaFrac_) {
-    if (haveDiffusion_) {
-      const SS::MemoryWindow& wz = zDiffFlux_->window_with_ghost();
-      tmpz  = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );
-      zAreaFracInterpolated = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );
-    }
-    else if (haveConvection_) {
-      const SS::MemoryWindow& wz = zConvFlux_->window_with_ghost();
-      tmpz  = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );
-      zAreaFracInterpolated = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );
-    }
-    else {
-      std::ostringstream msg;
-      msg << "ERROR: xAreaFraction specified without convection or diffusion Scalar RHS. Please revise your input file." << std::endl;
-      throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
-    }
-  }
-
-  // interpolate area fractions to XFLUXType
-  if ( doXDir_ && haveXAreaFrac_ )
-    xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterpolated );
-
-  if ( doXDir_ && haveXAreaFrac_ )
-    yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterpolated );
-
-  if ( doXDir_ && haveXAreaFrac_ )
-    zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterpolated );
-
-
   if( doXDir_ ){
-    if( haveConvection_ ){
-      if (haveXAreaFrac_) {
-        *tmpx <<= *xAreaFracInterpolated * *xConvFlux_;
-        divOpX_->apply_to_field( *tmpx, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpX_->apply_to_field( *xConvFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
+    SpatialOps::SpatFldPtr<XFluxT> tmpx = SpatialOps::SpatialFieldStore<XFluxT>::self().get(rhs);
+    if( haveConvection_ ) *tmpx <<= - *xConvFlux_;
+    else                  *tmpx <<= 0.0;
+    if( haveDiffusion_ )  *tmpx <<= *tmpx - *xDiffFlux_;
+    if( haveXAreaFrac_ ){
+      SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterp = SpatialOps::SpatialFieldStore<XFluxT>::self().get(rhs);
+      xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterp );
+      *tmpx <<= *tmpx * *xAreaFracInterp;
     }
-    if( haveDiffusion_ ){
-      if (haveXAreaFrac_) {
-        *tmpx <<= *xAreaFracInterpolated * *xDiffFlux_;
-        divOpX_->apply_to_field( *tmpx, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpX_->apply_to_field( *xDiffFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
-    }
+    divOpX_->apply_to_field( *tmpx, rhs );
+  }
+  else{
+    rhs <<= 0.0;
   }
 
   if( doYDir_ ){
-    if( haveConvection_ ){
-      if (haveYAreaFrac_) {
-        *tmpy <<= *yAreaFracInterpolated * *yConvFlux_;
-        divOpY_->apply_to_field( *tmpy, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpY_->apply_to_field( *yConvFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
+    SpatialOps::SpatFldPtr<YFluxT> tmpy = SpatialOps::SpatialFieldStore<YFluxT>::self().get(rhs);
+    if( haveConvection_ ) *tmpy <<= *yConvFlux_;
+    else                  *tmpy <<= 0.0;
+    if( haveDiffusion_ )  *tmpy <<= *tmpy + *yDiffFlux_;
+    if( haveYAreaFrac_ ){
+      SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterp = SpatialOps::SpatialFieldStore<YFluxT>::self().get(rhs);
+      yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterp );
+      *tmpy <<= *tmpy * *yAreaFracInterp;
     }
-    if( haveDiffusion_ ){
-      if (haveYAreaFrac_) {
-        *tmpy <<= *yAreaFracInterpolated * *yDiffFlux_;
-        divOpY_->apply_to_field( *tmpy, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpY_->apply_to_field( *yDiffFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
-    }
+    divOpY_->apply_to_field( *tmpy, *tmp );
+    rhs <<= rhs - *tmp;
   }
 
   if( doZDir_ ){
-    if( haveConvection_ ){
-      if (haveZAreaFrac_) {
-        *tmpz <<= *zAreaFracInterpolated * *zConvFlux_;
-        divOpZ_->apply_to_field( *tmpz, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpZ_->apply_to_field( *zConvFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
+    SpatialOps::SpatFldPtr<ZFluxT> tmpz = SpatialOps::SpatialFieldStore<ZFluxT>::self().get(rhs);
+    if( haveConvection_ ) *tmpz <<= *zConvFlux_;
+    else                  *tmpz <<= 0.0;
+    if( haveDiffusion_ )  *tmpz <<= *tmpz + *zDiffFlux_;
+    if( haveZAreaFrac_ ){
+      SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterp = SpatialOps::SpatialFieldStore<ZFluxT>::self().get(rhs);
+      zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterp );
+      *tmpz <<= *tmpz * *zAreaFracInterp;
     }
-    if( haveDiffusion_ ){
-      if (haveZAreaFrac_) {
-        *tmpz <<= *zAreaFracInterpolated * *zDiffFlux_;
-        divOpZ_->apply_to_field( *tmpz, *tmp );
-        rhs <<= rhs - *tmp;
-      } else {
-        divOpZ_->apply_to_field( *zDiffFlux_, *tmp );
-        rhs <<= rhs - *tmp;
-      }
-    }
+    divOpZ_->apply_to_field( *tmpz, *tmp );
+    rhs <<= rhs - *tmp;
   }
 
-
-  if ( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );
+  if( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );
 
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
     if (isConstDensity_) {
       const double densVal = (*rho_)[0];
-      if (haveVolFrac_) rhs <<= rhs + *tmp*(**isrc / densVal );
-      else  rhs <<= rhs + (**isrc / densVal );
+      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * *tmp;
+      else              rhs <<= rhs + (**isrc / densVal );
     }
     else {
       if ( haveVolFrac_ )  rhs <<= rhs + **isrc * *tmp;
-      else rhs <<= rhs + **isrc;
+      else                 rhs <<= rhs + **isrc;
     }
   }
 }
@@ -390,12 +308,12 @@ ScalarRHS<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const bool isConstDensity )
   : ExpressionBuilder(result),
     info_          ( fieldInfo ),
-    srcT_          ( sources ),
-    volfracT_      ( volFracTag ),
+    srcT_          ( sources      ),
+    volfracT_      ( volFracTag   ),
     xareafracT_    ( xAreaFracTag ),
     yareafracT_    ( yAreaFracTag ),
     zareafracT_    ( zAreaFracTag ),
-    densityT_      ( densityTag ),
+    densityT_      ( densityTag   ),
     isConstDensity_( isConstDensity )
 {}
 
@@ -412,11 +330,11 @@ ScalarRHS<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const bool isConstDensity )
   : ExpressionBuilder(result),
     info_          ( fieldInfo ),
-    volfracT_      ( volFracTag ),
+    volfracT_      ( volFracTag   ),
     xareafracT_    ( xAreaFracTag ),
     yareafracT_    ( yAreaFracTag ),
     zareafracT_    ( zAreaFracTag ),
-    densityT_      ( densityTag ),
+    densityT_      ( densityTag   ),
     isConstDensity_( isConstDensity )
 {}
 
