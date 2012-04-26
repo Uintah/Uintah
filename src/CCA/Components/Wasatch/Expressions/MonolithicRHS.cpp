@@ -149,6 +149,13 @@ evaluate()
   const FieldT phi_z0_2   = build_field( (*phi_), neutral );
   const FieldT phi_zplus  = build_field( (*phi_), pos_Z   );
 
+  const FieldT cflux_xm   = build_field( (*convFluxX_), neutral );
+  const FieldT cflux_xp   = build_field( (*convFluxX_), pos_X   );
+  const FieldT cflux_ym   = build_field( (*convFluxY_), neutral );
+  const FieldT cflux_yp   = build_field( (*convFluxY_), pos_Y   );
+  const FieldT cflux_zm   = build_field( (*convFluxZ_), neutral );
+  const FieldT cflux_zp   = build_field( (*convFluxZ_), pos_Z   );
+
   const FieldT dCoef_xminus = build_field( (*dCoef_), neg_X   );
   const FieldT dCoef_x0_1   = build_field( (*dCoef_), neutral );
   const FieldT dCoef_x0_2   = build_field( (*dCoef_), neutral );
@@ -187,41 +194,23 @@ evaluate()
   // build the full RHS including diffusive & reactive terms
   // jcs: not sure how to incorporate different field types here...
   result <<= (
-      (
-          dXl * ( (gXl * phi_xminus + gXh * phi_x0_1 ) * (iXl * dCoef_xminus + iXh * dCoef_x0_1 ) ) +
-          dXh * ( (gXl * phi_x0_2   + gXh * phi_xplus) * (iXl * dCoef_x0_2   + iXh * dCoef_xplus) )
+      ( /* x-direction convective and diffusive flux contributions - building diffusive flux inline */
+          dXl * ( cflux_xm + (gXl * phi_xminus + gXh * phi_x0_1 ) * (iXl * dCoef_xminus + iXh * dCoef_x0_1 ) ) +
+          dXh * ( cflux_xp + (gXl * phi_x0_2   + gXh * phi_xplus) * (iXl * dCoef_x0_2   + iXh * dCoef_xplus) )
       )
       +
-      (
-          dYl * ( (gYl * phi_yminus + gYh * phi_y0_1 ) * (iYl * dCoef_yminus + iYh * dCoef_y0_1 ) ) +
-          dYh * ( (gYl * phi_y0_2   + gYh * phi_yplus) * (iYl * dCoef_y0_2   + iYh * dCoef_yplus) )
+      ( /* y-direction convective and diffusive flux contributions - building diffusive flux inline */
+          dYl * ( cflux_ym + (gYl * phi_yminus + gYh * phi_y0_1 ) * (iYl * dCoef_yminus + iYh * dCoef_y0_1 ) ) +
+          dYh * ( cflux_yp + (gYl * phi_y0_2   + gYh * phi_yplus) * (iYl * dCoef_y0_2   + iYh * dCoef_yplus) )
       )
       +
-      (
-          dZl * ( (gZl * phi_zminus + gZh * phi_z0_1 ) * (iZl * dCoef_zminus + iZh * dCoef_z0_1 ) ) +
-          dZh * ( (gZl * phi_z0_2   + gZh * phi_zplus) * (iZl * dCoef_z0_2   + iZh * dCoef_zplus) )
+      ( /* z-direction convective and diffusive flux contributions - building diffusive flux inline */
+          dZl * ( cflux_zm + (gZl * phi_zminus + gZh * phi_z0_1 ) * (iZl * dCoef_zminus + iZh * dCoef_z0_1 ) ) +
+          dZh * ( cflux_zp + (gZl * phi_z0_2   + gZh * phi_zplus) * (iZl * dCoef_z0_2   + iZh * dCoef_zplus) )
       )
   );
 
-  // do things "the old way" for now until we get more support for folding this stuff in properly.
-
   if( srcTag_ != Expr::Tag() ) result <<= result + *src_;
-
-  if( xconvFluxTag_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get(result);
-    divX_->apply_to_field( *convFluxX_, *tmp );
-    result <<= result + *tmp;
-  }
-  if( yconvFluxTag_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get(result);
-    divY_->apply_to_field( *convFluxY_, *tmp );
-    result <<= result + *tmp;
-  }
-  if( zconvFluxTag_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get(result);
-    divZ_->apply_to_field( *convFluxZ_, *tmp );
-    result <<= result + *tmp;
-  }
 }
 
 //--------------------------------------------------------------------
