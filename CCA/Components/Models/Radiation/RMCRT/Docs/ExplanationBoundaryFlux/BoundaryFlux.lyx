@@ -173,7 +173,27 @@ reference "tab:ReorderingIndices"
 \end_inset
 
 ).
- One may note that for any face, the ray direction will always point toward
+ Numerically, this appears as
+\end_layout
+
+\begin_layout Standard
+Vector tmpry = directionVector;
+\end_layout
+
+\begin_layout Standard
+directionVector[0] = tmpry[indexOrder[0]] * signOrder[0]; 
+\end_layout
+
+\begin_layout Standard
+directionVector[1] = tmpry[indexOrder[1]] * signOrder[1]; 
+\end_layout
+
+\begin_layout Standard
+directionVector[2] = tmpry[indexOrder[2]] * signOrder[2];
+\end_layout
+
+\begin_layout Standard
+One may note that for any face, the ray direction will always point toward
  the inside of the cell, placing the first segment length of a ray through
  the origin cell.
  This is beause the operation that loops through the cells in the domain
@@ -227,6 +247,49 @@ reference "fig:LabeledCube"
 
 )), which can then be moved onto the appropriate face by reordering the
  indices and applying a shift value if the face of interest is E,N, or T.
+ This method holds for non-cubic cells as well, given that the unity shift
+ value is scaled by the ratio of 
+\begin_inset Formula $Dy$
+\end_inset
+
+ to 
+\begin_inset Formula $Dx$
+\end_inset
+
+ for the 
+\begin_inset Formula $y$
+\end_inset
+
+ direction, and 
+\begin_inset Formula $Dz$
+\end_inset
+
+ to 
+\begin_inset Formula $Dx$
+\end_inset
+
+ for the 
+\begin_inset Formula $z$
+\end_inset
+
+ direction.
+ Numerically, this appears as 
+\end_layout
+
+\begin_layout Standard
+Vector tmpry = location;
+\end_layout
+
+\begin_layout Standard
+location[0] = tmpry[indexOrder[0]] + shift[0]; 
+\end_layout
+
+\begin_layout Standard
+location[1] = tmpry[indexOrder[1]] + shift[1] * DyDxRatio; 
+\end_layout
+
+\begin_layout Standard
+location[2] = tmpry[indexOrder[2]] + shift[2] * DzDxRatio; 
 \end_layout
 
 \begin_layout Standard
@@ -934,6 +997,163 @@ where
  for a large number of rays, and is therefore removed from the summation,
  improving numerical efficiency.
  
+\end_layout
+
+\begin_layout Subsection
+Ray Convergence Analysis
+\end_layout
+
+\begin_layout Standard
+Verification testing was performed on the boundary flux calcuations.
+ The benchmark case is the Burns and Christon case which has been used in
+ prior verification for the flux divergence results, but also contains flux
+ results for the same cubic, trilinear case with cold black walls.
+ Agreement between our computed results and the Burns converged results
+ was obtained.
+ An increase in the number of rays led to a decrease in the L1 error norm
+ at the expected convergence of 
+\begin_inset Formula $\frac{1}{2}$
+\end_inset
+
+ order See Figs (!! - !!).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename RayConvergenceFlux.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Ray convergence for Boundary Fluxes.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename BurnsFluxVsRMCRT.pdf
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+RMCRT vs.
+ Burns' converged solution at 10M rays.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename 100kFlux.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+RMCRT vs.
+ Burns' converged solution at 100k rays.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename 1kFlux.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+RMCRT vs.
+ Burns' converged solution at 1,000 rays.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_body
