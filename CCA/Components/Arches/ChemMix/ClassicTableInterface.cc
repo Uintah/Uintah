@@ -186,13 +186,13 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel));
 
     } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
 
       cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel)).first; 
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel));
 
     } else if ( varName == "DissipationRate") {
 
@@ -201,7 +201,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // dissipation rate comes from a property model 
       PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
       PropertyModelBase& prop = prop_factory.retrieve_property_model( "scalar_dissipation_rate");
-      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) ).first; 
+      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) );
 
     } else {
 
@@ -210,7 +210,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // then it must be a mixture fraction 
       EqnFactory& eqn_factory = EqnFactory::self();
       EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel()));
 
     }
   }
@@ -380,7 +380,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
         storage.index = i_index->second; 
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -421,7 +421,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
         storage.index = i_index->second; 
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -1203,14 +1203,14 @@ ClassicTableInterface::getEnthalpyIndexInfo()
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
   int index = findIndex( "sensibleenthalpy" ); 
 
-  d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index )).first; 
+  d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index ));
 
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
   index = findIndex( "adiabaticenthalpy" ); 
-  d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index )).first; 
+  d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index ));
 
   index = findIndex( "density" ); 
-  d_enthalpyVarIndexMap.insert( make_pair( "density", index )).first; 
+  d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
 }
 
 //-------------------------------------

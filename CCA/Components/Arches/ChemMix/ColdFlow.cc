@@ -115,7 +115,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   EqnFactory& eqn_factory = EqnFactory::self();
   EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-  d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+  d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel()));
 
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
@@ -238,7 +238,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
         new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
         (*storage.var).initialize(0.0);
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -263,7 +263,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
         storage.var = new CCVariable<double>; 
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -281,9 +281,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
       // this just maps the iterator to an index so that density and temperature can be 
       // easily identified: 
       if ( i->first == "density" )
-        iter_to_index.insert( make_pair( i->first, 0 )).first;
+        iter_to_index.insert( make_pair( i->first, 0 ));
       else if ( i->first == "temperature" )
-        iter_to_index.insert( make_pair( i->first, 1 )).first;
+        iter_to_index.insert( make_pair( i->first, 1 ));
 
     }
 
