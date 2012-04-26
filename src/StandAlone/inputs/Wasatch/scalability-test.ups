@@ -29,6 +29,7 @@
     </BasicExpression>
 
     <ScalabilityTest> 
+        <MonolithicRHS>true</MonolithicRHS>
         <SolutionVariable>phi</SolutionVariable>        
         <NumberOfEquations>30</NumberOfEquations>
         <DoConvection>true</DoConvection>
