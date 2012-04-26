@@ -80,8 +80,10 @@
     <deviatoric_stress_model       spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'hypoElastic, hypoViscoElastic'" 
                                         need_applies_to="type elastic_plastic elastic_plastic_hp" >
+      <tau                         spec="REQUIRED MULTIPLE_DOUBLES" need_applies_to="type hypoViscoElastic" />
+      <mu                          spec="REQUIRED MULTIPLE_DOUBLES" need_applies_to="type hypoViscoElastic" /> 
     </deviatoric_stress_model>
-    
+        
     <DCp_DTemperature              spec="OPTIONAL DOUBLE" />
     <D                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
     <starting_location             spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->

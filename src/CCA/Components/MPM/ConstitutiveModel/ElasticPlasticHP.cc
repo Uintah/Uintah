@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DevStressModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
@@ -189,13 +190,12 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
-  d_devStress = scinew DeviatoricStressModel();
+  d_devStress = DevStressModelFactory::create(ps);
   if (!d_devStress) {
     ostringstream desc;
     desc << "ElasticPlasticHP::Error creating deviatoric stress model" << endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }  
-  d_devStress ->create(ps);
+  }
 
   d_computeSpecificHeat = false;
   ps->get("compute_specific_heat",d_computeSpecificHeat);
@@ -321,14 +321,15 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("plastic_convergence_algo",      d_plasticConvergenceAlgo);
   cm_ps->appendElement("compute_specific_heat",         d_computeSpecificHeat);
 
-  d_yield->outputProblemSpec(cm_ps);
-  d_stable->outputProblemSpec(cm_ps);
-  d_flow->outputProblemSpec(cm_ps);
-  d_damage->outputProblemSpec(cm_ps);
-  d_eos->outputProblemSpec(cm_ps);
-  d_shear->outputProblemSpec(cm_ps);
-  d_melt->outputProblemSpec(cm_ps);
-  d_Cp->outputProblemSpec(cm_ps);
+  d_yield      ->outputProblemSpec(cm_ps);
+  d_stable     ->outputProblemSpec(cm_ps);
+  d_flow       ->outputProblemSpec(cm_ps);
+  d_devStress  ->outputProblemSpec(cm_ps);
+  d_damage     ->outputProblemSpec(cm_ps);
+  d_eos        ->outputProblemSpec(cm_ps);
+  d_shear      ->outputProblemSpec(cm_ps);
+  d_melt       ->outputProblemSpec(cm_ps);
+  d_Cp         ->outputProblemSpec(cm_ps);
 
   cm_ps->appendElement("evolve_porosity",           d_evolvePorosity);
   cm_ps->appendElement("initial_mean_porosity",     d_porosity.f0);
@@ -480,7 +481,7 @@ ElasticPlasticHP::setErosionAlgorithm()
 //
 void 
 ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
-                                 std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(pRotationLabel);
@@ -501,8 +502,9 @@ ElasticPlasticHP::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pLocalizedLabel_preReloc);
   to.push_back(pEnergyLabel_preReloc);
 
-  // Add the particle state for the flow model
-  d_flow->addParticleState(from, to);
+  // Add the particle state for the flow & deviatoric stress model
+  d_flow     ->addParticleState(from, to);
+  d_devStress->addParticleState(from, to);
 }
 //______________________________________________________________________
 //
@@ -522,8 +524,9 @@ ElasticPlasticHP::addInitialComputesAndRequires(Task* task,
   task->computes(pLocalizedLabel,     matlset);
   task->computes(pEnergyLabel,        matlset);
  
-  // Add internal evolution variables computed by flow model
-  d_flow->addInitialComputesAndRequires(task, matl, patch);
+  // Add internal evolution variables computed by flow & deviatoric stress model
+  d_flow     ->addInitialComputesAndRequires(task, matl, patch);
+  d_devStress->addInitialComputesAndRequires(task, matl);
 }
 //______________________________________________________________________
 //
@@ -604,6 +607,10 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
 
   // Initialize the data for the flow model
   d_flow->initializeInternalVars(pset, new_dw);
+  
+  // Deviatoric Stress Model
+  d_devStress->initializeInternalVars(pset, new_dw);
+  
 }
 //______________________________________________________________________
 //
@@ -697,6 +704,9 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches);
+  
+  // Deviatoric stress model
+  d_devStress->addComputesAndRequires(task, matl);
 }
 //______________________________________________________________________
 //
@@ -865,9 +875,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
-    // Get the plastic strain
-    d_flow->getInternalVars(pset, old_dw);
-    d_flow->allocateAndPutInternalVars(pset, new_dw);
+    
+    d_flow     ->getInternalVars(pset, old_dw);
+    d_devStress->getInternalVars(pset, old_dw);
+    
+    d_flow     ->allocateAndPutInternalVars(pset, new_dw);
+    d_devStress->allocateAndPutInternalVars(pset, new_dw);
 
     //______________________________________________________________________
     // Loop thru particles
@@ -1011,11 +1024,11 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Compute rate of change of specific volume
       double Vdot = (pVolume_deformed[idx] - pVolume[idx])/(pMass[idx]*delT);
 
-      // Compute polar decomposition of F (F = RU)
-      pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
-
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
+
+      // Compute polar decomposition of F (F = RU)
+      pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
@@ -1033,6 +1046,11 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       sigma = (tensorR.Transpose())*(sigma*tensorR);
       double pressure = sigma.Trace()/3.0; 
       tensorS = sigma - one * pressure;
+
+      // Rotate internal Cauchy stresses back to the 
+      // material configuration (only for viscoelasticity)
+
+      d_devStress->rotateInternalStresses(idx, tensorR);
 
       double temperature = pTemperature[idx];
 
@@ -1087,7 +1105,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       DeformationState* defState = scinew DeformationState();
       defState->tensorD   = tensorD;
       defState->tensorEta = tensorEta;
-      d_devStress->computeDeviatoricStressInc(state, defState, delT);
+      d_devStress->computeDeviatoricStressInc(idx, state, defState, delT);
 
       Matrix3 trialS = tensorS + defState->devStressInc;
       
@@ -1150,9 +1168,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           // gammadotplus < 0 or delGamma < 0 use the Simo algorithm
           // with Newton iterations.
 
-	  //  Here set to true, if all conditionals are met (immediately above) then set to false.
+           //  Here set to true, if all conditionals are met (immediately above) then set to false.
           bool doRadialReturn = true;
-          
+          Matrix3 tensorEtaPlasticInc = zero;
           //__________________________________
           //
           if (normS > 0.0 && d_plasticConvergenceAlgo == "biswajit") {
@@ -1170,12 +1188,18 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             state->plasticStrain     = pPlasticStrain[idx];
             Matrix3 nn(0.0);
             computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
-            
-            tensorS = trialS - nn *(2.0 * state->shearModulus * delGamma);
+
+            tensorEtaPlasticInc = nn * delGamma;
+            //tensorS = trialS - tensorEtaPlasticInc *(2.0 * state->shearModulus);  // investigate why this != line below
+            tensorS = trialS - nn * (2.0 * state->shearModulus * delGamma);
           }
 
           // Update internal variables
           d_flow->updatePlastic(idx, delGamma);
+          
+          // Update internal Cauchy stresses (only for viscoelasticity)
+          Matrix3 dp = tensorEtaPlasticInc/delT;
+          d_devStress->updateInternalStresses(idx, dp, defState, delT);
 
         } // end of flow_rule if
       } // end of temperature if
@@ -1392,6 +1416,11 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
+
+      // Rotate internal Cauchy stresses back to laboratory
+      // coordinates (only for viscoelasticity)
+
+      d_devStress->rotateInternalStresses(idx, tensorR);
 
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;
@@ -1817,8 +1846,10 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                            pEnergyLabel_preReloc,                 pset);
 
     // Get the plastic strain
-    d_flow->getInternalVars(pset, old_dw);
-    d_flow->allocateAndPutInternalVars(pset, new_dw);
+    d_flow     ->getInternalVars(pset, old_dw);
+    d_devStress->getInternalVars(pset, old_dw);
+    d_flow     ->allocateAndPutInternalVars(pset, new_dw);
+    d_devStress->allocateAndPutInternalVars(pset, new_dw);
 
     //__________________________________
     // Special case for rigid materials
@@ -2101,6 +2132,9 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
 
   // Add internal evolution variables computed by flow model
   d_flow->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
+  
+  // Deviatoric Stress Model
+  d_devStress->addComputesAndRequires(task, matl, SchedParent);
 }
 //______________________________________________________________________
 //
@@ -3284,6 +3318,10 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
     // Get the plastic strain
     d_flow->getInternalVars(pset, old_dw);
     d_flow->allocateAndPutRigid(pset, new_dw);
+    
+    d_flow->getInternalVars(pset, old_dw);
+    d_flow->allocateAndPutRigid(pset, new_dw);    
+    
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
