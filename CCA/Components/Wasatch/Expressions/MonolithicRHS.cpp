@@ -38,13 +38,19 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
                const Expr::Tag& phiTag,
                const Expr::Tag& srcTag )
   : Expr::Expression<FieldT>(),
-    dCoefTag_ ( dCoefTag  ),
+    dCoefTag_    ( dCoefTag     ),
     xconvFluxTag_( xconvFluxTag ),
     yconvFluxTag_( yconvFluxTag ),
     zconvFluxTag_( zconvFluxTag ),
-    phiTag_   ( phiTag    ),
-    srcTag_   ( srcTag    )
-{}
+    phiTag_      ( phiTag       ),
+    srcTag_      ( srcTag       )
+{
+  // right now we must have all directions active with convection and diffusion.
+  assert( xconvFluxTag != Expr::Tag() );
+  assert( yconvFluxTag != Expr::Tag() );
+  assert( zconvFluxTag != Expr::Tag() );
+  assert( dCoefTag     != Expr::Tag() );
+}
 
 //--------------------------------------------------------------------
 
@@ -192,7 +198,7 @@ evaluate()
   const double dZh = divZ_   ->get_plus_coef();
 
   // build the full RHS including diffusive & reactive terms
-  result <<= (
+  r <<= (
       ( /* x-direction convective and diffusive flux contributions - building diffusive flux inline */
           dXl * ( -cflux_xm + (gXl * phi_xminus + gXh * phi_x0_1 ) * (iXl * dCoef_xminus + iXh * dCoef_x0_1 ) ) +
           dXh * ( -cflux_xp + (gXl * phi_x0_2   + gXh * phi_xplus) * (iXl * dCoef_x0_2   + iXh * dCoef_xplus) )
