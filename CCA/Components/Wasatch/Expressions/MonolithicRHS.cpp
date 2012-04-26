@@ -192,21 +192,20 @@ evaluate()
   const double dZh = divZ_   ->get_plus_coef();
 
   // build the full RHS including diffusive & reactive terms
-  // jcs: not sure how to incorporate different field types here...
   result <<= (
       ( /* x-direction convective and diffusive flux contributions - building diffusive flux inline */
-          dXl * ( cflux_xm + (gXl * phi_xminus + gXh * phi_x0_1 ) * (iXl * dCoef_xminus + iXh * dCoef_x0_1 ) ) +
-          dXh * ( cflux_xp + (gXl * phi_x0_2   + gXh * phi_xplus) * (iXl * dCoef_x0_2   + iXh * dCoef_xplus) )
+          dXl * ( -cflux_xm + (gXl * phi_xminus + gXh * phi_x0_1 ) * (iXl * dCoef_xminus + iXh * dCoef_x0_1 ) ) +
+          dXh * ( -cflux_xp + (gXl * phi_x0_2   + gXh * phi_xplus) * (iXl * dCoef_x0_2   + iXh * dCoef_xplus) )
       )
       +
       ( /* y-direction convective and diffusive flux contributions - building diffusive flux inline */
-          dYl * ( cflux_ym + (gYl * phi_yminus + gYh * phi_y0_1 ) * (iYl * dCoef_yminus + iYh * dCoef_y0_1 ) ) +
-          dYh * ( cflux_yp + (gYl * phi_y0_2   + gYh * phi_yplus) * (iYl * dCoef_y0_2   + iYh * dCoef_yplus) )
+          dYl * ( -cflux_ym + (gYl * phi_yminus + gYh * phi_y0_1 ) * (iYl * dCoef_yminus + iYh * dCoef_y0_1 ) ) +
+          dYh * ( -cflux_yp + (gYl * phi_y0_2   + gYh * phi_yplus) * (iYl * dCoef_y0_2   + iYh * dCoef_yplus) )
       )
       +
       ( /* z-direction convective and diffusive flux contributions - building diffusive flux inline */
-          dZl * ( cflux_zm + (gZl * phi_zminus + gZh * phi_z0_1 ) * (iZl * dCoef_zminus + iZh * dCoef_z0_1 ) ) +
-          dZh * ( cflux_zp + (gZl * phi_z0_2   + gZh * phi_zplus) * (iZl * dCoef_z0_2   + iZh * dCoef_zplus) )
+          dZl * ( -cflux_zm + (gZl * phi_zminus + gZh * phi_z0_1 ) * (iZl * dCoef_zminus + iZh * dCoef_z0_1 ) ) +
+          dZh * ( -cflux_zp + (gZl * phi_z0_2   + gZh * phi_zplus) * (iZl * dCoef_z0_2   + iZh * dCoef_zplus) )
       )
   );
 
