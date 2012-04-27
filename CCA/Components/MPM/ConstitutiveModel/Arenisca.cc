@@ -29,23 +29,24 @@ DEALINGS IN THE SOFTWARE.
 
 //#include </usr/include/valgrind/callgrind.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
-#include <Core/Grid/Patch.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
-#include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <sci_values.h>
 #include <iostream>
@@ -372,19 +373,19 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
-	     //re-zero the velocity gradient:
-	     tensorL.set(0.0);
+     //re-zero the velocity gradient:
+     tensorL.set(0.0);
       if(!flag->d_axisymmetric){
-	       // Get the node indices that surround the cell
-	       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+       // Get the node indices that surround the cell
+       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
                                                    deformationGradient[idx]);
-	       computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
+       computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
-	       // Get the node indices that surround the cell
-	       interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-							                                   psize[idx],deformationGradient[idx]);
-	       // x -> r, y -> z, z -> theta
-	       computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
+       // Get the node indices that surround the cell
+       interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                   psize[idx],deformationGradient[idx]);
+       // x -> r, y -> z, z -> theta
+       computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
       velGrad[idx]=tensorL;
 
@@ -405,20 +406,20 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       // Old First Order Way
       // deformationGradient_new[idx]=(tensorL*delT+Identity)*deformationGradient[idx];
 
-	     J = deformationGradient_new[idx].Determinant();
-	     if (J<=0){
-	       cout<< "ERROR, negative J! "<<endl;
-	       cout<<"J= "<<J<<endl;
-	       cout<<"L= "<<tensorL<<endl;
-        exit(1);
-	     }
-	     // Update particle volumes
-	     pvolume[idx]=(pmass[idx]/rho_orig)*J;
-	     rho_cur[idx] = rho_orig/J;
+     J = deformationGradient_new[idx].Determinant();
+     if (J<=0){
+       cout<< "ERROR, negative J! "<<endl;
+       cout<<"J= "<<J<<endl;
+       cout<<"L= "<<tensorL<<endl;
+       throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
+     }
+     // Update particle volumes
+     pvolume[idx]=(pmass[idx]/rho_orig)*J;
+     rho_cur[idx] = rho_orig/J;
     }
 
     double cap_r_initial = CR*FSLOPE*(PEAKI1-p0_crush_curve)/(1.0+CR*FSLOPE);
-    double kappa_initial = p0_crush_curve + cap_r_initial;
+    //double kappa_initial = p0_crush_curve + cap_r_initial;
     double min_kappa = 1000.0 * p0_crush_curve;
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
@@ -455,7 +456,7 @@ cout<<"@@@@@pKappa1="<<pKappa1<<endl;
       D = (tensorR.Transpose())*(D*tensorR);
 
       // modify the bulk modulus based on the fluid effects
-      double bulk_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+pElasticStrainVol[idx]);
+//      double bulk_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+pElasticStrainVol[idx]);
 if (idx==idxNO-1){
 cout<<"bulk="<<bulk<<endl;
 }
@@ -503,12 +504,12 @@ cout<<"f_trial[idx]="<<f_trial[idx]<<endl;
 cout<<"I1_trial="<<I1_trial<<endl;
 cout<<"J2_trial="<<J2_trial<<endl;
 }
-	     if (f_trial[idx]<0){ // ###1 (BEGIN: condition for elastic or plastic)
+     if (f_trial[idx]<0){ // ###1 (BEGIN: condition for elastic or plastic)
 
         // elastic step
-	       stress_new[idx] = trial_stress[idx];
+       stress_new[idx] = trial_stress[idx];
 
-	     }else{ // ###1 (ELSE: condition for elastic or plastic)
+     }else{ // ###1 (ELSE: condition for elastic or plastic)
 
         // Determine a characteristic length of the elastic zone
         double char_length_yield_surface;
@@ -533,105 +534,105 @@ cout<<"J2_trial="<<J2_trial<<endl;
           cout<<"cap_radius="<<cap_radius<<endl;
           cout<<"PEAKI1_hardening/FSLOPE="<<PEAKI1_hardening/FSLOPE<<endl;
           cout<<"idx="<<idx<<endl;
-          exit(1);
+          throw InvalidValue("**ERROR**:in char_length_yield_surface",
+                             __FILE__, __LINE__);
         }
-	       int condition_return_to_vertex=0;
+       int condition_return_to_vertex=0;
 
-	       if (I1_trial>PEAKI1_hardening/FSLOPE){ // ###2 (BEGIN: plasticity vertex treatment)
+       if (I1_trial>PEAKI1_hardening/FSLOPE){ // ###2 (BEGIN: plasticity vertex treatment)
 if (idx==idxNO){
 cout<<"********************** HERE 1: vertex"<<endl;
 cout<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
 cout<<"pKappa_new[idx]="<<pKappa_new[idx]<<endl;
 cout<<"R="<<cap_radius<<endl;
 }
-	         if (J2_trial<1.0e-10*char_length_yield_surface){
+         if (J2_trial<1.0e-10*char_length_yield_surface){
             // hydrostatic loading
             stress_new[idx] = Identity*PEAKI1_hardening/FSLOPE*one_third;
             condition_return_to_vertex = 1;
-	         }else{
-	           int counter_1_fix=0;
-	           int counter_2_fix=0;
-	           double P_component_1,P_component_2;
-	           double relative_stress_to_vertex_1,relative_stress_to_vertex_2;
-	           Matrix3 relative_stress_to_vertex,relative_stress_to_vertex_deviatoric;
-	           Matrix3 unit_tensor_vertex_1;
-	           Matrix3 unit_tensor_vertex_2;
-	           Matrix3 P,M,P_deviatoric;
-            // compute the relative trial stress in respect with the vertex
-	           relative_stress_to_vertex = trial_stress[idx] - Identity*PEAKI1_hardening/FSLOPE*one_third;
-            // compute two unit tensors of the stress space
-	           unit_tensor_vertex_1 = Identity/sqrt_three;
-	           unit_tensor_vertex_2 = S_trial/sqrt(2.0*J2_trial);
-            // compute the unit tensor in the direction of the plastic strain
-            M = ( Identity*FSLOPE_p + S_trial*(1.0/(2.0*sqrt(J2_trial))) )/sqrt(3.0*FSLOPE_p*FSLOPE_p + 0.5);
-            // compute the projection direction tensor
-            P = (Identity*lame*(M.Trace()) + M*2.0*shear);
-            // compute the components of P tensor in respect with two unit_tensor_vertex
-            P_component_1 = P.Trace()/sqrt_three;
-            P_deviatoric = P - unit_tensor_vertex_1*P_component_1;
-            for (int counter_1=0 ; counter_1<=2 ; counter_1++){
-              for (int counter_2=0 ; counter_2<=2 ; counter_2++){
-                if (fabs(unit_tensor_vertex_2(counter_1,counter_2))>
-                    fabs(unit_tensor_vertex_2(counter_1_fix,counter_2_fix))){
-                  counter_1_fix = counter_1;
-                  counter_2_fix = counter_2;
-                }
-              }
-            }
-            P_component_2 = P_deviatoric(counter_1_fix,counter_2_fix)/
-                            unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
-            // calculation of the components of relative_stress_to_vertex
-            // in respect with two unit_tensor_vertex
-            relative_stress_to_vertex_1 = relative_stress_to_vertex.Trace()*one_sqrt_three;
-            relative_stress_to_vertex_deviatoric = relative_stress_to_vertex -
-                                                   unit_tensor_vertex_1*relative_stress_to_vertex_1;
-            relative_stress_to_vertex_2 = relative_stress_to_vertex_deviatoric(counter_1_fix,counter_2_fix)/
-                                          unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
-            // condition to determine if the stress_trial is in the vertex zone or not?
-            if ( ((relative_stress_to_vertex_1*P_component_2 + relative_stress_to_vertex_2*P_component_1)/
-               (P_component_1*P_component_1) >=0 ) && ((relative_stress_to_vertex_1*P_component_2 +
-               relative_stress_to_vertex_2*(-1.0)*P_component_1)/(P_component_1*P_component_1) >=0 ) ){
-              stress_new[idx] = Identity*PEAKI1_hardening*one_third/FSLOPE;
-              condition_return_to_vertex = 1;
-            }
-	         }
+         }else{
+           int counter_1_fix=0;
+           int counter_2_fix=0;
+           double P_component_1,P_component_2;
+           double relative_stress_to_vertex_1,relative_stress_to_vertex_2;
+           Matrix3 relative_stress_to_vertex,relative_stress_to_vertex_deviatoric;
+           Matrix3 unit_tensor_vertex_1;
+           Matrix3 unit_tensor_vertex_2;
+           Matrix3 P,M,P_deviatoric;
+           // compute the relative trial stress in respect with the vertex
+           relative_stress_to_vertex = trial_stress[idx] - Identity*PEAKI1_hardening/FSLOPE*one_third;
+           // compute two unit tensors of the stress space
+           unit_tensor_vertex_1 = Identity/sqrt_three;
+           unit_tensor_vertex_2 = S_trial/sqrt(2.0*J2_trial);
+           // compute the unit tensor in the direction of the plastic strain
+           M = ( Identity*FSLOPE_p + S_trial*(1.0/(2.0*sqrt(J2_trial))) )/sqrt(3.0*FSLOPE_p*FSLOPE_p + 0.5);
+           // compute the projection direction tensor
+           P = (Identity*lame*(M.Trace()) + M*2.0*shear);
+           // compute the components of P tensor in respect with two unit_tensor_vertex
+           P_component_1 = P.Trace()/sqrt_three;
+           P_deviatoric = P - unit_tensor_vertex_1*P_component_1;
+           for (int counter_1=0 ; counter_1<=2 ; counter_1++){
+             for (int counter_2=0 ; counter_2<=2 ; counter_2++){
+               if (fabs(unit_tensor_vertex_2(counter_1,counter_2))>
+                   fabs(unit_tensor_vertex_2(counter_1_fix,counter_2_fix))){
+                 counter_1_fix = counter_1;
+                 counter_2_fix = counter_2;
+               }
+             }
+           }
+           P_component_2 = P_deviatoric(counter_1_fix,counter_2_fix)/
+                           unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
+           // calculation of the components of relative_stress_to_vertex
+           // in respect with two unit_tensor_vertex
+           relative_stress_to_vertex_1 = relative_stress_to_vertex.Trace()*one_sqrt_three;
+           relative_stress_to_vertex_deviatoric = relative_stress_to_vertex -
+                                                  unit_tensor_vertex_1*relative_stress_to_vertex_1;
+           relative_stress_to_vertex_2 = relative_stress_to_vertex_deviatoric(counter_1_fix,counter_2_fix)/
+                                         unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
+           // condition to determine if the stress_trial is in the vertex zone or not?
+           if ( ((relative_stress_to_vertex_1*P_component_2 + relative_stress_to_vertex_2*P_component_1)/
+              (P_component_1*P_component_1) >=0 ) && ((relative_stress_to_vertex_1*P_component_2 +
+              relative_stress_to_vertex_2*(-1.0)*P_component_1)/(P_component_1*P_component_1) >=0 ) ){
+             stress_new[idx] = Identity*PEAKI1_hardening*one_third/FSLOPE;
+             condition_return_to_vertex = 1;
+           }
+         }
 
-          if (condition_return_to_vertex == 1) {
+         if (condition_return_to_vertex == 1) {
 
-          double shear_inverse = 0.5/shear;
-	         double lame_inverse = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
-          Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
-	         Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
-                                     diff_stress_iteration*shear_inverse);
-          // update total plastic strain magnitude
-	         pPlasticStrain_new[idx] = pPlasticStrain[idx] + strain_iteration.Norm();
-          // update volumetric part of the plastic strain magnitude
-          pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
-          // update volumetric part of the elastic strain magnitude
-          pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
-          // update back stress
-          pBackStress_new[idx] = Identity*( -3.0*fluid_B0*
-                                  (exp(pPlasticStrainVol_new[idx])-1.0) * exp(p3_crush_curve+p4_fluid_effect)
-                                  /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol_new[idx])-1.0) )*
-                                  (pPlasticStrainVol_new[idx]);
-          // update the position of the cap
-          double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]);
-          double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol[idx]);
-          double var1;
-          if (cond_fixed_cap_radius==0) {
-            var1 = 1.0+FSLOPE*CR;
-          } else if (cond_fixed_cap_radius==1) {
-            var1 = 1.0;
-          }
-          if (pKappa1-cap_radius-p0_crush_curve<0) {
-            pKappa_new[idx] = pKappa1 + ( exp(-p1_crush_curve*(pKappa1-cap_radius-p0_crush_curve))
-                            /( p3_crush_curve*p1_crush_curve ) -
+         double shear_inverse = 0.5/shear;
+         double lame_inverse = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
+         Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
+         Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) + diff_stress_iteration*shear_inverse);
+         // update total plastic strain magnitude
+         pPlasticStrain_new[idx] = pPlasticStrain[idx] +strain_iteration.Norm();
+         // update volumetric part of the plastic strain magnitude
+         pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
+         // update volumetric part of the elastic strain magnitude
+         pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
+         // update back stress
+         pBackStress_new[idx] = Identity*( -3.0*fluid_B0*
+                               (exp(pPlasticStrainVol_new[idx])-1.0) * exp(p3_crush_curve+p4_fluid_effect)
+                                 /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol_new[idx])-1.0) )*
+                                 (pPlasticStrainVol_new[idx]);
+         // update the position of the cap
+         double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]);
+         double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol[idx]);
+         double var1;
+         if (cond_fixed_cap_radius==0) {
+           var1 = 1.0+FSLOPE*CR;
+         } else if (cond_fixed_cap_radius==1) {
+           var1 = 1.0;
+         }
+         if (pKappa1-cap_radius-p0_crush_curve<0) {
+           pKappa_new[idx] = pKappa1 + ( exp(-p1_crush_curve*(pKappa1-cap_radius-p0_crush_curve))
+                           /( p3_crush_curve*p1_crush_curve ) -
                             3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp
-                            /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
+                           /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
                             3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp1
-                            /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
+                           /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
                             *strain_iteration.Trace()/var1;
-          } else if (pKappa1-cap_radius<0.01*p0_crush_curve) {
+         } else if (pKappa1-cap_radius<0.01*p0_crush_curve) {
             //pKappa_new[idx] = p0_crush_curve + cap_radius; (1)KappaMin
             pKappa_new[idx] = pKappa1 + ( pow( (pKappa1-cap_radius)/p0_crush_curve,
                                             1-p0_crush_curve*p1_crush_curve*p3_crush_curve )
@@ -756,29 +757,29 @@ cout<<"****************************************************************"<<endl;
 cout<<"I1_trial_Sadeghirad="<<I1_trial_Sadeghirad<<endl;
 cout<<"J2_trial_Sadeghirad="<<J2_trial_Sadeghirad<<endl;
 }
-	         double gamma = 0.0;;
-	         double I1_iteration,J2_iteration;
-	         double beta_cap,FSLOPE_cap;
-          double f_new_loop = 1e99;
-          Matrix3 pBackStress_loop = pBackStress_new[idx];
-          double pKappa_loop = pKappa_new[idx];
-	         int max_number_of_iterations = 10;
-	         int counter = 1;
-	         Matrix3 P,M,G;
-	         Matrix3 stress_iteration=trial_stress[idx];
-	         Matrix3 S_iteration;
-          Matrix3 plasStrain_loop;
-          plasStrain_loop.set(0.0);
+         double gamma = 0.0;;
+         double I1_iteration,J2_iteration;
+         double beta_cap,FSLOPE_cap;
+         double f_new_loop = 1e99;
+         Matrix3 pBackStress_loop = pBackStress_new[idx];
+         double pKappa_loop = pKappa_new[idx];
+         int max_number_of_iterations = 10;
+         int counter = 1;
+         Matrix3 P,M,G;
+         Matrix3 stress_iteration=trial_stress[idx];
+         Matrix3 S_iteration;
+         Matrix3 plasStrain_loop;
+         plasStrain_loop.set(0.0);
 
-	         while( abs(f_new_loop)>9e-2*char_length_yield_surface
-                 && counter<=max_number_of_iterations ){ // ###4 (BEGIN LOOP: nested return algorithm)
+         while( abs(f_new_loop)>9e-2*char_length_yield_surface
+                && counter<=max_number_of_iterations ){ // ###4 (BEGIN LOOP: nested return algorithm)
 
-	           counter=counter+1;
-            trial_stress_loop = stress_iteration;
+           counter=counter+1;
+           trial_stress_loop = stress_iteration;
 
-            // compute the invariants of the trial stres in the loop
-	           computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-	           if (I1_iteration>PEAKI1_hardening/FSLOPE){ // ###5 (BEGIN: fast return algorithm)
+           // compute the invariants of the trial stres in the loop
+           computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
+           if (I1_iteration>PEAKI1_hardening/FSLOPE){ // ###5 (BEGIN: fast return algorithm)
 if (idx==idxNO){
 cout<<"&&&&&&&&&&&&&&& 1"<<endl;
 }
@@ -1266,42 +1267,41 @@ cout<<"(f_new_loop)="<<(f_new_loop)<<endl;
 
        } // ###3 (END CONDITION: nested return algorithm)
 
-       double f_new;
-	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],cap_radius,PEAKI1_hardening);
+       double f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],cap_radius,PEAKI1_hardening);
        f_new=sqrt(abs(f_new));
        double J2_new,I1_new;
        Matrix3 S_new;
        computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
        // send an error message to the host code if the new stress is not on the yield surface
-	      if (pKappa_new[idx]-cap_radius>PEAKI1_hardening/FSLOPE) {
-	        cerr<<"ERROR! pKappa-R>PEAKI1 "<<endl;
-	        cerr<<"J2_new= "<<J2_new<<endl;
-	        cerr<<"I1_new= "<<I1_new<<endl;
-	        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
-         cerr<<"f_new= "<<f_new<<endl;
-         cerr<<"char_length_yield_surface= "<<char_length_yield_surface<<endl;
-         cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-         cerr<<"R="<<cap_radius<<endl;
-         cerr<<"FSLOPE="<<FSLOPE<<endl;
-         cerr<<"idx="<<idx<<endl;
-	        exit(1);
-	      }
-	      if (sqrt(abs(f_new))<1.0e-1*char_length_yield_surface) {}
-	      else {
-	        cerr<<"ERROR!  did not return to yield surface (Arenisca.cc)"<<endl;
-	        cerr<<"J2_new= "<<J2_new<<endl;
-	        cerr<<"I1_new= "<<I1_new<<endl;
-	        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
-         cerr<<"f_new= "<<f_new<<endl;
-         cerr<<"char_length_yield_surface= "<<char_length_yield_surface<<endl;
-         cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-         cerr<<"R="<<cap_radius<<endl;
-         cerr<<"FSLOPE="<<FSLOPE<<endl;
-         cerr<<"idx="<<idx<<endl;
-         cerr<<"stress_new[idx]="<<stress_new[idx]<<endl;
-	        exit(1);
-	      }
-
+      if (pKappa_new[idx]-cap_radius>PEAKI1_hardening/FSLOPE) {
+        cerr<<"ERROR! pKappa-R>PEAKI1 "<<endl;
+        cerr<<"J2_new= "<<J2_new<<endl;
+        cerr<<"I1_new= "<<I1_new<<endl;
+        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
+        cerr<<"f_new= "<<f_new<<endl;
+        cerr<<"char_length_yield_surface= "<<char_length_yield_surface<<endl;
+        cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
+        cerr<<"R="<<cap_radius<<endl;
+        cerr<<"FSLOPE="<<FSLOPE<<endl;
+        cerr<<"idx="<<idx<<endl;
+        throw InvalidValue("**ERROR**:pKappa-R>PEAKI1 ", __FILE__, __LINE__);
+      }
+      if (sqrt(abs(f_new))<1.0e-1*char_length_yield_surface) {}
+      else {
+        cerr<<"ERROR!  did not return to yield surface (Arenisca.cc)"<<endl;
+        cerr<<"J2_new= "<<J2_new<<endl;
+        cerr<<"I1_new= "<<I1_new<<endl;
+        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
+        cerr<<"f_new= "<<f_new<<endl;
+        cerr<<"char_length_yield_surface= "<<char_length_yield_surface<<endl;
+        cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
+        cerr<<"R="<<cap_radius<<endl;
+        cerr<<"FSLOPE="<<FSLOPE<<endl;
+        cerr<<"idx="<<idx<<endl;
+        cerr<<"stress_new[idx]="<<stress_new[idx]<<endl;
+        throw InvalidValue("**ERROR**:did not return to yield surface ",
+                           __FILE__, __LINE__);
+      }
      } // ###1 (condition for elastic or plastic)
 
      // compute stress from the shifted stress
