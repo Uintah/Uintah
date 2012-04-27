@@ -231,6 +231,7 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
 
   FieldT& rhs = this->value();
+  rhs <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( rhs );
 
@@ -245,9 +246,6 @@ void ScalarRHS<FieldT>::evaluate()
       *tmpx <<= *tmpx * *xAreaFracInterp;
     }
     divOpX_->apply_to_field( *tmpx, rhs );
-  }
-  else{
-    rhs <<= 0.0;
   }
 
   if( doYDir_ ){
