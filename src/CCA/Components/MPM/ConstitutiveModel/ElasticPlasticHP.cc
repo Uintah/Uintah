@@ -1190,8 +1190,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
 
             tensorEtaPlasticInc = nn * delGamma;
-            //tensorS = trialS - tensorEtaPlasticInc *(2.0 * state->shearModulus);  // investigate why this != line below
-            tensorS = trialS - nn * (2.0 * state->shearModulus * delGamma);
+            tensorS = trialS - tensorEtaPlasticInc *(2.0 * state->shearModulus);
           }
 
           // Update internal variables
@@ -1946,7 +1945,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       // the volumetric strain and deviatoric strain increments at t_n+1
       sigma = pStress[idx];
       double pressure = sigma.Trace()/3.0;
-      //      tensorS = sigma - One*pressure;
+      Matrix3 tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state   = scinew PlasticityState();
@@ -1982,13 +1981,26 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double mu_cur = d_shear->computeShearModulus(state);
       state->shearModulus = mu_cur ;
 
+      // The calculation of tensorD and tensorEta are so that the deviatoric
+      // stress calculation will work.  
+
+      Matrix3 tensorD = incStrain/delT;
+      
+      // Calculate the deviatoric part of the non-thermal part
+      // of the rate of deformation tensor
+      Matrix3 tensorEta = tensorD - One*(tensorD.Trace()/3.0);
+
+      DeformationState* defState = scinew DeformationState();
+      defState->tensorD   = tensorD;
+      defState->tensorEta = tensorEta;
+      
       // Assume elastic deformation to get a trial deviatoric stress
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress    = sigma + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
-      trialS         = trialStress - One*(trialStress.Trace()/3.0);
+      d_devStress->computeDeviatoricStressInc(idx, state, defState, delT);
+      trialS = tensorS + defState->devStressInc;
+      trialStress    = trialS + One*(bulk*incStrain.Trace());
       
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
@@ -2035,9 +2047,14 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         
         computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma); 
         
-        pStress_new[idx]            = trialStress - nn*(2.0*state->shearModulus*delGamma);
+        Matrix3 tensorEtaPlasticInc = nn * delGamma;
+        pStress_new[idx]            = trialStress - tensorEtaPlasticInc*(2.0*state->shearModulus);
         pPlasticStrain_new[idx]     = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
+
+        // Update internal Cauchy stresses (only for viscoelasticity)
+        Matrix3 dp = tensorEtaPlasticInc/delT;
+        d_devStress->updateInternalStresses(idx, dp, defState, delT);
 
         // Update the porosity
         
@@ -2315,7 +2332,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       // the volumetric strain and deviatoric strain increments at t_n+1
       sigma = pStress[idx];
       double pressure = sigma.Trace()/3.0;
-      //Matrix3 tensorS = sigma - One*pressure;
+      Matrix3 tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state    = scinew PlasticityState();
@@ -2350,13 +2367,26 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       double mu_cur = d_shear->computeShearModulus(state);
       state->shearModulus = mu_cur ;
 
+      // The calculation of tensorD and tensorEta are so that the deviatoric
+      // stress calculation will work.  
+
+      Matrix3 tensorD = incStrain/delT;
+      
+      // Calculate the deviatoric part of the non-thermal part
+      // of the rate of deformation tensor
+      Matrix3 tensorEta = tensorD - One*(tensorD.Trace()/3.0);
+
+      DeformationState* defState = scinew DeformationState();
+      defState->tensorD   = tensorD;
+      defState->tensorEta = tensorEta;
+      
       // Assume elastic deformation to get a trial deviatoric stress
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress = sigma + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
-      trialS      = trialStress - One*(trialStress.Trace()/3.0);
+      d_devStress->computeDeviatoricStressInc( idx, state, defState, delT);
+      trialS = tensorS + defState->devStressInc;
+      trialStress    = trialS + One*(bulk*incStrain.Trace());
       
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
@@ -2399,9 +2429,14 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         
         computePlasticStateViaRadialReturn(trialS, delT, matl, idx, state, nn, delGamma);
         
-        pStress_new[idx]            = trialStress - nn*(2.0*state->shearModulus*delGamma);
+        Matrix3 tensorEtaPlasticInc = nn * delGamma;
+        pStress_new[idx]            = trialStress - tensorEtaPlasticInc*(2.0*state->shearModulus);
         pPlasticStrain_new[idx]     = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
+
+        // Update internal Cauchy stresses (only for viscoelasticity)
+        Matrix3 dp = tensorEtaPlasticInc/delT;
+        d_devStress->updateInternalStresses(idx, dp, defState, delT);
 
         computeEPlasticTangentModulus(bulk, shear, delGamma, trialS,
                                       idx, state, D, true);
