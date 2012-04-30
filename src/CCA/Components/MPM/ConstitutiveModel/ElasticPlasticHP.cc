@@ -2002,6 +2002,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       trialS = tensorS + defState->devStressInc;
       trialStress    = trialS + One*(bulk*incStrain.Trace());
       
+      delete defState;
+      
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
       // the flow stress routines should be passed the entire stress (not just deviatoric)
@@ -2387,6 +2389,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       d_devStress->computeDeviatoricStressInc( idx, state, defState, delT);
       trialS = tensorS + defState->devStressInc;
       trialStress    = trialS + One*(bulk*incStrain.Trace());
+      
+      delete defState;
       
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
