@@ -70,7 +70,6 @@ void copyVector(double to[3], const Point &from) {
   to[0]=from.x();  to[1]=from.y();  to[2]=from.z();
 }
 
-
 /////////////////////////////////////////////////////////////////////
 // Utility functions for serializing Uintah data structures into
 // a simple array for visit.
@@ -231,7 +230,6 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep, bool useExtraCe
     LevelP level = (*grid)->getLevel(l);
 
     copyIntVector(levelInfo.refinementRatio, level->getRefinementRatio());
-    copyIntVector(levelInfo.extraCells, level->getExtraCells());
     copyVector(levelInfo.spacing, level->dCell());
     copyVector(levelInfo.anchor, level->getAnchor());
     copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
@@ -244,48 +242,28 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep, bool useExtraCe
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
-      // If the user wants to see extra cells, just include them and let VisIt
-      // believe they are part of the original data. This is accomplished by
-      // simply setting cc_low and cc_high to the extra cell boundaries so that
-      // VisIt is none the wiser.
+      // If the user wants to see extra cells, just include them and let VisIt believe they are
+      // part of the original data. This is accomplished by setting <meshtype>_low and
+      // <meshtype>_high to the extra cell boundaries so that VisIt is none the wiser.
       if (useExtraCells)
       {
-        copyIntVector(patchInfo.cc_low,  patch->getExtraCellLowIndex());  
-        copyIntVector(patchInfo.cc_high, patch->getExtraCellHighIndex());
-        copyIntVector(patchInfo.nc_low,  patch->getExtraNodeLowIndex());  
-        copyIntVector(patchInfo.nc_high, patch->getExtraNodeHighIndex());
-        copyIntVector(patchInfo.sfcx_low,  patch->getExtraSFCXLowIndex());
-        copyIntVector(patchInfo.sfcx_high, patch->getExtraSFCXHighIndex());
-        copyIntVector(patchInfo.sfcy_low,  patch->getExtraSFCYLowIndex());  
-        copyIntVector(patchInfo.sfcy_high, patch->getExtraSFCYHighIndex());
-        copyIntVector(patchInfo.sfcz_low,  patch->getExtraSFCZLowIndex());  
-        copyIntVector(patchInfo.sfcz_high, patch->getExtraSFCZHighIndex());
+        patchInfo.setBounds(&patch->getExtraCellLowIndex()[0],&patch->getExtraCellHighIndex()[0],"CC_Mesh");
+        patchInfo.setBounds(&patch->getExtraNodeLowIndex()[0],&patch->getExtraNodeHighIndex()[0],"NC_Mesh");
+        patchInfo.setBounds(&patch->getExtraSFCXLowIndex()[0],&patch->getExtraSFCXHighIndex()[0],"SFCX_Mesh");
+        patchInfo.setBounds(&patch->getExtraSFCYLowIndex()[0],&patch->getExtraSFCYHighIndex()[0],"SFCY_Mesh");
+        patchInfo.setBounds(&patch->getExtraSFCZLowIndex()[0],&patch->getExtraSFCZHighIndex()[0],"SFCZ_Mesh");
       }
       else
       {
-        copyIntVector(patchInfo.cc_low,  patch->getCellLowIndex());
-        copyIntVector(patchInfo.cc_high, patch->getCellHighIndex());
-        copyIntVector(patchInfo.nc_low,  patch->getNodeLowIndex());
-        copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex());
-        copyIntVector(patchInfo.sfcx_low,  patch->getSFCXLowIndex());
-        copyIntVector(patchInfo.sfcx_high, patch->getSFCXHighIndex());
-        copyIntVector(patchInfo.sfcy_low,  patch->getSFCYLowIndex());
-        copyIntVector(patchInfo.sfcy_high, patch->getSFCYHighIndex());
-        copyIntVector(patchInfo.sfcz_low,  patch->getSFCZLowIndex());
-        copyIntVector(patchInfo.sfcz_high, patch->getSFCZHighIndex());
+        patchInfo.setBounds(&patch->getCellLowIndex()[0],&patch->getCellHighIndex()[0],"CC_Mesh");
+        patchInfo.setBounds(&patch->getNodeLowIndex()[0],&patch->getNodeHighIndex()[0],"NC_Mesh");
+        patchInfo.setBounds(&patch->getSFCXLowIndex()[0],&patch->getSFCXHighIndex()[0],"SFCX_Mesh");
+        patchInfo.setBounds(&patch->getSFCYLowIndex()[0],&patch->getSFCYHighIndex()[0],"SFCY_Mesh");
+        patchInfo.setBounds(&patch->getSFCZLowIndex()[0],&patch->getSFCZHighIndex()[0],"SFCZ_Mesh");
       }
-      copyIntVector(patchInfo.cc_extra_low,  patch->getExtraCellLowIndex());
-      copyIntVector(patchInfo.cc_extra_high, patch->getExtraCellHighIndex());
-      copyIntVector(patchInfo.nc_extra_low,  patch->getExtraNodeLowIndex());
-      copyIntVector(patchInfo.nc_extra_high, patch->getExtraNodeHighIndex());
-      copyIntVector(patchInfo.sfcx_extra_low,  patch->getExtraSFCXLowIndex());
-      copyIntVector(patchInfo.sfcx_extra_high, patch->getExtraSFCXHighIndex());
-      copyIntVector(patchInfo.sfcy_extra_low,  patch->getExtraSFCYLowIndex());
-      copyIntVector(patchInfo.sfcy_extra_high, patch->getExtraSFCYHighIndex());
-      copyIntVector(patchInfo.sfcz_extra_low,  patch->getExtraSFCZLowIndex());
-      copyIntVector(patchInfo.sfcz_extra_high, patch->getExtraSFCZHighIndex());
 
-      patchInfo.proc_id = archive->queryPatchwiseProcessor(patch, timestep);
+      //set processor id
+      patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
 
