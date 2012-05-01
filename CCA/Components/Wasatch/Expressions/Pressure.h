@@ -175,6 +175,16 @@ public:
                         const int RKStage );
 
   /**
+   *  \brief Allows Wasatch::TaskInterface to reach in set the boundary conditions
+             on pressure at the appropriate time - namely after the linear solve. 
+   */  
+  // NOTE: Maybe we should not expose this to the outside?
+  void schedule_set_pressure_bcs( const Uintah::LevelP& level,
+                                      Uintah::SchedulerP sched,
+                                      const Uintah::MaterialSet* const materials,
+                                 const int RKStage );
+  
+  /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
    *         this expression with a way to set the variables that it
    *         needs to.
@@ -207,6 +217,17 @@ public:
    */
   void setup_matrix();
 
+  /**
+   * \brief Special function to apply pressure boundary conditions after the pressure solve.
+            This is needed because process_after_evaluate is executed before the pressure solve.
+            We may need to split the pressure expression into a pressure_rhs and a pressure...
+   */  
+  void process_bcs ( const Uintah::ProcessorGroup* const pg,
+                     const Uintah::PatchSubset* const patches,
+                     const Uintah::MaterialSubset* const materials,
+                     Uintah::DataWarehouse* const oldDW,
+                    Uintah::DataWarehouse* const newDW);
+  
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );

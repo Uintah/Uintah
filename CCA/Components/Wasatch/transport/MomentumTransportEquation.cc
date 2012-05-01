@@ -557,13 +557,13 @@ namespace Wasatch{
 //                                         materials );
 
     // set bcs for pressure
-    process_boundary_conditions<SVolField>( pressure_tag(),
-                                            "pressure",
-                                            NODIR,
-                                            graphHelper,
-                                            localPatches,
-                                            patchInfoMap,
-                                            materials );
+//    process_boundary_conditions<SVolField>( pressure_tag(),
+//                                            "pressure",
+//                                            NODIR,
+//                                            graphHelper,
+//                                            localPatches,
+//                                            patchInfoMap,
+//                                            materials );
     // set bcs for partial rhs
     process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
                                          rhs_part_tag(mom_tag(thisMomName_)).name(),
@@ -593,28 +593,28 @@ namespace Wasatch{
 //              patchInfoMap,
 //              materials);
 
-//    // set bcs for normal stresses
-//    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-//    if(isviscous_) {
-//      Expr::Tag normalStressTag = factory.get_label(normalStressID_);
-//      process_boundary_conditions<NormalFace>( normalStressTag,
-//                                  normalStressTag.name(),
-//                NODIR,
-//                graphHelper,
-//                localPatches,
-//                patchInfoMap,
-//                materials);
-//    }
-//
-//    // set bcs for normal convective fluxes
-//    Expr::Tag normalConvFluxTag = factory.get_label(normalConvFluxID_);
-//    process_boundary_conditions<NormalFace>( normalConvFluxTag,
-//                                normalConvFluxTag.name(),
-//                                NODIR,
-//                                graphHelper,
-//                                localPatches,
-//                                patchInfoMap,
-//                                materials);
+    // set bcs for normal stresses
+    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+    if(isviscous_) {
+      Expr::Tag normalStressTag = factory.get_label(normalStressID_);
+      process_boundary_conditions<NormalFace>( normalStressTag,
+                                  normalStressTag.name(),
+                NODIR,
+                graphHelper,
+                localPatches,
+                patchInfoMap,
+                materials);
+    }
+
+    // set bcs for normal convective fluxes
+    Expr::Tag normalConvFluxTag = factory.get_label(normalConvFluxID_);
+    process_boundary_conditions<NormalFace>( normalConvFluxTag,
+                                normalConvFluxTag.name(),
+                                NODIR,
+                                graphHelper,
+                                localPatches,
+                                patchInfoMap,
+                                materials);
 
   }
 

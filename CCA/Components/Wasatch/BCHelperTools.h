@@ -82,7 +82,7 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials );
-
+  
   void update_pressure_rhs( const Expr::Tag& pressureTag,
                             Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                             SVolField& pressureField,
@@ -136,7 +136,25 @@ namespace Wasatch {
                                const Uintah::Patch* patch, 
                                const double referencePressureValue,
                                const SCIRun::IntVector refCell );
-  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Special function to handle pressure boundary conditions. This is
+      needed because process_after_evaluate() will NOT work on the newly solved
+      pressure.
+   *
+   *  \param pressureTag Pressure tag.
+   *
+   *  \param pressureField A reference to the pressure field.
+   *
+   *  \param patch The patch on which we wish to apply the BCs.
+   *
+   *  \param patch The material on which we wish to apply the BCs.   
+   */    
+  void process_pressure_bcs( const Expr::Tag& pressureTag,
+                            SVolField& pressureField,
+                            const Uintah::Patch* patch,
+                            const int material);  
 }
 
 #endif // Wasatch_BCHelperTools_h
