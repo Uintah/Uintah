@@ -96,7 +96,7 @@ public:
       break;
 
     default:
-      low[0]=low[1]=low[2]=-1E6;
+      low[0]=low[1]=low[2]=-1000000;
     }
   }
 
@@ -136,7 +136,7 @@ public:
       break;
 
     default:
-      high[0]=high[1]=high[2]=-1E6;
+      high[0]=high[1]=high[2]=-1000000;
     }
   }
 
