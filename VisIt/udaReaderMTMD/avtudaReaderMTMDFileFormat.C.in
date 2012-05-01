@@ -100,12 +100,10 @@ const double NAN_REPLACE_VAL=1.0E9;
 // ****************************************************************************
 avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBOptionsAttributes* attrs) :
   avtMTMDFileFormat(filename),
+  useExtraCells(true),
   archive(NULL),
-  grid(NULL),
-  useExtraCells(true)
+  grid(NULL)
 {
-  //debug5 << "\nIn avtudaReaderFileFormat\n";
-
   for (int i=0; attrs!=0 && i<attrs->GetNumberOfOptions(); ++i) {
     if (attrs->GetName(i) == "Load extra cells") {
       useExtraCells = attrs->GetBool("Load extra cells");
@@ -213,8 +211,6 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBO
   // haven't loaded any timestep data yet
   stepInfo = NULL;  
   currTimeStep = -1;
-
-  //debug5 << "Out avtudaReaderFileFormat\n";
 }
 
 
@@ -396,7 +392,6 @@ void getBounds(int low[3], int high[3], const string meshName, const LevelInfo &
     int ltmp[3],htmp[3];
     for (int i=0; i<(int)levelInfo.patchInfo.size(); i++) 
     {
-      //debug5<<"levelInfo.patchInfo["<<i<<"]:\n"<<levelInfo.patchInfo[i].toString();
       levelInfo.patchInfo[i].getBounds(ltmp,htmp,meshName);
       for (int j=0; j<3; j++) 
       {
@@ -409,7 +404,6 @@ void getBounds(int low[3], int high[3], const string meshName, const LevelInfo &
   {
     //query limits of one patch
     const PatchInfo &patchInfo=levelInfo.patchInfo[patch_id];
-    //debug5<<"patchInfo["<<patch_id<<"]:\n"<<patchInfo.toString();
     patchInfo.getBounds(low,high,meshName);
   }
 
@@ -427,8 +421,6 @@ void getBounds(int low[3], int high[3], const string meshName, const LevelInfo &
 void
 avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
 {
-  //debug5<<"udaReader::ReadMetaData\n";
-
   ActivateTimestep(timeState);
 
   int numLevels = stepInfo->levelInfo.size();
@@ -436,8 +428,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   int totalPatches = 0;
   for (int i = 0; i < numLevels; i++)
     totalPatches +=  stepInfo->levelInfo[i].patchInfo.size();
-
-  //debug5 << "Levels: " << numLevels << " Patches: " << totalPatches << endl;
+  //debug5 << "avtudaReaderMTMDFileFormat::ReadMetaData: Levels: " << numLevels << " Patches: " << totalPatches << endl;
 
   vector<int> groupIds(totalPatches);
   vector<string> pieceNames(totalPatches);
@@ -452,7 +443,6 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
     groupIds[i] = level;
     pieceNames[i] = tmpName;
   }
-  //debug5<<"num domains: "<<totalPatches<<endl;
 
   // compute the bounding box of the mesh from the grid indices of level 0
   LevelInfo &levelInfo = stepInfo->levelInfo[0];
@@ -479,7 +469,6 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   double box_max[3] = { levelInfo.anchor[0] + high[0] * levelInfo.spacing[0],
                         levelInfo.anchor[1] + high[1] * levelInfo.spacing[1],
                         levelInfo.anchor[2] + high[2] * levelInfo.spacing[2] };
-                        
   //debug5<<"box_min/max=["<<box_min[0]<<","<<box_min[1]<<","<<box_min[2]<<"] to ["<<box_max[0]<<","<<box_max[1]<<","<<box_max[2]<<"]\n";
 
   int logical[3];
@@ -494,11 +483,6 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
 
       string mesh_for_this_var;
       avtCentering cent=AVT_ZONECENT;
-
-      int adjust_extents[3]={0,0,0};
-      bool sfck[3] = {vartype.find("SFCX") != string::npos,
-                      vartype.find("SFCY") != string::npos,
-                      vartype.find("SFCZ") != string::npos};
 
       if (vartype.find("NC") != string::npos) {
         cent = AVT_NODECENT;
@@ -710,7 +694,6 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
   MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-
   //debug5 << "Proc: " << rank << " sent to mdserver" << endl;  
 
   if (rank == 0) {
@@ -797,8 +780,6 @@ int avtudaReaderMTMDFileFormat::GetGlobalDomainNumber(int level, int local_patch
 void
 avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::string &meshname)
 {
-  //debug5 << "udaReader::CalculateDomainNesting("<<meshname<<")\n";
-
   //
   // First, look to see if we don't already have it cached
   // Note that we compute BOTH domain nesting and domain boundary
@@ -974,8 +955,6 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
 vtkDataSet *
 avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
 {
-  //debug5<<"udaReader::GetMesh("<<meshname<<")\n";
-
   ActivateTimestep(timestate);
 
   string meshName(meshname);
@@ -990,7 +969,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     CalculateDomainNesting(timestate, meshname);
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
-    PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
     //get global bounds
     int glow[3], ghigh[3];
@@ -1132,8 +1110,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 vtkDataArray *
 avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varname)
 {
-  //debug5<<"udaReader::GetVar("<<varname<<")\n";
-
   ActivateTimestep(timestate);
 
   string varName(varname);
@@ -1172,8 +1148,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     int qlow[3], qhigh[3]; // region we're going to ask uintah for (from qlow to qhigh-1)
     patchInfo.getBounds(qlow,qhigh,varType);
 
-    //debug5<<"qlow/qhigh=["<<qlow[0]<<","<<qlow[1]<<","<<qlow[2]<<"] to ["<<qhigh[0]<<","<<qhigh[1]<<","<<qhigh[2]<<"]\n";
-
     GridDataRaw *gd=NULL;
 
     if (strcmp(varname, "proc_id")==0) {
@@ -1211,7 +1185,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       // domain 0 always reads right away
       if (domain==0)
         prev = -1;
-    
       //debug5 << "Proc: " << rank << " sent to GetVar" << endl;
 
       // wait for previous read to finish
@@ -1268,7 +1241,6 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     // domain 0 always reads right away
     if (domain==0)
       prev = -1;
-    
     //debug5 << "Proc: " << rank << " sent to GetVar" << endl;
 
     // wait for previous read to finish
@@ -1380,8 +1352,6 @@ avtudaReaderMTMDFileFormat::GetAuxiliaryData(const char *var, int dom,
 void
 avtudaReaderMTMDFileFormat::CheckNaNs(int num, double *data, int level, int patch)
 {
-  static int q=0;
-
   // replace nan's with a large negative number
   std::vector<int> nanCells;
   for (int i=0; i<num; i++) 
@@ -1398,21 +1368,20 @@ avtudaReaderMTMDFileFormat::CheckNaNs(int num, double *data, int level, int patc
     std::stringstream sstr;
     sstr << "NaNs exist in this file (patch "<<patch<<" of level "<<level
          <<"). They have been replaced by the value "<< NAN_REPLACE_VAL<<".";
-    if (nanCells.size()>40)
+    if ((int)nanCells.size()>40)
     {
       sstr<<"\nFirst 20: ";
-      for (int i=0;i<nanCells.size() && i<20;i++)
+      for (int i=0;i<(int)nanCells.size() && i<20;i++)
         sstr<<nanCells[i]<<",";
       sstr<<"\nLast 20: ";
-      for (int i=nanCells.size()-21;i<nanCells.size();i++)
+      for (int i=(int)nanCells.size()-21;i<(int)nanCells.size();i++)
         sstr<<nanCells[i]<<",";
     }
     else
     {
-      for (int i=0;i<nanCells.size();i++)
-        sstr<<nanCells[i]<<(nanCells.size()!=(i+1)?",":".");
+      for (int i=0;i<(int)nanCells.size();i++)
+        sstr<<nanCells[i]<<((int)nanCells.size()!=(i+1)?",":".");
     }
-    //debug5<<"CheckNaNs: issuing warning..."<<endl;
     avtCallback::IssueWarning(sstr.str().c_str());
   }
 }
