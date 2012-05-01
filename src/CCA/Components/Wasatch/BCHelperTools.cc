@@ -829,15 +829,16 @@ namespace Wasatch {
           const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
 
           SS::IntVec bcPointGhostOffset(0,0,0);
-          double denom = 1.0;
+          double denom   = 1.0;
+          double spacing = 1.0;
         
           switch( face ){
-            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  denom = dx2;  break;
-            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  denom = dx2;  break;
-            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  denom = dy2;  break;
-            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  denom = dy2;  break;
-            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  denom = dz2;  break;
-            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  denom = dz2;  break;
+            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
+            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
+            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
+            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
+            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
+            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
             default:                                                                                    break;
           } // switch
 
@@ -845,6 +846,25 @@ namespace Wasatch {
           const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
 
           if (bc_kind=="Dirichlet") {
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              SCIRun::IntVector bc_point_indices(*bound_ptr);
+              
+              bc_point_indices = bc_point_indices - patchCellOffset;
+              
+              const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                            bc_point_indices[1],
+                                            bc_point_indices[2] );
+              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                            bc_point_indices[1]+bcPointGhostOffset[1],
+                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+              
+              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              //const double ghostValue = 2.0*bc_value - pressureField[iInterior];
+              //pressureRHS[iInterior] += bc_value/denom;
+              pressureRHS[iInterior] += 2.0*bc_value/denom;
+            }
+          } else if (bc_kind=="Neumann") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
               
@@ -857,19 +877,13 @@ namespace Wasatch {
                                             bc_point_indices[1]+bcPointGhostOffset[1],
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-              const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );              
-              
-              if (hasExtraCells) {
-                const double ghostValue = 2.0*bc_value - pressureField[iGhost];
-                pressureRHS[iInterior] += ghostValue/denom;
-              } else {
-                const double ghostValue = 2.0*bc_value - pressureField[iInterior];
-                pressureRHS[iGhost] += ghostValue/denom;
-              }
+              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
+              std::cout << "prhs[interior] = " << pressureRHS[iInterior] << std::endl; 
+              //const double ghostValue = spacing*bc_value + pressureField[iInterior];
+              //pressureRHS[iInterior] += ghostValue/denom;
+              pressureRHS[iInterior] += spacing*bc_value/denom;
             }
-          } else if (bc_kind=="Neumann") {
-            return;
           } else {
             return;
           }
@@ -934,16 +948,15 @@ namespace Wasatch {
         if (bc_kind == "Dirichlet") { // pressure Outlet BC. don't forget to update pressure_rhs also.
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
-            
             Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
             
             switch(face){
-              case Uintah::Patch::xminus: coefs.w = 0.0; break;
-              case Uintah::Patch::yminus: coefs.s = 0.0; break;
-              case Uintah::Patch::zminus: coefs.b = 0.0; break;
-              case Uintah::Patch::xplus :                
-              case Uintah::Patch::yplus :                
-              case Uintah::Patch::zplus :                break;
+              case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
+              case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p +=1.0/dy2; break;
+              case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p +=1.0/dz2; break;
+              case Uintah::Patch::xplus :                coefs.p +=1.0/dx2; break;               
+              case Uintah::Patch::yplus :                coefs.p +=1.0/dy2; break;
+              case Uintah::Patch::zplus :                coefs.p +=1.0/dz2; break;
               default:                                   break;
             }
           }
@@ -963,7 +976,8 @@ namespace Wasatch {
               default:                                                      break;
             }
           }
-        } else { // wall bc. note that when the face is periodic, then bound_ptr is empty
+        } else { // when no pressure BC is specified, it implies that we have wall. 
+                 // note that when the face is periodic, then bound_ptr is empty
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
             
@@ -1062,7 +1076,113 @@ namespace Wasatch {
     }
   }
 
+  //-----------------------------------------------------------------------------
+  
+  void process_pressure_bcs( const Expr::Tag& pressureTag,
+                            SVolField& pressureField,
+                            const Uintah::Patch* patch,
+                            const int material) {
+    // check if we have plus boundary faces on this patch
+    bool hasPlusFace[3] = {false,false,false};
+    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
+    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
+    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
+    // get the dimensions of this patch
+    namespace SS = SpatialOps::structured;
+    const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
+    const SS::IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const Uintah::Vector spacing = patch->dCell();
+    const double dx = spacing[0];
+    const double dy = spacing[1];
+    const double dz = spacing[2];
+    const double dx2 = dx*dx;
+    const double dy2 = dy*dy;
+    const double dz2 = dz*dz;
+    
+    const std::string phiName = pressureTag.name();
+    
+    std::vector<Uintah::Patch::FaceType> bndFaces;
+    patch->getBoundaryFaces(bndFaces);
+    std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
+    
+    // loop over the boundary faces
+    for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
+      Uintah::Patch::FaceType face = *faceIterator;
+      
+      //get the number of children
+      const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
+      
+      for( int child = 0; child<numChildren; ++child ){
+        
+        double bc_value = -9;
+        std::string bc_kind = "NotSet";
+        SCIRun::Iterator bound_ptr;
+        const bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind);
+        
+        if (foundIterator) {
+          
+          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+          const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
+          
+          SS::IntVec bcPointGhostOffset(0,0,0);
+          double denom   = 1.0;
+          double spacing = 1.0;
+          
+          switch( face ){
+            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
+            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
+            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
+            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
+            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
+            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
+            default:                                                                                    break;
+          } // switch
+          
+          // cell offset used to calculate local cell index with respect to patch.
+          const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+          
+          if (bc_kind=="Dirichlet") {
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              SCIRun::IntVector bc_point_indices(*bound_ptr);
 
+              bc_point_indices = bc_point_indices - patchCellOffset;
+              
+              const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                            bc_point_indices[1],
+                                            bc_point_indices[2] );
+              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                            bc_point_indices[1]+bcPointGhostOffset[1],
+                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+              
+              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              pressureField[iGhost] = 2.0*bc_value - pressureField[iInterior];              
+            }
+          } else if (bc_kind=="Neumann") {
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              SCIRun::IntVector bc_point_indices(*bound_ptr);
+              
+              bc_point_indices = bc_point_indices - patchCellOffset;
+              
+              const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                            bc_point_indices[1],
+                                            bc_point_indices[2] );
+              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                            bc_point_indices[1]+bcPointGhostOffset[1],
+                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+              
+              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              pressureField[iGhost] = spacing*bc_value + pressureField[iInterior];
+            }
+          } else {
+            return;
+          }
+        }
+      } // child loop
+    }    
+  }
+  
   //==================================================================
   // Explicit template instantiation
   #include <CCA/Components/Wasatch/FieldTypes.h>

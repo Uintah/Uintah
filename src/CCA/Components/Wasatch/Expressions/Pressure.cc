@@ -141,6 +141,25 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 }
 
 //--------------------------------------------------------------------
+  
+void
+Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
+                          Uintah::SchedulerP sched,
+                          const Uintah::MaterialSet* const materials,
+                          const int RKStage )
+{    
+  // hack in a task to apply boundary condition on the pressure after the pressure solve
+  Uintah::Task* task = scinew Uintah::Task("Pressure: process pressure bcs", this, 
+                                           &Pressure::process_bcs);
+  const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
+  const int ng = get_n_ghost<SVolField>();
+  task->requires(Uintah::Task::NewDW,pressureLabel_, gt, ng);
+  //task->modifies(pressureLabel_);
+  Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+  sched->addTask(task, lb->getPerProcessorPatchSet(level), materials);
+}
+  
+//--------------------------------------------------------------------
 
 void
 Pressure::declare_uintah_vars( Uintah::Task& task,
@@ -268,9 +287,12 @@ Pressure::setup_matrix()
     coefs.b = -b;
     coefs.p = -p;
   }
+  
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
-  update_pressure_matrix((this->names())[0], matrix_, patch_, materialID_);
-  if (useRefPressure_) set_ref_pressure_coefs(matrix_, patch_, refPressureLocation_);
+  if ( patch_->hasBoundaryFaces() )update_pressure_matrix((this->names())[0], matrix_, patch_, materialID_);
+
+  // if the user specified a reference pressure, then modify the appropriate matrix coefficients
+  if ( useRefPressure_ ) set_ref_pressure_coefs(matrix_, patch_, refPressureLocation_);
 }
 
 //--------------------------------------------------------------------
@@ -317,7 +339,7 @@ Pressure::evaluate()
   }
 
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
-  //set_pressure_bc(this->name(), pressure, rhs, patch);
+
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into
@@ -346,13 +368,50 @@ Pressure::evaluate()
     rhs <<= rhs - *d2rhodt2_;
   }
   
+  // update pressure rhs for reference pressure
   if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
-  //
-  // fix pressure rhs and modify pressure matrix
-  update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_, materialID_);
-  //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
+
+  // update pressure rhs for any BCs
+  if(patch_->hasBoundaryFaces()) update_pressure_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
 }
 
+//--------------------------------------------------------------------  
+  
+void 
+Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
+                                   const Uintah::PatchSubset* const patches,
+                                   const Uintah::MaterialSubset* const materials,
+                                   Uintah::DataWarehouse* const oldDW,
+                                   Uintah::DataWarehouse* const newDW) {
+  
+  
+  using namespace SpatialOps;
+  typedef SelectUintahFieldType<SVolField>::const_type UintahField;
+  UintahField pressureField_;        
+
+  const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
+  const int ng = get_n_ghost<SVolField>();
+  
+  //__________________
+  // loop over materials
+  for( int im=0; im<materials->size(); ++im ){
+    
+    const int material = materials->get(im);
+    
+    //____________________
+    // loop over patches
+    for( int ip=0; ip<patches->size(); ++ip ){
+      const Uintah::Patch* const patch = patches->get(ip);      
+      if ( patch->hasBoundaryFaces() ) {
+        newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);        
+        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,patch);                
+        process_pressure_bcs(pressure_tag(), *pressure, patch, material);
+        delete pressure;                      
+      }
+    }      
+  }        
+}
+  
 //--------------------------------------------------------------------
 
 Pressure::Builder::Builder( const Expr::TagList& result,
@@ -389,7 +448,10 @@ Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
-  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, userefpressure_, refpressurevalue_, refpressurelocation_, use3dlaplacian_, sparams_, solver_ );
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, 
+                      dilatationt_, d2rhodt2t_, timestept_, userefpressure_, 
+                      refpressurevalue_, refpressurelocation_, use3dlaplacian_, 
+                      sparams_, solver_ );
 }
 
 } // namespace Wasatch

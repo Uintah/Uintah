@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Boundary Conditions</title>
+    <title> Channel Flow with Pressure Outlet at y- </title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -19,15 +19,15 @@
     </BasicExpression>
 
     <!-- Set the initial condition expression for x-momentum -->
-    <BasicExpression type="XVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
-
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="y-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="z-mom" state="STATE_N" />
        <Constant>0.0</Constant>
     </BasicExpression>
                
@@ -45,10 +45,10 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
-      <X-Velocity>u</X-Velocity>
-      <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
@@ -84,15 +84,15 @@
 
 
   <DataArchiver>
-    <filebase>channel-flow-xy-pressure-outlet.uda</filebase>
+    <filebase>channel-flow-yz-yminus-pressure-outlet.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
-    <save label="x-mom"/>
     <save label="y-mom"/>
-    <save label="u"/>
+    <save label="z-mom"/>
     <save label="v"/>
+    <save label="w"/>
     <save label="pressure"/>
     <save label="dilatation"/>
   </DataArchiver> 
@@ -100,84 +100,80 @@
   <Grid>
       <BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-">
+      <Face side="y+">
 
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> -1.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType id="all" var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>                                               
 
       </Face>
       
-      <Face side="x+">
+      <Face side="y-">
 
-        <!-- BCType id="all" var="Neumann" label="x-mom">
-          <value> 0.0 </value>
-        </BCType -->
-
-        <BCType id="all" var="Neumann" label="y-mom">
+        <BCType id="all" var="Neumann" label="z-mom">
           <value> 0.0 </value>
         </BCType>
-
+        
         <BCType id="all" var="Dirichlet" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
         
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
           <value> 0.0 </value>
-        </BCType>      
+        </BCType>                                               
 
       </Face>
       
-      <Face side="y-">
+      <Face side="z-">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
         <BCType id="all" var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>        
                         
       </Face>
       
-      <Face side="y+">
+      <Face side="z+">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
         <BCType id="all" var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType id="all" var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
-        </BCType>     
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
                         
       </Face>
 
       </BoundaryConditions>
       <Level>
       <Box label="1">
-        <lower>[0, 0,  0]</lower>
-        <upper>[6, 1, 0.01]</upper>
+        <lower>[0,      0,  0]</lower>
+        <upper>[0.01, 6, 1]</upper>
         <!-- extraCells>[1,1,0]</extraCells -->
-        <resolution>[240,40,2]</resolution>
-        <patches>[6,1,1]</patches>
+        <resolution>[2,240,40]</resolution>
+        <patches>[1,6,1]</patches>
       </Box>
-      <periodic>[0,0,1]</periodic>
+      <periodic>[1,0,0]</periodic>
     </Level>
   </Grid>
 

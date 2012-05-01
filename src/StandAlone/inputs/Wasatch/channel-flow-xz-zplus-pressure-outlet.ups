@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Boundary Conditions</title>
+    <title> Channel Flow with Pressure Outlet at z+ </title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -19,9 +19,9 @@
     </BasicExpression>
 
     <!-- Set the initial condition expression for x-momentum -->
-    <BasicExpression type="YVOL">
+    <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N" />
        <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -45,8 +45,8 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
-      <Y-Velocity>v</Y-Velocity>
-      <Y-Momentum>y-mom</Y-Momentum>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
@@ -84,14 +84,14 @@
 
 
   <DataArchiver>
-    <filebase>channel-flow-yz-pressure-outlet.uda</filebase>
+    <filebase>channel-flow-xz-zplus-pressure-outlet.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
-    <save label="y-mom"/>
+    <save label="x-mom"/>
     <save label="z-mom"/>
-    <save label="v"/>
+    <save label="u"/>
     <save label="w"/>
     <save label="pressure"/>
     <save label="dilatation"/>
@@ -100,41 +100,9 @@
   <Grid>
       <BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="y-">
-
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>                                               
-
-      </Face>
-      
-      <Face side="y+">
-
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>                                               
-
-      </Face>
-      
       <Face side="z-">
-      
-        <BCType id="all" var="Dirichlet" label="y-mom">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
@@ -144,13 +112,13 @@
         
         <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
-        </BCType>        
-                        
+        </BCType>                                               
+
       </Face>
       
       <Face side="z+">
-      
-        <BCType id="all" var="Neumann" label="y-mom">
+
+        <BCType id="all" var="Neumann" label="x-mom">
           <value> 0.0 </value>
         </BCType>
 
@@ -161,6 +129,38 @@
         <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>      
+
+      </Face>
+      
+      <Face side="x-">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+                        
+      </Face>
+      
+      <Face side="x+">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
                         
       </Face>
 
@@ -168,12 +168,12 @@
       <Level>
       <Box label="1">
         <lower>[0, 0,  0]</lower>
-        <upper>[0.01, 1, 6]</upper>
+        <upper>[1, 0.01, 6]</upper>
         <!-- extraCells>[1,1,0]</extraCells -->
-        <resolution>[2,40,240]</resolution>
+        <resolution>[40,2,240]</resolution>
         <patches>[1,1,6]</patches>
       </Box>
-      <periodic>[1,0,0]</periodic>
+      <periodic>[0,1,0]</periodic>
     </Level>
   </Grid>
 
