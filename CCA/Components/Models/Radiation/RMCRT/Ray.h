@@ -201,6 +201,7 @@ namespace Uintah{
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
+      const VarLabel* d_boundFluxLabel;
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;

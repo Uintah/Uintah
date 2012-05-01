@@ -67,6 +67,7 @@ Ray::Ray()
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
   d_VRFluxLabel          = VarLabel::create( "VRFlux",           CCVariable<double>::getTypeDescription() );
+  d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
 
    
   d_matlSet       = 0;
@@ -116,6 +117,7 @@ Ray::~Ray()
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
   VarLabel::destroy( d_VRFluxLabel);
+  VarLabel::destroy( d_boundFluxLabel);
 
 
   if(d_matlSet && d_matlSet->removeReference()) {
@@ -207,6 +209,7 @@ Ray::registerVarLabels(int   matlIndex,
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
   d_divQLabel        = divQ;
+
   //__________________________________
   //  define the materialSet
   d_matlSet = scinew MaterialSet();
@@ -433,10 +436,12 @@ Ray::sched_rayTrace( const LevelP& level,
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
+    tsk->modifies( d_boundFluxLabel );
 
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
+    tsk->computes( d_boundFluxLabel );
 
   }
 
@@ -487,16 +492,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     CCVariable<double> divQ;
     CCVariable<double> VRFlux;
+    CCVariable<Stencil7> boundFlux;
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,  d_divQLabel, d_matl, patch );
       old_dw->getModifiable( VRFlux,  d_VRFluxLabel, d_matl, patch );
+      old_dw->getModifiable( boundFlux,  d_boundFluxLabel, d_matl, patch );
 
     }else{
       new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, patch );
       divQ.initialize( 0.0 ); 
       new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
       VRFlux.initialize( 0.0 );
+      new_dw->allocateAndPut( boundFlux, d_boundFluxLabel, d_matl, patch );
     }
 
 
@@ -650,7 +658,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 	       int Ny = pHigh[1] - pLow[1];
 	       int Nz = pHigh[2] - pLow[2];
 
-	       double boundFlux[Nx][Ny][Nz][6]; // Has order WESNBT, same as Uintah
+	       //double& boundFlux[Nx][Ny][Nz][6]; // Has order WESNBT, same as Uintah
+
 
            //_____________________________________________
            //   Ordering for Surface Method
@@ -666,6 +675,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
            dirIndexOrder[4]  = IntVector(0, 1, 2);
            dirIndexOrder[5]  = IntVector(0, 1, 2);
 
+           // Ordering is slightly different from 6Flux
            dirSignSwap[0]  = IntVector(-1, 1, 1);
            dirSignSwap[1]  = IntVector(1, 1, 1);
            dirSignSwap[2]  = IntVector(1, -1, 1);
@@ -696,14 +706,29 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 	         int UintahFace[6] = {1,0,3,2,5,4};//Uintah face iterator is an enum with the order WESNBT
 	         int RayFace = UintahFace[face];  // All the Ray functions are based on the face order of EWNSTB
+
 	         Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
 
 	         for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
 	           const IntVector& origin = *iter;
 
+	           // create references to the stencil7 members.  Now can make assignments in the face loop without "switch"
+		       double& rW = boundFlux[origin].w;
+		       double& rE = boundFlux[origin].e;
+		       double& rS = boundFlux[origin].s;
+		       double& rN = boundFlux[origin].n;
+		       double& rB = boundFlux[origin].b;
+		       double& rT = boundFlux[origin].t;
+
+		       double rBoundFlux[6] = {rW, rE, rS, rN, rB, rT};
+
 	           int i = origin.x();
 	           int j = origin.y();
 	           int k = origin.z();
+
+	           // quick flux debug test
+	           //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations
+
 
 		       double sumI = 0;
 	           double sumProjI = 0;
@@ -763,10 +788,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
 	           //__________________________________
 	           //  Compute Flux
 
-	           boundFlux[i][j][k][face] = sumProjI * 2*_pi/_NoOfRays;
-	           cout <<  "boundFlux: " << boundFlux[i][j][k][face] << endl;
+	           rBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays;
+	           cout << rBoundFlux[face] << endl;
 
+	           //boundFlux[origin][face] = sumProjI * 2*_pi/_NoOfRays;
+	           //cout << boundFlux[origin][face] << endl;
 
+	           //} // end of quick flux debug
 	         } // end of iterating through boundary cells
 	       } // end of iterating over faces
 	     } // end has a boundaryFace
@@ -910,11 +938,14 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_VRFluxLabel );
+    tsk->modifies( d_boundFluxLabel );
 
   } else {
     
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
+    tsk->computes( d_boundFluxLabel );
+
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
