@@ -101,7 +101,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps>30</max_Timesteps>
+    <max_Timesteps>5</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -191,8 +191,8 @@
         <lower>[0, 0,  0]</lower>
         <upper>[6, 1, 0.01]</upper>
         <!-- extraCells>[1,1,0]</extraCells -->
-        <resolution>[240,40,2]</resolution>
-        <patches>[6,1,1]</patches>
+        <resolution>[30,10,2]</resolution>
+        <patches>[3,2,1]</patches>
       </Box>
       <periodic>[0,0,1]</periodic>
     </Level>
