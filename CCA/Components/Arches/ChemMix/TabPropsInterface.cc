@@ -156,13 +156,13 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel));
 
     } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
 
       cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel)).first; 
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel));
 
     } else if ( varName == "DissipationRate") {
 
@@ -171,7 +171,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // dissipation rate comes from a property model 
       PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
       PropertyModelBase& prop = prop_factory.retrieve_property_model( "scalar_dissipation_rate");
-      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) ).first; 
+      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) );
 
     } else {
 
@@ -180,7 +180,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // then it must be a mixture fraction 
       EqnFactory& eqn_factory = EqnFactory::self();
       EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel()));
 
     }
   }
@@ -331,7 +331,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
         storage.spline = i_spline->second; 
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -372,7 +372,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
         storage.spline = i_spline->second; 
 
-        depend_storage.insert( make_pair( i->first, storage )).first; 
+        depend_storage.insert( make_pair( i->first, storage ));
 
       }
 
@@ -922,12 +922,12 @@ TabPropsInterface::getEnthalpySplineInfo()
   cout_tabledbg << "TabPropsInterface::getEnthalpySplineInfo(): Looking for sensibleenthalpy" << endl;
   const InterpT* spline = d_statetbl.find_entry( "sensibleenthalpy" );
 
-  d_enthalpyVarSpline.insert( make_pair( "sensibleenthalpy", spline )).first; 
+  d_enthalpyVarSpline.insert( make_pair( "sensibleenthalpy", spline ));
 
   cout_tabledbg << "TabPropsInterface::getEnthalpySplineInfo(): Looking for adiabaticenthalpy" << endl;
   spline = d_statetbl.find_entry( "adiabaticenthalpy" );
 
-  d_enthalpyVarSpline.insert( make_pair( "adiabaticenthalpy", spline )).first; 
+  d_enthalpyVarSpline.insert( make_pair( "adiabaticenthalpy", spline ));
 
 }
 
