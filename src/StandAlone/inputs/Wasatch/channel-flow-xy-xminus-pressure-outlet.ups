@@ -1,3 +1,4 @@
+
 <Uintah_specification>
 
   <Meta>
@@ -8,7 +9,7 @@
    <Solver type="hypre" />
   <Wasatch>
 
-  <PostProcessingExpression type="SVOL">
+  <!-- PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="xvelcc" state="STATE_N" />
       <InterpolateExpression type="XVOL">
@@ -27,7 +28,7 @@
   <ForceOnGraph tasklist="advance_solution">
     <NameTag name="xvelcc" state="STATE_N" />
     <NameTag name="yvelcc" state="STATE_N" />
-  </ForceOnGraph>
+  </ForceOnGraph -->
 
     <Density>
       <IsConstant>true</IsConstant>
@@ -113,10 +114,6 @@
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
-    <save label="u"/>
-    <save label="v"/>
-    <save label="xvelcc"/>
-    <save label="yvelcc"/>
     <save label="pressure"/>
     <save label="dilatation"/>
   </DataArchiver> 

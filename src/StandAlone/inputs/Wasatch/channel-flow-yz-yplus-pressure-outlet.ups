@@ -91,8 +91,6 @@
     <compression>gzip</compression>
     <save label="y-mom"/>
     <save label="z-mom"/>
-    <save label="v"/>
-    <save label="w"/>
     <save label="pressure"/>
     <save label="dilatation"/>
   </DataArchiver> 
