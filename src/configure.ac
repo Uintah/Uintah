@@ -2399,6 +2399,7 @@ SCI_TRY_LINK(TIFF,tiff library,tiff.h,$_sci_inc,tiff,$_sci_lib,$M_LIB_DIR_FLAG $
 
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
+AC_SUBST(HAVE_TIFF)
 
 ##  --  search for png --------------------------------------
 
