@@ -127,7 +127,7 @@ BoundaryCondition_new::readInputFile( std::string file_name )
 
     IntVector C(I,J,K);
 
-    result.insert( make_pair( C, v )).first; 
+    result.insert( make_pair( C, v ));
 
   }
 

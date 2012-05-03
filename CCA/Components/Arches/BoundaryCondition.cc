@@ -5427,7 +5427,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         }
 
         if ( found_bc ) {
-          d_bc_information.insert( std::make_pair(bc_type_index, my_info)).first;
+          d_bc_information.insert( std::make_pair(bc_type_index, my_info));
           bc_type_index++; 
         }
 

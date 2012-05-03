@@ -41,7 +41,7 @@ OperatorSplitChem::problemSetup( const ProblemSpecP& params ){
 			db_eqn->getAttribute("eqn", eqn);
 			db_eqn->getAttribute("src", src); 
 
-			_eqns.insert(make_pair(eqn, src)).first; 
+			_eqns.insert(make_pair(eqn, src));
 
 		} 
 	} 
