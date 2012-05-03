@@ -658,9 +658,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
 	       int Ny = pHigh[1] - pLow[1];
 	       int Nz = pHigh[2] - pLow[2];
 
-	       //double& boundFlux[Nx][Ny][Nz][6]; // Has order WESNBT, same as Uintah
-
-
            //_____________________________________________
            //   Ordering for Surface Method
            vector <IntVector> dirIndexOrder(6);
@@ -675,7 +672,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
            dirIndexOrder[4]  = IntVector(0, 1, 2);
            dirIndexOrder[5]  = IntVector(0, 1, 2);
 
-           // Ordering is slightly different from 6Flux
+           // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
            dirSignSwap[0]  = IntVector(-1, 1, 1);
            dirSignSwap[1]  = IntVector(1, 1, 1);
            dirSignSwap[2]  = IntVector(1, -1, 1);
@@ -698,7 +695,20 @@ Ray::rayTrace( const ProcessorGroup* pc,
            locationShift[4] = IntVector(0, 0, 1);
            locationShift[5] = IntVector(0, 0, 0);
 
-	       //__________________________________
+
+           // Initialize fluxes to zero
+           for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+           	 const IntVector& origin = *iter;
+	         boundFlux[origin].p = 0; // p is never used, but initialize to zero for safety
+	         boundFlux[origin].w = 0;
+	         boundFlux[origin].e = 0;
+	         boundFlux[origin].s = 0;
+	         boundFlux[origin].n = 0;
+	         boundFlux[origin].b = 0;
+	         boundFlux[origin].t = 0;
+           }
+
+           //__________________________________
 	       // Loop over boundary faces and compute incident radiative flux
 
 	       for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -712,15 +722,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
 	         for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
 	           const IntVector& origin = *iter;
 
-	           // create references to the stencil7 members.  Now can make assignments in the face loop without "switch"
-		       double& rW = boundFlux[origin].w;
-		       double& rE = boundFlux[origin].e;
-		       double& rS = boundFlux[origin].s;
-		       double& rN = boundFlux[origin].n;
-		       double& rB = boundFlux[origin].b;
-		       double& rT = boundFlux[origin].t;
 
-		       double rBoundFlux[6] = {rW, rE, rS, rN, rB, rT};
+
+
+	           // create array of pointers to the stencil7 members.  Now can make assignments in the face loop without "switch"
+               double* pBoundFlux[6] = { &boundFlux[origin].w, &boundFlux[origin].e, &boundFlux[origin].s,
+		    		                     &boundFlux[origin].n, &boundFlux[origin].b, &boundFlux[origin].t };  // ordering is same as Uintah
+
 
 	           int i = origin.x();
 	           int j = origin.y();
@@ -736,7 +744,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 	           // Flux ray loop
 	           for (int iRay=0; iRay < _NoOfRays; iRay++){
-
 
 	             IntVector cur = origin;
 
@@ -786,13 +793,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 	           //__________________________________
-	           //  Compute Flux
+	           //  Compute Net Flux to the boundary
 
-	           rBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays;
-	           cout << rBoundFlux[face] << endl;
+	           *pBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
+	           //cout << *pBoundFlux[face] << endl;
 
-	           //boundFlux[origin][face] = sumProjI * 2*_pi/_NoOfRays;
-	           //cout << boundFlux[origin][face] << endl;
 
 	           //} // end of quick flux debug
 	         } // end of iterating through boundary cells
