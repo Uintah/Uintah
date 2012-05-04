@@ -367,6 +367,8 @@ faceextract: StandAlone/tools/extractors/faceextract
 
 lineextract: StandAlone/tools/extractors/lineextract
 
+particle2tiff: StandAlone/tools/extractors/particle2tiff
+
 compare_mms: StandAlone/tools/compare_mms/compare_mms
 
 compare_scalar: StandAlone/tools/compare_mms/compare_scalar

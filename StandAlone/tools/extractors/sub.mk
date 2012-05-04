@@ -56,6 +56,7 @@ else # Non-static build
         Core/Math        \
         Core/Disclosure  \
         Core/Exceptions  \
+        Core/OS          \
         CCA/Ports        \
         Core/ProblemSpec             \
         CCA/Components/ProblemSpecification
@@ -70,6 +71,9 @@ else
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY)
+  ifeq ($(HAVE_TIFF),yes)
+    LIBS := $(LIBS) $(TIFF_LIBRARY)
+  endif
 endif
 
 ##############################################
@@ -127,3 +131,15 @@ SRCS    := $(SRCDIR)/lineextract.cc
 PROGRAM := $(SRCDIR)/lineextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+
+##############################################
+# particle2tiffls
+
+ifeq ($(HAVE_TIFF),yes)
+
+  SRCS    := $(SRCDIR)/particle2tiff.cc
+  PROGRAM := $(SRCDIR)/particle2tiff
+  include $(SCIRUN_SCRIPTS)/program.mk
+
+endif
