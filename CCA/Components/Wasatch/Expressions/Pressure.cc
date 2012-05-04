@@ -135,15 +135,6 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                          prhsLabel_, Uintah::Task::NewDW, 
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW, 
                          &solverParams_ );
-
-//  if (RKStage==1) {
-//    solver_.scheduleSolve( level, sched, materials, matrixLabel_,
-//                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
-//  } else {
-////    solver_.scheduleSolve( level, sched, materials, matrixLabel_,
-////                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
-//  }
-
 }
 
 //--------------------------------------------------------------------
