@@ -127,8 +127,14 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 {
   // TODO: investigate why projection only works for the first RK stage when running
   // in parallel (specifically hypre)
-  solver_.scheduleSolve( level, sched, materials, matrixLabel_,
-                        Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::OldDW, &solverParams_ );
+
+  //  scheduleSolve (const LevelP &level, SchedulerP &sched, const MaterialSet *matls, const VarLabel *A, Task::WhichDW which_A_dw, const VarLabel *x, bool modifies_x, const VarLabel *b, Task::WhichDW which_b_dw, const VarLabel *guess, Task::WhichDW guess_dw, const SolverParameters *params)
+
+  solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW, 
+                         pressureLabel_, true, 
+                         prhsLabel_, Uintah::Task::NewDW, 
+                         pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW, 
+                         &solverParams_ );
 
 //  if (RKStage==1) {
 //    solver_.scheduleSolve( level, sched, materials, matrixLabel_,
