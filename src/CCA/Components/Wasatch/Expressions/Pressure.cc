@@ -89,6 +89,9 @@ Pressure::Pressure( const std::string& pressureName,
 
     didAllocateMatrix_(false),
   
+    materialID_(0),
+    rkStage_(1),
+  
     useRefPressure_( useRefPressure ),
     refPressureValue_( refPressureValue ),
     refPressureLocation_( refPressureLocation ),
@@ -125,11 +128,6 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            const Uintah::MaterialSet* const materials,
                            const int RKStage )
 {
-  // TODO: investigate why projection only works for the first RK stage when running
-  // in parallel (specifically hypre)
-
-  //  scheduleSolve (const LevelP &level, SchedulerP &sched, const MaterialSet *matls, const VarLabel *A, Task::WhichDW which_A_dw, const VarLabel *x, bool modifies_x, const VarLabel *b, Task::WhichDW which_b_dw, const VarLabel *guess, Task::WhichDW guess_dw, const SolverParameters *params)
-
   solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW, 
                          pressureLabel_, true, 
                          prhsLabel_, Uintah::Task::NewDW, 
@@ -178,11 +176,10 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
 {
   materialID_ = material;
   if (didAllocateMatrix_) {
-    //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
     if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
-    else   dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
+    else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
     //setup_matrix(patch);
   } else {
     dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
@@ -305,7 +302,10 @@ Pressure::evaluate()
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
   SVolField& pressure = *results[0];
-  pressure <<= 0.0;
+  // when we are at the 2nd or 3rd RK stages, do NOT initialize the pressure 
+  // in the new DW to zero because we're using that as our initial guess. 
+  // This will reduce the pressure solve iteration count.  
+  if (rkStage_ == 1) pressure <<= 0.0; 
   
   SVolField& rhs      = *results[1];
   rhs <<= 0.0;
