@@ -26,6 +26,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/Multiplier.h>
+#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
 //-- ExprLib includes --//
@@ -165,9 +166,10 @@ namespace Wasatch{
     if (isStrong_ && !isConstDensity_) {
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
-      typedef typename Multiplier<FieldT,SVolField>::Builder  Mult;
-      return icFactory.register_expression( new Mult( solnVarTag_, primVarTag_,
-                                                      Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ) );
+      typedef typename ExprAlgebra<FieldT,FieldT,SVolField>::Builder  ExprAlgbr;
+      typedef ExprAlgebra<FieldT,FieldT,SVolField>  ExprOp;
+      return icFactory.register_expression( new ExprAlgbr( solnVarTag_, primVarTag_,
+                                                          Expr::Tag(densityTag_.name(),Expr::STATE_NONE), ExprOp::PRODUCT) );
     }
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
