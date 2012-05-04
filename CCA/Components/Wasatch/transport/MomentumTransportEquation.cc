@@ -33,6 +33,7 @@
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
+#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
@@ -285,13 +286,14 @@ namespace Wasatch{
                                   rhsID,
                                   get_staggered_location<FieldT>() ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
-      normalStressID_  ( Expr::ExpressionID::null_id() ),
-      normalConvFluxID_( Expr::ExpressionID::null_id() ),
-      pressureID_      ( Expr::ExpressionID::null_id() )
+      thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
+      densityTag_      ( densTag                              ),
+      normalStressID_  ( Expr::ExpressionID::null_id()        ),
+      normalConvFluxID_( Expr::ExpressionID::null_id()        ),
+      pressureID_      ( Expr::ExpressionID::null_id()        )
   {
     set_vel_tags( params, velTags_ );
 
-    const Expr::Tag thisVelTag( velName, Expr::STATE_NONE );
     const Expr::Tag thisMomTag = mom_tag( momName );
 
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
@@ -328,15 +330,15 @@ namespace Wasatch{
     if (isviscous_) {
       const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
       if( doxmom ){
-        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags_[0], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
         if( stagLoc_ == XDIR )  normalStressID_ = stressID;
       }
       if( doymom ){
-        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags_[1], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
         if( stagLoc_ == YDIR )  normalStressID_ = stressID;
       }
       if( dozmom ){
-        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags_[2], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
         if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
       }
       factory.cleave_from_children( normalStressID_   );
@@ -369,7 +371,7 @@ namespace Wasatch{
     // pressure gradient) for use in the projection
     const Expr::ExpressionID momRHSPartID= factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
                                                                            cfxt, cfyt, cfzt,
-                                                                           tauxt, tauyt, tauzt, densTag,
+                                                                           tauxt, tauyt, tauzt, densityTag_,
                                                                            bodyForceTag) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
@@ -380,7 +382,7 @@ namespace Wasatch{
     // density time derivative
     const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
 
-    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag, thisMomTag, densTag ));
+    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_ ));
 
     //__________________
     // pressure
@@ -625,6 +627,15 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
+    
+    if( icFactory.have_entry( thisVelTag_ ) ){
+      // register expression to calculate the momentum initial condition from the initial conditions on
+      // velocity and density in the cases that we are initializing velocity in the input file
+      typedef typename ExprAlgebra<FieldT,FieldT,SVolField>::Builder ExprAlgbr;
+      return icFactory.register_expression( new ExprAlgbr( mom_tag(thisMomName_), thisVelTag_,
+                                                           Expr::Tag(densityTag_.name(),Expr::STATE_NONE), "PRODUCT") );
+    }
+
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 

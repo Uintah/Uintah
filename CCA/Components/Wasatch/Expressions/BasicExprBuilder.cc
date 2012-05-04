@@ -33,6 +33,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/StringNames.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationBulkDiffusionCoefficient.h>
@@ -143,7 +144,7 @@ namespace Wasatch{
       const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
       const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
       valParams->getAttribute("algebraicOperation",algebraicOperation);
-      typedef typename ExprAlgebra<FieldT>::Builder Builder;
+      typedef typename ExprAlgebra<FieldT,FieldT,FieldT>::Builder Builder;
       builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );
     }
     
