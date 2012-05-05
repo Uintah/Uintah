@@ -61,13 +61,13 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
                     const Expr::Tag& fztag,
-                    const Expr::Tag& dilatationtag,                   
+                    const Expr::Tag& dilatationtag,
                     const Expr::Tag& d2rhodt2tag,
                     const Expr::Tag& timesteptag,
                     const bool       useRefPressure,
                     const double     refPressureValue,
                     const SCIRun::IntVector refPressureLocation,
-                    const bool       use3DLaplacian,                   
+                    const bool       use3DLaplacian,
                     const Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
@@ -80,7 +80,7 @@ Pressure::Pressure( const std::string& pressureName,
     d2rhodt2t_( d2rhodt2tag ),
 
     timestept_( timesteptag ),
-  
+
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
@@ -88,16 +88,16 @@ Pressure::Pressure( const std::string& pressureName,
     doDens_( d2rhodt2tag != Expr::Tag() ),
 
     didAllocateMatrix_(false),
-  
+
     materialID_(0),
     rkStage_(1),
-  
+
     useRefPressure_( useRefPressure ),
     refPressureValue_( refPressureValue ),
     refPressureLocation_( refPressureLocation ),
-  
+
     use3DLaplacian_( use3DLaplacian ),
-  
+
     solverParams_( solverParams ),
     solver_( solver ),
 
@@ -128,23 +128,23 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            const Uintah::MaterialSet* const materials,
                            const int RKStage )
 {
-  solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW, 
-                         pressureLabel_, true, 
-                         prhsLabel_, Uintah::Task::NewDW, 
-                         pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW, 
+  solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
+                         pressureLabel_, true,
+                         prhsLabel_, Uintah::Task::NewDW,
+                         pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
                          &solverParams_ );
 }
 
 //--------------------------------------------------------------------
-  
+
 void
 Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                           Uintah::SchedulerP sched,
                           const Uintah::MaterialSet* const materials,
                           const int RKStage )
-{    
+{
   // hack in a task to apply boundary condition on the pressure after the pressure solve
-  Uintah::Task* task = scinew Uintah::Task("Pressure: process pressure bcs", this, 
+  Uintah::Task* task = scinew Uintah::Task("Pressure: process pressure bcs", this,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
@@ -153,7 +153,7 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
   Uintah::LoadBalancer* lb = sched->getLoadBalancer();
   sched->addTask(task, lb->getPerProcessorPatchSet(level), materials);
 }
-  
+
 //--------------------------------------------------------------------
 
 void
@@ -216,9 +216,9 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doZ_    )  fz_       = &zvfm.field_ref( fzt_       );
   if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
   dilatation_ = &svfm.field_ref( dilatationt_ );
-  
+
   const Expr::FieldManager<double>& doublefm = fml.field_manager<double>();
-  timestep_ = &doublefm.field_ref( timestept_ );  
+  timestep_ = &doublefm.field_ref( timestept_ );
 }
 
 //--------------------------------------------------------------------
@@ -248,7 +248,7 @@ Pressure::setup_matrix()
   double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
-  
+
   const SCIRun::IntVector l    = patch_->getCellLowIndex();
   const SCIRun::IntVector h    = patch_->getCellHighIndex();
   const Uintah::Vector spacing = patch_->dCell();
@@ -281,7 +281,7 @@ Pressure::setup_matrix()
     coefs.b = -b;
     coefs.p = -p;
   }
-  
+
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   if ( patch_->hasBoundaryFaces() )update_pressure_matrix((this->names())[0], matrix_, patch_, materialID_);
 
@@ -295,6 +295,7 @@ void
 Pressure::evaluate()
 {
   using namespace SpatialOps;
+  namespace SS = SpatialOps::structured;
 
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
@@ -302,40 +303,19 @@ Pressure::evaluate()
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
   SVolField& pressure = *results[0];
-  // when we are at the 2nd or 3rd RK stages, do NOT initialize the pressure 
-  // in the new DW to zero because we're using that as our initial guess. 
-  // This will reduce the pressure solve iteration count.  
-  if (rkStage_ == 1) pressure <<= 0.0; 
-  
-  SVolField& rhs      = *results[1];
+  // when we are at the 2nd or 3rd RK stages, do NOT initialize the pressure
+  // in the new DW to zero because we're using that as our initial guess.
+  // This will reduce the pressure solve iteration count.
+  if (rkStage_ == 1) pressure <<= 0.0;
+
+  SVolField& rhs = *results[1];
   rhs <<= 0.0;
-  
+
   // start by subtracting the dilatation from the previous timestep or integrator
   // stage. This is needed to account for any non-divergence free initial conditions
   rhs <<= - *dilatation_/ *timestep_;
-		
-  //
-  namespace SS = SpatialOps::structured;  
-  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx;
-  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy;
-  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;
-  
-  if (doX_) {
-    const SS::MemoryWindow& wx = fx_->window_with_ghost();
-    tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( wx );
-  }
 
-  if (doY_) {
-    const SS::MemoryWindow& wy = fy_->window_with_ghost();
-    tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( wy );
-  }
-
-  if (doZ_) {
-    const SS::MemoryWindow& wz = fz_->window_with_ghost();
-    tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( wz );
-  }
-
-  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
+  SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( rhs );
 
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
@@ -344,18 +324,21 @@ Pressure::evaluate()
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
   if( doX_ ){
+    SpatFldPtr<SS::SSurfXField> tmpx = SpatialFieldStore::get<SS::SSurfXField>( *fx_ );
     interpX_->apply_to_field( *fx_, *tmpx );
     divXOp_ ->apply_to_field( *tmpx, *tmp );
     rhs <<= rhs - *tmp;
   }
 
   if( doY_ ){
+    SpatFldPtr<SS::SSurfYField> tmpy = SpatialFieldStore::get<SS::SSurfYField>( *fy_ );
     interpY_->apply_to_field( *fy_, *tmpy );
     divYOp_ ->apply_to_field( *tmpy, *tmp );
     rhs <<= rhs - *tmp;
   }
 
   if( doZ_ ){
+    SpatFldPtr<SS::SSurfZField> tmpz = SpatialFieldStore::get<SS::SSurfZField>( *fz_ );
     interpZ_->apply_to_field( *fz_, *tmpz );
     divZOp_ ->apply_to_field( *tmpz, *tmp );
     rhs <<= rhs - *tmp;
@@ -364,7 +347,7 @@ Pressure::evaluate()
   if( doDens_ ){
     rhs <<= rhs - *d2rhodt2_;
   }
-  
+
   // update pressure rhs for reference pressure
   if (useRefPressure_) set_ref_pressure_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
@@ -372,56 +355,55 @@ Pressure::evaluate()
   if(patch_->hasBoundaryFaces()) update_pressure_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
 }
 
-//--------------------------------------------------------------------  
-  
-void 
+//--------------------------------------------------------------------
+
+void
 Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
-                                   const Uintah::PatchSubset* const patches,
-                                   const Uintah::MaterialSubset* const materials,
-                                   Uintah::DataWarehouse* const oldDW,
-                                   Uintah::DataWarehouse* const newDW) {
-  
-  
+                        const Uintah::PatchSubset* const patches,
+                        const Uintah::MaterialSubset* const materials,
+                        Uintah::DataWarehouse* const oldDW,
+                        Uintah::DataWarehouse* const newDW )
+{
   using namespace SpatialOps;
   typedef SelectUintahFieldType<SVolField>::const_type UintahField;
-  UintahField pressureField_;        
+  UintahField pressureField_;
 
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();
-  
+
   //__________________
   // loop over materials
   for( int im=0; im<materials->size(); ++im ){
-    
+
     const int material = materials->get(im);
-    
+
     //____________________
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){
-      const Uintah::Patch* const patch = patches->get(ip);      
+      const Uintah::Patch* const patch = patches->get(ip);
       if ( patch->hasBoundaryFaces() ) {
-        newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);        
-        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,patch);                
+        newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);
+        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,patch);
         process_pressure_bcs(pressure_tag(), *pressure, patch, material);
-        delete pressure;                      
+        delete pressure;
       }
-    }      
-  }        
+    }
+  }
 }
-  
+
 //--------------------------------------------------------------------
 
 Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& fxtag,
                             const Expr::Tag& fytag,
                             const Expr::Tag& fztag,
-                            const Expr::Tag& dilatationtag,                           
+                            const Expr::Tag& dilatationtag,
                             const Expr::Tag& d2rhodt2tag,
                             const Expr::Tag& timesteptag,
                             const bool       userefpressure,
                             const double     refPressureValue,
                             const SCIRun::IntVector refPressureLocation,
-                            const bool       use3dlaplacian,                           
+                            const bool       use3dlaplacian,
                             const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
@@ -445,9 +427,9 @@ Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
-  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, 
-                      dilatationt_, d2rhodt2t_, timestept_, userefpressure_, 
-                      refpressurevalue_, refpressurelocation_, use3dlaplacian_, 
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
+                      dilatationt_, d2rhodt2t_, timestept_, userefpressure_,
+                      refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                       sparams_, solver_ );
 }
 

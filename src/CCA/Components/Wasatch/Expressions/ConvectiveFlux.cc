@@ -91,7 +91,7 @@ void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
   PhiFaceT& result = this->value();
   result <<= 0.0;
   // note that PhiFaceT and VelFaceT should on the same mesh location
-  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
+  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
 
   // move the velocity from staggered volume to phi faces
   velInterpOp_->apply_to_field( *vel_, *velInterp );
@@ -201,16 +201,16 @@ evaluate()
   //       phi_high is a high order interpolant (e.g. central)
 
   // interpolated velocity scalar volume faces
-  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
+  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
 
   // flux limiter function. This lives on scalar volume faces
-  SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );
+  SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
 
   // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
-  SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );
+  SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
 
   // high order interpolant for phi (e.g. second order). This lives on scalar volume faces
-  SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore<PhiFaceT>::self().get( result );
+  SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
 
   // move the velocity from staggered volume to phi faces
   velInterpOp_->apply_to_field( *vel_, *velInterp );

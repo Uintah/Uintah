@@ -92,7 +92,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   if( tauXt_ != emptyTag_ )  tauX_ = &xfm.field_ref(tauXt_);
   if( tauYt_ != emptyTag_ )  tauY_ = &yfm.field_ref(tauYt_);
   if( tauZt_ != emptyTag_ )  tauZ_ = &zfm.field_ref(tauZt_);
-  
+
   const Expr::FieldManager<SVolField>& scalarfm = fml.template field_manager<SVolField>();
   density_ = &scalarfm.field_ref( densityt_ );
 
@@ -124,7 +124,7 @@ evaluate()
   FieldT& result = this->value();
   result <<= 0.0;
 
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
+  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
 
   if( cfluxXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *cFluxX_, *tmp );
@@ -174,7 +174,7 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& tauX,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
-                  const Expr::Tag& densityTag,                 
+                  const Expr::Tag& densityTag,
                   const Expr::Tag& bodyForce )
   : ExpressionBuilder(result),
     cfluxXt_   ( convFluxX  ),
