@@ -233,15 +233,15 @@ void ScalarRHS<FieldT>::evaluate()
   FieldT& rhs = this->value();
   rhs <<= 0.0;
 
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( rhs );
+  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( rhs );
 
   if( doXDir_ ){
-    SpatialOps::SpatFldPtr<XFluxT> tmpx = SpatialOps::SpatialFieldStore<XFluxT>::self().get(rhs);
+    SpatialOps::SpatFldPtr<XFluxT> tmpx = SpatialOps::SpatialFieldStore::get<XFluxT>(rhs);
     if( haveConvection_ ) *tmpx <<= - *xConvFlux_;
     else                  *tmpx <<= 0.0;
     if( haveDiffusion_ )  *tmpx <<= *tmpx - *xDiffFlux_;
     if( haveXAreaFrac_ ){
-      SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterp = SpatialOps::SpatialFieldStore<XFluxT>::self().get(rhs);
+      SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterp = SpatialOps::SpatialFieldStore::get<XFluxT>(rhs);
       xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterp );
       *tmpx <<= *tmpx * *xAreaFracInterp;
     }
@@ -249,12 +249,12 @@ void ScalarRHS<FieldT>::evaluate()
   }
 
   if( doYDir_ ){
-    SpatialOps::SpatFldPtr<YFluxT> tmpy = SpatialOps::SpatialFieldStore<YFluxT>::self().get(rhs);
+    SpatialOps::SpatFldPtr<YFluxT> tmpy = SpatialOps::SpatialFieldStore::get<YFluxT>(rhs);
     if( haveConvection_ ) *tmpy <<= *yConvFlux_;
     else                  *tmpy <<= 0.0;
     if( haveDiffusion_ )  *tmpy <<= *tmpy + *yDiffFlux_;
     if( haveYAreaFrac_ ){
-      SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterp = SpatialOps::SpatialFieldStore<YFluxT>::self().get(rhs);
+      SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterp = SpatialOps::SpatialFieldStore::get<YFluxT>(rhs);
       yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterp );
       *tmpy <<= *tmpy * *yAreaFracInterp;
     }
@@ -263,12 +263,12 @@ void ScalarRHS<FieldT>::evaluate()
   }
 
   if( doZDir_ ){
-    SpatialOps::SpatFldPtr<ZFluxT> tmpz = SpatialOps::SpatialFieldStore<ZFluxT>::self().get(rhs);
+    SpatialOps::SpatFldPtr<ZFluxT> tmpz = SpatialOps::SpatialFieldStore::get<ZFluxT>(rhs);
     if( haveConvection_ ) *tmpz <<= *zConvFlux_;
     else                  *tmpz <<= 0.0;
     if( haveDiffusion_ )  *tmpz <<= *tmpz + *zDiffFlux_;
     if( haveZAreaFrac_ ){
-      SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterp = SpatialOps::SpatialFieldStore<ZFluxT>::self().get(rhs);
+      SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterp = SpatialOps::SpatialFieldStore::get<ZFluxT>(rhs);
       zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterp );
       *tmpz <<= *tmpz * *zAreaFracInterp;
     }

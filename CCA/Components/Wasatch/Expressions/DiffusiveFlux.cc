@@ -119,7 +119,7 @@ evaluate()
     result <<= -result * *coef_;  // J =  - gamma * grad(phi)
   }
 
-  SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
+  SpatFldPtr<FluxT> interpRho = SpatialFieldStore::get<FluxT>(result);
   densityInterpOp_->apply_to_field( *rho_, *interpRho );
   result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
 }
@@ -193,7 +193,7 @@ evaluate()
   using namespace SpatialOps;
   FluxT& result = this->value();
 
-  SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore<FluxT>::self().get( result );
+  SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore::get<FluxT>( result );
 
   gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)
   interpOp_->apply_to_field( *coef_, result  );

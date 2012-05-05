@@ -153,8 +153,8 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  SpatialOps::SpatFldPtr<FieldT> tmp1 = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
-  SpatialOps::SpatFldPtr<FieldT> tmp2 = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
+  SpatialOps::SpatFldPtr<FieldT> tmp1 = SpatialOps::SpatialFieldStore::get<FieldT>( result );
+  SpatialOps::SpatFldPtr<FieldT> tmp2 = SpatialOps::SpatialFieldStore::get<FieldT>( result );
 
   src1InterpOp_->apply_to_field( *src1_, *tmp1 );
   src2InterpOp_->apply_to_field( *src2_, *tmp2 );

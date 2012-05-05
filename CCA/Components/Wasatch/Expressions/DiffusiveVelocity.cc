@@ -176,7 +176,7 @@ evaluate()
   using namespace SpatialOps;
   VelT& result = this->value();
 
-  SpatFldPtr<VelT> velTmp = SpatialFieldStore<VelT>::self().get( result );
+  SpatFldPtr<VelT> velTmp = SpatialFieldStore::get<VelT>( result );
 
   gradOp_  ->apply_to_field( *phi_, *velTmp );  // V = grad(phi)
   interpOp_->apply_to_field( *coef_, result  );

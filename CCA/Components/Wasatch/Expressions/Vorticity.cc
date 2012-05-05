@@ -8,8 +8,8 @@ Vorticity<FieldT,Vel1T,Vel2T>::
 Vorticity( const Expr::Tag& vel1tag,
            const Expr::Tag& vel2tag )
 : Expr::Expression<FieldT>(),
-vel1t_( vel1tag ),
-vel2t_( vel2tag )
+  vel1t_( vel1tag ),
+  vel2t_( vel2tag )
 {}
 
 //--------------------------------------------------------------------
@@ -70,23 +70,25 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& vorticity = this->value();
+
+  SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( vorticity );
+
   vorticity <<= 0.0;
 
   if( vel1t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<Vel1FaceT> tmp1 = SpatialOps::SpatialFieldStore<Vel1FaceT>::self().get( vorticity );
+    SpatFldPtr<Vel1FaceT> tmp1 = SpatialFieldStore::get<Vel1FaceT>( vorticity );
     Vel1GradTOp_->apply_to_field( *vel1_, *tmp1 );
 
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( vorticity );
     *tmp <<= 0.0;
     InpterpVel1FaceT2FieldTOp_->apply_to_field( *tmp1, *tmp );
 
     vorticity <<= *tmp;
   }
+
   if( vel2t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<Vel2FaceT> tmp2 = SpatialOps::SpatialFieldStore<Vel2FaceT>::self().get( vorticity );
+    SpatFldPtr<Vel2FaceT> tmp2 = SpatialFieldStore::get<Vel2FaceT>( vorticity );
     Vel2GradTOp_->apply_to_field( *vel2_, *tmp2 );
 
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( vorticity );
     *tmp <<= 0.0;
     InpterpVel2FaceT2FieldTOp_->apply_to_field( *tmp2, *tmp );
 
