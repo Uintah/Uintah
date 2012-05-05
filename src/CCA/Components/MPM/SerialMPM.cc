@@ -4134,12 +4134,17 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
+    StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+    double rho_init[numMPMMatls];
+    Vector dx = patch-> dCell();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-
+      rho_init[m]=mpm_matl->getInitialDensity();
       Ghost::GhostType  gac = Ghost::AroundCells;
+      Ghost::GhostType  gnone = Ghost::None;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch,gac,NGP);
+      new_dw->get(gmass[m],     lb->gMassLabel, dwi, patch, gnone, 0);
     }
 
 /*
@@ -4240,15 +4245,43 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
+	double massTop = 0.0;
+	double massBot = 0.0;
+	double mass_ratio = 0.0;
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
+	double cell_volume = dx.x()*dx.y()*dx.z();
+	double denseTop = rho_init[TopMat];
+	double denseBot = rho_init[BotMat];
+	double TOPMAX = 0.0;
+	double BOTMAX = 0.0;
+	
+//  	if (denseBot != denseTop){
+//    	   throw ProblemSetupException("Different densities not allowed for Bottom and Top Material of Cohesive Zone",
+//                                 __FILE__, __LINE__);
+//  	}
 
+	double density_ratio = denseTop/denseBot;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
           velTop      += gvelocity[TopMat][node] * S[k];
           velBot      += gvelocity[BotMat][node] * S[k];
+	  massTop     += gmass[TopMat][node]*S[k];
+	  TOPMAX      += cell_volume;
+	  massBot     += gmass[BotMat][node]*S[k];
+	  BOTMAX      += cell_volume;
         }
+	massTop = massTop/TOPMAX;
+	massBot = massBot/BOTMAX;
+	if (massBot > 0.0) {
+	    mass_ratio = massTop/massBot;
+	    mass_ratio = min(mass_ratio,1.0/mass_ratio);
+	}
+	else {
+	    mass_ratio = 0.0;
+	}
+	double mass_correction_factor = mass_ratio;
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
@@ -4295,7 +4328,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         else if( fabs(D_t2) > 2.0*delta_s){
           czFailed_new[idx]=2;
           czf=1.0;
-        } else {
+        }
+	else {
           czFailed_new[idx]=0;
         }
 
@@ -4316,7 +4350,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
                               * exp(-D_n/delta_n)
                               * exp(-D_t2*D_t2/(delta_s*delta_s));
 
-        czforce_new[idx]     = (normal_stress*cznorm_new[idx]*czlength_new[idx]
+        czforce_new[idx]     = mass_correction_factor*(normal_stress*cznorm_new[idx]*czlength_new[idx]
                              + tang1_stress*cztang_new[idx]*czlength_new[idx]
                              + tang2_stress*cztang2*czlength_new[idx])
                              * (1.0 - czf);
