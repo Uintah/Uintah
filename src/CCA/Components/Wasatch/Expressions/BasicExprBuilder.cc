@@ -144,10 +144,12 @@ namespace Wasatch{
       const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
       const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
       valParams->getAttribute("algebraicOperation",algebraicOperation);
+      // for now, only support parsing for fields of same type.  In the future,
+      // we could extend parsing support for differing source field types.
       typedef typename ExprAlgebra<FieldT,FieldT,FieldT>::Builder Builder;
       builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );
     }
-    
+
     else if ( params->findBlock("Cylinder") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("Cylinder");
       double radius, insideValue, outsideValue;
@@ -157,10 +159,10 @@ namespace Wasatch{
       valParams->getAttribute("outsideValue",outsideValue);
       valParams->get("Origin",origin);
       const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
-      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );      
+      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
       typedef typename CylinderPatch<FieldT>::Builder Builder;
       builder = scinew Builder( tag, field1Tag, field2Tag, origin, insideValue, outsideValue, radius );
-    }        
+    }
 
     return builder;
   }
@@ -332,7 +334,7 @@ namespace Wasatch{
       builder = scinew Builder(tag, saturationTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
     }
-    
+
     else if (params->findBlock("PrecipitationSource") ) {
       //this loops over all possible non-convective/non-diffusive rhs terms and creates a taglist
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSource");
@@ -342,16 +344,16 @@ namespace Wasatch{
       double molecVol;
       std::string modelType;
       std::string basePhiName;
-      
+
       const Expr::Tag etaScaleTag = parse_nametag( coefParams->findBlock("EtaScale")->findBlock("NameTag") );
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
 
       for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
             momentParams != 0;
             momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
-        momentParams->get("MolecVol", molecVol);  
+        momentParams->get("MolecVol", molecVol);
         momentParams->get("PopulationName", basePhiName);
-        
+
         for (Uintah::ProblemSpecP growthParams=momentParams->findBlock("GrowthExpression");
              growthParams != 0;
              growthParams = growthParams->findNextBlock("GrowthExpression") ) {
@@ -391,19 +393,19 @@ namespace Wasatch{
     Expr::ExpressionBuilder* builder = NULL;
     if( params->findBlock("VelocityMagnitude") ){
       Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
-      
+
       Expr::Tag xVelTag = Expr::Tag();
       if (valParams->findBlock("XVelocity"))
         xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
-      
+
       Expr::Tag yVelTag = Expr::Tag();
       if (valParams->findBlock("YVelocity"))
         yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
-      
+
       Expr::Tag zVelTag = Expr::Tag();
       if (valParams->findBlock("ZVelocity"))
         zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
-      
+
       typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
       builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
     }

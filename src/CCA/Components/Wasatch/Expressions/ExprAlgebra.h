@@ -31,7 +31,7 @@ class ExprAlgebra
     DIFFERENCE,
     PRODUCT
   };
- 
+
   const Expr::Tag src1Tag_, src2Tag_;
   const SrcT1* src1_;
   const SrcT2* src2_;
@@ -46,12 +46,15 @@ class ExprAlgebra
     ExprAlgebra( const Expr::Tag& src1Tag,
                  const Expr::Tag& src2Tag,
                  const OperationType algebraicOperation );
-public:  
+public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     /**
-     *  @brief Build a ExprAlgebra expression
+     *  @brief Build a ExprAlgebra expression.  Note that this should
+     *   only be used for initialization or post-processing - not in
+     *   performance critical operations.
+     *
      *  @param resultTag the tag for the value that this expression computes
      *
      *  @param src1Tag the tag to hold the value of the first source field
