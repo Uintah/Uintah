@@ -2736,9 +2736,6 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
               if ( face == Patch::xminus || face == Patch::xplus ) { 
 
-                std::cout << " velocity = " << bc_iter->second.velocity[0] << std::endl;
-                std::cout << " swirl_no = " << bc_iter->second.swirl_no << std::endl;
-                std::cout << " swirl_cent = " << bc_iter->second.swirl_cent << std::endl;
                 setSwirl( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, 
                     constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent ); 
 
