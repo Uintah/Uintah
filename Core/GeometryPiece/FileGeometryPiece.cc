@@ -123,23 +123,45 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   if (d_file_format=="bin"){   
     d_file_format = isLittleEndian()?"lsb":"msb";
   }
-  
-  // We must first read in the min and max from file.0 so
-  // that we can determine the BoundingBox for the geometry
-  string file_name = numbered_str(d_file_name+".", 0);
-  std::ifstream source(file_name.c_str());
-  if (!source ){
-    throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find points file",
-                                __FILE__, __LINE__);
+
+  ps->getWithDefault("usePFS",d_usePFS,true);
+  Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
+  if(d_usePFS){
+    // We must first read in the min and max from file.0 so
+    // that we can determine the BoundingBox for the geometry
+    string file_name = numbered_str(d_file_name+".", 0);
+    std::ifstream source(file_name.c_str());
+    if (!source ){
+      throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find points file",
+                                  __FILE__, __LINE__);
+    }
+
+    // bulletproofing
+    checkFileType(source, d_file_format, file_name);
+    // find the bounding box.
+
+    read_bbox(source, min, max);
+    source.close();
+  } else {
+    // If we do not use PFS then we should read the entire points file now.
+
+    std::ifstream source(d_file_name.c_str());
+    if (!source ){
+      throw ProblemSetupException("ERROR: opening MPM geometry file '"+d_file_name+"'\nFailed to find points file",
+                                  __FILE__, __LINE__);
+    }
+
+    // bulletproofing
+    checkFileType(source, d_file_format, d_file_name);
+
+    // While the file is read the max and min are updated.
+    while(source) {
+      read_line(source, min, max);
+    }
+    source.close();
   }
 
-  // bulletproofing
-  checkFileType(source, d_file_format, file_name);
 
-  // find the bounding box.
-  Point min, max;
-  read_bbox(source, min, max);
-  source.close();
 
   Vector fudge(1.e-5,1.e-5,1.e-5);
   min = min - fudge;
@@ -365,29 +387,32 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 void
 FileGeometryPiece::readPoints(int patchID)
 {
-  std::ifstream source;
+  if(d_usePFS){
+    std::ifstream source;
   
-  Point minpt( 1e30, 1e30, 1e30);
-  Point maxpt(-1e30,-1e30,-1e30);
+    Point minpt( 1e30, 1e30, 1e30);
+    Point maxpt(-1e30,-1e30,-1e30);
   
-  string file_name;
-  char fnum[5];
+    string file_name;
+    char fnum[5];
   
-  sprintf(fnum,".%d",patchID);
-  file_name = d_file_name+fnum;
+    sprintf(fnum,".%d",patchID);
+    file_name = d_file_name+fnum;
 
-  source.open(file_name.c_str());
+    source.open(file_name.c_str());
 
-  // bulletproofing
-  checkFileType(source, d_file_format, file_name);
+    // bulletproofing
+    checkFileType(source, d_file_format, file_name);
   
-  // ignore the first line of the file;
-  // this has already been processed
-  Point notUsed;
-  read_bbox(source, notUsed, notUsed);
+    // ignore the first line of the file;
+    // this has already been processed
+    Point notUsed;
+    read_bbox(source, notUsed, notUsed);
 
-  while(source) {
-    read_line(source, minpt, maxpt);
+    while(source) {
+      read_line(source, minpt, maxpt);
+    }
+
   }
 }
 //______________________________________________________________________

@@ -298,6 +298,7 @@
         <name                 spec="OPTIONAL STRING" />
         <var                  spec="MULTIPLE STRING" />
         <format               spec="OPTIONAL STRING" />
+        <usePFS               spec="OPTIONAL BOOLEAN"/>
       </file>
       
       <image                  spec="OPTIONAL NO_DATA" >
