@@ -224,10 +224,6 @@ public:
                         ArchesVariables* vars,
                         ArchesConstVariables* constvars);
                                    
-  void setBoundary(BoundaryCondition* boundaryCondition){
-                  d_boundaryCondition = boundaryCondition;
-      }; 
-
 private:
 
   PhysicalConstants* d_physicalConsts;
@@ -241,10 +237,6 @@ private:
   double cu, cv, cw, cp, phi0;
   // sine mms
   double amp;
-
-  //Source term boundary conditions stuff
-  BoundaryCondition* d_boundaryCondition;
-
 
 }; // end Class Source
 

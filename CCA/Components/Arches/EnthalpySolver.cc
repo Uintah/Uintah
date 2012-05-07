@@ -204,10 +204,6 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 
 
 
-// ++ jeremy ++ 
-  d_source->setBoundary(d_boundaryCondition);
-// -- jeremy --        
-
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
     string srcname; 

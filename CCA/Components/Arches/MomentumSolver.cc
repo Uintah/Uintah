@@ -145,9 +145,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   if (d_doMMS){
     d_source->problemSetup(db);
   }
-// ++ jeremy ++
-  d_source->setBoundary(d_boundaryCondition);
-// -- jeremy --            
 
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){

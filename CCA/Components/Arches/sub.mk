@@ -64,7 +64,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
-        $(SRCDIR)/OperatorSplitChem.cc         \
         $(SRCDIR)/TurbulenceModel.cc           
 
 ifeq ($(HAVE_PETSC),yes)
