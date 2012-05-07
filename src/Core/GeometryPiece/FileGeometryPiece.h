@@ -137,6 +137,7 @@ namespace Uintah {
     string              d_file_name;
     string              d_file_format;
     list<string>        d_vars;
+    bool                d_usePFS;
     
     void checkFileType(std::ifstream & source, string& fileType, string& filename);
     
