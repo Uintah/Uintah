@@ -77,7 +77,7 @@
 #include <InvalidVariableException.h>
 #include <InvalidDBTypeException.h>
 #include <DBOptionsAttributes.h>
-
+#include <InvalidFilesException.h>
 
 using std::max;
 using std::min;
@@ -773,160 +773,159 @@ int avtudaReaderMTMDFileFormat::GetGlobalDomainNumber(int level, int local_patch
 //      a layer of ghost zones around each patch.  Note that this only works
 //      within a refinement level, not across refinement levels.
 //  
-//  Programmer: Hank Childs / Modified for re-use by sshankar
-//  Creation:   January 22, 2006
+//
+// NOTE: The cache variable for the mesh MUST be called "any_mesh", which is a problem when
+// there are multiple meshes or one of them is actually named "any_mesh" (see
+// https://visitbugs.ornl.gov/issues/52). Thus, for each mesh we keep around our own cache
+// variable and if this function finds it then it just uses it again instead of recomputing it.
 //
 // ****************************************************************************
 void
 avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::string &meshname)
 {
-  //
-  // First, look to see if we don't already have it cached
-  // Note that we compute BOTH domain nesting and domain boundary
-  // information here. However, we use only existance of domain
-  // nesting object in cache as trigger for whether to compute
-  // both objects or not.
-  //
+  //lookup mesh in our cache and if it's not there, compute it
+  if (*this->mesh_domains[meshname]==NULL)
+  {
+    //
+    // Calculate some info we will need in the rest of the routine.
+    //
+    int num_levels = stepInfo->levelInfo.size();
+    int totalPatches = 0;
+    for (int level = 0 ; level < num_levels ; level++)
+      totalPatches += stepInfo->levelInfo[level].patchInfo.size();
 
-  void_ref_ptr vrTmp = cache->GetVoidRef(meshname.c_str(),
-                                         AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-                                         timestate, -1);
-  if (*vrTmp != NULL)
-    return;
+    //
+    // Now set up the data structure for patch boundaries.  The data 
+    // does all the work ... it just needs to know the extents of each patch.
+    //
+    avtRectilinearDomainBoundaries *rdb 
+      = new avtRectilinearDomainBoundaries(true);
+    rdb->SetNumDomains(totalPatches);
 
-  //
-  // Calculate some info we will need in the rest of the routine.
-  //
-  int num_levels = stepInfo->levelInfo.size();
-  int totalPatches = 0;
-  for (int level = 0 ; level < num_levels ; level++)
-    totalPatches += stepInfo->levelInfo[level].patchInfo.size();
+    for (int patch = 0 ; patch < totalPatches ; patch++) {
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(patch, my_level, local_patch);
 
+      PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
 
-  //
-  // Now set up the data structure for patch boundaries.  The data 
-  // does all the work ... it just needs to know the extents of each patch.
-  //
-  avtRectilinearDomainBoundaries *rdb 
-    = new avtRectilinearDomainBoundaries(true);
-  rdb->SetNumDomains(totalPatches);
+      int low[3],high[3];
+      patchInfo.getBounds(low,high,meshname);
 
-  for (int patch = 0 ; patch < totalPatches ; patch++) {
-    int my_level, local_patch;
-    GetLevelAndLocalPatchNumber(patch, my_level, local_patch);
+      int e[6] = { low[0], high[0],
+                   low[1], high[1],
+                   low[2], high[2] };
+      rdb->SetIndicesForAMRPatch(patch, my_level, e);
+    }
 
-    PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
+    rdb->CalculateBoundaries();
 
-    int low[3],high[3];
-    patchInfo.getBounds(low,high,meshname);
+    this->mesh_boundaries[meshname]=void_ref_ptr(rdb,
+                                                 avtStructuredDomainBoundaries::Destruct);
+    
+    //
+    // Domain Nesting
+    //
+    avtStructuredDomainNesting *dn = new avtStructuredDomainNesting(totalPatches, num_levels);
+    dn->SetNumDimensions(3);
 
-    int e[6] = { low[0], high[0],
-                 low[1], high[1],
-                 low[2], high[2] };
-    rdb->SetIndicesForAMRPatch(patch, my_level, e);
-  }
+    //
+    // Calculate what the refinement ratio is from one level to the next.
+    //
+    for (int level = 0 ; level < num_levels ; level++) {
+      // SetLevelRefinementRatios requires data as a vector<int>
+      vector<int> rr(3);
+      for (int i=0; i<3; i++)
+        rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
 
-  rdb->CalculateBoundaries();
+      dn->SetLevelRefinementRatios(level, rr);
+    }
 
+    //
+    // Calculating the child patches really needs some better sorting than
+    // what I am doing here.  This is likely to become a bottleneck in extreme
+    // cases.  Although this routine has performed well for a previous 55K
+    // patch run.
+    //
+    vector< vector<int> > childPatches(totalPatches);
+    for (int level = num_levels-1 ; level > 0 ; level--) {
+      int prev_level = level-1;
+      LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
+      LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
 
-  void_ref_ptr vrdb = void_ref_ptr(rdb,
-                                   avtStructuredDomainBoundaries::Destruct);
-  cache->CacheVoidRef(meshname.c_str(),
-                      AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
-                      timestate, -1, vrdb);
+      for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++) {
+        PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
+        int child_low[3],child_high[3];
+        childPatchInfo.getBounds(child_low,child_high,meshname);
 
+        for (int parent=0; parent<(int)levelInfoParent.patchInfo.size(); parent++) {
+          PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
+          int parent_low[3],parent_high[3];
+          parentPatchInfo.getBounds(parent_low,parent_high,meshname);
 
+          int mins[3], maxs[3];
+          for (int i=0; i<3; i++) {
+            mins[i] = max(child_low[i],  parent_low[i] *levelInfoChild.refinementRatio[i]);
+            maxs[i] = min(child_high[i], parent_high[i]*levelInfoChild.refinementRatio[i]);
+          }
+          bool overlap = (mins[0]<maxs[0] &&
+                          mins[1]<maxs[1] &&
+                          mins[2]<maxs[2]);
 
-  //
-  // Domain Nesting
-  //
-
-  avtStructuredDomainNesting *dn = new avtStructuredDomainNesting(totalPatches, num_levels);
-  dn->SetNumDimensions(3);
-
-  //
-  // Calculate what the refinement ratio is from one level to the next.
-  //
-  for (int level = 0 ; level < num_levels ; level++) {
-    // SetLevelRefinementRatios requires data as a vector<int>
-    vector<int> rr(3);
-    for (int i=0; i<3; i++)
-      rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
-
-    dn->SetLevelRefinementRatios(level, rr);
-  }
-
-
-  //
-  // Calculating the child patches really needs some better sorting than
-  // what I am doing here.  This is likely to become a bottleneck in extreme
-  // cases.  Although this routine has performed well for a previous 55K
-  // patch run.
-  //
-  vector< vector<int> > childPatches(totalPatches);
-  for (int level = num_levels-1 ; level > 0 ; level--) {
-    int prev_level = level-1;
-    LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
-    LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
-
-    for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++) {
-      PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
-      int child_low[3],child_high[3];
-      childPatchInfo.getBounds(child_low,child_high,meshname);
-
-      for (int parent=0; parent<(int)levelInfoParent.patchInfo.size(); parent++) {
-        PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
-        int parent_low[3],parent_high[3];
-        parentPatchInfo.getBounds(parent_low,parent_high,meshname);
-
-        int mins[3], maxs[3];
-        for (int i=0; i<3; i++) {
-          mins[i] = max(child_low[i],  parent_low[i] *levelInfoChild.refinementRatio[i]);
-          maxs[i] = min(child_high[i], parent_high[i]*levelInfoChild.refinementRatio[i]);
-        }
-        bool overlap = (mins[0]<maxs[0] &&
-                        mins[1]<maxs[1] &&
-                        mins[2]<maxs[2]);
-
-        if (overlap) {
-          int child_gpatch = GetGlobalDomainNumber(level, child);
-          int parent_gpatch = GetGlobalDomainNumber(prev_level, parent);
-          childPatches[parent_gpatch].push_back(child_gpatch);
+          if (overlap) {
+            int child_gpatch = GetGlobalDomainNumber(level, child);
+            int parent_gpatch = GetGlobalDomainNumber(prev_level, parent);
+            childPatches[parent_gpatch].push_back(child_gpatch);
+          }
         }
       }
     }
-  }
 
+    //
+    // Now that we know the extents for each patch and what its children are,
+    // tell the structured domain boundary that information.
+    //
+    for (int p=0; p<totalPatches ; p++) {
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(p, my_level, local_patch);
 
-  //
-  // Now that we know the extents for each patch and what its children are,
-  // tell the structured domain boundary that information.
-  //
-  for (int p=0; p<totalPatches ; p++) {
-    int my_level, local_patch;
-    GetLevelAndLocalPatchNumber(p, my_level, local_patch);
+      PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
+      int low[3],high[3];
+      patchInfo.getBounds(low,high,meshname);
 
-    PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
-    int low[3],high[3];
-    patchInfo.getBounds(low,high,meshname);
-
-    vector<int> e(6);
-    for (int i=0; i<3; i++) {
-      e[i+0] = low[i];
-      e[i+3] = high[i]-1;
+      vector<int> e(6);
+      for (int i=0; i<3; i++) {
+        e[i+0] = low[i];
+        e[i+3] = high[i]-1;
+      }
+      dn->SetNestingForDomain(p, my_level, childPatches[p], e);
     }
-    dn->SetNestingForDomain(p, my_level, childPatches[p], e);
+
+    this->mesh_domains[meshname]=void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
   }
 
-
   //
-  // Register this structure with the generic database so that it knows
+  // Register these structures with the generic database so that it knows
   // to ghost out the right cells.
   //
-  void_ref_ptr vr = void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
-  cache->CacheVoidRef(meshname.c_str(),
+  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
+                      AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+                      timestate, -1, this->mesh_boundaries[meshname]);
+  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
                       AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-                      timestate, -1, vr);
+                      timestate, -1, this->mesh_domains[meshname]);
+
+  //VERIFY we got the mesh boundary and domain in there
+  void_ref_ptr vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+                                         AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+                                         timestate, -1);
+  if (*vrTmp == NULL || *vrTmp != *this->mesh_domains[meshname])
+    throw InvalidFilesException("uda domain mesh not registered");
+
+  vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+                            AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+                            timestate, -1);
+  if (*vrTmp == NULL || *vrTmp != *this->mesh_boundaries[meshname])
+    throw InvalidFilesException("uda boundary mesh not registered");
 }
 
 
