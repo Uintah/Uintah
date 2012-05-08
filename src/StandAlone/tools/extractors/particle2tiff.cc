@@ -71,7 +71,7 @@ using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
-#define VERIFY 1
+//#define VERIFY 1
 
 //______________________________________________________________________
 //  
@@ -84,8 +84,8 @@ usage(const std::string& badarg, const std::string& progname)
          << "-uda <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h,        --help\n";
-    cerr << "  -v,        --variable:      <variable name>\n";
-    cerr << "  -m,        --material:      <material number> [defaults to 0]\n\n";
+    cerr << "  -v,        --variable:      [string] variable name\n";
+    cerr << "  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]\n\n";
     
     cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
@@ -98,7 +98,6 @@ usage(const std::string& badarg, const std::string& progname)
      
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -d,        --dir:           directory name where all output is kept [none]\n"; 
-    cerr << "  -vv,       --verbose:       (prints status of output)\n";
     cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
@@ -119,7 +118,6 @@ void write_tiff(const ostringstream& tname,
                 const IntVector& hi,
                 CCVariable<double>& ave){
 
-
   uint32 imageWidth = hi.x() - lo.x();
   uint32 imageHeight= hi.y() - lo.y();
   uint32 imageDepth = hi.z() - lo.z();
@@ -133,14 +131,14 @@ void write_tiff(const ostringstream& tname,
   float xres = 150;
   float yres = 150;
   uint16 spp = 1;                           // samples per pixel 1 for black & white or gray and 3 for color
-  uint16 bpp = 8;                          /// bits per pixel
+  uint16 depth = 1;                         // bytes per pixel;
   uint16 photo =  PHOTOMETRIC_MINISBLACK;
-  uint8 slice[imageWidth * imageHeight];
+   
+  depth = TIFFDataWidth(TIFF_FLOAT);        // 32 bit images are defined here 
+  float slice[ imageWidth * imageHeight];   // use float for 32 bit images
+  float buffer[imageWidth * imageHeight];
   
-    
-//  uint32 width  = imageWidth;
-//  uint32 height = imageHeight;
-  
+  tsize_t imageSize = imageHeight * imageWidth * depth;
   
   // Open the TIFF file
   TIFF *out;
@@ -156,7 +154,7 @@ void write_tiff(const ostringstream& tname,
 #ifdef VERIFY
     for (uint32 j = 0; j < imageHeight; j++){
       for(uint32 i = 0; i < imageWidth; i++){
-        slice[j * imageWidth + i] = j;
+        slice[j * imageWidth + i] = (float) j * (float) i;
       }
     }
 #else
@@ -167,46 +165,20 @@ void write_tiff(const ostringstream& tname,
       }
     }
 #endif
-
-#if 0
-// fill color tables
-    photo = PHOTOMETRIC_PALETTE;
-    int  colormapSize = imageWidth * imageHeight;
-    uint16 * redMap   = (uint16 *) _TIFFmalloc( 1<<bpp * sizeof(uint16));
-    uint16 * greenMap = (uint16 *) _TIFFmalloc( 1<<bpp * sizeof(uint16));
-    uint16 * blueMap  = (uint16 *) _TIFFmalloc( 1<<bpp * sizeof(uint16));
-    if (!redMap || !greenMap || !blueMap){
-      cout << "Can't allocate space for color component tables." << endl;
-      exit(1);
-    }
-
-    for (int i = 0; i < colormapSize; i++){
-      redMap[i]   = 257 * i;  
-      greenMap[i] = 257 * i;
-      blueMap[i]  = 257 * i;
-    }
-    TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);
-    TIFFSetField(out, TIFFTAG_COLORMAP,redMap, greenMap, blueMap );
     
-    
-   _TIFFfree(redMap);
-   _TIFFfree(greenMap);
-   _TIFFfree(blueMap);
-    
-#endif    
     // We need to set some values for basic tags before we can add any data
-    TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );        // set the width of the image       
-    TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );           // set the height of the image      
+    TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image       
+    TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );            // set the height of the image      
     TIFFSetField(out, TIFFTAG_ROWSPERSTRIP,     imageHeight);
-    TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,    bpp );                    // bits per channel
+    TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,    depth*8 );                // bits per channel
     TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL,  spp );                    // number of channels per pixel, 1 for B&W or gray
+
     TIFFSetField(out, TIFFTAG_SAMPLEFORMAT,     SAMPLEFORMAT_IEEEFP);     // IEEE floating point data
     TIFFSetField(out, TIFFTAG_ORIENTATION,      ORIENTATION_BOTLEFT);     // set the origin of the image.
 
   //=  TIFFSetField(out, TIFFTAG_COMPRESSION,      COMPRESSION_DEFLATE);
-    TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);  //WhiteIsZero. For bilevel and grayscale images: 0 is imaged as white.
-    
-    
+    TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);  
+        
     TIFFSetField(out, TIFFTAG_FILLORDER,        FILLORDER_MSB2LSB);
     TIFFSetField(out, TIFFTAG_PLANARCONFIG,     PLANARCONFIG_CONTIG);
 
@@ -220,30 +192,21 @@ void write_tiff(const ostringstream& tname,
     // slice number 
     TIFFSetField(out, TIFFTAG_PAGENUMBER, page, imageDepth);
 
-    
-    tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, slice, imageWidth * imageHeight);
+    tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, slice, imageSize);
     cout << "  writing slice: [" << page << "/"<< imageDepth << "]" << " width: " << imageWidth << " height " << imageHeight << endl;
-    
-    
-
-
-  #ifdef VERIFY
-     //__________________________________
+      
+ #ifdef VERIFY
+    //__________________________________
     // read data back in and verify that 
     // it's correct
-    tsize_t stripSize = TIFFStripSize (out);
-    tsize_t nStrips  = TIFFNumberOfStrips (out);
+    tsize_t nStrips   = TIFFNumberOfStrips (out);
     cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
     cout  << "    Now reading in slice and verify data: ";
-    unsigned long imageOffset = 0, result;
-    uint8 buffer[imageWidth * imageHeight];
 
-    for (int stripCount = 0; stripCount < nStrips; stripCount++){
-      if((result = TIFFReadRawStrip (out, (tstrip_t) stripCount, buffer + imageOffset, stripSize)) == -1){
-        fprintf(stderr, "Read error on input strip number %d\n", stripCount);
-        exit(42);
-      }
-      imageOffset += result;
+    long result;
+    if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
+      fprintf(stderr, "Read error on input strip number %d\n", 0);
+      exit(42);
     }
 
     for (uint32 j = 0; j < imageHeight; j++){
@@ -256,12 +219,11 @@ void write_tiff(const ostringstream& tname,
       }
     }
     cout << " PASSED " << endl;
-   #endif 
+ #endif 
    
    TIFFWriteDirectory(out);
    
   }  // page loop
-  
   TIFFClose(out);
 }
 
@@ -269,10 +231,12 @@ void write_tiff(const ostringstream& tname,
 //______________________________________________________________________
 //  compute the cell centered average of the particles in a cell for 1 patch
 //       D O U B L E   V E R S I O N
-void compute_ave(ParticleVariable<double>& var,
-                 CCVariable<double>& ave,
-                 ParticleVariable<Point>& pos,
-                 const Patch* patch) 
+void
+compute_ave( const int                             numMatls,
+             vector< ParticleVariable<double>* > & var,
+             CCVariable<double> &                  ave,
+             vector< ParticleVariable<Point>* >  & pos,
+             const Patch *                         patch ) 
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
@@ -283,30 +247,38 @@ void compute_ave(ParticleVariable<double>& var,
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
-  
-  ParticleSubset* pset = var.getParticleSubset();
-  if(pset->numParticles() > 0){
-    ParticleSubset::iterator iter = pset->begin();
-    
-    for( ;iter != pset->end(); iter++ ){
-      IntVector c;
-      patch->findCell(pos[*iter], c);
-      ave[c]    = ave[c] + var[*iter];
-      count[c] += 1;      
-    }
+cout << " AAA " << " numMatls " << numMatls << endl;
 
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      ave[c] = ave[c]/(count[c] + 1e-100);
+
+  for( int m = 0; m< numMatls; m++ ){
+    ParticleSubset* pset = var[m]->getParticleSubset();
+    
+    cout << " m: " << m << " *pset " << *pset << endl;
+    
+    if(pset->numParticles() > 0){
+      ParticleSubset::iterator iter = pset->begin();
+      for( ;iter != pset->end(); iter++ ){
+        IntVector c;
+        patch->findCell((*pos[m])[*iter], c);
+        ave[c]    = ave[c] + (*var[m])[*iter];
+        count[c] += 1;  
+      }
     }
   }
+
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter;
+    ave[c] = ave[c]/(count[c] + 1e-100);
+  }
 }
+
 //__________________________________
 //      V E C T O R   V E R S I O N  
-void compute_ave(ParticleVariable<Vector>& var,
-                 CCVariable<double>& ave,
-                 ParticleVariable<Point>& pos,
-                 const Patch* patch) 
+void compute_ave( const int                             numMatls,
+                  vector< ParticleVariable<Vector>* > & var,
+                  CCVariable<double>                  & ave,
+                  vector< ParticleVariable<Point>* >  & pos,
+                  const Patch                         * patch)
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
@@ -318,23 +290,66 @@ void compute_ave(ParticleVariable<Vector>& var,
   count.allocate(lo,hi);
   count.initialize(0.0);
   
-  ParticleSubset* pset = var.getParticleSubset();
-  if( pset->numParticles() > 0 ){
-    ParticleSubset::iterator iter = pset->begin();
+  for( int m = 0; m< numMatls; m++ ){
+    ParticleSubset* pset = var[m]->getParticleSubset();
     
-    for( ;iter != pset->end(); iter++ ){
-      IntVector c;
-      patch->findCell(pos[*iter], c);
-      ave[c]    = ave[c] + var[*iter].length();
-      count[c] += 1;      
-    }
+    if(pset->numParticles() > 0){
+      ParticleSubset::iterator iter = pset->begin();
 
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      ave[c] = ave[c]/(count[c] + 1e-100);
+      for( ;iter != pset->end(); iter++ ){
+        IntVector c;
+        patch->findCell((*pos[m])[*iter], c);
+        ave[c]    = ave[c] + (*var[m])[*iter].length();
+        count[c] += 1;      
+      }
     }
   }
+
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter;
+    ave[c] = ave[c]/(count[c] + 1e-100);
+  }
 }
+
+//__________________________________
+//       M A T R I X 3   V E R S I O N  
+void compute_ave( const int                          numMatls,
+                  vector< ParticleVariable<Matrix3>* > & var,
+                  CCVariable<double>                  & ave,
+                  vector< ParticleVariable<Point>* >  & pos,
+                  const Patch                         * patch)
+{
+  IntVector lo = patch->getExtraCellLowIndex();
+  IntVector hi = patch->getExtraCellHighIndex();
+  
+  ave.allocate(lo,hi);
+  ave.initialize(0.0);
+  
+  CCVariable<double> count;
+  count.allocate(lo,hi);
+  count.initialize(0.0);
+  
+  for( int m = 0; m< numMatls; m++ ){
+    ParticleSubset* pset = var[m]->getParticleSubset();
+    
+    if(pset->numParticles() > 0){
+      ParticleSubset::iterator iter = pset->begin();
+
+      for( ;iter != pset->end(); iter++ ){
+        IntVector c;
+        patch->findCell((*pos[m])[*iter], c);
+        ave[c]    = ave[c] + (*var[m])[*iter].Norm();
+        count[c] += 1;      
+      }
+    }
+  }
+
+  for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter;
+    ave[c] = ave[c]/(count[c] + 1e-100);
+  }
+}
+
 
 //__________________________________
 //  scale the pixel to 0->255
@@ -363,21 +378,18 @@ void scaleImage( const IntVector& lo,
 //______________________________________________________________________
 // Compute the average over all cell & patches in a level
 template<class T>
-void find_CC_ave(DataArchive* archive, 
-                 string& variable_name, 
-                 const Uintah::TypeDescription* subtype,
-                 int material, 
-                 const bool use_cellIndex_file, 
-                 int levelIndex,
-                 IntVector& var_start, 
-                 IntVector& var_end, 
-                 vector<IntVector> cells,
-                 unsigned long time_step,
-                 CCVariable<double>& aveLevel) 
-
+void find_CC_ave( DataArchive                   * archive, 
+                  string                        & variable_name, 
+                  const Uintah::TypeDescription * subtype,
+                  int                             matl, 
+                  const bool                      use_cellIndex_file, 
+                  int                             levelIndex,
+                  IntVector                     & var_start, 
+                  IntVector                     & var_end, 
+                  vector<IntVector>               cells,
+                  unsigned long                   time_step,
+                  CCVariable<double>            & aveLevel )
 {
-
-
   //__________________________________
   //  does the requested level exist
   bool levelExists = false;
@@ -410,25 +422,32 @@ void find_CC_ave(DataArchive* archive,
     
     //__________________________________
     // query all the data and compute the average over all the patches
-    vector<Variable*> pVar(patches.size());
-    vector<Variable*> ave(patches.size());
+    vector<CCVariable<double>*> ave(patches.size());
 
     for (int p = 0; p < patches.size(); p++) {
-      pVar[p] = scinew ParticleVariable<T>;
-      ave[p]  = scinew CCVariable<double>;
+      const Patch* patch = patches[p];
+    
+      int numMatls = archive->queryNumMaterials( patch, time_step);
+      
+      vector<ParticleVariable<T>*>     pVar(numMatls);
+      vector<ParticleVariable<Point>*> pos(numMatls);
 
-      archive->query( *(ParticleVariable<T>*)pVar[p], variable_name, 
-                      material, patches[p], time_step);
-                      
-      Variable* pos;
-      pos = scinew ParticleVariable<Point>;    
-      archive->query( *(ParticleVariable<Point>*)pos, "p.x", material, patches[p], time_step);
+      for (int m = 0; m < numMatls; m++){
+      
+        pVar[m] = scinew ParticleVariable<T>;
+        pos[m]  = scinew ParticleVariable<Point>;
+
+        archive->query( *(ParticleVariable<T>*)pVar[m], variable_name, 
+                      matl, patch, time_step);
+        
+        archive->query( *(ParticleVariable<Point>*)pos[m], "p.x", 
+                      matl, patch, time_step);
                   
+      }
+      ave[p] = scinew CCVariable<double>;
+
+      compute_ave( numMatls, pVar, *ave[p], pos, patch );
                   
-      compute_ave(*(ParticleVariable<T>*) pVar[p],
-                  *(CCVariable<double>*) ave[p],
-                  *(ParticleVariable<Point>*) pos,
-                  patches[p]);
     }  // patches loop
     
     
@@ -454,13 +473,8 @@ void find_CC_ave(DataArchive* archive,
         if (p == patches.size()) {
           continue;
         }
-
-        //aveLevel[c] = ( *ave[p] )[c];
-        aveLevel[c] = (*dynamic_cast<CCVariable<double>*>(ave[p]))[c];
-      }
-      
-      for (unsigned i = 0; i < pVar.size(); i++){
-        delete pVar[i];
+        
+       aveLevel[c] = (*dynamic_cast<CCVariable<double>*>(ave[p]))[c]; 
       }
     }
 
@@ -555,58 +569,64 @@ int main(int argc, char** argv)
   vector<IntVector> cells;
   string variable_name;
 
-  int material = 0;
+  int matl = 0;
   
   //__________________________________
   // Parse arguments
 
   for(int i=1;i<argc;i++){
-    string s=argv[i];
+    string s  =argv[i];
+    char* val=argv[++i];
+    
     if(s == "-v" || s == "--variable") {
-      variable_name = string(argv[++i]);
+      variable_name = string(val);
     } else if ( s == "-m" || s == "--material") {
-      material = atoi(argv[++i]);
+      if(string(val) == "a" || string(val) == "all" ){
+        matl = 999;
+      } else {
+        matl = atoi(val);
+      }
     } else if ( s == "-tlow" || s == "--timesteplow") {
-      time_start = strtoul(argv[++i],(char**)NULL,10);
+      time_start = strtoul(val,NULL,10);
     } else if ( s == "-thigh" || s == "--timestephigh") {
-      time_end = strtoul(argv[++i],(char**)NULL,10);
+      time_end = strtoul(val, NULL,10);
     } else if ( s == "-timestep" || s == "--timestep") {
-      int val = strtoul(argv[++i],(char**)NULL,10);
-      time_start = val;
-      time_end   = val;
+      int me = strtoul(val, NULL,10);
+      time_start = me;
+      time_end   = me;
     } else if ( s == "-istart" || s == "--indexs") {
-      int x = atoi(argv[++i]);
-      int y = atoi(argv[++i]);
-      int z = atoi(argv[++i]);
+      int x = atoi(val);
+      int y = atoi(val);
+      int z = atoi(val);
       var_start = IntVector(x,y,z);
     } else if ( s == "-iend" || s == "--indexe") {
-      int x = atoi(argv[++i]);
-      int y = atoi(argv[++i]);
-      int z = atoi(argv[++i]);
+      int x = atoi(val);
+      int y = atoi(val);
+      int z = atoi(val);
       findCellIndices = false;
       var_end = IntVector(x,y,z);
     } else if ( s == "-startPt" ) {
-      double x = atof(argv[++i]);
-      double y = atof(argv[++i]);
-      double z = atof(argv[++i]);
+      double x = atof(val);
+      double y = atof(val);
+      double z = atof(val);
       start_pt = Point(x,y,z);
     } else if ( s == "-endPt" ) {
-      double x = atof(argv[++i]);
-      double y = atof(argv[++i]);
-      double z = atof(argv[++i]);
+      double x = atof(val);
+      double y = atof(val);
+      double z = atof(val);
       end_pt = Point(x,y,z);
       findCellIndices = true;
     } else if ( s == "-l" || s == "--level" ) {
-      levelIndex = atoi(argv[++i]);
+      levelIndex = atoi(val);
     } else if ( s == "-h" || s == "--help" ) {
       usage( "", argv[0] );
     } else if ( s == "-uda" ) {
-      input_uda_name = string(argv[++i]);
+      input_uda_name = string(val);
     } else if ( s == "-d" || s == "--dir" ) {
-      base_dir_name = string(argv[++i]);
+      base_dir_name = string(val);
     } else if ( s == "--cellIndexFile" ) {
       use_cellIndex_file = true;
-      input_file_cellIndices = string(argv[++i]);
+      input_file_cellIndices = string(val);
     } else {
       usage(s, argv[0]);
     }
@@ -702,8 +722,7 @@ int main(int argc, char** argv)
       cout << "Timestep["<<time_step<<"] = " << times[time_step]<< endl;
       GridP grid = archive->queryGrid(time_step);
       const LevelP level = grid->getLevel(levelIndex);
-    
-    
+
       //__________________________________
       //  find indices to extract for
       if(findCellIndices) {
@@ -715,10 +734,11 @@ int main(int argc, char** argv)
             level->findInteriorCellIndexRange(var_start, var_end);
           }                   
         }
-      }                                  
+      }
 
       cout << vars[var_index] << ": " << types[var_index]->getName() 
-           << " being extracted for material "<<material
+           << " being extracted for material(s): "<< matl
+           << " ( 999 == all matls )"
            <<" at index "<<var_start << " to " << var_end <<endl;
  
       //__________________________________    
@@ -740,16 +760,19 @@ int main(int argc, char** argv)
       if(td->getType() == Uintah::TypeDescription::ParticleVariable){
         switch (subtype->getType()) {
         case Uintah::TypeDescription::double_type:
-          find_CC_ave<double>( archive, variable_name, subtype, material, use_cellIndex_file,
+          find_CC_ave<double>( archive, variable_name, subtype, matl, use_cellIndex_file,
                                levelIndex, var_start, var_end, cells, time_step, aveLevel);
           break;
         case Uintah::TypeDescription::Vector:
-          find_CC_ave<Vector>( archive, variable_name, subtype, material, use_cellIndex_file,
-                               levelIndex, var_start, var_end, cells, time_step, aveLevel);    
+          find_CC_ave<Vector>( archive, variable_name, subtype, matl, use_cellIndex_file,
+                               levelIndex, var_start, var_end, cells, time_step, aveLevel);
+          break;
+        case Uintah::TypeDescription::Matrix3:
+          find_CC_ave<Matrix3>( archive, variable_name, subtype, matl, use_cellIndex_file,
+                               levelIndex, var_start, var_end, cells, time_step, aveLevel);
           break;
         case Uintah::TypeDescription::Other:
           // don't break on else - flow to the error statement
-        case Uintah::TypeDescription::Matrix3:
         case Uintah::TypeDescription::bool_type:
         case Uintah::TypeDescription::short_int_type:
         case Uintah::TypeDescription::long_type:
@@ -765,7 +788,7 @@ int main(int argc, char** argv)
 
       if (base_dir_name != "-") {
         ostringstream tname;
-        tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step;
+        tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step << ".tif";
         
         //scaleImage( lo, hi, aveLevel );
         
