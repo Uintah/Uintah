@@ -78,6 +78,7 @@ DEALINGS IN THE SOFTWARE.
 #include <avtMTMDFileFormat.h>
 
 #include <vector>
+#include <map>
 #include <string>
 
 // ****************************************************************************
@@ -136,6 +137,10 @@ protected:
   // DATA MEMBERS
   bool useExtraCells;
   int currTimeStep;
+
+  //VisIt meshes (see https://visitbugs.ornl.gov/issues/52)
+  std::map<std::string, void_ref_ptr> mesh_domains;
+  std::map<std::string, void_ref_ptr> mesh_boundaries;
 
   // data that is not dependent on time
   DataArchive *archive;
