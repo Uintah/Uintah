@@ -2095,6 +2095,92 @@ will store the data for post processing is "rho."
 \begin{Verbatim}[fontsize=\footnotesize]
 ./timeextract -v rho_CC -i 5 0 0 -o rho -uda test01.uda.000
 \end{Verbatim}
+
+%__________________________________
+\section{particle2tiff} 
+particle2tiff is used to extract a user specified particle variable, compute a cell centered
+average and write that data to a series of tiff slices that can be used in further image processing.  
+Each slice in the tiff file corresponds to a plane in $z$ direction in the computational domain.  Each 
+pixel in the tiff image represents a cell in the computational domain.
+  
+The data types supported are\TT{ double, Vector, Matrix3}, and the equations for computing the cell-centered average are:
+\begin{eqnarray}
+  CC_{ave} =& {\raise1.5pt\hbox{$\scriptstyle\sum_{p=1}^{nParticles}$}} Double[p]          \over {nParticles} \nonumber \\
+  CC_{ave} =& {\raise1.5pt\hbox{$\scriptstyle\sum_{p=1}^{nParticles}$}} Vector[p].length() \over {nParticles} \nonumber \\
+  CC_{ave} =& {\raise1.5pt\hbox{$\scriptstyle\sum_{p=1}^{nParticles}$}} Matrix3[p].Norm()  \over {nParticles}\nonumber
+\end{eqnarray}
+
+The usage is
+\begin{Verbatim}[fontsize=\footnotesize]
+Usage: tools/extractors/particle2tiff [options] -uda <archive file>
+
+Valid options are:
+  -h,        --help
+  -v,        --variable:      [string] variable name
+  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]
+
+  -max                        [double] (maximum clamp value)
+  -min                        [double] (minimum clamp value)
+  -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]
+  -thigh,    --timestephigh:  [int] (end output timestep) [defaults to last timestep]
+  -timestep, --timestep:      [int] (only outputs timestep)  [defaults to 0]
+
+  -istart,   --indexs:        <i> <j> <k> [ints] (starting point, cell index) [defaults to 0 0 0]
+  -iend,     --indexe:        <i> <j> <k> [ints] (end-point, cell index) [defaults to 0 0 0]
+  -startPt                    <x> <y> <z> [doubles] (starting point in physical coordinates)
+  -endPt                      <x> <y> <z> [doubles] (end-point in physical coordinates)
+
+  -l,        --level:         [int] (level index to query range from) [defaults to 0]
+  -d,        --dir:           output directory name [none]
+  --cellIndexFile:            <filename> (file that contains a list of cell indices)
+                                   [int 100, 43, 0]
+                                   [int 101, 43, 0]
+                                   [int 102, 44, 0]
+----------------------------------------------------------------------------------------
+ For particle variables the average over all particles in a cell is returned.
+ \end{Verbatim} 
+
+The following example shows the usage of particle2tiff for averaging the particle stress (p.stress)
+for all materials over the interior cells of the computational domain.  A series of 3 tiff slices 
+are saved for every timestep in the directory``output." 
+\begin{Verbatim}[fontsize=\scriptsize]
+tools/extractors/particle2tiff -m all -d output -v p.stress -uda disks2mat4patch.uda.000/
+There are 14 timesteps
+ Initializing time_step_upper to 13
+Removed directory: output
+Created directory: output
+Timestep[0] = 2.08084e-05
+  p.stress: ParticleVariable<Matrix3> being extracted and averaged for material(s): 0, 1,  ........
+  writing slice: [0/3] width: 256 height 256
+  writing slice: [1/3] width: 256 height 256
+  writing slice: [2/3] width: 256 height 256
+Timestep[1] = 0.0100184
+  p.stress: ParticleVariable<Matrix3> being extracted and averaged for material(s): 0, 1,  ........
+  writing slice: [0/3] width: 256 height 256
+  writing slice: [1/3] width: 256 height 256
+  writing slice: [2/3] width: 256 height 256
+Timestep[2] = 0.0200161
+  p.stress: ParticleVariable<Matrix3> being extracted and averaged for material(s): 0, 1,  ........
+  writing slice: [0/3] width: 256 height 256
+  writing slice: [1/3] width: 256 height 256
+  writing slice: [2/3] width: 256 height 256
+Timestep[3] = 0.0300137
+  p.stress: ParticleVariable<Matrix3> being extracted and averaged for material(s): 0, 1,  ........
+  writing slice: [0/3] width: 256 height 256
+  writing slice: [1/3] width: 256 height 256
+  writing slice: [2/3] width: 256 height 256
+\end{Verbatim}
+A montage showing the average particle stress computed from particle2tiff is shown
+in Fig. \ref{fig:p2tiff}.  In this simulation two similar disks collided at the center of the domain.
+\vspace{-0.5in}
+\begin{figure}
+  \includegraphics[scale=.60]{particle2tiff.png}
+  \caption{Montage showing the averaged particle stress for two cylindrical disks colliding.}
+  \label{fig:p2tiff}
+\end{figure}
+
+
+
 %\section{compare\_uda}
 
 %__________________________________
