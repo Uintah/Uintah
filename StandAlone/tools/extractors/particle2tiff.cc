@@ -73,6 +73,14 @@ using namespace Uintah;
 
 //#define VERIFY 1
 
+
+
+struct clampVals{
+  double minVal;
+  double maxVal;
+  ~clampVals() {}
+};
+
 //______________________________________________________________________
 //  
 void
@@ -86,18 +94,20 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -h,        --help\n";
     cerr << "  -v,        --variable:      [string] variable name\n";
     cerr << "  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]\n\n";
+    cerr << "  -max                        [double] (maximum clamp value)\n";
+    cerr << "  -min                        [double] (minimum clamp value)\n";    
     
-    cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
-    cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
-    cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int)  [defaults to 0]\n\n";
+    cerr << "  -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]\n";
+    cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep) [defaults to last timestep]\n";
+    cerr << "  -timestep, --timestep:      [int] (only outputs timestep)  [defaults to 0]\n\n";
     
     cerr << "  -istart,   --indexs:        <i> <j> <k> [ints] starting point cell index  [defaults to 0 0 0]\n";
     cerr << "  -iend,     --indexe:        <i> <j> <k> [ints] end-point cell index [defaults to 0 0 0]\n";
-    cerr << "  -startPt                    <x> <y> <z> [doubles] starting point of line in physical coordinates\n";
-    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point of line in physical coordinates\n\n"; 
+    cerr << "  -startPt                    <x> <y> <z> [doubles] starting point in physical coordinates\n";
+    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point in physical coordinates\n\n"; 
      
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -d,        --dir:           directory name where all output is kept [none]\n"; 
+    cerr << "  -d,        --dir:           output directory name [none]\n"; 
     cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
@@ -161,14 +171,15 @@ void write_tiff(const ostringstream& tname,
     for (uint32 j = 0; j < imageHeight; j++){
       for(uint32 i = 0; i < imageWidth; i++){
         IntVector c = IntVector(i,j,page) + lo;
+    //    cout << " c " << c << " lo " << lo << endl;
         slice[j * imageWidth + i] = ave[c];
       }
     }
 #endif
     
     // We need to set some values for basic tags before we can add any data
-    TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image       
-    TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );            // set the height of the image      
+    TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image
+    TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );            // set the height of the image
     TIFFSetField(out, TIFFTAG_ROWSPERSTRIP,     imageHeight);
     TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,    depth*8 );                // bits per channel
     TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL,  spp );                    // number of channels per pixel, 1 for B&W or gray
@@ -232,11 +243,12 @@ void write_tiff(const ostringstream& tname,
 //  compute the cell centered average of the particles in a cell for 1 patch
 //       D O U B L E   V E R S I O N
 void
-compute_ave( const int                             numMatls,
+compute_ave( vector<int>                         & matls,
+             const clampVals                     * clamp,
              vector< ParticleVariable<double>* > & var,
-             CCVariable<double> &                  ave,
+             CCVariable<double>                  & ave,
              vector< ParticleVariable<Point>* >  & pos,
-             const Patch *                         patch ) 
+             const Patch                         * patch ) 
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
@@ -247,13 +259,14 @@ compute_ave( const int                             numMatls,
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
-cout << " AAA " << " numMatls " << numMatls << endl;
 
-
-  for( int m = 0; m< numMatls; m++ ){
+  vector<int>::iterator iter;
+  for (iter = matls.begin(); iter < matls.end(); iter++) {
+    int m = *iter;
+    
     ParticleSubset* pset = var[m]->getParticleSubset();
     
-    cout << " m: " << m << " *pset " << *pset << endl;
+    //cout << " m: " << m << " *pset " << *pset << endl;
     
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
@@ -269,12 +282,19 @@ cout << " AAA " << " numMatls " << numMatls << endl;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     ave[c] = ave[c]/(count[c] + 1e-100);
+    
+    // apply clamps to data only in cells where there are particles
+    if(count[c] > 0.0){
+      ave[c] = min(ave[c], clamp->maxVal);
+      ave[c] = max(ave[c], clamp->minVal);
+    } 
   }
 }
 
 //__________________________________
 //      V E C T O R   V E R S I O N  
-void compute_ave( const int                             numMatls,
+void compute_ave( vector<int>                         & matls,
+                  const clampVals                     * clamp,
                   vector< ParticleVariable<Vector>* > & var,
                   CCVariable<double>                  & ave,
                   vector< ParticleVariable<Point>* >  & pos,
@@ -290,7 +310,10 @@ void compute_ave( const int                             numMatls,
   count.allocate(lo,hi);
   count.initialize(0.0);
   
-  for( int m = 0; m< numMatls; m++ ){
+  vector<int>::iterator iter;
+  for (iter = matls.begin(); iter < matls.end(); iter++) {
+    int m = *iter;
+  
     ParticleSubset* pset = var[m]->getParticleSubset();
     
     if(pset->numParticles() > 0){
@@ -300,7 +323,7 @@ void compute_ave( const int                             numMatls,
         IntVector c;
         patch->findCell((*pos[m])[*iter], c);
         ave[c]    = ave[c] + (*var[m])[*iter].length();
-        count[c] += 1;      
+        count[c] += 1; 
       }
     }
   }
@@ -308,16 +331,23 @@ void compute_ave( const int                             numMatls,
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     ave[c] = ave[c]/(count[c] + 1e-100);
+    
+    // apply clamps to data only in cells where there are particles
+    if(count[c] > 0.0){
+      ave[c] = min(ave[c], clamp->maxVal);
+      ave[c] = max(ave[c], clamp->minVal);
+    } 
   }
 }
 
 //__________________________________
 //       M A T R I X 3   V E R S I O N  
-void compute_ave( const int                          numMatls,
+void compute_ave( vector<int>                          & matls,
+                  const clampVals                      * clamp,
                   vector< ParticleVariable<Matrix3>* > & var,
-                  CCVariable<double>                  & ave,
-                  vector< ParticleVariable<Point>* >  & pos,
-                  const Patch                         * patch)
+                  CCVariable<double>                   & ave,
+                  vector< ParticleVariable<Point>* >   & pos,
+                  const Patch                          * patch)
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
@@ -329,7 +359,10 @@ void compute_ave( const int                          numMatls,
   count.allocate(lo,hi);
   count.initialize(0.0);
   
-  for( int m = 0; m< numMatls; m++ ){
+  vector<int>::iterator iter;
+  for (iter = matls.begin(); iter < matls.end(); iter++) {
+    int m = *iter;    
+  
     ParticleSubset* pset = var[m]->getParticleSubset();
     
     if(pset->numParticles() > 0){
@@ -347,6 +380,12 @@ void compute_ave( const int                          numMatls,
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     ave[c] = ave[c]/(count[c] + 1e-100);
+    
+    // apply clamps to data only in cells where there are particles
+    if(count[c] > 0.0){
+      ave[c] = min(ave[c], clamp->maxVal);
+      ave[c] = max(ave[c], clamp->minVal);
+    } 
   }
 }
 
@@ -381,8 +420,9 @@ template<class T>
 void find_CC_ave( DataArchive                   * archive, 
                   string                        & variable_name, 
                   const Uintah::TypeDescription * subtype,
-                  int                             matl, 
-                  const bool                      use_cellIndex_file, 
+                  vector<int>                   & matls, 
+                  const bool                      use_cellIndex_file,
+                  const clampVals               * clampVals,
                   int                             levelIndex,
                   IntVector                     & var_start, 
                   IntVector                     & var_end, 
@@ -426,27 +466,27 @@ void find_CC_ave( DataArchive                   * archive,
 
     for (int p = 0; p < patches.size(); p++) {
       const Patch* patch = patches[p];
-    
-      int numMatls = archive->queryNumMaterials( patch, time_step);
-      
-      vector<ParticleVariable<T>*>     pVar(numMatls);
-      vector<ParticleVariable<Point>*> pos(numMatls);
 
-      for (int m = 0; m < numMatls; m++){
+      vector<ParticleVariable<T>*>     pVar(matls.size());
+      vector<ParticleVariable<Point>*> pos(matls.size());
+      
+      vector<int>::iterator iter;
+      for (iter = matls.begin(); iter < matls.end(); iter++) {
+        int m = *iter;
       
         pVar[m] = scinew ParticleVariable<T>;
         pos[m]  = scinew ParticleVariable<Point>;
 
         archive->query( *(ParticleVariable<T>*)pVar[m], variable_name, 
-                      matl, patch, time_step);
+                        m, patch, time_step);
         
         archive->query( *(ParticleVariable<Point>*)pos[m], "p.x", 
-                      matl, patch, time_step);
+                        m, patch, time_step);
                   
       }
       ave[p] = scinew CCVariable<double>;
 
-      compute_ave( numMatls, pVar, *ave[p], pos, patch );
+      compute_ave( matls, clampVals, pVar, *ave[p], pos, patch );
                   
     }  // patches loop
     
@@ -568,6 +608,10 @@ int main(int argc, char** argv)
   int levelIndex = 0;
   vector<IntVector> cells;
   string variable_name;
+  
+  clampVals* clamps = scinew clampVals();
+  clamps->minVal = -DBL_MAX;
+  clamps->maxVal = DBL_MAX;
 
   int matl = 0;
   
@@ -576,58 +620,63 @@ int main(int argc, char** argv)
 
   for(int i=1;i<argc;i++){
     string s  =argv[i];
-    char* val=argv[++i];
     
     if(s == "-v" || s == "--variable") {
-      variable_name = string(val);
+      variable_name = string(argv[++i]);
     } else if ( s == "-m" || s == "--material") {
-      if(string(val) == "a" || string(val) == "all" ){
+      string me = string(argv[++i]);
+      if( me == "a" || me == "all" ){
         matl = 999;
       } else {
-        matl = atoi(val);
+        matl = atoi(argv[++i]);
       }
     } else if ( s == "-tlow" || s == "--timesteplow") {
-      time_start = strtoul(val,NULL,10);
+      time_start = strtoul(argv[++i],NULL,10);
     } else if ( s == "-thigh" || s == "--timestephigh") {
-      time_end = strtoul(val, NULL,10);
+      time_end = strtoul(argv[++i], NULL,10);
     } else if ( s == "-timestep" || s == "--timestep") {
-      int me = strtoul(val, NULL,10);
+      int me = strtoul(argv[++i], NULL,10);
       time_start = me;
       time_end   = me;
     } else if ( s == "-istart" || s == "--indexs") {
-      int x = atoi(val);
-      int y = atoi(val);
-      int z = atoi(val);
+      int x = atoi(argv[++i]);
+      int y = atoi(argv[++i]);
+      int z = atoi(argv[++i]);
       var_start = IntVector(x,y,z);
     } else if ( s == "-iend" || s == "--indexe") {
-      int x = atoi(val);
-      int y = atoi(val);
-      int z = atoi(val);
+      int x = atoi(argv[++i]);
+      int y = atoi(argv[++i]);
+      int z = atoi(argv[++i]);
+      
       findCellIndices = false;
       var_end = IntVector(x,y,z);
     } else if ( s == "-startPt" ) {
-      double x = atof(val);
-      double y = atof(val);
-      double z = atof(val);
+      double x = atof(argv[++i]);
+      double y = atof(argv[++i]);
+      double z = atof(argv[++i]);
       start_pt = Point(x,y,z);
     } else if ( s == "-endPt" ) {
-      double x = atof(val);
-      double y = atof(val);
-      double z = atof(val);
+      double x = atof(argv[++i]);
+      double y = atof(argv[++i]);
+      double z = atof(argv[++i]);
       end_pt = Point(x,y,z);
       findCellIndices = true;
     } else if ( s == "-l" || s == "--level" ) {
-      levelIndex = atoi(val);
+      levelIndex = atoi(argv[++i]);
     } else if ( s == "-h" || s == "--help" ) {
       usage( "", argv[0] );
     } else if ( s == "-uda" ) {
-      input_uda_name = string(val);
+      input_uda_name = string(argv[++i]);
     } else if ( s == "-d" || s == "--dir" ) {
-      base_dir_name = string(val);
+      base_dir_name = string(argv[++i]);
     } else if ( s == "--cellIndexFile" ) {
       use_cellIndex_file = true;
-      input_file_cellIndices = string(val);
-    } else {
+      input_file_cellIndices = string(argv[++i]);
+    } else if ( s == "-max" ) {
+      clamps->maxVal = atof(argv[++i]);
+    } else if ( s == "-min" ) {
+      clamps->minVal = atof(argv[++i]);
+    }else {
       usage(s, argv[0]);
     }
   }
@@ -654,6 +703,8 @@ int main(int argc, char** argv)
         break;
       }
     }
+    
+    
     //__________________________________
     // bulletproofing
     if (!var_found) {
@@ -686,7 +737,7 @@ int main(int argc, char** argv)
     if (time_end == (unsigned long)-1) {
       cout <<"There are " << index.size() << " timesteps\n Initializing time_step_upper to "<<times.size()-1<<"\n";
       time_end = times.size() - 1;
-    }      
+    }
 
     //__________________________________
     // bullet proofing 
@@ -703,12 +754,12 @@ int main(int argc, char** argv)
     // create the base output directory
     if (base_dir_name != "-") {
       if( Dir::removeDir(base_dir_name.c_str() ) ){
-        cout << "Removed: "<<base_dir_name<<"\n";
+        cout << "Removed directory: "<<base_dir_name<<"\n";
       }
       base_dir = Dir::create(base_dir_name);
       
       if(base_dir.exists() ) {
-        cout << "Created Directory: "<<base_dir_name<<"\n";
+        cout << "Created directory: "<<base_dir_name<<"\n";
       }else{
         cout << "Failed creating  base output directory: "<<base_dir_name<<"\n";
         exit(1);
@@ -727,21 +778,40 @@ int main(int argc, char** argv)
       //  find indices to extract for
       if(findCellIndices) {
         if( level  ){ 
-          if (start_pt != Point(-9,-9,-9) ) {         
+          if (start_pt != Point(-9,-9,-9) ) {
             var_start=level->getCellIndex(start_pt);
             var_end  =level->getCellIndex(end_pt); 
           } else{
             level->findInteriorCellIndexRange(var_start, var_end);
-          }                   
+          }
         }
       }
+      
+      
+      
+      //__________________________________
+      //  find the number of matls at this timestep
+      vector<int> matls;
+      if(matl == 999){       // all matls
+        const Patch* patch = *(level->patchesBegin());
+        int numMatls = archive->queryNumMaterials( patch, time_step);
+        for (int m = 0; m< numMatls; m++ ){
+          matls.push_back(m);
+        }
+      } else {
+        matls.push_back(matl);
+      }
 
-      cout << vars[var_index] << ": " << types[var_index]->getName() 
-           << " being extracted for material(s): "<< matl
-           << " ( 999 == all matls )"
-           <<" at index "<<var_start << " to " << var_end <<endl;
+      cout << "  " << vars[var_index] << ": " << types[var_index]->getName() 
+           << " being extracted and averaged for material(s): ";
+           
+      vector<int>::iterator m;
+      for (m = matls.begin(); m < matls.end(); m++) {
+        cout << *m << ", "; 
+      }
+      cout  <<" between cells "<<var_start << " and " << var_end <<endl;
  
-      //__________________________________    
+      //__________________________________
       // read in cell indices from a file
       if ( use_cellIndex_file) {
         readCellIndicies(input_file_cellIndices, cells);
@@ -760,16 +830,16 @@ int main(int argc, char** argv)
       if(td->getType() == Uintah::TypeDescription::ParticleVariable){
         switch (subtype->getType()) {
         case Uintah::TypeDescription::double_type:
-          find_CC_ave<double>( archive, variable_name, subtype, matl, use_cellIndex_file,
-                               levelIndex, var_start, var_end, cells, time_step, aveLevel);
+          find_CC_ave<double>( archive, variable_name, subtype, matls, use_cellIndex_file,
+                               clamps, levelIndex, var_start, var_end, cells, time_step, aveLevel);
           break;
         case Uintah::TypeDescription::Vector:
-          find_CC_ave<Vector>( archive, variable_name, subtype, matl, use_cellIndex_file,
-                               levelIndex, var_start, var_end, cells, time_step, aveLevel);
+          find_CC_ave<Vector>( archive, variable_name, subtype, matls, use_cellIndex_file,
+                               clamps, levelIndex, var_start, var_end, cells, time_step, aveLevel);
           break;
         case Uintah::TypeDescription::Matrix3:
-          find_CC_ave<Matrix3>( archive, variable_name, subtype, matl, use_cellIndex_file,
-                               levelIndex, var_start, var_end, cells, time_step, aveLevel);
+          find_CC_ave<Matrix3>( archive, variable_name, subtype, matls, use_cellIndex_file,
+                               clamps, levelIndex, var_start, var_end, cells, time_step, aveLevel);
           break;
         case Uintah::TypeDescription::Other:
           // don't break on else - flow to the error statement
@@ -792,7 +862,7 @@ int main(int argc, char** argv)
         
         //scaleImage( lo, hi, aveLevel );
         
-        write_tiff(tname, lo, hi, aveLevel);            // write the tiff out
+        write_tiff(tname, var_start, var_end, aveLevel);            // write the tiff out
       }
     }  // timestep loop     
     
