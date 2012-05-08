@@ -106,6 +106,8 @@ echo "now cleaning up"
 find . -name "*.out" -exec /bin/rm -f {} \;
 find . -name "*.aux" -exec /bin/rm -f {} \;
 find . -name "*.log" -exec /bin/rm -r {} \;
+find . -name "*.bbl" -exec /bin/rm -r {} \;
+find . -name "*.blg" -exec /bin/rm -r {} \;
 
 echo "User error = " ${user_error}
 echo "Install error = " ${install_error}
