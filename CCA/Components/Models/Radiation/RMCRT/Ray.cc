@@ -357,11 +357,12 @@ Ray::initProperties( const ProcessorGroup* pc,
 void
 Ray::sched_sigmaT4( const LevelP& level, 
                     SchedulerP& sched,
-                    Task::WhichDW temp_dw )
+                    Task::WhichDW temp_dw,
+                    const bool includeEC )
 {
 
   std::string taskname = "Ray::sched_sigmaT4";
-  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw );
+  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw, includeEC );
 
   printSchedule(level,dbg,taskname);
   
@@ -377,9 +378,10 @@ void
 Ray::sigmaT4( const ProcessorGroup*,
               const PatchSubset* patches,           
               const MaterialSubset*,                
-              DataWarehouse* old_dw, 
+              DataWarehouse* , 
               DataWarehouse* new_dw,
-              Task::WhichDW which_temp_dw )               
+              Task::WhichDW which_temp_dw,
+              const bool includeEC )               
 {
 
   for (int p=0; p < patches->size(); p++){
@@ -395,8 +397,14 @@ Ray::sigmaT4( const ProcessorGroup*,
     DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
     temp_dw->get(temp,              d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
     new_dw->allocateAndPut(sigmaT4, d_sigmaT4_label,      d_matl, patch);
+    
+    // set the cell iterator
+    CellIterator iter = patch->getCellIterator();
+    if(includeEC){
+      iter = patch->getExtraCellIterator();
+    }
 
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (;!iter.done();iter++){
       const IntVector& c = *iter;
       double T_sqrd = temp[c] * temp[c];
       sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
@@ -1364,20 +1372,22 @@ Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &
 
 
 //---------------------------------------------------------------------------
-// 
+//   Set the the boundary conditions for sigmaT4 & abskg.
 //---------------------------------------------------------------------------
 void
 Ray::sched_setBoundaryConditions( const LevelP& level, 
-                                  SchedulerP& sched )
+                                  SchedulerP& sched,
+                                  Task::WhichDW temp_dw )
 {
 
   std::string taskname = "Ray::sched_setBoundaryConditions";
-  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions );
+  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, temp_dw );
 
   printSchedule(level,dbg,taskname);
 
-  tsk->modifies(d_sigmaT4_label); 
-  tsk->modifies(d_abskgLabel);
+  tsk->requires( temp_dw, d_temperatureLabel, Ghost::None,0 );
+  tsk->modifies( d_sigmaT4_label ); 
+  tsk->modifies( d_abskgLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1387,7 +1397,8 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
                             const PatchSubset* patches,           
                             const MaterialSubset*,                
                             DataWarehouse*,                
-                            DataWarehouse* new_dw )               
+                            DataWarehouse* new_dw,
+                            Task::WhichDW temp_dw )               
 {
 
   for (int p=0; p < patches->size(); p++){
@@ -1403,14 +1414,21 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 
       double sigma_over_pi = _sigma/M_PI;
 
+      constCCVariable<double> varTmp;
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4Pi;
-
+      
+      // get a copy of the temperature  and set the BC
+      // the temperature will not be put back in the DW.
+      DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
+      t_dw->get(varTmp, d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
       new_dw->allocateTemporary(temp,  patch);
-      new_dw->getModifiable( abskg,     d_abskgLabel,    d_matl, patch );
+      temp.copyData(varTmp);
+      
+      new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch );
       new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
-
+      
       setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
 

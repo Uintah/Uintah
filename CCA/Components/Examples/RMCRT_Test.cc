@@ -273,22 +273,24 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     // coarsen data to the coarser levels.  
     // do it in reverse order
+    Task::WhichDW temp_dw = Task::NewDW;
+    
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       d_RMCRT->sched_CoarsenAll (level, sched);
-      d_RMCRT->sched_setBoundaryConditions( level, sched );
+      d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw );
     }
+    
+    //__________________________________
+    //  compute the extents of the rmcrt region of interest
+    //  on the finest level
+    d_RMCRT->sched_ROI_Extents( fineLevel, sched );
     
     // only schedule RMCRT and pseudoCFD on the finest level
     Task::WhichDW abskg_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     bool modifies_divQ       = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
-    
-    //__________________________________
-    //  compute the extents of the rmcrt region of interest
-    //  on the finest level
-    d_RMCRT->sched_ROI_Extents( fineLevel, sched );
     
     schedulePseudoCFD(  sched, finestPatches, matls );
   }
