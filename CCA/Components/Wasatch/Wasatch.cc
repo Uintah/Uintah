@@ -48,6 +48,9 @@
 //-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
+#ifdef ENABLE_THREADS
+#include <spatialops/ThreadPool.h>
+#endif
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -223,6 +226,21 @@ namespace Wasatch{
 
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
     if (!wasatchParams) return;
+
+    // threaded execution
+#   ifdef ENABLE_THREADS
+    {
+      using namespace SpatialOps;
+      int nThreadExprLib=1, nThreadNebo=0;
+      if( wasatchParams->findBlock("TaskParallelThreadCount") )
+        wasatchParams->get("TaskParallelThreadCount", nThreadExprLib );
+      if( wasatchParams->findBlock("FieldParallelThreadCount") )
+        wasatchParams->get("FieldParallelThreadCount", nThreadNebo );
+      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
+      tprm.resize_active( ThreadPool::self(),     std::max(1,nThreadExprLib) );
+      tprm.resize_active( ThreadPoolFIFO::self(), std::max(0,nThreadNebo   ) );
+    }
+#   endif
 
     //
     // Material
