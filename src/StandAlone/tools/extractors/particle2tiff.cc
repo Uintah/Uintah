@@ -30,16 +30,29 @@ DEALINGS IN THE SOFTWARE.
 /*______________________________________________________________________
  *  particle2tiff.cc: 
  *
- *  A post processing utility takes particle data and averages all the 
- *  particle data in a computational cell to the cell center.  This CC data is then output
- *  in X format.
+ *  A post processing utility for udas containing particle data.  
+ *  The utility, tools/extractors/particle2tiff, averages particle data to the cell center and writes 
+ *  this data to a 32-bit tiff file.  The tiff file contains 'slices' where each slice corresponds 
+ *  to a plane in the z-direction.  The grayscale value of each pixel represents the 
+ *  averaged value for that computational cell.  You can use the 
+ *  image processing tool 'imageJ' to further analyze the tiffs.  Note, not all 
+ *  tools can handle 32-bit images.  Currently, particle variables of type 
+ *  double, Vector and Matrix3 are supported.  The equations for averaging 
+ *  these data are:
+ * 
+ * cc_ave = sum( double[p].         ) /( # particles in cell )
+ * cc_ave = sum( Vector[p].length() ) /( # particles in cell )
+ * cc_ave = sum( Matrix3[p].Norm()  ) /( # particles in cell )
+ *
+ * The users can select what material to analyze, the temporal and physical range to examine, and
+ * clamp the averaged data.
  *
  *  Written by:
  *   Todd Harman
  *   Department of Mechancial Engineering 
  *   by stealing lineextract from:
  *   University of Utah
- *   June 2012
+ *   May 2012
  *
  *  Copyright (C) 2012 U of U
 *______________________________________________________________________*/
@@ -392,6 +405,7 @@ void compute_ave( vector<int>                          & matls,
 
 //__________________________________
 //  scale the pixel to 0->255
+//  CURRENTLY NOT USED
 void scaleImage( const IntVector& lo,
                  const IntVector& hi,
                  CCVariable<double>& ave ) {
@@ -409,9 +423,7 @@ void scaleImage( const IntVector& lo,
     IntVector c = *iter;
     ave[c] = 255 * fabs(ave[c] - minVal)/range;
     //cout << c << " aveScaled: " << ave[c] << endl;
-  }  
-  
-  
+  }
 }
 
 //______________________________________________________________________
@@ -482,11 +494,19 @@ void find_CC_ave( DataArchive                   * archive,
         
         archive->query( *(ParticleVariable<Point>*)pos[m], "p.x", 
                         m, patch, time_step);
-                  
+                        
+          
       }
       ave[p] = scinew CCVariable<double>;
 
       compute_ave( matls, clampVals, pVar, *ave[p], pos, patch );
+      
+     // cleanup
+      for (iter = matls.begin(); iter < matls.end(); iter++) {
+        int m = *iter;
+        delete pVar[m];
+        delete pos[m];
+      }
                   
     }  // patches loop
     
@@ -573,14 +593,6 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
 }
 //______________________________________________________________________
 //______________________________________________________________________
-//    Notes:
-// Now the material index is kind of a hard thing.  There is no way
-// to reliably determine a default material.  Materials are defined
-// on the patch for each variable, so this subset of materials could
-// change over patches.  We can guess, that there will be a material
-// 0.  This shouldn't cause the program to crash.  It will spit out
-// an exception and exit gracefully.
-
 
 int main(int argc, char** argv)
 {
@@ -787,8 +799,6 @@ int main(int argc, char** argv)
         }
       }
       
-      
-      
       //__________________________________
       //  find the number of matls at this timestep
       vector<int> matls;
@@ -873,4 +883,8 @@ int main(int argc, char** argv)
     cerr << "Caught unknown exception\n";
     exit(1);
   }
+  
+  // cleanup
+  delete clamps;
+  
 }
