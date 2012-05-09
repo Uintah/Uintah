@@ -2098,10 +2098,15 @@ will store the data for post processing is "rho."
 
 %__________________________________
 \section{particle2tiff} 
-particle2tiff is used to extract a user specified particle variable, compute a cell centered
-average and write that data to a series of tiff slices that can be used in further image processing.  
-Each slice in the tiff file corresponds to a plane in $z$ direction in the computational domain.  Each 
-pixel in the tiff image represents a cell in the computational domain.
+particle2tiff is used to extract a user specified particle variable,
+compute a cell centered average and write that data to a series of tiff
+slices that can be used in further image processing.  Each slice in the tiff
+file corresponds to a plane in $z$ direction in the computational domain.
+Each pixel in the tiff image represents a cell in the computational domain.
+This utility depends on \TT{libtiff4, libtiff4-dev, \& libtiffxx0c2}, please
+verify that they are installed on your system before configuring and compiling.
+
+
   
 The data types supported are\TT{ double, Vector, Matrix3}, and the equations for computing the cell-centered average are:
 \begin{eqnarray}
@@ -2110,7 +2115,7 @@ The data types supported are\TT{ double, Vector, Matrix3}, and the equations for
   CC_{ave} =& {\raise1.5pt\hbox{$\scriptstyle\sum_{p=1}^{nParticles}$}} Matrix3[p].Norm()  \over {nParticles}\nonumber
 \end{eqnarray}
 
-The usage is
+\noindent The usage is
 \begin{Verbatim}[fontsize=\footnotesize]
 Usage: tools/extractors/particle2tiff [options] -uda <archive file>
 
@@ -2178,7 +2183,6 @@ in Fig. \ref{fig:p2tiff}.  In this simulation two similar disks collided at the 
   \caption{Montage showing the averaged particle stress for two cylindrical disks colliding.}
   \label{fig:p2tiff}
 \end{figure}
-
 
 
 %\section{compare\_uda}
