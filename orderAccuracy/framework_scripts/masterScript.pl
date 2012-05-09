@@ -103,7 +103,8 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
 # loop over each component 
  my $c=0;
  for($c = 0; $c<=$#components; $c++){
-
+   chdir($curr_path);
+   
    my $component = $components[$c];
    mkpath($component) || die "cannot mkpath($component) $!";
    chdir($component);
