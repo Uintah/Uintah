@@ -464,14 +464,14 @@ Arches::problemSetup(const ProblemSpecP& params,
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );
 
-				//Add any table lookup species to the table lookup list:
-				std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();
-				for ( std::vector<std::string>::iterator iter = tbl_lookup.begin();
-						iter != tbl_lookup.end(); ++iter ){
+                                //Add any table lookup species to the table lookup list:
+                                std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();
+                                for ( std::vector<std::string>::iterator iter = tbl_lookup.begin();
+                                                iter != tbl_lookup.end(); ++iter ){
 
-					d_lab->add_species( *iter );
+                                        d_lab->add_species( *iter );
 
-				}
+                                }
       }
     }
 
@@ -895,7 +895,7 @@ Arches::scheduleInitialize(const LevelP& level,
   else {
     bool initialize_it = true;
     bool modify_ref_den = true;
-	  d_props->doTableMatching();
+          d_props->doTableMatching();
     if ( d_calcEnthalpy || d_calcNewEnthalpy )
       d_props->sched_initEnthalpy( level, sched );
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
