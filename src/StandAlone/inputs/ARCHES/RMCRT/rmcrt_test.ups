@@ -29,7 +29,7 @@
     <save label="mixture_f"/>
     <save label="divQ"/>
     <save label="abskg"/>
-    <save label="color"/>        <!-- hack -->
+    <save label="temperature"/>
     <save label="sigmaT4"/>
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
@@ -40,16 +40,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -57,16 +58,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -74,16 +76,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -91,16 +94,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -108,16 +112,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -125,16 +130,17 @@
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,0]</value>
         </BCType>
-        <BCType id="all" label="mixture_f"  var="Neumann">
+        <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"   var="Neumann">
+        <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "color"   var="Dirichlet">
+        <!-- for RMCRT-->
+        <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"   var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -199,7 +205,6 @@
             <calc_frequency>1</calc_frequency>
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
-                <Temperature>    64.804     </Temperature>  <!-- this is a hack -->
                 <abskg>             999        </abskg>
                 <NoOfRays>          25         </NoOfRays>
                 <Threshold>         0.05       </Threshold>

@@ -95,7 +95,8 @@ namespace Uintah{
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
                           SchedulerP& sched,
-                          Task::WhichDW temp_dw);
+                          Task::WhichDW temp_dw,
+                          const bool includeEC = true);
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
@@ -104,7 +105,9 @@ namespace Uintah{
                                  
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
-                                         SchedulerP& sched );
+                                         SchedulerP& sched,
+                                         Task::WhichDW temp_dw);
+                                         
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( const Vector& inv_direction_vector,
       		             const Vector& ray_location,
@@ -260,7 +263,8 @@ namespace Uintah{
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
-                    Task::WhichDW which_temp_dw );
+                    Task::WhichDW which_temp_dw,
+                    const bool includeEC );
 
       //__________________________________
       inline bool containsCell(const IntVector &low, 
@@ -275,7 +279,8 @@ namespace Uintah{
                                   const PatchSubset* patches,           
                                   const MaterialSubset*,                
                                   DataWarehouse*,                
-                                  DataWarehouse* new_dw );
+                                  DataWarehouse* new_dw,
+                                  Task::WhichDW temp_dw );
                                   
     int numFaceCells(const Patch* patch,
                      const Patch::FaceIteratorType type,

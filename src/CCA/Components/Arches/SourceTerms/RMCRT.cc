@@ -35,7 +35,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _src_label      = VarLabel::create( src_name,  CC_double ); 
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
-  _colorLabel     = VarLabel::create( "color",   CC_double );
   _abskgLabel     = VarLabel::create( "abskg",   CC_double );
   _absorpLabel    = VarLabel::create( "absorp",  CC_double );
   
@@ -49,10 +48,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   _gac = Ghost::AroundCells;
   _gn  = Ghost::None; 
-  
-  // HACK
-  _initColor = -9;
-  _initAbskg = -9;
   
   _CoarseLevelRMCRTMethod = true;
   _multiLevelRMCRTMethod  = false;
@@ -74,7 +69,6 @@ RMCRT_Radiation::~RMCRT_Radiation()
 {
   // source label is destroyed in the base class 
   VarLabel::destroy( _sigmaT4Label ); 
-  VarLabel::destroy( _colorLabel );
   VarLabel::destroy( _abskgLabel );
   VarLabel::destroy( _absorpLabel );
 
@@ -92,45 +86,30 @@ void
 RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
 {
 
-  ProblemSpecP db = inputdb; 
-  db->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
-  db->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
-//  db->getWithDefault( "T_label",              _T_label_name,        "temperature" ); 
-//  db->getWithDefault( "abskp_label",          _abskp_label_name,    "new_abskp" ); 
-
+  _ps = inputdb; 
+  _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
+  _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
 
   //__________________________________
   //  Bulletproofing:
   if(_all_rk){
     throw ProblemSetupException("ERROR:  RMCRT_radiation only works if calc_on_all_RKstes = false", __FILE__, __LINE__);
   }
+  
+  
+  ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
+  if (!rmcrt_ps){
+    throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
+  }  
 
-  if (db->findBlock("RMCRT")){
-    ProblemSpecP rmcrt_ps = db->findBlock("RMCRT");
-    
-    _RMCRT = scinew Ray(); 
-    _RMCRT->registerVarLabels(_matl, 
-                              _abskgLabel,
-                              _absorpLabel,
-                               _colorLabel,
-                              _src_label);
-
-    _RMCRT->problemSetup( db, rmcrt_ps );
-   
-    //  HACK                           
-    rmcrt_ps->require("Temperature",  _initColor);
-    rmcrt_ps->require("abskg",        _initAbskg);
-    
-    //__________________________________
-    //
-    _prop_calculator = scinew RadPropertyCalculator(); 
-    _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps );
-    
-  }                               
+  //__________________________________
+  //
+  _prop_calculator = scinew RadPropertyCalculator(); 
+  _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps );                           
 
   //__________________________________
   //  Read in the AMR section
-  ProblemSpecP prob_spec = db->getRootNode();
+  ProblemSpecP prob_spec = _ps->getRootNode();
   
   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
   if (amr_ps){
@@ -156,6 +135,28 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
     }
   } 
 }
+
+//______________________________________________________________________
+//  Additional call made in problem setup
+//______________________________________________________________________
+void 
+RMCRT_Radiation::extraSetup()
+{ 
+  _tempLabel = _labels->getVarlabelByRole("temperature");
+  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
+
+  _RMCRT = scinew Ray(); 
+  _RMCRT->registerVarLabels(_matl, 
+                            _abskgLabel,
+                            _absorpLabel,
+                            _tempLabel,
+                            _src_label);
+
+  ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
+  _RMCRT->problemSetup( _ps, rmcrt_ps );
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //
@@ -184,8 +185,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
-  bool modifies_divQ =false;
-  Task::WhichDW temp_dw   = Task::NewDW;
+  bool modifies_divQ     =false;
+  bool includeExtraCells = false;  // domain for sigmaT4 computation
+  
+  Task::WhichDW temp_dw   = Task::OldDW;
   
   if (timeSubStep == 0 && !_label_sched_init) {
     modifies_divQ  = false;
@@ -204,8 +207,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );
     
-    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw );
+    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
     
+    _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
     
     for (int l = 0; l <= maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -244,14 +248,10 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel ); 
-    tsk->computes( _colorLabel ); // HACK rip color out once temperatureLabel is known
   } else {  
-    tsk->modifies( _abskgLabel ); 
-    tsk->modifies( _colorLabel ); 
+    tsk->modifies( _abskgLabel );
   }
-
   sched->addTask( tsk, level->eachPatch(), _matlSet ); 
-
 }
 
 //______________________________________________________________________
@@ -270,23 +270,18 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
 
     CCVariable<double> abskg; 
-    CCVariable<double> color;     // HACK rip color out once temperatureLabel is known
+    CCVariable<double> temp;
     if ( time_sub_step == 0 ) { 
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
-      new_dw->allocateAndPut( color, _colorLabel, _matl, patch );
     } else { 
       new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
-      new_dw->getModifiable( color,  _colorLabel,  _matl, patch );
     }
+    
+    // compute absorption coefficient via RadPropertyCalulator
     _prop_calculator->compute( patch, abskg );
     
-    color.initialize( _initColor );
-    
-    _RMCRT->setBC(color,  _colorLabel->getName(), patch, _matl);
-    _RMCRT->setBC(abskg, _abskgLabel->getName(), patch, _matl);
+    // abskg boundary conditions are set in setBoundaryCondition()
   }
-  
-
 }
 
 //---------------------------------------------------------------------------
@@ -301,7 +296,7 @@ RMCRT_Radiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   printSchedule(level,dbg,taskname);
 
   tsk->computes( _src_label  );
-  tsk->computes( _colorLabel );
+  tsk->computes( _tempLabel );
   tsk->computes( _abskgLabel );
   tsk->computes( _sigmaT4Label );
 
@@ -310,7 +305,7 @@ RMCRT_Radiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 //______________________________________________________________________
 //
 void 
-RMCRT_Radiation::dummyInit( const ProcessorGroup*, 
+RMCRT_Radiation::dummyInit( const ProcessorGroup*,
                       const PatchSubset* patches, 
                       const MaterialSubset*, 
                       DataWarehouse* , 
@@ -322,22 +317,21 @@ RMCRT_Radiation::dummyInit( const ProcessorGroup*,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::dummyInit");
 
     CCVariable<double> divQ;
-    CCVariable<double> color;
+    CCVariable<double> temp;
     CCVariable<double> abskg;
     CCVariable<double> sigmaT4;
     
-    new_dw->allocateAndPut( color,    _colorLabel,    _matl, patch );
+    new_dw->allocateAndPut( temp,     _tempLabel,    _matl, patch );
     new_dw->allocateAndPut( abskg,    _abskgLabel,    _matl, patch );
     new_dw->allocateAndPut( divQ,     _src_label,     _matl, patch );
     new_dw->allocateAndPut( sigmaT4,  _sigmaT4Label,  _matl, patch );
      
     divQ.initialize( 0.);
     sigmaT4.initialize( 0. ); 
-    abskg.initialize( _initAbskg );
-    color.initialize( _initColor );
+    abskg.initialize( 0. );
     
      // set boundary conditions 
-    _RMCRT->setBC(color,  _colorLabel->getName(), patch, _matl);
+    _RMCRT->setBC(temp,   _tempLabel->getName(),  patch, _matl);
     _RMCRT->setBC(abskg,  _abskgLabel->getName(), patch, _matl);
   }
 }
@@ -354,6 +348,5 @@ RMCRT_Radiation::computeSource( const ProcessorGroup* ,
                             int timeSubStep ){
   // see sched_computeSource & CCA/Components/Models/Radiation/RMCRT/Ray.cc
   // for the actual tasks
-  // HACK: until we start using the correct temperature.
   throw InternalError("Stub Task: RMCRT_Radiation::computeSource you should never land here ", __FILE__, __LINE__);
 }

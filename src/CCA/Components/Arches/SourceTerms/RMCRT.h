@@ -58,6 +58,8 @@ public:
 
   void problemSetup(const ProblemSpecP& db);
   
+  void extraSetup();
+  
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 
                             int timeSubStep );
@@ -74,7 +76,7 @@ public:
   
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
+                  const MaterialSubset* matls,
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
@@ -104,13 +106,14 @@ public:
       };
 
     private: 
-      std::string _name; 
-      std::string _type; 
-      ArchesLabel* _labels; 
-      MPMArchesLabel* _MAlab;
-      BoundaryCondition* _bc; 
+      std::string         _name; 
+      std::string         _type; 
+      ArchesLabel*        _labels; 
+      MPMArchesLabel*     _MAlab;
+      BoundaryCondition*  _bc; 
       const ProcessorGroup* _my_world; 
-      vector<std::string> _required_label_names; 
+      vector<std::string> _required_label_names;
+      
 
   }; // class Builder 
   //______________________________________________________________________
@@ -142,7 +145,6 @@ private:
   bool _CoarseLevelRMCRTMethod;
   bool _multiLevelRMCRTMethod;
   
-  double _initColor;
   double _initAbskg; 
 
   Ray* _RMCRT;
@@ -152,9 +154,10 @@ private:
   RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
+  ProblemSpecP          _ps;  // needed for extraSetup()
  
   const VarLabel* _T_label;
-  const VarLabel* _colorLabel;
+  const VarLabel* _tempLabel;
   const VarLabel* _sigmaT4Label;
   const VarLabel* _abskgLabel;
   const VarLabel* _absorpLabel;
