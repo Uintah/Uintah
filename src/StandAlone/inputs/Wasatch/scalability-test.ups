@@ -7,6 +7,10 @@
   <SimulationComponent type="wasatch"/>
 
   <Wasatch>
+  
+    <TaskParallelThreadCount>1</TaskParallelThreadCount>
+    <FieldParallelThreadCount>0</FieldParallelThreadCount>
+  
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
