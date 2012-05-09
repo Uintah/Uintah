@@ -54,7 +54,8 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   // inward normal
   // **WARNING** Currently allows only for box, cylinder or sphere.
   d_dxpp = Vector(1.,1.,1.);  // Only needed for axisymmetric end, see below
-  ProblemSpecP child = (ps->findBlock("geom_object"))->findBlock();
+  ProblemSpecP adult = ps->findBlock("geom_object");
+  ProblemSpecP child = adult->findBlock();
   std::string go_type = child->getNodeName();
   //std::cerr << "PressureBC::go_type = " << go_type << endl;
   if (go_type == "box") {
@@ -72,7 +73,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
     d_axisymmetric_end=cgp->axisymmetric_end();
     d_axisymmetric_side=cgp->axisymmetric_side();
     if(d_axisymmetric_end){
-      ps->require("res",d_res);
+      adult->require("res",d_res);
       Vector dx = grid->getLevel(0)->dCell();
       d_dxpp =  Vector(dx.x()/((double) d_res.x()),
                        dx.y()/((double) d_res.y()),
@@ -82,7 +83,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
   }
-  
+
   d_numMaterialPoints = 0;  // this value is read in on a restart
   ps->get("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
 
@@ -107,13 +108,15 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
       ( BB_max.x() > CD_max.x() ) ||
       ( BB_max.y() > CD_max.y() ) ||
       ( BB_max.z() > CD_max.z() ) ){
-    proc0cout <<"__________________________________________________________\n";
-    proc0cout << "\n Input File WARNING: <PhysicalBC : MPM : Pressure> \n"
-              << " The geometry Object ["<<d_surface->getType() << "] exceeds the dimensions of the computational domain.\n"
-              << " \n Please change the parameters so it doesn't. \n\n"
-              << " There is a flaw in the surface area calculation for the geometry object,\n"
-              << " it does not take into account that the object exceeds the domain\n";
-    proc0cout <<"__________________________________________________________\n";
+     if(!d_axisymmetric_end && !d_axisymmetric_side){
+      proc0cout <<"_________________________________________________________\n";
+      proc0cout << "\n Input File WARNING: <PhysicalBC : MPM : Pressure> \n"
+                << " The geometry Object ["<<d_surface->getType() << "] exceeds the dimensions of the computational domain.\n"
+                << " \n Please change the parameters so it doesn't. \n\n"
+                << " There is a flaw in the surface area calculation for the geometry object,\n"
+                << " it does not take into account that the object exceeds the domain\n";
+      proc0cout <<"_________________________________________________________\n";
+    }
   }
 }
 
