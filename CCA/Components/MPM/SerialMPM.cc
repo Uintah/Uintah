@@ -4264,7 +4264,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 //                                 __FILE__, __LINE__);
 //  	}
 
-	double density_ratio = denseTop/denseBot;
+	//double density_ratio = denseTop/denseBot;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
