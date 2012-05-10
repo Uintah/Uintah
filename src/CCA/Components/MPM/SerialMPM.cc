@@ -629,13 +629,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
-  scheduleUpdateCohesiveZones(            sched, patches, mpm_matls_sub,
+  if(flags->d_useCohesiveZones){
+    scheduleUpdateCohesiveZones(          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
 
-  scheduleAddCohesiveZoneForces(          sched, patches, mpm_matls_sub,
+    scheduleAddCohesiveZoneForces(        sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
+  }
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
 
@@ -1500,6 +1502,7 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gVelocityLabel,     mpm_matls,   gac,NGN);
+  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,   gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czLengthLabel,      cz_matls,    gnone);
   t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
