@@ -4254,8 +4254,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
 	double cell_volume = dx.x()*dx.y()*dx.z();
-	double denseTop = rho_init[TopMat];
-	double denseBot = rho_init[BotMat];
+	//double denseTop = rho_init[TopMat];
+	//double denseBot = rho_init[BotMat];
 	double TOPMAX = 0.0;
 	double BOTMAX = 0.0;
 	
