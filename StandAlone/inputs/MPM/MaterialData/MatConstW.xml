@@ -3,7 +3,7 @@
 <Uintah_Include>
   <density>19235.0</density>
   <thermal_conductivity>174</thermal_conductivity>
-  <specific_heat>132</specific_heat>
+  <specific_heat>134</specific_heat>
   <room_temp>294.0</room_temp>
-  <melt_temp>1723.0</melt_temp>
+  <melt_temp>3695.0</melt_temp>
 </Uintah_Include>
