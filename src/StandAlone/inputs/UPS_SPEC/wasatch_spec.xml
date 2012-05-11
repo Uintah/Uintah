@@ -14,7 +14,7 @@
 
     <BasicExpression		spec="MULTIPLE" />
     
-    <PhysicsCoefficient     spec="MULTIPLE" />
+    <PrecipitationBasicExpression     spec="MULTIPLE" />
 
     <PostProcessingExpression		spec="MULTIPLE" />
     <!-- ========================================= -->

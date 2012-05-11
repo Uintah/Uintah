@@ -557,9 +557,9 @@ namespace Wasatch{
 
     //___________________________________________________
     // parse and build physical coefficients expressions
-    for( Uintah::ProblemSpecP exprParams = parser->findBlock("PhysicsCoefficient");
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("PrecipitationBasicExpression");
         exprParams != 0;
-        exprParams = exprParams->findNextBlock("PhysicsCoefficient") ){
+        exprParams = exprParams->findNextBlock("PrecipitationBasicExpression") ){
 
       std::string fieldType, taskListName;
       exprParams->getAttribute("type",fieldType);
