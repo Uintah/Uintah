@@ -6,7 +6,7 @@
       <include href="MaterialData/IsoElasticW.xml"/>
       <include href="MaterialData/VonMisesYield.xml"/>
       <include href="MaterialData/DruckerStabilityCheck.xml"/>
-      <include href="MaterialData/JCPlasticW.xml"/>
+      <include href="MaterialData/JohnsonCookPlasticW.xml"/>
       <include href="MaterialData/MieGrunEOSW.xml"/>
       <initial_material_temperature>  294.0 </initial_material_temperature>
     </constitutive_model>
