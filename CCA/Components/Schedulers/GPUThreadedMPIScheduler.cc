@@ -67,6 +67,7 @@ extern DebugStream execout;
 static double CurrentWaitTime = 0;
 
 static DebugStream dbg("GPUThreadedMPIScheduler", false);
+static DebugStream gpudbg("GPUStats", false);
 static DebugStream timeout("GPUThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength", false);
 static DebugStream threaddbg("ThreadDBG", false);
@@ -1291,6 +1292,12 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
 //  }
 
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
+  if (gpudbg.active()) {
+    cerrLock.lock();
+    gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
+           << nbytes << " bytes on device " << device << " for " << label->getName() << endl;
+    cerrLock.unlock();
+  }
   hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
   deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
 
@@ -1302,6 +1309,12 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
+  if (gpudbg.active()) {
+    cerrLock.lock();
+    gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \""
+           << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
+    cerrLock.unlock();
+  }
   CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementH2DCopyCount();
@@ -1329,6 +1342,12 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
 //  }
 
   CUDA_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
+  if (gpudbg.active()) {
+    cerrLock.lock();
+    gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
+           << nbytes << " bytes on device " << device << " for " << label->getName() << endl;
+    cerrLock.unlock();
+  }
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
   deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
 
@@ -1340,6 +1359,12 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
+  if (gpudbg.active()) {
+    cerrLock.lock();
+    gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \""
+           << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
+    cerrLock.unlock();
+  }
   CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementH2DCopyCount();
