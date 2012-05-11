@@ -120,15 +120,16 @@
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.00001</delt_max>
+    <max_Timesteps> 3 </max_Timesteps>        
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>bc-test-svol-ydir.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle = "2" interval = "0.00001"/>
     <compression>gzip</compression>
     <save label="phi-dirichlet-dirichlet-a"/>
     <save label="phi-dirichlet-dirichlet-b"/>
@@ -206,7 +207,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[0.25,1,0.01]</upper>
-        <resolution>[2,80,2]</resolution>
+        <resolution>[2,40,2]</resolution>
         <patches>[1,4,1]</patches>
       </Box>
       <periodic>[1,0,1]</periodic>

@@ -319,15 +319,16 @@
     <initTime>0.0</initTime>
     <delt_min>0.0001</delt_min>
     <delt_max>0.0001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>convection_test_svol_zdir.uda</filebase>
-    <outputTimestepInterval>250</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0002"/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
     <compression>gzip</compression>
     <save label="phi_central"/>
     <save label="phi_upwind"/>
@@ -348,7 +349,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[2,2,100]</resolution>
+        <resolution>[2,2,20]</resolution>
         <patches>[1,1,4]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
