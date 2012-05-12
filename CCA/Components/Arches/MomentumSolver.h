@@ -308,6 +308,106 @@ private:
 
   };  
 
+  // almgren mms initialization ------------------------
+  class AlmgrenVel : public VelocityInitBase { 
+
+    public: 
+
+      AlmgrenVel(){ 
+        _pi = acos(-1.0); 
+      };
+      ~AlmgrenVel(){}; 
+
+      void problemSetup( ProblemSpecP db ){ 
+
+        db->getWithDefault( "A", _A, 1.0 ); 
+        db->getWithDefault( "B", _B, 1.0 ); 
+        db->getWithDefault( "plane", _plane, "x-y"); 
+        //valid options are x-y, y-z, z-x
+
+      }; 
+
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+
+        for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);
+
+          if ( _plane == "x-y" ){ 
+
+            uvel[c] = 1.0 - _A * cos( 2.0*_pi*p.x() ) 
+                               * sin( 2.0*_pi*p.y() ); 
+
+          } else if ( _plane == "z-x" ){ 
+
+            uvel[c] = 1.0 + _B * sin( 2.0*_pi*p.x() ) 
+                               * cos( 2.0*_pi*p.z() ); 
+
+          } else { 
+            uvel[c] = 0.0; 
+          }
+ 
+        }
+
+      }; 
+      
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+
+        for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);
+
+          if ( _plane == "y-z" ){ 
+
+            vvel[c] = 1.0 - _A * cos( 2.0*_pi*p.y() ) 
+                               * sin( 2.0*_pi*p.z() ); 
+
+          } else if ( _plane == "x-y" ){ 
+
+            vvel[c] = 1.0 + _B * sin( 2.0*_pi*p.x() ) 
+                               * cos( 2.0*_pi*p.y() ); 
+
+          } else { 
+            vvel[c] = 0.0; 
+          }
+ 
+        }
+
+      }; 
+
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+
+        for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);
+
+          if ( _plane == "z-x" ){ 
+
+            wvel[c] = 1.0 - _A * cos( 2.0*_pi*p.z() ) 
+                               * sin( 2.0*_pi*p.x() ); 
+
+          } else if ( _plane == "y-z" ){ 
+
+            wvel[c] = 1.0 + _B * sin( 2.0*_pi*p.y() ) 
+                               * cos( 2.0*_pi*p.z() ); 
+
+          } else { 
+            wvel[c] = 0.0; 
+          }
+ 
+        }
+
+      }; 
+
+    private: 
+
+      double _A;
+      double _B; 
+      double _pi; 
+      std::string _plane;  
+
+  };  
+
   // taylor-green initialization ------------------------
   class TaylorGreen3D : public VelocityInitBase { 
 

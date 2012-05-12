@@ -372,13 +372,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     discrete->calculatePressDiagonal(patch, &vars);
 
-
     if ( d_use_ref_point ){ 
 
       adjustForRefPoint( patch, &vars, &constVars ); 
 
     } 
-
 
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
 

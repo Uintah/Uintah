@@ -412,13 +412,17 @@
                                         attribute2="type REQUIRED STRING"/>
 
           <initialization               spec="OPTIONAL NO_DATA"           
-                                        attribute1="type REQUIRED STRING 'constant, taylor-green'">
+                                        attribute1="type REQUIRED STRING 'constant, taylor-green, almgren'">
 
            <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_w                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
 
            <c                           spec="REQUIRED DOUBLE" need_applies_to="type taylor-green"/> 
+
+           <A                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
+           <B                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
+           <plane                       spec="OPTIONAL STRING 'x-y, y-z, z-x'" need_applies_to="type almgren"/>
 
           </initialization>
         </MomentumSolver>

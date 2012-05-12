@@ -199,6 +199,7 @@
         <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
+          <use_ref_point value="0.0"/>
           <Parameters>
             <tolerance>       1.0e-16</tolerance>
             <solver>          cg    </solver>

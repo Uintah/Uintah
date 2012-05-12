@@ -101,6 +101,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       std::string name; 
       db_intrusion->getAttribute("label", name);
+      intrusion.name = name; 
 
       // set up velocity:
       ProblemSpecP db_velocity = db_intrusion->findBlock("velocity"); 
@@ -639,7 +640,6 @@ IntrusionBC::setCellType( const ProcessorGroup*,
             } 
           } 
         } 
-
       } // geometry loop
 
       //debugging: 

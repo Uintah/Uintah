@@ -427,6 +427,43 @@ namespace Uintah{
           return face_values; 
         }
 
+      /** @brief Return the face density for all cell types when boundaries are near */
+      template< class phiT > 
+        inline FaceData1D getDensityOnFace( const IntVector c, const IntVector coord, 
+            phiT& phi, constCCVariable<double>& den, Discretization_new::FaceBoundaryBool isBoundary ){
+
+          FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus  = 0.0;
+
+          TypeDescription::Type type = phi.getTypeDescription()->getType(); 
+
+          if ( type == TypeDescription::CCVariable ) {
+            IntVector cxm = c - coord; 
+            IntVector cxp = c + coord; 
+            
+            if ( isBoundary.minus ){ 
+              face_values.minus = den[cxm]; 
+            } else { 
+              face_values.minus = 0.5 * (den[c] + den[cxm]); 
+            }
+
+            if ( isBoundary.plus ){ 
+              face_values.plus = den[cxp]; 
+            } else { 
+              face_values.plus  = 0.5 * (den[c] + den[cxp]); 
+            }
+          } else {
+            // assume the only other type is a face type...
+            IntVector cxm = c - coord; 
+
+            face_values.minus = den[cxm];
+            face_values.plus  = den[c]; 
+          }
+
+          return face_values; 
+        }
+
       //---------------------------------------------------------------------------
       // Interpolation Class
       //
