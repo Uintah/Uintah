@@ -127,6 +127,10 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     
       _init_function = scinew TaylorGreen3D(); 
 
+    } else if ( _init_type == "almgren" ){ 
+
+      _init_function = scinew AlmgrenVel(); 
+
     } else { 
 
       throw InvalidValue("Initialization type not recognized: " + _init_type, __FILE__, __LINE__);

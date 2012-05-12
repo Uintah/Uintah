@@ -845,6 +845,7 @@ namespace Uintah{
         BCIterator                   interior_cell_iterator; 
         bool                         has_been_initialized; 
         Vector                       velocity;
+        std::string                  name; 
 
         //state space information: 
         double density; // from state-space calculation
