@@ -114,8 +114,8 @@
   <Intrusion>
     <geom_object>
       <cylinder>
-        <min>[0,.5,.5]</min>
-        </max>[1,.5,.5]</max>
+        <bottom>[0,.5,.5]</bottom>
+        <top>[1,.5,.5]</top>
         <radius>.1</radius>
       </cylinder>
     </geom_object>
