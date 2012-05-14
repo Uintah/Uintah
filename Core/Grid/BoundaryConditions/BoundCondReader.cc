@@ -332,9 +332,17 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
    
     //  bullet proofing-- rectangle must be on the same plane as the face
-    bool test = (l(p_dir) != grid_LoPt(p_dir) && u(p_dir) != grid_HiPt(p_dir));   
+    bool isOnFace = false;
+
+    if(plusMinusFaces == -1){    // x-, y-, z- faces
+      isOnFace = is_on_face(p_dir,l,grid_LoPts) && is_on_face(p_dir,u,grid_LoPts);
+    }
     
-    if(test){
+    if(plusMinusFaces == 1){     // x+, y+, z+ faces
+      isOnFace = is_on_face(p_dir,l,grid_HiPts) && is_on_face(p_dir,u,grid_HiPts);      
+    }    
+    
+    if(!isOnFace){
       ostringstream warn;
       warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
           << " The low " << l << " high " << u << " points must be on the same plane" 

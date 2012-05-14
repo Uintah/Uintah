@@ -48,27 +48,11 @@ RectangleBCData::RectangleBCData() : BCGeomBase()
   
 }
 
-RectangleBCData::RectangleBCData(Point& low, Point& up) : BCGeomBase()
+RectangleBCData::RectangleBCData(Point& low, Point& up) 
+: BCGeomBase(),
+  d_min(low),
+  d_max(up)
 {
-//  cout << "low = " << low << " up = " << up << endl;
-  Point n_low(0.,0.,0.), n_up(0.,0.,0.);
-
-  if(low.x() == up.x()) {
-    n_low = Point(low.x()-1.e-2,low.y(),low.z());
-    n_up = Point(up.x()+1.e-2,up.y(),up.z());
-  }    
-  if(low.y() == up.y()) {
-    n_low = Point(low.x(),low.y()-1.e-2,low.z());
-    n_up = Point(up.x(),up.y()+1.e-2,up.z());
-  }    
-  if(low.z() == up.z()) {
-    n_low = Point(low.x(),low.y(),low.z()-1.e-2);
-    n_up = Point(up.x(),up.y(),up.z()+1.e-2);
-  }    
-  d_min = n_low;
-  d_max = n_up;
-
-//  cout << "d_min = " << d_min << " d_max = " << d_max << endl;
 }
 
 RectangleBCData::~RectangleBCData()
@@ -110,10 +94,33 @@ void RectangleBCData::getBCData(BCData& bc) const
 
 bool RectangleBCData::inside(const Point &p) const 
 {
-  if (p == Max(p,d_min) && p == Min(p,d_max) )
-    return true;
-  else 
-    return false;
+  if(d_min.x() == d_max.x()) {
+    if (p.y() <= d_max.y() && p.y() >= d_min.y()
+        && p.z() <= d_max.z() && p.z() >= d_min.z()) {
+      return true;
+    }
+    else 
+      return false;
+  }    
+  
+  else if(d_min.y() == d_max.y()) {
+    if (p.x() <= d_max.x() && p.x() >= d_min.x()
+        && p.z() <= d_max.z() && p.z() >= d_min.z()) {
+      return true;
+    }
+    else 
+      return false;
+  }    
+
+  else if(d_min.z() == d_max.z()) {
+    if (p.y() <= d_max.y() && p.y() >= d_min.y()
+        && p.x() <= d_max.x() && p.x() >= d_min.x()) {
+      return true;
+    }
+    else 
+      return false;
+  }    
+  
 }
 
 void RectangleBCData::print() 
