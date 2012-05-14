@@ -161,6 +161,7 @@ private:
   const VarLabel* _sigmaT4Label;
   const VarLabel* _abskgLabel;
   const VarLabel* _absorpLabel;
+  const VarLabel* _cellTypeLabel; 
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;

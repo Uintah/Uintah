@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 
 using SCIRun::DebugStream;
 
@@ -130,6 +131,7 @@ WARNING
     VarLabel* d_abskgLabel;
     VarLabel* d_absorpLabel;
     VarLabel* d_sigmaT4Label;
+    VarLabel* d_cellTypeLabel; 
     
     Ghost::GhostType d_gn;
     Ghost::GhostType d_gac;
@@ -137,9 +139,12 @@ WARNING
     double         d_initColor;
     double         d_initAbskg;
     int            d_matl;
+    int            d_wall_cell; 
+    int            d_flow_cell; 
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
     
+    std::vector<GeometryPieceP>  d_intrusion_geom; 
     std::vector<GeometryObject*> d_refine_geom_objs;
   };
 

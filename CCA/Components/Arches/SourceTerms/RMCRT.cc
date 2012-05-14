@@ -37,6 +37,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
   _abskgLabel     = VarLabel::create( "abskg",   CC_double );
   _absorpLabel    = VarLabel::create( "absorp",  CC_double );
+  _cellTypeLabel  = _labels->d_cellTypeLabel; 
   
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -150,6 +151,7 @@ RMCRT_Radiation::extraSetup()
                             _abskgLabel,
                             _absorpLabel,
                             _tempLabel,
+                            _cellTypeLabel, 
                             _src_label);
 
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");

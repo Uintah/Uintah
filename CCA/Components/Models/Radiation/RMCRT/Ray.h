@@ -154,6 +154,7 @@ namespace Uintah{
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
                             const VarLabel* temperature,
+                            const VarLabel* celltype, 
                             const VarLabel* divQ);
                             
     void setBC(CCVariable<double>& Q_CC,
@@ -202,6 +203,7 @@ namespace Uintah{
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
+      const VarLabel* d_cellTypeLabel; 
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
       const VarLabel* d_boundFluxLabel;
