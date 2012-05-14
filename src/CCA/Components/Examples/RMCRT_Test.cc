@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Grid/Box.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/GeometryPiece/GeometryObject.h>
@@ -73,6 +74,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );          
   d_absorpLabel   = VarLabel::create( "absorp",   CCVariable<double>::getTypeDescription() );
   d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
+  d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
    
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
@@ -81,6 +83,9 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_initAbskg = -9;
   d_CoarseLevelRMCRTMethod = true;
   d_multiLevelRMCRTMethod  = false;
+  d_wall_cell = 8; //<----HARD CODED WALL CELL
+  d_flow_cell = -1; //<----HARD CODED FLOW CELL 
+   
 }
 //______________________________________________________________________
 //
@@ -95,6 +100,7 @@ RMCRT_Test::~RMCRT_Test ( void )
   VarLabel::destroy(d_abskgLabel);
   VarLabel::destroy(d_absorpLabel);
   VarLabel::destroy(d_sigmaT4Label);
+  VarLabel::destroy(d_cellTypeLabel); 
   
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
@@ -133,6 +139,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
                                  d_colorLabel,
+                                 d_cellTypeLabel, 
                                  d_divQLabel);
                                  
     rmcrt_ps->require("Temperature",  d_initColor);
@@ -154,6 +161,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
     }
+  }
+
+  if (prob_spec->findBlock("Intrusion")){
+    ProblemSpecP intrusion_ps = prob_spec->findBlock("Intrusion"); 
+    ProblemSpecP geom_obj_ps = intrusion_ps->findBlock("geom_object");
+    GeometryPieceFactory::create(geom_obj_ps, d_intrusion_geom);
   }
   
   //__________________________________
@@ -234,6 +247,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 
   task->computes( d_colorLabel );
   task->computes( d_abskgLabel );
+  task->computes( d_cellTypeLabel ); 
   sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
 
@@ -426,23 +440,53 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"Doing initialize");
+
+    Box patch_box = patch->getBox(); 
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
       CCVariable<double> color;
       CCVariable<double> abskg;
+      CCVariable<int> cellType; 
       new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
       new_dw->allocateAndPut(abskg, d_abskgLabel, matl, patch);
+      new_dw->allocateAndPut(cellType, d_cellTypeLabel, matl, patch); 
 
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
          IntVector idx(*iter);
          color[idx] = d_initColor;
          abskg[idx] = d_initAbskg;
-       }
-        // set boundary conditions 
-       d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, matl);
-       d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, matl);
+      }
+      // set boundary conditions 
+      d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, matl);
+      d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, matl);
+
+      // initialize cell type
+      cellType.initialize(d_flow_cell);
+
+      for ( int i = 0; i < (int)d_intrusion_geom.size(); i++ ){
+
+        for ( std::vector<GeometryPieceP>::iterator iter=d_intrusion_geom.begin(); iter!=d_intrusion_geom.end(); iter++ ){
+                  
+          GeometryPieceP piece = iter[i]; 
+          Box geometry_box     = piece->getBoundingBox(); 
+          Box intersect_box    = geometry_box.intersect( patch_box ); 
+        
+          if ( !(intersect_box.degenerate()) ) { 
+
+            for ( CellIterator cell_iter(patch->getExtraCellIterator()); !cell_iter.done(); cell_iter++) {
+              IntVector c = *cell_iter; 
+              Point p = patch->cellPosition( c ); 
+              if ( piece->inside( p ) ) {
+                
+                cellType[c] = d_wall_cell; 
+               
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

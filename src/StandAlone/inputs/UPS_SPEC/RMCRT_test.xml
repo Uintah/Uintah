@@ -14,4 +14,8 @@
   
   <include href="Models.xml"  section="Models/RMCRT" />
 
+  <Intrusion                    spec="OPTIONAL NO_DATA">
+    <geom_object/>
+  </Intrusion>
+
 </Uintah_Include>

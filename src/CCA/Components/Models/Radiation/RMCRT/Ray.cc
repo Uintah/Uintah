@@ -202,13 +202,16 @@ Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
                        const VarLabel* absorp,
                        const VarLabel* temperature,
+                       const VarLabel* celltype, 
                        const VarLabel* divQ)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
+  d_cellTypeLabel    = celltype; 
   d_divQLabel        = divQ;
+
 
   //__________________________________
   //  define the materialSet
@@ -234,8 +237,11 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int tim
     tsk->computes( d_sigmaT4_label ); 
     tsk->computes( d_abskgLabel ); 
     tsk->computes( d_absorpLabel );
+    tsk->computes( d_cellTypeLabel ); 
+    tsk->requires( Task::OldDW, d_cellTypeLabel, d_gn, 0 ); 
   } else { 
     tsk->requires( Task::NewDW, d_temperatureLabel, d_gn, 0 ); 
+    tsk->requires( Task::NewDW, d_cellTypeLabel, d_gn, 0 ); 
     tsk->modifies( d_sigmaT4_label ); 
     tsk->modifies( d_abskgLabel ); 
     tsk->modifies( d_absorpLabel ); 
@@ -264,25 +270,37 @@ Ray::initProperties( const ProcessorGroup* pc,
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
     CCVariable<double> sigmaT4Pi;
+    CCVariable<int>    newdw_celltype; 
 
     constCCVariable<double> temperature; 
+    constCCVariable<int> celltype; 
+
 
     if ( time_sub_step == 0 ) { 
 
       new_dw->allocateAndPut( abskg,    d_abskgLabel,     d_matl, patch ); 
       new_dw->allocateAndPut( sigmaT4Pi,d_sigmaT4_label,  d_matl, patch );
       new_dw->allocateAndPut( absorp,   d_absorpLabel,    d_matl, patch ); 
+      new_dw->allocateAndPut( newdw_celltype, d_cellTypeLabel,  d_matl, patch ); 
 
       abskg.initialize  ( 0.0 ); 
       absorp.initialize ( 0.0 ); 
       sigmaT4Pi.initialize( 0.0 );
+      newdw_celltype.initialize( 0.0 ); 
 
       old_dw->get(temperature,      d_temperatureLabel, d_matl, patch, Ghost::None, 0);
+      old_dw->get(celltype,     d_cellTypeLabel,    d_matl, patch, Ghost::None, 0); 
+
+      newdw_celltype.copyData( celltype ); 
+
     } else { 
+
       new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
       new_dw->getModifiable( absorp,    d_absorpLabel,    d_matl, patch ); 
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch ); 
       new_dw->get( temperature,         d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
+      new_dw->get( celltype,        d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); 
+
     }
 
     IntVector pLow;
