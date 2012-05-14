@@ -54,7 +54,8 @@ namespace Uintah {
 
     public: 
 
-      EfficiencyCalculator( const BoundaryCondition* bcs, ArchesLabel* lab ):_bcs(bcs), _a_labs(lab) {};
+      EfficiencyCalculator( const BoundaryCondition* bcs, ArchesLabel* lab ):_bcs(bcs), _a_labs(lab) {
+      };
       ~EfficiencyCalculator(){
 
         // delete all calculators
@@ -146,6 +147,7 @@ namespace Uintah {
 
         public: 
           Calculator( std::string id, ArchesLabel* a_labs ) : _id(id), _a_labs(a_labs){};
+
           virtual ~Calculator(){};
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
@@ -185,7 +187,7 @@ namespace Uintah {
 
           };
 
-        private: 
+        protected: 
           std::string _id; 
           ArchesLabel* _a_labs; 
 
@@ -572,7 +574,7 @@ namespace Uintah {
             IntVector cp = c - inside_dir; 
             IntVector cm = c + inside_dir; 
 
-            const double rho_f = 0.5 * ( rho[c] + rho[cm] ); 
+            const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
             const double u_f   = std::min( 0.0, u[c] ); 
 
             const double flux = rho_f * u_f; 
@@ -597,8 +599,6 @@ namespace Uintah {
 
           };
 
-          std::string _id;
-
           std::string _mf_id_1; 
           std::string _mf_id_2; 
 
@@ -612,7 +612,6 @@ namespace Uintah {
           const VarLabel* _phi_label;
 
           const BoundaryCondition* _bcs; 
-          ArchesLabel* _a_labs; 
 
       }; 
 

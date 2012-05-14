@@ -56,6 +56,80 @@
         <resolution>   [40,25,25]         </resolution>
       </Box>
     </Level>
+    <BoundaryConditions>
+      <Face rectangle="x-" lower="-1.0 0.5 -0.5" upper="-1.0 1.0 0.5" name="x+oulet">
+        <BCType id="all" label="Outlet x-" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" name="x- face">
+        <BCType id="all" label="Wall x-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ face">
+        <BCType id="all" label="Wall x+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face rectangle="x+" lower="1.0 0.5 -0.5" upper="1.0 1.0 0.5" name="x+oulet">
+        <BCType id="all" label="Outlet x+" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- face">
+        <BCType id="all" label="Wall y-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face rectangle="y-" lower="-.2 0.0 -.5" upper=".2 0.0 .5" name="y-inlet">
+        <BCType id="all" label="Inlet y-" var="VelocityInlet">
+          <value>[0.0,1.0,0.0]</value>
+        </BCType>
+        <BCType id="all" label="f" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ face">
+        <BCType id="all" label="Wall y+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- face">
+        <BCType id="all" label="Wall z-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ face">
+        <BCType id="all" label="Wall z+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
   </Grid>
 
 <!--__________________________________-->
@@ -73,6 +147,21 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
+      <TransportEqns>
+        <Eqn label="f" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
 
       <Turbulence model="smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -84,83 +173,22 @@
 
       <Properties>
         <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
+        <ColdFlow>
+          <mixture_fraction_label>f</mixture_fraction_label>
+          <Stream_1>
+            <density>1.0</density>
             <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
+          </Stream_1>
+          <Stream_2>
+            <density>1.0</density>
             <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+          </Stream_2>
+        </ColdFlow>
       </Properties>
 
 <!--__________________________________-->
       <BoundaryConditions>
-<!-- Bottom Y- face of T -->
-        <FlowInlet>
-          <InletVelocity>   1.0 </InletVelocity>
-          <mixture_fraction>0.0 </mixture_fraction>
-          <geom_object>
-            <box label="y- wall bottom T">
-              <min>     [-0.2, -0.1, -0.5]    </min>
-              <max>     [ 0.2,  0.0,  0.5]    </max>
-            </box>
-          </geom_object>
-        </FlowInlet>
-<!-- Bottom x- face of T -->
-        <WallBC>
-          <geom_object>
-            <box label="x- walls">
-              <min>     [-0.25, 0.0, -0.51]    </min>
-              <max>     [-0.2,  0.5,   0.51]    </max>
-            </box>
-<!-- Bottom X+ face of T -->
-            <box label="x+ walls">
-              <min>     [0.2,   0.0, -0.51]    </min>
-              <max>     [0.25,  0.5,  0.51]    </max>
-            </box>
-<!-- Bottom of Y- face of horizontal leg -->
-            <box label="y- left">
-              <min>     [-1.1,  0.45, -0.51]    </min>
-              <max>     [ -0.2,  0.5,  0.51]    </max>
-            </box>
-            <box label="y- right">
-              <min>     [ 0.2,  0.45, -0.51]    </min>
-              <max>     [ 1.1,  0.5,  0.51]    </max>
-            </box>
-<!-- Top, Y+ face of T -->
-            <box label="y+ wall">
-              <min>     [-1.1, 1.0, -0.51]    </min>
-              <max>     [1.1,  1.1,  0.51]    </max>
-            </box>
-<!-- Z minus face of T -->
-            <box label="z- wall">
-              <min>     [-1.1, -1.1, -0.55]    </min>
-              <max>     [ 1.1,  1.1, -0.5]    </max>
-            </box>
-<!-- Z plus face of T -->
-            <box label="z+ wall">
-              <min>     [-1.1,-1.1,  0.5]    </min>
-              <max>     [ 1.1, 1.1,  0.55]    </max>
-            </box>
-          </geom_object>
-        </WallBC>
-<!-- X minus face of horizontal leg -->
-        <OutletBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="x- horizontalLeg">
-              <min>       [-1.1, 0.5,-0.5]   </min>
-              <max>       [-1.0, 1.0, 0.5]   </max>
-            </box>
-            <box label="x+ horzontialLeg">
-              <min>       [ 1.0, 0.5,-0.5]   </min>
-              <max>       [ 1.1, 1.0, 0.5]   </max>
-            </box>
-          </geom_object>
-        </OutletBC>
+        <use_new_bcs/>
       </BoundaryConditions>
 
 <!--__________________________________-->
