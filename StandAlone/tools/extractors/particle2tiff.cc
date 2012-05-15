@@ -90,13 +90,17 @@ using namespace Uintah;
 
 //#define VERIFY 1
 
-
-
 struct clampVals{
   double minVal;
   double maxVal;
   ~clampVals() {}
 };
+
+// contains all tiff flags
+struct tiffFlags{
+  uint16 orientation;
+};
+
 
 //______________________________________________________________________
 //  
@@ -113,6 +117,17 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]\n\n";
     cerr << "  -max                        [double] (maximum clamp value)\n";
     cerr << "  -min                        [double] (minimum clamp value)\n";    
+    cerr << "  -orientation                [string] (The orientation of the image with respect to the rows and columns.)\n";
+    cerr << "                                      Options: \n";
+    cerr << "                                        topleft  0th row represents the visual top of the image, and the 0th column represents the visual left-hand side.\n";
+    cerr << "                                        topright 0th row represents the visual top of the image, and the 0th column represents the visual right-hand side\n";
+    cerr << "                                        botright 0th row represents the visual bottom of the image, and the 0th column represents the visual right-hand side\n";
+    cerr << "                             default->  botleft  0th row represents the visual bottom of the image, and the 0th column represents the visual left-hand side.\n";
+    cerr << "                                        lefttop  0th row represents the visual left-hand side of the image, and the 0th column represents the visual top.\n";
+    cerr << "                                        righttop 0th row represents the visual right-hand side of the image, and the 0th column represents the visual top.\n";
+    cerr << "                                        rightbot 0th row represents the visual right-hand side of the image, and the 0th column represents the visual bottom.\n";
+    cerr << "                                        leftbot  0th row represents the visual left-hand side of the image, and the 0th column represents the visual bottom. \n";
+    cerr << "                                                    Many readers ignore this tag \n\n";
     
     cerr << "  -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep) [defaults to last timestep]\n";
@@ -134,13 +149,38 @@ usage(const std::string& badarg, const std::string& progname)
     exit(1);
 }
 
-// arguments are the dataarchive, the successive arguments are the same as 
-// the arguments to archive->query for data values.  Then comes a type 
-// dexcription of the variable being queried, and last is an output stream.
+//______________________________________________________________________
+//  return the tiff flag option for the orientation
+uint16
+whichOrientation(const string& in){
+  uint16 ans= ORIENTATION_BOTLEFT;
+  if( in == "topleft" ){
+    ans = ORIENTATION_TOPLEFT;
+  } else if( in == "topright" ){
+    ans = ORIENTATION_TOPRIGHT;
+  } else if( in == "botright" ){
+    ans = ORIENTATION_BOTRIGHT;
+  } else if( in == "botleft" ){
+    ans = ORIENTATION_BOTLEFT;
+  } else if( in == "lefttop" ){
+    ans = ORIENTATION_LEFTTOP;
+  } else if( in == "righttop" ){
+    ans = ORIENTATION_RIGHTTOP;
+  } else if( in == "rightbot" ){
+    ans = ORIENTATION_RIGHTBOT;
+  } else if( in == "leftbot" ){
+    ans = ORIENTATION_LEFTBOT;
+  } else{
+    cerr << "\n\nThe orientation [" << in << "] is not valid. \n";
+    usage("","");
+  }
+  return ans;
+};
 
 //______________________________________________________________________
 //
-void write_tiff(const ostringstream& tname,
+void write_tiff(const tiffFlags* flags,
+                const ostringstream& tname,
                 const IntVector& lo,
                 const IntVector& hi,
                 CCVariable<double>& ave){
@@ -202,7 +242,7 @@ void write_tiff(const ostringstream& tname,
     TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL,  spp );                    // number of channels per pixel, 1 for B&W or gray
 
     TIFFSetField(out, TIFFTAG_SAMPLEFORMAT,     SAMPLEFORMAT_IEEEFP);     // IEEE floating point data
-    TIFFSetField(out, TIFFTAG_ORIENTATION,      ORIENTATION_BOTLEFT);     // set the origin of the image.
+    TIFFSetField(out, TIFFTAG_ORIENTATION,      flags->orientation);      // set the origin of the image.
 
   //=  TIFFSetField(out, TIFFTAG_COMPRESSION,      COMPRESSION_DEFLATE);
     TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);  
@@ -628,6 +668,9 @@ int main(int argc, char** argv)
   clampVals* clamps = scinew clampVals();
   clamps->minVal = -DBL_MAX;
   clamps->maxVal = DBL_MAX;
+  
+  tiffFlags* flags = scinew tiffFlags();
+  flags->orientation = ORIENTATION_BOTLEFT;
 
   int matl = 0;
   
@@ -692,15 +735,23 @@ int main(int argc, char** argv)
       clamps->maxVal = atof(argv[++i]);
     } else if ( s == "-min" ) {
       clamps->minVal = atof(argv[++i]);
+    } else if ( s == "-orientation" ) {
+      flags->orientation = whichOrientation( string(argv[++i]) );
     }else {
       usage(s, argv[0]);
     }
   }
-  
+  //__________________________________
+  //  bulletproofing inputs
   if(input_uda_name == ""){
-    cerr << "No archive file specified\n";
+    cerr << "\n\nNo archive file specified, now exiting....\n";
     usage("", argv[0]);
   }
+  if( base_dir_name == "-" ){
+    cerr << "\n\nUnspecified output directory name, now exiting....\n";
+    usage("", argv[0]);
+  }
+  
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -720,7 +771,6 @@ int main(int argc, char** argv)
       }
     }
     
-    
     //__________________________________
     // bulletproofing
     if (!var_found) {
@@ -739,8 +789,7 @@ int main(int argc, char** argv)
     // get type and subtype of data
     const Uintah::TypeDescription* td = types[var_index];
     const Uintah::TypeDescription* subtype = td->getSubType();
-    
-    
+
     //______________________________________________________________________
     //query time info from data archive
     vector<int> index;
@@ -876,7 +925,7 @@ int main(int argc, char** argv)
         
         //scaleImage( lo, hi, aveLevel );
         
-        write_tiff(tname, var_start, var_end, aveLevel);            // write the tiff out
+        write_tiff(flags,tname, var_start, var_end, aveLevel);            // write the tiff out
       }
     }  // timestep loop     
     
@@ -890,5 +939,6 @@ int main(int argc, char** argv)
   
   // cleanup
   delete clamps;
+  delete flags;
   
 }
