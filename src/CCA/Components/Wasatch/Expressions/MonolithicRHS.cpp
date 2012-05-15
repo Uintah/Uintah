@@ -155,12 +155,13 @@ evaluate()
   const FieldT phi_z0_2   = build_field( (*phi_), neutral );
   const FieldT phi_zplus  = build_field( (*phi_), pos_Z   );
 
-  const FieldT cflux_xm   = build_field( (*convFluxX_), neutral );
-  const FieldT cflux_xp   = build_field( (*convFluxX_), pos_X   );
-  const FieldT cflux_ym   = build_field( (*convFluxY_), neutral );
-  const FieldT cflux_yp   = build_field( (*convFluxY_), pos_Y   );
-  const FieldT cflux_zm   = build_field( (*convFluxZ_), neutral );
-  const FieldT cflux_zp   = build_field( (*convFluxZ_), pos_Z   );
+//  const FieldT cflux_xm   = build_field( (*convFluxX_), neutral );
+//  const FieldT cflux_xp   = build_field( (*convFluxX_), pos_X   );
+//  const FieldT cflux_ym   = build_field( (*convFluxY_), neutral );
+//  const FieldT cflux_yp   = build_field( (*convFluxY_), pos_Y   );
+//  const FieldT cflux_zm   = build_field( (*convFluxZ_), neutral );
+//  const FieldT cflux_zp   = build_field( (*convFluxZ_), pos_Z   );
+  const double cflux_xm=0, cflux_xp=0, cflux_ym=0, cflux_yp=0, cflux_zm=0, cflux_zp=0;
 
   const FieldT dCoef_xminus = build_field( (*dCoef_), neg_X   );
   const FieldT dCoef_x0_1   = build_field( (*dCoef_), neutral );
@@ -224,16 +225,16 @@ template< typename FieldT >
 MonolithicRHS<FieldT>::
 Builder::Builder( const Expr::Tag& resultTag,
                   const Expr::Tag& dCoefTag,
-                  const Expr::Tag& xconvFluxTag,
-                  const Expr::Tag& yconvFluxTag,
-                  const Expr::Tag& zconvFluxTag,
+//                  const Expr::Tag& xconvFluxTag,
+//                  const Expr::Tag& yconvFluxTag,
+//                  const Expr::Tag& zconvFluxTag,
                   const Expr::Tag& phiTag,
                   const Expr::Tag& srcTag )
   : ExpressionBuilder( resultTag ),
     dCoefTag_   ( dCoefTag    ),
-    xconvFluxTag_( xconvFluxTag ),
-    yconvFluxTag_( yconvFluxTag ),
-    zconvFluxTag_( zconvFluxTag ),
+    xconvFluxTag_( Expr::Tag() ), //xconvFluxTag ),
+    yconvFluxTag_( Expr::Tag() ), //yconvFluxTag ),
+    zconvFluxTag_( Expr::Tag() ), //zconvFluxTag ),
     phiTag_     ( phiTag      ),
     srcTag_     ( srcTag      )
 {}

@@ -75,9 +75,9 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& dCoefTag,
-             const Expr::Tag& xconvFluxTag,
-             const Expr::Tag& yconvFluxTag,
-             const Expr::Tag& zconvFluxTag,
+//             const Expr::Tag& xconvFluxTag,
+//             const Expr::Tag& yconvFluxTag,
+//             const Expr::Tag& zconvFluxTag,
              const Expr::Tag& phiTag,
              const Expr::Tag& srcTag );
 

@@ -36,7 +36,7 @@
         <MonolithicRHS>true</MonolithicRHS>
         <SolutionVariable>phi</SolutionVariable>        
         <NumberOfEquations>30</NumberOfEquations>
-        <DoConvection>true</DoConvection>
+        <DoConvection>false</DoConvection>
         <X-Velocity> 
             <NameTag name="x-vel" state="STATE_N"/>
         </X-Velocity>
