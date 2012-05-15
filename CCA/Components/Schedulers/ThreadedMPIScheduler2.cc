@@ -661,7 +661,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         havework=true;
         numTasksDone++;
         phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase) currphase++;
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase+1 < numPhase) currphase++;
         break;
       }
       else if (dts->numExternalReadyTasks() >0){
@@ -670,7 +670,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
           havework=true;
           numTasksDone++;
           phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase) currphase++;
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase+1 < numPhase) currphase++;
           break;
         }
       }
