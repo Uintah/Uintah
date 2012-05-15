@@ -178,7 +178,7 @@ WARNING
      void setIteration(int iter) {currentIteration = iter;}
 
      int getNumTaskPhases(){
-         return numTaskPhases;
+         return d_numtaskphases;
      }
      
      std::vector<Task*>& getTasks() {
@@ -269,7 +269,7 @@ WARNING
      int currentIteration;
      
      // how many task phases this taskgraph has
-     int numTaskPhases;
+     int d_numtaskphases;
 
      typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>
      DetailedReductionTasksMap;

@@ -80,7 +80,7 @@ extern DebugStream mixedDebug;
 
 
 TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg, Scheduler::tgType type)
-  : sc(sc), d_myworld(pg), type_(type), dts_(0)
+  : sc(sc), d_myworld(pg), type_(type), dts_(0), d_numtaskphases(0)
 {
   lb = dynamic_cast<LoadBalancer*>(sc->getPort("load balancer"));
 }
@@ -102,6 +102,7 @@ TaskGraph::initialize()
     delete *iter;
 
   d_tasks.clear();
+  d_numtaskphases=0;
 
   edges.clear();
   currentIteration = 0;
@@ -984,7 +985,7 @@ TaskGraph::createDetailedDependencies()
     }
   }
 
-  numTaskPhases=currphase+1;
+  d_numtaskphases=currphase+1;
 
   TAU_PROFILE_STOP(rctimer);
   // Go through the modifies/requires and 
