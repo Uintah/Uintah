@@ -84,6 +84,8 @@
                                         need_applies_to="type combustion_efficiency"/>
           <phi_label                    spec="REQUIRED STRING"
                                         need_applies_to="type combustion_efficiency"/>
+          <phi_at_feq1                  spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type combustion_efficiency"/>
 
         </calculator>
 

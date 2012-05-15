@@ -278,6 +278,9 @@ namespace Uintah {
             params->require("phi_label", phi_name); 
             _phi_label = VarLabel::find( phi_name ); 
 
+            _phi_at_feq1 = 0.0; 
+            params->require("phi_at_feq1", _phi_at_feq1); 
+
             return true; 
           
           }; 
@@ -308,6 +311,7 @@ namespace Uintah {
             tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
           
@@ -325,15 +329,13 @@ namespace Uintah {
               int archIndex = 0; // only one arches material
               int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-              double numerator = 0.0; 
-              double denominator = 0.0; 
-
               constCCVariable<double> mf_1; 
               constCCVariable<double> mf_2; 
               constSFCXVariable<double> u; 
               constSFCYVariable<double> v; 
               constSFCZVariable<double> w; 
               constCCVariable<double> rho; 
+              constCCVariable<double> phi; 
 
               if ( _num_mf == 1 ){ 
 
@@ -350,6 +352,7 @@ namespace Uintah {
               new_dw->get( v, _a_labs->d_vVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
               new_dw->get( w, _a_labs->d_wVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
               new_dw->get( rho, _a_labs->d_densityCPLabel, indx, patch, Ghost::None, 0 ); 
+              new_dw->get( phi, _phi_label, indx, patch, Ghost::None, 0 ); 
 
               double sum_num = 0.0;
               double sum_den = 0.0; 
@@ -398,13 +401,13 @@ namespace Uintah {
 
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A; 
 
                               } 
                             }
@@ -415,18 +418,18 @@ namespace Uintah {
                               IntVector c = *bound_ptr; 
                               const double A     = Dx.y()*Dx.z();     
                               const double rho_u_A = get_plus_flux( u, rho, c, insideCellDir ) * A;  
-
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A;
 
                               } 
+
                             }
                             break; 
                           case Patch::yminus: 
@@ -435,18 +438,18 @@ namespace Uintah {
                               IntVector c = *bound_ptr; 
                               const double A     = Dx.x()*Dx.z();     
                               const double rho_u_A = get_minus_flux( v, rho, c, insideCellDir ) * A;  
-
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A; 
 
                               } 
+
                             }
                             break; 
                           case Patch::yplus:
@@ -455,18 +458,18 @@ namespace Uintah {
                               IntVector c = *bound_ptr; 
                               const double A     = Dx.x()*Dx.z();     
                               const double rho_u_A = get_plus_flux( v, rho, c, insideCellDir ) * A;  
-
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A; 
 
                               } 
+
                             }
                             break; 
                           case Patch::zminus: 
@@ -475,18 +478,18 @@ namespace Uintah {
                               IntVector c = *bound_ptr; 
                               const double A     = Dx.x()*Dx.y();     
                               const double rho_u_A = get_minus_flux( w, rho, c, insideCellDir ) * A;  
-
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A; 
 
                               } 
+
                             }
                             break; 
                           case Patch::zplus:
@@ -495,18 +498,18 @@ namespace Uintah {
                               IntVector c = *bound_ptr; 
                               const double A     = Dx.x()*Dx.y();     
                               const double rho_u_A = get_plus_flux( w, rho, c, insideCellDir ) * A;  
-
                               if ( _num_mf == 1 ){ 
                                 
-                                sum_num += mf_1[c] * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * mf_1[c] * rho_u_A; 
 
                               } else { 
 
-                                sum_num += ( mf_1[c] + mf_2[c] ) * rho_u_A; 
-                                sum_den += rho_u_A; 
+                                sum_num += phi[c] * rho_u_A; 
+                                sum_den += _phi_at_feq1 * ( mf_1[c] + mf_2[c] ) * rho_u_A; 
 
                               } 
+
                             }
                             break; 
                           default: 
@@ -519,8 +522,8 @@ namespace Uintah {
                 } 
               }
 
-              new_dw->put( sum_vartype( numerator ), _numerator_label ); 
-              new_dw->put( sum_vartype( denominator ), _denominator_label ); 
+              new_dw->put( sum_vartype( sum_num ), _numerator_label ); 
+              new_dw->put( sum_vartype( sum_den ), _denominator_label ); 
 
             }
           
@@ -555,12 +558,19 @@ namespace Uintah {
             sum_vartype denominator; 
             new_dw->get( numerator, _numerator_label ); 
             new_dw->get( denominator, _denominator_label ); 
+            const double small = 1.0e-16; 
 
             double combustion_efficiency = 0.0;
-            if ( denominator > 0.0 ) { 
-              combustion_efficiency = 1 - numerator / denominator; 
-            }
-
+            if ( denominator > small ) { 
+              if ( numerator > small ) { 
+                combustion_efficiency = 1.0 - numerator / denominator; 
+              } else { 
+                combustion_efficiency = 1.0;
+              } 
+            } else { 
+              combustion_efficiency = 1.0; 
+            } 
+  
             new_dw->put( delt_vartype( combustion_efficiency ), _efficiency_label ); 
 
           }; 
@@ -603,6 +613,7 @@ namespace Uintah {
           std::string _mf_id_2; 
 
           int _num_mf; 
+          double _phi_at_feq1; 
 
           const VarLabel* _numerator_label; 
           const VarLabel* _denominator_label; 
