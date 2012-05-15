@@ -22,10 +22,6 @@
 
 #include "ScalabilityTestSrc.h"
 
-//-- SpatialOps Includes --//
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
-
 template< typename FieldT >
 ScalabilityTestSrc<FieldT>::
 ScalabilityTestSrc( const Expr::Tag& varTag,
