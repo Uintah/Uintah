@@ -25,12 +25,6 @@
 
 #include <expression/Expression.h>
 
-//-- ExprLib Includes --//
-#include <expression/ExprLib.h>
-
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-
 /**
  *  \ingroup 	Expressions
  *  \class 	ScalabilityTestSrc
