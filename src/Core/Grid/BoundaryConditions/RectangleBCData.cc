@@ -120,7 +120,7 @@ bool RectangleBCData::inside(const Point &p) const
     else 
       return false;
   }    
-  
+  return false;
 }
 
 void RectangleBCData::print() 

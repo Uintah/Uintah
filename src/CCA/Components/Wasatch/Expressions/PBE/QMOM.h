@@ -298,9 +298,9 @@ evaluate()
         errorMsg << endl
                  << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
                  << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
-        std::cout << superSaturationTag_ << std::endl; 
+        std::cout << superSaturationTag_ << std::endl;
         for (int i = 0; i<nMoments_; i++) {
-          std::cout << "Value: M["<<i<<"] = "<<*knownMomentsIterators[i] << std::endl;   
+          std::cout << "Value: M["<<i<<"] = "<<*knownMomentsIterators[i] << std::endl;
         }
         throw std::runtime_error( errorMsg.str() );
       }
@@ -341,7 +341,6 @@ evaluate()
     /* Query and allocate the optimal workspace */
     int n = abSize, lda = abSize, info, lwork;
     double wkopt;
-    double* work;
     lwork = -1;
     char jobz='V';
     char matType = 'U';

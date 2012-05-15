@@ -100,8 +100,6 @@ namespace Wasatch{
                                           const bool isConstDensity,
                                           GraphCategories& gc )
   {
-    const StringNames& sName = StringNames::self();
-
     EqnTimestepAdaptorBase* adaptor = NULL;
     Wasatch::TransportEquation* transeqn = NULL;
 
@@ -778,7 +776,6 @@ namespace Wasatch{
                                          FieldTagInfo& info )
   {
     typedef OpTypes<FieldT> Ops;
-    const std::string& solnVarName = solnVarTag.name();
     Expr::Tag convFluxTag, advVelocityTag;
 
     std::string dir, interpMethod;
