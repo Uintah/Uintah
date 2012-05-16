@@ -110,27 +110,27 @@ namespace Uintah{
                                          
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( const Vector& inv_direction_vector,
-      		             const Vector& ray_location,
-      		             const IntVector& origin,
-      		             const Vector& Dx,
-      		             const IntVector& domainLo,
-      		             const IntVector& domainHi,
-      		             constCCVariable<double> sigmaT4Pi,
-      		             constCCVariable<double> abskg,
-      		             unsigned long int& size,
-      		             double& sumI);
+                             const Vector& ray_location,
+                             const IntVector& origin,
+                             const Vector& Dx,
+                             const IntVector& domainLo,
+                             const IntVector& domainHi,
+                             constCCVariable<double> sigmaT4Pi,
+                             constCCVariable<double> abskg,
+                             unsigned long int& size,
+                             double& sumI);
 
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void adjustLocation(Vector &location,
-    		                   const IntVector &indexOrder,
-    		                   const IntVector &shift,
-    		                   const double &DyDxRatio,
-    		                   const double &DzDxRatio);
+                                   const IntVector &indexOrder,
+                                   const IntVector &shift,
+                                   const double &DyDxRatio,
+                                   const double &DzDxRatio);
 
       /** @brief Adjust the direction of a ray depending on the cell face */
       void adjustDirection(Vector &directionVector,
-    		                    const IntVector &indexOrder,
-    		                    const IntVector &signOrder);
+                                    const IntVector &indexOrder,
+                                    const IntVector &signOrder);
 
 
 
@@ -213,6 +213,10 @@ namespace Uintah{
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
 
+      //__________________________________
+      //  
+      void constructor();
+      
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
@@ -247,9 +251,9 @@ namespace Uintah{
                                const MaterialSubset* matls, 
                                DataWarehouse* old_dw, 
                                DataWarehouse* new_dw,
-                     bool modifies_divQ,
-                     Task::WhichDW which_abskg_dw,
-                     Task::WhichDW which_sigmaT4_dw );
+                               bool modifies_divQ,
+                               Task::WhichDW which_abskg_dw,
+                               Task::WhichDW which_sigmaT4_dw );
       
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
@@ -278,9 +282,9 @@ namespace Uintah{
     //   Boundary Conditions
 
       void setBoundaryConditions( const ProcessorGroup*,
-                                  const PatchSubset* patches,           
-                                  const MaterialSubset*,                
-                                  DataWarehouse*,                
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*,
                                   DataWarehouse* new_dw,
                                   Task::WhichDW temp_dw );
                                   
@@ -296,7 +300,7 @@ namespace Uintah{
                   DataWarehouse*,
                   DataWarehouse* new_dw);
                           
-    // coarsen a single variable                      
+    // coarsen a single variable
     void sched_Coarsen_Q( const LevelP& coarseLevel,
                           SchedulerP& scheduler,
                           Task::WhichDW this_dw,
@@ -313,10 +317,10 @@ namespace Uintah{
                      Task::WhichDW this_dw);
                      
     void ROI_Extents ( const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse*, 
-                         DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*,
+                       DataWarehouse* new_dw);
 
   }; // class Ray
 } // namespace Uintah
