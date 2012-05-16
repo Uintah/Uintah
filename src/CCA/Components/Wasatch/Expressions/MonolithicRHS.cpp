@@ -46,9 +46,9 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
     srcTag_      ( srcTag       )
 {
   // right now we must have all directions active with convection and diffusion.
-  assert( xconvFluxTag != Expr::Tag() );
-  assert( yconvFluxTag != Expr::Tag() );
-  assert( zconvFluxTag != Expr::Tag() );
+//  assert( xconvFluxTag != Expr::Tag() );
+//  assert( yconvFluxTag != Expr::Tag() );
+//  assert( zconvFluxTag != Expr::Tag() );
   assert( dCoefTag     != Expr::Tag() );
 }
 
