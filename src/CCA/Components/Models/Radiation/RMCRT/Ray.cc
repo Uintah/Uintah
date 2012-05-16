@@ -53,11 +53,11 @@ static DebugStream dbg("RAY",       false);
 static DebugStream dbg2("RAY_DEBUG",false);
 static DebugStream dbg_BC("RAY_BC", false);
 
-//---------------------------------------------------------------------------
-// Method: Constructor. he's not creating an instance to the class yet
-//---------------------------------------------------------------------------
-Ray::Ray()
-{
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void Ray::constructor(){
   _pi = acos(-1); 
 
   d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
@@ -77,6 +77,16 @@ Ray::Ray()
   d_orderOfInterpolation = -9;
 }
 
+
+
+//---------------------------------------------------------------------------
+// Class: Constructor. 
+//---------------------------------------------------------------------------
+Ray::Ray()
+{
+  constructor();  // put everything that is common to cpu & gpu inside the function above
+}
+
 //---------------------------------------------------------------------------
 // Method: Constructor for GPU Version.
 //---------------------------------------------------------------------------
@@ -84,24 +94,7 @@ Ray::Ray()
 Ray::Ray(GPUThreadedMPIScheduler* gpuScheduler)
 {
   _gpuScheduler = gpuScheduler;
-
-  _pi = acos(-1);
-
-  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
-  d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
-  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
-  d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
-  d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
-  d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
-  d_VRFluxLabel          = VarLabel::create( "VRFlux",           CCVariable<double>::getTypeDescription() );
-  d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
-
-  d_matlSet       = 0;
-  _isDbgOn        = dbg2.active();
-
-  d_gac           = Ghost::AroundCells;
-  d_gn            = Ghost::None;
-  d_orderOfInterpolation = -9;
+  constructor();
 }
 #endif
 
@@ -138,7 +131,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "Slice"     ,       _slice     ,      9 );          // Level in z direction of xy slice
   rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
   rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
-  rmcrt_ps->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
+  rmcrt_ps->getWithDefault( "StefanBoltzmann",  _sigma,           5.67051e-8);  // Units are W/(m^2-K)
   rmcrt_ps->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );             // if true, at least one virtual radiometer exists
@@ -146,9 +139,11 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VROrientation"  ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
-  rmcrt_ps->getWithDefault( "NoRadRays"  ,       _NoRadRays  ,      1000 );
+  rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "halo"      ,       _halo,            IntVector(10,10,10));
 
+  //__________________________________
+  //  Warnings and bulletproofing
   if (_benchmark > 3 || _benchmark < 0  ){
     ostringstream warn;
     warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
@@ -211,7 +206,6 @@ Ray::registerVarLabels(int   matlIndex,
   d_temperatureLabel = temperature;
   d_cellTypeLabel    = celltype; 
   d_divQLabel        = divQ;
-
 
   //__________________________________
   //  define the materialSet
@@ -286,9 +280,9 @@ Ray::initProperties( const ProcessorGroup* pc,
       abskg.initialize  ( 0.0 ); 
       absorp.initialize ( 0.0 ); 
       sigmaT4Pi.initialize( 0.0 );
-      newdw_celltype.initialize( 0.0 ); 
+      newdw_celltype.initialize( 0 ); 
 
-      old_dw->get(temperature,      d_temperatureLabel, d_matl, patch, Ghost::None, 0);
+      old_dw->get(temperature,  d_temperatureLabel, d_matl, patch, Ghost::None, 0);
       old_dw->get(celltype,     d_cellTypeLabel,    d_matl, patch, Ghost::None, 0); 
 
       newdw_celltype.copyData( celltype ); 
@@ -299,7 +293,7 @@ Ray::initProperties( const ProcessorGroup* pc,
       new_dw->getModifiable( absorp,    d_absorpLabel,    d_matl, patch ); 
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch ); 
       new_dw->get( temperature,         d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
-      new_dw->get( celltype,        d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); 
+      new_dw->get( celltype,            d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); 
 
     }
 
@@ -600,6 +594,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             //  are in the 3rd or 4th quadrants due to the constraints on arccos
             if (_orient[0] < 0 && _orient[1] < 0) //quadrant 3
               psiRot = (_pi/2 + psiRot);
+              
             if (_orient[0] > 0 && _orient[1] < 0) //quadrant 4
               psiRot = (2*_pi - psiRot);
           
@@ -975,10 +970,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   //   fine level region of interest ROI
   minvec_vartype lo;
   maxvec_vartype hi;
-  new_dw->get( lo, d_ROI_LoCellLabel);
-  new_dw->get( hi, d_ROI_HiCellLabel);
-  const IntVector fineLevel_ROI_Lo = roundNearest(Vector(lo));
-  const IntVector fineLevel_ROI_Hi = roundNearest(Vector(hi));
+  new_dw->get( lo, d_ROI_LoCellLabel );
+  new_dw->get( hi, d_ROI_HiCellLabel );
+  const IntVector fineLevel_ROI_Lo = roundNearest( Vector(lo) );
+  const IntVector fineLevel_ROI_Hi = roundNearest( Vector(hi) );
   dbg << "fineLevel_ROI_Lo: " << fineLevel_ROI_Lo << " fineLevel_ROI_Hi: "<< fineLevel_ROI_Hi << endl;
   
   //__________________________________
@@ -1214,8 +1209,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               } else {
                 dir = Z;
               }
-            }
-            else {
+            } else {
               if(tMax.y() <tMax.z()){
                 dir = Y;
               } else {
