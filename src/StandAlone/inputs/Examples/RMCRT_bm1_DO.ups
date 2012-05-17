@@ -92,16 +92,7 @@
          <resolution> [41,41,41]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>      
-      </Box>                                         
-    </Level>    
-    <Level>
-      <Box label = "2">                              
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
-         <patches>    [3,3,3]     </patches> 
-         <extraCells> [1,1,1]     </extraCells>      
-      </Box>                                         
+      </Box>                                        
     </Level>
   </Grid>
   <!--__________________________________-->
@@ -132,13 +123,16 @@
     <abskg>             999        </abskg>
     <NoOfRays>          1          </NoOfRays>
     <Threshold>         0.05       </Threshold>
-    <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
 
     <algorithm type='dataOnion'>
-      <abskg_threshold>     0.1    </abskg_threshold>
       <halo>           [4,4,4]     </halo>
+      
+      <ROI_extents type='dynamic'>
+        <abskg_threshold>     0.1    </abskg_threshold>
+      </ROI_extents>
+      
     </algorithm>
     
   </RMCRT>

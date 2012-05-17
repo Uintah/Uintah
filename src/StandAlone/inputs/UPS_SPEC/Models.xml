@@ -9,28 +9,37 @@
     <RMCRT                    spec="OPTIONAL NO_DATA" >
       <randomSeed             spec="OPTIONAL BOOLEAN"/>
       <Temperature            spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
-      <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>                   
-      <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>        
-      <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>        
-      <Slice                  spec="OPTIONAL DOUBLE"/>                    
-      <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>        
-      <benchmark              spec="OPTIONAL INTEGER 'positive'"/>                    
-      <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>                   
+      <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>
+      <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>
+      <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
+      <Slice                  spec="OPTIONAL DOUBLE"/>
+      <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
+      <benchmark              spec="OPTIONAL INTEGER 'positive'"/>
+      <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
       <CCRays                 spec="OPTIONAL BOOLEAN"/>
       <VirtRadiometer         spec="OPTIONAL BOOLEAN"/>
       <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>
       <VROrientation          spec="OPTIONAL VECTOR"/>
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
-      <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>        
-      
-      
+      <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>
+           
       <algorithm                spec="OPTIONAL NO_DATA" 
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
-        <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" /> 
-        <abskg_threshold        spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion"/>   
-        <sigmaT4_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion"/> 
-        <halo                   spec="OPTIONAL VECTOR  'positive'"/>
+                                    
+        <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+        <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+        
+        <ROI_extents            spec="OPTIONAL NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+    
+          <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          
+          <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+          <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+        </ROI_extents>
+ 
       </algorithm>
       
     </RMCRT>

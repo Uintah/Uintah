@@ -174,7 +174,6 @@ namespace Uintah{
        
       int    _NoOfRays;
       int    _NoRadRays;
-      int    _slice;
       int    d_matl;
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       
@@ -189,13 +188,18 @@ namespace Uintah{
       bool _CCRays;
       bool _shouldSetBC;
       bool _isDbgOn;
+      
+      enum ROI_algo{fixed, dynamic, patch_based};
+      ROI_algo  _whichROI_algo;
+      Point _ROI_minPt;
+      Point _ROI_maxPt;
 
       // Virtual Radiometer parameters
       bool _virtRad;
       double _viewAng;
       Vector _orient;
-      IntVector _VRLocationsMin;
-      IntVector _VRLocationsMax;
+      IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
+      IntVector _VRLocationsMax;        // What happens if the resolution changes
       
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
