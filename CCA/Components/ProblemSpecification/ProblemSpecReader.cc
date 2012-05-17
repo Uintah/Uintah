@@ -382,6 +382,10 @@ struct Attribute : public AttributeAndTagBase {
 
 struct Tag : public AttributeAndTagBase {
 
+private:
+  const xmlNode              * originalXmlNode_; // This var is used (only) for debugging
+                                                 // (it contains the file/line # this tag comes from...)
+public:
   vector< AttributeP >         attributes_;
   vector< TagP >               subTags_;
 
@@ -398,16 +402,18 @@ struct Tag : public AttributeAndTagBase {
   //  BOOLEAN: validValues is not allowed... because it defaults to true/false.
   //  VECTOR: FIXME... does nothing yet...
   //
-  Tag( const string & name, TagP parent ) : 
+  Tag( const string & name, TagP parent, const xmlNode * node ) : 
     // This constructor is used only for creating a tag that is a forward declaration place holder tag.
-    AttributeAndTagBase( name, parent ), forwardDeclaration_( true ), isCommonTag_( false ) {}
+    AttributeAndTagBase( name, parent ), 
+    originalXmlNode_( node ), forwardDeclaration_( true ), isCommonTag_( false ) {}
 
-  Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ TagP parent ) :
-    AttributeAndTagBase( name, need, type, validValues, parent ), forwardDeclaration_( false ), isCommonTag_( false ) {}
+  Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ TagP parent, const xmlNode * node ) :
+    AttributeAndTagBase( name, need, type, validValues, parent ),
+    originalXmlNode_( node ), forwardDeclaration_( false ), isCommonTag_( false ) {}
 
-  Tag( const TagP commonTag, /*const*/ TagP parent, need_e need ) :
+  Tag( const TagP commonTag, /*const*/ TagP parent, need_e need, const xmlNode * node ) :
     AttributeAndTagBase( commonTag->name_, commonTag->need_, commonTag->type_, commonTag->validValues_, parent ),
-    forwardDeclaration_( false ) {
+    originalXmlNode_( node ), forwardDeclaration_( false ) {
 
     if( need == INVALID_NEED ) { 
       need_ = commonTag->need_;
@@ -776,7 +782,41 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   }
   else {
     if( name != "CommonTags" ) {
+
+      TagP tempTag = commonTags_g->findChildTag( name ); // If the tag is (accidentally) declared twice, then
+                                                         // this var will hold the first declaration...
+
+      if( ( xmlTag->properties != NULL ) && tempTag ) {
+
+        // This section checks for multiply declared versions of the same 'Common' tag...
+
+        string specStr = (const char *)( xmlTag->properties->children->content );
+
+        if( tempTag->forwardDeclaration_ ) { // If the original (first) specification of this Tag is a forward
+                                             // declaration, then if the new one is a forward declaration, there
+                                             // is an error, otherwise we are good to continue...
+          if( specStr == "FORWARD_DECLARATION" ) {
+            throw ProblemSetupException( "Error: The CommonTag <" + name + "> is forwardly declared twice.\n" +
+                                         "First time: " + getErrorInfo(tempTag->originalXmlNode_) + "\n"
+                                         "Second time: " + getErrorInfo(xmlTag), __FILE__, __LINE__ );
+          }
+        }
+        else {
+
+          need_e nd   = INVALID_NEED; // Need          - These three variable names are just used in debugging
+          type_e tp   = INVALID_TYPE; // Type          - and just in the following line, so am using
+          string vvs;                 // Valid Values  - abbreviated names as not to confuse with other vars later.
+          getNeedAndTypeAndValidValues( specStr, nd, tp, vvs );
+          if( tp != INVALID_TYPE ) {
+            throw ProblemSetupException( "Error: The CommonTag <" + name + "> appears to be created (specified) twice.\n" +
+                                         "First time: " + getErrorInfo(tempTag->originalXmlNode_) + "\n"
+                                         "Second time: " + getErrorInfo(xmlTag), __FILE__, __LINE__ );
+          }
+        }
+      }
+
       if( xmlTag->properties == NULL ) {
+
         TagP tag = commonTags_g->findChildTag( name );
         if( tag ) {
           dbg << "Found common tag for " << name << "\n";
@@ -784,7 +824,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
         else {
           throw ProblemSetupException( "Error (a)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").\n" +
-                                       "              or couldn't find in CommonTags.", __FILE__, __LINE__ );
+                                       "              or couldn't find in CommonTags.\n" + getErrorInfo(xmlTag), __FILE__, __LINE__ );
         }
       }
       else if( xmlTag->properties->children == NULL ) {
@@ -835,7 +875,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   if( forwardDecl ) {
     // Add tag to the list of forwardly declared tags that need to be resolved when the real definition is found.
     forwardDeclMap[ name ] = true;
-    newTag = new Tag( name, this );
+    newTag = new Tag( name, this, xmlTag );
   }
   else if( common ) {
     // Find this tag in the list of common tags... 
@@ -859,7 +899,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         storeTag = true;
       }
     }
-    newTag = new Tag( commonTag, this, need );
+    newTag = new Tag( commonTag, this, need, xmlTag );
 
     if( storeTag ) {
       // Save newTag in the list of tags that must be fixed up later (when the forwardly declared tag has been defined).
@@ -867,7 +907,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     }
   }
   else {
-    newTag = new Tag( name, need, type, validValues, this );
+    newTag = new Tag( name, need, type, validValues, this, xmlTag );
   }
 
   if( !updateForwardDecls ) {  // If we are updating a forward declaration, then our parent already knows about us. 
@@ -1138,8 +1178,8 @@ ProblemSpecReader::parseValidationFile()
   root->_private = (void*)valFile;
   resolveIncludes( root->children, root );
 
-  uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL );
-  commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL );
+  uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL, root );
+  commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL, root );
 
   //  string tagName = to_char_ptr( root->name );
   string tagName = (const char *)( root->name );
