@@ -107,30 +107,20 @@
   <!--__________________________________-->
   <AMR>
     <useLockStep> true </useLockStep>
-    <RMCRT>
-      <orderOfInterpolation>    1    </orderOfInterpolation>
-      <manualGrid>             true  </manualGrid>
-      <CoarseLevelRMCRTMethod> false  </CoarseLevelRMCRTMethod>
-      <multiLevelRMCRTMethod>  true </multiLevelRMCRTMethod>
-    </RMCRT>  
   </AMR>    
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_bm1_DO.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <!--  1L
-      <save label = "color"   />
-      <save label = "divQ"    />
-      <save label = "abskg"   />
-      <save label = "sigmaT4" />
-      -->  
-      <!--  2L -->
-      <save label = "color"   levels="-1"/>
-      <save label = "divQ"    levels="-1"/>
       <save label = "abskg" />
-      <save label = "sigmaT4" levels="1"/>
+      <save label = "sigmaT4"/>
       
-      <!--<save label = "refineFlag"/> -->
+      <save label = "color"          levels="-1"/>
+      <save label = "divQ"           levels="-1"/>
+      <save label = "mag_grad_abskg"   levels="-1"/>
+      <save label = "mag_grad_sigmaT4" levels="-1"/>
+      <save label = "flaggedCells"     levels="-1"/>
+      
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -145,6 +135,11 @@
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
-    <halo>           [4,4,4]       </halo>
+
+    <algorithm type='dataOnion'>
+      <abskg_threshold>     0.1    </abskg_threshold>
+      <halo>           [4,4,4]     </halo>
+    </algorithm>
+    
   </RMCRT>
 </Uintah_specification>

@@ -81,8 +81,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_matl = 0;
   d_initColor = -9;
   d_initAbskg = -9;
-  d_CoarseLevelRMCRTMethod = true;
-  d_multiLevelRMCRTMethod  = false;
+  d_whichAlgo = coarseLevel;
   d_wall_cell = 8; //<----HARD CODED WALL CELL
   d_flow_cell = -1; //<----HARD CODED FLOW CELL 
    
@@ -104,10 +103,6 @@ RMCRT_Test::~RMCRT_Test ( void )
   
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
-  for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
-    delete d_refine_geom_objs[i];
-  }
-  //delete d_examplesLabel;
 }
 
 //______________________________________________________________________
@@ -147,7 +142,35 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     
     d_RMCRT->problemSetup( prob_spec, rmcrt_ps );
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
+    
+      
+    //__________________________________
+    //  Read in the dataOnion section
+    ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
+    if (alg_ps){
+    
+      string type="NULL";
+      alg_ps->getAttribute("type", type);
+    
+      if (type == "dataOnion" ) {
+        cout << " here " << endl;
+        d_whichAlgo = dataOnion;
+
+        //__________________________________
+        //  bulletproofing
+        if(!d_sharedState->isLockstepAMR()){
+          ostringstream msg;
+          msg << "\n ERROR: You must add \n"
+              << " <useLockStep> true </useLockStep> \n"
+              << " inside of the <AMR> section. \n"; 
+          throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+        }
+      } else if ( type == "RMCRT_coarseLevel" ) {
+        d_whichAlgo = coarseLevel;
+      }
+    }
   }
+  
   //__________________________________
   //  bullet proofing
   IntVector extraCells = grid->getLevel(0)->getExtraCells();
@@ -167,72 +190,6 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     ProblemSpecP intrusion_ps = prob_spec->findBlock("Intrusion"); 
     ProblemSpecP geom_obj_ps = intrusion_ps->findBlock("geom_object");
     GeometryPieceFactory::create(geom_obj_ps, d_intrusion_geom);
-  }
-  
-  //__________________________________
-  //  Read in the AMR section
-  ProblemSpecP rmcrt_ps;
-  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-  if (amr_ps){
-    rmcrt_ps = amr_ps->findBlock("RMCRT");
-
-    if(!rmcrt_ps){
-      string warn;
-      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
-      throw ProblemSetupException(warn, __FILE__, __LINE__);
-    }
-
-    rmcrt_ps->require("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
-    rmcrt_ps->require("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
-    //__________________________________
-    // read in the regions that user would like 
-    // refined if the grid has not been setup manually
-    bool manualGrid;
-    rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
-
-    if(!manualGrid){
-      ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
-      if(!refine_ps ){
-        string warn;
-        warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
-             " block not found inside of <RMCRT> block \n";
-        throw ProblemSetupException(warn, __FILE__, __LINE__);
-      }
-
-      // Read in the refined regions geometry objects
-      int piece_num = 0;
-      list<GeometryObject::DataItem> geom_obj_data;
-      geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
-
-      for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
-            geom_obj_ps != 0;
-            geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-
-          vector<GeometryPieceP> pieces;
-          GeometryPieceFactory::create(geom_obj_ps, pieces);
-
-          GeometryPieceP mainpiece;
-          if(pieces.size() == 0){
-             throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-          } else if(pieces.size() > 1){
-             mainpiece = scinew UnionGeometryPiece(pieces);
-          } else {
-             mainpiece = pieces[0];
-          }
-          piece_num++;
-          d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
-       }
-     }
-
-    //__________________________________
-    //  bulletproofing
-    if(!d_sharedState->isLockstepAMR()){
-      ostringstream msg;
-      msg << "\n ERROR: You must add \n"
-          << " <useLockStep> true </useLockStep> \n"
-          << " inside of the <AMR> section. \n"; 
-      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-    }
   }
 }
   
@@ -277,7 +234,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
-  if(d_multiLevelRMCRTMethod){
+  if( d_whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     const PatchSet* finestPatches = fineLevel->eachPatch();
 
@@ -287,12 +244,13 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     // coarsen data to the coarser levels.  
     // do it in reverse order
-    Task::WhichDW temp_dw = Task::NewDW;
+    Task::WhichDW notUsed = Task::OldDW;
+    const bool backoutTemp = true;
     
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       d_RMCRT->sched_CoarsenAll (level, sched);
-      d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw );
+      d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
     }
     
     //__________________________________
@@ -313,7 +271,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //   2 - L E V E L   A P P R O A C H
   //  If the RMCRT is performed on only the coarse level
   // and the results are interpolated to the fine level
-  if(d_CoarseLevelRMCRTMethod){
+  if( d_whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     const PatchSet* finestPatches = fineLevel->eachPatch();
    

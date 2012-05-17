@@ -13,7 +13,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 4        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -93,48 +93,11 @@
   <!--__________________________________-->
   <AMR>
     <useLockStep> true </useLockStep>
-    <RMCRT>
-      <orderOfInterpolation>    1    </orderOfInterpolation>
-      <manualGrid>             true  </manualGrid>
-      <CoarseLevelRMCRTMethod> true  </CoarseLevelRMCRTMethod>
-      <multiLevelRMCRTMethod>  false </multiLevelRMCRTMethod>
-    </RMCRT>
-    
-    <!--
-    <RMCRT>
-      <Refine_Regions>
-        <geom_object>
-          <box label = "regrid">
-              <min>           [-0.2, -0.2,-0.2]   </min>
-              <max>           [ 0.2,  0.2, 0.2]   </max>
-            </box>
-            <level> -1 </level>
-          </geom_object>
-          
-        </Refine_Regions>
-      </RMCRT>
-      <Regridder type="Tiled">
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]    </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]     </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]      </min_boundary_cells>
-        <min_patch_size>           [[10,10,1]]  </min_patch_size>
-        <patches_per_level_per_proc> 8          </patches_per_level_per_proc>
-      </Regridder>
-      -->
-      
   </AMR>    
   <!--__________________________________-->
   <DataArchiver>
   <filebase>RMCRT_ML.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <!--  1L
-      <save label = "color"   />
-      <save label = "divQ"    />
-      <save label = "abskg"   />
-      <save label = "sigmaT4" />
-      -->  
-      <!--  2L -->
       <save label = "color"   levels="-1"/>
       <save label = "divQ"  />
       <save label = "abskg" />
@@ -150,11 +113,16 @@
     <randomSeed>         false     </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
-    <NoOfRays>          25         </NoOfRays>
+    <NoOfRays>          10         </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
+    
+    <!-- compute rmcrt on coarse level -->
+    <algorithm type='RMCRT_coarseLevel'>
+      <orderOfInterpolation>  1    </orderOfInterpolation>
+    </algorithm>
   </RMCRT>
 </Uintah_specification>

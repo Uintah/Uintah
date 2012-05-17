@@ -836,7 +836,6 @@
 
     <include href="ice_spec.xml"         section="AMR/ICE" />
     <include href="mpm_spec.xml"         section="AMR/MPM" />
-    <include href="RMCRT_test.xml"       section="AMR/RMCRT" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >

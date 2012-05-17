@@ -140,7 +140,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
-  rmcrt_ps->getWithDefault( "halo"      ,       _halo,            IntVector(10,10,10));
+
 
   //__________________________________
   //  Warnings and bulletproofing
@@ -163,22 +163,25 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   } 
 
   //__________________________________
-  //  Read in the AMR section
-  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-  if (amr_ps){
-    rmcrt_ps = amr_ps->findBlock("RMCRT");
+  //  Read in the algorithm section
+  ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
+  if (alg_ps){
+  
+    string type="NULL";
 
-    if(!rmcrt_ps){
-      string warn;
-      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
-      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    if( !alg_ps->getAttribute("type", type) ){
+      throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose dataOnion on RMCRT_coarseLevel", __FILE__, __LINE__);
     }
-    rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
-    rmcrt_ps->getWithDefault( "abskg_threshold",    _abskg_thld,   DBL_MAX);
-    rmcrt_ps->getWithDefault( "sigmaT4_threshold",  _sigmaT4_thld, DBL_MAX);
+  
+    if (type == "dataOnion" ) {
+      alg_ps->getWithDefault( "abskg_threshold",   _abskg_thld,   DBL_MAX);
+      alg_ps->getWithDefault( "sigmaT4_threshold", _sigmaT4_thld, DBL_MAX);
+      alg_ps->getWithDefault( "halo",              _halo,         IntVector(10,10,10));
+    } else if ( type == "RMCRT_coarseLevel" ) {
+      alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
+    }
   }
 
-  
   _sigma_over_pi = _sigma/_pi;
 
   //__________________________________
@@ -1367,15 +1370,19 @@ Ray::containsCell(const IntVector &low,
 void
 Ray::sched_setBoundaryConditions( const LevelP& level, 
                                   SchedulerP& sched,
-                                  Task::WhichDW temp_dw )
+                                  Task::WhichDW temp_dw,
+                                  const bool backoutTemp )
 {
 
   std::string taskname = "Ray::sched_setBoundaryConditions";
-  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, temp_dw );
+  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, temp_dw, backoutTemp );
 
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( temp_dw, d_temperatureLabel, Ghost::None,0 );
+  if(!backoutTemp){
+    tsk->requires( temp_dw, d_temperatureLabel, Ghost::None,0 );
+  }
+  
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
 
@@ -1388,7 +1395,8 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
                             const MaterialSubset*,                
                             DataWarehouse*,                
                             DataWarehouse* new_dw,
-                            Task::WhichDW temp_dw )               
+                            Task::WhichDW temp_dw,
+                            const bool backoutTemp )               
 {
 
   for (int p=0; p < patches->size(); p++){
@@ -1403,22 +1411,44 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       printTask(patches,patch,dbg,"Doing Ray::setBoundaryConditions");
 
       double sigma_over_pi = _sigma/M_PI;
-
-      constCCVariable<double> varTmp;
+      
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4Pi;
       
-      // get a copy of the temperature  and set the BC
-      // the temperature will not be put back in the DW.
-      DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
-      t_dw->get(varTmp, d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
       new_dw->allocateTemporary(temp,  patch);
-      temp.copyData(varTmp);
-      
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch );
       new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
       
+      //__________________________________
+      // loop over boundary faces and backout the temperature 
+      // one cell from the boundary.  Note that the temperature 
+      // is not available on all levels but sigmaT4 is.
+      if (backoutTemp){
+        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+          Patch::FaceType face = *itr;
+
+          Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
+
+          for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
+            const IntVector& c = *iter;
+            double T4 =  sigmaT4Pi[c]/sigma_over_pi;
+            temp[c]   =  pow( T4, 1./4.);
+          }
+        }
+      } else {
+        //__________________________________
+        // get a copy of the temperature and set the BC
+        // on the copy and do not put it back in the DW.
+        DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
+        constCCVariable<double> varTmp;
+        t_dw->get(varTmp, d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
+        temp.copyData(varTmp);
+      }
+      
+      
+      //__________________________________
+      // set the boundary conditions
       setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
 
