@@ -128,7 +128,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rmcrt_ps = rmcrtps;
   rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      1000 );
   rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
-  rmcrt_ps->getWithDefault( "Slice"     ,       _slice     ,      9 );          // Level in z direction of xy slice
   rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
   rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
   rmcrt_ps->getWithDefault( "StefanBoltzmann",  _sigma,           5.67051e-8);  // Units are W/(m^2-K)
@@ -173,10 +172,34 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose dataOnion on RMCRT_coarseLevel", __FILE__, __LINE__);
     }
   
+    //__________________________________
+    //  Data Onion
     if (type == "dataOnion" ) {
-      alg_ps->getWithDefault( "abskg_threshold",   _abskg_thld,   DBL_MAX);
-      alg_ps->getWithDefault( "sigmaT4_threshold", _sigmaT4_thld, DBL_MAX);
-      alg_ps->getWithDefault( "halo",              _halo,         IntVector(10,10,10));
+
+      alg_ps->getWithDefault( "halo",  _halo,  IntVector(10,10,10));
+      
+      //  Method for deteriming the extents of the ROI
+      ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
+      ROI_ps->getAttribute("type", type);
+      
+      if(type == "fixed" ) {
+        
+        _whichROI_algo = fixed;
+        ROI_ps->get("min", _ROI_minPt );
+        ROI_ps->get("max", _ROI_maxPt );
+        
+      } else if ( type == "dynamic" ) {
+        
+        _whichROI_algo = dynamic;
+        ROI_ps->getWithDefault( "abskg_threshold",   _abskg_thld,   DBL_MAX);
+        ROI_ps->getWithDefault( "sigmaT4_threshold", _sigmaT4_thld, DBL_MAX);
+        
+      } else if ( type == "patch_based" ){
+        _whichROI_algo = patch_based;
+      }
+      
+    //__________________________________
+    //  rmcrt only on the coarse level  
     } else if ( type == "RMCRT_coarseLevel" ) {
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
@@ -924,8 +947,11 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // finest level:
   tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
-  tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
-  tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
+  
+  if( _whichROI_algo == dynamic ){
+    tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
+    tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
+  }
   
   // coarser level
   int nCoarseLevels = maxLevels;
@@ -971,12 +997,22 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
   //__________________________________
   //   fine level region of interest ROI
-  minvec_vartype lo;
-  maxvec_vartype hi;
-  new_dw->get( lo, d_ROI_LoCellLabel );
-  new_dw->get( hi, d_ROI_HiCellLabel );
-  const IntVector fineLevel_ROI_Lo = roundNearest( Vector(lo) );
-  const IntVector fineLevel_ROI_Hi = roundNearest( Vector(hi) );
+  IntVector fineLevel_ROI_Lo;
+  IntVector fineLevel_ROI_Hi;
+  
+  if( _whichROI_algo == dynamic ){
+    minvec_vartype lo;
+    maxvec_vartype hi;
+    new_dw->get( lo, d_ROI_LoCellLabel );
+    new_dw->get( hi, d_ROI_HiCellLabel );
+    fineLevel_ROI_Lo = roundNearest( Vector(lo) );
+    fineLevel_ROI_Hi = roundNearest( Vector(hi) );
+    
+  } else if ( _whichROI_algo == fixed ){
+    fineLevel_ROI_Lo = fineLevel->getCellIndex( _ROI_minPt );
+    fineLevel_ROI_Hi = fineLevel->getCellIndex( _ROI_maxPt );
+  }
+  
   dbg << "fineLevel_ROI_Lo: " << fineLevel_ROI_Lo << " fineLevel_ROI_Hi: "<< fineLevel_ROI_Hi << endl;
   
   //__________________________________
@@ -1628,14 +1664,14 @@ void Ray::refine_Q(const ProcessorGroup*,
 }
   
 //______________________________________________________________________
-// This task determine the extents of the fine level region of interest
+// This task computes the extents of the fine level region of interest
 void Ray::sched_ROI_Extents ( const LevelP& level, 
                               SchedulerP& scheduler )
 {
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
   
-  if(L_indx != maxLevels){     // only schedule on the finest level
+  if( (L_indx != maxLevels ) && ( _whichROI_algo == dynamic ) ){     // only schedule on the finest level
     return;
   }
   

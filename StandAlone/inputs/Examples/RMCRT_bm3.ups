@@ -105,7 +105,6 @@
     <abskg>             999        </abskg>
     <NoOfRays>          10         </NoOfRays>
     <Threshold>         0.05       </Threshold>
-    <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         3          </benchmark>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
