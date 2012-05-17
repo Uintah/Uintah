@@ -23,7 +23,16 @@
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
       <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>        
-      <halo                   spec="OPTIONAL VECTOR 'positive'"/>
+      
+      
+      <algorithm                spec="OPTIONAL NO_DATA" 
+                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+        <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" /> 
+        <abskg_threshold        spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion"/>   
+        <sigmaT4_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dataOnion"/> 
+        <halo                   spec="OPTIONAL VECTOR  'positive'"/>
+      </algorithm>
+      
     </RMCRT>
     
     <!--__________________________________-->

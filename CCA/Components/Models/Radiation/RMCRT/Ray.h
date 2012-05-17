@@ -106,7 +106,8 @@ namespace Uintah{
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched,
-                                         Task::WhichDW temp_dw);
+                                         Task::WhichDW temp_dw,
+                                         const bool backoutTemp = false);
                                          
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( const Vector& inv_direction_vector,
@@ -286,7 +287,8 @@ namespace Uintah{
                                   const MaterialSubset*,
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
-                                  Task::WhichDW temp_dw );
+                                  Task::WhichDW temp_dw,
+                                  const bool backoutTemp );
                                   
     int numFaceCells(const Patch* patch,
                      const Patch::FaceIteratorType type,

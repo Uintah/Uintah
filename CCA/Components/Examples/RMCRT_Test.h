@@ -121,8 +121,6 @@ WARNING
     const ProcessorGroup* d_myworld;
     
     Ray* d_RMCRT;
-
-    ExamplesLabel*   d_examplesLabel;
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 
@@ -136,16 +134,15 @@ WARNING
     Ghost::GhostType d_gn;
     Ghost::GhostType d_gac;
     
-    double         d_initColor;
-    double         d_initAbskg;
-    int            d_matl;
-    int            d_wall_cell; 
-    int            d_flow_cell; 
-    bool           d_CoarseLevelRMCRTMethod;
-    bool           d_multiLevelRMCRTMethod;
+    double   d_initColor;
+    double   d_initAbskg;
+    int      d_matl;
+    int      d_wall_cell; 
+    int      d_flow_cell;
+    int      d_whichAlgo;
+    enum Algorithm{ dataOnion, coarseLevel}; 
     
-    std::vector<GeometryPieceP>  d_intrusion_geom; 
-    std::vector<GeometryObject*> d_refine_geom_objs;
+    std::vector<GeometryPieceP>  d_intrusion_geom;
   };
 
 } // namespace Uintah
