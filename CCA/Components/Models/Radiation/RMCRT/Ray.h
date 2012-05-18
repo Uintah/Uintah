@@ -111,27 +111,28 @@ namespace Uintah{
                                          
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( const Vector& inv_direction_vector,
-                             const Vector& ray_location,
-                             const IntVector& origin,
-                             const Vector& Dx,
-                             const IntVector& domainLo,
-                             const IntVector& domainHi,
-                             constCCVariable<double> sigmaT4Pi,
-                             constCCVariable<double> abskg,
-                             unsigned long int& size,
-                             double& sumI);
+                         const Vector& ray_location,
+                         const IntVector& origin,
+                         const Vector& Dx,
+                         const IntVector& domainLo,
+                         const IntVector& domainHi,
+                         constCCVariable<double>& sigmaT4Pi,
+                         constCCVariable<double>& abskg,
+                         unsigned long int& size,
+                         double& sumI);
 
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void adjustLocation(Vector &location,
-                                   const IntVector &indexOrder,
-                                   const IntVector &shift,
-                                   const double &DyDxRatio,
-                                   const double &DzDxRatio);
+                          const IntVector &indexOrder,         
+                          const IntVector &shift,              
+                          const double &DyDxRatio,             
+                          const double &DzDxRatio);            
 
       /** @brief Adjust the direction of a ray depending on the cell face */
       void adjustDirection(Vector &directionVector,
-                                    const IntVector &indexOrder,
-                                    const IntVector &signOrder);
+                           const IntVector &indexOrder,         
+                           const IntVector &signOrder);         
+
 
 
 
