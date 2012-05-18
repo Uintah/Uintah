@@ -220,7 +220,7 @@
       </table>
       <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
       <toMaterial             spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
-      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type ZeroOrder DDT1"/>
+      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 Simple_Burn Steady_Burn Unsteady_Burn ZeroOrder"/>
       <ThresholdvolFrac       spec="OPTIONAL DOUBLE 'positive'" />
       <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
       <ThresholdPressureSB    spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
