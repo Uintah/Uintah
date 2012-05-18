@@ -47,13 +47,13 @@
     <!--__________________________________-->
     <!--  Models used by ICE & MPMICE     -->
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1, SolidReactionModel'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, ZeroOrder, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1, SolidReactionModel'" >
 
-      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0 SolidReactionModel" />
-      <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp Tillotson" />
+      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp ZeroOrder Simple_Burn DDT0 SolidReactionModel" />
+      <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp ZeroOrder Thomsen_Hartka_water Tillotson" />
+      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp ZeroOrder Tillotson" />
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp" />
+      <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp ZeroOrder" />
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
       
@@ -220,15 +220,16 @@
       </table>
       <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
       <toMaterial             spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
-      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" />
+      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type ZeroOrder DDT1"/>
       <ThresholdvolFrac       spec="OPTIONAL DOUBLE 'positive'" />
-      <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'"/>
-      <ThresholdPressureSB    spec="OPTIONAL DOUBLE 'positive'" />
+      <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+      <ThresholdPressureSB    spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
       <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" />
       <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" />
       <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      <useCrackModel          spec="OPTIONAL BOOLEAN" />  
+      <useCrackModel          spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
+      <useZeroOrderRate       spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
      
       <IandG                  spec="OPTIONAL NO_DATA">
         <fromMaterial         spec="REQUIRED STRING" />

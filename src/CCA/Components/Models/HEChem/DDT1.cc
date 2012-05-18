@@ -174,6 +174,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   d_params->require("IgnitionTemp",      ignitionTemp);
   d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
   d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
+  d_params->getWithDefault("useZeroOrderRate", d_useZeroOrderRate, false); 
   
   if(d_useCrackModel){
     d_params->require("Gcrack",           d_Gcrack);
@@ -257,6 +258,7 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("BoundaryParticles", BP);
   model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
   model_ps->appendElement("IgnitionTemp",      ignitionTemp);
+  model_ps->appendElement("useZeroOrderRate",  d_useZeroOrderRate);
   if(d_useCrackModel){
     model_ps->appendElement("useCrackModel",     d_useCrackModel);
     model_ps->appendElement("Gcrack",            d_Gcrack);
@@ -622,15 +624,22 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       
-      // JWL++ Model For explosions
+      // Detonation model For explosions
       if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
         
         detonating[c] = 1;   // Flag for detonating 
         
         
         Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
-        if(Fr[c] >= 0. && Fr[c] < .99){
-          delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
+        // use a simple 0-order rate model
+        if(d_useZeroOrderRate) {
+          if(Fr[c] >= 0. && Fr[c] < 1.0){
+            delF[c] = d_G*pow(press_CC[c], d_b);
+          }
+        } else { // Use the JWL++ model for explosion
+          if(Fr[c] >= 0. && Fr[c] < .99){
+            delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
+          }
         }
         delF[c]*=delT;
         
