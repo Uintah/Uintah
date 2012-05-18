@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #  include <CCA/Components/Models/HEChem/Unsteady_Burn.h>
 #  include <CCA/Components/Models/HEChem/IandG.h>
 #  include <CCA/Components/Models/HEChem/JWLpp.h>
+#  include <CCA/Components/Models/HEChem/ZeroOrder.h>
 #  include <CCA/Components/Models/HEChem/DDT0.h>
 #  include <CCA/Components/Models/HEChem/LightTime.h>
 #  include <CCA/Components/Models/HEChem/DDT0.h>
@@ -131,6 +132,8 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew IandG(d_myworld, model_ps));
     else if(type == "JWLpp")
       d_models.push_back(scinew JWLpp(d_myworld, model_ps, prob_spec));
+    else if(type == "ZeroOrder")
+      d_models.push_back(scinew ZeroOrder(d_myworld, model_ps, prob_spec));
     else if(type == "LightTime")
       d_models.push_back(scinew LightTime(d_myworld, model_ps));
     else if(type == "DDT0")
