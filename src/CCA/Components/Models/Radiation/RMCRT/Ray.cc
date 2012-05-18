@@ -1848,8 +1848,8 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
                        const Vector& Dx,
                        const IntVector& domainLo,
                        const IntVector& domainHi,
-                       constCCVariable<double> sigmaT4Pi,
-                       constCCVariable<double> abskg,
+                       constCCVariable<double>& sigmaT4Pi,
+                       constCCVariable<double>& abskg,
                        unsigned long int& size,
                        double& sumI)
 
