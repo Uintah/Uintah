@@ -221,7 +221,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw   = Task::NewDW;
         Task::WhichDW sigmaT4_dw = Task::NewDW;
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
+        Task::WhichDW celltype_dw = Task::NewDW;
+        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
     }
 

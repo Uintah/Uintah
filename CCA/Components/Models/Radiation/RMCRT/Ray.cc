@@ -456,6 +456,7 @@ Ray::sched_rayTrace( const LevelP& level,
                      SchedulerP& sched,
                      Task::WhichDW abskg_dw,
                      Task::WhichDW sigma_dw,
+                     Task::WhichDW celltype_dw,
                      bool modifies_divQ )
 {
   std::string taskname = "Ray::sched_rayTrace";
@@ -465,7 +466,7 @@ Ray::sched_rayTrace( const LevelP& level,
                            &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, sigma_dw );
+                         modifies_divQ, abskg_dw, celltype_dw, sigma_dw );
 #endif
 
   printSchedule(level,dbg,taskname);
@@ -475,8 +476,8 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw , d_abskgLabel  ,  gac, SHRT_MAX);
   tsk->requires( sigma_dw , d_sigmaT4_label, gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, 0);
   //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
-
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
@@ -502,7 +503,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* new_dw,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
-               Task::WhichDW which_sigmaT4_dw )
+               Task::WhichDW which_sigmaT4_dw,
+               Task::WhichDW which_celltype_dw)
 { 
   const Level* level = getLevel(patches);
   MTRand _mTwister;
@@ -516,12 +518,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
   
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+
 
   constCCVariable<double> sigmaT4Pi;
-  constCCVariable<double> abskg;                               
+  constCCVariable<double> abskg;
+  constCCVariable<int>    celltype;
+
   abskg_dw->getRegion(   abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
   sigmaT4_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
-
+  celltype_dw->getRegion( celltype , d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
   double start=clock();
 
   // patch loop
@@ -533,18 +539,31 @@ Ray::rayTrace( const ProcessorGroup* pc,
     CCVariable<double> divQ;
     CCVariable<double> VRFlux;
     CCVariable<Stencil7> boundFlux;
+    constCCVariable<int> celltype;
+
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,      d_divQLabel,      d_matl, patch );
       old_dw->getModifiable( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       old_dw->getModifiable( boundFlux, d_boundFluxLabel, d_matl, patch );
+      //old_dw->get(celltype,     d_cellTypeLabel,    d_matl, patch, Ghost::None, 0);
+
 
     }else{
+
       new_dw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
       divQ.initialize( 0.0 ); 
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux, d_boundFluxLabel, d_matl, patch );
+
+      new_dw->get( celltype,        d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); // I might be able to do this without going through the trouble
+
+
+
+
+
+
     }
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
@@ -766,6 +785,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             int i = origin.x();
             int j = origin.y();
             int k = origin.z();
+            //cout << "celltype: " << celltype[origin] << endl;
 
             // quick flux debug test
             //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations

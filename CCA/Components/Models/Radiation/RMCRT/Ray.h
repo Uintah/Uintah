@@ -83,6 +83,7 @@ namespace Uintah{
                            SchedulerP& sched,
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
+                           Task::WhichDW celltype_dw,
                            bool modifies_divQ );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
@@ -231,7 +232,8 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
-                     Task::WhichDW which_sigmaT4_dw );
+                     Task::WhichDW which_sigmaT4_dw,
+                     Task::WhichDW which_celltype_dw);
 
 #ifdef HAVE_CUDA
 
