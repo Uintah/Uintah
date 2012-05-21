@@ -601,13 +601,13 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE" />
-      <timeStart                        spec="REQUIRED INTEGER" />
-      <timeStop                         spec="REQUIRED INTEGER" />
-      <colorThreshold                   spec="REQUIRED DOUBLE" need_applies_to="name particleExtract"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract"/>
+      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract"/>
+      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract"/>
+      <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
       <Variables                        spec="OPTIONAL NO_DATA" >
         <analyze                        spec="MULTIPLE NO_DATA"
@@ -622,6 +622,12 @@
           <stepSize                     spec="OPTIONAL DOUBLE 'positive'"/>
         </line>
       </lines>
+      
+      <plane                           spec="MULTIPLE NO_DATA" need_applies_to="name flatPlate_heatFlux"> 
+        <startingPt                   spec="REQUIRED VECTOR" />
+        <endingPt                     spec="REQUIRED VECTOR" />
+      </plane>
+      
       <!--  container extract -->
       <objects                          spec="OPTIONAL NO_DATA" need_applies_to="name containerExtract">
         <geom_object>
