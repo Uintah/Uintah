@@ -51,7 +51,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       int device,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
-                      Task::WhichDW which_sigmaT4_dw)
+                      Task::WhichDW which_sigmaT4_dw,
+                      Task::WhichDW which_celltype_dw)
 {
   // set the CUDA device and context
   cudaError_t retVal;
