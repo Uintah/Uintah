@@ -40,14 +40,17 @@ namespace Uintah {
   class AnalysisModule;
   
   class AnalysisModuleFactory{
-    public:
+    private:
       AnalysisModuleFactory();
       ~AnalysisModuleFactory();
-      
-      static AnalysisModule* create(const ProblemSpecP& prob_spec,
-                                    SimulationStateP& sharedState,
-                                    Output* dataArchiever);
-    };
+          
+    public:      
+      static
+       std::vector< AnalysisModule*> 
+        create(const ProblemSpecP& prob_spec,
+               SimulationStateP& sharedState,
+               Output* dataArchiever);
+  };
 }
 
 #endif 

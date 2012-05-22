@@ -440,7 +440,7 @@ protected:
   int              pbx_matl_num;
   MaterialSubset*  pbx_matl;
 
-  AnalysisModule*  d_analysisModule;
+  std::vector<AnalysisModule*>  d_analysisModules;
 
   SwitchingCriteria* d_switchCriteria;
 

@@ -378,7 +378,7 @@ public:
 
   Arches*          d_arches;
   
-  AnalysisModule* d_analysisModule;
+  std::vector<AnalysisModule*> d_analysisModules;
 
   double d_tcond;
   bool d_calcEnergyExchange;

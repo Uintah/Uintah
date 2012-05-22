@@ -114,8 +114,12 @@ MPMArches::~MPMArches()
   delete d_mpm;
   delete d_arches;
   
-  if (d_analysisModule) {
-    delete d_analysisModule;
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      delete *iter;
+    }
   }
 }
 
@@ -213,9 +217,15 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  create analysis modules
   // call problemSetup  
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->problemSetup(prob_spec, grid, sharedState);
+    }
   }
 
   // make an allowance for an enthalpy variable with a different name: 
@@ -274,8 +284,13 @@ void MPMArches::scheduleInitialize(const LevelP& level,
   //  cerr << "--------------------------------\n"<<endl; 
   
   // dataAnalysis 
-  if(d_analysisModule){
-    d_analysisModule->scheduleInitialize( sched, level);
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleInitialize( sched, level);
+    }
   }
   
 }
@@ -1147,9 +1162,15 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     Mlb->pParticleIDLabel,
                                     mpm_matls);
       
-  // on the fly data analysis
-  if(d_analysisModule){                                                        
-    d_analysisModule->scheduleDoAnalysis( sched, level);
+  //__________________________________
+  //  on the fly analysis
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis( sched, level);
+    }
   }
 }
 

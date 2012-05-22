@@ -49,39 +49,44 @@ AnalysisModuleFactory::~AnalysisModuleFactory()
 {
 }
 
-AnalysisModule* AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
-                                              SimulationStateP&   sharedState,
-                                              Output* dataArchiver)
+std::vector<AnalysisModule*>
+AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
+                              SimulationStateP&   sharedState,
+                              Output* dataArchiver)
 {
   string module("");
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
 
+  vector<AnalysisModule*> modules;
+ 
   if (da_ps) {
-    ProblemSpecP module_ps = da_ps->findBlock("Module");
-    if(!module_ps){
-      throw ProblemSetupException("\nERROR:<DataAnalysis>, could not find find <Module> tag \n",__FILE__, __LINE__);
-    }
-    map<string,string> attributes;
-    module_ps->getAttributes(attributes);
-    module = attributes["name"];
-    
-    if (module == "lineExtract") {
-      return (scinew lineExtract(module_ps, sharedState, dataArchiver));
-    } else if (module == "pointExtract") {
-      return (scinew pointExtract(module_ps,sharedState, dataArchiver));
-    } else if (module == "containerExtract") {
-      return (scinew containerExtract(module_ps,sharedState,dataArchiver));
-    } else if (module == "particleExtract") {
-      return (scinew particleExtract(module_ps,sharedState,dataArchiver));
-    } else if (module == "vorticity") {
-      return (scinew vorticity(module_ps,sharedState, dataArchiver));
-    } else if (module == "flatPlate_heatFlux") {
-      return (scinew flatPlate_heatFlux(module_ps,sharedState, dataArchiver));
-    } else {
-      throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
-    }
-    
-  } else {
-    return 0;
+  
+    for(ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != 0;
+                    module_ps = module_ps->findNextBlock("Module")){
+                        
+      if(!module_ps){
+        throw ProblemSetupException("\nERROR:<DataAnalysis>, could not find find <Module> tag \n",__FILE__, __LINE__);
+      }
+      map<string,string> attributes;
+      module_ps->getAttributes(attributes);
+      module = attributes["name"];
+
+      if (module == "lineExtract") {
+        modules.push_back (scinew lineExtract(module_ps, sharedState, dataArchiver));
+      } else if (module == "pointExtract") {
+        modules.push_back (scinew pointExtract(module_ps,sharedState, dataArchiver));
+      } else if (module == "containerExtract") {
+        modules.push_back (scinew containerExtract(module_ps,sharedState,dataArchiver));
+      } else if (module == "particleExtract") {
+        modules.push_back (scinew particleExtract(module_ps,sharedState,dataArchiver));
+      } else if (module == "vorticity") {
+        modules.push_back (scinew vorticity(module_ps,sharedState, dataArchiver));
+      } else if (module == "flatPlate_heatFlux") {
+        modules.push_back (scinew flatPlate_heatFlux(module_ps,sharedState, dataArchiver));
+      } else {
+        throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
+      }
+    } 
   }
+  return modules;
 }

@@ -125,7 +125,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // unlike the situation for ice materials
 
   d_switchCriteria = 0;
-  d_analysisModule = 0;
 
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
@@ -138,9 +137,15 @@ MPMICE::~MPMICE()
   delete MIlb;
   delete d_mpm;
   delete d_ice;
-  if(d_analysisModule){
-    delete d_analysisModule;
+  
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      delete *iter;
+    }
   }
+  
 }
 
 //__________________________________
@@ -262,13 +267,16 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Set up data analysis modules
-  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-  if(d_analysisModule){
-    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
-  }
-  
+  d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
 
-  
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->problemSetup(prob_spec, grid, sharedState);
+    }
+  }  
 }
 
 //______________________________________________________________________
@@ -322,8 +330,13 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   
   //__________________________________
   // dataAnalysis 
-  if(d_analysisModule){
-    d_analysisModule->scheduleInitialize( sched, level);
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleInitialize( sched, level);
+    }
   }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
@@ -339,8 +352,13 @@ void MPMICE::restartInitialize()
   d_mpm->restartInitialize();
   d_ice->restartInitialize();
   
-  if(d_analysisModule){
-    d_analysisModule->restartInitialize();
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->restartInitialize();
+    }
   }
 }
 
@@ -646,8 +664,15 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                   Mlb->pXLabel, d_sharedState->d_particleState,
                                   Mlb->pParticleIDLabel, mpm_matls);
   
-  if(d_analysisModule){                                                        
-    d_analysisModule->scheduleDoAnalysis( sched, level);
+  //__________________________________
+  //  on the fly analysis
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis( sched, level);
+    }
   }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
