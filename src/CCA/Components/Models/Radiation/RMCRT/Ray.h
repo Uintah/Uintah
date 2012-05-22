@@ -148,7 +148,12 @@ namespace Uintah{
                              
 
       void sched_ROI_Extents ( const LevelP& level, 
-                                 SchedulerP& scheduler );
+                               SchedulerP& scheduler );
+                                 
+      void sched_CarryForward ( const LevelP& level,
+                                SchedulerP& scheduler,
+                                const VarLabel* variable );
+      
                                
       //__________________________________
       //  Helpers
@@ -159,6 +164,7 @@ namespace Uintah{
                             const VarLabel* temperature,
                             const VarLabel* celltype, 
                             const VarLabel* divQ);
+                            
                             
     void setBC(CCVariable<double>& Q_CC,
                const string& desc,
@@ -331,6 +337,13 @@ namespace Uintah{
                        const MaterialSubset* matls,
                        DataWarehouse*,
                        DataWarehouse* new_dw);
+                       
+    void carryForward ( const ProcessorGroup*,
+                        const PatchSubset* ,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse*,
+                        const VarLabel* variable);
 
   }; // class Ray
 } // namespace Uintah

@@ -253,15 +253,13 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int tim
 
   if ( time_sub_step == 0 ) { 
     tsk->requires( Task::OldDW, d_abskgLabel,       d_gn, 0 ); 
-    tsk->requires( Task::OldDW, d_temperatureLabel, d_gn, 0 ); 
+    tsk->requires( Task::OldDW, d_temperatureLabel, d_gn, 0 );
     tsk->computes( d_sigmaT4_label ); 
     tsk->computes( d_abskgLabel ); 
-    tsk->computes( d_absorpLabel );
-    tsk->computes( d_cellTypeLabel ); 
-    tsk->requires( Task::OldDW, d_cellTypeLabel, d_gn, 0 ); 
+    tsk->computes( d_absorpLabel ); 
+     
   } else { 
     tsk->requires( Task::NewDW, d_temperatureLabel, d_gn, 0 ); 
-    tsk->requires( Task::NewDW, d_cellTypeLabel, d_gn, 0 ); 
     tsk->modifies( d_sigmaT4_label ); 
     tsk->modifies( d_abskgLabel ); 
     tsk->modifies( d_absorpLabel ); 
@@ -289,29 +287,20 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
-    CCVariable<double> sigmaT4Pi;
-    CCVariable<int>    newdw_celltype; 
-
+    CCVariable<double> sigmaT4Pi; 
     constCCVariable<double> temperature; 
-    constCCVariable<int> celltype; 
-
 
     if ( time_sub_step == 0 ) { 
 
       new_dw->allocateAndPut( abskg,    d_abskgLabel,     d_matl, patch ); 
       new_dw->allocateAndPut( sigmaT4Pi,d_sigmaT4_label,  d_matl, patch );
-      new_dw->allocateAndPut( absorp,   d_absorpLabel,    d_matl, patch ); 
-      new_dw->allocateAndPut( newdw_celltype, d_cellTypeLabel,  d_matl, patch ); 
+      new_dw->allocateAndPut( absorp,   d_absorpLabel,    d_matl, patch );  
 
       abskg.initialize  ( 0.0 ); 
       absorp.initialize ( 0.0 ); 
       sigmaT4Pi.initialize( 0.0 );
-      newdw_celltype.initialize( 0 ); 
 
-      old_dw->get(temperature,  d_temperatureLabel, d_matl, patch, Ghost::None, 0);
-      old_dw->get(celltype,     d_cellTypeLabel,    d_matl, patch, Ghost::None, 0); 
-
-      newdw_celltype.copyData( celltype ); 
+      old_dw->get(temperature,  d_temperatureLabel, d_matl, patch, Ghost::None, 0); 
 
     } else { 
 
@@ -319,7 +308,6 @@ Ray::initProperties( const ProcessorGroup* pc,
       new_dw->getModifiable( absorp,    d_absorpLabel,    d_matl, patch ); 
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch ); 
       new_dw->get( temperature,         d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
-      new_dw->get( celltype,            d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); 
 
     }
 
@@ -463,10 +451,10 @@ Ray::sched_rayTrace( const LevelP& level,
 #ifdef HAVE_CUDA
   std::string gputaskname = "Ray::sched_rayTraceGPU";
   Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
-                           &Ray::rayTrace, modifies_divQ, abskg_dw, celltype_dw, sigma_dw );
+                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, celltype_dw, sigma_dw );
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #endif
 
   printSchedule(level,dbg,taskname);
@@ -474,10 +462,10 @@ Ray::sched_rayTrace( const LevelP& level,
   // require an infinite number of ghost cells so  you can access
   // the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw , d_abskgLabel  ,  gac, SHRT_MAX);
-  tsk->requires( sigma_dw , d_sigmaT4_label, gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, 0);
-  //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
@@ -487,7 +475,6 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
     tsk->computes( d_boundFluxLabel );
-
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -516,8 +503,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
   
-  DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
 
@@ -528,6 +515,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
   abskg_dw->getRegion(   abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
   sigmaT4_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
   celltype_dw->getRegion( celltype , d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
+  
   double start=clock();
 
   // patch loop
@@ -539,32 +527,18 @@ Ray::rayTrace( const ProcessorGroup* pc,
     CCVariable<double> divQ;
     CCVariable<double> VRFlux;
     CCVariable<Stencil7> boundFlux;
-    constCCVariable<int> celltype;
-
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,      d_divQLabel,      d_matl, patch );
       old_dw->getModifiable( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       old_dw->getModifiable( boundFlux, d_boundFluxLabel, d_matl, patch );
-      //old_dw->get(celltype,     d_cellTypeLabel,    d_matl, patch, Ghost::None, 0);
-
-
     }else{
-
       new_dw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
       divQ.initialize( 0.0 ); 
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux, d_boundFluxLabel, d_matl, patch );
-
-      new_dw->get( celltype,        d_cellTypeLabel,    d_matl, patch, Ghost::None, 0 ); // I might be able to do this without going through the trouble
-
-
-
-
-
-
-    }
+   }
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
  
@@ -1860,6 +1834,36 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
     }
   }  // course patch loop 
 }
+
+
+//______________________________________________________________________
+// Utility task:  move variable from old_dw -> new_dw
+void Ray::sched_CarryForward ( const LevelP& level, 
+                               SchedulerP& sched,
+                               const VarLabel* variable)
+{ 
+  string taskname = "        carryForward_" + variable->getName();
+  printSchedule(level, dbg, taskname);
+
+  Task* tsk = scinew Task( taskname, this, &Ray::carryForward, variable );
+  
+  tsk->requires(Task::OldDW, variable,   d_gn, 0);
+  tsk->computes(variable);
+ 
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+
+//______________________________________________________________________
+void Ray::carryForward ( const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw,
+                         const VarLabel* variable)
+{
+  new_dw->transferFrom(old_dw, variable, patches, matls);
+}
+
 
 //______________________________________________________________________
 void Ray::updateSumI ( const Vector& inv_direction_vector,
