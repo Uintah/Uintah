@@ -286,9 +286,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       d_RMCRT->sched_CoarsenAll (level, sched);
       
       if(level->hasFinerLevel() || maxLevels == 1){
-        Task::WhichDW abskg_dw   = Task::NewDW;
-        Task::WhichDW sigmaT4_dw = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::NewDW;
+        Task::WhichDW abskg_dw    = Task::NewDW;
+        Task::WhichDW sigmaT4_dw  = Task::NewDW;
+        Task::WhichDW celltype_dw = Task::OldDW;
         bool modifies_divQ       = false;
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
@@ -303,6 +303,12 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     // only schedule CFD on the finest level
     schedulePseudoCFD( sched, finestPatches, matls );
+    
+    // carry forward
+    for (int l = 0; l <= maxLevels-1; l++) {
+      const LevelP& level = grid->getLevel(l);
+      d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
+    }
   }
 }
 //______________________________________________________________________
@@ -408,8 +414,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       CCVariable<double> color;
       CCVariable<double> abskg;
       CCVariable<int> cellType; 
-      new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
-      new_dw->allocateAndPut(abskg, d_abskgLabel, matl, patch);
+      new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
+      new_dw->allocateAndPut(abskg,    d_abskgLabel,    matl, patch);
       new_dw->allocateAndPut(cellType, d_cellTypeLabel, matl, patch); 
 
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
