@@ -95,7 +95,7 @@ Nth Order & $(1-\alpha)^n$  & NthOrder \\
 \hline
 3-D Diffusion& $3/2(1-\alpha)^{2/3}(1-(1-\alpha)^{1/3})$  & Diffusion \\
 \hline
-4-D Diffusion& $3/2(1/alpha^{1/3}-1)$  & Diffusion \\
+4-D Diffusion& $3/2(1/\alpha^{1/3}-1)$  & Diffusion \\
 \hline
 \multicolumn{3}{|c|}{\textbf{Geometrical Contraction Models}} \\
 \hline
@@ -137,7 +137,7 @@ on the dimensionality of the desired rate model.  Both geometric contraction mod
 input parameters. Both nucleation based models, \textbf{Power} and \textbf{AvaramiErofeev}, take both 
 an \textbf{a} and a \textbf{b} input parameter. 
 
-\section{HE Combustion Models}
+\section{HE Reaction Models}
 
 Three models exist for reaction of high explosive materials.  Each
 simulation using one of these models utilize MPMICE's material
@@ -243,9 +243,9 @@ The following table describes the input parameters for Steady Burn.  The final c
 \hline
   \textbf{Tag} & \textbf{Type} & \textbf{Description} & \textbf{HMX Value} \\
 \hline
-  $<$fromMaterial$>$ & String & 'Name' of reactant material (mass source) &  \\
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source) &  \\
 \hline
-  $<$toMaterial$>$ & String & 'Name' of product material (mass sink) & \\
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink) & \\
 \hline
   $<$IdealGasConst$>$ & double & Ideal gas constant ($R$) & $8.314 J/(K\times mol)$ \\
 \hline
@@ -307,9 +307,9 @@ The following table describes the input parameters for Unsteady Burn.
 \hline
   \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
 \hline
-  $<$fromMaterial$>$ & String & 'Name' of reactant material (mass source)\\
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source)\\
 \hline
-  $<$toMaterial$>$ & String & 'Name' of product material (mass sink)\\
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink)\\
 \hline
   $<$IdealGasConst$>$ & double & Ideal gas constant ($R$)\\
 \hline
@@ -345,6 +345,255 @@ The following table describes the input parameters for Unsteady Burn.
 \hline
 \end{tabular}
 \end{center}
+
+
+\newpage
+\subsection{Ignition \& Growth} \label {Sec:IandG}
+
+The Ignition \& Growth model created by Lee and Tarver \cite{ref:Lee1980} to simulate shock-to-detonation
+transitions in condensed explosives.  The rate equation takes the form:
+
+\begin{equation}
+\frac{dF}{dt}=I(1-F)^b\left(\frac{\rho}{\rho_0}-1-a\right)^x+G_1(1-F)^cF^dP^y+G_2(1-F)^eF^gP^z
+\label{IandGEqn}
+\end{equation}
+
+where $F$ is the extent of reaction in a cell, $P$ is the pressure, $\rho$ and $\rho_0$ are the current and initial density of the
+explosive and $I$, $G_1$, $G_2$, $a$, $b$, $c$, $d$, $e$, $g$, $x$, $y$ and $z$ are constant fit parameters. 
+The three terms are the ignition, growth and completion terms respectively. The ignition term is used to emulate 
+hot-spot formation and strengthening and runs over $0<F<F_{igmax}$ where $F_{igmax}$ is a constant.  The growth
+term is used as a fast term for growth of the shock front and runs over $0<F<F_{G1max}$ where $F_{G1max}$ is a
+constant.  The completion term is a slow term used to model the precipitation of solid carbon at the end
+of reaction and runs over $F_{G2min}<F<1$ where $F_{G2min}$ is a constant. The model input parameters are detailed in the following table.
+
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{Ignition \& Growth Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source)\\
+\hline
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink)\\
+\hline
+  $<$I$>$ & double & Ignition rate constant (hot-spot frequency) \\
+\hline
+  $<$G1$>$ & double & Growth rate constant \\
+\hline
+  $<$G2$>$ & double & Completion rate constant \\
+\hline
+  $<$a$>$ & double & Ignition constant \\
+\hline
+  $<$b$>$ & double & Ignition exponent \\
+\hline
+  $<$c$>$ & double & Growth exponent \\
+\hline
+  $<$d$>$ & double & Growth exponent \\
+\hline
+  $<$e$>$ & double & Completion exponent \\
+\hline
+  $<$g$>$ & double & Completion exponent \\
+\hline
+  $<$x$>$ & double & Ignition density exponent \\
+\hline
+  $<$y$>$ & double & Growth pressure exponent \\
+\hline
+  $<$z$>$ & double & Completion pressure exponent \\
+\hline
+  $<$Figmax$>$ & double & Maximum reaction extent for hot-spot (ignition) term \\
+\hline
+  $<$FG1max$>$ & double & Maximum reaction extent for fast (growth) term \\
+\hline
+  $<$FG2min$>$ & double & Minimum reaction extent for slow (completion) term \\
+\hline
+  $<$rho0$>$ & double & The initial density of the explosive \\
+\hline
+  $<$E0$>$ & double & The energy of detonation \\
+\hline
+  $<$ThresholdPressure$>$ & double & Reaction is allowed to occur above this pressure \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+\newpage
+\subsection{JWL++} \label {Sec:JWLpp}
+
+The JWL++ model by Souers et al. \cite{ref:JWL} is related to the Ignition and Growth model (see Section \ref{Sec:IandG}),
+but much simplified in its form for ease of rate constant fit.  The rate is described by:
+
+\begin{equation}
+\frac{dF}{dt}=G(1-F)P^b
+\label{JWLppEqn}
+\end{equation}
+
+where $F$ is the extent of reaction, $P$ is the pressure and $G$ and $b$ are fit constants.  Several other
+forms of the JWL++ model have been formulated, however this is the only one that is currently supported in 
+Uintah.  Input paramters are shown in the follwoing table.
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{Ignition \& Growth Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source)\\
+\hline
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink)\\
+\hline
+  $<$G$>$ & double & Growth rate constant \\
+\hline
+  $<$b$>$ & double & Completion rate constant \\
+\hline
+  $<$rho0$>$ & double & The initial density of the explosive \\
+\hline
+  $<$E0$>$ & double & The energy of detonation \\
+\hline
+  $<$ThresholdPressure$>$ & double & Reaction is allowed to occur above this pressure \\
+\hline
+  $<$ThresholdVolFrac$>$ & double & (Optional; default 0.01) Minimum volume of explosive in a cell for reaction \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+
+\newpage
+\subsection{DDT0} \label {Sec:DDT0}
+
+Deflagration-to-detonation model 0 (DDT0) was the first incarnation of a model 
+that contains two rate models to represent three different reaction modes. The 
+model is capable of surface burning, convective burning and detonation. Burning
+is accomplished using the same model as Simple Burn (see Section \ref{Sec:SimpleBurn}).  Detonation
+is accounted for by the JWL++ model (see Section \ref{Sec:JWLpp}) presented by P. Clark Souers  \cite{ref:JWL}.  
+The simple threshold pressure separates detonation and deflagration regimes.  In addition,
+a crack-size dependent model may be optionally used to allow convective burning to 
+occur in the bulk material.  The crack-size threshold is computed via an expression fit by
+Berghout et al. \cite{ref:Berghout2002}  The parameters are presented in the following table.
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{DDT0 Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source)\\
+\hline
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink)\\
+\hline
+  $<$G$>$ & double & Rate constant for detonation (JWL++ model) \\
+\hline
+  $<$b$>$ & double & Pressure exponent for detonation (JWL++ model) \\
+\hline
+  $<$E0$>$ & double & Energy of reaction for detonation (JWL++ model) \\
+\hline
+  $<$ThresholdPressureJWL$>$ & double & Threshold pressure for onset of detonation \\
+\hline
+  $<$ThresholdVolFrac$>$ & double & (Optional; default 0.01) Minimum volume fraction of reactant for detonation to occur in a cell \\
+\hline
+  $<$Enthalpy$>$ & double & Energy of reaction for deflagration (Simple Burn model) \\
+\hline
+  $<$BurnCoeff$>$ & double & Rate constant for deflagration (Simple Burn model) \\
+\hline
+  $<$refPressure$>$ & double & Reference pressure for deflagration (Simple Burn model) \\
+\hline
+  $<$ThresholdTemp$>$ & double & Threshold temperature for combustion (Simple Burn model) \\
+\hline
+  $<$TresholdPressureSB$>$ & double & Threshold pressure required for combustion (Simple Burn model) \\
+\hline
+  $<$useCrackModel$>$ & boolean & (Optional; default false) Switch that allows convective burning \\
+\hline
+  $<$Gcrack$>$ & double & (Required for 'useCrackModel') Rate constant for convective deflagration \\
+\hline
+  $<$CrackVolThreshold$>$ & double & (Optional; default 1e-14) Volume fraction of reactant above temperature needed for convective deflagration \\
+\hline
+  $<$nCrack$>$ & double & (Required for 'useCrackModel') Pressure exponent for convective deflagration \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+\newpage
+\subsection{DDT1} \label {Sec:DDT1}
+
+Deflagration-to-detonation model 1 (DDT1) \cite{ref:Peterson2012} was the second incarnation of a model
+that contains two rate models to represent three different reaction modes. The
+model is capable of surface burning, convective burning and detonation. Burning
+is accomplished using the same model as Steady Burn (see Section \ref{Sec:SteadyBurn}).  Detonation
+is accounted for by the JWL++ model (see Section \ref{Sec:JWLpp}) presented by P. Clark Souers  \cite{ref:JWL}.
+The simple threshold pressure separates detonation and deflagration regimes.  In addition,
+a crack-size dependent model may be optionally used to allow convective burning to
+occur in the bulk material.  The crack-size threshold is computed via an expression fit by
+Berghout et al. \cite{ref:Berghout2002}  The parameters are presented in the following table.
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{DDT1 Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$fromMaterial$>$ & String & `Name' of reactant material (mass source)\\
+\hline
+  $<$toMaterial$>$ & String & `Name' of product material (mass sink)\\
+\hline
+  $<$burnMaterial$>$ & String & (Optional; default `toMaterial') `Name' of product material for deflagration\\
+\hline
+  $<$G$>$ & double & Rate constant for detonation (JWL++ model) \\
+\hline
+  $<$b$>$ & double & Pressure exponent for detonation (JWL++ model) \\
+\hline
+  $<$E0$>$ & double & Energy of reaction for detonation (JWL++ model) \\
+\hline
+  $<$ThresholdPressureJWL$>$ & double & Threshold pressure for detonation \\
+\hline
+  $<$ThresholdVolFrac$>$ & double & (Optional; default 0.01) Minimum volume fraction of reactant for detonation to occur in a cell \\
+\hline
+  $<$IdealGasConst$>$ & double & Ideal gas constant ($R$) \\
+\hline
+  $<$PreExpCondPh$>$ & double & Condensed phase pre-exponential coefficient ($A_c$) \\
+\hline
+  $<$ActEnergyCondPh$>$ & double & Condensed phase activation energy ($E_c$)  \\
+\hline
+  $<$PreExpGasPh$>$ & double & Gas phase frequency factor ($B_g$)  \\
+\hline
+  $<$CondPhaseHeat$>$ & double & Condensed phase heat release per unit mass ($Q_c$)  \\
+\hline
+  $<$GasPhaseHeat$>$ & double & Gas phase heat release per unit mass ($Q_g$)  \\
+\hline
+  $<$HeatConductGasPh$>$ & double & Thermal conductivity of gas ($\kappa_g$) \\
+\hline
+  $<$HeatConductCondPh$>$ & double & Thermal conductivity of condensed phase ($\kappa_c$) \\
+\hline
+  $<$SpecificHeatBoth$>$ & double & Specific heat at constant pressure ($c_p$)  \\
+\hline
+  $<$MoleWeightGasPh$>$ & double & Molecular weight of gas ($W$)  \\
+\hline
+  $<$BoundaryParticles$>$ & int & Max \# of particles a cell can have and be burning  \\
+\hline
+  $<$ThresholdPressure$>$ & double & Threshold pressure cell must have $\ge$ to burn mass \\
+\hline
+  $<$IgnitionTemp$>$ & double & Temperature cell must have $\ge$ to be burning \\
+\hline
+  $<$TresholdPressureSB$>$ & double & Threshold pressure required for combustion \\
+\hline
+  $<$useCrackModel$>$ & boolean & (Optional; default false) Switch that allows convective burning \\
+\hline
+\end{tabular}
+\end{center}
+
+
 
 \newpage
 
