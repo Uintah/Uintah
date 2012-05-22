@@ -126,7 +126,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_recompile = false;
   dataArchiver = 0;
   d_loadCurveIndex=0;
-  d_analysisModule = 0;
   d_switchCriteria = 0;
 }
 
@@ -139,8 +138,12 @@ SerialMPM::~SerialMPM()
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
   
-  if(d_analysisModule){
-    delete d_analysisModule;
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      delete *iter;
+    }
   }
   
   if(d_switchCriteria) {
@@ -258,9 +261,15 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   //  create analysis modules
   // call problemSetup  
   if(!flags->d_with_ice && !flags->d_with_arches){    // mpmice or mpmarches handles this
-    d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-    if(d_analysisModule){
-      d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+    d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+    
+    if(d_analysisModules.size() != 0){
+      vector<AnalysisModule*>::iterator iter;
+      for( iter  = d_analysisModules.begin();
+           iter != d_analysisModules.end(); iter++){
+        AnalysisModule* am = *iter;
+        am->problemSetup(prob_spec, grid, sharedState);
+      }
     }
   }
   
@@ -412,8 +421,13 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   // dataAnalysis 
-  if(d_analysisModule){
-    d_analysisModule->scheduleInitialize( sched, level);
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleInitialize( sched, level);
+    }
   }
   
   int numCZM = d_sharedState->getNumCZMatls();
@@ -488,8 +502,13 @@ void SerialMPM::restartInitialize()
 {
   cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
 
-  if(d_analysisModule){
-    d_analysisModule->restartInitialize();
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->restartInitialize();
+    }
   }  
 }
 
@@ -697,8 +716,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     lb->czIDLabel, cz_matls,2);
   }
 
-  if(d_analysisModule){                                                        
-    d_analysisModule->scheduleDoAnalysis( sched, level);
+  //__________________________________
+  //  on the fly analysis
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis( sched, level);
+    }
   }
 }
 

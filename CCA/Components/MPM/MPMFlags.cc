@@ -270,12 +270,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
   if (da_ps) {
-    ProblemSpecP module_ps = da_ps->findBlock("Module");
-    if(module_ps){
-      map<string,string> attributes;
-      module_ps->getAttributes(attributes);
-      if ( attributes["name"]== "flatPlate_heatFlux") {
-        d_computeNodalHeatFlux = true;
+    for(ProblemSpecP module_ps = da_ps->findBlock("Module"); module_ps != 0;
+                     module_ps = module_ps->findNextBlock("Module")){
+      if(module_ps){
+        map<string,string> attributes;
+        module_ps->getAttributes(attributes);
+        if ( attributes["name"]== "flatPlate_heatFlux") {
+          d_computeNodalHeatFlux = true;
+        }
       }
     }
   }

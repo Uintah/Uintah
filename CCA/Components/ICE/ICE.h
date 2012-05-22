@@ -1014,7 +1014,7 @@ namespace Uintah {
       bool d_useCompatibleFluxes;
       bool d_clampSpecificVolume;
       Turbulence* d_turbulence;
-      AnalysisModule* d_analysisModule;
+      std::vector<AnalysisModule*> d_analysisModules;
       
       std::string d_delT_scheme;
       

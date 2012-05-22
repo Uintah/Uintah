@@ -155,7 +155,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
 
   nofTimeSteps                     =  0;
   init_timelabel_allocated         =  false;
-  d_analysisModule                 =  NULL;
   d_set_initial_condition          =  false;
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
@@ -180,8 +179,13 @@ Arches::~Arches()
 
   if (init_timelabel_allocated)
     delete init_timelabel;
-  if (d_analysisModule) {
-    delete d_analysisModule;
+
+  if(d_analysisModules.size() != 0){
+    std::vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      delete *iter;
+    }
   }
 
   delete d_timeIntegrator;
@@ -638,9 +642,15 @@ Arches::problemSetup(const ProblemSpecP& params,
       throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
     }
 
-    d_analysisModule = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
-    if (d_analysisModule) {
-      d_analysisModule->problemSetup(params, grid, sharedState);
+    d_analysisModules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+
+    if(d_analysisModules.size() != 0){
+      vector<AnalysisModule*>::iterator iter;
+      for( iter  = d_analysisModules.begin();
+           iter != d_analysisModules.end(); iter++){
+        AnalysisModule* am = *iter;
+        am->problemSetup(params, grid, sharedState);
+      }
     }
   }
 
@@ -941,8 +951,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //______________________
   //Data Analysis
-  if (d_analysisModule) {
-    d_analysisModule->scheduleInitialize(sched, level);
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleInitialize( sched, level);
+    }
   }
 
   //----------------------
@@ -1636,8 +1651,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     );
   }
 
-  if (d_analysisModule) {
-    d_analysisModule->scheduleDoAnalysis(sched, level);
+  //__________________________________
+  //  on the fly analysis
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis( sched, level);
+    }
   }
 
   if (d_doingRestart) {

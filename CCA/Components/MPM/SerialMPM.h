@@ -593,7 +593,7 @@ protected:
   IntegratorType   d_integrator;
   MaterialSubset*  d_loadCurveIndex;
   
-  AnalysisModule* d_analysisModule;
+  std::vector<AnalysisModule*> d_analysisModules;
   SwitchingCriteria* d_switchCriteria;
   
 private:

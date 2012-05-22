@@ -386,7 +386,7 @@ private:
 
     string d_timeIntegratorType;
 
-    AnalysisModule* d_analysisModule;
+    std::vector<AnalysisModule*> d_analysisModules;
 
     bool d_set_initial_condition;
     std::string d_init_inputfile;

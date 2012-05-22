@@ -113,7 +113,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_SMALL_NUM = 1.0e-100;                                                   
   d_modelInfo = 0;
   d_modelSetup = 0;
-  d_analysisModule = 0;
   d_recompile               = false;
   d_canAddICEMaterial       = false;
   d_with_mpm                = false;
@@ -152,9 +151,15 @@ ICE::~ICE()
   if(d_turbulence){
     delete d_turbulence;
   }
-  if(d_analysisModule){
-    delete d_analysisModule;
-  }   
+
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      delete *iter;
+    }
+  }
+  
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
   }
@@ -518,11 +523,17 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Set up data analysis modules
   if(!d_with_mpm){
-    d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
-    if(d_analysisModule){
-      d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+    d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+
+    if(d_analysisModules.size() != 0){
+      vector<AnalysisModule*>::iterator iter;
+      for( iter  = d_analysisModules.begin();
+           iter != d_analysisModules.end(); iter++){
+        AnalysisModule* am = *iter;
+        am->problemSetup(prob_spec, grid, sharedState);
+      }
     }
-  }
+  }  // mpm
 
 }
 /*______________________________________________________________________
@@ -755,8 +766,13 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   //__________________________________
   // dataAnalysis 
-  if(d_analysisModule){
-    d_analysisModule->scheduleInitialize( sched, level);
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleInitialize( sched, level);
+    }
   }
  
   //__________________________________
@@ -791,10 +807,16 @@ _____________________________________________________________________*/
 void ICE::restartInitialize()
 {
   cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
-  
-  if(d_analysisModule){
-    d_analysisModule->restartInitialize();
+
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->restartInitialize();
+    }
   }
+  
   //__________________________________
   // Models Initialization
   if(d_models.size() != 0){
@@ -1000,8 +1022,15 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                                           all_matls,
                                                           "finalizeTimestep");
                                                           
-  if(d_analysisModule){                                                        
-    d_analysisModule->scheduleDoAnalysis( sched, level);
+  //__________________________________
+  //  on the fly analysis
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis( sched, level);
+    }
   }                                                          
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
