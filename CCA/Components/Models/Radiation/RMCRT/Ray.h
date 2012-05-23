@@ -124,15 +124,15 @@ namespace Uintah{
 
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void adjustLocation(Vector &location,
-                          const IntVector &indexOrder,         
-                          const IntVector &shift,              
-                          const double &DyDxRatio,             
-                          const double &DzDxRatio);            
+                          const IntVector &indexOrder,
+                          const IntVector &shift,
+                          const double &DyDxRatio,
+                          const double &DzDxRatio);
 
       /** @brief Adjust the direction of a ray depending on the cell face */
       void adjustDirection(Vector &directionVector,
-                           const IntVector &indexOrder,         
-                           const IntVector &signOrder);         
+                           const IntVector &indexOrder,
+                           const IntVector &signOrder);
 
 
 
@@ -269,7 +269,17 @@ namespace Uintah{
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw );
-      
+ 
+     void computeExtents(LevelP level_0,
+                        const Level* fineLevel,
+                        const Patch* patch,
+                        const int maxlevels,
+                        DataWarehouse* new_dw,
+                        IntVector& fineLevel_ROI_Lo,
+                        IntVector& fineLevel_ROI_Hi,
+                        vector<IntVector>& regionLo,
+                        vector<IntVector>& regionHi);
+
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
                            const PatchSubset* patches, 
@@ -291,7 +301,7 @@ namespace Uintah{
       inline bool containsCell(const IntVector &low, 
                                const IntVector &high, 
                                const IntVector &cell,
-                               const int &face);
+                               const int &dir);
 
     //______________________________________________________________________
     //   Boundary Conditions
