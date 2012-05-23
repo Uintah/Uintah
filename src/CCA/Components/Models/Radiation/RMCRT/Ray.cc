@@ -459,22 +459,27 @@ Ray::sched_rayTrace( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  // require an infinite number of ghost cells so  you can access
-  // the entire domain.
+  // require an infinite number of ghost cells so  you can access the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+#ifndef HAVE_CUDA
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+#endif
   
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
+#ifndef HAVE_CUDA
     tsk->modifies( d_VRFluxLabel );
     tsk->modifies( d_boundFluxLabel );
+#endif
 
   } else {
     tsk->computes( d_divQLabel );
+#ifndef HAVE_CUDA
     tsk->computes( d_VRFluxLabel );
     tsk->computes( d_boundFluxLabel );
+#endif
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
