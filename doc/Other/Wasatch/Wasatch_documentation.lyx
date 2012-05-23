@@ -4,7 +4,24 @@
 \begin_header
 \textclass report
 \begin_preamble
-\renewcommand{\chaptername}{Hellow}
+\newrefformat{eq}{Eq. (\ref{#1})}
+\newrefformat{lem}{Lemma \ref{#1}}
+\newrefformat{cla}{Claim \ref{#1}}
+\newrefformat{thm}{Theorem \ref{#1}}
+\newrefformat{cha}{Chapter \ref{#1}}
+\newrefformat{sec}{Section \ref{#1}}
+\newrefformat{rem}{Remark \ref{#1}}
+\newrefformat{fac}{Fact \ref{#1}}
+\newrefformat{sec}{\S \ref{#1}}
+\newrefformat{sub}{\S \ref{#1}}
+\newrefformat{subsec}{\S \ref{#1}}
+\newrefformat{cor}{Corollary \ref{#1}}
+\newrefformat{cond}{Condition \ref{#1}}
+\newrefformat{con}{Conjecture \ref{#1}}
+\newrefformat{def}{Definition \ref{#1}}
+\newrefformat{pro}{Proposition \ref{#1}}
+\newrefformat{tbl}{Table \ref{#1} }
+\newrefformat{fig}{Fig. \ref{#1}}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -27,7 +44,7 @@
 \output_sync 0
 \bibtex_command default
 \index_command default
-\paperfontsize default
+\paperfontsize 11
 \spacing single
 \use_hyperref true
 \pdf_title "Wasatch"
@@ -229,7 +246,7 @@ status open
 \begin_inset Graphics
 	filename figures/navier-stokes-graph.pdf
 	lyxscale 50
-	width 6in
+	width 5in
 
 \end_inset
 
@@ -2695,6 +2712,265 @@ Boundary Conditions
 
 \begin_layout Section
 Overview of Defining Boundary Conditions
+\end_layout
+
+\begin_layout Standard
+Wasatch provides the machinery to apply Dirichlet and Neumann boundary condition
+s.
+ Our approach is based on setting boundary conditions on ghost cells at
+ the boundaries of the computational domain to reproduce the desired boundary
+ at the face.
+ This is illustrated in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:boundary-condition-specification"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch_bc_treatment.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Boundary condition specification in Wasatch.
+ Here, 
+\begin_inset Formula $\Phi_{\text{BC}}$
+\end_inset
+
+ designates the desired value of the scalar or its flux at the boundary,
+ 
+\begin_inset Formula $\phi_{\text{interior }}$
+\end_inset
+
+ is the interior value of the scalar, and 
+\begin_inset Formula $\phi_{\text{ghost}}$
+\end_inset
+
+ is the ghost value to be set.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:boundary-condition-specification"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Mathematically, this may be written as follows.
+ Consider a scalar 
+\begin_inset Formula $\phi$
+\end_inset
+
+ for which a boundary condition is to be specified.
+ The ghost value of 
+\begin_inset Formula $\phi$
+\end_inset
+
+ may then be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi_{\text{ghost}}=\alpha\phi_{\text{interior}}+\beta\Phi_{\text{{BC}}}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta$
+\end_inset
+
+ are real coefficients that depend on the type of boundary condition specified.
+ These are summarized in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "tbl:summary-of-coefficients-cell-centered"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\alpha$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\beta$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Dirichlet
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.5
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Neumann
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $-\Delta x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Summary of coefficients for setting values at ghost cells to reproduce a
+ desired boundary condition at a physical boundary.
+\begin_inset CommandInset label
+LatexCommand label
+name "tbl:summary-of-coefficients-cell-centered"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Staggered fields on uniform structured grids, a simplification follows
+ for setting Dirichlet conditions.
+ In this case, certain boundary faces coincide with staggered control volumes
+ and the desired Dirichlet condition may be set directly on those cells.
 \end_layout
 
 \begin_layout Section
