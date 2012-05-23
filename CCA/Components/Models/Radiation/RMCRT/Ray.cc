@@ -112,7 +112,6 @@ Ray::~Ray()
   VarLabel::destroy( d_VRFluxLabel);
   VarLabel::destroy( d_boundFluxLabel);
 
-
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
@@ -466,14 +465,12 @@ Ray::sched_rayTrace( const LevelP& level,
   if (!tsk->usesGPU()) {
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
-  
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     if (!tsk->usesGPU()) {
       tsk->modifies( d_VRFluxLabel );
       tsk->modifies( d_boundFluxLabel );
     }
-
   } else {
     tsk->computes( d_divQLabel );
     if (!tsk->usesGPU()) {
@@ -851,7 +848,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
        IntVector pLow;
        IntVector pHigh;
        level->findInteriorCellIndexRange(pLow, pHigh);
-       int Nx = pHigh[0] - pLow[0];
+       //int Nx = pHigh[0] - pLow[0];
        //if (j==Nx/2 && k==Nx/2){
 
       double sumI = 0;
