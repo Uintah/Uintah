@@ -463,23 +463,23 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-#ifndef HAVE_CUDA
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-#endif
+  if (!tsk->usesGPU()) {
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  }
   
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
-#ifndef HAVE_CUDA
-    tsk->modifies( d_VRFluxLabel );
-    tsk->modifies( d_boundFluxLabel );
-#endif
+    if (!tsk->usesGPU()) {
+      tsk->modifies( d_VRFluxLabel );
+      tsk->modifies( d_boundFluxLabel );
+    }
 
   } else {
     tsk->computes( d_divQLabel );
-#ifndef HAVE_CUDA
-    tsk->computes( d_VRFluxLabel );
-    tsk->computes( d_boundFluxLabel );
-#endif
+    if (!tsk->usesGPU()) {
+      tsk->computes( d_VRFluxLabel );
+      tsk->computes( d_boundFluxLabel );
+    }
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
