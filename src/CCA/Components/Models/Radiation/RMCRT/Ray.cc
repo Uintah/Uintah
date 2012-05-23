@@ -181,7 +181,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       //  Method for deteriming the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
       ROI_ps->getAttribute("type", type);
-      
+
       if(type == "fixed" ) {
         
         _whichROI_algo = fixed;
@@ -989,28 +989,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
   MTRand _mTwister;
 
+
+
   //__________________________________
-  //   fine level region of interest ROI
-  IntVector fineLevel_ROI_Lo;
-  IntVector fineLevel_ROI_Hi;
-  
-  if( _whichROI_algo == dynamic ){
-    minvec_vartype lo;
-    maxvec_vartype hi;
-    new_dw->get( lo, d_ROI_LoCellLabel );
-    new_dw->get( hi, d_ROI_HiCellLabel );
-    fineLevel_ROI_Lo = roundNearest( Vector(lo) );
-    fineLevel_ROI_Hi = roundNearest( Vector(hi) );
-    
-  } else if ( _whichROI_algo == fixed ){
-    fineLevel_ROI_Lo = fineLevel->getCellIndex( _ROI_minPt );
-    fineLevel_ROI_Hi = fineLevel->getCellIndex( _ROI_maxPt );
-  }
-  
-  dbg << "fineLevel_ROI_Lo: " << fineLevel_ROI_Lo << " fineLevel_ROI_Hi: "<< fineLevel_ROI_Hi << endl;
-  
-  //__________________________________
-  //retrieve all of the data for all levels
+  //retrieve the coarse level data
   StaticArray< constCCVariable<double> > abskg(maxLevels);
   StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
   constCCVariable<double> abskg_fine;
@@ -1032,62 +1014,36 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
       sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-      cout << " getting coarse level data L:" <<L<< endl;
-    } 
-    else{                                                        // fine level
-      cout << " getting fine level data L:" <<L<< endl;
-      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      dbg << " getting coarse level data L-" <<L<< endl;
     }
-    
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
     DzDx[L] = dx.z() / dx.x();
     Dx[L] = dx;
   } 
-  abskg_fine     = abskg[maxLevels-1];
-  sigmaT4Pi_fine = sigmaT4Pi[maxLevels-1];
   
-  
-  //__________________________________
-  // Determine the extents of the regions below the fineLevel
+  IntVector fineLevel_ROI_Lo = IntVector(-9,-9,-9);
+  IntVector fineLevel_ROI_Hi = IntVector(-9,-9,-9);
   vector<IntVector> regionLo(maxLevels);
   vector<IntVector> regionHi(maxLevels);
-
-  // finest level
-  IntVector finelevel_EC = fineLevel->getExtraCells();
-  regionLo[maxLevels-1] = fineLevel_ROI_Lo + finelevel_EC;
-  regionHi[maxLevels-1] = fineLevel_ROI_Hi - finelevel_EC;
-
-  // coarsest level
-  level_0->findInteriorCellIndexRange(regionLo[0], regionHi[0]);
-
-  for (int L = maxLevels - 2; L > 0; L--) {
-
-    LevelP level = new_dw->getGrid()->getLevel(L);
-
-    if( level->hasCoarserLevel() ){
-
-      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - _halo;
-      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + _halo;
-
-      // region must be within a level
-      IntVector levelLo, levelHi;
-      level->findInteriorCellIndexRange(levelLo, levelHi);
-
-      regionLo[L] = Max(regionLo[L], levelLo);
-      regionHi[L] = Min(regionHi[L], levelHi);
-    }
-  }
+                 
+  //__________________________________
+  //  retrieve fine level data & compute the extents (dynamic and fixed )
+  if ( _whichROI_algo == fixed || _whichROI_algo == dynamic ){
+    int L = maxLevels - 1;
     
-/*`==========TESTING==========*/
-    if(dbg2.active()){
-      for(int L = 0; L<maxLevels; L++){
-        dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
-      }
-    } 
-/*===========TESTING==========`*/
+    const Patch* notUsed=0;
+    computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
+                   fineLevel_ROI_Lo, fineLevel_ROI_Hi,  
+                   regionLo,  regionHi);
+    
+    dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
+    abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+  }
   
+  abskg_fine     = abskg[maxLevels-1];
+  sigmaT4Pi_fine = sigmaT4Pi[maxLevels-1];
   
   // Determine the size of the domain.
   BBox domain_BB;
@@ -1102,6 +1058,23 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
 
+     //__________________________________
+    //  retrieve fine level data ( patch_based )
+    if ( _whichROI_algo == patch_based ){
+    
+      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,        
+                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,  
+                     regionLo,  regionHi);
+    
+      int L = maxLevels - 1;
+      dbg << " getting fine level data across L-" <<L<< endl;
+           
+      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      abskg_fine     = abskg[L];
+      sigmaT4Pi_fine = sigmaT4Pi[L];
+    }
+    
     CCVariable<double> divQ_fine;
     
     if( modifies_divQ ){
@@ -1133,7 +1106,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       
       
 /*`==========TESTING==========*/
-      if(origin == IntVector(10,10,10) && _isDbgOn ){
+      if(origin == IntVector(10,10,0) && _isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
@@ -1175,7 +1148,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         direction[2] = plusMinus_one;
         
 /*`==========TESTING==========*/
-//        direction = Vector(0,1,0);                   // Debug:: shoot ray in 1 directon
+        direction = Vector(0,1,0);                   // Debug:: shoot ray in 1 directon
 /*===========TESTING==========`*/
         
         Vector inv_direction = Vector(1.0)/direction;
@@ -1219,12 +1192,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         bool   onFineLevel    = true;
         const Level* level    = fineLevel;
 
+
+        dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
+         
         //______________________________________________________________________
         //  Threshold  loop
         while (intensity > _Threshold){
           
-          int face = -9;
-          
+          DIR dir = NONE;
           while (in_domain){
             
             prevCell = cur;
@@ -1234,8 +1209,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             //__________________________________
             //  Determine the princple direction the ray is traveling
-            //
-            DIR dir = NONE;
+            //  
             if (tMax.x() < tMax.y()){
               if (tMax.x() < tMax.z()){
                 dir = X;
@@ -1256,16 +1230,23 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             //__________________________________
             // Logic for moving between levels
-            // currently you can only move  from fine to coarse level
-            if( onFineLevel && finePatch->containsCell(cur) == false ){
+            // currently you can only move from fine to coarse level
+            
+            //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
+            bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
+            bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
+            
+            dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+                 << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
+                 
+            if( jumpFinetoCoarserLevel ){
               cur   = level->mapCellToCoarser(cur); 
-              level = level->getCoarserLevel().get_rep();
+              level = level->getCoarserLevel().get_rep();      // move to a coarser level
               L     = level->getIndex();
               onFineLevel = false;
               
               dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
-            }    // TODD: CLEAN THIS UP
-            else if ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, face) == false && L > 0 ){
+            } else if ( jumpCoarsetoCoarserLevel ){
               
               IntVector c_old = cur;
               cur   = level->mapCellToCoarser(cur); 
@@ -1280,8 +1261,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
             tMax_prev     = tMax[dir];
             tMax[dir]     = tMax[dir] + tDelta[L][dir];
-            face          = dir;
-     
+            
             in_domain = domain_BB.inside(pos); 
 
             //__________________________________
@@ -1299,7 +1279,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
             sumI += sigmaT4Pi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
             
-            dbg2 << "origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
+            dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
             //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
             //dbg2 << "    direction " << direction << endl;
          
@@ -1324,8 +1304,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             in_domain = 1;
 
             // apply reflection condition
-            step[face] *= -1;                      // begin stepping in opposite direction
-            sign[face] = (sign[face]==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+            step[dir] *= -1;                      // begin stepping in opposite direction
+            sign[dir] = (sign[dir]==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
             
             dbg2 << " REFLECTING " << endl;
           }  // if reflection
@@ -1352,6 +1332,100 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     }
   }  //end finePatch loop
 }  // end ray trace method
+
+
+//______________________________________________________________________
+//
+void 
+Ray::computeExtents(LevelP level_0,
+                    const Level* fineLevel,
+                    const Patch* patch,
+                    const int maxLevels,          
+                    DataWarehouse* new_dw,        
+                    IntVector& fineLevel_ROI_Lo,  
+                    IntVector& fineLevel_ROI_Hi,  
+                    vector<IntVector>& regionLo,  
+                    vector<IntVector>& regionHi)
+{
+  //__________________________________
+  //   fine level region of interest ROI
+  if( _whichROI_algo == dynamic ){
+  
+    minvec_vartype lo;
+    maxvec_vartype hi;
+    new_dw->get( lo, d_ROI_LoCellLabel );
+    new_dw->get( hi, d_ROI_HiCellLabel );
+    fineLevel_ROI_Lo = roundNearest( Vector(lo) );
+    fineLevel_ROI_Hi = roundNearest( Vector(hi) );
+    
+  } else if ( _whichROI_algo == fixed ){
+  
+    fineLevel_ROI_Lo = fineLevel->getCellIndex( _ROI_minPt );
+    fineLevel_ROI_Hi = fineLevel->getCellIndex( _ROI_maxPt );
+    
+    if( !fineLevel->containsCell( fineLevel_ROI_Lo ) || 
+        !fineLevel->containsCell( fineLevel_ROI_Hi ) ){
+      ostringstream warn;
+      warn << "ERROR:  the fixed ROI extents " << _ROI_minPt << " " << _ROI_maxPt << " are not contained on the fine level."<< endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
+    }
+  } else if ( _whichROI_algo == patch_based ){
+  
+    IntVector patchLo = patch->getCellLowIndex();
+    IntVector patchHi = patch->getCellHighIndex();
+    
+    fineLevel_ROI_Lo = patchLo  - _halo;
+    fineLevel_ROI_Hi = patchHi + _halo; 
+    dbg << "  patch: " << patchLo << " " << patchHi << endl;
+
+  }
+
+  // region must be within a finest Level including extraCells.
+  IntVector levelLo, levelHi;
+  fineLevel->findCellIndexRange(levelLo, levelHi);
+
+  fineLevel_ROI_Lo = Max(fineLevel_ROI_Lo, levelLo);
+  fineLevel_ROI_Hi = Min(fineLevel_ROI_Hi, levelHi);
+  dbg << "  fineLevel_ROI: " << fineLevel_ROI_Lo << " "<< fineLevel_ROI_Hi << endl;
+    
+  //__________________________________
+  // Determine the extents of the regions below the fineLevel
+
+  // finest level
+  IntVector finelevel_EC = fineLevel->getExtraCells();
+  regionLo[maxLevels-1] = fineLevel_ROI_Lo + finelevel_EC;
+  regionHi[maxLevels-1] = fineLevel_ROI_Hi - finelevel_EC;
+
+  // coarsest level
+  level_0->findInteriorCellIndexRange(regionLo[0], regionHi[0]);
+
+  for (int L = maxLevels - 2; L > 0; L--) {
+
+    LevelP level = new_dw->getGrid()->getLevel(L);
+
+    if( level->hasCoarserLevel() ){
+
+      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - _halo;
+      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + _halo;
+
+      // region must be within a level
+      IntVector levelLo, levelHi;
+      level->findInteriorCellIndexRange(levelLo, levelHi);
+
+      regionLo[L] = Max(regionLo[L], levelLo);
+      regionHi[L] = Min(regionHi[L], levelHi);
+    }
+  }
+  
+  // debugging  
+  if(dbg2.active()){
+    for(int L = 0; L<maxLevels; L++){
+      dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
+    }
+  }  
+}
+
+
 
 //______________________________________________________________________
 void Ray::adjustDirection(Vector &directionVector, 
@@ -1387,10 +1461,10 @@ inline bool
 Ray::containsCell(const IntVector &low, 
                   const IntVector &high, 
                   const IntVector &cell, 
-                  const int &face)
+                  const int &dir)
 {
-  return  low[face] <= cell[face] &&
-          high[face] > cell[face];
+  return  low[dir] <= cell[dir] &&
+          high[dir] > cell[dir];
 }
 
 
@@ -1665,7 +1739,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
   
-  if( (L_indx != maxLevels ) && ( _whichROI_algo == dynamic ) ){     // only schedule on the finest level
+  if( (L_indx != maxLevels ) || ( _whichROI_algo != dynamic ) ){     // only schedule on the finest level and dynamic
     return;
   }
   
