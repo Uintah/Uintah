@@ -1,5 +1,5 @@
 <start>
-<upsFile>DeterminingBurnRate.ups</upsFile>
+<upsFile>BurnRate.ups</upsFile>
 
 <!-- NOTE....... plotScript2 is hard coded!!!!!-->
 

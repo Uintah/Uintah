@@ -16,13 +16,13 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01    </maxTime>
+       <maxTime>            0.02    </maxTime>
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
        <delt_max>           1.0       </delt_max>
        <delt_init>          1e-9    </delt_init>
        <timestep_multiplier>0.2       </timestep_multiplier>
-       <max_Timesteps>      500000      </max_Timesteps>
+      <!-- <max_Timesteps>      500000      </max_Timesteps>-->
        <max_delt_increase>  0.5      </max_delt_increase>
    </Time>    
     <!--____________________________________________________________________-->
@@ -35,20 +35,7 @@
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <!--<BCType id="0" label="Pressure" var="Neumann">
-          <value> 1.38e6   </value>
-        </BCType>
-        <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Neumann">
-          <value> 0.0  </value>
-        </BCType>
-        <BCType id="all" label="Density" var="Neumann">
-          <value> 0.0  </value>
-        </BCType>
-       </Face>-->
-       <Face side = "x+">
+        <Face side = "x+">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
@@ -94,7 +81,7 @@
       <save label="totalHeatReleased"/>
       <save label="modelMass_src"/>
       
-      <checkpoint cycle = "2" timestepInterval = "1000"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->
