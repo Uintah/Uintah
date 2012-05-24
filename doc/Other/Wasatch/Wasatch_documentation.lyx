@@ -3009,6 +3009,282 @@ Modeling Species Transport
 Modeling Dispersed-Phase Flows
 \end_layout
 
+\begin_layout Section
+Precipitate Flows
+\end_layout
+
+\begin_layout Standard
+Work in Progress
+\end_layout
+
+\begin_layout Standard
+Wasatch has models for precipitation reactions utilizing teh quadrature
+ method of moments to track the population balance equation in terms of
+ the radius.
+\end_layout
+
+\begin_layout Subsection
+Governing Equations
+\end_layout
+
+\begin_layout Standard
+The Precipitate flow model utilized in Wasatch uses the implemented moment
+ transport equations.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial m_{k}}{\partial t}=-\nabla\cdot\mathbf{u}m_{k}-k\int_{-\infty}^{+\infty}r^{k-1}gN\,\mathrm{d}r+\int_{-\infty}^{+\infty}r^{k}b\,\mathrm{d}r\equiv F(m_{k+i});\quad i\in\mathbb{Q}\label{eq:wasatch-moment-transport-eq-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With QMOM used as closure for the moments.
+ The moments which require closure will changed based on the growth rate
+ model that is utilized, and the closure is taken care of automatically
+ in the Wasatch algorithm.
+ The relavent terms dictating the reaction rate are tabulated by the extent
+ of reaction and the mixture fraction.
+ The main term required is the supersaturation value of the liquid.
+ The source term for the reaction progress is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+S_{\xi}=\frac{1}{\iota}\sum_{\alpha=1}^{n}\nu_{\alpha}S_{3,\alpha}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $S_{3,\alpha}$
+\end_inset
+
+ is the source term of the third moment, representing the volume, of the
+ 
+\begin_inset Formula $\alpha th$
+\end_inset
+
+ species, 
+\begin_inset Formula $\nu_{\alpha}$
+\end_inset
+
+ is the molecular volume and 
+\begin_inset Formula $\iota$
+\end_inset
+
+ is the maximum mols of precipitate.
+\end_layout
+
+\begin_layout Subsection
+Birth Models
+\end_layout
+
+\begin_layout Standard
+Nucleation terms in Wasatch can be specifed as one of three distributions,
+ point, uniform or normal.
+ Each of these distributions has to occur at a point in 
+\begin_inset Formula $r$
+\end_inset
+
+ space which can either be set as a constant value for testing or set as
+ the critical radius
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+r^{*}=r_{0}/\log(S)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $S$
+\end_inset
+
+ is the supersaturation ratio.
+ The coefficient used for the birth term can either be set as constant or
+ using the classical nucleation definition
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+B_{0}=\exp(16\pi/3(\gamma/K_{B}T)^{3}(\nu/N_{A}/\log(S))^{2})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\gamma$
+\end_inset
+
+ is the surface energy, 
+\begin_inset Formula $K_{B}$
+\end_inset
+
+ is the Boltzman constant, 
+\begin_inset Formula $T$
+\end_inset
+
+ is the temperature in Kelvin, 
+\begin_inset Formula $\nu$
+\end_inset
+
+ is the molecular volume, and 
+\begin_inset Formula $N_{A}$
+\end_inset
+
+ is Avogadro's constant.
+ The Wasatch forumaltion also includes a 
+\begin_inset Quotes eld
+\end_inset
+
+pre-Birth coefficient
+\begin_inset Quotes erd
+\end_inset
+
+ which is used as a converison factor from SI units into smaller lengths
+ (
+\begin_inset Formula $\mu$
+\end_inset
+
+m or nm) used as precipitate measurements.
+\end_layout
+
+\begin_layout Subsection
+Growth Models
+\end_layout
+
+\begin_layout Standard
+Currently Wasatch has three grwoth models implemented, constant growth,
+ bulk diffusion and monosurface nucleation.
+ Each of these models has different moments which need closure, as none,
+ 
+\begin_inset Formula $m_{-2}$
+\end_inset
+
+ & 
+\begin_inset Formula $m_{-1}$
+\end_inset
+
+, and 
+\begin_inset Formula $m_{k+1}$
+\end_inset
+
+, respectively.
+ The bulk diffusion model uses the appropriate coefficient as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g_{0}=\nu DC_{eq}(S-\bar{S})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula $D$
+\end_inset
+
+ as the diffusion coefficient, 
+\begin_inset Formula $C_{eq}$
+\end_inset
+
+ as the equilibirum concentration and where 
+\begin_inset Formula $\bar{S}$
+\end_inset
+
+ can either be set as one, or set as needed for Ostwald Ripening as 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\bar{S}=\exp(2\nu\gamma/RTr)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+for monosurface nucleation the growth coefficient is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula 
+\begin{equation}
+\Delta G=\frac{\beta_{L}\gamma^{2}d^{2}}{4\beta_{A}K_{B}T\log(S)}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\beta_{L}$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta_{A}$
+\end_inset
+
+ are shape factors, and 
+\begin_inset Formula $d$
+\end_inset
+
+ is the molecualr diameter.
+ As with the birth models, a 
+\begin_inset Quotes eld
+\end_inset
+
+pre-Growth coeffcient
+\begin_inset Quotes erd
+\end_inset
+
+ can be used for unit conversions.
+\end_layout
+
 \begin_layout Chapter
 Summary of Current Capabilities and Work in Progress
 \end_layout
