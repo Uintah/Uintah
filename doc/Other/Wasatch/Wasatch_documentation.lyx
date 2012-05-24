@@ -3010,17 +3010,13 @@ Modeling Dispersed-Phase Flows
 \end_layout
 
 \begin_layout Section
-Precipitate Flows
+Precipitation
 \end_layout
 
 \begin_layout Standard
-Work in Progress
-\end_layout
-
-\begin_layout Standard
-Wasatch has models for precipitation reactions utilizing teh quadrature
- method of moments to track the population balance equation in terms of
- the radius.
+Wasatch supports precipitation-physics reactions utilizing the quadrature
+ method of moments to solve the population balance equation.
+ The internal coordinate in this case is the particle radius.
 \end_layout
 
 \begin_layout Subsection
@@ -3028,7 +3024,7 @@ Governing Equations
 \end_layout
 
 \begin_layout Standard
-The Precipitate flow model utilized in Wasatch uses the implemented moment
+The precipitation model utilized in Wasatch uses the implemented moment
  transport equations.
 \end_layout
 
@@ -3040,12 +3036,8 @@ The Precipitate flow model utilized in Wasatch uses the implemented moment
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-With QMOM used as closure for the moments.
- The moments which require closure will changed based on the growth rate
+with QMOM used as closure for the moments.
+ The moments that require closure will changed based on the growth rate
  model that is utilized, and the closure is taken care of automatically
  in the Wasatch algorithm.
  The relavent terms dictating the reaction rate are tabulated by the extent
@@ -3062,28 +3054,24 @@ S_{\xi}=\frac{1}{\iota}\sum_{\alpha=1}^{n}\nu_{\alpha}S_{3,\alpha}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Where 
+where 
 \begin_inset Formula $S_{3,\alpha}$
 \end_inset
 
- is the source term of the third moment, representing the volume, of the
+ is the source term of the third moment, representing the volume, of species
  
-\begin_inset Formula $\alpha th$
+\begin_inset Formula $\alpha$
 \end_inset
 
- species, 
+, 
 \begin_inset Formula $\nu_{\alpha}$
 \end_inset
 
- is the molecular volume and 
+ is the molecular volume, and 
 \begin_inset Formula $\iota$
 \end_inset
 
- is the maximum mols of precipitate.
+ is the maximum moles of precipitate.
 \end_layout
 
 \begin_layout Subsection
@@ -3092,32 +3080,14 @@ Birth Models
 
 \begin_layout Standard
 Nucleation terms in Wasatch can be specifed as one of three distributions,
- point, uniform or normal.
- Each of these distributions has to occur at a point in 
-\begin_inset Formula $r$
+ point, uniform, and normal.
+ Each of these distributions requires the specification of a nucleation
+ radius which can either be set as a constant or as the critical radius
+ 
+\begin_inset Formula $r^{*}=r_{0}/\log(S)$
 \end_inset
 
- space which can either be set as a constant value for testing or set as
- the critical radius
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-r^{*}=r_{0}/\log(S)
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-where 
-\begin_inset Formula $S$
-\end_inset
-
- is the supersaturation ratio.
+.
  The coefficient used for the birth term can either be set as constant or
  using the classical nucleation definition
 \end_layout
@@ -3125,15 +3095,11 @@ where
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-B_{0}=\exp(16\pi/3(\gamma/K_{B}T)^{3}(\nu/N_{A}/\log(S))^{2})
+B_{0}=\text{Exp}[\tfrac{16\pi}{3}(\tfrac{\gamma}{K_{B}T})^{3}\frac{\nu}{N_{\text{A}}\log(S)^{2}}]
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\gamma$
 \end_inset
@@ -3151,7 +3117,7 @@ where
 \end_inset
 
  is the molecular volume, and 
-\begin_inset Formula $N_{A}$
+\begin_inset Formula $N_{\text{A}}$
 \end_inset
 
  is Avogadro's constant.
@@ -3203,10 +3169,6 @@ g_{0}=\nu DC_{eq}(S-\bar{S})
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 with 
 \begin_inset Formula $D$
 \end_inset
@@ -3230,10 +3192,6 @@ with
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 for monosurface nucleation the growth coefficient is 
 \end_layout
 
@@ -3245,10 +3203,6 @@ g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T)
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 with 
 \begin_inset Formula 
 \begin{equation}
@@ -3257,10 +3211,6 @@ with
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\beta_{L}$
 \end_inset
