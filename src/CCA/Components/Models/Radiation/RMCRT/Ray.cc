@@ -682,9 +682,38 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
     if( _solveBoundaryFlux){
       vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
+      //patch->getBoundaryFaces(bf);
+      //if( bf.size() > 0){ // we can have intrusion even if there are no boundary faces
 
-      if( bf.size() > 0){
+      int patchID = patch->getID();
+      // see if map is empty, if so,  populate it, and initialize fluxes to zero.
+      if (CellToValuesMap.empty()){
+        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector origin = *iter;
+          
+          // this 4 member vector will be the key for the CellToValuesMap.
+          // 0 thru 2 are i,j,k, and 3 is the cell face
+          std::vector<int> originAndFace;
+
+          // !! HACK !! Hard coded for Arches wall types!!
+          // !! In the future, specify this based on the current component
+          int nWallTypes = 3;
+          int wallTypes[3] = {6,7,8}; // make a std::vector
+          int face = -1;
+          if (has_a_boundary(origin, wallTypes, nWallTypes, celltype, face)){
+            originAndFace.push_back( origin.x() );
+            originAndFace.push_back( origin.y() );
+            originAndFace.push_back( origin.z() );
+            originAndFace.push_back( face );
+
+            // initialize fluxes to zero
+            CellToValuesMap.insert(make_pair( originAndFace, 0 )); // !! This might need to be moved down.
+          }
+        }// end populate map cell iterator
+        PatchToCellsMap.insert(make_pair( patchID, CellToValuesMap ));
+      }// end if map is empty
+
+
 
         IntVector pLow;
         IntVector pHigh;
@@ -740,28 +769,32 @@ Ray::rayTrace( const ProcessorGroup* pc,
           boundFlux[origin].t = 0;                                                            
         }
 
-        //__________________________________
-        // Loop over boundary faces and compute incident radiative flux
+      //__________________________________
+      // Loop over boundary faces and compute incident radiative flux
 
-        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-          Patch::FaceType face = *itr;
-
+       // for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+       //   Patch::FaceType face = *itr;
+        for (map<std::vector<int>,double>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
+          int i = itr->first[0];
+          int j = itr->first[1];
+          int k = itr->first[2];
+          int face = itr->first[3];
           int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
           int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
+          IntVector origin = IntVector(i,j,k);
 
           Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
 
-          for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
-            const IntVector& origin = *iter;
+         // for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+            //const IntVector& origin = *iter;
 
             // create array of pointers to the stencil7 members.  Now can make assignments in the face loop without "switch"
-            double* pBoundFlux[6] = { &boundFlux[origin].w, &boundFlux[origin].e, &boundFlux[origin].s,
-                                      &boundFlux[origin].n, &boundFlux[origin].b, &boundFlux[origin].t };  // ordering is same as Uintah
+            // double* pBoundFlux[6] = { &boundFlux[origin].w, &boundFlux[origin].e, &boundFlux[origin].s,
+            // &boundFlux[origin].n, &boundFlux[origin].b, &boundFlux[origin].t };  // ordering is same as Uintah
 
-            int i = origin.x();
-            int j = origin.y();
-            int k = origin.z();
-            //cout << "celltype: " << celltype[origin] << endl;
+          //  int i = origin.x();
+          //  int j = origin.y();
+          //  int k = origin.z();
 
             // quick flux debug test
             //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations
@@ -823,14 +856,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             //__________________________________
             //  Compute Net Flux to the boundary
+            itr->second = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
 
-            *pBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
+            //*pBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
             //cout << *pBoundFlux[face] << endl;
 
             //} // end of quick flux debug
-          } // end of iterating through boundary cells
-        } // end of iterating over faces
-      } // end has a boundaryFac
+          } // end of iterating through boundary map
+       // } // end of iterating over faces
+      // } // end has a boundaryFace
     } // end if _solveBoundaryFlux
         
          
@@ -1457,6 +1491,74 @@ void Ray::adjustLocation(Vector &location,
   location[2] = tmpry[indexOrder[2]] + shift[2] * DzDxRatio;
 
 }
+
+//______________________________________________________________________
+//
+bool Ray::has_a_boundary(const IntVector &c, const int wallTypes[], const int nWallTypes,  constCCVariable<int> &celltype, int &face){
+
+  IntVector adjacentCell = c;
+
+  // Loop over the different wall types and check the 6 adjacent cells to see if any of them are boundaries
+  for (int i=0; i<nWallTypes; ++i){
+
+    //  !! In the future, this fuction can be made more efficient. Rather than
+    // resetting adjacentCell to c each time, I can do something like
+    // adjacentCell[0] += 2 for the east face for instance.  It's easier
+    // to make coding mistakes that way, so leaving it as is for now.
+
+    adjacentCell = c;
+
+    adjacentCell[0] = c[0] - 1; // west
+
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 0;
+      return(true);
+    }
+
+    adjacentCell = c;
+    adjacentCell[0] = c[0] + 1; // east
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 1;
+      return(true);
+    }
+
+    adjacentCell = c;
+    adjacentCell[1] = c[1] - 1; // south
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 2;
+      return(true);
+    }
+
+    adjacentCell = c;
+    adjacentCell[1] = c[1] + 1; // north
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 3;
+      return(true);
+    }
+
+    adjacentCell = c;
+    adjacentCell[2] = c[2] - 1; // bottom
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 4;
+      return(true);
+    }
+
+    adjacentCell = c;
+    adjacentCell[2] = c[2] + 1; // top
+    if (celltype[adjacentCell] == wallTypes[i]){
+      face = 5;
+      return(true);
+    }
+
+  } // end loop over wall types.
+
+// if none of the above returned true, then the current cell must not be adjacent to a wall
+return (false);
+
+}
+
+
+
 
 //______________________________________________________________________
 inline bool

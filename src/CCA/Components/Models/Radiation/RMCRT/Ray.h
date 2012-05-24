@@ -134,7 +134,12 @@ namespace Uintah{
                            const IntVector &indexOrder,
                            const IntVector &signOrder);
 
-
+      /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
+      bool has_a_boundary(const IntVector &c,
+                          const int wallTypes[],
+                          const int nWallTypes,
+                          constCCVariable<int> &celltype,
+                          int &face);
 
 
       //__________________________________
@@ -189,6 +194,9 @@ namespace Uintah{
       IntVector _halo;                       // number of cells surrounding a coarse patch on coarser levels
       
       double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
+
+      std::map<std::vector<int>, double> CellToValuesMap;                  // holds the fluxes for the cells in the patch
+      std::map< int, std::map<std::vector<int>, double> > PatchToCellsMap; // holds the boundary cells in the patch
 
       int  _benchmark; 
       bool _isSeedRandom;
