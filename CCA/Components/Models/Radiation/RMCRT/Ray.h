@@ -101,8 +101,7 @@ namespace Uintah{
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
-                                 SchedulerP& sched, 
-                                 const int time_sub_step );
+                                 SchedulerP& sched );
                                  
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
@@ -149,7 +148,9 @@ namespace Uintah{
                           const MaterialSet* matls);
                       
       void sched_CoarsenAll( const LevelP& coarseLevel, 
-                             SchedulerP& sched );
+                             SchedulerP& sched,
+                             const bool modifies_abskg,
+                             const bool modifies_sigmaT4 );
                              
 
       void sched_ROI_Extents ( const LevelP& level, 
@@ -293,8 +294,7 @@ namespace Uintah{
                            const PatchSubset* patches, 
                            const MaterialSubset* matls, 
                            DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           const int time_sub_step ); 
+                           DataWarehouse* new_dw ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,

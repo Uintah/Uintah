@@ -232,16 +232,29 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
   
+  // move data to the new_dw for simplicity
+  for (int l = 0; l <= maxLevels-1; l++) {
+    const LevelP& level = grid->getLevel(l);
+    d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
+    d_RMCRT->sched_CarryForward (level, sched, d_colorLabel);
+    d_RMCRT->sched_CarryForward (level, sched, d_abskgLabel);
+  }
+  
+  
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if( d_whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     const PatchSet* finestPatches = fineLevel->eachPatch();
-
-    // compute Radiative properties on the finest level
-    int time_sub_step = 0;
-    d_RMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
-
+    Task::WhichDW temp_dw = Task::NewDW;
+    
+    // modify Radiative properties on the finest level
+    d_RMCRT->sched_initProperties( fineLevel, sched);
+    
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+ 
+    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
+        
     // coarsen data to the coarser levels.  
     // do it in reverse order
     Task::WhichDW notUsed = Task::OldDW;
@@ -249,7 +262,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
-      d_RMCRT->sched_CoarsenAll (level, sched);
+      const bool modifies_abskg   = true;
+      const bool modifies_sigmaT4 = false;
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
       d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
     }
     
@@ -274,21 +289,26 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   if( d_whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     const PatchSet* finestPatches = fineLevel->eachPatch();
+    Task::WhichDW temp_dw = Task::NewDW;
    
-    // compute Radiative properties on the finest level
-    int time_sub_step = 0;
-    d_RMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
+    // modify Radiative properties on the finest level
+    d_RMCRT->sched_initProperties( fineLevel, sched  );
+    
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+    
+    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
     
     
     for (int l = 0; l <= maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
-      
-      d_RMCRT->sched_CoarsenAll (level, sched);
+      const bool modifies_abskg   = true;
+      const bool modifies_sigmaT4 = false;
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
       
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::OldDW;
+        Task::WhichDW celltype_dw = Task::NewDW;
         bool modifies_divQ       = false;
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
@@ -303,12 +323,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     // only schedule CFD on the finest level
     schedulePseudoCFD( sched, finestPatches, matls );
-    
-    // carry forward
-    for (int l = 0; l <= maxLevels-1; l++) {
-      const LevelP& level = grid->getLevel(l);
-      d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
-    }
   }
 }
 //______________________________________________________________________
@@ -321,10 +335,9 @@ void RMCRT_Test::schedulePseudoCFD(SchedulerP& sched,
   
   Task* t = scinew Task("RMCRT_Test::pseudoCFD",
                   this, &RMCRT_Test::pseudoCFD);
-  t->requires(Task::NewDW, d_divQLabel,   d_gn, 0);
-  t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
-  
-  t->computes( d_colorLabel );
+                  
+  t->requires(Task::NewDW, d_divQLabel,  d_gn, 0);
+  t->modifies( d_colorLabel );
 
   sched->addTask(t, patches, matls);
 }
@@ -343,23 +356,27 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       CCVariable<double> color;
       constCCVariable<double> divQ;
-      constCCVariable<double> color_old;
+                 
+      new_dw->get(           divQ,     d_divQLabel,  d_matl, patch, d_gn,0);
+      new_dw->getModifiable( color,    d_colorLabel, d_matl, patch );
       
-      new_dw->allocateAndPut(color, d_colorLabel, d_matl, patch);              
-      new_dw->get(divQ,       d_divQLabel,  d_matl, patch, d_gn,0);      
-      old_dw->get(color_old,  d_colorLabel, d_matl, patch, d_gn,0);       
-      
-      color.initialize(0.0);
       
       const double rhoSTP = 118.39; // density at standard temp and pressure [g/m^3] 
       double deltaTime = 0.0243902; // !! Should be dynamic
       const double specHeat = 1.012; // specific heat [J/K]
       double rho = 0;
+      
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
         // rho = rhoSTP *298 / 1500; // more accurate, but "hard codes" temperature to 1500 
-        rho = rhoSTP * 298 / color[c]; // calculate density based on ideal gas law
-        color[c] = color_old[c] - (1/rho) * (1/specHeat) * deltaTime * divQ[c];
+        //__________________________________
+        //
+        double color_wrong = 0.0;            // THIS IS WRONG
+        //__________________________________
+
+        rho = rhoSTP * 298 / color_wrong; // calculate density based on ideal gas law
+        
+        color[c] = color[c] - (1/rho) * (1/specHeat) * deltaTime * divQ[c];
       }
       
       // set boundary conditions 
