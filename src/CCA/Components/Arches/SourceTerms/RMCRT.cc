@@ -215,12 +215,13 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     
     for (int l = 0; l <= maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
-      
-      _RMCRT->sched_CoarsenAll (level, sched);
+      const bool modifies_abskg   = false;
+      const bool modifies_sigmaT4 = false;
+      _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
       
       if(level->hasFinerLevel() || maxLevels == 1){
-        Task::WhichDW abskg_dw   = Task::NewDW;
-        Task::WhichDW sigmaT4_dw = Task::NewDW;
+        Task::WhichDW abskg_dw    = Task::NewDW;
+        Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }

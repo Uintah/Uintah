@@ -243,28 +243,19 @@ Ray::registerVarLabels(int   matlIndex,
 //---------------------------------------------------------------------------
 //
 void 
-Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int time_sub_step )
+Ray::sched_initProperties( const LevelP& level, SchedulerP& sched )
 {
 
-  std::string taskname = "Ray::schedule_initProperties"; 
-  Task* tsk = scinew Task( taskname, this, &Ray::initProperties, time_sub_step ); 
-  printSchedule(level,dbg,taskname);
+  if(_benchmark != 0){
+    std::string taskname = "Ray::schedule_initProperties"; 
+    Task* tsk = scinew Task( taskname, this, &Ray::initProperties); 
+    printSchedule(level,dbg,taskname);
 
-  if ( time_sub_step == 0 ) { 
-    tsk->requires( Task::OldDW, d_abskgLabel,       d_gn, 0 ); 
-    tsk->requires( Task::OldDW, d_temperatureLabel, d_gn, 0 );
-    tsk->computes( d_sigmaT4_label ); 
-    tsk->computes( d_abskgLabel ); 
-    tsk->computes( d_absorpLabel ); 
-     
-  } else { 
-    tsk->requires( Task::NewDW, d_temperatureLabel, d_gn, 0 ); 
-    tsk->modifies( d_sigmaT4_label ); 
-    tsk->modifies( d_abskgLabel ); 
-    tsk->modifies( d_absorpLabel ); 
+    tsk->modifies( d_temperatureLabel );
+    tsk->modifies( d_abskgLabel );
+
+    sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
   }
-
-  sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
 }
 //______________________________________________________________________
 //
@@ -273,10 +264,8 @@ Ray::initProperties( const ProcessorGroup* pc,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw, 
-                     const int time_sub_step )
+                     DataWarehouse* new_dw )
 {
-  // patch loop
   const Level* level = getLevel(patches);
 
   for (int p=0; p < patches->size(); p++){
@@ -286,29 +275,9 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
-    CCVariable<double> sigmaT4Pi; 
-    constCCVariable<double> temperature; 
 
-    if ( time_sub_step == 0 ) { 
-
-      new_dw->allocateAndPut( abskg,    d_abskgLabel,     d_matl, patch ); 
-      new_dw->allocateAndPut( sigmaT4Pi,d_sigmaT4_label,  d_matl, patch );
-      new_dw->allocateAndPut( absorp,   d_absorpLabel,    d_matl, patch );  
-
-      abskg.initialize  ( 0.0 ); 
-      absorp.initialize ( 0.0 ); 
-      sigmaT4Pi.initialize( 0.0 );
-
-      old_dw->get(temperature,  d_temperatureLabel, d_matl, patch, Ghost::None, 0); 
-
-    } else { 
-
-      new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
-      new_dw->getModifiable( absorp,    d_absorpLabel,    d_matl, patch ); 
-      new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch ); 
-      new_dw->get( temperature,         d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
-
-    }
+    new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
+    abskg.initialize  ( 0.0 ); 
 
     IntVector pLow;
     IntVector pHigh;
@@ -343,33 +312,22 @@ Ray::initProperties( const ProcessorGroup* pc,
                         * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
                         * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
                         + 0.1;                  
-      }
-      // apply boundary conditions
-      setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
-    }
-    else if (_benchmark == 2) {
+      }     
+    } else if (_benchmark == 2) {
+      
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter;
         abskg[c] = 1;
       }
-      // apply boundary conditions
-      setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
     }
-
-    //__________________________________
-    //  compute sigmaT4
+    
     if(_benchmark == 3) {
-      for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+      CCVariable<double> temp;
+      new_dw->getModifiable(temp, d_temperatureLabel, d_matl, patch);
+      
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter; 
-        double temp2 = 1000 * abskg[c] * 1000 * abskg[c];
-        sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
-      }
-    }
-    else {
-      for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
-        IntVector c = *iter; 
-        double temp2 = temperature[c] * temperature[c];
-        sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
+        temp[c] = 1000 * abskg[c] * 1000 * abskg[c];
       }
     }
   }
@@ -1494,7 +1452,11 @@ void Ray::adjustLocation(Vector &location,
 
 //______________________________________________________________________
 //
-bool Ray::has_a_boundary(const IntVector &c, const int wallTypes[], const int nWallTypes,  constCCVariable<int> &celltype, int &face){
+bool Ray::has_a_boundary(const IntVector &c, 
+                         const int wallTypes[], 
+                         const int nWallTypes,  
+                         constCCVariable<int> &celltype, 
+                         int &face){
 
   IntVector adjacentCell = c;
 
@@ -1932,13 +1894,15 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 
 //______________________________________________________________________
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel, 
-                            SchedulerP& sched )
+                            SchedulerP& sched,
+                            const bool modifies_abskg,
+                            const bool modifies_sigmaT4)
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
     bool modifies = false;
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_abskgLabel);
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_sigmaT4_label);
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel);
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4_label);
   }
 }
 
