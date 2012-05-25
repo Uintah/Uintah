@@ -5,5 +5,14 @@
   <Intrusion                    spec="OPTIONAL NO_DATA">
     <geom_object/>
   </Intrusion>
+  
+  <initalizeUsingUda       spec="OPTIONAL NO_DATA">
+    <uda_name               spec="REQUIRED STRING"/>
+    <abskg_varName          spec="REQUIRED STRING"/>
+    <temperature_varName    spec="REQUIRED STRING"/>
+    <cellType_varName       spec="OPTIONAL STRING"/>      
+    <matl_index             spec="OPTIONAL INTEGER 'positive'"/>
+    <timestep               spec="OPTIONAL INTEGER 'positive'"/>
+  </initalizeUsingUda>
 
 </Uintah_Include>
