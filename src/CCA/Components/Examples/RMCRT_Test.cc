@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
@@ -84,7 +85,8 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_whichAlgo = coarseLevel;
   d_wall_cell = 8; //<----HARD CODED WALL CELL
   d_flow_cell = -1; //<----HARD CODED FLOW CELL 
-   
+  
+  d_old_uda = 0; 
 }
 //______________________________________________________________________
 //
@@ -100,6 +102,10 @@ RMCRT_Test::~RMCRT_Test ( void )
   VarLabel::destroy(d_absorpLabel);
   VarLabel::destroy(d_sigmaT4Label);
   VarLabel::destroy(d_cellTypeLabel); 
+  
+  if( d_old_uda){
+    delete d_old_uda;
+  }
   
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
@@ -153,7 +159,6 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       alg_ps->getAttribute("type", type);
     
       if (type == "dataOnion" ) {
-        cout << " here " << endl;
         d_whichAlgo = dataOnion;
 
         //__________________________________
@@ -169,10 +174,33 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
         d_whichAlgo = coarseLevel;
       }
     }
+
   }
   
   //__________________________________
-  //  bullet proofing
+  //  Read in initalizeUsingUda section
+  ProblemSpecP uda_ps = prob_spec->findBlock("initalizeUsingUda");
+  if(uda_ps){
+    d_old_uda = scinew useOldUdaData();
+    uda_ps->get( "uda_name"  ,          d_old_uda->udaName );
+    uda_ps->get( "timestep"  ,          d_old_uda->timestep );
+    uda_ps->get( "abskg_varName"  ,     d_old_uda->abskgName );
+    uda_ps->get( "temperature_varName", d_old_uda->temperatureName );
+    uda_ps->getWithDefault( "matl_index",          d_old_uda->matl, 0 );
+    uda_ps->getWithDefault( "cellType_varName"  ,  d_old_uda->cellTypeName, "NONE" );
+  }
+  
+  //__________________________________
+  //  Intrusions
+  if (prob_spec->findBlock("Intrusion")){
+    ProblemSpecP intrusion_ps = prob_spec->findBlock("Intrusion"); 
+    ProblemSpecP geom_obj_ps = intrusion_ps->findBlock("geom_object");
+    GeometryPieceFactory::create(geom_obj_ps, d_intrusion_geom);
+  }
+  
+  
+  //__________________________________
+  //  General bullet proofing
   IntVector extraCells = grid->getLevel(0)->getExtraCells();
   IntVector periodic   = grid->getLevel(0)->getPeriodicBoundaries();
 
@@ -183,13 +211,62 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
           << " or one extraCell "<< extraCells << " specified in each direction";
 
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+      
     }
   }
 
-  if (prob_spec->findBlock("Intrusion")){
-    ProblemSpecP intrusion_ps = prob_spec->findBlock("Intrusion"); 
-    ProblemSpecP geom_obj_ps = intrusion_ps->findBlock("geom_object");
-    GeometryPieceFactory::create(geom_obj_ps, d_intrusion_geom);
+  //__________________________________
+  // usingOldUda bullet proofing
+  if(d_old_uda){    
+    DataArchive* archive = scinew DataArchive(d_old_uda->udaName);
+    
+    // does the user specified timestep exist?
+    vector<int> index;
+    vector<double> times;
+    archive->queryTimesteps(index, times);
+  
+    if( d_old_uda->timestep >= index.size() ){
+      ostringstream warn;
+      warn << "The timestep ("<< d_old_uda->timestep << ") was not found in the uda\n"
+           << "There are " << index.size()-1 << " timesteps\n";
+      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+    }   
+    
+#if 0       // Dav help here. 
+    // are the grids the same ?
+    GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
+    if( uda_grid == grid ){
+      ostringstream warn;
+      warn << "ERROR initalizeUsingUda: The grid defined in the input file"
+           <<  " is not equal to the initialization uda's grid ";
+      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);  
+    }
+#endif
+    
+    // do the variables exist
+    vector<string> vars;
+    vector<const Uintah::TypeDescription*> types;
+
+    archive->queryVariables(vars, types);
+    int vars_found = 0;
+    
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      if (d_old_uda->abskgName == vars[i]) {
+        vars_found +=1;
+      } else if (d_old_uda->temperatureName == vars[i]){
+        vars_found +=1;
+      }
+    }
+   
+    if (vars_found != 2 && vars_found != 3) {
+      ostringstream warn;
+      warn << "The variables (" << d_old_uda->abskgName << "),"
+           << " (" << d_old_uda->temperatureName << "), or"
+           << " optional variale cellType: (" << d_old_uda->cellTypeName 
+           << ") was not found in the uda";
+      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);        
+    }
+    delete archive;
   }
 }
   
@@ -199,8 +276,14 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
 
-  Task* task = scinew Task( "RMCRT_Test::initialize", this, 
-                            &RMCRT_Test::initialize );
+  Task* task = NULL;
+  if (!d_old_uda) {
+    task = scinew Task( "RMCRT_Test::initialize", this, 
+                        &RMCRT_Test::initialize );  
+  } else {
+    task = scinew Task( "RMCRT_Test::initializeWithUda", this, 
+                        &RMCRT_Test::initializeWithUda );
+  }
 
   task->computes( d_colorLabel );
   task->computes( d_abskgLabel );
@@ -470,6 +553,84 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         }
       }
     }
+  }
+}
+
+//______________________________________________________________________
+// initialize using data from a previously run uda.
+void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse*,
+                                    DataWarehouse* new_dw)
+{
+  //__________________________________
+  // retreive data from uda
+  DataArchive* archive = scinew DataArchive( d_old_uda->udaName );
+  vector<int> index;
+  vector<double> times;
+  archive->queryTimesteps(index, times);
+  GridP uda_grid = archive->queryGrid(d_old_uda->timestep);
+
+  const int timestep = d_old_uda->timestep;
+  const int uda_matl = d_old_uda->matl;
+
+  vector<CCVariable<double>*> uda_temp(     patches->size() );
+  vector<CCVariable<double>*> uda_abskg(    patches->size() );
+  vector<CCVariable<int>*>    uda_cellType( patches->size() );
+
+  proc0cout << "Extracting data from " << d_old_uda->udaName
+            << " at time " << times[timestep] 
+            << " and initializing RMCRT variables " << endl;
+            
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);  
+
+    uda_temp[p]  = scinew CCVariable<double>;
+    uda_abskg[p] = scinew CCVariable<double>;
+    
+    archive->query( *(CCVariable<double>*) uda_temp[p],  
+                    d_old_uda->temperatureName, uda_matl, patch, timestep);
+
+    archive->query( *(CCVariable<double>*) uda_abskg[p], 
+                    d_old_uda->abskgName,       uda_matl, patch, timestep);
+
+    if (d_old_uda->cellTypeName != "NONE" ){
+      uda_cellType[p] = scinew CCVariable<int>;
+
+      archive->query( *(CCVariable<int>*) uda_cellType[p],  
+                      d_old_uda->cellTypeName, uda_matl, patch, timestep);  
+    }
+  }
+  delete archive;
+
+  //__________________________________
+  //  initialize 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,dbg,"Doing initializeWithUda");    
+
+    CCVariable<double> color;
+    CCVariable<double> abskg;
+    CCVariable<int> cellType; 
+    new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
+    new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
+    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
+    cellType.initialize(d_flow_cell);
+
+    for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
+      IntVector c(*iter);                      
+      color[c] = (*uda_temp[p])[c];            
+      abskg[c] = (*uda_abskg[p])[c];           
+
+      if (d_old_uda->cellTypeName != "NONE" ){ 
+       cellType[c] = (*uda_cellType[p])[c];    
+      }
+    }
+
+    // set boundary conditions 
+    d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
+    d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, d_matl);
   }
 }
 

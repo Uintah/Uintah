@@ -99,6 +99,12 @@ WARNING
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw );
+                      
+    void initializeWithUda (const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* ,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw);
 
     void computeStableTimestep ( const ProcessorGroup*,
                                  const PatchSubset* patches,
@@ -143,6 +149,17 @@ WARNING
     enum Algorithm{ dataOnion, coarseLevel}; 
     
     std::vector<GeometryPieceP>  d_intrusion_geom;
+    
+    struct useOldUdaData{
+      string udaName;
+      string cellTypeName;
+      string temperatureName;
+      string abskgName;
+      unsigned int timestep;
+      int matl;
+    };
+    
+    useOldUdaData* d_old_uda;
   };
 
 } // namespace Uintah
