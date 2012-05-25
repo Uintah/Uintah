@@ -818,7 +818,11 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
     if( vl == NULL ) {
 //      proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
 //          << "However, it is possible that this may cause problems down the road...\n";
-      vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(1,1,1) );
+      //***** THIS ASSUMES A SINGLE GHOST CELL ***** BE CAREFUL ********
+      // check if we have extracells specified. This affects Wasatch only and should have no impact on other components.
+      const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
+      // if extracells are specified, then create varlabels that are consistent with Wasatch varlabels.
+      vl = VarLabel::create( names[i], typeDescriptions[i], hasExtraCells? IntVector(0,0,0) : IntVector(1,1,1) );
     }
     varMap[names[i]] = vl;
   }
