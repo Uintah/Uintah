@@ -26,7 +26,8 @@
                                         attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
                                                                           scalar_diss, laminar_pr, 
                                                                           extent_rxn, tab_strip_factor, 
-                                                                          absorption_coefficient'"
+                                                                          absorption_coefficient, 
+                                                                          empirical_soot'"
                                         attribute3="initialization REQUIRED STRING 'constant'">
 
           <!-- constant property model and scalar dissipation rate model --> 
@@ -68,6 +69,24 @@
           <ch4_label                    spec="OPTIONAL STRING 'ch4IN, CH4'"/>
           <small                        spec="OPTIONAL DOUBLE 'positive'"/>
 
+          <!-- Emperical soot --> 
+          <carbon_content               spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> 
+          <opl                          spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- this is optional because the radiation model may specify it --> 
+          <scaling_factor               spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/>
+          <c3                           spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/>
+          <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/>
+          <density_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/>
+          <temperature_label            spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/>
+          <absorption_label             spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/>
+                                        
         </model>
       </PropertyModels>
 
@@ -558,6 +577,7 @@
             <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
+            <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 

@@ -102,6 +102,16 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
   db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
+  db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
+
+  proc0cout << " --- DO Radiation Model Summary: --- " << endl;
+  proc0cout << "   -> calculation frequency: " << _radiation_calc_freq << endl;
+  proc0cout << "   -> co2 label name:    " << _co2_label_name << endl; 
+  proc0cout << "   -> h20 label name:    " << _h2o_label_name << endl;
+  proc0cout << "   -> T label name:      " << _T_label_name << endl;
+  proc0cout << "   -> absorp label name: " << _abskp_label_name << endl;
+  proc0cout << "   -> soot label name:   " << _soot_label_name << endl;
+  proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db, true ); 
@@ -123,9 +133,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
-  //resolve the abskp label -- allows for different methods for computing abskp: 
-  _abskpLabel = VarLabel::find( _abskp_label_name ); 
-
   _perproc_patches = level->eachPatch(); 
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -134,6 +141,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _co2_label = VarLabel::find( _co2_label_name ); 
   _h2o_label = VarLabel::find( _h2o_label_name ); 
   _T_label   = VarLabel::find( _T_label_name ); 
+  _soot_label = VarLabel::find( _soot_label_name ); 
+  _abskpLabel = VarLabel::find( _abskp_label_name ); 
   
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -145,7 +154,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
     tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
     tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
-    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gn, 0 ); 
+    tsk->requires( Task::OldDW, _soot_label, gn, 0 ); 
+    if ( _abskp_label_name != "new_abskp" ){ 
+      tsk->requires( Task::OldDW, _abskpLabel, gn, 0 ); 
+    }
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -162,7 +174,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
     tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
     tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
-    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gn, 0); 
+    tsk->requires( Task::NewDW, _soot_label, gn, 0); 
+    if ( _abskp_label_name != "new_abskp" ){ 
+      tsk->requires( Task::NewDW, _abskpLabel, gn, 0 ); 
+    }
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -175,10 +190,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
-
-  if ( _abskp_label_name != "new_abskp" ){ 
-    tsk->requires( Task::OldDW, _abskpLabel, gn, 0 ); 
-  }
 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -230,7 +241,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
       old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gn , 0 );
       old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gn , 0 );
-      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel , matlIndex , patch , gn , 0 ); 
+      old_dw->get( const_radiation_vars.sootFV    , _soot_label, matlIndex , patch , gn , 0 ); 
       old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
       old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
 
@@ -260,13 +271,21 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->copyOut( radiation_vars.ABSKP,  _abskpLocalLabel, matlIndex, patch, Ghost::None, 0 );
       old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
+      if ( _abskp_label_name != "new_abskp" ){ 
+
+        constCCVariable<double> other_abskp; 
+
+        //copy over with precomputed abskp
+        old_dw->get( other_abskp, _abskpLabel, matlIndex, patch, gn, 0 ); 
+        radiation_vars.ABSKP.copyData( other_abskp ); 
+      }
 
     } else { 
 
       new_dw->get(     const_radiation_vars.co2,    _co2_label, matlIndex, patch, gn, 0 ); 
       new_dw->get(     const_radiation_vars.h2o,    _h2o_label, matlIndex, patch, gn, 0 ); 
        
-      new_dw->get(     const_radiation_vars.sootFV,    _labels->d_sootFVINLabel, matlIndex, patch, gn, 0 ); 
+      new_dw->get(     const_radiation_vars.sootFV,    _soot_label, matlIndex, patch, gn, 0 ); 
       old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gn ,  0 ); 
       new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
 
@@ -285,11 +304,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
       radiation_vars.ESRCG.initialize(0.0); 
 
-    } 
+      if ( _abskp_label_name != "new_abskp" ){ 
 
-    if ( _abskp_label_name != "new_abskp" ){
-      old_dw->copyOut(radiation_vars.ABSKP, _abskpLabel, matlIndex, patch, gn, 0);
-    }
+        constCCVariable<double> other_abskp; 
+        new_dw->get( other_abskp, _abskpLabel, matlIndex, patch, gn, 0 ); 
+        radiation_vars.ABSKP.copyData( other_abskp ); 
+      } 
+
+    } 
 
     if ( do_radiation ){ 
 

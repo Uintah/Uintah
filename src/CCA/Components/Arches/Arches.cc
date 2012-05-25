@@ -62,6 +62,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
+#include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #if HAVE_TABPROPS
 #  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif
@@ -2817,6 +2818,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         // An example of a constant FCX variable property
         PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "empirical_soot" ){ 
+        
+        // emperical soot model (computes soot volume fraction and abskp) 
+        PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {
 
