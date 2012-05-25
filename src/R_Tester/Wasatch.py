@@ -37,7 +37,7 @@ NIGHTLYTESTS = [
   ("channel-flow-xz-zplus-pressure-outlet",    "channel-flow-xz-zplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-yz-yminus-pressure-outlet",   "channel-flow-yz-yminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-yz-yplus-pressure-outlet",    "channel-flow-yz-yplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
-  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["exactComparison"] ),                 \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -88,7 +88,7 @@ LOCALTESTS = [
   ("channel-flow-xz-zplus-pressure-outlet",    "channel-flow-xz-zplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),                \
   ("channel-flow-yz-yminus-pressure-outlet",   "channel-flow-yz-yminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-yz-yplus-pressure-outlet",    "channel-flow-yz-yplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),                \
-  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison","no_restart"] ),                   \
+  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),                   \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
