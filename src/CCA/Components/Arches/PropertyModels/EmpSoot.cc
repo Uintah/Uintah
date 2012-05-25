@@ -159,9 +159,9 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
 
       soot_vf[c] = _scale_factor * ( _c3 * bc * _cmw ) / _rho_soot; 
-
-      absorp_coef[c] = 0.01 + Min( 0.5, (4.0/_opl)*log(1.0+350.0*
-                       soot_vf[c] * temperature[c] * _opl));
+      
+      absorp_coef[c] = 0.01 + std::min( 0.5, (4.0/_opl)*log( 1.0 + 
+                       350.0 * soot_vf[c] * temperature[c] * _opl));
 
     }
   }
