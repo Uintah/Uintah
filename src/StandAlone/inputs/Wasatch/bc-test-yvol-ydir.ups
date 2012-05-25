@@ -156,10 +156,16 @@
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 10.0 </value>
         </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a_rhs">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side="y+">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 5.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a_rhs">
+          <value> 0.0 </value>
         </BCType>
       </Face>
 
@@ -168,10 +174,16 @@
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
           <value> 5.0 </value>
         </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b_rhs">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side="y+">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
           <value> 10.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b_rhs">
+          <value> 0.0 </value>
         </BCType>
       </Face>
             
@@ -179,6 +191,9 @@
       <Face side="y-">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-neumann">
           <value> 10.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-neumann_rhs">
+          <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
@@ -196,6 +211,9 @@
       <Face side="y+">
         <BCType id="all" var="Dirichlet" label="phi-neumann-dirichlet">
           <value> 10.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="phi-neumann-dirichlet_rhs">
+          <value> 0.0 </value>
         </BCType>
       </Face>
 

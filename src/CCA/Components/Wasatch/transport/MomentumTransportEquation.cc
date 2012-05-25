@@ -543,20 +543,20 @@ namespace Wasatch{
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
-//    Expr::Tag velTag;
-//    switch (this->staggered_location()) {
-//      case XDIR:  velTag=velTags_[0];  break;
-//      case YDIR:  velTag=velTags_[1];  break;
-//      case ZDIR:  velTag=velTags_[2];  break;
-//      default:                         break;
-//    }
-//    process_boundary_conditions<FieldT>( velTag,
-//                                         velTag.name(),
-//                                         this->staggered_location(),
-//                                         graphHelper,
-//                                         localPatches,
-//                                         patchInfoMap,
-//                                         materials );
+    Expr::Tag velTag;
+    switch (this->staggered_location()) {
+      case XDIR:  velTag=velTags_[0];  break;
+      case YDIR:  velTag=velTags_[1];  break;
+      case ZDIR:  velTag=velTags_[2];  break;
+      default:                         break;
+    }
+    process_boundary_conditions<FieldT>( velTag,
+                                         velTag.name(),
+                                         this->staggered_location(),
+                                         graphHelper,
+                                         localPatches,
+                                         patchInfoMap,
+                                         materials );
 
     // set bcs for pressure
 //    process_boundary_conditions<SVolField>( pressure_tag(),
@@ -574,7 +574,15 @@ namespace Wasatch{
                                          localPatches,
                                          patchInfoMap,
                                          materials );
-
+    // set bcs for partial full rhs
+    process_boundary_conditions<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE),
+                                        thisMomName_ + "_rhs_full",
+                                        this->staggered_location(),
+                                        graphHelper,
+                                        localPatches,
+                                        patchInfoMap,
+                                        materials );
+    
 
 //    // set bcs for density
 //    const Expr::Tag densTag( "density", Expr::STATE_NONE );
