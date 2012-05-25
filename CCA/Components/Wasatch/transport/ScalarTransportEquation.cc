@@ -153,6 +153,15 @@ namespace Wasatch{
                                          localPatches,
                                          patchInfoMap,
                                          materials );
+    // see BCHelperTools.cc
+    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name()+"_rhs",Expr::STATE_NONE ),
+                                        this->solution_variable_name() + "_rhs",
+                                        this->staggered_location(),
+                                        graphHelper,
+                                        localPatches,
+                                        patchInfoMap,
+                                        materials );
+    
   }
 
   //------------------------------------------------------------------
