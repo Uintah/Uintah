@@ -85,7 +85,7 @@ namespace Uintah {
      /// Get the boundary condition data for a given material and a given
      /// type for a given child.
      const BoundCondBase* getBoundCondData(int mat_id,const string type, 
-                                           int i) const;
+                                           int ichild) const;
 
      /// Determine the iterator limits.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
@@ -97,17 +97,17 @@ namespace Uintah {
      void combineBCGeometryTypes(int mat_id);
      void combineBCGeometryTypes_NEW(int mat_id);
 
-     /// Get the cell centered face iterator.
-     void getCellFaceIterator(int mat_id,Iterator& b_ptr, int i) const;
+     /// Get the cell centered face iterator for the ith face child on mat_id.
+     void getCellFaceIterator(int mat_id,Iterator& b_ptr, int ichild) const;
 
-     /// Get the node centered face iterator.
-     void getNodeFaceIterator(int mat_id,Iterator& b_ptr, int i) const;
+     /// Get the node centered face iterator for the ith face child on mat_id.
+     void getNodeFaceIterator(int mat_id,Iterator& b_ptr, int ichild) const;
 
      /// Return the number of children in the vector<BCGeomBase*>.
      int getNumberChildren(int mat_id) const;
 
      /// Get the ith child.
-     BCGeomBase* getChild(int mat_id,int i) const;
+     BCGeomBase* getChild(int mat_id,int ichild) const;
 
      /// Print out the various boundary condition geometry types.
      void print();

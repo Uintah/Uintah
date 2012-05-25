@@ -335,7 +335,7 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 }
 
 const BoundCondBase* 
-BCDataArray::getBoundCondData(int mat_id, const string type, int i) const
+BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
 {
   //  cout << "type = " << type << endl;
   BCData new_bc,new_bc_all;
@@ -344,7 +344,7 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int i) const
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   
   if (itr != d_BCDataArray.end()) {
-    itr->second[i]->getBCData(new_bc);
+    itr->second[ichild]->getBCData(new_bc);
     bool found_it = new_bc.find(type);
     if (found_it == true)
       return new_bc.getBCValues(type);
@@ -357,8 +357,8 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int i) const
   // Check the mat_id = "all" case
   itr = d_BCDataArray.find(-1);
   if (itr  != d_BCDataArray.end()) {
-    if (i < (int)itr->second.size()) {
-      itr->second[i]->getBCData(new_bc_all);
+    if (ichild < (int)itr->second.size()) {
+      itr->second[ichild]->getBCData(new_bc_all);
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
         return new_bc_all.getBCValues(type);
@@ -374,33 +374,32 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int i) const
 }
 
 
-void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int i) const
+void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[i]->getCellFaceIterator(b_ptr);
+    itr->second[ichild]->getCellFaceIterator(b_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[i]->getCellFaceIterator(b_ptr);
+      itr->second[ichild]->getCellFaceIterator(b_ptr);
   }
 
 }
 
 
-void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int i) const
+void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[i]->getNodeFaceIterator(b_ptr);
+    itr->second[ichild]->getNodeFaceIterator(b_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[i]->getNodeFaceIterator(b_ptr);
+      itr->second[ichild]->getNodeFaceIterator(b_ptr);
   }
-
 }
 
 int BCDataArray::getNumberChildren(int mat_id) const
