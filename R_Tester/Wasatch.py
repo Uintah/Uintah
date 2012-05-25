@@ -5,6 +5,18 @@ from os import environ
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
+the_dir = generatingGoldStandards()
+
+if the_dir == "" :
+  the_dir = "%s/Wasatch" % inputs_root()
+else :
+  the_dir = the_dir + "/Wasatch"
+
+liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
+                                       "lid-driven-cavity-3D-Re1000.ups", \
+                                       ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
+                                       "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
@@ -38,6 +50,7 @@ NIGHTLYTESTS = [
   ("channel-flow-yz-yminus-pressure-outlet",   "channel-flow-yz-yminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-yz-yplus-pressure-outlet",    "channel-flow-yz-yplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["exactComparison"] ),                 \
+  ("liddrivencavity3DRe1000rk3",    liddrivencavity3DRe1000rk3_ups,   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -89,6 +102,7 @@ LOCALTESTS = [
   ("channel-flow-yz-yminus-pressure-outlet",   "channel-flow-yz-yminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-yz-yplus-pressure-outlet",    "channel-flow-yz-yplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),                \
   ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),                   \
+  ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] ),                 \
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
   ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   \
