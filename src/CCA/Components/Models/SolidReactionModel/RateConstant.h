@@ -82,7 +82,12 @@ namespace Uintah {
          /// @param T Temperature at which to get constant
          /// @return rate Rate at given temperature
          virtual double getConstant(double T) = 0;
-         
+     
+         // This quiets compiler warnings
+         virtual ~RateConstant()
+         {
+         }
+    
      private:
          
      };

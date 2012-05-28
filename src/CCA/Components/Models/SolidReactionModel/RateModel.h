@@ -82,7 +82,12 @@ namespace Uintah {
         /// @param fractionReactant The fraction in the volume that is reactant, i.e. m_r/(m_r+m_p)
         /// @return a scalar for the extent of reaction
         virtual double getDifferentialFractionChange(double fractionReactant) = 0;
-        
+     
+        // This quiets compiler warnings
+        virtual ~RateModel()
+        {
+        }
+   
     private:
         
     };
