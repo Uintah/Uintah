@@ -234,7 +234,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     
     // are the grids the same ?
     GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
-    if( *(uda_grid.get_rep() )  == *( grid.get_rep() ) ){
+    
+    if( ( *(uda_grid.get_rep() )  == *( grid.get_rep() ) ) == false ){
       ostringstream warn;
       warn << "\n\nERROR initalizeUsingUda: The grid defined in the input file"
            <<  " is not equal to the initialization uda's grid\n";
