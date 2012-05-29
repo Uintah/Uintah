@@ -232,16 +232,14 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
     }   
     
-#if 0       // Dav help here. 
     // are the grids the same ?
     GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
-    if( uda_grid == grid ){
+    if( *(uda_grid.get_rep() )  == *( grid.get_rep() ) ){
       ostringstream warn;
-      warn << "ERROR initalizeUsingUda: The grid defined in the input file"
-           <<  " is not equal to the initialization uda's grid ";
+      warn << "\n\nERROR initalizeUsingUda: The grid defined in the input file"
+           <<  " is not equal to the initialization uda's grid\n";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);  
     }
-#endif
     
     // do the variables exist
     vector<string> vars;
