@@ -741,7 +741,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
           IntVector origin = IntVector(i,j,k);
 
-          Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
+          //Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
 
          // for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
             //const IntVector& origin = *iter;
@@ -1900,7 +1900,6 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    bool modifies = false;
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel);
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4_label);
   }
@@ -1939,14 +1938,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  
-  DataWarehouse* this_dw = new_dw;
-  
-  if( which_dw == Task::OldDW ){
-    this_dw = old_dw;
-  }
-  
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();  
 
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
