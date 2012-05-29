@@ -4,6 +4,8 @@
 \begin_header
 \textclass report
 \begin_preamble
+\usepackage{color}
+\usepackage[font=small,labelfont=bf,margin=0.5in]{caption}
 \newrefformat{eq}{Eq. (\ref{#1})}
 \newrefformat{lem}{Lemma \ref{#1}}
 \newrefformat{cla}{Claim \ref{#1}}
@@ -60,6 +62,7 @@
 \pdf_colorlinks true
 \pdf_backref false
 \pdf_pdfusetitle true
+\pdf_quoted_options "linkcolor=blue,citecolor=red,urlcolor=blue,filecolor=blue"
 \papersize default
 \use_geometry true
 \use_amsmath 1
@@ -2712,6 +2715,13 @@ Boundary Conditions
 
 \begin_layout Section
 Overview of Defining Boundary Conditions
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:overview-bcs"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2736,7 +2746,7 @@ reference "fig:boundary-condition-specification"
 placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -2977,12 +2987,17 @@ For Staggered fields on uniform structured grids, a simplification follows
 Scalar Transport Boundary Conditions
 \end_layout
 
-\begin_layout Subsection
-Dirichlet Boundary Conditions
-\end_layout
+\begin_layout Standard
+The treatment of scalar boundary conditions follows from the previous discussion.
+ Specification of either fixed values or fluxes of transported scalars is
+ easily achieved using the machinery discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:overview-bcs"
 
-\begin_layout Subsection
-Neumann Boundary Conditions
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -2991,6 +3006,147 @@ Fluid Flow Boundary Conditions
 
 \begin_layout Subsection
 Inlets, Walls, and Moving Walls
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement b
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch_pressure_bc_treatment.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Derivation of pressure boundary conditions.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:boundary-condition-pressure-specification-1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Inlets and walls, whether moving or stationary, share the same type boundary
+ conditions.
+ The user specifies the momentum at those boundaries.
+ Treatment of the pressure is derived from the pressure Poisson equation
+ as follows.
+ For simplicity, we illustrate this in one-dimension at a boundary cell
+ on the x-minus side of the computational domain.
+ In this case, the pressure poisson equation is written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial^{2}p}{\partial x^{2}}=\frac{\partial F}{\partial x}\label{eq:bc-ppe-1d}
+\end{equation}
+
+\end_inset
+
+Using second order finite differencing, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:bc-ppe-1d"
+
+\end_inset
+
+ may be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{p_{-1}-2p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}
+\end{equation}
+
+\end_inset
+
+Here, both 
+\begin_inset Formula $p_{-1}$
+\end_inset
+
+ and 
+\begin_inset Formula $F_{i-\tfrac{1}{2}}$
+\end_inset
+
+ are unknown and one may be inclined to specify these quantities at the
+ boundary.
+ However, by using the 
+\begin_inset Formula $x$
+\end_inset
+
+-momentum equation, one can relate these quantities as follows.
+ On an 
+\begin_inset Formula $x$
+\end_inset
+
+-minus cell, the 
+\begin_inset Formula $x$
+\end_inset
+
+-momentum equation may be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}=-\left(\frac{\partial p}{\partial x}\right)_{-\tfrac{1}{2}}-F_{-\tfrac{1}{2}}
+\end{equation}
+
+\end_inset
+
+Again, using central finite differencing, one recovers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}=-\frac{p_{0}-p_{-1}}{\Delta x}-F_{i-\tfrac{1}{2}}
+\end{equation}
+
+\end_inset
+
+or
+\begin_inset Formula 
+\begin{equation}
+\frac{p_{-1}-p_{0}}{\Delta x}=\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}+F_{i-\tfrac{1}{2}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Both the pressure coefficient matrix and the pressure right-hand-side are
+ modified accordingly.
+ For practicaly reasons, we set the 
+\begin_inset Formula $F_{-\tfrac{1}{2}}=0$
+\end_inset
+
+ on faces perpendicular to momentum directions.
 \end_layout
 
 \begin_layout Subsection
