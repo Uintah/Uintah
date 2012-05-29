@@ -912,14 +912,29 @@ bool Grid::operator==(const Grid& othergrid) const
     const Level* otherlevel = othergrid.getLevel(i).get_rep();
     if (level->numPatches() != otherlevel->numPatches())
       return false;
+      
+    // do the patches have the same number of cells and
+    // cover the same physical domain?  
     Level::const_patchIterator iter = level->patchesBegin();
     Level::const_patchIterator otheriter = otherlevel->patchesBegin();
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
-      if (patch->getCellLowIndex() != otherpatch->getCellLowIndex() ||
-          patch->getCellHighIndex() != otherpatch->getCellHighIndex())
+      
+      IntVector lo, o_lo;
+      IntVector hi, o_hi;
+      lo   = patch->getCellLowIndex();
+      o_lo = otherpatch->getCellLowIndex();
+      hi   = patch->getCellHighIndex();
+      o_hi = otherpatch->getCellHighIndex();
+       
+      if ( lo !=  o_lo || hi != o_hi ){
         return false;
+      }
+      if( patch->getCellPosition(lo) != otherpatch->getCellPosition(o_lo) ||
+          patch->getCellPosition(hi) != otherpatch->getCellPosition(o_hi) ){
+        return false;
+      }
     }
       
   }
