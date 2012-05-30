@@ -24,7 +24,7 @@
                                  need_applies_to="type empirical_soot"/>
    <scaling_factor               spec="OPTIONAL DOUBLE 'positive'"
                                  need_applies_to="type empirical_soot"/>
-   <c3                           spec="OPTIONAL DOUBLE 'positive'"
+   <c1                           spec="OPTIONAL DOUBLE 'positive'"
                                  need_applies_to="type empirical_soot"/>
    <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
                                  need_applies_to="type empirical_soot"/>
@@ -96,7 +96,7 @@ namespace Uintah{
      double _opl; 
      double _scale_factor;
      double _rho_soot; 
-     double _c3; 
+     double _c1; 
      const double _cmw;              //<< Carbon molecular weight
 
      const VarLabel* _den_label; 

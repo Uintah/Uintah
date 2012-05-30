@@ -68,7 +68,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
   db->getWithDefault( "absorption_label", _absorp_label_name, "absorpIN"); 
   db->getWithDefault( "temperature_label", _T_label_name, "temperature"); 
   db->getWithDefault( "soot_density", _rho_soot, 1950.0); 
-  db->getWithDefault( "c3", _c3, 0.1); 
+  db->getWithDefault( "c1", _c1, 0.1); 
 
 }
 
@@ -159,7 +159,7 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
 
       if ( temperature[c] > 1000.0 ) { 
-        soot_vf[c] = _scale_factor * ( _c3 * bc * _cmw ) / _rho_soot; 
+        soot_vf[c] = _scale_factor * ( _c1 * bc * _cmw ) / _rho_soot; 
       } else { 
         soot_vf[c] = 0.0;
       } 
