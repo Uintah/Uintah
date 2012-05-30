@@ -484,7 +484,7 @@ Models_PetscSolver::radLinearSolve()
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR==2 && PETSC_VERSION_MINOR == 2)
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 2))
     ierr = VecAXPY(&neg_one, d_b, u_tmp);
 #else
     ierr = VecAXPY(u_tmp,neg_one, d_b);
@@ -498,7 +498,11 @@ Models_PetscSolver::radLinearSolve()
 #endif
   if(ierr)
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ierr = VecDestroy(&u_tmp);
+#else
   ierr = VecDestroy(u_tmp);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
@@ -536,8 +540,8 @@ Models_PetscSolver::radLinearSolve()
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
       throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR==2)
-  #if  ( PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR >= 1) // 2.3.1
+#if (PETSC_VERSION_MAJOR == 2)
+  #if  ((PETSC_VERSION_MINOR == 3) && (PETSC_VERSION_SUBMINOR >= 1)) // 2.3.1
     ierr = PCFactorSetFill(peqnpc, d_fill);
     if(ierr)
       throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
@@ -600,7 +604,7 @@ Models_PetscSolver::radLinearSolve()
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR==2 && PETSC_VERSION_MINOR == 2)
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 2))
   ierr = VecAXPY(&neg_one, d_b, d_u);
 #else
   ierr = VecAXPY(d_u,neg_one, d_b);
@@ -617,7 +621,11 @@ Models_PetscSolver::radLinearSolve()
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
 #if 1
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ierr = KSPDestroy(&solver);
+#else
   ierr = KSPDestroy(solver);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
 #endif
@@ -684,6 +692,21 @@ Models_PetscSolver::destroyMatrix()
      are no longer needed.
   */
 #if 1
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  int ierr;
+  ierr = VecDestroy(&d_u);
+  if(ierr)
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+  ierr = VecDestroy(&d_b);
+  if(ierr)
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+  ierr = VecDestroy(&d_x);
+  if(ierr)
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+  ierr = MatDestroy(&A);
+  if(ierr)
+    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+#else
   int ierr;
   ierr = VecDestroy(d_u);
   if(ierr)
@@ -697,6 +720,7 @@ Models_PetscSolver::destroyMatrix()
   ierr = MatDestroy(A);
   if(ierr)
     throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+#endif
 #endif
 }
 
