@@ -124,11 +124,12 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
     ps->require("om",d_JWLEOSData.om);
     // takes precedence over Murnaghan and Modified
     d_useMurnahanEOS = false;
+    d_useBirchMurnaghanEOS = false;
   }
   if(d_useJWLEOS) {
     d_useJWLCEOS = false;
     ps->require("Cv",d_JWLEOSData.Cv);
-  }
+ }
   if(d_useJWLCEOS) {
     ps->require("C",d_JWLEOSData.C);
   }
@@ -180,6 +181,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
 
 ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
 {
+  std::cout << "Copying..." << std::endl;
   d_bulk = cm->d_bulk;
   d_random = cm->d_random;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
@@ -228,7 +230,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
     d_JWLEOSData.R1 =   cm->d_JWLEOSData.R1;
     d_JWLEOSData.R2 =   cm->d_JWLEOSData.R2;
     d_JWLEOSData.om =   cm->d_JWLEOSData.om;
-  }
+ }
 
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = cm->d_tt.T0_WLF;
@@ -1288,29 +1290,151 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pRandLabel_preReloc);
 }
 
+
+//______________________________________________________________________
+//  Computes the reference density using a combined bisection and Newton
+//  Method.
+//  See:  /src/CCA/Components/MPM/ConstitutiveModels/Docs/ModifiedJWL.pdf
+//  for details. ?????
+
+void  ViscoScram::computeRhoRef(const double rho_orig,
+                                const double p_ref,
+                                const double temperature,
+                                const double pressure,
+                                double& rho_refrr,
+                                double& K0)
+{
+  double delta_old;
+  double delta_new;
+  double f       = 0;
+  double df_drho = 0;
+  double Cv      = d_JWLEOSData.Cv;
+  double epsilon = 1.0e-10;
+  double rho_min = 0.0;                      // Such that f(min) < 0
+  double rho_max = 100000.0; //pressure*1.001*rho_orig/(om*Cv*temperature)*1.3431907e7; // Such that f(max) > 0
+
+  IterationVariables iterVar;
+  iterVar.Pressure     = p_ref;
+  iterVar.Temperature  = temperature;
+  iterVar.SpecificHeat = Cv;
+  iterVar.IL           = rho_min;
+  iterVar.IR           = rho_max;
+
+  rho_refrr = rho_orig;
+  
+  
+  //double rhoM_start = rhoM;
+
+  int iter = 0;
+  double A  = d_JWLEOSData.A;
+  double B  = d_JWLEOSData.B;
+  double R1 = d_JWLEOSData.R1;
+  double R2 = d_JWLEOSData.R2;
+  double om = d_JWLEOSData.om;
+  while(1){
+
+    double V  = rho_orig/(rho_refrr+1e-100);                       
+    double P1 = A*exp(-R1*V);                                      
+    double P2 = B*exp(-R2*V);                                      
+    double P3 = om*iterVar.SpecificHeat*iterVar.Temperature/V;     
+    f = (P1 + P2 + P3) - iterVar.Pressure;
+
+    setInterval(f, rho_refrr, &iterVar);
+    if(fabs((iterVar.IL-iterVar.IR)/rho_refrr) < epsilon){
+      rho_refrr = (iterVar.IL+iterVar.IR)/2.0;
+      break;
+    }
+
+    delta_new   = 1e100;
+    bool breakOuterLoop = false;
+    while(1){
+      double V  = rho_orig/(rho_refrr +1e-100);
+      double P1 = A*exp(-R1*V);
+      double P2 = B*exp(-R2*V);
+      double P3 = om*iterVar.SpecificHeat*iterVar.Temperature/V;
+
+      df_drho = (P1*R1*V + P2*R2*V+P3)/rho_refrr;
+      delta_old = delta_new;
+      delta_new = -f/df_drho;
+      rho_refrr += delta_new;
+
+      if(fabs(delta_new/rho_refrr) < epsilon){
+        breakOuterLoop = true;
+        break;
+      }
+
+      if(iter>=100){
+        ostringstream warn;
+        warn << setprecision(15);
+        warn << "ERROR:MPM:ViscoSCRAM:ComputingRho_ref. \n";
+        warn << "press= " << pressure << " temp=" << temperature << "\n";
+        warn << "delta= " << delta_new << " rhoM= " << rho_refrr << " f = " << f
+             <<" df_drho =" << df_drho << "\n";
+        throw InternalError(warn.str(), __FILE__, __LINE__);
+      }
+      
+      if(rho_refrr<iterVar.IL ||
+         rho_refrr>iterVar.IR ||
+         fabs(delta_new) > fabs(delta_old*0.7)){
+        break;
+      }else{
+        double V  = rho_orig/(rho_refrr + 1e-100);
+        double P1 = A*exp(-R1*V);
+        double P2 = B*exp(-R2*V);
+        double P3 = om * iterVar.SpecificHeat * iterVar.Temperature/V;
+        f = (P1 + P2 + P3) - iterVar.Pressure;
+      }
+      setInterval(f, rho_refrr, &iterVar);
+      iter++;
+    }
+
+    if(breakOuterLoop == true)
+      break;
+    rho_refrr = (iterVar.IL + iterVar.IR)/2.0;
+    iter++;
+  }   
+
+ double v = rho_orig/rho_refrr;
+ K0 = v*(A*R1*exp(-R1*v)
+        +B*R2*exp(-R2*v))
+       +temperature*Cv*om/v;
+
+}
+//______________________________________________________________________
+//
+
 double ViscoScram::computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
                                      double temperature,
                                      double rho_guess)
 {
+
   double rho_orig = matl->getInitialDensity();
-  double p_gauge = pressure - p_ref;
   double rho_cur;
 
+
+  double rho_refrr = rho_orig;
+  double K0 = d_bulk;
+ 
+  //determining rho_ref so pressure does not go negative
+  //modified EOS is used when pressure is lower than p_ref
+  if(d_useJWLEOS && d_useModifiedEOS) {
+    double K0        = -987654321;
+    double rho_refrr = -987654321;
+    computeRhoRef(rho_orig, p_ref,temperature, pressure, rho_refrr, K0);   
+  }
+  double p_gauge = pressure - p_ref;
 
   // For expansion beyond relative volume = 1
   //  Used to prevent negative pressures
   if(d_useModifiedEOS && p_gauge < 0.0) {        // MODIFIED EOS
 
-
     double A = p_ref;   
-    double n = p_ref/d_bulk;
-    rho_cur  = rho_orig*pow(pressure/A,n);
-
-
+    double n = A/K0;
+    rho_cur  = rho_refrr*pow(pressure/A,n);
+    
   } else if(d_useJWLEOS) {                        // JWL EOS
-
 
     double delta_old;
     double delta_new;
@@ -1328,13 +1452,12 @@ double ViscoScram::computeRhoMicroCM(double pressure,
     iterVar.IL           = rho_min;
     iterVar.IR           = rho_max;
 
-
     double rho_cur = rho_guess <= rho_max ? rho_guess : rho_max/2.0;
     //double rhoM_start = rhoM;
 
     int iter = 0;
     while(1){
-      f = computePJWL(rho_cur,matl, &iterVar);
+      f = computePJWL(rho_cur,matl->getInitialDensity(), &iterVar);
       setInterval(f, rho_cur, &iterVar);
       if(fabs((iterVar.IL-iterVar.IR)/rho_cur) < epsilon){
         return (iterVar.IL+iterVar.IR)/2.0;
@@ -1342,7 +1465,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
       delta_new   = 1e100;
       while(1){
-        df_drho   = computedPdrhoJWL(rho_cur,matl, &iterVar);
+        df_drho   = computedPdrhoJWL(rho_cur,matl->getInitialDensity(), &iterVar);
         delta_old = delta_new;
         delta_new = -f/df_drho;
         rho_cur  += delta_new;
@@ -1367,7 +1490,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           break;
         }
 
-        f = computePJWL(rho_cur,matl,&iterVar);
+        f = computePJWL(rho_cur,matl->getInitialDensity(),&iterVar);
         setInterval(f, rho_cur, &iterVar);
         iter++;
       }
@@ -1376,9 +1499,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
       iter++;
     }
 
-
   } else if(d_useJWLCEOS) {                // JWLC EOS
-
 
     double A    = d_JWLEOSData.A;
     double B    = d_JWLEOSData.B;
@@ -1426,18 +1547,18 @@ double ViscoScram::computeRhoMicroCM(double pressure,
         while(fabs(delta/rhoM) > epsilon){
          double inv_rho_rat = rho_orig/rhoM;
          double rho_rat     = rhoM/rho_orig;
-         double A_e_to_the_R1_rho0_over_rhoM   = A*exp(-R1*inv_rho_rat);
-         double B_e_to_the_R2_rho0_over_rhoM   = B*exp(-R2*inv_rho_rat);
-         double C_rho_rat_tothe_one_plus_omega = C*pow(rho_rat,one_plus_omega);
+         double A_e_to_the_R1_rho0_over_rhoM   = A * exp(-R1*inv_rho_rat);
+         double B_e_to_the_R2_rho0_over_rhoM   = B * exp(-R2*inv_rho_rat);
+         double C_rho_rat_tothe_one_plus_omega = C * pow(rho_rat,one_plus_omega);
 
          f = (A_e_to_the_R1_rho0_over_rhoM +
               B_e_to_the_R2_rho0_over_rhoM +
               C_rho_rat_tothe_one_plus_omega) - pressure;
 
          double rho0_rhoMsqrd = rho_orig/(rhoM*rhoM);
-         df_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
-                  + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
-                  + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
+         df_drho =  R1 * rho0_rhoMsqrd * A_e_to_the_R1_rho0_over_rhoM
+                  + R2 * rho0_rhoMsqrd * B_e_to_the_R2_rho0_over_rhoM
+                  + (one_plus_omega/rhoM) * C_rho_rat_tothe_one_plus_omega;
 
          delta = -relfac*(f/df_drho);
          rhoM += delta;
@@ -1546,24 +1667,38 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   return rho_cur;
 
 }
-void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
+void ViscoScram::computePressEOSCM(double rho_cur,
+                                   double& pressure,
                                    double p_ref,
-                                   double& dp_drho, double& tmp,
+                                   double& dp_drho, 
+                                   double& tmp,
                                    const MPMMaterial* matl, 
                                    double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1.0/rho_orig;
 
+  double rho_refrr = rho_orig;
+  double K0 = d_bulk;
+  
+  //determining rho_ref so pressure does not go negative
+  if(d_useJWLEOS && d_useModifiedEOS) {
+    double K0        = -987654321;
+    double rho_refrr = -987654321;
+    computeRhoRef(rho_orig, p_ref,temperature, pressure, rho_refrr, K0);  
+  }
+
+
   // If we are expanding beyond relative volume = 1, then we need to prevent negative pressures
-  if(d_useModifiedEOS && rho_cur < rho_orig) {
+  if(d_useModifiedEOS && rho_cur < rho_refrr) {
 
 
     double A = p_ref;         // MODIFIED EOS
-    double n = d_bulk/p_ref;
-    double rho_rat_to_the_n = pow(rho_cur*inv_rho_orig,n);
+    double n = K0/A;
+    double invRhoRef = 1.0/rho_refrr;
+    double rho_rat_to_the_n = pow(rho_cur*invRhoRef,n);
     pressure = A * rho_rat_to_the_n;
-    dp_drho  = (d_bulk/rho_cur)*rho_rat_to_the_n;
+    dp_drho  = (K0/rho_cur)*rho_rat_to_the_n;
     tmp      = dp_drho;       // speed of sound squared
 
 
@@ -1684,7 +1819,7 @@ double ViscoScram::computedPdrhoBirchMurnaghan(double v, double rho0)
 
 //____________________________________________________________________________
 // Functions used in Newton-Bisection Solver for JWL Temperature Dependent EOS
-double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl, IterationVariables *iterVar){
+double ViscoScram::computePJWL(double rhoM, double rho0, IterationVariables *iterVar){
   double A  = d_JWLEOSData.A;
   double B  = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
@@ -1694,21 +1829,21 @@ double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl, IterationVa
   if(rhoM == 0){
     return -(iterVar->Pressure);
   }
-  double V  = matl->getInitialDensity()/rhoM;
+  double V  = rho0/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
   double P3 = om*iterVar->SpecificHeat*iterVar->Temperature/V;
   return (P1 + P2 + P3) - iterVar->Pressure;
 }
 
-double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl, IterationVariables *iterVar){
+double ViscoScram::computedPdrhoJWL(double rhoM, double rho0, IterationVariables *iterVar){
   double A  = d_JWLEOSData.A;
   double B  = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
   double R2 = d_JWLEOSData.R2;
   double om = d_JWLEOSData.om;
 
-  double V  = matl->getInitialDensity()/rhoM;
+  double V  = rho0/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
   double P3 = om*iterVar->SpecificHeat*iterVar->Temperature/V;
@@ -1726,7 +1861,6 @@ void ViscoScram::setInterval(double f, double rhoM, IterationVariables *iterVar)
     iterVar->IR = rhoM;
   }
 }
-
 namespace Uintah {
 
 static
