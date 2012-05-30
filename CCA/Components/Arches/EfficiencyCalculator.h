@@ -231,7 +231,7 @@ namespace Uintah {
           CombustionEfficiency(std::string id, const BoundaryCondition* bcs, ArchesLabel* a_lab) 
             : Calculator(id, a_lab), _bcs(bcs) {
 
-            std::cout << " Instantiating a calculator named: " << _id << " of type: combustion_efficiency" << std::endl;
+            proc0cout << " Instantiating a calculator named: " << _id << " of type: combustion_efficiency" << std::endl;
 
             _numerator_label = VarLabel::create(   _id+"_numerator", sum_vartype::getTypeDescription() ); 
             _denominator_label = VarLabel::create( _id+"_denominator", sum_vartype::getTypeDescription() ); 
