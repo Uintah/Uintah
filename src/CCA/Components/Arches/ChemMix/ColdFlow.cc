@@ -85,7 +85,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   ProblemSpecP db_str2 = db_coldflow->findBlock("Stream_2"); 
 
   db_str1->require( "density", d_stream[0][0] ); 
-  db_str2->require( "temperature", d_stream[1][0] ); 
+  db_str1->require( "temperature", d_stream[1][0] ); 
   db_str2->require( "density", d_stream[0][1] ); 
   db_str2->require( "temperature", d_stream[1][1] ); 
 
@@ -490,6 +490,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
                 //arches_density[c] = ghost_value; 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
+              } else if ( i->first == "temperature") { 
+                (*i->second.var)[c] = table_value;
               }
             } else { 
 
