@@ -63,10 +63,10 @@ NIGHTLYTESTS = [
   ("convection-test3",              "convection-test3.ups",              1,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("convection-superbee",           "convection-test-superbee.ups",      1,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "Linux",  ["exactComparison"],"no_restart" ),                 \
-  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "Linux",  ["exactComparison"],"no_restart" ),                 \
-  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "Linux",  ["exactComparison"],"no_restart" ),                 \
-  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "Linux",  ["exactComparison"],"no_restart" ),                 \
+  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("scalability-test",              "scalability-test.ups",              1,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
@@ -115,28 +115,28 @@ LOCALTESTS = [
   ("convection-test3",              "convection-test3.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-superbee",           "convection-test-superbee.ups",      1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_memoryTest"] ),   \
-  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "All",   ["exactComparison","no_memoryTest"] ),   \
-  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "All",   ["exactComparison","no_memoryTest"] ),   \
-  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-xvol-xdir",             "bc-test-xvol-xdir.ups",             4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("bc-test-xvol-xdir",             "bc-test-xvol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-xvol-ydir",             "bc-test-xvol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-xvol-zdir",             "bc-test-xvol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-yvol-xdir",             "bc-test-yvol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-yvol-ydir",             "bc-test-yvol-ydir.ups",             4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("bc-test-yvol-ydir",             "bc-test-yvol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-yvol-zdir",             "bc-test-yvol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-zvol-xdir",             "bc-test-zvol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-zvol-ydir",             "bc-test-zvol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",             4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("qmom-test",                     "qmom-test.ups",                     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "All",   ["exactComparison","no_memoryTest"] ),   \
-  ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "All",   ["exactComparison","no_memoryTest"] ),   \
-  ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "All",   ["exactComparison","no_memoryTest"] ),   \
+  ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test-svol-xdir-bc",  "convection-test-svol-xdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
