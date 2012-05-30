@@ -169,6 +169,9 @@ private:
 
   std::string d_cold_flow_mixfrac; 
 
+  std::map<string, double> species_s1; 
+  std::map<string, double> species_s2; 
+
 }; // end class ColdFlow
   
 } // end namespace Uintah

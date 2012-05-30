@@ -187,10 +187,16 @@
           <Stream_1                     spec="MULTIPLE NO_DATA">
             <density                    spec="REQUIRED DOUBLE 'positive'"/>
             <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+            <species                    spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
           </Stream_1>
           <Stream_2                     spec="MULTIPLE NO_DATA">
             <density                    spec="REQUIRED DOUBLE 'positive'"/>
             <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+            <species                    spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
           </Stream_2>
         </ColdFlow>
 

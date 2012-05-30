@@ -81,10 +81,60 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // d_stream[ kind index (density, temperature) ][ stream index ( 0,1) ]
-  db_coldflow->findBlock( "Stream_1" )->require( "density", d_stream[0][0] ); 
-  db_coldflow->findBlock( "Stream_1" )->require( "temperature", d_stream[1][0] ); 
-  db_coldflow->findBlock( "Stream_2" )->require( "density", d_stream[0][1] ); 
-  db_coldflow->findBlock( "Stream_2" )->require( "temperature", d_stream[1][1] ); 
+  ProblemSpecP db_str1 = db_coldflow->findBlock("Stream_1"); 
+  ProblemSpecP db_str2 = db_coldflow->findBlock("Stream_2"); 
+
+  db_str1->require( "density", d_stream[0][0] ); 
+  db_str2->require( "temperature", d_stream[1][0] ); 
+  db_str2->require( "density", d_stream[0][1] ); 
+  db_str2->require( "temperature", d_stream[1][1] ); 
+
+  // allow speciation 
+  for ( ProblemSpecP db_sp = db_str1->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
+
+    double value; 
+    string label; 
+
+    db_sp->getAttribute( "label", label );
+    db_sp->getAttribute( "value", value ); 
+
+    species_s1.insert(make_pair(label,value)); 
+
+    insertIntoMap( label ); 
+
+  } 
+
+  for ( ProblemSpecP db_sp = db_str2->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
+
+    double value; 
+    string label; 
+
+    db_sp->getAttribute( "label", label );
+    db_sp->getAttribute( "value", value ); 
+
+    species_s2.insert(make_pair(label,value)); 
+
+    insertIntoMap( label ); 
+
+  } 
+
+  // bullet proofing 
+  for ( map<string,double>::iterator iter_1 = species_s1.begin(); iter_1 != species_s1.end(); iter_1++ ){ 
+
+    string label = iter_1->first; 
+
+    // currently don't allow for a unique species to be defined in both streams. 
+    // This just simplifies life.  
+    for ( map<string,double>::iterator iter_2 = species_s2.begin(); iter_2 != species_s2.end(); iter_2++ ){ 
+      string label_check = iter_2->first; 
+      if ( label == label_check ){ 
+        std::cout << " For: " << label_check << " and " << label << endl;
+        throw ProblemSetupException("Error: Cold Flow model does not currently allow for the same species to be defined in both streams",
+            __FILE__, __LINE__ ); 
+      } 
+    }
+  } 
+
   db_coldflow->require( "mixture_fraction_label", d_cold_flow_mixfrac ); 
 
   // Extract independent and dependent variables from input file
@@ -305,16 +355,41 @@ ColdFlow::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-        double table_value = coldFlowMixing( iv, i_to_i->second ); 
-        table_value *= eps_vol[c]; 
-        (*i->second.var)[c] = table_value;
+        if ( i->first == "density" || i->first == "temperature" ) { 
+          std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+          double table_value = coldFlowMixing( iv, i_to_i->second ); 
+          table_value *= eps_vol[c]; 
 
-        if (i->first == "density") {
-          arches_density[c] = table_value; 
-          if (d_MAlab)
-            mpmarches_denmicro[c] = table_value; 
-        }
+          if (i->first == "density") {
+            (*i->second.var)[c] = table_value;
+            arches_density[c] = table_value; 
+            if (d_MAlab)
+              mpmarches_denmicro[c] = table_value; 
+          } else if ( i->first == "temperature") { 
+            (*i->second.var)[c] = table_value;
+          } 
+        } else { 
+
+          //speciation
+          string species_name = i->first; 
+
+          //look in stream 1: 
+          map<string,double>::iterator sp_iter = species_s1.find( species_name ); 
+          if ( sp_iter != species_s1.end() ){ 
+
+            (*i->second.var)[c] = sp_iter->second * iv[0]; 
+
+          } 
+
+          //look in stream 2: 
+          sp_iter = species_s2.find( species_name ); 
+          if ( sp_iter != species_s2.end() ){ 
+
+            (*i->second.var)[c] = sp_iter->second * ( 1.0 - iv[0]); 
+
+          } 
+          
+        } 
       }
     }
 
@@ -379,7 +454,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
           IntVector cp1 = ( *bound_ptr - insideCellDir ); 
 
           // again loop over iv's and fill iv vector
-          for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+          for ( int i = 0; i < (int)d_allIndepVarNames.size(); i++ ){
 
             switch (which_bc[i]) { 
 
@@ -403,18 +478,40 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-            std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-            double table_value = coldFlowMixing( iv, i_to_i->second ); 
-            table_value *= eps_vol[c]; 
-            (*i->second.var)[c] = table_value;
+            if ( i->first == "density" || i->first == "temperature" ) { 
+              std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+              double table_value = coldFlowMixing( iv, i_to_i->second ); 
+              table_value *= eps_vol[c]; 
+              (*i->second.var)[c] = table_value;
 
-            if (i->first == "density") {
-              //double ghost_value = 2.0*table_value - arches_density[cp1];
-              arches_density[c] = table_value;
-              //arches_density[c] = ghost_value; 
-              if (d_MAlab)
-                mpmarches_denmicro[c] = table_value; 
-            }
+              if (i->first == "density") {
+                //double ghost_value = 2.0*table_value - arches_density[cp1];
+                arches_density[c] = table_value;
+                //arches_density[c] = ghost_value; 
+                if (d_MAlab)
+                  mpmarches_denmicro[c] = table_value; 
+              }
+            } else { 
+
+              //speciation
+              string species_name = i->first; 
+
+              //look in stream 1: 
+              map<string,double>::iterator sp_iter = species_s1.find( species_name ); 
+              if ( sp_iter != species_s1.end() ){ 
+
+                (*i->second.var)[c] = sp_iter->second * iv[0]; 
+
+              } 
+
+              //look in stream 2: 
+              sp_iter = species_s2.find( species_name ); 
+              if ( sp_iter != species_s2.end() ){ 
+
+                (*i->second.var)[c] = sp_iter->second * ( 1.0 - iv[0]); 
+
+              } 
+            } 
           }
           iv.resize(0);  
         }
