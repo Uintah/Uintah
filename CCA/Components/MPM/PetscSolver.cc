@@ -79,7 +79,6 @@ MPMPetscSolver::~MPMPetscSolver()
 {
 }
 
-
 void MPMPetscSolver::initialize()
 {
   // store in a vector so we can customize the settings easily
@@ -315,7 +314,11 @@ void MPMPetscSolver::solve(vector<double>& guess)
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
   VecView(d_x,PETSC_VIEWER_STDOUT_WORLD);
 #endif
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 2)
+  KSPDestroy(&solver);
+#else
   KSPDestroy(solver);
+#endif
 }
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
@@ -331,8 +334,9 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   int *diag, *onnz;
   diag = scinew int[numlrows];
   onnz = scinew int[numlrows];
-  for (int i = 0; i < numlrows; i++) 
+  for (int i = 0; i < numlrows; i++) {
     diag[i] = 1;
+  }
 
   map<int,int>::const_iterator itr;
   for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
@@ -340,6 +344,12 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     ASSERT(itr->second>0);
     diag[itr->first] = itr->second;
   }
+
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  PetscBool exists;
+#else
+  PetscTruth exists;
+#endif
 
 #if 0
   cerr << "me = " << me << endl;
@@ -351,18 +361,30 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     cerr << "diag[" << i << "] = " << diag[i] << endl;
 #endif
 
-  PetscTruth exists;
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
-  PetscCookie cookie = 0;
-  if (d_A)
-    PetscObjectGetCookie((PetscObject)d_A,&cookie);
-  if (cookie)
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  PetscClassId id;
+  if (d_A) {
+    PetscObjectGetClassId((PetscObject)d_A,&id);
+  }
+  if (id) {
     exists = PETSC_TRUE;
-  else
+  }
+  else {
     exists = PETSC_FALSE;
-  
+  }
+#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
+  PetscCookie cookie = 0;
+  if (d_A) {
+    PetscObjectGetCookie((PetscObject)d_A,&cookie);
+  }
+  if (cookie) {
+    exists = PETSC_TRUE;
+  }
+  else {
+    exists = PETSC_FALSE;
+  }
 #else
-  PetscObjectExists((PetscObject)d_A,&exists);
+  PetscObjectExists((PetscObject)d_A, &exists);
 #endif
 #if 0
     // This one works
@@ -379,13 +401,15 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
       DIAG_MAX=27;
     }
 
-    if (numlcolumns < ONNZ_MAX)
+    if (numlcolumns < ONNZ_MAX) {
       ONNZ_MAX = numlcolumns;
+    }
 
-    if (numlcolumns < DIAG_MAX)
+    if (numlcolumns < DIAG_MAX) {
       DIAG_MAX = numlcolumns;
+    }
 
-    for (int i = 0; i < numlrows; i++){
+    for (int i = 0; i < numlrows; i++) {
       ASSERT(diag[i]>0);
       onnz[i]=ONNZ_MAX;
       if(diag[i]==1){
@@ -435,18 +459,14 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     }
     
 #if (PETSC_VERSION_MAJOR==3)
-#if (PETSC_VERSION_MINOR == 1)
     MatSetOption(d_A,MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-#else
-    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
-#endif
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE);
 #else
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
 #endif
 
-    // Create vectors.  Note that we form 1 vector from scratch and
+    // Create vectors. Note that we form 1 vector from scratch and
     // then duplicate as needed.
 #ifdef USE_SPOOLES
     VecCreate(PETSC_COMM_WORLD,&d_B);
@@ -484,8 +504,24 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
       VecSet(d_flux,zero);
 #endif
   } else {
-    PetscTruth exists;
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  PetscBool exists;
+#else
+  PetscTruth exists;
+#endif
+
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  PetscClassId id;
+  if (d_A) {
+    PetscObjectGetClassId((PetscObject)d_A,&id);
+  }
+  if (id) {
+    exists = PETSC_TRUE;
+  }
+  else {
+    exists = PETSC_FALSE;
+  }
+#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
   PetscCookie cookie = 0;
   if (d_A) 
     PetscObjectGetCookie((PetscObject)d_A,&cookie);
@@ -497,14 +533,24 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #else
     PetscObjectExists((PetscObject)d_A,&exists);
 #endif
+
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
     if (exists == PETSC_TRUE) {
-      MatDestroy(d_A);
-      VecDestroy(d_B);
-      VecDestroy(d_diagonal);
-      VecDestroy(d_x);
-      VecDestroy(d_t);
-      VecDestroy(d_flux);
+      MatDestroy(&d_A);
+      VecDestroy(&d_B);
+      VecDestroy(&d_diagonal);
+      VecDestroy(&d_x);
+      VecDestroy(&d_t);
+      VecDestroy(&d_flux);
     }
+#else
+    MatDestroy(d_A);
+    VecDestroy(d_B);
+    VecDestroy(d_diagonal);
+    VecDestroy(d_x);
+    VecDestroy(d_t);
+    VecDestroy(d_flux);
+#endif
   }
   if (recursion == false) {
     d_DOF.clear();
@@ -592,8 +638,8 @@ MPMPetscSolver::removeFixedDOF()
   int* indices;
   int in=0;
   indices = scinew int[d_DOF.size()];
-  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
-       iter++) {
+
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++) {
     indices[in++] = *iter;
 
     // Take care of the d_B side
@@ -639,15 +685,26 @@ MPMPetscSolver::removeFixedDOF()
   VecAssemblyEnd(d_diagonal);
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
   
-  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, PETSC_COPY_VALUES, &is);
+#else
+  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, &is);
+#endif
   delete[] indices;
 
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 2))
+  MatZeroRows(d_A, is, &one);
+#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  MatZeroRowsIS(d_A, is, one, 0, 0);
 #else
-  MatZeroRowsIS(d_A,is,one);
+  MatZeroRowsIS(d_A, is, one);
 #endif
+
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ISDestroy(&is);
+#else
   ISDestroy(is);
+#endif
 
 
   //__________________________________
@@ -721,27 +778,37 @@ void MPMPetscSolver::removeFixedDOFHeat()
   if (d_DOF.size() != 0) {
     cout << "Zeroing out rows" << endl;
   }
+
   IS is;
-  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
-       
-  PetscScalar one = 1.0;
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#else 
-  MatZeroRowsIS(d_A,is,one);
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, PETSC_COPY_VALUES, &is);
+#else
+  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, &is);
 #endif
+  delete[] indices;
+
+  PetscScalar one = 1.0;
+#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 2))
+  MatZeroRows(d_A, is, &one);
+#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  MatZeroRowsIS(d_A, is, one, 0, 0);
+#else
+  MatZeroRowsIS(d_A, is, one);
+#endif
+
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+  ISDestroy(&is);
+#else
   ISDestroy(is);
+#endif
 
   int* indices_flux = scinew int[d_DOFFlux.size()];
   in = 0;
-  for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); 
-       iter++) {
+  for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); iter++) {
     indices_flux[in++] = *iter;
   }
 
-
   //do vector modifications
-  
   PetscScalar* y = scinew PetscScalar[d_DOF.size()];
   PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
 
