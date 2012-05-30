@@ -149,6 +149,8 @@ namespace Uintah {
     TimeTemperatureData d_tt;
     MurnaghanEOS d_murnahanEOSData;
     JWLEOS d_JWLEOSData;
+
+
   private:
 
     // Prevent assignment of this class
@@ -210,7 +212,8 @@ namespace Uintah {
                               DataWarehouse* new_dw);
 
     /*! Set up data required in the particle conversion process */
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
+    virtual void allocateCMDataAddRequires(Task* task, 
+                                           const MPMMaterial* matl,
                                            const PatchSet* patch, 
                                            MPMLabel* lb) const;
 
@@ -236,9 +239,11 @@ namespace Uintah {
                                      double rho_guess);
 
     /*! Used by MPMICE for pressure equilibriation */
-    virtual void computePressEOSCM(double rho_m, double& press_eos,
+    virtual void computePressEOSCM(double rho_m, 
+                                   double& press_eos,
                                    double p_ref,
-                                   double& dp_drho, double& ss_new,
+                                   double& dp_drho, 
+                                   double& ss_new,
                                    const MPMMaterial* matl,
                                    double temperature);
 
@@ -260,9 +265,15 @@ private:
     } IterationVariables;
 
     void   setInterval(double f, double rhoM, IterationVariables *);
-    double computePJWL(double rhoM,const MPMMaterial* matl, IterationVariables *);
-    double computedPdrhoJWL(double rhoM,const MPMMaterial* matl, IterationVariables *);
-
+    double computePJWL(double rhoM, double rho0, IterationVariables *);
+    double computedPdrhoJWL(double rhoM, double rho0, IterationVariables *);
+    
+    void  computeRhoRef(const double rho_orig,
+                        const double p_ref,
+                        const double temperature,
+                        const double pressure,
+                        double& rho_refrr,
+                        double& K0);
   };
 
   /*! Set up type for StateData */

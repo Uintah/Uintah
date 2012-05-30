@@ -16,7 +16,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.02    </maxTime>
+       <maxTime>            0.002    </maxTime>
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
        <delt_max>           1.0       </delt_max>
@@ -73,7 +73,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>BurnRate.uda</filebase>
-    <outputInterval> 1e-5</outputInterval>
+    <outputInterval> 1e-6</outputInterval>
   <!-- <outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label="press_CC"/>
       <save label="vol_frac_CC"/>
