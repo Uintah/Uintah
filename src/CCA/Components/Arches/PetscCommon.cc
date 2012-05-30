@@ -430,6 +430,8 @@ void finalizePetscSolver()
 void
 destroyPetscObjects(Mat A, Vec X, Vec B, Vec U) 
 {
+  int ierr;
+
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
   PetscClassId id;
   if (U) {
@@ -437,7 +439,6 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
   }
 
   PetscBool flg = (id ? PETSC_TRUE : PETSC_FALSE);
-  int ierr;
 
   if( flg ){
     ierr = VecDestroy(&U);
