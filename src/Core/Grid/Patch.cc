@@ -162,6 +162,40 @@ void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
 }
 
 /**
+ * Returns the 27 nodes found around the point pos
+ */
+void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
+{
+  Point cellpos = getLevel()->positionToIndex(pos);
+  int ix = Floor(cellpos.x());
+  int iy = Floor(cellpos.y());
+  int iz = Floor(cellpos.z());
+  int nnx,nny,nnz;
+
+  if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
+  if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
+  if(cellpos.z()-(iz) <= .5){ nnz = -1; } else{ nnz = 2; }
+
+  ni[0]  = IntVector(ix,    iy,      iz);
+  ni[1]  = IntVector(ix+1,  iy,      iz);
+  ni[2]  = IntVector(ix+nnx,iy,      iz);
+  ni[3]  = IntVector(ix,    iy+1,    iz);
+  ni[4]  = IntVector(ix+1,  iy+1,    iz);
+  ni[5]  = IntVector(ix+nnx,iy+1,    iz);
+  ni[6]  = IntVector(ix,    iy+nny,  iz);
+  ni[7]  = IntVector(ix+1,  iy+nny,  iz);
+  ni[8]  = IntVector(ix+nnx,iy+nny,  iz);
+  ni[9]  = IntVector(ix,    iy,      iz+1);
+  ni[10] = IntVector(ix+1,  iy,      iz+1);
+  ni[11] = IntVector(ix+nnx,iy,      iz+1);
+  ni[12] = IntVector(ix,    iy+1,    iz+1);
+  ni[13] = IntVector(ix+1,  iy+1,    iz+1);
+  ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
+  ni[15] = IntVector(ix,    iy+nny,  iz+1);
+}
+
+
+/**
  * Returns the position of the node idx in domain coordinates.
  */
 Point Patch::nodePosition(const IntVector& idx) const {
