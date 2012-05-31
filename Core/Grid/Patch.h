@@ -1320,6 +1320,11 @@ WARNING
       void findCellNodes(const Point& pos, IntVector ni[8]) const;
 
       /**
+       * Returns the 27 nodes found around the point pos
+       */
+      void findCellNodes27(const Point& pos, IntVector ni[27]) const;
+
+      /**
        * Returns true if the point p is contained within the patch
        * including extra cells
        */
