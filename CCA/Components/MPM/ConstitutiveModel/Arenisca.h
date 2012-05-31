@@ -81,6 +81,8 @@ namespace Uintah {
     const VarLabel* pBackStressIsoLabel_preReloc;
     const VarLabel* pKappaStateLabel;
     const VarLabel* pKappaStateLabel_preReloc;
+    const VarLabel* pLocalizedLabel;
+    const VarLabel* pLocalizedLabel_preReloc;
   private:
     CMData d_initialData;
 
@@ -125,6 +127,22 @@ namespace Uintah {
 
 
     double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1);
+
+    ////////////////////////////////////////////////////////////////////////
+    /* Make the value for pLocalized computed locally available outside of the model. */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void addRequiresDamageParameter(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
+
+
+    ////////////////////////////////////////////////////////////////////////
+    /* Make the value for pLocalized computed locally available outside of the model */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void getDamageParameter(const Patch* patch,
+                                    ParticleVariable<int>& damage, int dwi,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
 
     // carry forward CM data for RigidMPM
