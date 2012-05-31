@@ -166,6 +166,8 @@ void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
  */
 void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 {
+
+  cerr << "findCellNodes27 appears to be incorrect.  You are using it at your own risk" << endl;
   Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
@@ -1687,7 +1689,7 @@ void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
   }                                                                                                   
 
   //add coarse patch to coarsePatch_q                                                                 
-  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex()));                                                                                                                              
+  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex())); 
 
   //compute region of coarse patches that do not contain fine patches                                 
   difference=Region::difference(coarsePatch_q, finePatch_q);                                                                                 
