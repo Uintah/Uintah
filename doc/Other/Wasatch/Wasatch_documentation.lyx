@@ -177,7 +177,7 @@ Wasatch solves the variable density momentum equations
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\rho\mathbf{u}}{\partial t}=-\nabla\cdot\rho\mathbf{u}\mathbf{u}+\nabla\cdot\boldsymbol{\tau}_{ij}+\nabla p+\rho\mathbf{g}
+\frac{\partial\rho\mathbf{u}}{\partial t}=-\nabla\cdot\rho\mathbf{u}\mathbf{u}-\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla p+\rho\mathbf{g}
 \end{equation}
 
 \end_inset
@@ -193,7 +193,43 @@ in conjunction with the continuity equation
 
 \end_inset
 
+Here, 
+\begin_inset Formula $\rho$
+\end_inset
 
+ stands for the density, 
+\begin_inset Formula $\mathbf{u}=(u,v,w)$
+\end_inset
+
+ is the velocity field, 
+\begin_inset Formula $p$
+\end_inset
+
+ is the pressure, 
+\begin_inset Formula $\mathbf{g}$
+\end_inset
+
+ is the gravity vector, and 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}$
+\end_inset
+
+ is the stress tensor given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}_{ij}=-2\mu S_{ij}+\frac{2}{3}\mu\delta_{ij}S_{kk};\quad S_{ij}=\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right)
+\end{equation}
+
+\end_inset
+
+The rate of strain tensor 
+\begin_inset Formula $S_{ij}$
+\end_inset
+
+ is a fundamental quantity when using gradient diffusion turbulence models
+ and will be used extensively in subsequent sections.
 \end_layout
 
 \begin_layout Standard
@@ -326,18 +362,227 @@ For a constant density flow, the Pressure-Poisson-Equation reduces to
 \end_layout
 
 \begin_layout Section
-LES modeling
+LES Modeling
 \end_layout
 
 \begin_layout Standard
-This part is currently in progress in Wasatch.
-\end_layout
-
-\begin_layout Paragraph
-Momentum equation
+Wasatch uses Favre filtering as the basis for its LES approach.
+ Favre filtering is defined as a density-weighted filtering operation to
+ accomodate variable density.
+ It is given by the following operation
 \end_layout
 
 \begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\overline{\rho\phi}=\overline{\rho}\widetilde{\phi}
+\end{equation}
+
+\end_inset
+
+where the overbar denotes a traditional filtering operation.
+ A traditional filtering operation consists of a convolution of a transported
+ variable (i.e.
+ a variable that one wishes to filter) with a filter.
+ This is written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\overline{\phi}=\int_{\Omega}G(\mathbf{r})\phi(\mathbf{x}-\mathbf{r})\,\mathrm{d}\mathbf{r}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Momentum Equations
+\end_layout
+
+\begin_layout Standard
+To make further headway, we apply the traditional filter to the governing
+ fluid transport equations.
+ Starting with continuity, we have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho\mathbf{u}}=0
+\end{equation}
+
+\end_inset
+
+Then, one makes use of the Favre filtering operation by setting 
+\begin_inset Formula $\overline{\rho\mathbf{u}}=\overline{\rho}\widetilde{\mathbf{u}}$
+\end_inset
+
+.
+ At the outset, the Favre-filtered continuity equation is given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}=0
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Moving on to the momentum equation, the filtering operation yields
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}+\overline{\rho\mathbf{g}}
+\end{equation}
+
+\end_inset
+
+It is best to transform to Favre filtering term-by-term
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\nabla\cdot\overline{\boldsymbol{\tau}_{ij}}=\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}+\left(\nabla\cdot\overline{\boldsymbol{\tau}_{ij}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}\right)\equiv\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\overline{\rho\mathbf{g}}=\overline{\rho}\mathbf{g}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+ are subgrid-scale stress tensors (SGS) that result from applying filtering
+ to the convective and diffusive terms in the momentum equations.
+ At the outset, the filtered momentum equations may be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}\label{eq:wasatch-filtered-momentum-eq}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It is evident from 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-filtered-momentum-eq"
+
+\end_inset
+
+ that both subgrid tensors 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+ require closure.
+ However, it may be argued that the subgrid tensor 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+ resulting from viscous stresses is negligible compared to 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+ that results from filtering of the convective terms 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "geurts_les_1993,vreman_subgrid-modelling_1995"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+OLD STUFF
+\end_layout
+
+\begin_layout Plain Layout
 The filtered momentum equation is
 \begin_inset Formula 
 \begin{equation}
@@ -355,6 +600,112 @@ where
 \end_inset
 
 And ~ shows the Favre averaged variables.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Energy Equation:THIS SECTION REQUIRES REVISION
+\end_layout
+
+\begin_layout Standard
+The filtered energy equation is
+\begin_inset Formula 
+\begin{equation}
+C_{v}\frac{\partial\bar{\rho}\tilde{T}}{\partial t}+C_{v}\frac{\partial}{\partial x_{k}}(\bar{\rho}\tilde{v}_{k}\tilde{T})=-\bar{p}\frac{\partial\tilde{v}_{k}}{\partial x_{k}}+\tilde{\sigma}_{ik}\frac{\partial\tilde{v}_{k}}{\partial x_{l}}+\frac{\partial}{\partial x_{k}}\left(\tilde{\kappa}\frac{\partial\tilde{T}}{\partial x_{l}}\right)-C_{v}\frac{\partial q_{k}}{\partial x_{k}}\label{eq:wasatch-filtered-energy-eq}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Similarly for the filtered energy equation, the diffusive term needs to
+ be modeled somehow.
+ Again, by considering eddy viscosity SGS model we can obtain
+\begin_inset Formula 
+\begin{equation}
+q_{k}=-\frac{\bar{\rho}\nu_{T}}{Pr_{t}}\frac{\partial\tilde{T}}{\partial x_{k}}
+\end{equation}
+
+\end_inset
+
+Where 
+\begin_inset Formula $\nu_{T}=C\Delta^{2}|\tilde{S}|$
+\end_inset
+
+ and 
+\begin_inset Formula $Pr$
+\end_inset
+
+ number is again parametrized using dynamic models to obtain
+\begin_inset Formula 
+\begin{equation}
+Pr_{t}=C\left\langle \hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|\frac{\partial\hat{\tilde{T}}}{\partial x_{k}}\frac{\partial\tilde{T}}{\partial x_{k}}-\Delta^{2}\widehat{\bar{\rho}|\tilde{S}|\frac{\partial\tilde{T}}{\partial x_{k}}}\frac{\partial\tilde{T}}{\partial x_{k}}\right\rangle \times\left\langle \left(\frac{1}{\hat{\bar{\rho}}}\widehat{\bar{\rho}\tilde{v}_{k}}\widehat{\bar{\rho}\tilde{T}}-\widehat{\bar{\rho}\tilde{v}_{k}\tilde{T}}\right)\frac{\partial\tilde{T}}{\partial x_{k}}\right\rangle ^{-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+SGS Closure
+\end_layout
+
+\begin_layout Standard
+The most common approach to modeling the subgrid-scale tensors is based
+ on eddy-viscosity models.
+ First propsed by 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "smagorinsky_general_1963"
+
+\end_inset
+
+, these have the general form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}_{ij}^{R}=-2\overline{\rho}\nu_{\text{t}}\widetilde{S}_{ij}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\nu_{\text{t}}$
+\end_inset
+
+ is the eddy- or turbulent-viscosity and 
+\begin_inset Formula $\widetilde{S}_{ij}$
+\end_inset
+
+ is the Favre-filtered rate of strain - a computable quantity.
+ The essence of all eddy-viscosity models is then to model the turbulent
+ viscosity 
+\begin_inset Formula $\nu_{\text{t}}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph*
+Constant Smagorinsky-Lilly Model
+\end_layout
+
+\begin_layout Standard
+In the constant Smagorinsky-Lilly model, a simple algebraic relation is
+ proposed for the eddy-viscosity.
+\end_layout
+
+\begin_layout Paragraph
+Dynamic Smagorinsky Model
 \end_layout
 
 \begin_layout Standard
@@ -444,52 +795,6 @@ Where
 \end_inset
 
  and over hat means the test filter is applied.
-\end_layout
-
-\begin_layout Subparagraph
-Energy equation
-\end_layout
-
-\begin_layout Standard
-The filtered energy equation is
-\begin_inset Formula 
-\begin{equation}
-C_{v}\frac{\partial\bar{\rho}\tilde{T}}{\partial t}+C_{v}\frac{\partial}{\partial x_{k}}(\bar{\rho}\tilde{v}_{k}\tilde{T})=-\bar{p}\frac{\partial\tilde{v}_{k}}{\partial x_{k}}+\tilde{\sigma}_{ik}\frac{\partial\tilde{v}_{k}}{\partial x_{l}}+\frac{\partial}{\partial x_{k}}\left(\tilde{\kappa}\frac{\partial\tilde{T}}{\partial x_{l}}\right)-C_{v}\frac{\partial q_{k}}{\partial x_{k}}\label{eq:wasatch-filtered-energy-eq}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Similarly for the filtered energy equation, the diffusive term needs to
- be modeled somehow.
- Again, by considering eddy viscosity SGS model we can obtain
-\begin_inset Formula 
-\begin{equation}
-q_{k}=-\frac{\bar{\rho}\nu_{T}}{Pr_{t}}\frac{\partial\tilde{T}}{\partial x_{k}}
-\end{equation}
-
-\end_inset
-
-Where 
-\begin_inset Formula $\nu_{T}=C\Delta^{2}|\tilde{S}|$
-\end_inset
-
- and 
-\begin_inset Formula $Pr$
-\end_inset
-
- number is again parametrized using dynamic models to obtain
-\begin_inset Formula 
-\begin{equation}
-Pr_{t}=C\left\langle \hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|\frac{\partial\hat{\tilde{T}}}{\partial x_{k}}\frac{\partial\tilde{T}}{\partial x_{k}}-\Delta^{2}\widehat{\bar{\rho}|\tilde{S}|\frac{\partial\tilde{T}}{\partial x_{k}}}\frac{\partial\tilde{T}}{\partial x_{k}}\right\rangle \times\left\langle \left(\frac{1}{\hat{\bar{\rho}}}\widehat{\bar{\rho}\tilde{v}_{k}}\widehat{\bar{\rho}\tilde{T}}-\widehat{\bar{\rho}\tilde{v}_{k}\tilde{T}}\right)\frac{\partial\tilde{T}}{\partial x_{k}}\right\rangle ^{-1}
-\end{equation}
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Section
@@ -3734,6 +4039,17 @@ in progress
 
 
 \end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "wasatch_documentation_references"
+options "apalike"
 
 \end_inset
 
