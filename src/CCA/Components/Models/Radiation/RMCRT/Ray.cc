@@ -1919,6 +1919,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                          variable, modifies, this_dw );
   
   if(modifies){
+    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
     t->modifies(variable);
   }else{
     t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
