@@ -55,8 +55,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       Task::WhichDW which_celltype_dw)
 {
   // set the CUDA device and context
-  cudaError_t retVal;
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device));
+  CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
   // Single material now, but can't assume 0, need the specific ARCHES or ICE material here
   int matl = matls->getVector().front();
@@ -121,7 +120,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     // setup random number generator states on the device, 1 for each thread
     curandState* globalDevStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_SAFE_CALL( retVal = cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
+    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
 
     // setup and launch kernel
     cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
@@ -148,7 +147,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     _gpuScheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
 
     // free device-side RNG states
-    CUDA_SAFE_CALL( retVal = cudaFree(globalDevStates) );
+    CUDA_RT_SAFE_CALL( cudaFree(globalDevStates) );
 
   }  //end patch loop
 }  // end GPU ray trace method
