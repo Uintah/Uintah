@@ -1087,7 +1087,7 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   int device = this->getDeviceNum();
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // even one unrecorded event means all device memory is not ready
   cudaEvent_t* event = NULL;
@@ -1117,7 +1117,7 @@ cudaError_t DetailedTask::checkD2HCopyDependencies()
   // sets the CUDA context, must be at least one per process per device
   cudaError_t retVal;
   int device = this->getDeviceNum();
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // even one unrecorded event means all result data is not back on the CPU
   cudaEvent_t* event = NULL;

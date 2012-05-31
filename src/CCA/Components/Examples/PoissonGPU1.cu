@@ -474,8 +474,8 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     phi_host    = (double*)phi.getWindow()->getData()->getPointer();
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
 
-    CUDA_SAFE_CALL(cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice));
-    CUDA_SAFE_CALL(cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice));
+    CUDA_RT_SAFE_CALL(cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice));
 
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow  = make_uint3(l.x(), l.y(), l.z());
@@ -516,16 +516,16 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
 
     //__________________________________
     //  Device->Host Memory Copy
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
-    CUDA_SAFE_CALL(cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost));
+    CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
+    CUDA_RT_SAFE_CALL(cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost));
 
     new_dw->put(sum_vartype(residual), residual_label);
 
   } // end patch for loop
 
   // free up allocated memory
-  CUDA_SAFE_CALL(cudaFree(phi_device));
-  CUDA_SAFE_CALL(cudaFree(newphi_device));
+  CUDA_RT_SAFE_CALL(cudaFree(phi_device));
+  CUDA_RT_SAFE_CALL(cudaFree(newphi_device));
 
   
 }

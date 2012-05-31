@@ -1102,7 +1102,7 @@ void GPUThreadedMPIScheduler::assignTask(DetailedTask* task,
 
 void GPUThreadedMPIScheduler::gpuInitialize() {
   cudaError_t retVal;
-  CUDA_SAFE_CALL( retVal = cudaGetDeviceCount(&numGPUs_) );
+  CUDA_RT_SAFE_CALL( retVal = cudaGetDeviceCount(&numGPUs_) );
   currentGPU_ = 0;
 }
 
@@ -1275,7 +1275,7 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   double* d_reqData;
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
@@ -1291,7 +1291,7 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
 //    }
 //  }
 
-  CUDA_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
@@ -1308,14 +1308,14 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \""
            << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
     cerrLock.unlock();
   }
-  CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementH2DCopyCount();
 }
@@ -1325,7 +1325,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device));
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
 
   double* d_compData;
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
@@ -1341,7 +1341,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
 //    }
 //  }
 
-  CUDA_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
@@ -1358,14 +1358,14 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \""
            << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
     cerrLock.unlock();
   }
-  CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementH2DCopyCount();
 }
@@ -1375,9 +1375,9 @@ void GPUThreadedMPIScheduler::createCudaStreams(int numStreams, int device)
   cudaError_t retVal;
 
   for (int j = 0; j < numStreams; j++) {
-    cutilSafeCall( retVal = cudaSetDevice(device) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
     cudaStream_t* stream = (cudaStream_t*)malloc(sizeof(cudaStream_t));
-    cutilSafeCall( retVal = cudaStreamCreate(&(*stream)) );
+    CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)) );
     idleStreams[device].push(stream);
   }
 }
@@ -1387,9 +1387,9 @@ void GPUThreadedMPIScheduler::createCudaEvents(int numEvents, int device)
   cudaError_t retVal;
 
   for (int j = 0; j < numEvents; j++) {
-    cutilSafeCall( retVal = cudaSetDevice(device) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
     cudaEvent_t* event = (cudaEvent_t*)malloc(sizeof(cudaEvent_t));
-    cutilSafeCall( retVal = cudaEventCreate(&(*event)) );
+    CUDA_RT_SAFE_CALL( retVal = cudaEventCreate(&(*event)) );
     idleEvents[device].push(event);
   }
 }
@@ -1400,11 +1400,11 @@ void GPUThreadedMPIScheduler::clearCudaStreams()
   int numQueues = idleStreams.size();
 
   for (int i = 0; i < numQueues; i++) {
-    cutilSafeCall( retVal = cudaSetDevice(i) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(i) );
     while (!idleStreams[i].empty()) {
       cudaStream_t* stream = idleStreams[i].front();
       idleStreams[i].pop();
-      cutilSafeCall( retVal = cudaStreamDestroy(*stream) );
+      CUDA_RT_SAFE_CALL( retVal = cudaStreamDestroy(*stream) );
     }
     idleStreams.clear();
   }
@@ -1416,11 +1416,11 @@ void GPUThreadedMPIScheduler::clearCudaEvents()
   int numQueues = idleEvents.size();
 
   for (int i = 0; i < numQueues; i++) {
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(i) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(i) );
     while (!idleEvents[i].empty()) {
       cudaEvent_t* event = idleEvents[i].front();
       idleEvents[i].pop();
-      CUDA_SAFE_CALL( retVal = cudaEventDestroy(*event) );
+      CUDA_RT_SAFE_CALL( retVal = cudaEventDestroy(*event) );
     }
     idleEvents.clear();
   }
@@ -1435,7 +1435,7 @@ cudaStream_t* GPUThreadedMPIScheduler::getCudaStream(int device)
     stream = idleStreams[device].front();
     idleStreams[device].pop();
   } else { // shouldn't need any more than the queue capacity, but in case
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
     // this will get put into idle stream queue and properly disposed of later
     stream = ((cudaStream_t*) malloc(sizeof(cudaStream_t)));
   }
@@ -1451,7 +1451,7 @@ cudaEvent_t* GPUThreadedMPIScheduler::getCudaEvent(int device)
     event = idleEvents[device].front();
     idleEvents[device].pop();
   } else { // shouldn't need any more than the queue capacity, but in case
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
     // this will get put into idle event queue and properly disposed of later
     event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
   }
@@ -1522,7 +1522,7 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   // set the CUDA context
   DetailedTask* dtask = hostComputesPtrs.find(var)->second.dtask;
   int device = dtask->getDeviceNum();
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // collect arguments and setup the async d2h copy
   double* d_compData = deviceComputesPtrs.find(var)->second.ptr;
@@ -1531,8 +1531,8 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
   // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
-  CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDefault, *stream) );
-  CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementD2HCopyCount();
 }
@@ -1546,11 +1546,11 @@ cudaError_t GPUThreadedMPIScheduler::freeDeviceRequiresMem()
 
     // set the device & CUDA context
     int device = iter->second.device;
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) ); // set the CUDA context so the free() works
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) ); // set the CUDA context so the free() works
 
     // free the device requires memory
     double* d_reqPtr = iter->second.ptr;
-    CUDA_SAFE_CALL( retVal = cudaFree(d_reqPtr) );
+    CUDA_RT_SAFE_CALL( retVal = cudaFree(d_reqPtr) );
   }
   return retVal;
 }
@@ -1564,11 +1564,11 @@ cudaError_t GPUThreadedMPIScheduler::freeDeviceComputesMem()
 
     // set the device & CUDA context
     int device = iter->second.device;
-    CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
     // free the device computes memory
     double* d_compPtr = iter->second.ptr;
-    CUDA_SAFE_CALL( retVal = cudaFree(d_compPtr) );
+    CUDA_RT_SAFE_CALL( retVal = cudaFree(d_compPtr) );
   }
   return retVal;
 }
@@ -1582,7 +1582,7 @@ cudaError_t GPUThreadedMPIScheduler::unregisterPageLockedHostMem()
 
     // unregister the page-locked host requires memory
     double* ptr = *iter;
-    CUDA_SAFE_CALL( retVal = cudaHostUnregister(ptr) );
+    CUDA_RT_SAFE_CALL( retVal = cudaHostUnregister(ptr) );
   }
   return retVal;
 }

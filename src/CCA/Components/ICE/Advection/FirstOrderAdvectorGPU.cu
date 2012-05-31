@@ -324,7 +324,7 @@ void FirstOrderAdvector::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
                                                 GPUThreadedMPIScheduler* sched)
 {
   cudaError_t retVal;
-  CUDA_SAFE_CALL( cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
   Vector dx = patch->dCell();
 
