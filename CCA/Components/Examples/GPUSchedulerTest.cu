@@ -359,7 +359,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 
   // set the CUDA context
   cudaError_t retVal;
-  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // get a handle on the GPU scheduler to query for device and host pointers, etc
   GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));

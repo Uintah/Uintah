@@ -36,10 +36,8 @@
 #define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
 
 #  include <cuda.h>
-#  include <cutil.h>
 #  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
-#  include <cutil_inline.h>
 #  include <curand.h>
 #  include <curand_kernel.h>
 
@@ -50,8 +48,8 @@ extern "C" {
 
 // Error handling wrapper for CUDA RUNTIME API calls (no-sync)
 #  define CUDA_RT_SAFE_CALL( call ) {                                  \
-    cudaError_t err = call;                                                    \
-    if( cudaSuccess != err) {                                                  \
+    cudaError err = call;                                                    \
+    if(err != cudaSuccess) {                                                  \
         fprintf(stderr, "CUDA error in file '%s', on line %i : %s.\n",         \
                 __FILE__, __LINE__, cudaGetErrorString( err) );                \
         exit(EXIT_FAILURE);                                                    \
@@ -60,7 +58,7 @@ extern "C" {
 // Error handling wrapper for CUDA Driver API calls (no-sync)
 #  define CUDA_DR_SAFE_CALL( call ) {                                  \
     CUresult err = call;                                                       \
-    if( CUDA_SUCCESS != err) {                                                 \
+    if(err != CUDA_SUCCESS) {                                                 \
         fprintf(stderr, "CUDA driver error %x in file '%s' on line %i.\n",     \
                 err, __FILE__, __LINE__ );                                     \
         exit(EXIT_FAILURE);                                                    \
