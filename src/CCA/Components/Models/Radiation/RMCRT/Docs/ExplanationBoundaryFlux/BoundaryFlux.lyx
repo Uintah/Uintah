@@ -1015,7 +1015,35 @@ Verification testing was performed on the boundary flux calcuations.
 \begin_inset Formula $\frac{1}{2}$
 \end_inset
 
- order See Figs (!! - !!).
+ order See Figs (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:rc"
+
+\end_inset
+
+,
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:10M"
+
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:100k"
+
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:1k"
+
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Standard
@@ -1023,10 +1051,6 @@ Verification testing was performed on the boundary flux calcuations.
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -1039,6 +1063,13 @@ status open
 
 \begin_layout Plain Layout
 Ray convergence for Boundary Fluxes.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:rc"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1074,6 +1105,13 @@ status open
 \begin_layout Plain Layout
 RMCRT vs.
  Burns' converged solution at 10M rays.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:10M"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1105,6 +1143,13 @@ status open
 \begin_layout Plain Layout
 RMCRT vs.
  Burns' converged solution at 100k rays.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:100k"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1140,6 +1185,70 @@ status open
 \begin_layout Plain Layout
 RMCRT vs.
  Burns' converged solution at 1,000 rays.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:1k"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+To ensure the code did not have a bias in one or more of the Cartesian direction
+s, the L1 error norms from the 2 center lines of each of the 6 faces of
+ the unit cube of the Burns case were analyzed.
+ Four of these twelve center lines are found by varying the x values from
+ zero to one.
+ Similarly, there are 4 lines in the y, and z directions.
+ Figure (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:bar"
+
+\end_inset
+
+) demonstrates the lack of a bias, and therefore invariability of the L1
+ error norm as a function of direction, which is as expected for this symmetric
+ case.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename InvariabilityOfL1OnDir.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Invariability of the L1 error norm of the fluxes as a function of direction
+ for the symmetric Burns and Christon case.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:bar"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
