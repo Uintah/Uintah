@@ -46,7 +46,7 @@
 \output_sync 0
 \bibtex_command default
 \index_command default
-\paperfontsize 11
+\paperfontsize 12
 \spacing single
 \use_hyperref true
 \pdf_title "Wasatch"
@@ -482,7 +482,7 @@ It is best to transform to Favre filtering term-by-term
 \uwave off
 \noun off
 \color none
-\begin_inset Formula $\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{R}$
+\begin_inset Formula $\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{R};\quad\boldsymbol{\tau}_{ij}^{R}\equiv\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}$
 \end_inset
 
 
@@ -673,7 +673,22 @@ key "smagorinsky_general_1963"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}^{R}=-2\overline{\rho}\nu_{\text{t}}\widetilde{S}_{ij}
+\boldsymbol{\tau}_{ij}^{R}=\underbrace{\overbrace{\boldsymbol{\tau}_{ij}^{R}-\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{deviatoric}}^{\boldsymbol{\tau}_{ij}^{\mathrm{d}}}+\underbrace{\overbrace{\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{isotropic}}^{\boldsymbol{\tau}_{ij}^{\mathrm{s}}}\label{eq:wasatch-sgs-tensor-decomposition}
+\end{equation}
+
+\end_inset
+
+The deviatoric subgrid-stress tensor 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{\mathrm{d}}$
+\end_inset
+
+ is modeled as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\nu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right)
 \end{equation}
 
 \end_inset
@@ -687,8 +702,90 @@ where
 \end_inset
 
  is the Favre-filtered rate of strain - a computable quantity.
- The essence of all eddy-viscosity models is then to model the turbulent
- viscosity 
+ 
+\end_layout
+
+\begin_layout Standard
+The isotropic subgrid-stress tensor 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{\mathrm{s}}$
+\end_inset
+
+ may be absorbed into the filtered pressure or entirely neglected 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "erlebacher_toward_1992,garnier_les_compressible_2009"
+
+\end_inset
+
+.
+ This is based on the observation that small scales are generally incompressible
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "garnier_les_compressible_2009"
+
+\end_inset
+
+.
+ In fact, 
+\begin_inset Formula $\boldsymbol{\tau}_{kk}$
+\end_inset
+
+ may be written in terms of the subgrid Mach number as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}_{kk}=\gamma M_{\text{sgs}}^{2}\overline{p}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\gamma$
+\end_inset
+
+ is the ratio of specific heats and 
+\begin_inset Formula $M_{\text{sgs}}$
+\end_inset
+
+ is the subgrid Mach number whose values is expected to be small when the
+ turbulent Mach number of the large scales is low.
+\end_layout
+
+\begin_layout Standard
+Upon substitution of 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-sgs-tensor-decomposition"
+
+\end_inset
+
+ into 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-filtered-momentum-eq"
+
+\end_inset
+
+ one recovers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}\label{eq:wasatch-filtered-momentum-eq-1}
+\end{equation}
+
+\end_inset
+
+Given that all quantities -- except 
+\begin_inset Formula $\nu_{\text{t}}$
+\end_inset
+
+ -- are computable, the essence of all eddy-viscosity models is then to
+ model the turbulent viscosity 
 \begin_inset Formula $\nu_{\text{t}}$
 \end_inset
 
@@ -701,7 +798,43 @@ Constant Smagorinsky-Lilly Model
 
 \begin_layout Standard
 In the constant Smagorinsky-Lilly model, a simple algebraic relation is
- proposed for the eddy-viscosity.
+ proposed for the eddy-viscosity 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "smagorinsky_general_1963"
+
+\end_inset
+
+.
+ This form may be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\nu_{\mathrm{t}}=C_{\mathrm{s}}\Delta^{2}|\widetilde{S}|
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $C_{\mathrm{s}}$
+\end_inset
+
+ is a constant, 
+\begin_inset Formula $\Delta$
+\end_inset
+
+ is an average measure of the cell size, usually taken as the average cell
+ volume 
+\begin_inset Formula $V^{1/3}$
+\end_inset
+
+, and 
+\begin_inset Formula $|\widetilde{S}|=\sqrt{2\widetilde{S}_{ij}\widetilde{S}_{ij}}$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Paragraph
