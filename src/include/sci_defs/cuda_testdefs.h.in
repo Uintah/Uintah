@@ -46,6 +46,8 @@
 extern "C" {
 #endif
 
+#  include <stdio.h>
+
 // Error handling wrapper for CUDA RUNTIME API calls (no-sync)
 #  define CUDA_RT_SAFE_CALL( call ) {                                  \
     cudaError err = call;                                                    \
