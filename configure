@@ -42963,7 +42963,7 @@ for i in $_cuda_inc; do
 done
 
 
-for i in cudart cuda; do
+for i in cudart; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else

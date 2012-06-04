@@ -4143,7 +4143,7 @@ EOF
                              NVCC tr1/type_traits header compatibility,
                              cuda.h,
                              $_cuda_inc,
-                             cudart cuda,
+                             cudart,
                              $_cuda_lib,
                              ,
                              type_traits_test.cu,

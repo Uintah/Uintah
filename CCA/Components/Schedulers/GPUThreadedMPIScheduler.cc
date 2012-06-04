@@ -1281,21 +1281,21 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-//  const bool pinned = ( *(pinnedHostPtrs.find(h_reqData)) == h_reqData );
-//  if (!pinned) {
-//    // page-lock (pin) host memory for async copy to device
-//    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-//    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
-//    if(retVal == cudaSuccess) {
-//      pinnedHostPtrs.insert(h_reqData);
-//    }
-//  }
+  const bool pinned = ( *(pinnedHostPtrs.find(h_reqData)) == h_reqData );
+  if (!pinned) {
+    // pin/page-lock host memory for asynchronous host-to-device copy
+    // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
+    if(retVal == cudaSuccess) {
+      pinnedHostPtrs.insert(h_reqData);
+    }
+  }
 
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
-           << nbytes << " bytes on device " << device << " for " << label->getName() << endl;
+           << nbytes << " bytes on device (" << device << ") for " << label->getName() << endl;
     cerrLock.unlock();
   }
   hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
@@ -1312,7 +1312,7 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \""
-           << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
+           << label->getName() << "\" to device (" << device << "), " << nbytes << " bytes" << endl;
     cerrLock.unlock();
   }
   CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
@@ -1331,21 +1331,21 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-//  const bool pinned = ( *(pinnedHostPtrs.find(h_compData)) == h_compData );
-//  if (!pinned) {
-//    // page-lock (pin) host memory for async copy to device
-//    // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-//    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
-//    if(retVal == cudaSuccess) {
-//      pinnedHostPtrs.insert(h_compData);
-//    }
-//  }
+  const bool pinned = ( *(pinnedHostPtrs.find(h_compData)) == h_compData );
+  if (!pinned) {
+    // pin/page-lock host memory for asynchronous host-to-device copy
+    // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
+    if(retVal == cudaSuccess) {
+      pinnedHostPtrs.insert(h_compData);
+    }
+  }
 
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " allocating "
-           << nbytes << " bytes on device " << device << " for " << label->getName() << endl;
+           << nbytes << " bytes on device (" << device << ") for " << label->getName() << endl;
     cerrLock.unlock();
   }
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
@@ -1362,7 +1362,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \""
-           << label->getName() << "\" to device " << device << " (" << nbytes << " bytes)" << endl;
+           << label->getName() << "\" to device (" << device << "), " << nbytes << " bytes" << endl;
     cerrLock.unlock();
   }
   CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
