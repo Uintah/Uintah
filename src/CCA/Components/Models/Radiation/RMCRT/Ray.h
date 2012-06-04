@@ -196,8 +196,13 @@ namespace Uintah{
       
       double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
-      std::map<std::vector<int>, double> CellToValuesMap;                  // holds the fluxes for the cells in the patch
-      std::map< int, std::map<std::vector<int>, double> > PatchToCellsMap; // holds the boundary cells in the patch
+
+      struct Flux{
+        double incident;
+        double net;
+      };
+      std::map<std::vector<int>, Flux> CellToValuesMap;                  // holds the fluxes for the cells in the patch
+      std::map< int, std::map<std::vector<int>, Flux> > PatchToCellsMap; // holds the boundary cells in the patch
 
       int  _benchmark; 
       bool _isSeedRandom;
