@@ -468,12 +468,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
 
-  constCCVariable<double> sigmaT4Pi;
+  constCCVariable<double> sigmaT4OverPi;
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
   abskg_dw->getRegion(   abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
-  sigmaT4_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
+  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
   celltype_dw->getRegion( celltype , d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
   
   double start=clock();
@@ -618,7 +618,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
              inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
             sumI_prev = sumI;
@@ -640,8 +640,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
     if( _solveBoundaryFlux){
       vector<Patch::FaceType> bf;
-      //patch->getBoundaryFaces(bf);
-      //if( bf.size() > 0){ // we can have intrusion even if there are no boundary faces
 
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
@@ -673,156 +671,132 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 
-        IntVector pLow;
-        IntVector pHigh;
-        level->findInteriorCellIndexRange(pLow, pHigh);
+      IntVector pLow;
+      IntVector pHigh;
+      level->findInteriorCellIndexRange(pLow, pHigh);
 
-        //_____________________________________________
-        //   Ordering for Surface Method
-        vector <IntVector> dirIndexOrder(6);
-        vector <IntVector> dirSignSwap(6);
-        vector <IntVector> locationIndexOrder(6);
-        vector <IntVector> locationShift(6);
+      //_____________________________________________
+      //   Ordering for Surface Method
+      vector <IntVector> dirIndexOrder(6);
+      vector <IntVector> dirSignSwap(6);
+      vector <IntVector> locationIndexOrder(6);
+      vector <IntVector> locationShift(6);
 
-        dirIndexOrder[0]  = IntVector(2, 1, 0);
-        dirIndexOrder[1]  = IntVector(2, 1, 0);
-        dirIndexOrder[2]  = IntVector(0, 2, 1);
-        dirIndexOrder[3]  = IntVector(0, 2, 1);
-        dirIndexOrder[4]  = IntVector(0, 1, 2);
-        dirIndexOrder[5]  = IntVector(0, 1, 2);
+      dirIndexOrder[0]  = IntVector(2, 1, 0);
+      dirIndexOrder[1]  = IntVector(2, 1, 0);
+      dirIndexOrder[2]  = IntVector(0, 2, 1);
+      dirIndexOrder[3]  = IntVector(0, 2, 1);
+      dirIndexOrder[4]  = IntVector(0, 1, 2);
+      dirIndexOrder[5]  = IntVector(0, 1, 2);
 
-        // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
-        dirSignSwap[0]  = IntVector(-1, 1, 1);
-        dirSignSwap[1]  = IntVector(1, 1, 1);
-        dirSignSwap[2]  = IntVector(1, -1, 1);
-        dirSignSwap[3]  = IntVector(1, 1, 1);
-        dirSignSwap[4]  = IntVector(1, 1, -1);
-        dirSignSwap[5]  = IntVector(1, 1, 1);
-
-
-        locationIndexOrder[0] = IntVector(1,0,2);
-        locationIndexOrder[1] = IntVector(1,0,2);
-        locationIndexOrder[2] = IntVector(0,1,2);
-        locationIndexOrder[3] = IntVector(0,1,2);
-        locationIndexOrder[4] = IntVector(0,2,1);
-        locationIndexOrder[5] = IntVector(0,2,1);
-
-        locationShift[0] = IntVector(1, 0, 0);
-        locationShift[1] = IntVector(0, 0, 0);
-        locationShift[2] = IntVector(0, 1, 0);
-        locationShift[3] = IntVector(0, 0, 0);
-        locationShift[4] = IntVector(0, 0, 1);
-        locationShift[5] = IntVector(0, 0, 0);
+      // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
+      dirSignSwap[0]  = IntVector(-1, 1, 1);
+      dirSignSwap[1]  = IntVector(1, 1, 1);
+      dirSignSwap[2]  = IntVector(1, -1, 1);
+      dirSignSwap[3]  = IntVector(1, 1, 1);
+      dirSignSwap[4]  = IntVector(1, 1, -1);
+      dirSignSwap[5]  = IntVector(1, 1, 1);
 
 
-        // Initialize fluxes to zero
-        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          const IntVector& origin = *iter;                                                    
-          boundFlux[origin].p = 0; // p is never used, but initialize to zero for safety      
-          boundFlux[origin].w = 0;                                                            
-          boundFlux[origin].e = 0;                                                            
-          boundFlux[origin].s = 0;                                                            
-          boundFlux[origin].n = 0;                                                            
-          boundFlux[origin].b = 0;                                                            
-          boundFlux[origin].t = 0;                                                            
-        }
+      locationIndexOrder[0] = IntVector(1,0,2);
+      locationIndexOrder[1] = IntVector(1,0,2);
+      locationIndexOrder[2] = IntVector(0,1,2);
+      locationIndexOrder[3] = IntVector(0,1,2);
+      locationIndexOrder[4] = IntVector(0,2,1);
+      locationIndexOrder[5] = IntVector(0,2,1);
 
-      //__________________________________
-      // Loop over boundary faces and compute incident radiative flux
+      locationShift[0] = IntVector(1, 0, 0);
+      locationShift[1] = IntVector(0, 0, 0);
+      locationShift[2] = IntVector(0, 1, 0);
+      locationShift[3] = IntVector(0, 0, 0);
+      locationShift[4] = IntVector(0, 0, 1);
+      locationShift[5] = IntVector(0, 0, 0);
 
-       // for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-       //   Patch::FaceType face = *itr;
-        for (map<std::vector<int>,double>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
-          int i = itr->first[0];
-          int j = itr->first[1];
-          int k = itr->first[2];
-          int face = itr->first[3];
-          int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
-          int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
-          IntVector origin = IntVector(i,j,k);
 
-          //Patch::FaceIteratorType PEC = Patch::InteriorFaceCells;
 
-         // for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
-            //const IntVector& origin = *iter;
+    //__________________________________
+    // Loop over boundary faces and compute incident radiative flux
 
-            // create array of pointers to the stencil7 members.  Now can make assignments in the face loop without "switch"
-            // double* pBoundFlux[6] = { &boundFlux[origin].w, &boundFlux[origin].e, &boundFlux[origin].s,
-            // &boundFlux[origin].n, &boundFlux[origin].b, &boundFlux[origin].t };  // ordering is same as Uintah
+      for (map<std::vector<int>,double>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
+        int i = itr->first[0];
+        int j = itr->first[1];
+        int k = itr->first[2];
+        int face = itr->first[3];
+        int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
+        int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
+        IntVector origin = IntVector(i,j,k);
 
-          //  int i = origin.x();
-          //  int j = origin.y();
-          //  int k = origin.z();
+        //  int i = origin.x();
+        //  int j = origin.y();
+        //  int k = origin.z();
 
-            // quick flux debug test
-            //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations
+        // quick flux debug test
+        //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations
 
-            double sumI     = 0;
-            double sumProjI = 0;
-            double sumI_prev= 0;
+        double sumI     = 0;
+        double sumProjI = 0;
+        double sumI_prev= 0;
 
-            //__________________________________
-            // Flux ray loop
-            for (int iRay=0; iRay < _NoOfRays; iRay++){
+        //__________________________________
+        // Flux ray loop
+        for (int iRay=0; iRay < _NoOfRays; iRay++){
 
-              IntVector cur = origin;
+          IntVector cur = origin;
 
-              if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
-                _mTwister.seed((i + j +k) * iRay +1);
-              }
+          if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
+            _mTwister.seed((i + j +k) * iRay +1);
+          }
 
-              Vector direction_vector;
-   
-              // Surface Way to generate a ray direction from the positive z face
-              double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
-              double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
-              
-              //Convert to Cartesian
-              direction_vector[0] =  sin(theta) * cos(phi);
-              direction_vector[1] =  sin(theta) * sin(phi);
-              direction_vector[2] =  cos(theta);
-              
-              // Put direction vector as coming from correct face
-              adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
+          Vector direction_vector;
 
-              Vector inv_direction_vector = Vector(1.0)/direction_vector;
+          // Surface Way to generate a ray direction from the positive z face
+          double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
+          double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
+          
+          //Convert to Cartesian
+          direction_vector[0] =  sin(theta) * cos(phi);
+          direction_vector[1] =  sin(theta) * sin(phi);
+          direction_vector[2] =  cos(theta);
+          
+          // Put direction vector as coming from correct face
+          adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
 
-              double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-              double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+          Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-              Vector ray_location;
+          double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+          double DzDxRatio = Dx.z() / Dx.x(); //noncubic
 
-              // Surface way to generate a ray location from the negative y face
-              ray_location[0] =  _mTwister.rand() ;
-              ray_location[1] =  0;
-              ray_location[2] =  _mTwister.rand() * DzDxRatio ;
-              
-              // Put point on correct face
-              adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
+          Vector ray_location;
 
-              ray_location[0] += i;
-              ray_location[1] += j;
-              ray_location[2] += k;
+          // Surface way to generate a ray location from the negative y face
+          ray_location[0] =  _mTwister.rand() ;
+          ray_location[1] =  0;
+          ray_location[2] =  _mTwister.rand() * DzDxRatio ;
+          
+          // Put point on correct face
+          adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
 
-              updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+          ray_location[0] += i;
+          ray_location[1] += j;
+          ray_location[2] += k;
 
-              sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                     // from all the rays up to that point
-              sumI_prev = sumI;
+          updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
 
-            } // end of flux ray loop
+          sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                 // from all the rays up to that point
+          sumI_prev = sumI;
 
-            //__________________________________
-            //  Compute Net Flux to the boundary
-            itr->second = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
+        } // end of flux ray loop
 
-            //*pBoundFlux[face] = sumProjI * 2*_pi/_NoOfRays; // - abskg[origin]*sigmaT4_OPi[origin]*_pi
-            //cout << *pBoundFlux[face] << endl;
+        //__________________________________
+        //  Compute Net Flux to the boundary
+        itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
+        //itr->second.incidentFlux = sumProjI * 2*_pi/_NoOfRays;
+        //itr->second.netFlux = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi;
+        // cout << itr->second << endl;
 
-            //} // end of quick flux debug
-          } // end of iterating through boundary map
-       // } // end of iterating over faces
-      // } // end has a boundaryFace
+        //} // end of quick flux debug
+      } // end of iterating through boundary map
     } // end if _solveBoundaryFlux
         
          
@@ -879,13 +853,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ;
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4Pi, abskg, size, sumI);
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
         
       }  // Ray loop
       
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (sumI/_NoOfRays) );
+      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
       //cout << divQ[origin] << endl;
       //} // end quick debug testing
     }  // end cell iterator
@@ -988,9 +962,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   //__________________________________
   //retrieve the coarse level data
   StaticArray< constCCVariable<double> > abskg(maxLevels);
-  StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
+  StaticArray< constCCVariable<double> >sigmaT4OverPi(maxLevels);
   constCCVariable<double> abskg_fine;
-  constCCVariable<double> sigmaT4Pi_fine;
+  constCCVariable<double> sigmaT4OverPi_fine;
     
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
@@ -1007,7 +981,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
       abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
       dbg << " getting coarse level data L-" <<L<< endl;
     }
     Vector dx = level->dCell();
@@ -1033,11 +1007,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     
     dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
     abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
   }
   
   abskg_fine     = abskg[maxLevels-1];
-  sigmaT4Pi_fine = sigmaT4Pi[maxLevels-1];
+  sigmaT4OverPi_fine = sigmaT4OverPi[maxLevels-1];
   
   // Determine the size of the domain.
   BBox domain_BB;
@@ -1064,9 +1038,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       dbg << " getting fine level data across L-" <<L<< endl;
            
       abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       abskg_fine     = abskg[L];
-      sigmaT4Pi_fine = sigmaT4Pi[L];
+      sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
     
     CCVariable<double> divQ_fine;
@@ -1271,7 +1245,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
             //Eqn 3-15(see below reference) while
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            sumI += sigmaT4Pi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+            sumI += sigmaT4OverPi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
             
             dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
             //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
@@ -1282,7 +1256,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
           intensity = exp(-optical_thickness);
 
           //  wall emission
-          sumI += abskg[L][cur] * sigmaT4Pi[L][cur] * intensity;
+          sumI += abskg[L][cur] * sigmaT4OverPi[L][cur] * intensity;
 
           intensity = intensity * (1-abskg[L][cur]);  
            
@@ -1308,7 +1282,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4Pi_fine[origin] - (sumI/_NoOfRays) );
+      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_NoOfRays) );
       
       dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_NoOfRays) << endl;
        // } // end quick debug testing
@@ -1584,11 +1558,11 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       
       CCVariable<double> temp;
       CCVariable<double> abskg;
-      CCVariable<double> sigmaT4Pi;
+      CCVariable<double> sigmaT4OverPi;
       
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch );
-      new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
+      new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4_label,  d_matl, patch );
       
       //__________________________________
       // loop over boundary faces and backout the temperature 
@@ -1602,7 +1576,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 
           for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
             const IntVector& c = *iter;
-            double T4 =  sigmaT4Pi[c]/sigma_over_pi;
+            double T4 =  sigmaT4OverPi[c]/sigma_over_pi;
             temp[c]   =  pow( T4, 1./4.);
           }
         }
@@ -1632,7 +1606,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
         for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
           const IntVector& c = *iter;
           double T_sqrd = temp[c] * temp[c];
-          sigmaT4Pi[c] = sigma_over_pi * T_sqrd * T_sqrd;
+          sigmaT4OverPi[c] = sigma_over_pi * T_sqrd * T_sqrd;
         }
       } 
     } // has a boundaryFace
@@ -2007,7 +1981,7 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
                        const Vector& Dx,
                        const IntVector& domainLo,
                        const IntVector& domainHi,
-                       constCCVariable<double>& sigmaT4Pi,
+                       constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
                        unsigned long int& size,
                        double& sumI)
@@ -2120,14 +2094,14 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
 
        //Eqn 3-15(see below reference) while
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-       sumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+       sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
      } //end domain while loop.  ++++++++++++++
 
      intensity = exp(-optical_thickness);
 
      //  wall emission 12/15/11
-     sumI += abskg[cur]*sigmaT4Pi[cur] * intensity;
+     sumI += abskg[cur]*sigmaT4OverPi[cur] * intensity;
 
      intensity = intensity * (1-abskg[cur]);
 
