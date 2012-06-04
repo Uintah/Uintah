@@ -36,8 +36,8 @@
 #define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
 
 #  include <cuda.h>
-#  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
+#  include <cuda_runtime_api.h>
 #  include <curand.h>
 #  include <curand_kernel.h>
 
