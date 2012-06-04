@@ -641,6 +641,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     if( _solveBoundaryFlux){
       vector<Patch::FaceType> bf;
 
+
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
       if (CellToValuesMap.empty()){
@@ -663,7 +664,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
             originAndFace.push_back( face );
 
             // initialize fluxes to zero
-            CellToValuesMap.insert(make_pair( originAndFace, 0 )); // !! This might need to be moved down.
+            Flux Flux_;
+            Flux_.incident = 0;
+            Flux_.net = 0;
+            CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
           }
         }// end populate map cell iterator
         PatchToCellsMap.insert(make_pair( patchID, CellToValuesMap ));
@@ -717,7 +721,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //__________________________________
     // Loop over boundary faces and compute incident radiative flux
 
-      for (map<std::vector<int>,double>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
+      for (map<std::vector<int>,Flux>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
         int i = itr->first[0];
         int j = itr->first[1];
         int k = itr->first[2];
@@ -790,9 +794,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         //__________________________________
         //  Compute Net Flux to the boundary
-        itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
-        //itr->second.incidentFlux = sumProjI * 2*_pi/_NoOfRays;
-        //itr->second.netFlux = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi;
+        //itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
+        itr->second.incident = sumProjI * 2*_pi/_NoOfRays;
+        itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi;
         // cout << itr->second << endl;
 
         //} // end of quick flux debug
