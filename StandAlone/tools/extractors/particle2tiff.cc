@@ -99,7 +99,7 @@ struct clampVals{
 
 // contains all tiff flags
 struct tiffFlags{
-  uint16 orientation;
+  uint16 orientation;  // currently not used
 };
 
 
@@ -147,9 +147,10 @@ class eightBit  : public Bits
           }
         }
       } else {                    // actual data
-        for (uint32 j = 0; j < d_height; j++){
-          for(uint32 i = 0; i < d_width; i++){
-            IntVector c = IntVector(i,j, page) + lo;
+        for ( uint32 j = d_height-1; j != 0; j-- ){
+          for( uint32 i = 0; i < d_width; i++ ){
+            int y = (d_height-1) - j;   // so the orientation is correct in most viewers
+            IntVector c = IntVector(i,y, page) + lo;
             d_slice[j * d_width + i] = ave[c];;
           }
         }
@@ -229,10 +230,11 @@ class sixteenBit  : public Bits
           }
         }
       } else {                    // actual data
-        for (uint32 j = 0; j < d_height; j++){
+        for (uint32 j = d_height-1; j != 0; j--){
           for(uint32 i = 0; i < d_width; i++){
-            IntVector c = IntVector(i,j,page) + lo;
-            d_slice[j * d_width + i] = ave[c];;
+            int y = (d_height-1) - j;   // so the orientation is correct in most viewers
+            IntVector c = IntVector(i,y,page) + lo;
+            d_slice[j * d_width + i] = ave[c];
           }
         }
       }
@@ -302,7 +304,7 @@ class thirtytwoBit  : public Bits
                    bool doVerification,
                    const IntVector& lo,
                    uint32 page ){
-      
+
       if( doVerification ) {      // create test image
         for (uint32 j = 0; j < d_height; j++){
           for(uint32 i = 0; i < d_width; i++){
@@ -310,9 +312,10 @@ class thirtytwoBit  : public Bits
           }
         }
       } else {                    // actual data
-        for (uint32 j = 0; j < d_height; j++){
+        for (uint32 j = d_height-1; j != 0; j--){
           for(uint32 i = 0; i < d_width; i++){
-            IntVector c = IntVector(i,j,page) + lo;
+            int y = (d_height-1) - j;   // so the orientation is correct in most viewers 
+            IntVector c = IntVector(i,y,page) + lo;
             d_slice[j * d_width + i] = ave[c];
           }
         }
@@ -383,20 +386,8 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -min                        [double] (minimum clamp value)\n";    
     cerr << "  -verify                     [none]   (output test image 256x256x5) \n";
     cerr << "  -nBits                      [int]    (number of bits/pixel in output images) [defaults to 8] \n";
-    cerr << "  -asVolume                   [none]   (save all slices in 1 tiff file \n";
-    cerr << "  -asSlices                   [none]   (save slices as separate files \n";
-    cerr << "  -orientation                [string] (The orientation of the image with respect to the rows and columns.)\n";
-    cerr << "                                      Options: \n";
-    cerr << "                                        topleft  0th row represents the visual top of the image, and the 0th column represents the visual left-hand side.\n";
-    cerr << "                                        topright 0th row represents the visual top of the image, and the 0th column represents the visual right-hand side\n";
-    cerr << "                                        botright 0th row represents the visual bottom of the image, and the 0th column represents the visual right-hand side\n";
-    cerr << "                             default->  botleft  0th row represents the visual bottom of the image, and the 0th column represents the visual left-hand side.\n";
-    cerr << "                                        lefttop  0th row represents the visual left-hand side of the image, and the 0th column represents the visual top.\n";
-    cerr << "                                        righttop 0th row represents the visual right-hand side of the image, and the 0th column represents the visual top.\n";
-    cerr << "                                        rightbot 0th row represents the visual right-hand side of the image, and the 0th column represents the visual bottom.\n";
-    cerr << "                                        leftbot  0th row represents the visual left-hand side of the image, and the 0th column represents the visual bottom. \n";
-    cerr << "                                                    Many readers ignore this tag \n\n";
-    
+    cerr << "  -asVolume                   [none]   (save all slices in 1 tiff file) [default] \n";
+    cerr << "  -asSlices                   [none]   (save slices as separate files) \n";    
     cerr << "  -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep) [defaults to last timestep]\n";
     cerr << "  -timestep, --timestep:      [int] (only outputs timestep)  [defaults to 0]\n\n";
@@ -418,34 +409,6 @@ usage(const std::string& badarg, const std::string& progname)
 }
 
 //______________________________________________________________________
-//  return the tiff flag option for the orientation
-uint16
-whichOrientation(const string& in){
-  uint16 ans= ORIENTATION_BOTLEFT;
-  if( in == "topleft" ){
-    ans = ORIENTATION_TOPLEFT;
-  } else if( in == "topright" ){
-    ans = ORIENTATION_TOPRIGHT;
-  } else if( in == "botright" ){
-    ans = ORIENTATION_BOTRIGHT;
-  } else if( in == "botleft" ){
-    ans = ORIENTATION_BOTLEFT;
-  } else if( in == "lefttop" ){
-    ans = ORIENTATION_LEFTTOP;
-  } else if( in == "righttop" ){
-    ans = ORIENTATION_RIGHTTOP;
-  } else if( in == "rightbot" ){
-    ans = ORIENTATION_RIGHTBOT;
-  } else if( in == "leftbot" ){
-    ans = ORIENTATION_LEFTBOT;
-  } else{
-    cerr << "\n\nThe orientation [" << in << "] is not valid. \n";
-    usage("","");
-  }
-  return ans;
-};
-
-//______________________________________________________________________
 //
 
 void set_tiff_options(TIFF* out,
@@ -457,6 +420,11 @@ void set_tiff_options(TIFF* out,
     float yres = 150;
     uint16 spp = 1;                       // samples per pixel 1 for black & white or gray and 3 for color
     uint16 photo =  PHOTOMETRIC_MINISBLACK;
+    
+    uint16 format = SAMPLEFORMAT_UINT;          // sample format
+    if(depth == TIFFDataWidth(TIFF_FLOAT) ){    // if 32-bit
+      format = SAMPLEFORMAT_IEEEFP;
+    }
       
     // We need to set some values for basic tags before we can add any data
     TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image
@@ -465,8 +433,8 @@ void set_tiff_options(TIFF* out,
     TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,    depth*8 );                // bits per channel
     TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL,  spp );                    // number of channels per pixel, 1 for B&W or gray
 
-    TIFFSetField(out, TIFFTAG_SAMPLEFORMAT,     SAMPLEFORMAT_IEEEFP);     // IEEE floating point data
-    TIFFSetField(out, TIFFTAG_ORIENTATION,      flags->orientation);      // set the origin of the image.
+    TIFFSetField(out, TIFFTAG_SAMPLEFORMAT,     format);                  // Specifies how to interpret each data sample in a pixel
+    TIFFSetField(out, TIFFTAG_ORIENTATION,      ORIENTATION_BOTLEFT);     // set the origin of the image.
 
   //=  TIFFSetField(out, TIFFTAG_COMPRESSION,      COMPRESSION_DEFLATE);
     TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);  
@@ -504,7 +472,7 @@ void write_tiff_volume(const tiffFlags* flags,
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
-  Bits* whichBit;
+  Bits* whichBit = NULL;
   
   if(nBits == 8){
     depth = TIFFDataWidth(TIFF_BYTE); 
@@ -533,6 +501,8 @@ void write_tiff_volume(const tiffFlags* flags,
   //  loop over slices in z direction
   for (uint32 page = 0; page < imageDepth; page++) {
   
+  
+    
     // fill the slice with data
     whichBit->fillSlice( ave, doVerification, lo, page);
     
@@ -584,7 +554,7 @@ void write_tiff_slices(const tiffFlags* flags,
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
-  Bits* whichBit;
+  Bits* whichBit = NULL;
   
   if(nBits == 8){
     depth = TIFFDataWidth(TIFF_BYTE); 
@@ -715,6 +685,7 @@ void compute_ave( vector<int>                         & matls,
   
     ParticleSubset* pset = var[m]->getParticleSubset();
     
+    
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
 
@@ -726,7 +697,7 @@ void compute_ave( vector<int>                         & matls,
       }
     }
   }
-
+  
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     ave[c] = ave[c]/(count[c] + 1e-100);
@@ -858,16 +829,21 @@ void find_CC_ave( DataArchive                   * archive,
       exit(1);
     }
     
+    // determing the max matl index
+    int max_matl = -9;
+    vector<int>::iterator m_it;
+    for (m_it = matls.begin(); m_it < matls.end(); m_it++) {
+      max_matl = max(max_matl, *m_it);
+    }
+    
     //__________________________________
     // query all the data and compute the average over all the patches
     vector<CCVariable<double>*> ave(patches.size());
 
     for (int p = 0; p < patches.size(); p++) {
       const Patch* patch = patches[p];
-
-      vector<ParticleVariable<T>*>     pVar(matls.size());
-      vector<ParticleVariable<Point>*> pos(matls.size());
-      
+      vector<ParticleVariable<T>*>     pVar(max_matl+1);
+      vector<ParticleVariable<Point>*> pos(max_matl+1);
       vector<int>::iterator iter;
       for (iter = matls.begin(); iter < matls.end(); iter++) {
         int m = *iter;
@@ -1011,8 +987,7 @@ int main(int argc, char** argv)
   clamps->minVal = -DBL_MAX;
   clamps->maxVal = DBL_MAX;
   
-  tiffFlags* flags = scinew tiffFlags();
-  flags->orientation = ORIENTATION_BOTLEFT;
+  tiffFlags* flags = scinew tiffFlags();  // currently not used.
 
   int matl = 0;
   unsigned int nBits     = 8;
@@ -1024,6 +999,7 @@ int main(int argc, char** argv)
 
   for(int i=1;i<argc;i++){
     string s  =argv[i];
+    //cout << " s " << s << endl;  // debugging
     
     if(s == "-v" || s == "--variable") {
       variable_name = string(argv[++i]);
@@ -1032,7 +1008,7 @@ int main(int argc, char** argv)
       if( me == "a" || me == "all" ){
         matl = 999;
       } else {
-        matl = atoi(argv[++i]);
+        matl = atoi(me.c_str());
       }
     } else if ( s == "-tlow" || s == "--timesteplow") {
       time_start = strtoul(argv[++i],NULL,10);
@@ -1080,8 +1056,6 @@ int main(int argc, char** argv)
       clamps->maxVal = atof(argv[++i]);
     } else if ( s == "-min" ) {
       clamps->minVal = atof(argv[++i]);
-    } else if ( s == "-orientation" ) {
-      flags->orientation = whichOrientation( string(argv[++i]) );
     } else if ( s == "-verify" ) {
       doVerification = true;
     } else if ( s == "-asVolume" ) {
@@ -1104,7 +1078,10 @@ int main(int argc, char** argv)
     cerr << "\n\nUnspecified output directory name, now exiting....\n";
     usage("", argv[0]);
   }
-  
+  if( nBits != 8 && nBits != 16 && nBits != 32){
+    cerr << "\n\nInvalid nBits (" << nBits <<") specified, now exiting....\n";
+    usage("", argv[0]);
+  }
   
 
   try {
@@ -1281,8 +1258,7 @@ int main(int argc, char** argv)
       }
       
       //__________________________________
-      //
-      // create the base output directory
+      //  Write each tiff slice as a individual files
       if (sliceFormat == asIndividualSlices) {
         
         ostringstream tname;
@@ -1302,7 +1278,6 @@ int main(int argc, char** argv)
         write_tiff_slices(flags,sliceName, var_start, var_end, aveLevel, doVerification, nBits);            // write the tiff out
         
       }
-      
       
     }  // timestep loop     
     
