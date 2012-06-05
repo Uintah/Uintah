@@ -654,7 +654,7 @@ Pr_{t}=C\left\langle \hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|\frac{\par
 \end_layout
 
 \begin_layout Subsection
-SGS Closure
+Subgrid Closure
 \end_layout
 
 \begin_layout Standard
@@ -688,7 +688,7 @@ The deviatoric subgrid-stress tensor
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\nu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right)
+\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\mu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right)
 \end{equation}
 
 \end_inset
@@ -812,7 +812,7 @@ key "smagorinsky_general_1963"
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\nu_{\mathrm{t}}=C_{\mathrm{s}}\Delta^{2}|\widetilde{S}|
+\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|
 \]
 
 \end_inset
@@ -928,6 +928,67 @@ Where
 \end_inset
 
  and over hat means the test filter is applied.
+\end_layout
+
+\begin_layout Paragraph
+Wall-Adapting Local Eddy-Viscosity (WALE)
+\end_layout
+
+\begin_layout Standard
+In the WALE model 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "geurts_les_1993"
+
+\end_inset
+
+, the eddy-viscosity is modeled as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mu_{t}=\rho\left(C_{\mathrm{w}}\Delta\right)^{2}\frac{(S_{ij}^{d}S_{ij}^{d})^{3/2}}{(\widetilde{S}_{ij}\widetilde{S}_{ij})^{5/2}+(S_{ij}^{d}S_{ij}^{d})^{5/4}}
+\end{equation}
+
+\end_inset
+
+Here, 
+\begin_inset Formula $C_{\mathrm{w}}$
+\end_inset
+
+ is the WALE model constant, 
+\begin_inset Formula $\Delta$
+\end_inset
+
+ is the average cell size, and 
+\begin_inset Formula $S_{ij}^{d}$
+\end_inset
+
+ is the traceless symmetric part f the square of the velocity gradient tensor,
+ given by 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "nicoud_subgrid-scale_1999"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+S_{ij}^{d}=\tfrac{1}{2}\left(g_{ij}^{2}+g_{ji}^{2}\right)-\tfrac{1}{3}\delta_{ij}g_{kk}^{2};\quad g_{ij}^{2}=g_{ik}g_{kj};\quad g_{ij}=\frac{\partial u_{i}}{\partial x_{j}}
+\end{equation}
+
+\end_inset
+
+Care must be taken in evaluating the components of 
+\begin_inset Formula $S_{ij}^{d}$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
