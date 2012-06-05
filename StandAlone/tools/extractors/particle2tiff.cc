@@ -88,7 +88,8 @@ using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
-//#define VERIFY 1
+// format for saving slices
+enum saveSlices{ asVolume, asIndividualSlices, None};
 
 struct clampVals{
   double minVal;
@@ -100,6 +101,269 @@ struct clampVals{
 struct tiffFlags{
   uint16 orientation;
 };
+
+
+//______________________________________________________________________
+//   Base class
+class Bits{
+  public:
+    virtual void fillSlice(CCVariable<double>& ave,
+                           bool doVerification,
+                           const IntVector& lo,
+                           uint32 page ) = 0;
+
+    virtual void verifySlice(TIFF* out, 
+                             tsize_t size,
+                             tsize_t imageSize) = 0;
+                           
+    virtual tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ) = 0;
+};
+
+//______________________________________________________________________
+//      8 - bit class & methods
+class eightBit  : public Bits
+{
+  public:
+    eightBit(uint32 height, uint32 width){
+      d_height = height;
+      d_width = width;
+      d_slice = (uint8*) malloc(height * width * sizeof(uint8));
+      
+    }
+    
+    ~eightBit(){}
+    
+    //__________________________________
+    //
+    void fillSlice(CCVariable<double>& ave,
+                   bool doVerification,
+                   const IntVector& lo,
+                   uint32 page ){
+      
+      if( doVerification ) {      // create test image
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            d_slice[j * d_width + i] = (uint8) j + (uint8) i;
+          }
+        }
+      } else {                    // actual data
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            IntVector c = IntVector(i,j, page) + lo;
+            d_slice[j * d_width + i] = ave[c];;
+          }
+        }
+      } 
+    }
+
+    //__________________________________
+    // read the image back in and verify that 
+    // it's correct
+    void verifySlice(TIFF* out, 
+                     tsize_t size,
+                     tsize_t imageSize){
+ 
+      tsize_t nStrips   = TIFFNumberOfStrips (out);
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Now reading in slice and verify data: ";
+
+      uint8 buffer[d_height * d_width];
+      
+      long result;
+      if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
+        fprintf(stderr, "Read error on input strip number %d\n", 0);
+        exit(42);
+      }
+
+      for (uint32 j = 0; j < d_height; j++){
+        for(uint32 i = 0; i < d_width; i++){
+          if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
+            cout << " ERROR:  ["<<i << "," << j << "] "
+                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " output pixel " << d_slice[j * d_width + i] << endl;
+          }
+        }
+      }
+      cout << " PASSED " << endl;    
+    }
+    
+    //__________________________________
+    //
+    tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
+      tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, d_slice, imageSize);
+      return size;
+    }
+
+    private:
+      uint32 d_height;
+      uint32 d_width;
+
+      uint8* d_slice;
+      uint8* d_buffer;
+};
+
+//______________________________________________________________________
+//      16 - bit class & methods
+class sixteenBit  : public Bits
+{
+  public:
+    sixteenBit(uint32 height, uint32 width){
+      d_height = height;
+      d_width = width;
+      d_slice = (uint16*) malloc(height * width * sizeof(uint16));
+    }
+    
+    ~sixteenBit(){}
+    
+    //__________________________________
+    //
+    void fillSlice(CCVariable<double>& ave,
+                   bool doVerification,
+                   const IntVector& lo,
+                   uint32 page ){
+      
+      if( doVerification ) {      // create test image
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            d_slice[j * d_width + i] = (uint16) j * (uint16) i;
+          }
+        }
+      } else {                    // actual data
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            IntVector c = IntVector(i,j,page) + lo;
+            d_slice[j * d_width + i] = ave[c];;
+          }
+        }
+      }
+    }
+    
+    //__________________________________
+    // read the image back in and verify that 
+    // it's correct
+    void verifySlice(TIFF* out, 
+                     tsize_t size,
+                     tsize_t imageSize){
+    
+      tsize_t nStrips   = TIFFNumberOfStrips (out);
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Now reading in slice and verify data: ";
+
+      uint16  buffer[d_height * d_width];
+      
+      long result;
+      if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
+        fprintf(stderr, "Read error on input strip number %d\n", 0);
+        exit(42);
+      }
+
+      for (uint32 j = 0; j < d_height; j++){
+        for(uint32 i = 0; i < d_width; i++){
+          if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
+            cout << " ERROR:  ["<<i << "," << j << "] "
+                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " output pixel " << d_slice[j * d_width + i] << endl;
+          }
+        }
+      }
+      cout << " PASSED " << endl;    
+    }    
+    //__________________________________
+    //
+    tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
+      tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, d_slice, imageSize);
+      return size;
+    }
+
+    private:
+      uint32 d_height;
+      uint32 d_width;
+
+      uint16* d_slice;
+      uint16* d_buffer;
+};
+
+//______________________________________________________________________
+//      32 - bit class & methods
+class thirtytwoBit  : public Bits
+{
+  public:
+    thirtytwoBit(uint32 height, uint32 width){
+      d_height = height;
+      d_width = width;
+      d_slice = (float*) malloc(height * width * sizeof(float));
+    }
+    
+    ~thirtytwoBit(){}
+    
+    //__________________________________
+    //
+    void fillSlice(CCVariable<double>& ave,
+                   bool doVerification,
+                   const IntVector& lo,
+                   uint32 page ){
+      
+      if( doVerification ) {      // create test image
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            d_slice[j * d_width + i] = (float) j * (float) i;
+          }
+        }
+      } else {                    // actual data
+        for (uint32 j = 0; j < d_height; j++){
+          for(uint32 i = 0; i < d_width; i++){
+            IntVector c = IntVector(i,j,page) + lo;
+            d_slice[j * d_width + i] = ave[c];
+          }
+        }
+      }      
+    }
+
+    //__________________________________
+    // read the image back in and verify that 
+    // it's correct
+    void verifySlice(TIFF* out, 
+                     tsize_t size,
+                     tsize_t imageSize){
+    
+      tsize_t nStrips   = TIFFNumberOfStrips (out);
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Now reading in slice and verify data: ";
+
+      float buffer[d_height * d_width];
+      
+      long result;
+      if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
+        fprintf(stderr, "Read error on input strip number %d\n", 0);
+        exit(42);
+      }
+
+      for (uint32 j = 0; j < d_height; j++){
+        for(uint32 i = 0; i < d_width; i++){
+          if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
+            cout << " ERROR:  ["<<i << "," << j << "] "
+                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " output pixel " << d_slice[j * d_width + i] << endl;
+          }
+        }
+      }
+      cout << " PASSED " << endl;    
+    }
+    
+    //__________________________________
+    //
+    tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
+    
+      tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, d_slice, imageSize);
+      return size;
+    }
+
+    private:
+      uint32 d_height;
+      uint32 d_width;
+
+      float* d_slice;
+};                        
 
 
 //______________________________________________________________________
@@ -117,6 +381,10 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]\n\n";
     cerr << "  -max                        [double] (maximum clamp value)\n";
     cerr << "  -min                        [double] (minimum clamp value)\n";    
+    cerr << "  -verify                     [none]   (output test image 256x256x5) \n";
+    cerr << "  -nBits                      [int]    (number of bits/pixel in output images) [defaults to 8] \n";
+    cerr << "  -asVolume                   [none]   (save all slices in 1 tiff file \n";
+    cerr << "  -asSlices                   [none]   (save slices as separate files \n";
     cerr << "  -orientation                [string] (The orientation of the image with respect to the rows and columns.)\n";
     cerr << "                                      Options: \n";
     cerr << "                                        topleft  0th row represents the visual top of the image, and the 0th column represents the visual left-hand side.\n";
@@ -179,61 +447,17 @@ whichOrientation(const string& in){
 
 //______________________________________________________________________
 //
-void write_tiff(const tiffFlags* flags,
-                const ostringstream& tname,
-                const IntVector& lo,
-                const IntVector& hi,
-                CCVariable<double>& ave){
 
-  uint32 imageWidth = hi.x() - lo.x();
-  uint32 imageHeight= hi.y() - lo.y();
-  uint32 imageDepth = hi.z() - lo.z();
-  
-#ifdef VERIFY  
-  imageWidth =256;
-  imageHeight=256;
-  imageDepth = 5;
-#endif
-  
-  float xres = 150;
-  float yres = 150;
-  uint16 spp = 1;                           // samples per pixel 1 for black & white or gray and 3 for color
-  uint16 depth = 1;                         // bytes per pixel;
-  uint16 photo =  PHOTOMETRIC_MINISBLACK;
-   
-  depth = TIFFDataWidth(TIFF_FLOAT);        // 32 bit images are defined here 
-  float slice[ imageWidth * imageHeight];   // use float for 32 bit images
-  float buffer[imageWidth * imageHeight];
-  
-  tsize_t imageSize = imageHeight * imageWidth * depth;
-  
-  // Open the TIFF file
-  TIFF *out;
-  if((out = TIFFOpen(tname.str().c_str(), "w")) == NULL){
-    cout << "Could not open " << tname << " for writing\n";
-    exit(1);
-  }
-
-  //__________________________________
-  //  loop over slices in z direction
-  for (uint32 page = 0; page < imageDepth; page++) {
-  
-#ifdef VERIFY
-    for (uint32 j = 0; j < imageHeight; j++){
-      for(uint32 i = 0; i < imageWidth; i++){
-        slice[j * imageWidth + i] = (float) j * (float) i;
-      }
-    }
-#else
-    for (uint32 j = 0; j < imageHeight; j++){
-      for(uint32 i = 0; i < imageWidth; i++){
-        IntVector c = IntVector(i,j,page) + lo;
-    //    cout << " c " << c << " lo " << lo << endl;
-        slice[j * imageWidth + i] = ave[c];
-      }
-    }
-#endif
-    
+void set_tiff_options(TIFF* out,
+                      const uint32 imageWidth,
+                      const uint32 imageHeight,
+                      const uint16 depth,
+                      const tiffFlags* flags){
+    float xres = 150;
+    float yres = 150;
+    uint16 spp = 1;                       // samples per pixel 1 for black & white or gray and 3 for color
+    uint16 photo =  PHOTOMETRIC_MINISBLACK;
+      
     // We need to set some values for basic tags before we can add any data
     TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image
     TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );            // set the height of the image
@@ -253,6 +477,67 @@ void write_tiff(const tiffFlags* flags,
     TIFFSetField(out, TIFFTAG_XRESOLUTION,      xres);
     TIFFSetField(out, TIFFTAG_YRESOLUTION,      yres);
     TIFFSetField(out, TIFFTAG_RESOLUTIONUNIT,   RESUNIT_INCH);
+}
+
+
+//______________________________________________________________________
+//
+void write_tiff_volume(const tiffFlags* flags,
+                       const ostringstream& tname,
+                       const IntVector& lo,
+                       const IntVector& hi,
+                       CCVariable<double>& ave,
+                       const bool doVerification,
+                       const int nBits){
+
+  uint32 imageWidth = hi.x() - lo.x();
+  uint32 imageHeight= hi.y() - lo.y();
+  uint32 imageDepth = hi.z() - lo.z();
+  
+  if(doVerification){
+    imageWidth =256;
+    imageHeight=256;
+    imageDepth = 5;
+  }                       
+  uint16 depth = -9;                         // bytes per pixel;
+  
+  //__________________________________
+  //  Create the objects that create the slices
+  //  and write the data
+  Bits* whichBit;
+  
+  if(nBits == 8){
+    depth = TIFFDataWidth(TIFF_BYTE); 
+    whichBit = new eightBit(imageHeight, imageWidth);
+    cout << "  Writing 8-bit images " << endl;
+  } else if (nBits == 16){
+    depth = TIFFDataWidth(TIFF_SHORT);
+    whichBit = new sixteenBit(imageHeight, imageWidth);
+    cout << "  Writing 16-bit images " << endl;
+  } else if (nBits == 32){
+    depth = TIFFDataWidth(TIFF_FLOAT);
+    whichBit = new thirtytwoBit(imageHeight, imageWidth);
+    cout << "  Writing 32-bit images " << endl;
+  }
+  
+  tsize_t imageSize = imageHeight * imageWidth * depth;
+  
+  // Open the TIFF file
+  TIFF *out;
+  if((out = TIFFOpen(tname.str().c_str(), "w")) == NULL){
+    cout << "Could not open " << tname << " for writing\n";
+    exit(1);
+  }
+
+  //__________________________________
+  //  loop over slices in z direction
+  for (uint32 page = 0; page < imageDepth; page++) {
+  
+    // fill the slice with data
+    whichBit->fillSlice( ave, doVerification, lo, page);
+    
+    
+    set_tiff_options(out, imageWidth, imageHeight, depth, flags);
 
     // We are writing a page of the multi page file
     TIFFSetField(out, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
@@ -260,39 +545,96 @@ void write_tiff(const tiffFlags* flags,
     // slice number 
     TIFFSetField(out, TIFFTAG_PAGENUMBER, page, imageDepth);
 
-    tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, slice, imageSize);
+    tsize_t size = whichBit->writeRawStrip(out, imageSize );
+    
     cout << "  writing slice: [" << page << "/"<< imageDepth << "]" << " width: " << imageWidth << " height " << imageHeight << endl;
-      
- #ifdef VERIFY
-    //__________________________________
-    // read data back in and verify that 
-    // it's correct
-    tsize_t nStrips   = TIFFNumberOfStrips (out);
-    cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
-    cout  << "    Now reading in slice and verify data: ";
 
-    long result;
-    if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
-      fprintf(stderr, "Read error on input strip number %d\n", 0);
-      exit(42);
+    if( doVerification ){
+      whichBit->verifySlice( out, size, imageSize);
     }
-
-    for (uint32 j = 0; j < imageHeight; j++){
-      for(uint32 i = 0; i < imageWidth; i++){
-        if (buffer[j * imageWidth + i] != slice[j * imageWidth + i]  ){
-          cout << " ERROR:  ["<<i << "," << j << "] "
-               << " input pixel " << buffer[j * imageWidth + i] 
-               << " output pixel " << slice[j * imageWidth + i] << endl;
-        }
-      }
-    }
-    cout << " PASSED " << endl;
- #endif 
-   
-   TIFFWriteDirectory(out);
+       
+    TIFFWriteDirectory(out);
    
   }  // page loop
   TIFFClose(out);
+}
+
+
+//______________________________________________________________________
+//
+void write_tiff_slices(const tiffFlags* flags,
+                       const ostringstream& sliceBaseName,
+                       const IntVector& lo,
+                       const IntVector& hi,
+                       CCVariable<double>& ave,
+                       const bool doVerification,
+                       const int nBits){
+
+  uint32 imageWidth = hi.x() - lo.x();
+  uint32 imageHeight= hi.y() - lo.y();
+  uint32 imageDepth = hi.z() - lo.z();
+  
+  if(doVerification){
+    imageWidth =256;
+    imageHeight=256;
+    imageDepth = 5;
+  }                       
+  uint16 depth = -9;                         // bytes per pixel;
+  
+  //__________________________________
+  //  Create the objects that create the slices
+  //  and write the data
+  Bits* whichBit;
+  
+  if(nBits == 8){
+    depth = TIFFDataWidth(TIFF_BYTE); 
+    whichBit = new eightBit(imageHeight, imageWidth);
+    cout << "  Writing 8-bit images " << endl;
+  } else if (nBits == 16){
+    depth = TIFFDataWidth(TIFF_SHORT);
+    whichBit = new sixteenBit(imageHeight, imageWidth);
+    cout << "  Writing 16-bit images " << endl;
+  } else if (nBits == 32){
+    depth = TIFFDataWidth(TIFF_FLOAT);
+    whichBit = new thirtytwoBit(imageHeight, imageWidth);
+    cout << "  Writing 32-bit images " << endl;
+  }
+  
+  tsize_t imageSize = imageHeight * imageWidth * depth;
+  
+
+  //__________________________________
+  //  loop over slices in z direction
+  for (uint32 page = 0; page < imageDepth; page++) {
+    ostringstream sliceName;
+    sliceName << sliceBaseName.str()<<page<<".tif";
+
+    // Open the TIFF file
+    TIFF *out;
+    if((out = TIFFOpen(sliceName.str().c_str(), "w")) == NULL){
+      cout << "Could not open " << sliceName << " for writing\n";
+      exit(1);
+    }
+  
+    // fill the slice with data
+    whichBit->fillSlice( ave, doVerification, lo, page);
+    
+    set_tiff_options(out, imageWidth, imageHeight, depth, flags);
+
+    // slice number 
+    TIFFSetField(out, TIFFTAG_PAGENUMBER, page, imageDepth);
+
+    tsize_t size = whichBit->writeRawStrip(out, imageSize );
+    
+    cout << "  writing slice: [" << page << "/"<< imageDepth << "]" << " width: " << imageWidth << " height " << imageHeight << endl;
+
+    if( doVerification ){
+      whichBit->verifySlice( out, size, imageSize);
+    }
+       
+    TIFFClose(out);
+   
+  }  // page loop
 }
 
 
@@ -673,7 +1015,10 @@ int main(int argc, char** argv)
   flags->orientation = ORIENTATION_BOTLEFT;
 
   int matl = 0;
-  
+  unsigned int nBits     = 8;
+  bool doVerification    = false;
+  saveSlices sliceFormat = asVolume;
+
   //__________________________________
   // Parse arguments
 
@@ -737,6 +1082,14 @@ int main(int argc, char** argv)
       clamps->minVal = atof(argv[++i]);
     } else if ( s == "-orientation" ) {
       flags->orientation = whichOrientation( string(argv[++i]) );
+    } else if ( s == "-verify" ) {
+      doVerification = true;
+    } else if ( s == "-asVolume" ) {
+      sliceFormat = asVolume;
+    } else if ( s == "-asSlices" ) {
+      sliceFormat = asIndividualSlices;
+    } else if ( s == "-nBits" ) {
+      nBits = atoi(argv[++i]);
     }else {
       usage(s, argv[0]);
     }
@@ -751,6 +1104,7 @@ int main(int argc, char** argv)
     cerr << "\n\nUnspecified output directory name, now exiting....\n";
     usage("", argv[0]);
   }
+  
   
 
   try {
@@ -817,18 +1171,16 @@ int main(int argc, char** argv)
     }
     
     // create the base output directory
-    if (base_dir_name != "-") {
-      if( Dir::removeDir(base_dir_name.c_str() ) ){
-        cout << "Removed directory: "<<base_dir_name<<"\n";
-      }
-      base_dir = Dir::create(base_dir_name);
-      
-      if(base_dir.exists() ) {
-        cout << "Created directory: "<<base_dir_name<<"\n";
-      }else{
-        cout << "Failed creating  base output directory: "<<base_dir_name<<"\n";
-        exit(1);
-      }
+    if( Dir::removeDir(base_dir_name.c_str() ) ){
+      cout << "Removed directory: "<<base_dir_name<<"\n";
+    }
+    base_dir = Dir::create(base_dir_name);
+
+    if(base_dir.exists() ) {
+      cout << "Created directory: "<<base_dir_name<<"\n";
+    }else{
+      cout << "Failed creating  base output directory: "<<base_dir_name<<"\n";
+      exit(1);
     }
 
     //__________________________________
@@ -919,14 +1271,39 @@ int main(int argc, char** argv)
         }
       }
 
-      if (base_dir_name != "-") {
+      //__________________________________
+      //  write out a tiff volume
+      if (sliceFormat == asVolume) {
         ostringstream tname;
         tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step << ".tif";
         
-        //scaleImage( lo, hi, aveLevel );
-        
-        write_tiff(flags,tname, var_start, var_end, aveLevel);            // write the tiff out
+        write_tiff_volume(flags,tname, var_start, var_end, aveLevel, doVerification, nBits);            // write the tiff out
       }
+      
+      //__________________________________
+      //
+      // create the base output directory
+      if (sliceFormat == asIndividualSlices) {
+        
+        ostringstream tname;
+        tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step;
+        
+        Dir timestep_dir = Dir::create(tname.str());
+
+        if(timestep_dir.exists() ) {
+          cout << "  Created directory: "<<tname.str()<<"\n";
+        }else{
+          cout << "Failed creating  base output directory: "<<tname<<"\n";
+          exit(1);
+        }
+        
+        ostringstream sliceName;
+        sliceName << tname.str() << "/";
+        write_tiff_slices(flags,sliceName, var_start, var_end, aveLevel, doVerification, nBits);            // write the tiff out
+        
+      }
+      
+      
     }  // timestep loop     
     
   } catch (Exception& e) {
