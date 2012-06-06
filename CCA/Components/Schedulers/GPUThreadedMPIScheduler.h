@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef UINTAH_HOMEBREW_GPUTMPISCHEDULER_H
-#define UINTAH_HOMEBREW_GPUTMPISCHEDULER_H
+#ifndef UINTAH_HOMEBREW_GPUTHREADEDMPISCHEDULER_H
+#define UINTAH_HOMEBREW_GPUTHREADEDMPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -53,27 +53,30 @@ class GPUTaskWorker;
 CLASS
    GPUThreadedMPIScheduler
    
-   Short description...
+   GPU/Multi-thread/MPI scheduler
 
 GENERAL INFORMATION
 
    GPUThreadedMPIScheduler.h
 
-   Alan Humphrey, after Steven G. Parker & Qingyu Meng
+   Alan Humphrey, after Qingyu Meng & Steven G. Parker
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2011 SCI Group
+   Copyright (C) 2012 SCI Group
 
 KEYWORDS
-   Scheduler_Brain_Damaged
+   Task Scheduler, Multi-threaded, GPU
 
 DESCRIPTION
-   Long description...
+   This class extends the existing multi-threaded MPI scheduler to
+   support, schedule and execute tasks that have been GPU-enabled.
   
 WARNING
+   This scheduler is still EXPERIMENTAL and undergoing extensive
+   development, not all tasks are GPU-enabled and thread-safe yet.
   
 ****************************************/
   class GPUThreadedMPIScheduler : public MPIScheduler  {

@@ -693,7 +693,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
   if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
     freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
     freeDeviceComputesMem();         // call cudaFree on all device memory for task->computes
-//    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
+    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
     clearMaps();
   }
 
