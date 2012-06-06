@@ -2027,6 +2027,16 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
    double fs = 1.0;
    double optical_thickness = 0;
 
+   // #define SCATTER 1
+   #ifdef SCATTER
+   double scatCoeff = 5; //[m^-1]  !! HACK !! This needs to come from data warehouse
+
+   // determine the length at which scattering will occur
+   // CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
+   double scatLength = -log( 1- _mTwister.randDblExc() ) / scatCoeff;
+   double curLength = 0;
+   #endif
+
    //+++++++Begin ray tracing+++++++++++++++++++
 
    // Vector temp_direction = direction_vector;   // Used for reflections
@@ -2099,6 +2109,48 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
        //Eqn 3-15(see below reference) while
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
        sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+
+       #ifdef SCATTER
+       curLength += disMin;
+       if (curLength > scatLength){
+         // get new direction (below is isotropic scatteirng)
+         plusMinus_one = 2 * _mTwister.randDblExc() - 1;
+         r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+         theta = 2 * M_PI * _mTwister.randDblExc();            // Uniform betwen 0-2Pi
+
+         direction_vector[0] = r*cos(theta);                   // Convert to cartesian
+         direction_vector[1] = r*sin(theta);
+         direction_vector[2] = plusMinus_one;
+         inv_direction_vector = Vector(1.0)/direction_vector;
+
+         // get new step and sign
+         int step[3];                                          // Gives +1 or -1 based on sign
+         bool sign[3];
+         for ( int ii= 0; ii<3; ii++){
+           if (inv_direction_vector[ii]>0){
+             step[ii] = 1;
+             sign[ii] = 1;
+           }
+           else{
+             step[ii] = -1;
+             sign[ii] = 0;
+           }
+         }
+
+         // get new tMax
+         tMaxX = (origin[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
+         tMaxY = (origin[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
+         tMaxZ = (origin[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
+
+         // get new tDelta
+         //Length of t to traverse one cell
+         tDeltaX = abs(inv_direction_vector[0]);
+         tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
+         tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
+         tMax_prev = 0;
+       }
+
+       #endif
 
      } //end domain while loop.  ++++++++++++++
 
