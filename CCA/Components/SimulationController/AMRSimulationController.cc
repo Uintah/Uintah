@@ -973,9 +973,10 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
 
   Task* task = scinew Task("coarsenDelt", this, &AMRSimulationController::coarsenDelt);
 
+  //coarsenDelT task requires that delT is computed on every level, even if no tasks are 
+  // run on that level.  I think this is a bug.  --Todd
   for (int i = 0; i < grid->numLevels(); i++) {
-    //coarsen delt requires each levels delt variable
-    task->requires(Task::NewDW,d_sharedState->get_delt_label(),grid->getLevel(i).get_rep());
+    task->requires(Task::NewDW, d_sharedState->get_delt_label(), grid->getLevel(i).get_rep());
   }
 
   //coarsen delt computes the global delt variable
@@ -999,14 +1000,19 @@ AMRSimulationController::coarsenDelt( const ProcessorGroup*,
   
   int multiplier = 1;
   const GridP grid = patches->get(0)->getLevel()->getGrid();
+  
   for (int i = 0; i < grid->numLevels(); i++) {
     const LevelP level = grid->getLevel(i);
-    if (i > 0 && !d_sharedState->isLockstepAMR())
+    
+    if (i > 0 && !d_sharedState->isLockstepAMR()){
       multiplier *= level->getRefinementRatioMaxDim();
+    }
+        
     if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
       delt_vartype deltvar;
       double delt;
       new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
+      
       delt = deltvar;
       new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
     }
