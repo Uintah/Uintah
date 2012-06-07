@@ -813,23 +813,25 @@ void ImpMPM::scheduleInitializePressureBCs(const LevelP& level,
 
 
 
-void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
+void ImpMPM::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched)
 {
-  if (!flags->doMPMOnLevel(lev->getIndex(), lev->getGrid()->numLevels()))
-    return;
 
-  if (cout_doing.active())
-    cout_doing << "ImpMPM::scheduleComputeStableTimestep " << endl;
+
+  printSchedule(level,cout_doing,"IMPM::scheduleComputeStableTimestep");
 
   Task* t = scinew Task("ImpMPM::actuallyComputeStableTimestep",
                      this, &ImpMPM::actuallyComputeStableTimestep);
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-  t->requires(Task::OldDW,d_sharedState->get_delt_label());
-  t->requires(Task::NewDW, lb->pVelocityLabel,   Ghost::None);
-  t->computes(            d_sharedState->get_delt_label(),lev.get_rep());
+  
+  if (flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()) ) {
+    t->requires(Task::OldDW,d_sharedState->get_delt_label());
+    t->requires(Task::NewDW, lb->pVelocityLabel,   Ghost::None);
+  }
+  // compute a delT on all levels even levels where impm is not running
+  t->computes( d_sharedState->get_delt_label(),level.get_rep() );
 
-  sched->addTask(t,lev->eachPatch(), matls);
+  sched->addTask(t,level->eachPatch(), matls);
 }
 
 void
@@ -3913,52 +3915,59 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
+  // compute a delT on all levels even levels where impm is not running
+  const Level* level = getLevel(patches);
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()) ) {
+    new_dw->put(delt_vartype(999), lb->delTLabel, level);
+    return;
+  }  
+  
+  
   for(int p=0;p<patches->size();p++){
-   const Patch* patch = patches->get(p);
+    const Patch* patch = patches->get(p);
    
-   printTask(patches, patch,cout_doing,"Doing ImpMPM::actuallyComputeStableTimestep");
+    printTask(patches, patch,cout_doing,"Doing ImpMPM::actuallyComputeStableTimestep");
 
-   if(d_numIterations==0){
-     new_dw->put(delt_vartype(d_initialDt), lb->delTLabel, patch->getLevel());
-   }
-   else{
-    Vector dx = patch->dCell();
-    delt_vartype old_delT;
-    old_dw->get(old_delT, d_sharedState->get_delt_label(), patch->getLevel());
+    if(d_numIterations==0){
+      new_dw->put(delt_vartype(d_initialDt), lb->delTLabel, patch->getLevel());
+    } else{
+      Vector dx = patch->dCell();
+      delt_vartype old_delT;
+      old_dw->get(old_delT, d_sharedState->get_delt_label(), patch->getLevel());
 
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
+      int numMPMMatls=d_sharedState->getNumMPMMatls();
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        int dwindex = mpm_matl->getDWIndex();
 
-      ParticleSubset* pset = new_dw->getParticleSubset(dwindex, patch);
+        ParticleSubset* pset = new_dw->getParticleSubset(dwindex, patch);
 
-      constParticleVariable<Vector> pvelocity;
-      new_dw->get(pvelocity, lb->pVelocityLabel, pset);
+        constParticleVariable<Vector> pvelocity;
+        new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
-      Vector ParticleSpeed(1.e-12,1.e-12,1.e-12);
+        Vector ParticleSpeed(1.e-12,1.e-12,1.e-12);
 
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-        particleIndex idx = *iter;
-        ParticleSpeed=Vector(Max(fabs(pvelocity[idx].x()),ParticleSpeed.x()),
-                             Max(fabs(pvelocity[idx].y()),ParticleSpeed.y()),
-                             Max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
+        for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
+          particleIndex idx = *iter;
+          ParticleSpeed=Vector(Max(fabs(pvelocity[idx].x()),ParticleSpeed.x()),
+                               Max(fabs(pvelocity[idx].y()),ParticleSpeed.y()),
+                               Max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
+        }
+        ParticleSpeed = dx/ParticleSpeed;
+        double delT_new = .8*ParticleSpeed.minComponent();
+
+        double old_dt=old_delT;
+        if(d_numIterations <= flags->d_num_iters_to_increase_delT){
+          old_dt = flags->d_delT_increase_factor*old_delT;
+        }
+        if(d_numIterations >= flags->d_num_iters_to_decrease_delT){
+          old_dt = flags->d_delT_decrease_factor*old_delT;
+        }
+        delT_new = min(delT_new, old_dt);
+
+        new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
       }
-      ParticleSpeed = dx/ParticleSpeed;
-      double delT_new = .8*ParticleSpeed.minComponent();
-
-      double old_dt=old_delT;
-      if(d_numIterations <= flags->d_num_iters_to_increase_delT){
-        old_dt = flags->d_delT_increase_factor*old_delT;
-      }
-      if(d_numIterations >= flags->d_num_iters_to_decrease_delT){
-        old_dt = flags->d_delT_decrease_factor*old_delT;
-      }
-      delT_new = min(delT_new, old_dt);
-
-      new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     }
-   }
   }
 }
 
