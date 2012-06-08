@@ -143,6 +143,7 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
+                                                                         Uintah::ProblemSpecP wasatchParams,
                                                                         GraphCategories& gc);
 
 

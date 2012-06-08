@@ -34,6 +34,7 @@
 #include "MomentumTransportEquation.h"
 #include "MomentTransportEquation.h"
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvMixingModel.h>
 
 //-- includes for the expressions built here --//
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -483,7 +484,8 @@ namespace Wasatch{
                                          Expr::ExpressionFactory& factory,
                                          Expr::TagList& transportedMomentTags,
                                          Expr::TagList& abscissaeTags,
-                                         Expr::TagList& weightsTags )
+                                         Expr::TagList& weightsTags,
+                                         Expr::TagList& multiEnvWeightsTags)
   {
     // check for supersaturation
     Expr::Tag superSaturationTag = Expr::Tag();
@@ -526,12 +528,33 @@ namespace Wasatch{
     // register the qmom expression
     //
     factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags,superSaturationTag) );
+    
+    //register the multi environment mixign model calculation
+    //register this here since only need one expr for the weights
+    if (momentEqsParams->findBlock("MultiEnvMixingModel") ) {
+      std::stringstream wID;
+      const int numEnv = 3;
+      //create the expression for weights and derivatives if block found  
+      for (int i=0; i<numEnv; i++) {
+        wID.str(std::string());
+        wID << i;
+        multiEnvWeightsTags.push_back(Expr::Tag("w_MultiEnv_" + wID.str(), Expr::STATE_NONE) );
+        multiEnvWeightsTags.push_back(Expr::Tag("dwdt_MultiEnv_" + wID.str(), Expr::STATE_NONE) );
+      }
+      
+      Uintah::ProblemSpecP multiEnvParams = momentEqsParams->findBlock("MultiEnvMixingModel");
+      const Expr::Tag mixFracTag = parse_nametag( multiEnvParams->findBlock("MixtureFraction")->findBlock("NameTag") );
+      const Expr::Tag scalarVarTag = parse_nametag( multiEnvParams->findBlock("ScalarVariance")->findBlock("NameTag") );
+      const Expr::Tag scalarDissTag = parse_nametag( multiEnvParams->findBlock("ScalarDissipation")->findBlock("NameTag") );
+      factory.register_expression( scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag) );
+    }
   }
 
   //==================================================================
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
+                                    Uintah::ProblemSpecP wasatchParams,
                                     GraphCategories& gc )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -555,7 +578,33 @@ namespace Wasatch{
     int nEnv = 1;
     params->get( "NumberOfEnvironments", nEnv );
     const int nEqs = 2*nEnv;
+    
+    std::vector< double> initialMoments;
+    double val;
+    initialMoments = std::vector< double >(nEqs);
+    //loop over all basic exprs to find initialized moments 
+    for( int i=0; i<nEqs; i++) { 
+      std::stringstream ss;
+      ss << i;
+      std::string thisPhiName = basePhiName + "_" + ss.str();
+      
+      for( Uintah::ProblemSpecP expressionParams=wasatchParams->findBlock("BasicExpression");
+          expressionParams != 0;
+          expressionParams=expressionParams->findNextBlock("BasicExpression") ){
 
+        std::string exprName;
+        expressionParams->findBlock("NameTag")->getAttribute("name",exprName);
+        
+        if (exprName == thisPhiName ){
+          expressionParams->get("Constant",val);
+          initialMoments[i] = val;
+          std::cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
+        }
+      }
+    }
+
+    Expr::TagList multiEnvWeightsTags;
+    
     if (stagLocParams) {
 
       // X-Staggered scalar
@@ -563,7 +612,7 @@ namespace Wasatch{
         for (int iMom=0; iMom<nEqs; iMom++) {
           preprocess_moment_transport_qmom<XVolField>(params, *solnGraphHelper->exprFactory,
                                         transportedMomentTags, abscissaeTags,
-                                        weightsTags);
+                                        weightsTags, multiEnvWeightsTags);
 
           const double momentID = (double) iMom; //here we will add any fractional moments
           std::stringstream ss;
@@ -577,7 +626,9 @@ namespace Wasatch{
                                                                       params,
                                                                       weightsTags,
                                                                       abscissaeTags,
-                                                                      momentID)
+                                                                      momentID,
+                                                                      multiEnvWeightsTags,
+                                                                      initialMoments[iMom])
                                          );
           adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
           adaptors.push_back(adaptor);
@@ -585,7 +636,7 @@ namespace Wasatch{
       } else if (stagLoc=="Y") {
         preprocess_moment_transport_qmom<YVolField>(params, *solnGraphHelper->exprFactory,
                                                  transportedMomentTags, abscissaeTags,
-                                                 weightsTags);
+                                                 weightsTags, multiEnvWeightsTags);
         for (int iMom=0; iMom<nEqs; iMom++) {
           const double momentID = (double) iMom; //here we will add any fractional moments
           std::stringstream ss;
@@ -599,7 +650,9 @@ namespace Wasatch{
                                                                        params,
                                                                        weightsTags,
                                                                        abscissaeTags,
-                                                                       momentID)
+                                                                       momentID,
+                                                                       multiEnvWeightsTags,
+                                                                       initialMoments[iMom])
                                          );
           adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
           adaptors.push_back(adaptor);
@@ -608,7 +661,7 @@ namespace Wasatch{
       } else if (stagLoc=="Z") {
         preprocess_moment_transport_qmom<ZVolField>(params, *solnGraphHelper->exprFactory,
                                                  transportedMomentTags, abscissaeTags,
-                                                 weightsTags);
+                                                 weightsTags, multiEnvWeightsTags);
 
         for (int iMom=0; iMom<nEqs; iMom++) {
           const double momentID = (double) iMom; //here we will add any fractional moments
@@ -623,7 +676,9 @@ namespace Wasatch{
                                                                        params,
                                                                        weightsTags,
                                                                        abscissaeTags,
-                                                                       momentID)
+                                                                       momentID,
+                                                                       multiEnvWeightsTags,
+                                                                       initialMoments[iMom])
                                          );
           adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
           adaptors.push_back(adaptor);
@@ -632,7 +687,7 @@ namespace Wasatch{
     } else if (!stagLocParams) {
       preprocess_moment_transport_qmom<SVolField>(params, *solnGraphHelper->exprFactory,
                                                transportedMomentTags, abscissaeTags,
-                                               weightsTags);
+                                               weightsTags, multiEnvWeightsTags);
 
       for (int iMom=0; iMom<nEqs; iMom++) {
         const double momentID = (double) iMom; //here we will add any fractional moments
@@ -646,7 +701,9 @@ namespace Wasatch{
                                                                        params,
                                                                        weightsTags,
                                                                        abscissaeTags,
-                                                                       momentID);
+                                                                       momentID,
+                                                                       multiEnvWeightsTags,
+                                                                       initialMoments[iMom]);
         momtranseq = scinew MomTransEq( thisPhiName, rhsID);
         adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
         adaptors.push_back(adaptor);

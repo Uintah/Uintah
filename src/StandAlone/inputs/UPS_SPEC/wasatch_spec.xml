@@ -527,6 +527,18 @@
         <NameTag spec="REQUIRED" />
       </SupersaturationExpression>
       
+      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
+        <MixtureFraction spec = "REQUIRED NO_DATA" > 
+          <NameTag spec	= "REQUIRED"/>
+        </MixtureFraction>      
+        <ScalarVariance spec = "REQUIRED NO_DATA" > 
+          <NameTag spec	= "REQUIRED"/>
+        </ScalarVariance>
+        <ScalarDissipation spec="REQUIRED NO_DATA" >
+          <NameTag spec = "REQUIRED"/>
+        </ScalarDissipation>
+      </MultiEnvMixingModel>
+      
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
       <!-- of the form G = alpha * g0 * g(r)-->

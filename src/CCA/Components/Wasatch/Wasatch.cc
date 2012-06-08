@@ -382,7 +382,8 @@ namespace Wasatch{
         momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") ){
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, graphCategories_);
+        //For the Mulit-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
+        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, graphCategories_);
         adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
       }
       catch( std::runtime_error& err ){

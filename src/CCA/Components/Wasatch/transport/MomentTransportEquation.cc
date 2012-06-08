@@ -29,6 +29,8 @@
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Birth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Growth.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvSource.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvAveMoment.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/OstwaldRipening.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
@@ -218,7 +220,9 @@ namespace Wasatch {
                     Uintah::ProblemSpecP params,
                     Expr::TagList& weightsTags,
                     Expr::TagList& abscissaeTags,
-                    const double momentOrder)
+                    const double momentOrder,
+                    Expr::TagList& multiEnvWeightsTags,
+                    const double initialMoment)
   {
     std::stringstream momentOrderStr;
     momentOrderStr << momentOrder;
@@ -259,6 +263,26 @@ namespace Wasatch {
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
 
+    //____________
+    //Multi Environment Mixing 
+
+    if( params->findBlock("MultiEnvMixingModel") ){
+      //register source term from mixing
+      Expr::Tag mixingSourceTag = Expr::Tag( thisPhiName + "_mixing_source", Expr::STATE_NONE);
+      typedef typename MultiEnvSource<FieldT>::Builder MixSource;
+      Expr::ExpressionBuilder* builder = NULL;
+      builder = scinew MixSource( mixingSourceTag, multiEnvWeightsTags, thisPhiTag, initialMoment); 
+      factory.register_expression(builder);
+      rhsTags.push_back(mixingSourceTag);
+      
+      //register averaged moment 
+      Expr::Tag aveMomentTag = Expr::Tag( thisPhiName + "_ave", Expr::STATE_NONE);
+      typedef typename MultiEnvAveMoment<FieldT>::Builder AveMoment;
+      Expr::ExpressionBuilder* builder2 = NULL;
+      builder2 = scinew AveMoment( aveMomentTag, multiEnvWeightsTags, thisPhiTag, initialMoment); 
+      factory.register_expression(builder2);
+    }
+    
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
