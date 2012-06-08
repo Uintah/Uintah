@@ -29,6 +29,7 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -72,6 +73,7 @@ namespace Wasatch{
                                const Expr::Tag bodyForceTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
+                               TurbulenceParameters turbulenceParams,
                                const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver);
 
@@ -117,6 +119,7 @@ namespace Wasatch{
   private:
 
     const bool isviscous_;
+    const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     Expr::ExpressionID normalStressID_, normalConvFluxID_, pressureID_;
     std::string thisMomName_;

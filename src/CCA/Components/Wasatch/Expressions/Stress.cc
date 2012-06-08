@@ -30,12 +30,15 @@
 template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Stress<StressT,Vel1T,Vel2T,ViscT>::
 Stress( const Expr::Tag& viscTag,
+        const Expr::Tag& turbViscTag,
         const Expr::Tag& vel1Tag,
         const Expr::Tag& vel2Tag )
   : Expr::Expression<StressT>(),
-    visct_( viscTag ),
-    vel1t_( vel1Tag ),
-    vel2t_( vel2Tag )
+    visct_     ( viscTag ),
+    turbvisct_ ( turbViscTag ),
+    vel1t_     ( vel1Tag ),
+    vel2t_     ( vel2Tag ),
+    isTurbulent_( turbViscTag != Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -53,6 +56,7 @@ Stress<StressT,Vel1T,Vel2T,ViscT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( visct_ );
+  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );  
   exprDeps.requires_expression( vel1t_ );
   exprDeps.requires_expression( vel2t_ );
 }
@@ -69,6 +73,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldManager<Vel2T>& vel2fm = fml.template field_manager<Vel2T>();
 
   visc_ = &viscfm.field_ref( visct_ );
+  if ( isTurbulent_ ) turbvisc_ = &viscfm.field_ref( turbvisct_ );
   vel1_ = &vel1fm.field_ref( vel1t_ );
   vel2_ = &vel2fm.field_ref( vel2t_ );
 }
@@ -97,13 +102,23 @@ evaluate()
   stress <<= 0.0;
 
   SpatFldPtr<StressT> tmp = SpatialFieldStore::get<StressT>( stress );
+  //*tmp <<= 0.0;
+  
   vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
   vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
 
   stress <<= stress + *tmp; // dui/dxj + duj/dxi
 
-  viscInterpOp_->apply_to_field( *visc_, *tmp );
-  stress <<= -stress * *tmp; // -mu * (dui/dxj + duj/dxi)
+  if ( isTurbulent_ ) {
+    SpatFldPtr<ViscT> tmp1 = SpatialFieldStore::get<ViscT>( stress );    
+    *tmp1 <<= 0.0;
+    *tmp1 <<= *visc_ + *turbvisc_;
+    viscInterpOp_->apply_to_field( *tmp1, *tmp ); // tmp = mu + mu_turbulent
+  } else {
+    viscInterpOp_->apply_to_field( *visc_, *tmp );
+  }
+  
+  stress <<= - stress * *tmp; // - (mu + mu_turbulent) * (dui/dxj + duj/dxi)
 }
 
 //--------------------------------------------------------------------
@@ -112,13 +127,15 @@ template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Stress<StressT,Vel1T,Vel2T,ViscT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& viscTag,
+                  const Expr::Tag& turbViscTag,                 
                   const Expr::Tag& vel1Tag,
                   const Expr::Tag& vel2Tag,
                   const Expr::Tag& dilTag )
   : ExpressionBuilder(result),
-    visct_( viscTag ),
-    vel1t_( vel1Tag ),
-    vel2t_( vel2Tag )
+    visct_    ( viscTag ),
+    turbvisct_( turbViscTag ),
+    vel1t_    ( vel1Tag ),
+    vel2t_    ( vel2Tag )    
 {}
 
 //--------------------------------------------------------------------
@@ -127,7 +144,7 @@ template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Expr::ExpressionBase*
 Stress<StressT,Vel1T,Vel2T,ViscT>::Builder::build() const
 {
-  return new Stress<StressT,Vel1T,Vel2T,ViscT>( visct_, vel1t_, vel2t_ );
+  return new Stress<StressT,Vel1T,Vel2T,ViscT>( visct_, turbvisct_, vel1t_, vel2t_ );
 }
 
 
@@ -137,12 +154,15 @@ Stress<StressT,Vel1T,Vel2T,ViscT>::Builder::build() const
 template< typename StressT, typename VelT, typename ViscT >
 Stress<StressT,VelT,VelT,ViscT>::
 Stress( const Expr::Tag& viscTag,
+        const Expr::Tag& turbViscTag,
         const Expr::Tag& velTag,
         const Expr::Tag& dilTag )
   : Expr::Expression<StressT>(),
-    visct_( viscTag ),
-    velt_ ( velTag  ),
-    dilt_ ( dilTag  )
+    visct_    ( viscTag ),
+    turbvisct_( turbViscTag ),
+    velt_     ( velTag  ),
+    dilt_     ( dilTag  ),
+    isTurbulent_( turbViscTag != Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -160,6 +180,7 @@ Stress<StressT,VelT,VelT,ViscT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( visct_ );
+  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );  
   exprDeps.requires_expression( velt_  );
   exprDeps.requires_expression( dilt_  );
 }
@@ -175,6 +196,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldManager<VelT >& velfm  = fml.template field_manager<VelT >();
 
   visc_ = &viscfm.field_ref( visct_ );
+  if ( isTurbulent_ ) turbvisc_ = &viscfm.field_ref( turbvisct_ );
   vel_  = &velfm. field_ref( velt_  );
   dil_  = &viscfm.field_ref( dilt_  );
 }
@@ -205,11 +227,18 @@ evaluate()
   SpatFldPtr<StressT> velgrad    = SpatialFieldStore::get<StressT>( stress );
   SpatFldPtr<StressT> dilatation = SpatialFieldStore::get<StressT>( stress );
 
-  velGradOp_   ->apply_to_field( *vel_, *velgrad    );
-  viscInterpOp_->apply_to_field( *visc_, stress     );
-  viscInterpOp_->apply_to_field( *dil_, *dilatation );
+  if (isTurbulent_) {
+    SpatFldPtr<ViscT> tmp = SpatialFieldStore::get<ViscT>( stress );    
+    *tmp <<= 0.0;
+    *tmp <<= *visc_ + *turbvisc_;
+    viscInterpOp_->apply_to_field( *tmp, stress   ); // stress = mu + mu_turbulent
+  } else {
+    viscInterpOp_->apply_to_field( *visc_, stress ); // stress = mu
+  }
 
-  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * stress * *dilatation;
+  viscInterpOp_->apply_to_field( *dil_, *dilatation );
+  velGradOp_   ->apply_to_field( *vel_, *velgrad    );
+  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * stress * *dilatation; // stress = -2 (mu + mu_turbulent) * du/dx + 2/3 (mu + mu_turbulent) * div(u)
 }
 
 //--------------------------------------------------------------------
@@ -218,11 +247,13 @@ template< typename StressT, typename VelT, typename ViscT >
 Stress<StressT,VelT,VelT,ViscT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& viscTag,
+                  const Expr::Tag& turbViscTag,
                   const Expr::Tag& vel1Tag,
                   const Expr::Tag& vel2Tag,
                   const Expr::Tag& dilTag )
   : ExpressionBuilder(result),
     visct_( viscTag ),
+    turbvisct_( turbViscTag ),
     velt_ ( vel1Tag ),
     dilt_ ( dilTag  )
 {}
@@ -233,7 +264,7 @@ template< typename StressT, typename VelT, typename ViscT >
 Expr::ExpressionBase*
 Stress<StressT,VelT,VelT,ViscT>::Builder::build() const
 {
-  return new Stress<StressT,VelT,VelT,ViscT>( visct_, velt_, dilt_ );
+  return new Stress<StressT,VelT,VelT,ViscT>( visct_, turbvisct_, velt_, dilt_ );
 }
 
 //====================================================================

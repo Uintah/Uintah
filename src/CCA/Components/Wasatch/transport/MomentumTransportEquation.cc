@@ -32,6 +32,8 @@
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -163,6 +165,7 @@ namespace Wasatch{
   Expr::ExpressionID
   setup_stress( const Expr::Tag& stressTag,
                 const Expr::Tag& viscTag,
+                const Expr::Tag& turbViscTag,
                 const Expr::Tag& vel1Tag,
                 const Expr::Tag& vel2Tag,
                 const Expr::Tag& dilTag,
@@ -174,7 +177,7 @@ namespace Wasatch{
 
     typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
 
-    return factory.register_expression( scinew StressT( stressTag, viscTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( scinew StressT( stressTag, viscTag, turbViscTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -280,12 +283,14 @@ namespace Wasatch{
                              const Expr::Tag bodyForceTag,                            
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
+                             TurbulenceParameters turbulenceParams,
                              const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver)
     : Wasatch::TransportEquation( momName,
                                   rhsID,
                                   get_staggered_location<FieldT>() ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
+      isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStressID_  ( Expr::ExpressionID::null_id()        ),
@@ -325,20 +330,72 @@ namespace Wasatch{
     const Expr::Tag tauxt = tauTags[0];
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];
+    //
+    const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
+        
+    //--------------------------------------
+    // TURBULENCE	
+    // check if we have a turbulence model turned on
+    Expr::Tag turbViscTag = Expr::Tag();
+    std::cout<<"is turbulent? " << isTurbulent_ << std::endl;
+    if ( isTurbulent_ && isviscous_ ) {
 
-     // check if inviscid or not
-    if (isviscous_) {
-      const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
+      Expr::Tag sqStrTsrMagTag  = Expr::Tag();
+      Expr::Tag dynSmagConstTag = Expr::Tag();
+      turbViscTag = Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+
+      // we got turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
+      const Expr::Tag strTsrMagTag( "StrainTensorMagnitude", Expr::STATE_NONE );
+      if( !factory.have_entry( strTsrMagTag ) ){
+        typedef typename StrainTensorMagnitude::Builder StrTsrMagT;
+        const Expr::ExpressionID strTsrMagID_ = factory.register_expression( new StrTsrMagT(strTsrMagTag, velTags_[0], 
+                                                                                            velTags_[1], velTags_[2]) );
+      }
+      
+      switch (turbulenceParams.turbulenceModelName) {
+        case WALE: {
+          // if WALE model is turned on, then create an expression for the square velocity gradient tensor
+          sqStrTsrMagTag = Expr::Tag("SquareStrainTensorMagnitude", Expr::STATE_NONE);
+          if( !factory.have_entry( sqStrTsrMagTag ) ){
+            typedef typename SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
+            const Expr::ExpressionID sqStrTsrMagID_ = factory.register_expression( new SqStrTsrMagT(sqStrTsrMagTag, velTags_[0], 
+                                                                                                    velTags_[1], velTags_[2] ) );
+          }         
+        }
+          break;
+        case DYNAMIC: {
+          // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
+          dynSmagConstTag = Expr::Tag("DynamicSmagorinskyConstant", Expr::STATE_NONE);
+          if( !factory.have_entry( dynSmagConstTag ) ){
+          }            
+          
+        }
+          break;
+        default:
+          break;
+      }
+      
+      if( !factory.have_entry( turbViscTag ) ){
+        typedef typename TurbulentViscosity::Builder TurbViscT;
+        const Expr::ExpressionID turbViscID_ = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, 
+                                                                                              sqStrTsrMagTag, turbulenceParams ) );
+      }
+    }
+    // END TURBULENCE	
+    //--------------------------------------
+    // check if inviscid or not
+    if ( isviscous_ ) {
+      //const Expr::Tag viscosityTag = isTurbulent_ ? turbViscTag : viscTag;
       if( doxmom ){
-        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, turbViscTag, thisVelTag_, velTags_[0], dilTag, factory );
         if( stagLoc_ == XDIR )  normalStressID_ = stressID;
       }
       if( doymom ){
-        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, turbViscTag, thisVelTag_, velTags_[1], dilTag, factory );
         if( stagLoc_ == YDIR )  normalStressID_ = stressID;
       }
       if( dozmom ){
-        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, turbViscTag, thisVelTag_, velTags_[2], dilTag, factory );
         if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
       }
       factory.cleave_from_children( normalStressID_   );

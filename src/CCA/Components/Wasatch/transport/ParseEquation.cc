@@ -323,6 +323,7 @@ namespace Wasatch{
   //==================================================================
 
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
+                                                                 TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver )
@@ -381,6 +382,7 @@ namespace Wasatch{
                                       xBodyForceTag,
                                       *solnGraphHelper->exprFactory,
                                       params,
+                                      turbParams,
                                       rhsID,
                                       linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);
@@ -399,6 +401,7 @@ namespace Wasatch{
                                      yBodyForceTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
+                                     turbParams,
                                      rhsID,
                                      linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);
@@ -417,6 +420,7 @@ namespace Wasatch{
                                      zBodyForceTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
+                                     turbParams,
                                      rhsID,
                                      linSolver );
       solnGraphHelper->rootIDs.insert(rhsID);

@@ -409,7 +409,19 @@
         </Z-Velocity>        
         <DoSourceTerm       spec="REQUIRED BOOLEAN"/>
     </ScalabilityTest>
-    
+
+    <!-- ======================================================================== -->
+    <!-- Spec for a turbulent viscosity in our LES modeling:                      -->
+    <!-- Here we can specify wether we want to use the constant Smagorinsky model -->
+    <!-- or the dynamic Smagorinsky model in order to obtain turbulent viscosity? -->
+    <!-- ======================================================================== -->       
+    <Turbulence              spec="OPTIONAL NO_DATA">
+      <KolmogorovScale         spec="OPTIONAL DOUBLE"/>                                   
+      <EddyViscosityConstant   spec="OPTIONAL DOUBLE"/>                               
+      <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE'">
+      </TurbulenceModel>
+    </Turbulence>
+        
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
