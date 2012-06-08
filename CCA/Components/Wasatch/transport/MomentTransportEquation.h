@@ -132,7 +132,9 @@ namespace Wasatch{
                                                   Uintah::ProblemSpecP params,
                                                   Expr::TagList& weightsTags,
                                                   Expr::TagList& abscissaeTags,
-                                                  const double momentOrder);
+                                                  const double momentOrder,
+                                                  Expr::TagList& multiEnvWeightsTags,
+                                                  const double initialMoment);
 
     /**
      *  \brief Parse the input file to get the name of this ScalarTransportEquation
