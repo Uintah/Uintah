@@ -278,7 +278,7 @@ reference "fig:wasatch-navier-stokes-graph"
 placement !t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -812,7 +812,7 @@ key "smagorinsky_general_1963"
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|
+\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|
 \]
 
 \end_inset
@@ -835,6 +835,183 @@ where
 \end_inset
 
 .
+ Also, 
+\begin_inset Formula $L_{s}$
+\end_inset
+
+ is commonly referred to as the mixing length and is a measure of the characteri
+stic mixing length of turbulent eddies.
+\end_layout
+
+\begin_layout Standard
+In Wasatch, we implement a variant of Smagorinsky's classic model.
+ To allow users to fine-tune the turbulent viscosity based on physical input,
+ we introduce a lengthscale to the calculation of the smagorinsky mixing
+ length.
+ The desired features of our model are
+\end_layout
+
+\begin_layout Itemize
+As the grid spacing 
+\begin_inset Formula $\Delta$
+\end_inset
+
+ approaches the kolmogorov scale, the turbulent viscosity should approach
+ zero since all scales are resolved.
+\end_layout
+
+\begin_layout Itemize
+As the grid spacing drifts from the kolmogorov scale, the effect of mixing
+ due to small scales becomes more pronounced and hence the turbulent viscosity
+ increases.
+\end_layout
+
+\begin_layout Itemize
+Ability to recover constant smagorinsky model when desirable.
+\end_layout
+
+\begin_layout Standard
+These features may be accomplished by setting
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+L_{s}=C_{s}\Delta\left(1-\frac{\Delta}{\eta}\right)\label{eq:wasatch-modified-smagorinsky-model}
+\end{equation}
+
+\end_inset
+
+Here, 
+\begin_inset Formula $C_{s}$
+\end_inset
+
+ is a scaling constant that is 
+\shape slanted
+not
+\shape default
+ equal to the Smagorinsky constant and 
+\begin_inset Formula $\eta$
+\end_inset
+
+ is a characteristic small scale of the problem.
+ Typically, 
+\begin_inset Formula $\eta$
+\end_inset
+
+ may be taken as the Kolmogorov scale.
+ It may be evalulated from the following scaling law
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{L}{\eta}\sim\text{Re}^{3/4}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $L$
+\end_inset
+
+ is a characteristic length of the large scale eddies and Re is the Reynolds
+ number of the flow.
+ For example, for the flow in a pipe of diameter 
+\begin_inset Formula $D$
+\end_inset
+
+, the characteristic length may be taken as 
+\begin_inset Formula $L=D$
+\end_inset
+
+ while 
+\begin_inset Formula $\text{Re}=\frac{\rho VD}{\mu}$
+\end_inset
+
+.
+ The behavior of 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-modified-smagorinsky-model"
+
+\end_inset
+
+ is shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:wasatch-modified-smagorinsky-model"
+
+\end_inset
+
+.
+ Two key regimes may be identified in this figure.
+ The first lies at 
+\begin_inset Formula $0<\eta<\Delta$
+\end_inset
+
+ (to the left of 
+\begin_inset Formula $\eta=\Delta$
+\end_inset
+
+ mark) designates the region where the mesh spacing is larger than the small
+ scales.
+ Hence, as the mesh spacing becomes larger than the small scales (i.e.
+ only very large scales are resolved), more dissipation must be added to
+ mimic the dissipation caused by the small scales.
+ The second regime lies in the region 
+\begin_inset Formula $\Delta<\eta<\infty$
+\end_inset
+
+ and is only included for mathematical completion.
+ This region indicates that the mesh size is smaller than the smallest scales
+ and is not truly part of an LES model.
+ Its inclusion, however, is necessary to recover the Smagorinsky classic
+ model as 
+\begin_inset Formula $\eta\to\infty$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement !t
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch-smagorinsky-model.pdf
+	lyxscale 50
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Behavior of the mixing length in the modified Smagorinsky model used in
+ Wasatch.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:wasatch-modified-smagorinsky-model"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
