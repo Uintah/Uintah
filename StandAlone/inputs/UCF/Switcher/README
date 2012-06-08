@@ -67,5 +67,43 @@ To pass variables over from phase 1 to phase 3 we use:
 We reuse the same ups file for phases 1 & 3.
 
 
+SwitchExample4.ups
+__________________________________
+This is identical to example 3 except adaptive mesh refinement is used.
+The grid is refined around particles and the 'tiled' regridder is being used.
+
+
+ are three phases in this example.  First the grid and mpmice
+variables are setup by running 
+
+  inputs/UCF/Switcher/ex4_phases1_3.ups
+
+After 3 timesteps are taken an implicit mpm heat transfer calculation
+begins by running the impm component with
+  
+  inputs/UCF/Switcher/ex4_phase2.ups.
+  
+The "simpleBurn" switch criteria states that if the reactant (matl 1) 
+exceeds 350K then switch to the explosion phase (mpmice) or phase 3.
+  
+  inputs/UCF/Switcher/ex4_phases1_3.ups
+  
+To pass variables over from phase 1 to phase 3 we use:
+
+    <carry_over var="press_CC" matls="0" />
+    <carry_over var="temp_CC" />
+    <carry_over var="rho_CC" />
+    <carry_over var="sp_vol_CC" />
+    <carry_over var="vel_CC" />
+    <carry_over var="NC_CCweight" />
+    <carry_over var="heatRate_CC" matls="0,1"/>
+    <carry_over var="g.temperature" />
+    
+We reuse the same ups file for phases 1 & 3.
+
+
+______________________________________________________________________
+
+
 ______________________________________________________________________
 
