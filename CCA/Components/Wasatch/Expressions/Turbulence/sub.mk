@@ -28,30 +28,9 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/Wasatch/Expressions
+SRCDIR   := CCA/Components/Wasatch/Expressions/Turbulence
 
 SRCS     +=                         \
-	$(SRCDIR)/BasicExprBuilder.cc		\
-	$(SRCDIR)/ConvectiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveVelocity.cc		\
-	$(SRCDIR)/Dilatation.cc			\
-	$(SRCDIR)/MomentumPartialRHS.cc 	\
-	$(SRCDIR)/MomentumRHS.cc 		\
-	$(SRCDIR)/MonolithicRHS.cc		\
-	$(SRCDIR)/PrimVar.cc			\
-	$(SRCDIR)/ScalarRHS.cc			\
-	$(SRCDIR)/ScalabilityTestSrc.cc		\
-	$(SRCDIR)/SetCurrentTime.cc		\
-	$(SRCDIR)/Stress.cc 			\
-	$(SRCDIR)/VelocityMagnitude.cc 		\
-	$(SRCDIR)/Vorticity.cc 			\
-	$(SRCDIR)/Pressure.cc
-
-SUBDIRS := \
-        $(SRCDIR)/MMS \
-        $(SRCDIR)/PBE \
-        $(SRCDIR)/PostProcessing \
-        $(SRCDIR)/Turbulence
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+	$(SRCDIR)/TurbulentViscosity.cc		\
+	$(SRCDIR)/StrainTensorMagnitude.cc \
+ $(SRCDIR)/TurbulenceParameters.cc

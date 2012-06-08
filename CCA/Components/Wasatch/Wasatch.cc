@@ -278,6 +278,13 @@ namespace Wasatch{
     setup_property_evaluation( wasatchParams, graphCategories_ );
 
     //
+    // get the turbulence params, if any, and parse them
+    //
+    Uintah::ProblemSpecP turbulenceModelParams = wasatchParams->findBlock("Turbulence");
+    struct TurbulenceParameters turbParams = {0.1,0.1,NONE};
+    parse_turbulence_input(turbulenceModelParams, turbParams);
+    
+    //
     // extract the density tag for scalar transport equations and momentum equations
     // and perform error handling
     //
@@ -354,7 +361,7 @@ namespace Wasatch{
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, densityTag, graphCategories_, *linSolver_);
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams, densityTag, graphCategories_, *linSolver_);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){

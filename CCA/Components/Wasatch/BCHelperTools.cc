@@ -879,7 +879,6 @@ namespace Wasatch {
               
               const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
               const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
-              std::cout << "prhs[interior] = " << pressureRHS[iInterior] << std::endl; 
               //const double ghostValue = spacing*bc_value + pressureField[iInterior];
               //pressureRHS[iInterior] += ghostValue/denom;
               pressureRHS[iInterior] += spacing*bc_value/denom;
