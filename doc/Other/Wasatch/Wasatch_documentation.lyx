@@ -3869,9 +3869,9 @@ The precipitation model utilized in Wasatch uses the implemented moment
 \end_inset
 
 with QMOM used as closure for the moments.
- The moments that require closure will changed based on the growth rate
- model that is utilized, and the closure is taken care of automatically
- in the Wasatch algorithm.
+ The moments that require closure will change based on the growth rate model
+ that is utilized, and the closure is taken care of automatically in the
+ Wasatch algorithm.
  The relavent terms dictating the reaction rate are tabulated by the extent
  of reaction and the mixture fraction.
  The main term required is the supersaturation value of the liquid.
@@ -3920,6 +3920,8 @@ Nucleation terms in Wasatch can be specifed as one of three distributions,
 \end_inset
 
 .
+ The uniform and normal distributions also require a specified standard
+ deviation for the distribution.
  The coefficient used for the birth term can either be set as constant or
  using the classical nucleation definition
 \end_layout
@@ -3953,7 +3955,7 @@ where
 \end_inset
 
  is Avogadro's constant.
- The Wasatch forumaltion also includes a 
+ The Wasatch formulation also includes a 
 \begin_inset Quotes eld
 \end_inset
 
@@ -3974,10 +3976,26 @@ Growth Models
 \end_layout
 
 \begin_layout Standard
-Currently Wasatch has three grwoth models implemented, constant growth,
+Currently Wasatch has three growth models implemented; constant growth,
  bulk diffusion and monosurface nucleation.
- Each of these models has different moments which need closure, as none,
- 
+ Each model uses a different form of 
+\begin_inset Formula $g(r)$
+\end_inset
+
+ with 
+\begin_inset Formula $g(r)=g_{0}$
+\end_inset
+
+, 
+\begin_inset Formula $g(r)=g_{0}\frac{1}{r}$
+\end_inset
+
+, and 
+\begin_inset Formula $g(r)=g_{0}r^{2}$
+\end_inset
+
+, respectively, as well as a different requirement for the closure of the
+ moment transport equations as: none, 
 \begin_inset Formula $m_{-2}$
 \end_inset
 
@@ -3989,7 +4007,7 @@ Currently Wasatch has three grwoth models implemented, constant growth,
 \begin_inset Formula $m_{k+1}$
 \end_inset
 
-, respectively.
+.
  The bulk diffusion model uses the appropriate coefficient as
 \end_layout
 
@@ -4024,7 +4042,14 @@ with
 
 \end_inset
 
-for monosurface nucleation the growth coefficient is 
+For Ostwald ripening, the 
+\begin_inset Formula $r$
+\end_inset
+
+ appearing in the exponential does not allow for this term to be converted
+ into a moment of the problem, therefore the quadrature weights and abscissae
+ are used to evaluate the Ostwald ripening term.
+ For monosurface nucleation the growth coefficient is 
 \end_layout
 
 \begin_layout Standard
@@ -4055,7 +4080,7 @@ where
 \begin_inset Formula $d$
 \end_inset
 
- is the molecualr diameter.
+ is the molecular diameter.
  As with the birth models, a 
 \begin_inset Quotes eld
 \end_inset
@@ -4065,6 +4090,163 @@ pre-Growth coeffcient
 \end_inset
 
  can be used for unit conversions.
+\end_layout
+
+\begin_layout Subsection
+Multi Environment Mixing Model
+\end_layout
+
+\begin_layout Standard
+Wasatch has a subgrid scale model for mixing for the precipitation flows.
+ Since the source terms of the moment transport equations are highly dependent
+ on the current value of the moments, which are solved on the slow scale,
+ a tabulation of data for use in a continuous PDF (i.e.
+ such as a flamelet) is not a viable option.
+ Instead a discrete PDF is used consisting of three delta functions, one
+ at mixture fraction 
+\begin_inset Formula $z=0$
+\end_inset
+
+, one at mixture fraction 
+\begin_inset Formula $z=1$
+\end_inset
+
+, and the third at the average mixture fraction.
+ In precipitation flows, no reaction occurs at either mixture fraction 0
+ or 1, so only the source terms from the central delta function need to
+ be solved.
+\end_layout
+
+\begin_layout Standard
+Wasatch requires the averaged mixture fraction and the scalar variance to
+ be solved on the grid.
+ Then the weights of the three delta functions are calculated as 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+w_{1}=\frac{\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle }
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+w_{2}=\frac{\left\langle z'^{2}\right\rangle -\left\langle z\right\rangle +\left\langle z\right\rangle ^{2}}{\left\langle z\right\rangle ^{2}-\left\langle z\right\rangle }
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+w_{3}=\frac{-\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle -1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\left\langle z\right\rangle $
+\end_inset
+
+ is the average mixture fraction, and 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\left\langle z'^{2}\right\rangle $
+\end_inset
+
+ is the scalar variance.
+\end_layout
+
+\begin_layout Standard
+When the Multi Environment Model is enabled, the moment equations are only
+ solved for the second environment with the moments from environments 1
+ and 3 held constant.
+ The averaged moments are then post-processed based on the values of the
+ environment weights.
+ In addition the transport of the second environment requires a new source
+ term to account for the change in the moments due to mixing.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+S_{\phi_{\alpha,2},\; mix}=-\frac{dw_{1}/dt}{w_{2}}\left(\phi_{\alpha,1}-\phi_{\alpha,2}\right)-\frac{dw_{3}/dt}{w_{2}}\left(\phi_{\alpha,3}-\phi_{\alpha,2}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\phi_{\alpha,i}$
+\end_inset
+
+ represents the 
+\begin_inset Formula $\alpha$
+\end_inset
+
+th precipitate moment located in the 
+\begin_inset Formula $i$
+\end_inset
+
+th mixing environment.
+ With the time derivatives of the weights of the mixing environments calculated
+ as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dw_{1}}{dt}=\frac{-\left\langle \epsilon_{\phi}\right\rangle }{\left\langle z\right\rangle }
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dw_{3}}{dt}=\frac{-\left\langle \epsilon_{\phi}\right\rangle }{1-\left\langle z\right\rangle }
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\left\langle \epsilon_{\phi}\right\rangle $
+\end_inset
+
+ is the scalar dissipation rate.
 \end_layout
 
 \begin_layout Chapter
