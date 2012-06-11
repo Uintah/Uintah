@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include "SCGMeltTemp.h"
 #include "BPSMeltTemp.h"
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>
@@ -46,7 +47,7 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("melting_temp_model");
    if(!child) {
-      cerr << "**WARNING** Creating default (constant melting temperature) model" << endl;
+      proc0cout << "**WARNING** Creating default (constant melting temperature) model" << endl;
       return(scinew ConstantMeltTemp());
       //throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.", __FILE__, __LINE__);
    }
@@ -63,7 +64,7 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "bps_Tm")
       return(scinew BPSMeltTemp(child));
    else {
-      cerr << "**WARNING** Creating default (constant melting temperature) model" << endl;
+      proc0cout << "**WARNING** Creating default (constant melting temperature) model" << endl;
       return(scinew ConstantMeltTemp(child));
       //throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
       //                            __FILE__, __LINE__);
@@ -82,7 +83,7 @@ MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
    else if (dynamic_cast<const BPSMeltTemp*>(mtm))
       return(scinew BPSMeltTemp(dynamic_cast<const BPSMeltTemp*>(mtm)));
    else {
-      cerr << "**WARNING** Creating copy of default (constant melting temperature) model" << endl;
+      proc0cout << "**WARNING** Creating copy of default (constant melting temperature) model" << endl;
       return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
       //throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
    }
