@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include "PTWShear.h"
 #include "NPShear.h"
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>
@@ -49,7 +50,7 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("shear_modulus_model");
    if(!child) {
-      cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
+      proc0cout << "**WARNING** Creating default (constant shear modulus) model" << endl;
       return(scinew ConstantShear());
       //throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find shear modulus model.",
       //                            __FILE__, __LINE__);
@@ -70,7 +71,7 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "np_shear")
       return(scinew NPShear(child));
    else {
-      cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
+      proc0cout << "**WARNING** Creating default (constant shear modulus) model" << endl;
       return(scinew ConstantShear(child));
       //throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")",
       //                            __FILE__, __LINE__);
@@ -91,7 +92,7 @@ ShearModulusModelFactory::createCopy(const ShearModulusModel* smm)
    else if (dynamic_cast<const NPShear*>(smm))
       return(scinew NPShear(dynamic_cast<const NPShear*>(smm)));
    else {
-      cerr << "**WARNING** Creating copy of default (constant shear modulus) model" << endl;
+      proc0cout << "**WARNING** Creating copy of default (constant shear modulus) model" << endl;
       return(scinew ConstantShear(dynamic_cast<const ConstantShear*>(smm)));
       //throw ProblemSetupException("Cannot create copy of unknown shear modulus model",
       //                            __FILE__, __LINE__);

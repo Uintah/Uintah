@@ -310,7 +310,7 @@ void UCNH::getYieldStressDistribution(ProblemSpecP& ps)
   //"constant", "uniform", "weibull" or "gauss" not implemented
   if (d_yield.dist == "uniform") {
     ps->require("yield_range", d_yield.range);
-    ps->getWithDefault("yield_seed", d_yield.seed, 0.0);
+    ps->getWithDefault("yield_seed", d_yield.seed, 0);
   }
 }
 
