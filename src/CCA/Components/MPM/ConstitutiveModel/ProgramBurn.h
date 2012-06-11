@@ -100,6 +100,10 @@ namespace Uintah {
     // clone
     ProgramBurn* clone();
 
+    virtual void addRequiresDamageParameter(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
+
     virtual void getDamageParameter(const Patch* patch, 
                                     ParticleVariable<int>& damage, int dwi,
                                     DataWarehouse* old_dw,

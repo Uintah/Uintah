@@ -141,7 +141,8 @@ void P_Alpha::addInitialComputesAndRequires(Task* task,
                                          const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(alphaMinLabel,matlset);
+  task->computes(alphaMinLabel,  matlset);
+  task->computes(tempAlpha1Label,matlset);
 }
 
 void P_Alpha::initializeCMData(const Patch* patch,
@@ -155,8 +156,8 @@ void P_Alpha::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double>      alpha_min;
-  new_dw->allocateAndPut(alpha_min, alphaMinLabel, pset);
   ParticleVariable<double>      tAlpha1;
+  new_dw->allocateAndPut(alpha_min, alphaMinLabel, pset);
   new_dw->allocateAndPut(tAlpha1, tempAlpha1Label, pset);
 
   double rhoS = d_initialData.rhoS;
