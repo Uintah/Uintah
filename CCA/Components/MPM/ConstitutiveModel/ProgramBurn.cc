@@ -610,6 +610,14 @@ void ProgramBurn::addInitialComputesAndRequires(Task* task,
   task->computes(pLocalizedLabel,       matlset);
 }
 
+void ProgramBurn::addRequiresDamageParameter(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet* ) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+}
+
 void ProgramBurn::getDamageParameter(const Patch* patch,
                                    ParticleVariable<int>& damage,
                                    int dwi,
