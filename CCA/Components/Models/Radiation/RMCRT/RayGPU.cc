@@ -114,10 +114,11 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
     dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
 
+    // block dimensions (threads per block)
     int tpbX = 8;
     int tpbY = 8;
     int tpbZ = 1;
-    dim3 dimBlock(tpbX, tpbY, tpbZ); // block dimensions (threads per block)
+    dim3 dimBlock(tpbX, tpbY, tpbZ);
 
     // setup random number generator states on the device, 1 for each thread
     curandState* globalDevStates;
@@ -135,7 +136,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     // launch the kernel
     cuErrVal = cuLaunchKernel(rayTraceKernel, dimGrid.x, dimGrid.y, dimGrid.z,
                               dimBlock.x, dimBlock.y, dimBlock.z, 0, *stream, kernelParms, 0);
-
 
     // get updated divQ back into host memory
     cudaEvent_t* event = _gpuScheduler->getCudaEvent(device);
