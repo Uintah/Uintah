@@ -312,7 +312,6 @@ NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@
 ifeq ($(IS_WIN),yes)
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
   LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
-  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
   PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
 else
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
@@ -325,6 +324,7 @@ FFLAGS		:= @FFLAGS@ $(FFLAGS)
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 OBJEXT := @OBJEXT@
+NVCCEXT := @NVCCEXT@
 
 ################################################################
 # Auto dependency generation flags
@@ -464,9 +464,11 @@ endif
 
 .cu.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@-rm -f $@
+	@-rm -f $(basename $@).$(NVCCEXT)
+	@-rm -f $(basename $@).$(OBJEXT)
 else
-	-rm -f $@
+	-rm -f $(basename $@).$(NVCCEXT)
+	-rm -f $(basename $@).$(OBJEXT)
 endif
 #
 # .d - most likely gcc... have to explicitly put it in a .d file.
@@ -482,10 +484,12 @@ ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	@$(NVCC) -ptx $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	$(NVCC) -ptx $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 endif
 
 .cpp.$(OBJEXT): $<

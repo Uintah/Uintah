@@ -35,12 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Disclosure/TypeDescription.h>
 
-#include <sci_defs/cuda_defs.h>
-
-#ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
-#endif
-
 namespace Uintah {
 
 
@@ -66,20 +60,6 @@ namespace Uintah {
                                      const int&  indx,
                                      const bool& bulletProof_test,
                                      DataWarehouse* new_dw);
-
-#ifdef HAVE_CUDA
-    virtual void inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
-                                        const VarLabel* vvel_FCMELabel,
-                                        const VarLabel* wvel_FCMELabel,
-                                        const double& delT,
-                                        const Patch* patch,
-                                        const int& indx,
-                                        const bool& bulletProofing_test,
-                                        DataWarehouse* new_dw,
-                                        const int& device,
-                                        GPUThreadedMPIScheduler* sched);
-
-#endif
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,

@@ -30,6 +30,8 @@
 #ifndef RAY_GPU_CUH
 #define RAY_GPU_CUH
 
+#include <sci_defs/cuda_defs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

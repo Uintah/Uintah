@@ -2,7 +2,7 @@
 
  The MIT License
 
- Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and
+ Copyright (c) 1997-2012 Center for the Simulation of Accidental Fires and
  Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
  University of Utah.
 
@@ -47,13 +47,17 @@
 using namespace std;
 using namespace Uintah;
 
+//______________________________________________________________________
+//
 PoissonGPU1::PoissonGPU1(const ProcessorGroup* myworld) : UintahParallelComponent(myworld) {
 
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
-
+//______________________________________________________________________
+//
 PoissonGPU1::~PoissonGPU1() {
+
   VarLabel::destroy(phi_label);
   VarLabel::destroy(residual_label);
 }
@@ -68,15 +72,13 @@ void PoissonGPU1::problemSetup(const ProblemSpecP& params,
 
   poisson->require("delt", delt_);
 
-  mymat_ = scinew
-  SimpleMaterial();
-
+  mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
-void PoissonGPU1::scheduleInitialize(const LevelP& level,
-                                     SchedulerP& sched) {
+void PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
+                                    
   Task * task = scinew Task("PoissonGPU1::initialize", this, &PoissonGPU1::initialize);
 
   task->computes(phi_label);
@@ -85,8 +87,8 @@ void PoissonGPU1::scheduleInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
-                                                SchedulerP& sched) {
+void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
+                                               
   Task * task = scinew Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
@@ -95,8 +97,8 @@ void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void PoissonGPU1::scheduleTimeAdvance(const LevelP& level,
-                                      SchedulerP& sched) {
+void PoissonGPU1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched) {
+
   Task * task = scinew Task("PoissonGPU1::timeAdvanceGPU", this, &PoissonGPU1::timeAdvanceGPU);
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
@@ -115,8 +117,9 @@ void PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
   if (pg->myrank() == 0) {
     sum_vartype residual;
     new_dw->get(residual, residual_label);
-    cerr << "Residual=" << residual << '\n';
+    cerr << "Residual=" << residual << endl;
   }
+
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
 }
 //______________________________________________________________________
@@ -268,7 +271,7 @@ void PoissonGPU1::timeAdvance1DP(const ProcessorGroup*,
           int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
 
           newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
-              + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
+                                      + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
 
           double diff = newphi_data[idx] - phi_data[idx];
           residual += diff * diff;
@@ -346,58 +349,6 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-// @brief A kernel that applies the stencil used in timeAdvance(...)
-// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
-// @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
-// @param domainSize a three component vector that gives the size of the domain including ghost nodes
-// @param ghostLayers the number of layers of ghost cells
-// @param phi pointer to the source phi allocated on the device
-// @param newphi pointer to the sink phi allocated on the device
-// @param residual the residual calculated by this individual kernel
-__global__ void timeAdvanceKernel(uint3 domainLow,
-                                  uint3 domainHigh,
-                                  uint3 domainSize,
-                                  int ghostLayers,
-                                  double *phi,
-                                  double *newphi,
-                                  double *residual) {
-  // calculate the thread indices
-  int i = blockDim.x * blockIdx.x + threadIdx.x;
-  int j = blockDim.y * blockIdx.y + threadIdx.y;
-  
-  // Get the size of the data block in which the variables reside.
-  //  This is essentially the stride in the index calculations.
-  int dx = domainSize.x;
-  int dy = domainSize.y;
-
-  // If the threads are within the bounds of the ghost layers
-  //  the algorithm is allowed to stream along the z direction
-  //  applying the stencil to a line of cells.  The z direction
-  //  is streamed because it allows access of x and y elements
-  //  that are close to one another which should allow coalesced 
-  //  memory accesses.
-  if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
-    for (int k = domainLow.z; k < domainHigh.z; k++) {
-      // For an array of [ A ][ B ][ C ], we can index it thus:
-      // (a * B * C) + (b * C) + (c * 1)
-      int idx = INDEX3D(dx,dy,i,j,k);
-
-      newphi[idx] = (1. / 6) 
-                  * (phi[INDEX3D(dx,dy, (i-1), j, k)] 
-                   + phi[INDEX3D(dx,dy, (i+1), j, k)]
-                   + phi[INDEX3D(dx,dy, i, (j-1), k)]
-                   + phi[INDEX3D(dx,dy, i, (j+1), k)]
-                   + phi[INDEX3D(dx,dy, i, j, (k-1))] 
-                   + phi[INDEX3D(dx,dy, i, j, (k+1))]);
-
-      // Still need a way to compute the residual as a reduction
-      //  variable here.
-    }
-  }
-}
-
-//______________________________________________________________________
-//
 void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
@@ -405,18 +356,27 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
                                  DataWarehouse* new_dw) {
 
   int matl = 0;
-  int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations
+  int previousPatchSize = 0; // this is to see if we need to reallocate between computations
   int size = 0;
   int ghostLayers = 1;
 
-  // Device and host memor pointersy
+  // Device and host memory pointers
   double* phi_host;
   double* phi_device;
   double* newphi_host;
   double* newphi_device;
+  double* residual_host;
+  double* residual_device;
 
-  // Find the "best" device for cudaSetDevice() or in other words the device with 
-  //  the highes number of processors.
+  // setup for driver API kernel launch
+  CUresult   cuErrVal;
+  CUmodule   cuModule;
+  CUfunction poissonGPU1Kernel;
+
+  // initialize the driver API
+  CUDA_DRV_SAFE_CALL( cuErrVal = cuInit(0) );
+
+  // Use the device with the highest number of multiprocessors (default is device(0))
   int num_devices, device;
   cudaGetDeviceCount(&num_devices);
   if (num_devices > 1) {
@@ -439,14 +399,14 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     constNCVariable<double> phi;
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
 
+    // newphi will be the result after each timestep
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-    double residual = 0;
+    // Calculate the memory block size
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    // Calculate the memory block size
     IntVector s = phi.getWindow()->getData()->size();
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
     size = xdim * ydim * zdim * sizeof(double);
@@ -458,8 +418,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
         patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
         patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    // Check if we need to reallocate due to a change in the 
-    //  size of this patch from the previous patch.
+    // Check if we need to reallocate due to a change in patch size 
     if (size != previousPatchSize) {
       if (previousPatchSize != 0) {
         cudaFree(phi_device);
@@ -469,63 +428,68 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
       cudaMalloc(&newphi_device, size);
     }
 
-    //___________________________________________
-    //  Host->Device Memory Allocation and copy
+    //  host->device memcopy
     phi_host    = (double*)phi.getWindow()->getData()->getPointer();
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+    CUDA_RT_SAFE_CALL( cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice) );
+    CUDA_RT_SAFE_CALL( cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice) );
 
-    CUDA_RT_SAFE_CALL(cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice));
-    CUDA_RT_SAFE_CALL(cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice));
+    *residual_host = 0;
+    unsigned int flags = cudaHostAllocMapped;
+    size_t bytes = 1 * sizeof(double);
+    CUDA_RT_SAFE_CALL( cudaHostAlloc((void**)&residual_host, bytes, flags) );
+    CUDA_RT_SAFE_CALL( cudaHostGetDevicePointer((void**)&residual_device, (void*)residual_host, 0) );
 
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow  = make_uint3(l.x(), l.y(), l.z());
     uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
     uint3 domainSize = make_uint3(s.x(), s.y(), s.z());
 
-    // Threads per block must be power of 2 in each direction.  Here
+    // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
+    int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
+    int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
+    dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
+
+    // block dimensions must be power of 2 in each direction.  Here
     //  8 is chosen as a test value in the x and y and 1 in the z,
     //  as each of these (x,y) threads streams through the z direction.
-    dim3 threadsPerBlock(8, 8, 1);
+    dim3 dimBlock(8, 8, 1); // block dimensions (threads per block)
 
-    // Set up the number of blocks of threads in each direction accounting for any
-    //  non-power of 8 end pieces.
-    int xBlocks = xdim / 8;
-    if( xdim % 8 != 0)
-    {
-      xBlocks++;
-    }
-    int yBlocks = ydim / 8;
-    if( ydim % 8 != 0)
-    {
-      yBlocks++;
-    }
-    dim3 totalBlocks(xBlocks,yBlocks);
-
-
-    // Launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, domainSize, ghostLayers, phi_device, newphi_device, &residual);
+    // Setup kernel parameters and launch via driver API
+    void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &ghostLayers, &phi_device, &newphi_device, &residual_device };
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, "/home/alan/uintah/trunk/dbg/CCA/Components/Examples/PoissonGPU1Kernel.ptx") );
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&poissonGPU1Kernel, cuModule, "poissonGPU1Kernel") );
+    cuErrVal =  cuLaunchKernel(poissonGPU1Kernel,
+                               dimGrid.x,
+                               dimGrid.y,
+                               dimGrid.z,
+                               dimBlock.x,
+                               dimBlock.y,
+                               dimBlock.z,
+                               sizeof(double),
+                               NULL,
+                               kernelParms,
+                               0);
 
     // Kernel error checking
-    cudaError_t error = cudaGetLastError();
+    cudaError_t error = cudaPeekAtLastError();
     if(error!=cudaSuccess) {
       fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
       exit(-1);
     } 
 
+    // device->host memcopy
+    CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_RT_SAFE_CALL( cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost) );
 
-
-    //__________________________________
-    //  Device->Host Memory Copy
-    CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
-    CUDA_RT_SAFE_CALL(cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost));
-
-    new_dw->put(sum_vartype(residual), residual_label);
+    new_dw->put(sum_vartype(*residual_host), residual_label);
 
   } // end patch for loop
 
   // free up allocated memory
-  CUDA_RT_SAFE_CALL(cudaFree(phi_device));
-  CUDA_RT_SAFE_CALL(cudaFree(newphi_device));
-
+  CUDA_RT_SAFE_CALL( cudaFree(phi_device) );
+  CUDA_RT_SAFE_CALL( cudaFree(newphi_device) );
+  CUDA_RT_SAFE_CALL( cudaFreeHost(residual_host) );
   
 }
+

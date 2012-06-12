@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2012 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #ifndef Packages_Uintah_CCA_Components_Examples_GPUSchedulerTest_h
 #define Packages_Uintah_CCA_Components_Examples_GPUSchedulerTest_h
 
@@ -36,19 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-__global__ void timeAdvanceTestKernel(uint3 domainLow,
-                                      uint3 domainHigh,
-                                      uint3 domainSize,
-                                      int ghostLayers,
-                                      double *phi,
-                                      double *newphi);
-#ifdef __cplusplus
-}
-#endif
 
 namespace Uintah {
 
@@ -65,21 +51,24 @@ GENERAL INFORMATION
 
    GPUSchedulerTest.h
 
-   Alan Humphrey, after Steven G. Parker
+   Alan Humphrey
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2011 SCI Group
+   Copyright (C) 2012 SCI Group
 
 KEYWORDS
    GPUSchedulerTestComponent, GPU Scheduler
 
 DESCRIPTION
-   A simple material Poisson simulation used to test scheduling of GPU tasks.
-  
+   A simple material Poisson simulation used to test scheduling of GPU tasks
+   via the GPUThreadedMPIScheduler.
 
+Warning
+   None
+  
 ****************************************/
 
   class GPUSchedulerTest : public UintahParallelComponent, public SimulationInterface {
@@ -102,11 +91,11 @@ DESCRIPTION
 
 
   private:
-    SimulationStateP sharedState_;
-    double           delt_;
-    SimpleMaterial*  simpleMaterial_;
-    const VarLabel*  phi_label;
-    const VarLabel*  residual_label;
+    SimulationStateP  sharedState_;
+    double            delt_;
+    SimpleMaterial*   simpleMaterial_;
+    const VarLabel*   phi_label;
+    const VarLabel*   residual_label;
 
     void initialize(const ProcessorGroup* pg,
 		                const PatchSubset* patches,

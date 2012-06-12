@@ -49,19 +49,19 @@ extern "C" {
 #  include <stdio.h>
 
 // Error handling wrapper for CUDA RUNTIME API calls (no-sync)
-#  define CUDA_RT_SAFE_CALL( call ) {                                  \
-    cudaError err = call;                                                    \
-    if(err != cudaSuccess) {                                                  \
-        fprintf(stderr, "CUDA error in file '%s', on line %i : %s.\n",         \
-                __FILE__, __LINE__, cudaGetErrorString( err) );                \
+#  define CUDA_RT_SAFE_CALL( call ) {                                          \
+    cudaError err = call;                                                      \
+    if(err != cudaSuccess) {                                                   \
+        fprintf(stderr, "\nCUDA error %i in file '%s', on line %i : %s.\n\n",  \
+                err, __FILE__, __LINE__, cudaGetErrorString( err) );           \
         exit(EXIT_FAILURE);                                                    \
     } }
 
 // Error handling wrapper for CUDA Driver API calls (no-sync)
-#  define CUDA_DR_SAFE_CALL( call ) {                                  \
+#  define CUDA_DRV_SAFE_CALL( call ) {                                         \
     CUresult err = call;                                                       \
-    if(err != CUDA_SUCCESS) {                                                 \
-        fprintf(stderr, "CUDA driver error %x in file '%s' on line %i.\n",     \
+    if(err != CUDA_SUCCESS) {                                                  \
+        fprintf(stderr, "\nCUDA driver error %i in file '%s' on line %i.\n\n", \
                 err, __FILE__, __LINE__ );                                     \
         exit(EXIT_FAILURE);                                                    \
     } }

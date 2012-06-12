@@ -32,7 +32,8 @@ SRCDIR   := CCA/Components/Models/Radiation/RMCRT
 SRCS += $(SRCDIR)/Ray.cc
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/RayGPU.cu
+  SRCS += $(SRCDIR)/RayGPUKernel.cu \
+          $(SRCDIR)/RayGPU.cc
   LIBS :=  $(CUDA_LIBRARY)
 endif
 
