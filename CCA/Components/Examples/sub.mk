@@ -38,7 +38,6 @@ SRCS     += \
         $(SRCDIR)/AMRWave.cc           \
         $(SRCDIR)/Wave.cc              \
         $(SRCDIR)/Poisson1.cc          \
-				$(SRCDIR)/PoissonGPU1.cc       \
         $(SRCDIR)/Poisson2.cc          \
         $(SRCDIR)/Poisson3.cc          \
         $(SRCDIR)/Poisson4.cc          \
@@ -51,14 +50,15 @@ SRCS     += \
         $(SRCDIR)/SolverTest1.cc       \
         $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/Benchmark.cc         \
-        $(SRCDIR)/GPUSchedulerTest.cc        
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       
 endif
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/PoissonGPU1Kernel.cu     \
+  SRCS += $(SRCDIR)/PoissonGPU1.cc            \
+          $(SRCDIR)/PoissonGPU1Kernel.cu      \
+          $(SRCDIR)/GPUSchedulerTest.cc       \
           $(SRCDIR)/GPUSchedulerTestKernel.cu
 endif
 
