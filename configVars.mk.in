@@ -474,22 +474,32 @@ endif
 # .d - most likely gcc... have to explicitly put it in a .d file.
 #
 # -M outputs to stdout(err?) dependency info.
-# Prepend that file to replace filename.o with:
-#     <path_to_file>/filename.o.
-# Note: For the CUDA compiler (nvcc), it is necessary to generate
-#       dependencies after the compilation phase.
+# Prepend that file to replace filename.o with: <path_to_file>/filename.o.
+#
+# Notes: 1.) For the CUDA compiler (nvcc), it is necessary to generate .o, .d and .ptx
+#            in separate compilation phases, e.g. nvcc must be called once for each
+#            generated output file, hence multiple compile lines. This will only be for
+#            .cu files, which in the context of Uintah, strictly contain kernels and
+#            other associated device functions.
+#        2.) First compile line is the Compilation phase to be used in dep. generation
+#        3.) Second compile line is the actual dependency generation
+#        4.) Third compile line generates device-only PTX (Nvidia bytecode)
+#            code used in explicitly registering PTX modules via the CUDA
+#            Driver API for kernel (grid) launches. This step discards host
+#            code for each .cu input file.
+#
 #
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	@$(NVCC) -ptx $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	@$(NVCC) -ptx -Xcompiler -fno-strict-aliasing $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	$(NVCC) -ptx $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	$(NVCC) -ptx -Xcompiler -fno-strict-aliasing $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 endif
 
 .cpp.$(OBJEXT): $<
