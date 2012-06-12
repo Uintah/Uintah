@@ -4113,6 +4113,7 @@ if test "$sci_required_cuda" = "yes"; then
   HAVE_CUDA_H=""
   INC_CUDA_H=""
   CUDA_LIB_DIR=""
+  NVCCEXT=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -4129,30 +4130,6 @@ if test "$sci_required_cuda" = "yes"; then
 # code to compile and test various system GPU/CUDA properties
 # (these files, etc are deleted after tests)
 #------------------------------------------------------------------------------
-# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
-# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
-  cat > type_traits_test.cu << EOF
-#include <tr1/type_traits>
-int main(void)
-{
-      return 0;
-}
-EOF
-
-  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
-                             NVCC tr1/type_traits header compatibility,
-                             cuda.h,
-                             $_cuda_inc,
-                             cudart,
-                             $_cuda_lib,
-                             ,
-                             type_traits_test.cu,
-                             optional,
-                             no)
-
-rm -rf type_traits_test*
-
-
 # test CUDA and CUDA_SDK libraries and headers
   cat > cuda_conf_test.cu << EOF
 #include <stdlib.h>
@@ -4169,16 +4146,16 @@ __global__ void vectorAddGPU(float *a, float *results, int N) {
 int main(int argc, char **argv) {
 
 	int N = 512;
-    float *a = (float *)malloc(N * sizeof(float));
-    float *results = (float *)malloc(N * sizeof(float));
+  float *a = (float *)malloc(N * sizeof(float));
+  float *results = (float *)malloc(N * sizeof(float));
 	float *dev_a, *dev_results;
 	int memsize = N * sizeof(float);
 
 	for (int i = 0; i < N; i++) {
-	    *(a+i) = i;
+	  *(a+i) = i;
 		printf("a:%d = %f\n", i, *(a+i));
 	}
-
+	
 	cudaMalloc((void**)&dev_a, memsize);
 	cudaMalloc((void**)&dev_results, memsize);
 	cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice);
@@ -4192,12 +4169,12 @@ int main(int argc, char **argv) {
 		printf("a:%d = %f\n", i, *(results+i));
 	}
 
-    cudaFree(dev_a);
-    cudaFree(dev_results);
-    free(a);
-    free(results);
+  cudaFree(dev_a);
+  cudaFree(dev_results);
+  free(a);
+  free(results);
 
-	cudaThreadExit();
+	cudaDeviceReset();
 
 	return 1;
 }
@@ -4207,7 +4184,7 @@ EOF
                              CUDA libraries and headers,
                              cuda.h,
                              $_cuda_inc,
-                             cudart,
+                             cudart cuda,
                              $_cuda_lib,
                              ,
                              cuda_conf_test.cu,
@@ -4229,13 +4206,12 @@ echo
 #echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
 #echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
 #echo "NVCC_LIBS         = " $NVCC_LIBS
-#echo
-#echo "CC       = " $CC
-#echo "NVCC     = " $NVCC
-#echo "LIBS     = " $LIBS
-#echo "LDFLAGS  = " $LDFLAGS
-#echo "CFLAGS   = " $CFLAGS
-#echo "CXXFLAGS = " $CXXFLAGS
+#echo "CC                = " $CC
+#echo "NVCC              = " $NVCC
+#echo "LIBS              = " $LIBS
+#echo "LDFLAGS           = " $LDFLAGS
+#echo "CFLAGS            = " $CFLAGS
+#echo "CXXFLAGS          = " $CXXFLAGS
 #echo
 
 fi #end sci_required_cuda
@@ -4249,6 +4225,7 @@ AC_SUBST(CUDA_LIB_FLAG)
 AC_SUBST(NVCC_CFLAGS)
 AC_SUBST(NVCC_CXXFLAGS)
 AC_SUBST(NVCC_LIBS)
+AC_SUBST(NVCCEXT)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 

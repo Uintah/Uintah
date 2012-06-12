@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-201s0 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2012 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -58,42 +58,52 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2011 SCI Group
+   Copyright (C) 2012 SCI Group
 
 KEYWORDS
    PoissonGPU1
 
 DESCRIPTION
-   Long description...
+   A GPU version of the single material Poisson1 problem. This
+   does not use GPU task scheduling provided by the GPUThreadedMPIScheduler,
+   but simply embeds the setup and invocation of the timeAdvance() kernel
+   within a CPU task. This is the original proof-of-concept example for
+   Uintah's GPU scheduler.
   
 WARNING
+   None
   
 ****************************************/
 
   class PoissonGPU1 : public UintahParallelComponent, public SimulationInterface {
+
   public:
     PoissonGPU1(const ProcessorGroup* myworld);
+
     virtual ~PoissonGPU1();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
-    virtual void scheduleInitialize(const LevelP& level,
-                                    SchedulerP& sched);
+
+    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched);
                                     
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                               SchedulerP&);
+    virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
                                                
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-                                      SchedulerP&);
+    virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
   private:
+    SimulationStateP  sharedState_;
+    double            delt_;
+    SimpleMaterial*   mymat_;
+    const VarLabel*   phi_label;
+    const VarLabel*   residual_label;
+
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, 
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, 
                     DataWarehouse* new_dw);
-                    
                     
     void computeStableTimestep(const ProcessorGroup*,
                                const PatchSubset* patches,
@@ -125,14 +135,8 @@ WARNING
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);
 
-                     
-    SimulationStateP sharedState_;
-    double delt_;
-    SimpleMaterial* mymat_;
-    const VarLabel* phi_label;
-    const VarLabel* residual_label;
-
     PoissonGPU1(const PoissonGPU1&);
+
     PoissonGPU1& operator=(const PoissonGPU1&);
 	 
   };

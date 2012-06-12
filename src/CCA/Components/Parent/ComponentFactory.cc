@@ -63,8 +63,6 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Examples/GPUSchedulerTest.h>
-#include <CCA/Components/Examples/AdvectSlabs.h>
-//#include <CCA/Components/Examples/AdvectSlabsGPU.h>
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
@@ -189,14 +187,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
-  } 
-#ifdef HAVE_CUDA
-  if (sim_comp == "advectslabs" || sim_comp == "ADVECTSLABS") {
-    return scinew AdvectSlabs(world);
   }
-//  if (sim_comp == "advectslabsgpu" || sim_comp == "ADVECTSLABSGPU") {
-//    return scinew AdvectSlabsGPU(world);
-//  }
+
+#ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
     return scinew PoissonGPU1(world);
   }
@@ -204,6 +197,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew GPUSchedulerTest(world);
   }
 #endif
+
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
   } 

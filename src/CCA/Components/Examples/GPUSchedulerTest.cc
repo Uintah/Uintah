@@ -2,7 +2,7 @@
 
  The MIT License
 
- Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
+ Copyright (c) 1997-2012 Center for the Simulation of Accidental Fires and
  Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
  University of Utah.
 
@@ -26,6 +26,7 @@
  DEALINGS IN THE SOFTWARE.
 
  */
+
 
 #include <CCA/Components/Examples/GPUSchedulerTest.h>
 #include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
@@ -284,10 +285,10 @@ void GPUSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void GPUSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw) {
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw) {
 
   int matl = 0;
   int ghostLayers = 1;
@@ -357,27 +358,34 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* new_dw,
                                       int device) {
 
-  // set the CUDA context
-  cudaError_t retVal;
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device) );
+  // setup for driver API kernel launch
+  CUresult   cuErrVal;
+  CUmodule   cuModule;
+  CUfunction gpuSchedulerTestKernel;
+
+  // initialize the driver API
+  CUDA_DRV_SAFE_CALL( cuErrVal = cuInit(0) )
+
+  // set the CUDA device and context
+  CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
   // get a handle on the GPU scheduler to query for device and host pointers, etc
   GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
 
   // Do time steps
   int NGC = 1;
-  int numPatches = patches->size();
   int matl = 0;
 
   // requisite pointers
   double* d_phi = NULL;
   double* d_newphi = NULL;
 
+  int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     double residual = 0;
 
-    d_phi = sched->getDeviceRequiresPtr(phi_label, matl, patch);
+    d_phi    = sched->getDeviceRequiresPtr(phi_label, matl, patch);
     d_newphi = sched->getDeviceComputesPtr(phi_label, matl, patch);
 
     // Calculate the memory block size
@@ -393,33 +401,30 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor ? 0 : 1);
 
-
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
     uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
     uint3 domainSize = make_uint3(s.x(), s.y(), s.z());
 
-    // Threads per block must be power of 2 in each direction.  Here
-    //  8 is chosen as a test value in the x and y and 1 in the z,
-    //  as each of these (x,y) threads streams through the z direction.
-    dim3 threadsPerBlock(8, 8, 1);
+    // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
+    int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
+    int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
+    dim3 gridDim(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
 
-    // Set up the number of blocks of threads in each direction accounting for any
-    //  non-power of 8 end pieces.
-    int xBlocks = xdim / 8;
-    if (xdim % 8 != 0) { xBlocks++; }
-    int yBlocks = ydim / 8;
-    if (ydim % 8 != 0) { yBlocks++; }
-    dim3 totalBlocks(xBlocks, yBlocks);
+    int tpbX = 8;
+    int tpbY = 8;
+    int tpbZ = 1;
+    dim3 dimBlock(tpbX, tpbY, tpbZ); // block dimensions (threads per block)
 
     // setup and launch kernel
+    void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &NGC, &d_phi, &d_newphi };
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, "CCA/Components/Examples/GPUSchedulerTestKernel.ptx") );
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&gpuSchedulerTestKernel, cuModule, "gpuSchedulerTestKernel") );
     cudaStream_t* stream = sched->getCudaStream(device);
-    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
-                                                                          domainHigh,
-                                                                          domainSize,
-                                                                          NGC,
-                                                                          d_phi,
-                                                                          d_newphi);
+
+    // launch the kernel
+    cuErrVal = cuLaunchKernel(gpuSchedulerTestKernel, gridDim.x, gridDim.y, gridDim.z,
+                              dimBlock.x, dimBlock.y, dimBlock.z, 0, *stream, kernelParms, 0);
 
     // get the results back to the host
     cudaEvent_t* event = sched->getCudaEvent(device);
@@ -428,51 +433,4 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     new_dw->put(sum_vartype(residual), residual_label);
 
   }  // end patch for loop
-}
-
-//______________________________________________________________________
-//
-// @brief A kernel that applies the stencil used in timeAdvance(...)
-// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
-// @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
-// @param domainSize a three component vector that gives the size of the domain including ghost nodes
-// @param ghostLayers the number of layers of ghost cells
-// @param phi pointer to the source phi allocated on the device
-// @param newphi pointer to the sink phi allocated on the device
-__global__ void timeAdvanceTestKernel(uint3 domainLow,
-                                      uint3 domainHigh,
-                                      uint3 domainSize,
-                                      int ghostLayers,
-                                      double *phi,
-                                      double *newphi) {
-  // calculate the thread indices
-  int i = blockDim.x * blockIdx.x + threadIdx.x;
-  int j = blockDim.y * blockIdx.y + threadIdx.y;
-
-  // Get the size of the data block in which the variables reside.
-  //  This is essentially the stride in the index calculations.
-  int dx = domainSize.x;
-  int dy = domainSize.y;
-
-  // If the threads are within the bounds of the ghost layers
-  //  the algorithm is allowed to stream along the z direction
-  //  applying the stencil to a line of cells.  The z direction
-  //  is streamed because it allows access of x and y elements
-  //  that are close to one another which should allow coalesced
-  //  memory accesses.
-  if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
-    for (int k = domainLow.z; k < domainHigh.z; k++) {
-      // For an array of [ A ][ B ][ C ], we can index it thus:
-      // (a * B * C) + (b * C) + (c * 1)
-      int idx = INDEX3D(dx,dy,i,j,k);
-
-      newphi[idx] = (1. / 6)
-                  * (phi[INDEX3D(dx,dy, (i-1), j, k)]
-                   + phi[INDEX3D(dx,dy, (i+1), j, k)]
-                   + phi[INDEX3D(dx,dy, i, (j-1), k)]
-                   + phi[INDEX3D(dx,dy, i, (j+1), k)]
-                   + phi[INDEX3D(dx,dy, i, j, (k-1))]
-                   + phi[INDEX3D(dx,dy, i, j, (k+1))]);
-    }
-  }
 }

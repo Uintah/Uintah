@@ -785,6 +785,8 @@ for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
+NVCCEXT="ptx"
+
 if test "$debug" = "yes"; then
   # The "-g -G0" option pair must be passed to NVCC when an application is compiled in
   # order to debug with cuda‐gdb. This forces -O0 compilation, with the exception of
@@ -813,10 +815,19 @@ $CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
 
 if test -f $_file_base_name; then
   AC_MSG_RESULT([yes])
-  HAVE_CUDA="yes"
 else
   AC_MSG_RESULT([no])
   AC_MSG_ERROR( [For some reason we could not link nvcc compiled object code] )
+fi
+
+AC_MSG_CHECKING([for NVCC compilation to PTX])
+$NVCC -ptx -gencode arch=compute_20,code=sm_20 $8
+if test -f $_file_base_name.$NVCCEXT; then
+  AC_MSG_RESULT([yes])
+  HAVE_CUDA="yes"
+else
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR( [For some reason we could not compile to PTX using nvcc] )
   HAVE_CUDA="no"
 fi
 
