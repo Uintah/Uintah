@@ -50,12 +50,11 @@ namespace Wasatch{
 Expr::Tag pressure_tag();
 
 /**
- *  \class 	Pressure
+ *  \class 	  Pressure
  *  \ingroup 	Expressions
- *  \ingroup	WasatchCore
- *  \author 	James C. Sutherland
- *  \author 	Tony Saad
- *  \date 	January, 2011
+ *  \ingroup	 WasatchCore
+ *  \authors 	James C. Sutherland, Tony Saad
+ *  \date 	   January, 2011
  *
  *  \brief Expression to form and solve the poisson system for pressure.
  *

@@ -10,7 +10,7 @@
 
 /**
  *  \class ExprAlgebra
- *  \author Amir Biglari
+ *  \authors Tony Saad, Amir Biglari
  *  \date April, 2012
  *  \brief Implements simple algebraic operations between expressions. This useful
  *         for initializing data using existing initialized expressions. E.g. we

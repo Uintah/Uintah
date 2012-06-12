@@ -8,9 +8,8 @@
 
 /**
  *  \class TurbulentViscosity
- *  \author Amir Biglari
- *  \author Tony Saad
- *  \date   Jan, 2012
+ *  \author Tony Saad, Amir Biglari
+ *  \date   June, 2012. (Originally created: Jan, 2012).
  *  \ingroup Expressions
  *  \brief given strain tensor magnitude, \f$|\tilde{S}| = ( 2\tilde{S_{kl}}\tilde{S_{kl}} )^{1/2}\f$, Smagorinsky constant, \f$C\f$, filtered density, \f$\bar{\rho}\f$, Kolmogorov length scale, \f$\eta\f$, and molecular viscosity, \f$\mu\f$,this calculates mixed viscosity, \f$\mu_{T} + \mu = C \bar{\rho} \Delta^2 |\tilde{S}| + \mu\f$.
  *

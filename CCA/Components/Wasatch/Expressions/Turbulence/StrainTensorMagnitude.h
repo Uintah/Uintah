@@ -7,9 +7,8 @@
 
 /**
  *  \class StrainTensorMagnitude
- *  \author Amir Biglari
- *  \author Tony Saad
- *  \date   Jan, 2012. June, 2012.
+ *  \authors Amir Biglari, Tony Saad
+ *  \date   Jan, 2012. (Originally created: June, 2012).
  *  \ingroup Expressions
  *
  *  \brief given all components of the velocity, \f$u_i\f$, this calculates strain tensor magnitude, \f$|\tilde{S}|=(2\tilde{S_{kl}}\tilde{S_{kl}})^{1/2}\f$ where \f$S_{kl}=\frac{1}{2}(\frac{\partial\tilde{u}_k}{\partial x_l}+\frac{\partial\tilde{u}_l}{\partial x_k})\f$.

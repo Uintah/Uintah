@@ -62,10 +62,8 @@ namespace Wasatch{
 
   /**
    *  \class EqnTimestepAdaptor
-   *  \author James C. Sutherland
-   *  \date June, 2010
-   *  \modifier Amir Biglari
-   *  \date July, 2011
+   *  \authors James C. Sutherland, Tony Saad, Amir Biglari
+   *  \date July, 2011. (Originally created: June, 2010).
    *
    *  \brief Strongly typed adaptor provides the key functionality to
    *         plug a transport equation into a TimeStepper.

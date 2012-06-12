@@ -42,8 +42,7 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
-   *  \author James C. Sutherland
-   *  \author Tony Saad
+   *  \authors James C. Sutherland, Tony Saad
    *  \date January, 2011
    *
    *  \brief Creates a momentum transport equation
