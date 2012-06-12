@@ -636,6 +636,7 @@ LIBOBJS
 scirun_src_dir
 scirun_obj_dir
 WOFF_STRING
+NVCC_MODULE_FLAGS
 NVCCEXT
 NVCC_LIBS
 CUDA_LIB_FLAG
@@ -1711,7 +1712,7 @@ Some influential environment variables:
   FFLAGS      Fortran 77 compiler flags
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
-  NVCC        CUDA compiler command
+  NVCC        CUDA compiler driver command
   NVCC_CFLAGS CUDA C compiler flags
   NVCC_CXXFLAGS
               CUDA C++ compiler flags
@@ -42851,6 +42852,7 @@ $as_echo "$as_me: checking for required CUDA components......" >&6;}
   INC_CUDA_H=""
   CUDA_LIB_DIR=""
   NVCCEXT=""
+  NVCC_MODULE_FLAGS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -43074,12 +43076,19 @@ fi
 #   If the flag is not specified, then the kernels must be recompiled at runtime every time.
 NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
 
-# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+# Add one extra flag to pass to the host compiler when working with .cu to .o
+CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
+
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ compiler
 for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
+# This line is only place that needs mods if switching compiled module type, e.g., PTX, CUBIN
 NVCCEXT="ptx"
+
+# This will gather flags necessary for module file to be generated
+NVCC_MODULE_FLAGS="-$NVCCEXT $NVCC_CXXFLAGS"
 
 if test "$debug" = "yes"; then
   # The "-g -G0" option pair must be passed to NVCC when an application is compiled in
@@ -43261,11 +43270,13 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
+#echo  "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
 #echo
 
 fi #end sci_required_cuda
 
 # these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+
 
 
 

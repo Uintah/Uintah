@@ -3,7 +3,7 @@
 # 
 #  The MIT License
 # 
-#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  Copyright (c) 2012 Scientific Computing and Imaging Institute,
 #  University of Utah.
 # 
 #  License for the specific language governing rights and limitations under
@@ -325,6 +325,7 @@ F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 OBJEXT := @OBJEXT@
 NVCCEXT := @NVCCEXT@
+NVCC_MODULE_FLAGS :=@NVCC_MODULE_FLAGS@
 
 ################################################################
 # Auto dependency generation flags
@@ -494,12 +495,12 @@ ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	@$(NVCC) -ptx -Xcompiler -fno-strict-aliasing $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	@$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	$(NVCC) -ptx -Xcompiler -fno-strict-aliasing $(NVCC_CXXFLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
 endif
 
 .cpp.$(OBJEXT): $<

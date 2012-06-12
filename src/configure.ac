@@ -3,7 +3,7 @@
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2012 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -161,7 +161,7 @@ SCI_ARG_VAR(F77,Fortran 77 compiler command)
 SCI_ARG_VAR(FFLAGS,Fortran 77 compiler flags)
 SCI_ARG_VAR(CPP,C preprocessor)
 SCI_ARG_VAR(CXXCPP,C++ preprocessor)
-SCI_ARG_VAR(NVCC, CUDA compiler command)
+SCI_ARG_VAR(NVCC, CUDA compiler driver command)
 SCI_ARG_VAR(NVCC_CFLAGS, CUDA C compiler flags)
 SCI_ARG_VAR(NVCC_CXXFLAGS, CUDA C++ compiler flags)
 SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
@@ -4114,6 +4114,7 @@ if test "$sci_required_cuda" = "yes"; then
   INC_CUDA_H=""
   CUDA_LIB_DIR=""
   NVCCEXT=""
+  NVCC_MODULE_FLAGS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -4212,6 +4213,7 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
+#echo  "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
 #echo
 
 fi #end sci_required_cuda
@@ -4226,6 +4228,7 @@ AC_SUBST(NVCC_CFLAGS)
 AC_SUBST(NVCC_CXXFLAGS)
 AC_SUBST(NVCC_LIBS)
 AC_SUBST(NVCCEXT)
+AC_SUBST(NVCC_MODULE_FLAGS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 

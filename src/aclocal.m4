@@ -3,7 +3,7 @@
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2012 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -780,12 +780,19 @@ AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 #   If the flag is not specified, then the kernels must be recompiled at runtime every time.
 NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
 
-# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+# Add one extra flag to pass to the host compiler when working with .cu to .o
+CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
+
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ compiler
 for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
+# This line is only place that needs mods if switching compiled module type, e.g., PTX, CUBIN
 NVCCEXT="ptx"
+
+# This will gather flags necessary for module file to be generated
+NVCC_MODULE_FLAGS="-$NVCCEXT $NVCC_CXXFLAGS"
 
 if test "$debug" = "yes"; then
   # The "-g -G0" option pair must be passed to NVCC when an application is compiled in

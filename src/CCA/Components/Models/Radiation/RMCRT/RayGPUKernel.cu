@@ -68,6 +68,7 @@ __global__ void rayTraceKernel(const uint3 patchLo,
 
   // GPU equivalent of GridIterator loop - calculate sets of rays per thread
   if (tidX >= patchLo.x && tidY >= patchLo.y && tidX <= patchHi.x && tidY <= patchHi.y) { // patch boundary check
+    #pragma unroll
     for (int z = patchLo.z; z <= patchHi.z; z++) { // loop through z slices
 
       // calculate the index for individual threads
