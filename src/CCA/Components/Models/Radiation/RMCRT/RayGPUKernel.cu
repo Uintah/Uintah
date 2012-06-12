@@ -146,10 +146,6 @@ __device__ void updateSumIDevice(const uint3& domainLo,
                                  double* threshold,
                                  double* sumI)
 {
-  // calculate the thread indices
-  int tidX = threadIdx.x + blockIdx.x * blockDim.x;
-  int tidY = threadIdx.y + blockIdx.y * blockDim.y;
-
   // Get the size of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
   int dx = patchSize.x;
