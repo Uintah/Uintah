@@ -757,14 +757,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   }
 #endif
 
-  if (d_calcVariance) {
-    d_turbModel->sched_computeScalarVariance(             sched, patches, matls,
-                                                          nosolve_timelabels);
-
-    d_turbModel->sched_computeScalarDissipation(          sched, patches, matls,
-                                                          nosolve_timelabels);
-  }
-
   EqnFactory& eqn_factory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -772,6 +764,15 @@ int ExplicitSolver::noSolve(const LevelP& level,
     EqnBase* eqn = iter->second;
     eqn->sched_dummyInit( level, sched );
 
+  }
+
+
+  if (d_calcVariance) {
+    d_turbModel->sched_computeScalarVariance(             sched, patches, matls,
+                                                          nosolve_timelabels);
+
+    d_turbModel->sched_computeScalarDissipation(          sched, patches, matls,
+                                                          nosolve_timelabels);
   }
 
   string mixmodel = d_props->getMixingModelType();
