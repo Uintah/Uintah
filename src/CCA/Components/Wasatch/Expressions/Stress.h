@@ -28,8 +28,8 @@
 
 /**
  *  \class 	Stress
- *  \author 	James C. Sutherland
- *  \date 	December, 2010
+ *  \author 	James C. Sutherland, Tony Saad
+ *  \date 	 June 2012, (Originally created: December, 2010).
  *  \ingroup	Expressions
  *
  *  \brief Calculates a component of the stress tensor.

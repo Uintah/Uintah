@@ -9,11 +9,9 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class Growth
- *  \author Tony Saad
- *  \date July, 2011
- *  \author Alex Abboud	 
- *  \date January 2012
- *  \note: modified and merged by Alex Abboud to generalize growth
+ *  \authors Tony Saad, Alex Abboud
+ *  \date January, 2012. (Originally created: July, 2011).
+ *  \note modified and merged by Alex Abboud to generalize growth
  *  \tparam FieldT the type of field.
  
  *  \brief Implements any type of growth term

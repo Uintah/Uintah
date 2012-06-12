@@ -40,10 +40,8 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchCore
    *  \class ScalarTransportEquation
-   *  \date June, 2010
-   *  \author James C. Sutherland
-   *  \modifier Amir Biglari
-   *  \date July, 2011
+   *  \authors James C. Sutherland, Tony Saad, Amir Biglari
+   *  \date July, 2011. (Originally Created: June 2010).
    *
    *  \brief Support for a generic scalar transport equation.
    *

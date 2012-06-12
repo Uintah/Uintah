@@ -33,10 +33,8 @@
 /**
  *  \ingroup Expressions
  *  \class  DiffusiveFlux
- *  \author James C. Sutherland
- *  \date	June, 2010
- *  \author Amir Biglari
- *  \date July,2011
+ *  \author James C. Sutherland, Amir Biglari
+ *  \date July, 2011. (Originally created: June, 2010).
  *
  *  \brief Calculates a simple diffusive flux of the form
  *         \f$ J_i = -\rho \Gamma \frac{\partial \phi}{\partial x_i} \f$
@@ -155,10 +153,8 @@ public:
 /**
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveFlux2
- *  \author James C. Sutherland
- *  \date   June, 2010
- *  \modifier Amir Biglari
- *  \date July,2011
+ *  \authors James C. Sutherland, Amir Biglari
+ *  \date July,2011. (Originally created: June, 2010).
  *
  *  \brief Calculates a generic diffusive flux, \f$J = -\rho \Gamma
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
