@@ -86,7 +86,6 @@
           <NameTag        spec="REQUIRED"/>
         </Coordinate2>
       </Cylinder>
-
       
     </BasicExpression>
 
@@ -462,6 +461,46 @@
           </Parameters>
       </Pressure>
     </MomentumEquations>
+
+
+    <!-- ======================================================================== -->
+    <!-- POISSON EQUATION                                                         -->
+    <!-- ======================================================================== -->       
+    <PoissonEquation      spec="MULTIPLE NO_DATA">      
+    
+      <SolutionVariable   spec="REQUIRED STRING" />
+    
+      <PoissonRHS         spec="REQUIRED NO_DATA">
+        <NameTag          spec="REQUIRED" />
+      </PoissonRHS>
+      
+      <!-- Specify whether Wasatch should use a reference point or not. Set the ref pressure value and the ref cell IJK location. -->
+      <!-- NOTE: the Reference pressure is turned off by default. If you don't want to use it, simply do NOT include the following block. -->   
+      <ReferenceValue        spec="OPTIONAL NO_DATA"
+                             attribute1="value    REQUIRED DOUBLE">
+         <ReferenceCell      spec="REQUIRED VECTOR" />                       
+      </ReferenceValue>
+      
+      <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>                
+      
+      <Parameters         spec="OPTIONAL NO_DATA">      
+        <criteria         spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />                     
+        <jump             spec="OPTIONAL INTEGER" />                                        
+        <logging          spec="OPTIONAL INTEGER 'positive'" />                             
+        <maxiterations    spec="OPTIONAL INTEGER 'positive'" />                             
+        <norm             spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+        <npost            spec="OPTIONAL INTEGER" />                                        
+        <npre             spec="OPTIONAL INTEGER" />                                        
+        <preconditioner   spec="REQUIRED STRING 'none, pfmg, smg, jacobi'" />                            
+        <outputEquations  spec="OPTIONAL BOOLEAN" />                                        
+        <skip             spec="OPTIONAL INTEGER" />                                        
+        <solver           spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
+        <tolerance        spec="REQUIRED DOUBLE" />                                         
+        <relax_type       spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+      </Parameters>
+      
+    </PoissonEquation>
+
 
     <!-- ================== -->
     <!-- Initial Conditions -->

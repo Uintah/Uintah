@@ -42,7 +42,7 @@
 //-- Wasatch includes --//
 #include "TaskInterface.h"
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
-
+#include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 
 #include <stdexcept>
 #include <fstream>
@@ -436,7 +436,20 @@ namespace Wasatch{
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
     }
-
+    //
+    Expr::Tag ptag;
+    for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
+        ptag!=PoissonExpression::poissonTagList.end();
+        ++ptag ){
+      if (tree->computes_field( *ptag )) {
+        PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( tree->get_expression( *ptag ) );
+        pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
+        pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
+        pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
+      }      
+    }    
+    //
+    
     hasBeenScheduled_ = true;
   }
 
@@ -498,7 +511,19 @@ namespace Wasatch{
             pexpr.set_RKStage(rkStage);
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
           }
-
+          //
+          Expr::Tag ptag;
+          for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
+              ptag!=PoissonExpression::poissonTagList.end();
+              ++ptag ){
+            if (tree->computes_field( *ptag )) {
+              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( tree->get_expression( *ptag ) );
+              pexpr.set_patch(patches->get(ip));
+              pexpr.set_RKStage(rkStage);
+              pexpr.bind_uintah_vars( newDW, patch, material, rkStage );          
+            }            
+          }    
+          //
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
           tree->execute_tree();

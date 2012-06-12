@@ -51,10 +51,8 @@ namespace Wasatch{
 
   /**
    *  \class EqnTimestepAdaptorBase
-   *  \author James C. Sutherland
+   *  \author James C. Sutherland, Tony Saad, Amir Biglari
    *  \date June, 2010
-   *  \modifier Amir Biglari
-   *  \date July, 2011
    *
    *  This serves as a means to have a container of adaptors.  These
    *  adaptors will plug a strongly typed transport equation into a
@@ -126,7 +124,10 @@ namespace Wasatch{
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver);
-
+  void parse_poisson_equation( Uintah::ProblemSpecP params,
+                              GraphCategories& gc,
+                              Uintah::SolverInterface& linSolver);
+  
   /**
    *  \brief Build moment transport equations specified by "params"
    *

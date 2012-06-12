@@ -82,16 +82,54 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials );
-  
-  void update_pressure_rhs( const Expr::Tag& pressureTag,
-                            Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
-                            SVolField& pressureField,
-                            SVolField& pressureRHS,
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Function that updates poisson rhs when boundaries are present.
+   *
+   *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
+   This Tag is needed to extract the boundary iterators from Uintah.
+   *
+   *  \param poissonMatrix A reference to the poisson coefficient matrix which
+   we intend to modify.
+   *
+   *  \param poissonField A reference to the poisson field. This contains the
+   values of the poisson variable, e.g. pressure.
+   *
+   *  \param poissonRHS A reference to the poisson RHS field. This should be
+   a MODIFIABLE field since it will be updated using bcs on the poisson field.
+   *   
+   *  \param patch A pointer to the current patch. If the patch does NOT contain
+   the reference cells, then nothing is set.
+   *
+   *  \param material The Uintah material ID (an integer).
+   */      
+  void update_poisson_rhs( const Expr::Tag& poissonTag,
+                            Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
+                            SVolField& poissonField,
+                            SVolField& poissonRHS,
                             const Uintah::Patch* patch,
                             const int material);
 
-  void update_pressure_matrix( const Expr::Tag& pressureTag,
-                               Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Function that updates pressure matrix coefficients when boundaries
+   are present.
+   *
+   *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
+   This Tag is needed to extract the boundary iterators from Uintah.
+   *
+   *  \param poissonMatrix A reference to the poisson coefficient matrix which
+   we intend to modify.
+   *
+   *  \param patch A pointer to the current patch. If the patch does NOT contain
+   the reference cells, then nothing is set.
+   *
+   *  \param material The Uintah material ID (an integer).
+   */    
+  void update_poisson_matrix( const Expr::Tag& poissonTag,
+                               Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                                const Uintah::Patch* patch,
                                const int material);
   /**
@@ -112,7 +150,7 @@ namespace Wasatch {
    *  \param refCell A SCIRun::IntVector that designates the reference cell. 
                      This defaults to [1,1,1].
    */  
-  void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                                const Uintah::Patch* patch,
                                const SCIRun::IntVector refCell );
 
@@ -132,7 +170,7 @@ namespace Wasatch {
    *  \param refCell A SCIRun::IntVector that designates the reference cell. 
                      This defaults to [1,1,1].
    */    
-  void set_ref_pressure_rhs  ( SVolField& pressureRHS,
+  void set_ref_poisson_rhs  ( SVolField& pressureRHS,
                                const Uintah::Patch* patch, 
                                const double referencePressureValue,
                                const SCIRun::IntVector refCell );
@@ -151,7 +189,7 @@ namespace Wasatch {
    *
    *  \param patch The material on which we wish to apply the BCs.   
    */    
-  void process_pressure_bcs( const Expr::Tag& pressureTag,
+  void process_poisson_bcs( const Expr::Tag& pressureTag,
                             SVolField& pressureField,
                             const Uintah::Patch* patch,
                             const int material);  
