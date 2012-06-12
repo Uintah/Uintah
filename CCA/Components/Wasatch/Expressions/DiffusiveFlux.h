@@ -35,7 +35,7 @@
  *  \class  DiffusiveFlux
  *  \author James C. Sutherland
  *  \date	June, 2010
- *  \modifier Amir Biglari
+ *  \author Amir Biglari
  *  \date July,2011
  *
  *  \brief Calculates a simple diffusive flux of the form

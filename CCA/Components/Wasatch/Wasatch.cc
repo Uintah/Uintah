@@ -395,11 +395,28 @@ namespace Wasatch{
       }
     }
 
+    //
+    // Build poisson equations
+    for( Uintah::ProblemSpecP poissonEqnParams=wasatchParams->findBlock("PoissonEquation");
+        poissonEqnParams != 0;
+        poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") ){
+      try{
+        parse_poisson_equation(poissonEqnParams, graphCategories_, *linSolver_);
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+        << "Problems setting up momentum transport equations.  Details follow:" << endl
+        << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    
     if( buildTimeIntegrator_ ){
       timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
-    }
-
+    }    
+    
     //
     // force additional expressions on the graph
     //
@@ -685,10 +702,10 @@ namespace Wasatch{
                                           Uintah::SchedulerP& sched,
                                           const int rkStage )
   {
-    if( adaptors_.size() == 0 ) return; // no equations registered.
-
     GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
     Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+
+    if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
 
     //_____________________________________________________________
     // create an expression to set the current time as a field that

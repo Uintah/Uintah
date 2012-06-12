@@ -770,10 +770,10 @@ namespace Wasatch {
 
   //-----------------------------------------------------------------------------
 
-  void update_pressure_rhs( const Expr::Tag& pressureTag,
-                            Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
-                            SVolField& pressureField,
-                            SVolField& pressureRHS,
+  void update_poisson_rhs( const Expr::Tag& poissonTag,
+                            Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
+                            SVolField& poissonField,
+                            SVolField& poissonRHS,
                             const Uintah::Patch* patch,
                             const int material)
   {
@@ -803,7 +803,7 @@ namespace Wasatch {
     const double dy2 = dy*dy;
     const double dz2 = dz*dz;
 
-    const std::string phiName = pressureTag.name();
+    const std::string phiName = poissonTag.name();
 
     std::vector<Uintah::Patch::FaceType> bndFaces;
     patch->getBoundaryFaces(bndFaces);
@@ -858,11 +858,11 @@ namespace Wasatch {
                                             bc_point_indices[1]+bcPointGhostOffset[1],
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
-              //const double ghostValue = 2.0*bc_value - pressureField[iInterior];
-              //pressureRHS[iInterior] += bc_value/denom;
-              pressureRHS[iInterior] += 2.0*bc_value/denom;
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              //const double ghostValue = 2.0*bc_value - poissonField[iInterior];
+              //poissonRHS[iInterior] += bc_value/denom;
+              poissonRHS[iInterior] += 2.0*bc_value/denom;
             }
           } else if (bc_kind=="Neumann") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
@@ -877,11 +877,11 @@ namespace Wasatch {
                                             bc_point_indices[1]+bcPointGhostOffset[1],
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
-              //const double ghostValue = spacing*bc_value + pressureField[iInterior];
-              //pressureRHS[iInterior] += ghostValue/denom;
-              pressureRHS[iInterior] += spacing*bc_value/denom;
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
+              //const double ghostValue = spacing*bc_value + poissonField[iInterior];
+              //poissonRHS[iInterior] += ghostValue/denom;
+              poissonRHS[iInterior] += spacing*bc_value/denom;
             }
           } else {
             return;
@@ -893,8 +893,8 @@ namespace Wasatch {
 
   //-----------------------------------------------------------------------------
 
-  void update_pressure_matrix( const Expr::Tag& pressureTag,
-                           Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+  void update_poisson_matrix( const Expr::Tag& poissonTag,
+                           Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                            const Uintah::Patch* patch,
                               const int material)
   {
@@ -918,7 +918,7 @@ namespace Wasatch {
     const double dx2 = dx*dx;
     const double dy2 = dy*dy;
     const double dz2 = dz*dz;
-    const std::string phiName = pressureTag.name();
+    const std::string phiName = poissonTag.name();
 
     std::vector<Uintah::Patch::FaceType> bndFaces;
     patch->getBoundaryFaces(bndFaces);
@@ -936,7 +936,7 @@ namespace Wasatch {
         //patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
         double bc_value;
         std::string bc_kind;
-        get_iter_bcval_bckind( patch, face, child, pressureTag.name(), material, bc_value, bound_ptr, bc_kind);
+        get_iter_bcval_bckind( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind);
         
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
@@ -947,7 +947,7 @@ namespace Wasatch {
         if (bc_kind == "Dirichlet") { // pressure Outlet BC. don't forget to update pressure_rhs also.
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
-            Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
@@ -963,7 +963,7 @@ namespace Wasatch {
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
             
-            Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -980,7 +980,7 @@ namespace Wasatch {
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
             
-            Uintah::Stencil4& coefs = pressureMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -999,7 +999,7 @@ namespace Wasatch {
 
   //-----------------------------------------------------------------------------
 
-  void set_ref_pressure_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
+  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                               const Uintah::Patch* patch,
                               const SCIRun::IntVector refCell )
   {
@@ -1012,27 +1012,27 @@ namespace Wasatch {
       // check if all cell neighbors are contained in this patch:
       if ( !containsAllNeighbors ) {
         msg << std::endl
-        << "  Invalid reference pressure cell." << std::endl
-        << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
+        << "  Invalid reference cell specified for poisson system." << std::endl
+        << "  The reference cell, as well as its north, east, and top neighbors must be in the same patch." << std::endl
         << std::endl;
         throw std::runtime_error( msg.str() );
       }
-      Uintah::Stencil4& refCoef = pressureMatrix[refCell];
+      Uintah::Stencil4& refCoef = poissonMatrix[refCell];
       refCoef.w = 0.0;
       refCoef.s = 0.0;
       refCoef.b = 0.0;
       refCoef.p = 1.0;
-      pressureMatrix[refCell + IntVector(1,0,0)].w = 0.0;
-      pressureMatrix[refCell + IntVector(0,1,0)].s = 0.0;
-      pressureMatrix[refCell + IntVector(0,0,1)].b = 0.0;
+      poissonMatrix[refCell + IntVector(1,0,0)].w = 0.0;
+      poissonMatrix[refCell + IntVector(0,1,0)].s = 0.0;
+      poissonMatrix[refCell + IntVector(0,0,1)].b = 0.0;
     }
   }
 
   //-----------------------------------------------------------------------------
 
-  void set_ref_pressure_rhs( SVolField& pressureRHS,
+  void set_ref_poisson_rhs( SVolField& poissonRHS,
                              const Uintah::Patch* patch,
-                             const double refPressureValue,
+                             const double refpoissonValue,
                              const SCIRun::IntVector refCell )
   {
     using SCIRun::IntVector;
@@ -1050,35 +1050,35 @@ namespace Wasatch {
       // check if all cell neighbors are contained in this patch:
       if ( !containsAllNeighbors ) {
         msg << std::endl
-        << "  Invalid reference pressure cell." << std::endl
-        << "  The reference pressure cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
+        << "  Invalid reference poisson cell." << std::endl
+        << "  The reference poisson cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
         << std::endl;
         throw std::runtime_error( msg.str() );
       }
       // remember, indexing is local for SpatialOps so we must offset by the patch's low index
       const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);
       const SpatialOps::structured::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
-      const int irefCell = pressureRHS.window_without_ghost().flat_index(refCellIJK);
-      pressureRHS[irefCell] = refPressureValue;
+      const int irefCell = poissonRHS.window_without_ghost().flat_index(refCellIJK);
+      poissonRHS[irefCell] = refpoissonValue;
 
       // modify rhs for neighboring cells
       const Uintah::Vector spacing = patch->dCell();
       const double dx2 = spacing[0]*spacing[0];
       const double dy2 = spacing[1]*spacing[1];
       const double dz2 = spacing[2]*spacing[2];
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refPressureValue/dx2;
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refPressureValue/dy2;
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refPressureValue/dz2;
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refPressureValue/dx2;
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refPressureValue/dy2;
-      pressureRHS[pressureRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refPressureValue/dz2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refpoissonValue/dx2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refpoissonValue/dy2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refpoissonValue/dz2;
     }
   }
 
   //-----------------------------------------------------------------------------
   
-  void process_pressure_bcs( const Expr::Tag& pressureTag,
-                            SVolField& pressureField,
+  void process_poisson_bcs( const Expr::Tag& poissonTag,
+                            SVolField& poissonField,
                             const Uintah::Patch* patch,
                             const int material) {
     // check if we have plus boundary faces on this patch
@@ -1098,7 +1098,7 @@ namespace Wasatch {
     const double dy2 = dy*dy;
     const double dz2 = dz*dz;
     
-    const std::string phiName = pressureTag.name();
+    const std::string phiName = poissonTag.name();
     
     std::vector<Uintah::Patch::FaceType> bndFaces;
     patch->getBoundaryFaces(bndFaces);
@@ -1153,9 +1153,9 @@ namespace Wasatch {
                                             bc_point_indices[1]+bcPointGhostOffset[1],
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
-              pressureField[iGhost] = 2.0*bc_value - pressureField[iInterior];              
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              poissonField[iGhost] = 2.0*bc_value - poissonField[iInterior];              
             }
           } else if (bc_kind=="Neumann") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
@@ -1170,9 +1170,9 @@ namespace Wasatch {
                                             bc_point_indices[1]+bcPointGhostOffset[1],
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = pressureField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = pressureField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
-              pressureField[iGhost] = spacing*bc_value + pressureField[iInterior];
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+              poissonField[iGhost] = spacing*bc_value + poissonField[iInterior];
             }
           } else {
             return;

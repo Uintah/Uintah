@@ -38,6 +38,7 @@
 
 //-- includes for the expressions built here --//
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
+#include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
@@ -322,7 +323,53 @@ namespace Wasatch{
   }
 
   //==================================================================
+  
+  void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
+                              GraphCategories& gc,
+                              Uintah::SolverInterface& linSolver) {
+    std::string slnVariableName;
+    poissonEqParams->get("SolutionVariable", slnVariableName);
+    Expr::TagList poissontags;
+    const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);    
+    poissontags.push_back( poissonVariableTag );
+    poissontags.push_back( Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", pressure_tag().context() ) );
+    const Expr::Tag rhsTag = parse_nametag( poissonEqParams->findBlock("PoissonRHS")->findBlock("NameTag"));    
+    bool useRefPoint = false;
+    double refValue = 0.0;
+    SCIRun::IntVector refLocation(0,0,0);
+    
+    if (poissonEqParams->findBlock("ReferenceValue")) {
+      useRefPoint = true;
+      Uintah::ProblemSpecP refPhiParams = poissonEqParams->findBlock("ReferenceValue");      
+      refPhiParams->getAttribute("value", refValue);
+      refPhiParams->get("ReferenceCell", refLocation);
+    }
+    
+    bool use3DLaplacian = true;
+    poissonEqParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
+        
+    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
+    sparams->setSolveOnExtraCells( false );
+    sparams->setUseStencil4( true );
+    sparams->setOutputFileName( "WASATCH" );
+    
+    PoissonExpression::poissonTagList.push_back(poissonVariableTag);
+    
+    const Expr::ExpressionBuilder* const pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag,useRefPoint, refValue, refLocation, use3DLaplacian,*sparams, linSolver);    
+    const Expr::ExpressionBuilder* const pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag,useRefPoint, refValue, refLocation, use3DLaplacian,*sparams, linSolver);            
+    
+    GraphHelper* const icgraphHelper = gc[INITIALIZATION];        
+    GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
 
+    slngraphHelper->exprFactory->register_expression( pbuilder1 );            
+    icgraphHelper->exprFactory->register_expression( pbuilder );    
+
+    slngraphHelper->rootIDs.insert( slngraphHelper->exprFactory->get_id(poissonVariableTag) );
+    icgraphHelper->rootIDs.insert( icgraphHelper->exprFactory->get_id(poissonVariableTag) );    
+  }
+
+  //==================================================================
+  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
@@ -467,7 +514,7 @@ namespace Wasatch{
       std::ostringstream msg;
       msg << e.what()
       << std::endl
-      << "ERORR while setting initial conditions on pressure. When solving for the momentum equations, you must provide an initialization for the pressure from the input file."
+      << "ERORR while setting initial conditions on pressure. When solving for the momentum equations, you must provide an initial condition for the pressure from the input file."
       << pressure_tag().name()
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );

@@ -46,7 +46,8 @@ SRCS     +=                         \
 	$(SRCDIR)/Stress.cc 			\
 	$(SRCDIR)/VelocityMagnitude.cc 		\
 	$(SRCDIR)/Vorticity.cc 			\
-	$(SRCDIR)/Pressure.cc
+	$(SRCDIR)/Pressure.cc     \
+ $(SRCDIR)/PoissonExpression.cc
 
 SUBDIRS := \
         $(SRCDIR)/MMS \
