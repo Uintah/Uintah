@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace Uintah; 
 
@@ -31,7 +32,8 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
   
-  db->require( "carbon_content", _carb_content );
+  db->require( "carbon_content_fuel", _carb_content_fuel );
+  db->require( "carbon_content_ox",   _carb_content_ox );
 
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
 
@@ -62,13 +64,20 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
   } 
 
-
   db->getWithDefault( "density_label", _den_label_name, "density"); 
-  db->getWithDefault( "scaling_factor", _scale_factor, 1.0 ); 
   db->getWithDefault( "absorption_label", _absorp_label_name, "absorpIN"); 
   db->getWithDefault( "temperature_label", _T_label_name, "temperature"); 
+  db->getWithDefault( "mixture_fraction_label", _f_label_name, "mixture_fraction"); 
+
   db->getWithDefault( "soot_density", _rho_soot, 1950.0); 
-  db->getWithDefault( "c1", _c1, 0.1); 
+  db->getWithDefault( "E_cr", _E_cr, 1.0 ); 
+  db->getWithDefault( "E_inf", _E_inf, 2.0 ); 
+  db->require( "E_st", _E_st ); 
+  db->getWithDefault( "C1", _C1, 0.1); 
+
+  if ( _C1 > .20 ){ 
+    throw ProblemSetupException( "ERROR: Soot constant C1 is not within published bounds (0-0.2)", __FILE__, __LINE__);
+  } 
 
 }
 
@@ -89,6 +98,7 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
 
       tsk->requires( Task::OldDW, _T_label, Ghost::None, 0 ); 
       tsk->requires( Task::OldDW, _den_label, Ghost::None, 0 ); 
+      tsk->requires( Task::OldDW, _f_label, Ghost::None, 0 ); 
 
     } else {
 
@@ -97,6 +107,7 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
 
       tsk->requires( Task::NewDW, _T_label, Ghost::None, 0 ); 
       tsk->requires( Task::NewDW, _den_label, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _f_label, Ghost::None, 0 ); 
 
     }
 
@@ -124,12 +135,11 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    std::cout << " MATERIAL INDEX = " << matlIndex << std::endl;
-
     CCVariable<double> soot_vf; 
     CCVariable<double> absorp_coef; 
     constCCVariable<double> temperature; 
     constCCVariable<double> density; 
+    constCCVariable<double> f; 
 
     if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
 
@@ -138,6 +148,7 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
       new_dw->get( temperature, _T_label, matlIndex, patch, Ghost::None, 0 ); 
       new_dw->get( density, _den_label, matlIndex, patch, Ghost::None, 0 ); 
+      new_dw->get( f, _f_label, matlIndex, patch, Ghost::None, 0 ); 
 
     } else {
 
@@ -148,6 +159,7 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
       old_dw->get( temperature, _T_label, matlIndex, patch, Ghost::None, 0 ); 
       old_dw->get( density, _T_label, matlIndex, patch, Ghost::None, 0 ); 
+      old_dw->get( f, _f_label, matlIndex, patch, Ghost::None, 0 ); 
 
     }
 
@@ -157,13 +169,22 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      double bc = _carb_content * density[c];
+      double bc = get_carbon_content( f[c] ) * density[c];
 
+      double E = f[c] / ( 1.0 - f[c] ); 
+      E = E / _E_st; 
+
+      double C2 = std::max( 0.0, std::min(E-_E_cr, _E_inf - _E_cr ) ); 
+      C2 = C2 / ( _E_inf - _E_cr ); 
 
       if ( temperature[c] > 1000.0 ) { 
-        soot_vf[c] = _scale_factor * ( _c1 * bc * _cmw ) / _rho_soot; 
+
+        soot_vf[c] = _C1 * C2 * bc * _cmw / _rho_soot; 
+
       } else { 
+
         soot_vf[c] = 0.0;
+
       } 
       
       absorp_coef[c] = 0.01 + std::min( 0.5, (4.0/_opl)*log( 1.0 + 
@@ -236,6 +257,7 @@ void EmpSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
   _den_label    = VarLabel::find( _den_label_name );
   _T_label      = VarLabel::find( _T_label_name );
   _absorp_label = VarLabel::find( _absorp_label_name );
+  _f_label      = VarLabel::find( _f_label_name ); 
 
   Task* tsk = scinew Task(taskname, this, &EmpSoot::initialize);
   tsk->computes(_prop_label); 

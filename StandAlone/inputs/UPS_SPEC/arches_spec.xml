@@ -70,14 +70,20 @@
           <small                        spec="OPTIONAL DOUBLE 'positive'"/>
 
           <!-- Emperical soot --> 
-          <carbon_content               spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot"/> 
+          <carbon_content_fuel          spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of fuel --> 
+          <carbon_content_ox            spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of oxidizer --> 
           <opl                          spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- this is optional because the radiation model may specify it --> 
-          <scaling_factor               spec="OPTIONAL DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot"/> <!-- default of 1.0 --> 
-          <c3                           spec="OPTIONAL DOUBLE 'positive'"
-                                        need_applies_to="type empirical_soot"/> <!-- default of 0.3 --> 
+          <C1                           spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- default of 0.1, valid values range between 0-0.2 (see Hottel & Sarofim, 1978) --> 
+          <E_cr                         spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Critical equivilence ratio, default 1.0 --> 
+          <E_inf                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at infinity, default = 2*E_cr --> 
+          <E_st                         spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at stoich --> 
           <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- default of 1950.0 --> 
           <density_label                spec="OPTIONAL STRING"
@@ -85,6 +91,8 @@
           <temperature_label            spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "temperature" --> 
           <absorption_label             spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
+          <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
                                         
         </model>
