@@ -8,7 +8,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class MultiEnvMixingModel
- *  \author Alex Abboud	 
+ *  \author Alex Abboud
  *  \date June 2012
  *  \tparam FieldT the type of field.
  *  \brief Implements a basic three absciassae multi environment mixing model
@@ -17,22 +17,22 @@
  *  for precipitation, reaction only occurs at w_2
  *  this returns a vector of weights
  *  with a vector of dw/dt base on scalr diss
- *  [w1 dw1/dt w2 dw2/dt w3 dw3/dt] 
+ *  [w1 dw1/dt w2 dw2/dt w3 dw3/dt]
  */
 template< typename FieldT >
 class MultiEnvMixingModel
 : public Expr::Expression<FieldT>
 {
-  
+
   const Expr::Tag mixFracTag_, scalarVarTag_, scalarDissTag_;    //this will correspond to proper tags for mix frac & sclar var
   const FieldT* mixFrac_; 											 // mixture fraction from grid
   const FieldT* scalarVar_; 										 // sclar variance form grid
   const FieldT* scalarDiss_;
-  
+
   MultiEnvMixingModel( const Expr::Tag& mixFracTag_,
                        const Expr::Tag& scalarVarTag_,
-                      const Expr::Tag& scalarDissTag_);
-  
+                       const Expr::Tag& scalarDissTag_);
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -46,20 +46,20 @@ public:
     scalarvart_(scalarVarTag),
     scalardisst_(scalarDissTag)
     {}
-    
+
     ~Builder(){}
-    
+
     Expr::ExpressionBase* build() const
     {
       return new MultiEnvMixingModel<FieldT>( mixfract_, scalarvart_, scalardisst_ );
     }
-    
+
   private:
     const Expr::Tag mixfract_, scalarvart_, scalardisst_;
   };
-  
+
   ~MultiEnvMixingModel();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -77,11 +77,11 @@ template< typename FieldT >
 MultiEnvMixingModel<FieldT>::
 MultiEnvMixingModel( const Expr::Tag& mixFracTag,
                      const Expr::Tag& scalarVarTag,
-                    const Expr::Tag& scalarDissTag)
+                     const Expr::Tag& scalarDissTag)
 : Expr::Expression<FieldT>(),
-mixFracTag_(mixFracTag),
-scalarVarTag_(scalarVarTag),
-scalarDissTag_(scalarDissTag)
+  mixFracTag_(mixFracTag),
+  scalarVarTag_(scalarVarTag),
+  scalarDissTag_(scalarDissTag)
 {}
 
 //--------------------------------------------------------------------
@@ -98,8 +98,8 @@ void
 MultiEnvMixingModel<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( mixFracTag_ );
-  exprDeps.requires_expression( scalarVarTag_ );
+  exprDeps.requires_expression( mixFracTag_    );
+  exprDeps.requires_expression( scalarVarTag_  );
   exprDeps.requires_expression( scalarDissTag_ );
 }
 
@@ -110,9 +110,9 @@ void
 MultiEnvMixingModel<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  mixFrac_ = &fm.field_ref( mixFracTag_ );
-  scalarVar_ = &fm.field_ref( scalarVarTag_ );
+  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  mixFrac_    = &fm.field_ref( mixFracTag_    );
+  scalarVar_  = &fm.field_ref( scalarVarTag_  );
   scalarDiss_ = &fm.field_ref( scalarDissTag_ );
 }
 
@@ -131,14 +131,17 @@ void
 MultiEnvMixingModel<FieldT>::
 evaluate()
 {
-  using namespace SpatialOps;
+  using SpatialOps::operator<<=;
+
   typedef std::vector<FieldT*> ResultsVec;
+
   ResultsVec& results = this->get_value_vec();
+
   const int nEnv = 3;
   const int wSize = 2*nEnv;
-  
+
   const FieldT* sampleField = scalarVar_;  //dummy iterator field
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin(); 
+  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
 
   typename FieldT::const_interior_iterator mixfracIter = mixFrac_->interior_begin();
   typename FieldT::const_interior_iterator scalarvarIter = scalarVar_->interior_begin();
@@ -149,7 +152,7 @@ evaluate()
     typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
-  
+
   while (sampleIterator != sampleField->interior_end() ) {
 
     if ( *mixfracIter != 1.0 && *mixfracIter != 0.0 ) {
@@ -159,7 +162,7 @@ evaluate()
       *resultsIterators[3] = *scalardissIter / ( *mixfracIter - *mixfracIter * *mixfracIter );
       *resultsIterators[4] = - *scalarvarIter / ( *mixfracIter - 1.0 );
       *resultsIterators[5] = - *scalardissIter / ( 1.0 - *mixfracIter );
-      
+
     } else if ( *mixfracIter == 1.0 ) {
       *resultsIterators[0] = 0.0;
       *resultsIterators[1] = 0.0;
@@ -167,7 +170,7 @@ evaluate()
       *resultsIterators[3] = 0.0;
       *resultsIterators[4] = 1.0;
       *resultsIterators[5] = 0.0;
-      
+
     } else if ( *mixfracIter == 0.0 ) {
       *resultsIterators[0] = 1.0;
       *resultsIterators[1] = 0.0;
@@ -176,7 +179,7 @@ evaluate()
       *resultsIterators[4] = 0.0;
       *resultsIterators[5] = 0.0;
     }
-  
+
     //increment iterators
     ++sampleIterator;
     ++mixfracIter;

@@ -129,7 +129,7 @@ void
 TabPropsEvaluator<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
 
   indepVars_.clear();
   for( VarNames::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
