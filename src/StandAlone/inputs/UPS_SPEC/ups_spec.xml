@@ -535,7 +535,7 @@
                               attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                              
                               attribute12="major_radius OPTIONAL DOUBLE 'positive'"
                               attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
-                              attribute14="angle        OPTIONAL DOUBLE 'positive'"                                                                                          
+                              attribute14="angle        OPTIONAL DOUBLE"                                                                                          
                               attribute15="name         OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
