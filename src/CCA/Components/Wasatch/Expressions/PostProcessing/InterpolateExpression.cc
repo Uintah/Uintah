@@ -34,9 +34,7 @@ void
 InterpolateExpression<SrcT, DestT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<SrcT>&  srcfm  = fml.template field_manager<SrcT>();
-
-  if( srct_ != Expr::Tag() )  src_ = &srcfm.field_ref( srct_ );
+  if( srct_ != Expr::Tag() )  src_ = &fml.template field_manager<SrcT>().field_ref( srct_ );
 }
 
 //--------------------------------------------------------------------

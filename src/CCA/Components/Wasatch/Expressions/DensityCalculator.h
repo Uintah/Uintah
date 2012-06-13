@@ -186,7 +186,7 @@ void
 DensityCalculator<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
 
   rhoEta_.clear();
   for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){

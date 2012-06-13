@@ -154,7 +154,7 @@ void
 OstwaldRipening<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& volfm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldManagerSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
   weights_.clear();
   abscissae_.clear();
   for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
@@ -164,8 +164,7 @@ bind_fields( const Expr::FieldManagerList& fml )
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
 
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  growthCoef_ = &fm.field_ref( growthCoefTag_ );
+  growthCoef_ = &fml.template field_manager<FieldT>().field_ref( growthCoefTag_ );
 }
 
 //--------------------------------------------------------------------

@@ -119,7 +119,7 @@ void
 PrecipitationSource<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   sources_.clear();
   for (Expr::TagList::const_iterator isource=sourceTagList_.begin(); isource!=sourceTagList_.end(); isource++) {
     sources_.push_back(&fm.field_ref(*isource) );
