@@ -43,22 +43,23 @@ namespace Uintah {
     
   \class EllipseBCData
   
-  \ brief Defines an ellipse geometry object for a boundary condition.
-          The convention for creating ellipses from the input is as follows.
+   Defines an ellipse geometry object for a boundary condition.
+   The convention for creating ellipses from the input is as follows.
    The user provides four quantities: origin, minor radius, major radius, and angle.
    The origin defines the "center" of the ellipse or the intersection of the minor
    and major axes. The minor radius refers to the half length of the minor axis while
    the major radius denotes the half length of the major axis. Finally, the angle
    refers to the "tilt" of the ellipse measured counterclockwise with respect 
-   to a reference axis. We define the reference axis the major axis with angle zero. 
-   The convention here is as follows. 
-   Consider an orthogonal coordinate system x_1, x_2, x_3 (e.g. x, y, z). An ellipse
-   created on face x_i will have its reference axis aligned with the x_{i+1} axis.
-   The angle is then measured counterclockwise from that reference axis.
+   to a reference axis, and looking from OUTSIDE the computational logical box. 
+   We define the reference axis the major axis with angle zero. The convention 
+   here is as follows. Consider an orthogonal coordinate system x_1, x_2, x_3 
+   (e.g. x, y, z). An ellipse created on face x_i will have its reference axis 
+   aligned with the x_{i+1} axis. The angle is then measured counterclockwise 
+   from that reference axis, looking from OUTSIDE the computational box.
    NOTE that x_4 \equiv x_1. 
    
    So for example, an ellipse created on an "x-" face will have its reference axis
-   aligned with the "y" axis. The angle will be measured clockwise. An ellipse
+   aligned with the "y" axis. The angle will be measured counter-clockwise. An ellipse
    created on a "z+" face will have its reference axis aligned with the "x" axis.
   
   \author Tony Saad \n
