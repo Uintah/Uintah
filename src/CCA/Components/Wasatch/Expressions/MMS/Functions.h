@@ -89,7 +89,8 @@ void
 SineTime<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  const Expr::FieldManager<double>& timeFM = fml.template field_manager<double>();
+  t_ = &timeFM.field_ref( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -131,7 +132,7 @@ SineTime<ValT>::Builder::build() const
  *  \date April, 2012
  *  \brief Implements a cylindrical patch for initialization purposes among other things.
  By patch here we mean "patching a region of a domain with a specific value".
- For a given field, This class allows users to "patch" a cylindrical region with
+ For a given field, This class allows users to "patch" a cylindrical region with 
  a specific value for that field and also set its value outside the cylinder.
  The user specifies two coordinates (XSVOL, YSVOL for example) through
  the input file along with an inside and outside values. The coordinates
@@ -235,7 +236,7 @@ void
 CylinderPatch<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
   field1_ = &fm.field_ref( tag1_ );
   field2_ = &fm.field_ref( tag2_ );
 }

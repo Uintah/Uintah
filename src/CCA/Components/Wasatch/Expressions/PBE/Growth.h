@@ -13,7 +13,7 @@
  *  \date January, 2012. (Originally created: July, 2011).
  *  \note modified and merged by Alex Abboud to generalize growth
  *  \tparam FieldT the type of field.
- *
+ 
  *  \brief Implements any type of growth term
  *  relies on the proper phi_tag from parsing
  */
@@ -22,17 +22,17 @@ class Growth
 : public Expr::Expression<FieldT>
 {
 
-  const Expr::Tag phiTag_, growthCoefTag_;  // this will correspond to proper tags for constant calc & momnet dependency
-  const double momentOrder_;    ///< this is the order of the moment equation in which the growth model is used
+  const Expr::Tag phiTag_, growthCoefTag_;  //this will correspond to proper tags for constant calc & momnet dependency
+  const double momentOrder_; 															// this is the order of the moment equation in which the growth model is used
   const double constCoef_;
-  const FieldT* phi_;           ///< this will correspond to m(k + i), i depends on which growth model is used
-  const FieldT* growthCoef_;    ///< this will correspond to the coefficient in the growth rate term
-
+  const FieldT* phi_; 																						// this will correspond to m(k + i), i depends on which growth model is used
+  const FieldT* growthCoef_; 														 // this will correspond to the coefficient in the growth rate term
+  
   Growth( const Expr::Tag& phiTag,
           const Expr::Tag& growthCoefTag,
-          const double momentOrder,
+          const double momentOrder, 
           const double constCoef);
-
+  
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -48,22 +48,22 @@ public:
     momentorder_(momentOrder),
     constcoef_(constCoef)
     {}
-
+    
     ~Builder(){}
-
+    
     Expr::ExpressionBase* build() const
     {
       return new Growth<FieldT>( phit_, growthcoeft_, momentorder_, constcoef_ );
     }
-
+    
   private:
     const Expr::Tag phit_, growthcoeft_;
     const double momentorder_;
     const double constcoef_;
   };
-
+  
   ~Growth();
-
+  
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -82,7 +82,7 @@ template< typename FieldT >
 Growth<FieldT>::
 Growth( const Expr::Tag& phiTag,
         const Expr::Tag& growthCoefTag,
-        const double momentOrder,
+        const double momentOrder, 
         const double constCoef)
   : Expr::Expression<FieldT>(),
   phiTag_(phiTag),
@@ -117,7 +117,7 @@ void
 Growth<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
   phi_ = &fm.field_ref( phiTag_ );
   if ( growthCoefTag_ != Expr::Tag () )
     growthCoef_ = &fm.field_ref( growthCoefTag_ );

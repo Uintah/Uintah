@@ -26,10 +26,10 @@ class PrecipitationRCritical
   const double rKnotVal_;
   const FieldT* superSat_; //field from table of supersaturation
   const FieldT* eqConc_;   //field form table of equilibrium concentration
-
+  
   PrecipitationRCritical( const Expr::Tag& superSatTag,
                           const double rKnotVal_);
-
+  
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -41,26 +41,26 @@ public:
     supersatt_(superSatTag),
     rknotval_(rKnotVal)
     {}
-
+    
     ~Builder(){}
-
+    
     Expr::ExpressionBase* build() const
     {
       return new PrecipitationRCritical<FieldT>( supersatt_, rknotval_ );
     }
-
+    
   private:
     const Expr::Tag supersatt_;
     const double rknotval_;
   };
-
+  
   ~PrecipitationRCritical();
-
+  
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-
+  
 };
 
 
@@ -103,7 +103,8 @@ void
 PrecipitationRCritical<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
+  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  superSat_ = &fm.field_ref( superSatTag_ );
 }
 
 //--------------------------------------------------------------------

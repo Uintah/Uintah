@@ -8,10 +8,9 @@
 
 //====================================================================
 
-TurbulentViscosity::
-TurbulentViscosity( const Expr::Tag rhoTag,
+TurbulentViscosity::TurbulentViscosity( const Expr::Tag rhoTag,
                     const Expr::Tag strTsrMagTag,
-                    const Expr::Tag sqStrTsrMagTag,
+                    const Expr::Tag sqStrTsrMagTag,                                       
                     const Wasatch::TurbulenceParameters turbParams )
 : Expr::Expression<SVolField>(),
   isConstSmag_(turbulenceParameters_.turbulenceModelName != Wasatch::DYNAMIC),
@@ -36,9 +35,9 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhoTag_ );
   exprDeps.requires_expression( strTsrMagTag_ );
-  if (turbulenceParameters_.turbulenceModelName == Wasatch::WALE)
+  if (turbulenceParameters_.turbulenceModelName == Wasatch::WALE) 
     exprDeps.requires_expression( sqStrTsrMagTag_ );
-  if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC )
+  if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) 
     exprDeps.requires_expression( smagTag_ );
 }
 
@@ -48,13 +47,13 @@ void
 TurbulentViscosity::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManagerSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
+  const Expr::FieldManager<SVolField>& scalarfm = fml.field_manager<SVolField>();
 
   rho_       = &scalarfm.field_ref( rhoTag_       );
   strTsrMag_ = &scalarfm.field_ref( strTsrMagTag_ );
-  if ( turbulenceParameters_.turbulenceModelName == Wasatch::WALE )
+  if ( turbulenceParameters_.turbulenceModelName == Wasatch::WALE )   
     sqStrTsrMag_ = &scalarfm.field_ref( sqStrTsrMagTag_ );
-  if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC )
+  if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) 
     smag_ = &scalarfm.field_ref ( smagTag_ );
 }
 
@@ -78,7 +77,7 @@ evaluate()
   using namespace SpatialOps;
   SVolField& result = this->value();
   result <<= 0.0;
-
+  
   const double dx = 1.0 / std::abs( gradXOp_->get_plus_coef() );
   const double dy = 1.0 / std::abs( gradYOp_->get_plus_coef() );
   const double dz = 1.0 / std::abs( gradZOp_->get_plus_coef() );
@@ -87,7 +86,7 @@ evaluate()
   mixingLengthSq = mixingLengthSq * mixingLengthSq;
   //const double deltaSquared  = pow(dx * dy * dz, 2.0/3.0);
   //const double eddyViscConstSq = turbulenceParameters_.eddyViscosityConstant * turbulenceParameters_.eddyViscosityConstant;
-
+  
   switch ( turbulenceParameters_.turbulenceModelName ) {
     case Wasatch::SMAGORINSKY:
       result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * delta^2 * |S|
