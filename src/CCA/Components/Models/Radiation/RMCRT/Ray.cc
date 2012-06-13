@@ -645,6 +645,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
       if (CellToValuesMap.empty()){
+        // initialize fluxes to zero
+        Flux Flux_;
+        Flux_.incident = 0;
+        Flux_.net = 0;
         for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector origin = *iter;
           
@@ -663,10 +667,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             originAndFace.push_back( origin.z() );
             originAndFace.push_back( face );
 
-            // initialize fluxes to zero
-            Flux Flux_;
-            Flux_.incident = 0;
-            Flux_.net = 0;
+
             CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
           }
         }// end populate map cell iterator
