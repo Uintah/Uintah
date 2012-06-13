@@ -815,12 +815,6 @@ namespace Wasatch{
 
       Expr::ExpressionBuilder* builder = NULL;
 
-      if( advVelocityTag == Expr::Tag() ){
-        std::ostringstream msg;
-        msg << "ERROR: no advective velocity set for transport equation '" << solnVarTag << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-
       const std::string interpMethod = get_conv_interp_method( convMethod );
       if( dir=="X" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;

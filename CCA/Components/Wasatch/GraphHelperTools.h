@@ -42,7 +42,7 @@ namespace Expr{
 
 namespace Wasatch{
 
-  class TransportEquation;  // forward declartation
+  class TransportEquation;  // forward declaration
 
   /** \addtogroup WasatchGraph
    *  @{
