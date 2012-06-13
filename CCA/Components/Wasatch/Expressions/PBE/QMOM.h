@@ -149,7 +149,7 @@ void
 QMOM<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  const Expr::FieldManager<FieldT>& fm = fml.field_manager<FieldT>();
   knownMoments_.clear();
   for( Expr::TagList::const_iterator iMomTag=knownMomentsTagList_.begin();
        iMomTag!=knownMomentsTagList_.end();

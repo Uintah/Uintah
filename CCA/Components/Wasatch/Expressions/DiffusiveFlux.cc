@@ -81,9 +81,12 @@ void
 DiffusiveFlux<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  phi_ = &fml.template field_manager<ScalarT  >().field_ref( phiTag_ );
+  const Expr::FieldManager<FluxT  >& fluxFM   = fml.template field_manager<FluxT  >();
+  const Expr::FieldManager<ScalarT>& scalarFM = fml.template field_manager<ScalarT>();
+
+  phi_ = &scalarFM.field_ref( phiTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( !isConstCoef_ ) coef_ = &fml.template field_manager<FluxT>().field_ref( coefTag_ );
+  if( !isConstCoef_ ) coef_ = &fluxFM.field_ref( coefTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -162,7 +165,7 @@ void
 DiffusiveFlux2<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
+  const Expr::FieldManager<ScalarT>& scalarFM = fml.template field_manager<ScalarT>();
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );

@@ -76,8 +76,8 @@ void
 DiffusiveVelocity<GradT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<VelT   >::type& velFM    = fml.template field_manager<VelT   >();
-  const typename Expr::FieldManagerSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
+  const Expr::FieldManager<VelT  >& velFM   = fml.template field_manager<VelT  >();
+  const Expr::FieldManager<ScalarT>& scalarFM = fml.template field_manager<ScalarT>();
 
   phi_ = &scalarFM.field_ref( phiTag_ );
   if( !isConstCoef_ ) coef_ = &velFM.field_ref( coefTag_ );
@@ -150,7 +150,7 @@ void
 DiffusiveVelocity2<GradT,InterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldManagerSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
+  const Expr::FieldManager<ScalarT>& scalarFM = fml.template field_manager<ScalarT>();
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
 }
