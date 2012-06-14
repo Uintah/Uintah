@@ -59,12 +59,11 @@ void
 VelocityX<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  const Expr::FieldManager<double>& timeFM = fml.template field_manager<double>();
-  t_ = &timeFM.field_ref( tTag_ );
+  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -143,12 +142,11 @@ void
 VelocityY<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  const Expr::FieldManager<double>& timeFM = fml.template field_manager<double>();
-  t_ = &timeFM.field_ref( tTag_ );
+  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -227,12 +225,11 @@ void
 GradPX<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  const Expr::FieldManager<double>& timeFM = fml.template field_manager<double>();
-  t_ = &timeFM.field_ref( tTag_ );
+  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -311,12 +308,11 @@ void
 GradPY<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  const Expr::FieldManager<double>& timeFM = fml.template field_manager<double>();
-  t_ = &timeFM.field_ref( tTag_ );
+  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -394,7 +390,7 @@ void
 TaylorGreenVel3D<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
   z_ = &fm.field_ref( zTag_ );

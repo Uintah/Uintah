@@ -88,8 +88,8 @@ void
 PrimVar<FieldT,DensT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& phifm = fml.template field_manager<FieldT>();
-  const Expr::FieldManager<DensT >& denfm = fml.template field_manager<DensT >();
+  const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<DensT >::type& denfm = fml.template field_manager<DensT >();
 
   rhophi_ = &phifm.field_ref( rhophit_ );
   rho_    = &denfm.field_ref( rhot_    );
@@ -100,7 +100,7 @@ void
 PrimVar<FieldT,FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& phifm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
   rhophi_ = &phifm.field_ref( rhophit_ );
   rho_    = &phifm.field_ref( rhot_    );
 }

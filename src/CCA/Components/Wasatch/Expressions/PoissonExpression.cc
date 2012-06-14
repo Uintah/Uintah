@@ -46,7 +46,7 @@
 #include <spatialops/FieldExpressions.h>
 
 namespace Wasatch {
-    
+
   PoissonExpression::PoissonExpression( const Expr::Tag& phiTag,
                                         const Expr::Tag& phiRHSLocalTag,
                                         const Expr::Tag& phiRHSTag,
@@ -63,21 +63,21 @@ namespace Wasatch {
     doX_( true ),
     doY_( true ),
     doZ_( true ),
-    
+
     didAllocateMatrix_(false),
-    
+
     materialID_(0),
     rkStage_(1),
-    
+
     useRefPhi_( useRefPhi ),
     refPhiValue_( refPhiValue ),
     refPhiLocation_( refPhiLocation ),
-    
+
     use3DLaplacian_( use3DLaplacian ),
-    
+
     solverParams_( solverParams ),
     solver_( solver ),
-    
+
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix", Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
     phiLabel_( Uintah::VarLabel::create( phit_.name(),
@@ -89,16 +89,16 @@ namespace Wasatch {
   {}
 
   //--------------------------------------------------------------------
-  
+
   PoissonExpression::~PoissonExpression()
   {
     Uintah::VarLabel::destroy( phiLabel_      );
     Uintah::VarLabel::destroy( phirhsLabel_   );
     Uintah::VarLabel::destroy( matrixLabel_   );
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::schedule_solver( const Uintah::LevelP& level,
                                       Uintah::SchedulerP sched,
@@ -111,9 +111,9 @@ namespace Wasatch {
                            isDoingInitialization ? 0 : phiLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
                            &solverParams_ );
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::schedule_set_poisson_bcs( const Uintah::LevelP& level,
                                                Uintah::SchedulerP sched,
@@ -130,9 +130,9 @@ namespace Wasatch {
     Uintah::LoadBalancer* lb = sched->getLoadBalancer();
     sched->addTask(task, lb->getPerProcessorPatchSet(level), materials);
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::declare_uintah_vars( Uintah::Task& task,
                                           const Uintah::PatchSubset* const patches,
@@ -142,9 +142,9 @@ namespace Wasatch {
     if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
     else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                                        const Uintah::Patch* const patch,
@@ -161,26 +161,27 @@ namespace Wasatch {
       didAllocateMatrix_=true;
     }
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::advertise_dependents( Expr::ExprDeps& exprDeps )
   {
     if(phirhst_ != Expr::Tag()) exprDeps.requires_expression( phirhst_ );
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::bind_fields( const Expr::FieldManagerList& fml )
   {
-    const Expr::FieldManager<SVolField>& svfm = fml.field_manager<SVolField>();
-    if(phirhst_ != Expr::Tag()) phirhs_ = &svfm.field_ref( phirhst_ );
+    if( phirhst_ != Expr::Tag() ){
+      phirhs_ = &fml.field_manager<SVolField>().field_ref( phirhst_ );
+    }
   }
-  
+
   //--------------------------------------------------------------------
-    
+
   void
   PoissonExpression::setup_matrix()
   {
@@ -191,11 +192,11 @@ namespace Wasatch {
     double p = 0.0;
     // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
     double w = 0.0, s = 0.0, b = 0.0;
-    
+
     const SCIRun::IntVector l    = patch_->getCellLowIndex();
     const SCIRun::IntVector h    = patch_->getCellHighIndex();
     const Uintah::Vector spacing = patch_->dCell();
-    
+
     if ( doX_ || use3DLaplacian_ ) {
       const double dx2 = spacing[0]*spacing[0];
       w = 1.0/dx2;
@@ -211,29 +212,29 @@ namespace Wasatch {
       b = 1.0/dz2;
       p -= 2.0/dz2;
     }
-    
+
     for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
       // NOTE: for the conjugate gradient solver in Hypre, we must pass a positive
       // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
       // to the Laplacian operator is not positive definite - but "- A" is. Hence,
       // we multiply all coefficients by -1.
-      IntVector iCell = *iter;      
+      IntVector iCell = *iter;
       Uintah::Stencil4&  coefs = matrix_[iCell];
       coefs.w = -w;
       coefs.s = -s;
       coefs.b = -b;
       coefs.p = -p;
     }
-    
+
     // When boundary conditions are present, modify the coefficient matrix coefficients at the boundary
     if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->names())[0], matrix_, patch_, materialID_);
 
     // if the user specified a reference value, then modify the appropriate matrix coefficients
     if ( useRefPhi_ ) set_ref_poisson_coefs(matrix_, patch_, refPhiLocation_ );
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::evaluate()
   {
@@ -248,16 +249,16 @@ namespace Wasatch {
 
     SVolField& rhs = *results[1];
     rhs <<= 0.0;
-    rhs <<= - *phirhs_;    
-    
+    rhs <<= - *phirhs_;
+
     // update poisson rhs for reference value
     if (useRefPhi_) set_ref_poisson_rhs( rhs, patch_, refPhiValue_, refPhiLocation_ );
-    
+
     if(patch_->hasBoundaryFaces()) update_poisson_rhs(phit_, matrix_, phi, rhs, patch_, materialID_);
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   void
   PoissonExpression::process_bcs ( const Uintah::ProcessorGroup* const pg,
                                    const Uintah::PatchSubset* const patches,
@@ -268,15 +269,15 @@ namespace Wasatch {
     using namespace SpatialOps;
     typedef SelectUintahFieldType<SVolField>::const_type UintahField;
     UintahField poissonField_;
-    
+
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
     //__________________
     // loop over materials
     for( int im=0; im<materials->size(); ++im ){
-      
+
       const int material = materials->get(im);
-      
+
       //____________________
       // loop over patches
       for( int ip=0; ip<patches->size(); ++ip ){
@@ -290,9 +291,9 @@ namespace Wasatch {
       }
     }
   }
-  
+
   //--------------------------------------------------------------------
-  
+
   PoissonExpression::Builder::Builder( const Expr::TagList& results,
                                        const Expr::Tag& phiRHSTag,
                                        const bool       useRefPhi,
@@ -310,9 +311,9 @@ namespace Wasatch {
   sparams_( sparams ),
   solver_( solver )
   {}
-  
+
   //--------------------------------------------------------------------
-  
+
   Expr::ExpressionBase*
   PoissonExpression::Builder::build() const
   {

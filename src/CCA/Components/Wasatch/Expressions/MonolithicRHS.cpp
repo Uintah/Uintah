@@ -81,7 +81,7 @@ void
 MonolithicRHS<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   dCoef_ = &fm.field_ref( dCoefTag_ );
   phi_   = &fm.field_ref( phiTag_   );
 

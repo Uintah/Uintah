@@ -5,30 +5,30 @@
 
 #include <expression/Expression.h>
 
-/**                                                                                                                   
- *  \ingroup WasatchExpressions                                                                                       
- *  \class PrecipitationClassicNucleationCoefficient                                                                                                 
- *  \author Alex Abboud                                                                                               
- *  \date January, 2012                                                                                               
- *                                                                                                                    
- *  \tparam FieldT the type of field.                                                                                 
- *                                                                                                                    
- *  \brief Nucleation Coeffcient Source term for use in QMOM                                                                     
- *  classic nucleation refers to this value as                                                                       
- *  \f$ B_0 = \exp ( 16 \pi /3 ( \gamma /K_B T)^3( \nu /N_A/ \ln(S)^2  \f$                                                                                                                
+/**
+ *  \ingroup WasatchExpressions
+ *  \class PrecipitationClassicNucleationCoefficient
+ *  \author Alex Abboud
+ *  \date January, 2012
+ *
+ *  \tparam FieldT the type of field.
+ *
+ *  \brief Nucleation Coeffcient Source term for use in QMOM
+ *  classic nucleation refers to this value as
+ *  \f$ B_0 = \exp ( 16 \pi /3 ( \gamma /K_B T)^3( \nu /N_A/ \ln(S)^2  \f$
  */
 template< typename FieldT >
 class PrecipitationClassicNucleationCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag phiTag_, superSatTag_;            
-  const FieldT* phi_; // this will correspond to m(k+1)                                                               
+  const Expr::Tag phiTag_, superSatTag_;
+  const FieldT* phi_; // this will correspond to m(k+1)
   const FieldT* superSat_;
   const double expConst_;
-  
+
   PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
                                              const double expConst);
-  
+
   public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -42,33 +42,33 @@ class PrecipitationClassicNucleationCoefficient
     {}
 
     ~Builder(){}
-    
+
     Expr::ExpressionBase* build() const
     {
       return new PrecipitationClassicNucleationCoefficient<FieldT>( supersatt_, expconst_);
     }
-    
+
   private:
     const Expr::Tag supersatt_;
     const double expconst_;
   };
-  
+
   ~PrecipitationClassicNucleationCoefficient();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
+
 };
 
-// ###################################################################                                                
-//                                                                                                                    
-//                          Implementation                                                                            
-//                                                                                                                    
-// ###################################################################                                                
+// ###################################################################
+//
+//                          Implementation
+//
+// ###################################################################
 
-                                          
+
 
 template< typename FieldT >
 PrecipitationClassicNucleationCoefficient<FieldT>::
@@ -79,14 +79,14 @@ superSatTag_(superSatTag),
 expConst_(expConst)
 {}
 
-//--------------------------------------------------------------------                                                
+//--------------------------------------------------------------------
 
 template< typename FieldT >
 PrecipitationClassicNucleationCoefficient<FieldT>::
 ~PrecipitationClassicNucleationCoefficient()
 {}
 
-//--------------------------------------------------------------------                                                
+//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
@@ -96,25 +96,24 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( superSatTag_ );
 }
 
-//--------------------------------------------------------------------                                                
+//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
 PrecipitationClassicNucleationCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
+  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
 }
 
-//--------------------------------------------------------------------       
+//--------------------------------------------------------------------
 template< typename FieldT >
 void
 PrecipitationClassicNucleationCoefficient<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {}
 
-//--------------------------------------------------------------------                                                
+//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
@@ -127,6 +126,6 @@ evaluate()
                  ( 0.0 );
 }
 
-//--------------------------------------------------------------------                                                
+//--------------------------------------------------------------------
 
-#endif // PrecipitationClassicNucleationCoefficient_Expr_h                                                                                           
+#endif // PrecipitationClassicNucleationCoefficient_Expr_h

@@ -130,7 +130,7 @@ void
 QuadratureClosure<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& volfm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
   weights_.clear();
   abscissae_.clear();
   for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {

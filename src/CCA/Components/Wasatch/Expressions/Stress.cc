@@ -56,7 +56,7 @@ Stress<StressT,Vel1T,Vel2T,ViscT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( visct_ );
-  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );  
+  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );
   exprDeps.requires_expression( vel1t_ );
   exprDeps.requires_expression( vel2t_ );
 }
@@ -68,9 +68,9 @@ void
 Stress<StressT,Vel1T,Vel2T,ViscT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ViscT>& viscfm = fml.template field_manager<ViscT>();
-  const Expr::FieldManager<Vel1T>& vel1fm = fml.template field_manager<Vel1T>();
-  const Expr::FieldManager<Vel2T>& vel2fm = fml.template field_manager<Vel2T>();
+  const typename Expr::FieldMgrSelector<ViscT>::type& viscfm = fml.template field_manager<ViscT>();
+  const typename Expr::FieldMgrSelector<Vel1T>::type& vel1fm = fml.template field_manager<Vel1T>();
+  const typename Expr::FieldMgrSelector<Vel2T>::type& vel2fm = fml.template field_manager<Vel2T>();
 
   visc_ = &viscfm.field_ref( visct_ );
   if ( isTurbulent_ ) turbvisc_ = &viscfm.field_ref( turbvisct_ );
@@ -103,21 +103,21 @@ evaluate()
 
   SpatFldPtr<StressT> tmp = SpatialFieldStore::get<StressT>( stress );
   //*tmp <<= 0.0;
-  
+
   vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
   vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
 
   stress <<= stress + *tmp; // dui/dxj + duj/dxi
 
   if ( isTurbulent_ ) {
-    SpatFldPtr<ViscT> tmp1 = SpatialFieldStore::get<ViscT>( stress );    
+    SpatFldPtr<ViscT> tmp1 = SpatialFieldStore::get<ViscT>( stress );
     *tmp1 <<= 0.0;
     *tmp1 <<= *visc_ + *turbvisc_;
     viscInterpOp_->apply_to_field( *tmp1, *tmp ); // tmp = mu + mu_turbulent
   } else {
     viscInterpOp_->apply_to_field( *visc_, *tmp );
   }
-  
+
   stress <<= - stress * *tmp; // - (mu + mu_turbulent) * (dui/dxj + duj/dxi)
 }
 
@@ -127,7 +127,7 @@ template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Stress<StressT,Vel1T,Vel2T,ViscT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& viscTag,
-                  const Expr::Tag& turbViscTag,                 
+                  const Expr::Tag& turbViscTag,
                   const Expr::Tag& vel1Tag,
                   const Expr::Tag& vel2Tag,
                   const Expr::Tag& dilTag )
@@ -135,7 +135,7 @@ Builder::Builder( const Expr::Tag& result,
     visct_    ( viscTag ),
     turbvisct_( turbViscTag ),
     vel1t_    ( vel1Tag ),
-    vel2t_    ( vel2Tag )    
+    vel2t_    ( vel2Tag )
 {}
 
 //--------------------------------------------------------------------
@@ -180,7 +180,7 @@ Stress<StressT,VelT,VelT,ViscT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( visct_ );
-  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );  
+  if( isTurbulent_ ) exprDeps.requires_expression( turbvisct_ );
   exprDeps.requires_expression( velt_  );
   exprDeps.requires_expression( dilt_  );
 }
@@ -192,8 +192,8 @@ void
 Stress<StressT,VelT,VelT,ViscT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<ViscT>& viscfm = fml.template field_manager<ViscT>();
-  const Expr::FieldManager<VelT >& velfm  = fml.template field_manager<VelT >();
+  const typename Expr::FieldMgrSelector<ViscT>::type& viscfm = fml.template field_manager<ViscT>();
+  const typename Expr::FieldMgrSelector<VelT >::type& velfm  = fml.template field_manager<VelT >();
 
   visc_ = &viscfm.field_ref( visct_ );
   if ( isTurbulent_ ) turbvisc_ = &viscfm.field_ref( turbvisct_ );
@@ -228,7 +228,7 @@ evaluate()
   SpatFldPtr<StressT> dilatation = SpatialFieldStore::get<StressT>( stress );
 
   if (isTurbulent_) {
-    SpatFldPtr<ViscT> tmp = SpatialFieldStore::get<ViscT>( stress );    
+    SpatFldPtr<ViscT> tmp = SpatialFieldStore::get<ViscT>( stress );
     *tmp <<= 0.0;
     *tmp <<= *visc_ + *turbvisc_;
     viscInterpOp_->apply_to_field( *tmp, stress   ); // stress = mu + mu_turbulent

@@ -40,9 +40,9 @@ void
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<Vel1T>& v1fm = fml.template field_manager<Vel1T>();
-  const Expr::FieldManager<Vel2T>& v2fm = fml.template field_manager<Vel2T>();
-  const Expr::FieldManager<Vel3T>& v3fm = fml.template field_manager<Vel3T>();
+  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
+  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
+  const typename Expr::FieldMgrSelector<Vel3T>::type& v3fm = fml.template field_manager<Vel3T>();
 
   if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
   if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );

@@ -9,11 +9,11 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class Birth
- *  \author Alex Abboud	
+ *  \author Alex Abboud
  *  \date January 2012
  *
  *  \tparam FieldT the type of field.
- 
+
  *  \brief Implements any type of birth term
  *  takes the form of
  *  \f$ B  = J \times B_0(S) \times IB(r) \f$
@@ -21,7 +21,7 @@
  *  \f$ B_0(S) \f$ is an optional functionality for the coefficient
  *  \f$ IB \f$ is the integral of the birth source term
  *  \f$ IB(r) = \int_0^\inf B r^k dr \f$, (k = moment order)
- *  For Point and Uniform birth sources, an analytical 
+ *  For Point and Uniform birth sources, an analytical
  *  solution is possible and used here
  *  For Normal distribution birth, a 10-point trapezoid method is used,
  *  with limits set as +/- 3 \times std dev of \f$ r^* \f$
@@ -41,24 +41,24 @@ class Birth
   const double stdDev_;
   const FieldT* birthCoef_; // this will correspond to the coefficient in the Birth rate term
   const FieldT* rStar_; // this will correspond to m(k + x) x depends on which Birth model
-  
+
   Birth( const Expr::Tag& birthCoefTag,
          const Expr::Tag& rStarTag,
          const double constCoef,
-         const double momentOrder, 
+         const double momentOrder,
          const std::string birthModel,
          const double constRStar,
          const double stdDev);
-  
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag& result, 
+    Builder( const Expr::Tag& result,
              const Expr::Tag& birthCoefTag,
              const Expr::Tag& rStarTag,
              const double constCoef,
-             const double momentOrder, 
+             const double momentOrder,
              const std::string birthModel,
              const double constRStar,
              const double stdDev)
@@ -71,14 +71,14 @@ public:
     constrstar_ (constRStar),
     stddev_     (stdDev)
     {}
-    
+
     ~Builder(){}
-    
+
     Expr::ExpressionBase* build() const
     {
       return new Birth<FieldT>( birthcoeft_, rstart_, constcoef_, momentorder_, birthmodel_, constrstar_, stddev_ );
     }
-    
+
   private:
     const Expr::Tag birthcoeft_, rstart_;
     const double constcoef_;
@@ -87,9 +87,9 @@ public:
     const double constrstar_;
     const double stddev_;
   };
-  
+
   ~Birth();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -139,7 +139,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   if ( birthCoefTag_ != Expr::Tag () )
     exprDeps.requires_expression( birthCoefTag_ );
-  if (rStarTag_ != Expr::Tag () ) 
+  if (rStarTag_ != Expr::Tag () )
     exprDeps.requires_expression( rStarTag_ );
 }
 
@@ -150,11 +150,11 @@ void
 Birth<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   if ( birthCoefTag_ != Expr::Tag () )
     birthCoef_ = &fm.field_ref( birthCoefTag_ );
   if (rStarTag_ != Expr::Tag () )
-    rStar_ = &fm.field_ref( rStarTag_ ); 
+    rStar_ = &fm.field_ref( rStarTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -174,11 +174,11 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  
+
   if ( birthCoefTag_ != Expr::Tag () ) {
     if ( rStarTag_ != Expr::Tag () ) {
       if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_); 
+        result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
                                                 pow(*rStar_ + stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
@@ -204,15 +204,15 @@ evaluate()
                                          pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - *rStarIter) * (x[i+1] - *rStarIter)) );
           }
           *resultsIter = constCoef_ * *birthCoefIter * IntVal;
-          ++resultsIter; 
+          ++resultsIter;
           ++rStarIter;
           ++birthCoefIter;
         }
       }
-      
+
     } else {// constant r*
       if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_); 
+        result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
                                                 pow(constRStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
@@ -234,12 +234,12 @@ evaluate()
         }
         result <<= constCoef_ * *birthCoef_ * IntVal;
       }
-    }   
-    
+    }
+
   } else { //const coeff
     if ( rStarTag_ != Expr::Tag () ) {
       if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * pow(*rStar_, momentOrder_); 
+        result <<= constCoef_ * pow(*rStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
                                    pow(*rStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
@@ -264,14 +264,14 @@ evaluate()
                                          pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - *rStarIter) * (x[i+1] - *rStarIter)) );
           }
           *resultsIter = constCoef_ * IntVal;
-          ++resultsIter; 
+          ++resultsIter;
           ++rStarIter;
         }
       }
-      
+
     } else { // constant r* & const coef
       if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * pow(constRStar_, momentOrder_); 
+        result <<= constCoef_ * pow(constRStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
                                   pow(constRStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);

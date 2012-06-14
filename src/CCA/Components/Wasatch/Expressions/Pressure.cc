@@ -206,10 +206,10 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
 void
 Pressure::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<SVolField>& svfm = fml.field_manager<SVolField>();
-  const Expr::FieldManager<XVolField>& xvfm = fml.field_manager<XVolField>();
-  const Expr::FieldManager<YVolField>& yvfm = fml.field_manager<YVolField>();
-  const Expr::FieldManager<ZVolField>& zvfm = fml.field_manager<ZVolField>();
+  const Expr::FieldMgrSelector<SVolField>::type& svfm = fml.field_manager<SVolField>();
+  const Expr::FieldMgrSelector<XVolField>::type& xvfm = fml.field_manager<XVolField>();
+  const Expr::FieldMgrSelector<YVolField>::type& yvfm = fml.field_manager<YVolField>();
+  const Expr::FieldMgrSelector<ZVolField>::type& zvfm = fml.field_manager<ZVolField>();
 
   if( doX_    )  fx_       = &xvfm.field_ref( fxt_       );
   if( doY_    )  fy_       = &yvfm.field_ref( fyt_       );
@@ -217,7 +217,7 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
   dilatation_ = &svfm.field_ref( dilatationt_ );
 
-  const Expr::FieldManager<double>& doublefm = fml.field_manager<double>();
+  const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
   timestep_ = &doublefm.field_ref( timestept_ );
 }
 
