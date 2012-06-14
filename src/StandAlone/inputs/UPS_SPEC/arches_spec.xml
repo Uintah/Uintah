@@ -93,7 +93,7 @@
           <absorption_label             spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
+                                        need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
                                         
         </model>
       </PropertyModels>
