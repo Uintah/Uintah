@@ -81,9 +81,9 @@ void
 MomRHSPart<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<XFluxT>& xfm = fml.template field_manager<XFluxT>();
-  const Expr::FieldManager<YFluxT>& yfm = fml.template field_manager<YFluxT>();
-  const Expr::FieldManager<ZFluxT>& zfm = fml.template field_manager<ZFluxT>();
+  const typename Expr::FieldMgrSelector<XFluxT>::type& xfm = fml.template field_manager<XFluxT>();
+  const typename Expr::FieldMgrSelector<YFluxT>::type& yfm = fml.template field_manager<YFluxT>();
+  const typename Expr::FieldMgrSelector<ZFluxT>::type& zfm = fml.template field_manager<ZFluxT>();
 
   if( cfluxXt_ != emptyTag_ )  cFluxX_ = &xfm.field_ref(cfluxXt_);
   if( cfluxYt_ != emptyTag_ )  cFluxY_ = &yfm.field_ref(cfluxYt_);
@@ -93,11 +93,9 @@ bind_fields( const Expr::FieldManagerList& fml )
   if( tauYt_ != emptyTag_ )  tauY_ = &yfm.field_ref(tauYt_);
   if( tauZt_ != emptyTag_ )  tauZ_ = &zfm.field_ref(tauZt_);
 
-  const Expr::FieldManager<SVolField>& scalarfm = fml.template field_manager<SVolField>();
-  density_ = &scalarfm.field_ref( densityt_ );
+  density_ = &fml.field_manager<SVolField>().field_ref( densityt_ );
 
-  const Expr::FieldManager<FieldT>& volfm = fml.template field_manager<FieldT>();
-  if( bodyForcet_ != emptyTag_ )  bodyForce_ = &volfm.field_ref( bodyForcet_ );
+  if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fml.field_manager<FieldT>().field_ref( bodyForcet_ );
 }
 
 //--------------------------------------------------------------------

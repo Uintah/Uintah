@@ -63,11 +63,8 @@ void
 MomRHS<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  rhsPart_ = &fm.field_ref( rhsPartt_ );
-
-  const Expr::FieldManager<PFieldT>& pfm = fml.template field_manager<PFieldT>();
-  if( pressuret_ != emptyTag_ )    pressure_ = &pfm.field_ref( pressuret_ );
+  rhsPart_ = &fml.field_manager<FieldT>().field_ref( rhsPartt_ );
+  if( pressuret_ != emptyTag_ )  pressure_ = &fml.field_manager<PFieldT>().field_ref( pressuret_ );
 }
 
 //--------------------------------------------------------------------

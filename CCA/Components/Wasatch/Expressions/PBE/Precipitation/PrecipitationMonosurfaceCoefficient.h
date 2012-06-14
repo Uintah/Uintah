@@ -27,11 +27,11 @@ class PrecipitationMonosurfaceCoefficient
   const double growthCoefVal_;
   const double expConst_;
   const FieldT* superSat_; //field from table of supersaturation
-  
+
   PrecipitationMonosurfaceCoefficient( const Expr::Tag& superSatTag,
                                        const double growthCoefVal,
                                        const double expConst);
-  
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -45,27 +45,27 @@ public:
     growthcoefval_(growthCoefVal),
     expconst_(expConst)
     {}
-    
+
     ~Builder(){}
-    
+
     Expr::ExpressionBase* build() const
     {
       return new PrecipitationMonosurfaceCoefficient<FieldT>( supersatt_,  growthcoefval_, expconst_ );
     }
-    
+
   private:
     const Expr::Tag supersatt_;
     const double growthcoefval_;
     const double expconst_;
   };
-  
+
   ~PrecipitationMonosurfaceCoefficient();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
+
 };
 
 
@@ -113,8 +113,7 @@ void
 PrecipitationMonosurfaceCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
+  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
 }
 
 //--------------------------------------------------------------------

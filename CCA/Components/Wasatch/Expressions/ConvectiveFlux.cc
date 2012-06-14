@@ -64,11 +64,8 @@ template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<PhiVolT>& phiVolFM = fml.template field_manager<PhiVolT>();
-  phi_ = &phiVolFM.field_ref( phiTag_ );
-
-  const Expr::FieldManager<VelVolT>& velVolFM = fml.template field_manager<VelVolT>();
-  vel_ = &velVolFM.field_ref( velTag_ );
+  phi_ = &fml.template field_manager<PhiVolT>().field_ref( phiTag_ );
+  vel_ = &fml.template field_manager<VelVolT>().field_ref( velTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -159,11 +156,10 @@ void
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<PhiVolT>& phiVolFM = fml.template field_manager<PhiVolT>();
+  const typename Expr::FieldMgrSelector<PhiVolT>::type& phiVolFM = fml.template field_manager<PhiVolT>();
   phi_ = &phiVolFM.field_ref( phiTag_ );
 
-  const Expr::FieldManager<VelVolT>& velVolFM = fml.template field_manager<VelVolT>();
-  vel_ = &velVolFM.field_ref( velTag_ );
+  vel_ = &fml.template field_manager<VelVolT>().field_ref( velTag_ );
 
   if (hasEmbeddedBoundary_) volFrac_ = &phiVolFM.field_ref( volFracTag_ );
 }

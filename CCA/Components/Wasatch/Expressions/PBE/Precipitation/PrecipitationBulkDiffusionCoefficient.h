@@ -15,7 +15,7 @@
  *
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with bulk diffusion growth
- *  \f$ g_0 = \nu D C_{eq} (S-1) \f$ or \f$ (S - \bar{S}) \f$   
+ *  \f$ g_0 = \nu D C_{eq} (S-1) \f$ or \f$ (S - \bar{S}) \f$
  *  \f$ g(r) = 1/r \f$
  *
  */
@@ -28,12 +28,12 @@ class PrecipitationBulkDiffusionCoefficient
   const FieldT* superSat_; //field from table of supersaturation
   const FieldT* eqConc_;   //field form table of equilibrium concentration
   const bool hasOstwaldRipening_;
-  
+
   PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                          const Expr::Tag& eqConcTag,
                                          const double growthCoefVal,
                                          const bool hasOstwaldRipening );
-  
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -49,27 +49,27 @@ public:
     growthcoefval_(growthCoefVal),
     hasostwaldripening_(hasOstwaldRipening)
     {}
-    
+
     ~Builder(){}
-    
+
     Expr::ExpressionBase* build() const
     {
       return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, growthcoefval_, hasostwaldripening_ );
     }
-    
+
   private:
     const Expr::Tag supersatt_, eqconct_;
     const double growthcoefval_;
     const bool hasostwaldripening_;
   };
-  
+
   ~PrecipitationBulkDiffusionCoefficient();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
+
 };
 
 
@@ -120,9 +120,9 @@ void
 PrecipitationBulkDiffusionCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   superSat_ = &fm.field_ref( superSatTag_ );
-  eqConc_ = &fm.field_ref( eqConcTag_ );
+  eqConc_   = &fm.field_ref( eqConcTag_   );
 }
 
 //--------------------------------------------------------------------

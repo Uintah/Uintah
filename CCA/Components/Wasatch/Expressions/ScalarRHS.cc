@@ -130,14 +130,13 @@ void ScalarRHS<FieldT>::nullify_fields()
 template< typename FieldT >
 void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<XFluxT>& xFluxFM  = fml.field_manager<XFluxT>();
-  const Expr::FieldManager<YFluxT>& yFluxFM  = fml.field_manager<YFluxT>();
-  const Expr::FieldManager<ZFluxT>& zFluxFM  = fml.field_manager<ZFluxT>();
-  const Expr::FieldManager<FieldT>& scalarFM = fml.field_manager<FieldT>();
-  const Expr::FieldManager<XVolField>& xVolFM  = fml.field_manager<XVolField>();
-  const Expr::FieldManager<YVolField>& yVolFM  = fml.field_manager<YVolField>();
-  const Expr::FieldManager<ZVolField>& zVolFM  = fml.field_manager<ZVolField>();
-
+  const typename Expr::FieldMgrSelector<XFluxT   >::type& xFluxFM  = fml.field_manager<XFluxT   >();
+  const typename Expr::FieldMgrSelector<YFluxT   >::type& yFluxFM  = fml.field_manager<YFluxT   >();
+  const typename Expr::FieldMgrSelector<ZFluxT   >::type& zFluxFM  = fml.field_manager<ZFluxT   >();
+  const typename Expr::FieldMgrSelector<FieldT   >::type& scalarFM = fml.field_manager<FieldT   >();
+  const typename Expr::FieldMgrSelector<XVolField>::type& xVolFM   = fml.field_manager<XVolField>();
+  const typename Expr::FieldMgrSelector<YVolField>::type& yVolFM   = fml.field_manager<YVolField>();
+  const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM   = fml.field_manager<ZVolField>();
 
   if( haveConvection_ ){
     if( doXDir_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
@@ -152,8 +151,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   }
 
   if ( haveVolFrac_ ) {
-    const Expr::FieldManager<SVolField>& densityFM = fml.template field_manager<SVolField>();
-    volfrac_ = &densityFM.field_ref( volFracTag_ );
+    volfrac_ = &fml.template field_manager<SVolField>().field_ref( volFracTag_ );
   }
 
   if ( haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
@@ -165,8 +163,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
     if( isrc->context() != Expr::INVALID_CONTEXT ) {
       srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
       if (isConstDensity_){
-        const Expr::FieldManager<SVolField>& densityFM = fml.template field_manager<SVolField>();
-        rho_ = &densityFM.field_ref( densityTag_ );
+        rho_ = &fml.template field_manager<SVolField>().field_ref( densityTag_ );
       }
     }
   }
