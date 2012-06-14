@@ -10,6 +10,8 @@
       <randomSeed             spec="OPTIONAL BOOLEAN"/>
       <Temperature            spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
       <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>
+      <sigmaScat              spec="OPTIONAL DOUBLE  'positive'"/>
+      <abskgBench4            spec="OPTIONAL DOUBLE  'positive'"/>
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
       <Slice                  spec="OPTIONAL DOUBLE"/>

@@ -204,6 +204,8 @@ namespace Uintah{
       std::map<std::vector<int>, Flux> CellToValuesMap;                  // holds the fluxes for the cells in the patch
       std::map< int, std::map<std::vector<int>, Flux> > PatchToCellsMap; // holds the boundary cells in the patch
 
+      double _sigmaScat;
+      double _abskgBench4;
       int  _benchmark; 
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
