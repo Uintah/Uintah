@@ -138,14 +138,16 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
+  rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
+  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // scattering coefficient
 
 
   //__________________________________
   //  Warnings and bulletproofing
-  if (_benchmark > 3 || _benchmark < 0  ){
+  if (_benchmark > 4 || _benchmark < 0  ){
     ostringstream warn;
     warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
-    warn << "Specify a value of 1 through 3 to run a benchmark case, or 0 otherwise." << endl;
+    warn << "Specify a value of 1 through 4 to run a benchmark case, or 0 otherwise." << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
@@ -327,9 +329,19 @@ Ray::initProperties( const ProcessorGroup* pc,
       
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter; 
-        temp[c] = 1000 * abskg[c] * 1000 * abskg[c];
+        //temp[c] = 1000 * abskg[c] * 1000 * abskg[c]; incorrect
+        temp[c] = 1000 * abskg[c];
+
       }
     }
+
+    if(_benchmark == 4) {  // Siegel isotropic scattering
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = _abskgBench4;
+      }
+    }
+
   }
 }
 
@@ -2030,7 +2042,7 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
 
    // #define SCATTER 1
    #ifdef SCATTER
-   double scatCoeff = 5; //[m^-1]  !! HACK !! This needs to come from data warehouse
+   double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
 
    // determine the length at which scattering will occur
    // CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
