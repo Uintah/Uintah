@@ -760,26 +760,35 @@ void compute_ave( vector<int>                          & matls,
 }
 
 
-//__________________________________
-//  scale the pixel to 0->255
-//  CURRENTLY NOT USED
-void scaleImage( const IntVector& lo,
+//______________________________________________________________________
+//  scale the pixel 
+// 8-bit:   0->255
+// 16-bit:  0->65025
+void scaleImage( const int nBits,
+                 const IntVector& lo,
                  const IntVector& hi,
                  CCVariable<double>& ave ) {
-  double maxVal = -DBL_MAX;
-  double minVal = DBL_MAX;
-  
-  for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
-    IntVector c = *iter;
-    maxVal = Max( maxVal, ave[c] );
-    minVal = Min( minVal, ave[c] );
-  }
-  
-  double range = fabs(maxVal - minVal);
-  for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
-    IntVector c = *iter;
-    ave[c] = 255 * fabs(ave[c] - minVal)/range;
-    //cout << c << " aveScaled: " << ave[c] << endl;
+                 
+  if( nBits == 8 || nBits == 16 ){
+   
+    double maxVal = -DBL_MAX;
+    double minVal = DBL_MAX;
+    int power = nBits/8;
+    double scale = pow(255, power);
+
+
+    for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
+      IntVector c = *iter;
+      maxVal = Max( maxVal, ave[c] );
+      minVal = Min( minVal, ave[c] );
+    }
+
+    double range = fabs(maxVal - minVal);
+    for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
+      IntVector c = *iter;
+      ave[c] = scale * fabs(ave[c] - minVal)/range;
+    }
+    cout << "  Scaled data between 0 -> "<< scale << " Data min: " << minVal << " max: " << maxVal << endl;
   }
 }
 
@@ -989,11 +998,10 @@ int main(int argc, char** argv)
   
   tiffFlags* flags = scinew tiffFlags();  // currently not used.
 
-  int matl = 0;
   unsigned int nBits     = 8;
   bool doVerification    = false;
   saveSlices sliceFormat = asVolume;
-
+  vector<int> matls;                      // what matls to average
   //__________________________________
   // Parse arguments
 
@@ -1004,11 +1012,25 @@ int main(int argc, char** argv)
     if(s == "-v" || s == "--variable") {
       variable_name = string(argv[++i]);
     } else if ( s == "-m" || s == "--material") {
+      
       string me = string(argv[++i]);
-      if( me == "a" || me == "all" ){
-        matl = 999;
-      } else {
-        matl = atoi(me.c_str());
+      
+      if( me == "a" || me == "all" ){        // all matls
+        matls.push_back(999);
+      } else{
+        //__________________________________
+        // read in vector of matls
+        --i;                                 // rewind
+        int rc = 1;                          // return code
+        do {
+          int m;
+          rc = sscanf( argv[++i], "%d",&m);  // read in a int
+
+          if (rc){                            
+            matls.push_back(m);              // put int into vector
+          }
+        } while (rc);
+        --i;                                 // rewind
       }
     } else if ( s == "-tlow" || s == "--timesteplow") {
       time_start = strtoul(argv[++i],NULL,10);
@@ -1183,15 +1205,15 @@ int main(int argc, char** argv)
       
       //__________________________________
       //  find the number of matls at this timestep
-      vector<int> matls;
-      if(matl == 999){       // all matls
+      if(matls[0] == 999){       // all matls
+
+        matls.clear();
         const Patch* patch = *(level->patchesBegin());
         int numMatls = archive->queryNumMaterials( patch, time_step);
+        
         for (int m = 0; m< numMatls; m++ ){
           matls.push_back(m);
         }
-      } else {
-        matls.push_back(matl);
       }
 
       cout << "  " << vars[var_index] << ": " << types[var_index]->getName() 
@@ -1247,6 +1269,9 @@ int main(int argc, char** argv)
           exit(1);
         }
       }
+      //__________________________________
+      //  Scale 8bit and 16bit data
+      scaleImage( nBits, lo, hi, aveLevel );
 
       //__________________________________
       //  write out a tiff volume
