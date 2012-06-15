@@ -59,7 +59,7 @@
  *
  *
  */
-
+class MTRand; //forward declaration for use in updateSumI
 namespace Uintah{
 
   class Ray  {
@@ -110,7 +110,7 @@ namespace Uintah{
                                          const bool backoutTemp = false);
                                          
       /** @brief Update the running total of the incident intensity */
-      void  updateSumI ( const Vector& inv_direction_vector,
+      void  updateSumI ( Vector& inv_direction_vector, // can change if scattering occurs
                          const Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
@@ -119,7 +119,8 @@ namespace Uintah{
                          constCCVariable<double>& sigmaT4Pi,
                          constCCVariable<double>& abskg,
                          unsigned long int& size,
-                         double& sumI);
+                         double& sumI,
+                         MTRand * _mTwister);
 
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void adjustLocation(Vector &location,
