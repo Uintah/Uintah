@@ -359,11 +359,13 @@ namespace Wasatch{
     GraphHelper* const icgraphHelper = gc[INITIALIZATION];        
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
 
-    slngraphHelper->exprFactory->register_expression( pbuilder1 );            
-    icgraphHelper->exprFactory->register_expression( pbuilder );    
+    const Expr::ExpressionID slnPoissonID = slngraphHelper->exprFactory->register_expression( pbuilder1 );            
+    slngraphHelper->exprFactory->cleave_from_parents(slnPoissonID);
+    const Expr::ExpressionID icPoissonID = icgraphHelper->exprFactory->register_expression( pbuilder );    
+    //icgraphHelper->exprFactory->cleave_from_parents(icPoissonID);
 
-    slngraphHelper->rootIDs.insert( slngraphHelper->exprFactory->get_id(poissonVariableTag) );
-    icgraphHelper->rootIDs.insert( icgraphHelper->exprFactory->get_id(poissonVariableTag) );    
+    slngraphHelper->rootIDs.insert( slnPoissonID );
+    icgraphHelper->rootIDs.insert( icPoissonID );    
   }
 
   //==================================================================
