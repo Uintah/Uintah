@@ -630,7 +630,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
              inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
             sumI_prev = sumI;
@@ -797,7 +797,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] += j;
           ray_location[2] += k;
 
-          updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
+          updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
 
           sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                  // from all the rays up to that point
@@ -870,7 +870,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ;
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI);
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
         
       }  // Ray loop
       
@@ -1992,7 +1992,7 @@ void Ray::carryForward ( const ProcessorGroup*,
 
 
 //______________________________________________________________________
-void Ray::updateSumI ( const Vector& inv_direction_vector,
+void Ray::updateSumI ( Vector& inv_direction_vector,
                        const Vector& ray_location,
                        const IntVector& origin,
                        const Vector& Dx,
@@ -2001,7 +2001,8 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
                        constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
                        unsigned long int& size,
-                       double& sumI)
+                       double& sumI,
+                       MTRand * _mTwister)
 
 {
   IntVector cur = origin;
@@ -2040,13 +2041,14 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
    double fs = 1.0;
    double optical_thickness = 0;
 
-   // #define SCATTER 1
+
+   #define SCATTER 1
    #ifdef SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
 
    // determine the length at which scattering will occur
    // CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-   double scatLength = -log( 1- _mTwister.randDblExc() ) / scatCoeff;
+   double scatLength = -log(_mTwister->randDblExc() ) / scatCoeff;
    double curLength = 0;
    #endif
 
@@ -2127,10 +2129,11 @@ void Ray::updateSumI ( const Vector& inv_direction_vector,
        curLength += disMin;
        if (curLength > scatLength){
          // get new direction (below is isotropic scatteirng)
-         plusMinus_one = 2 * _mTwister.randDblExc() - 1;
-         r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-         theta = 2 * M_PI * _mTwister.randDblExc();            // Uniform betwen 0-2Pi
+         double plusMinus_one = 2 * _mTwister->randDblExc() - 1;
+         double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+         double theta = 2 * M_PI * _mTwister->randDblExc();            // Uniform betwen 0-2Pi
 
+         Vector direction_vector;
          direction_vector[0] = r*cos(theta);                   // Convert to cartesian
          direction_vector[1] = r*sin(theta);
          direction_vector[2] = plusMinus_one;
