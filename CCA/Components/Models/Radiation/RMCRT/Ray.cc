@@ -2042,7 +2042,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    double optical_thickness = 0;
 
 
-   #define SCATTER 1
+   //#define SCATTER 1
    #ifdef SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
 
