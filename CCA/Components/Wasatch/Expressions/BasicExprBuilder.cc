@@ -34,6 +34,8 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
+
 #include <CCA/Components/Wasatch/StringNames.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationBulkDiffusionCoefficient.h>
@@ -163,7 +165,14 @@ namespace Wasatch{
       typedef typename CylinderPatch<FieldT>::Builder Builder;
       builder = scinew Builder( tag, field1Tag, field2Tag, origin, insideValue, outsideValue, radius );
     }
-
+    
+    else if( params->findBlock("WallDistanceFunction") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("WallDistanceFunction");
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename WallDistance::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag );
+    }
+    
     return builder;
   }
 

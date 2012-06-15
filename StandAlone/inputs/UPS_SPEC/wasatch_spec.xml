@@ -12,7 +12,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra,Cylinder)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
@@ -86,6 +86,11 @@
           <NameTag        spec="REQUIRED"/>
         </Coordinate2>
       </Cylinder>
+      
+      <WallDistanceFunction     spec="OPTIONAL NO_DATA">
+        <NameTag                        spec="REQUIRED" />
+      </WallDistanceFunction>
+      
       
     </BasicExpression>
 

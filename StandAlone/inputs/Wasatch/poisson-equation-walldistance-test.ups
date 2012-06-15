@@ -51,6 +51,30 @@
        </Parameters>
      </PoissonEquation>
 
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="walld" state="STATE_N" />
+    </ForceOnGraph>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="walld" state="STATE_N" />
+    </ForceOnGraph>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="walld" state="STATE_N" />
+      <WallDistanceFunction>
+        <NameTag name="wall_distance" state="STATE_N" />
+      </WallDistanceFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="walld" state="STATE_N" />
+      <WallDistanceFunction>
+        <NameTag name="wall_distance" state="STATE_N" />
+      </WallDistanceFunction>
+    </BasicExpression>
+
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
@@ -98,6 +122,7 @@
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.00001"/>
     <compression>gzip</compression>
+    <save label="walld"/>    
     <save label="wall_distance"/>    
     <save label="potential_flow"/>        
   </DataArchiver> 
@@ -165,8 +190,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[60,60,60]</resolution>
-        <patches>[3,3,3]</patches>
+        <resolution>[20,20,20]</resolution>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,0,0]</periodic>
     </Level>
