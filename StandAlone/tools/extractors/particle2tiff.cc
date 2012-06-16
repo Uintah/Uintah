@@ -147,9 +147,10 @@ class eightBit  : public Bits
           }
         }
       } else {                    // actual data
-        for ( uint32 j = d_height-1; j != 0; j-- ){
+        for ( int j = d_height-1; j != -1; j-- ){  // invert the image
+          int y = (d_height-1) - j;                // so the orientation is correct in most viewers
+          
           for( uint32 i = 0; i < d_width; i++ ){
-            int y = (d_height-1) - j;   // so the orientation is correct in most viewers
             IntVector c = IntVector(i,y, page) + lo;
             d_slice[j * d_width + i] = ave[c];;
           }
@@ -230,9 +231,10 @@ class sixteenBit  : public Bits
           }
         }
       } else {                    // actual data
-        for (uint32 j = d_height-1; j != 0; j--){
+        for ( int j = d_height-1; j != -1; j-- ){  // invert the image
+          int y = (d_height-1) - j;                // so the orientation is correct in most viewers
+          
           for(uint32 i = 0; i < d_width; i++){
-            int y = (d_height-1) - j;   // so the orientation is correct in most viewers
             IntVector c = IntVector(i,y,page) + lo;
             d_slice[j * d_width + i] = ave[c];
           }
@@ -312,9 +314,10 @@ class thirtytwoBit  : public Bits
           }
         }
       } else {                    // actual data
-        for (uint32 j = d_height-1; j != 0; j--){
+        for ( int j = d_height-1; j != -1; j-- ){   // invert the image
+          int y = (d_height-1) - j;                 // so the orientation is correct in most viewers
+          
           for(uint32 i = 0; i < d_width; i++){
-            int y = (d_height-1) - j;   // so the orientation is correct in most viewers 
             IntVector c = IntVector(i,y,page) + lo;
             d_slice[j * d_width + i] = ave[c];
           }
