@@ -6768,3 +6768,36 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
   }
 
 }
+
+void 
+BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{ 
+  Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity", 
+                           this, &BoundaryCondition::setIntrusionDensity); 
+  tsk->modifies( d_lab->d_densityCPLabel ); 
+  sched->addTask( tsk, patches, matls ); 
+
+} 
+
+void 
+BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    if ( _using_new_intrusion ){ 
+      const Patch* patch = patches->get(p);
+      int archIndex = 0; // only one arches material
+      int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+      CCVariable<double> density; 
+      new_dw->getModifiable( density, d_lab->d_densityCPLabel, indx, patch ); 
+
+      _intrusionBC->setDensity( patch, density ); 
+    }
+  }
+}
+

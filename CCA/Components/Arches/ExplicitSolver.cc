@@ -710,6 +710,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                        d_timeIntegratorLabels[curr_level]);
     }
 
+    d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
+
   }
 
   return(0);
@@ -2127,7 +2129,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
             negativeDensityGuess = 1.0;
           }
-          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess) && cellType[currCell] == -1 ) {
             negativeDensityGuess = 1.0;
           }
         }

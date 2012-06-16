@@ -675,7 +675,6 @@ IntrusionBC::setCellType( const ProcessorGroup*,
           }
         }
       }
-
     }   // intrusion loop 
   }     // patch loop
 } 
@@ -805,6 +804,44 @@ IntrusionBC::addScalarRHS( const Patch* patch,
                 double face_vel = V[_iHelp[idir]];
 
                 scalar_iter->second->set_scalar_rhs( idir, c, RHS, face_den, face_vel, area ); 
+
+              } 
+            }
+          }
+        }
+      }
+    }
+  }
+} 
+
+//_________________________________________
+void 
+IntrusionBC::setDensity( const Patch* patch, 
+                         CCVariable<double>& density )
+{ 
+
+  const int p = patch->getID(); 
+
+  if ( _intrusion_on ) { 
+
+    // sets density on intrusion inlets 
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+
+      if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){ 
+
+        if ( !iIntrusion->second.interior_cell_iterator.empty() ) {
+
+          BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
+
+          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+
+            IntVector c = *i;
+
+            for ( int idir = 0; idir < 6; idir++ ){ 
+
+              if ( iIntrusion->second.directions[idir] != 0 ){ 
+
+                density[ c - _faceDirHelp[idir] ] = iIntrusion->second.density; 
 
               } 
             }
