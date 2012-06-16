@@ -318,6 +318,14 @@ namespace Uintah {
                                        SFCZVariable<double>& w, 
                                        constCCVariable<double>& density );
 
+      void sched_setIntrusionDensity( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls );
+
+      void setIntrusionDensity( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw);
+
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, 

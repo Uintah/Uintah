@@ -142,6 +142,10 @@ namespace Uintah{
                          CCVariable<double>& RHS,
                          constCCVariable<double>& density ); 
 
+      /** @brief Sets the density in the intrusion for inlets */
+      void setDensity( const Patch* patch, 
+                       CCVariable<double>& density );
+
       /** @brief Sets the temperature field to that of the intrusion temperature */ 
       void sched_setIntrusionT( SchedulerP& sched, 
                                 const PatchSet* patches, 
@@ -838,7 +842,7 @@ namespace Uintah{
         std::vector<const VarLabel*> labels;
         std::map<std::string, double> varnames_values_map; 
         std::vector<std::string>     VARIABLE_TYPE; 
-        // Note that directions is a vector as: [-X,+X,-Y,+Y,-Z,+Z] ~ 0 means off/non-zero means on
+        // Note that directions is a vector as: [-X,+X,-Y,+Y,-Z,+Z] ~ 0 means "off"/non-zero means "on"
         std::vector<int>             directions; 
         double                       mass_flow_rate; 
         BCIterator                   bc_face_iterator;
