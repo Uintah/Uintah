@@ -56,15 +56,21 @@ IS_STATIC_BUILD := @IS_STATIC_BUILD@
 %.tex :: %
 
 
+# PTXDIR is the Nvidia assembler/bytecode subdirectory (for PTX or CUBIN)
 ifeq ($(OBJTOP),.)
   LIBDIR := lib
+  PTXDIR := ptx
 else
   LIBDIR := $(OBJTOP_ABS)/lib
+  PTXDIR := $(OBJTOP_ABS)/ptx
 endif
 
 # squash any output from noisy environments, we just want the pwd output
 LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
-	           > /dev/null; pwd) 
+	           > /dev/null; pwd)
+	           
+PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR)\
+	           > /dev/null; pwd) 	           
 
 SCIRUN_LIBDIR := $(LIBDIR)
 
@@ -74,7 +80,6 @@ SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR) > /dev/null; pwd)
 VPATH := $(SRCTOP)
 
 # Optional pieces
-
 BUILD_VISIT := @BUILD_VISIT@
 VISIT_INSTALL_DIR := @VISIT_INSTALL_DIR@
 
@@ -495,12 +500,12 @@ ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	@$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	@$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(PTXDIR)/$(basename $(notdir $@)).$(NVCCEXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(basename $@).$(NVCCEXT)
+	$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(PTXDIR)/$(basename $(notdir $@)).$(NVCCEXT)
 endif
 
 .cpp.$(OBJEXT): $<

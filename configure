@@ -636,6 +636,7 @@ LIBOBJS
 scirun_src_dir
 scirun_obj_dir
 WOFF_STRING
+DEF_PTXDIR_ABS
 NVCC_MODULE_FLAGS
 NVCCEXT
 NVCC_LIBS
@@ -42853,6 +42854,7 @@ $as_echo "$as_me: checking for required CUDA components......" >&6;}
   CUDA_LIB_DIR=""
   NVCCEXT=""
   NVCC_MODULE_FLAGS=""
+  DEF_PTXDIR_ABS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -43145,6 +43147,7 @@ fi
 
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
+  DEF_PTXDIR_ABS="#define PTX_DIR_PATH \"`pwd`/ptx\""
   eval CUDA_LIB_DIR='"$_cuda_lib"'
   eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
   eval CUDA_LIB_FLAG='"$_sci_libs"'
@@ -43270,12 +43273,14 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
-#echo  "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
+#echo "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
+#echo "DEF_PTXDIR_ABS    = " $DEF_PTXDIR_ABS
 #echo
 
 fi #end sci_required_cuda
 
 # these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+
 
 
 

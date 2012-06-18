@@ -840,6 +840,7 @@ fi
 
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
+  DEF_PTXDIR_ABS="#define PTX_DIR_PATH \"`pwd`/ptx\""
   eval $1_LIB_DIR='"$6"'
   eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
   eval $1_LIB_FLAG='"$_sci_libs"'
