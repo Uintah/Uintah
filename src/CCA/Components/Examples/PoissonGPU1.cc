@@ -457,7 +457,8 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
 
     // Setup kernel parameters and launch via driver API
     void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &ghostLayers, &phi_device, &newphi_device, &residual_device };
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, "/home/alan/uintah/trunk/dbg/CCA/Components/Examples/PoissonGPU1Kernel.ptx") );
+    string ptxpath = string(PTX_DIR_PATH)+"/PoissonGPU1Kernel.ptx";
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
     CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&poissonGPU1Kernel, cuModule, "poissonGPU1Kernel") );
     cuErrVal =  cuLaunchKernel(poissonGPU1Kernel,
                                dimGrid.x,

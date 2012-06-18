@@ -33,6 +33,8 @@
 @DEF_CUDA@
 
 #ifdef HAVE_CUDA
+
+@DEF_PTXDIR_ABS@
 #define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
 
 #  include <cuda.h>

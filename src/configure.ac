@@ -4115,6 +4115,7 @@ if test "$sci_required_cuda" = "yes"; then
   CUDA_LIB_DIR=""
   NVCCEXT=""
   NVCC_MODULE_FLAGS=""
+  DEF_PTXDIR_ABS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -4213,7 +4214,8 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
-#echo  "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
+#echo "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
+#echo "DEF_PTXDIR_ABS    = " $DEF_PTXDIR_ABS
 #echo
 
 fi #end sci_required_cuda
@@ -4229,6 +4231,7 @@ AC_SUBST(NVCC_CXXFLAGS)
 AC_SUBST(NVCC_LIBS)
 AC_SUBST(NVCCEXT)
 AC_SUBST(NVCC_MODULE_FLAGS)
+AC_SUBST(DEF_PTXDIR_ABS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 

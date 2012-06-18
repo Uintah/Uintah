@@ -129,7 +129,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     void *kernelParms[] = { (void*)(&patchLo), (void*)(&patchHi), (void*)(&patchSize), (void*)(&domainLo), (void*)(&domainHi),
                             (void*)(&cellSpacing), &d_absk, &d_sigmaT4, &d_divQ, &_virtRad, &_isSeedRandom, &_CCRays,
                             &_NoOfRays, &_viewAng, &_Threshold, &globalDevStates };
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, "CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.ptx") );
+    string ptxpath = string(PTX_DIR_PATH)+"/RayGPUKernel.ptx";
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
     CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&rayTraceKernel, cuModule, "rayTraceKernel") );
     cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
 

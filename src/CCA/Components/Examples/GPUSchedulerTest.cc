@@ -418,7 +418,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 
     // setup and launch kernel
     void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &NGC, &d_phi, &d_newphi };
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, "CCA/Components/Examples/GPUSchedulerTestKernel.ptx") );
+    string ptxpath = string(PTX_DIR_PATH)+"/GPUSchedulerTestKernel.ptx";
+    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
     CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&gpuSchedulerTestKernel, cuModule, "gpuSchedulerTestKernel") );
     cudaStream_t* stream = sched->getCudaStream(device);
 
