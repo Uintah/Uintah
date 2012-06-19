@@ -434,7 +434,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     CUDA_RT_SAFE_CALL( cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice) );
     CUDA_RT_SAFE_CALL( cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice) );
 
-    *residual_host = 0;
     unsigned int flags = cudaHostAllocMapped;
     size_t bytes = 1 * sizeof(double);
     CUDA_RT_SAFE_CALL( cudaHostAlloc((void**)&residual_host, bytes, flags) );
