@@ -169,10 +169,20 @@
            <constitutive_model type = "visco_scram">
              <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
              <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
-             <randomize_parameters>          false </randomize_parameters>
+             
+             <useJWLEOS> true </useJWLEOS>
+             <useJWLCEOS> false </useJWLCEOS>
+             <A> 732000e9     </A>
+             <B>  -5.2645e9     </B>
+             <Cv> 2.780236e6      </Cv>
+             <R1> 14.1         </R1>
+             <R2> 1.41         </R2>
+             <om> 0.8867        </om>
+             <rho0> 1840      </rho0>
+	      <randomize_parameters>          false </randomize_parameters>
              <use_time_temperature_equation> false </use_time_temperature_equation>
              <useObjectiveRate>              false </useObjectiveRate>
-             <useModifiedEOS>                true  </useModifiedEOS>
+             <useModifiedEOS>               true </useModifiedEOS>
            </constitutive_model>
            
            <geom_object>
@@ -628,12 +638,12 @@
            <EOS type="JWLC">
              <!-- Urtiew's fit parameters -->
              <A>    1668.9e9 </A>
-             <B>    5.969e9  </B>
+             <B>    59.69e9  </B>
              <C>    6.43e8   </C>
              <R1>   5.9      </R1>
              <R2>   2.1      </R2>
              <om>   0.45     </om>
-             <rho0> 1894     </rho0>
+             <rho0> 1840     </rho0>
            </EOS>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
@@ -655,52 +665,25 @@
       </ICE>       
 
       <exchange_properties>
-        <heatExchangeCoeff>  variable  </heatExchangeCoeff>
         <exchange_coefficients>
-          <momentum>  [ 1e10, 1e10, 1e10 ]   </momentum>
-          <heat>      [  1e5, 1e5,  1e5  ]   </heat>
+          <momentum>  [ 1e8, 1e8, 1e3 ]   </momentum>
+          <heat>      [  1e5, 1e5, 1e12  ]   </heat>
         </exchange_coefficients>
       </exchange_properties>
     </MaterialProperties>
 
 
     <Models>
- 
-<!--
-      <Model type="Steady_Burn">
-        <fromMaterial>         PBX9501      </fromMaterial>
-        <toMaterial>           product      </toMaterial>
-        <IdealGasConst>        8.314        </IdealGasConst>
-        <PreExpCondPh>         1.637e15     </PreExpCondPh>
-        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
-        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
-        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
-        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
-        <HeatConductGasPh>     0.07         </HeatConductGasPh>
-        <HeatConductCondPh>    0.2          </HeatConductCondPh>
-        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
-        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
-        <BoundaryParticles>    3            </BoundaryParticles>
-        <ThresholdPressure>    50000        </ThresholdPressure>
-        <IgnitionTemp>         500.0        </IgnitionTemp>
-      </Model>
-     
-
-      Note:  These parameters are for PBX 9501.  They should give a Detonation velocity slightly higher than experimental,
-      perhaps as much as 500 m/s too large (5%) but they give about the right detonation pressure: ~35 GPa.  They do not exhibit
-      large pressure spikes.  Maximum spike size is approximately 40 GPa which follows experimental data.  run distance to detonation
-      is likely too large in inpact situations, indicating a need for larger Gcrack.  However, these should give a good representation
-      of what the model can do.
--->
-      <Model type="DDT1">
+	<Model type="DDT1">
         <fromMaterial> PBX9501   </fromMaterial> 
         <toMaterial>   product   </toMaterial>
-        <G>       3.0e-10 </G>
-        <b>       1.5     </b>
+        
+        <G>       2.33e-6 </G>
+        <b>       1.2     </b>
         <rho0>    1840.0  </rho0>
         <E0>      5.0e6   </E0>
-        <useCrackModel>      false   </useCrackModel>
-        <Gcrack>             4.0e-18 </Gcrack>
+        <useCrackModel>      true  </useCrackModel>
+        <Gcrack>             3.7e-18 </Gcrack>
         <CrackVolThreshold>  1e-14   </CrackVolThreshold>
         <nCrack>             1.84    </nCrack>
 
@@ -716,7 +699,7 @@
         <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
         <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
         <BoundaryParticles>    3            </BoundaryParticles>
-        <IgnitionTemp>         1e100        </IgnitionTemp>    <!-- turn off deflagration -->
+        <IgnitionTemp>         550          </IgnitionTemp> 
         <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
       </Model>  
     </Models>
