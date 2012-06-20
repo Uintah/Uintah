@@ -165,7 +165,6 @@ namespace Wasatch{
   Expr::ExpressionID
   setup_stress( const Expr::Tag& stressTag,
                 const Expr::Tag& viscTag,
-                const Expr::Tag& turbViscTag,
                 const Expr::Tag& vel1Tag,
                 const Expr::Tag& vel2Tag,
                 const Expr::Tag& dilTag,
@@ -177,7 +176,7 @@ namespace Wasatch{
 
     typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
 
-    return factory.register_expression( scinew StressT( stressTag, viscTag, turbViscTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( scinew StressT( stressTag, viscTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -337,7 +336,6 @@ namespace Wasatch{
     // TURBULENCE	
     // check if we have a turbulence model turned on
     Expr::Tag turbViscTag = Expr::Tag();
-    std::cout<<"is turbulent? " << isTurbulent_ << std::endl;
     if ( isTurbulent_ && isviscous_ ) {
 
       Expr::Tag sqStrTsrMagTag  = Expr::Tag();
@@ -379,6 +377,7 @@ namespace Wasatch{
         typedef typename TurbulentViscosity::Builder TurbViscT;
         const Expr::ExpressionID turbViscID_ = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, 
                                                                                               sqStrTsrMagTag, turbulenceParams ) );
+        factory.attach_dependency_to_expression(turbViscTag, viscTag);
       }
     }
     // END TURBULENCE	
@@ -387,15 +386,15 @@ namespace Wasatch{
     if ( isviscous_ ) {
       //const Expr::Tag viscosityTag = isTurbulent_ ? turbViscTag : viscTag;
       if( doxmom ){
-        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, turbViscTag, thisVelTag_, velTags_[0], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
         if( stagLoc_ == XDIR )  normalStressID_ = stressID;
       }
       if( doymom ){
-        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, turbViscTag, thisVelTag_, velTags_[1], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
         if( stagLoc_ == YDIR )  normalStressID_ = stressID;
       }
       if( dozmom ){
-        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, turbViscTag, thisVelTag_, velTags_[2], dilTag, factory );
+        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
         if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
       }
       factory.cleave_from_children( normalStressID_   );
