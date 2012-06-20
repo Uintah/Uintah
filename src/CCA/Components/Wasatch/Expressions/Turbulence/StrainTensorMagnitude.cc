@@ -143,9 +143,6 @@ evaluate()
     *tmp1 <<= *tmp1 + *tmp2;                         // 2*S_23 = 2*S_32 = dv/dz + dw/dy
     StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1 * 0.5;   // |S|^2 / 2 = S_ij * S_ij (we take account for S_ij and Sji at the same time)
   }
-
-  //StrTsrMag <<= sqrt( StrTsrMag * 2.0 );                // |S|= (2 * S_ij * S_ij)^(1/2)
-
 }
 
 //--------------------------------------------------------------------

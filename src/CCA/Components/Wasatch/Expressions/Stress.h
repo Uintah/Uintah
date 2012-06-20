@@ -49,8 +49,7 @@ template< typename StressT,
 class Stress
  : public Expr::Expression<StressT>
 {
-  const Expr::Tag visct_, turbvisct_, vel1t_, vel2t_, dilt_;
-  const bool isTurbulent_;
+  const Expr::Tag visct_, vel1t_, vel2t_, dilt_;
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ViscT, StressT >::type  ViscInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T, StressT >::type  Vel1GradT;  // jcs this will likely be insufficient
@@ -61,12 +60,10 @@ class Stress
   const Vel2GradT*   vel2GradOp_;   ///< Calculate the velocity gradient duj/dxi at the stress face
 
   const ViscT* visc_;
-  const ViscT* turbvisc_;
   const Vel1T* vel1_;
   const Vel2T* vel2_;
 
   Stress( const Expr::Tag& viscTag,
-          const Expr::Tag& turbViscTag,
           const Expr::Tag& vel1Tag,
           const Expr::Tag& vel2Tag );
 
@@ -85,7 +82,6 @@ public:
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& viscTag,
-             const Expr::Tag& turbViscTag,            
              const Expr::Tag& vel1Tag,
              const Expr::Tag& vel2Tag,
              const Expr::Tag& dilTag );
@@ -93,7 +89,7 @@ public:
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag visct_, turbvisct_, vel1t_, vel2t_;
+    const Expr::Tag visct_, vel1t_, vel2t_;
   };
 
   ~Stress();
@@ -117,8 +113,7 @@ template< typename StressT,
 class Stress< StressT, VelT, VelT, ViscT >
  : public Expr::Expression<StressT>
 {
-  const Expr::Tag visct_, turbvisct_, velt_, dilt_;
-  const bool isTurbulent_;
+  const Expr::Tag visct_, velt_, dilt_;
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ViscT, StressT >::type  ViscInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,  StressT >::type  VelGradT;
@@ -127,12 +122,10 @@ class Stress< StressT, VelT, VelT, ViscT >
   const VelGradT*    velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the stress face
 
   const ViscT* visc_;
-  const ViscT* turbvisc_;
   const VelT*  vel_;
   const ViscT* dil_;
 
   Stress( const Expr::Tag& viscTag,
-          const Expr::Tag& turbViscTag,
           const Expr::Tag& velTag,
           const Expr::Tag& dilTag );
 
@@ -155,7 +148,6 @@ public:
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& viscTag,
-             const Expr::Tag& turbViscTag,
              const Expr::Tag& vel1Tag,
              const Expr::Tag& vel2Tag,
              const Expr::Tag& dilTag );
@@ -163,7 +155,7 @@ public:
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag visct_, turbvisct_, velt_, dilt_;
+    const Expr::Tag visct_, velt_, dilt_;
   };
 
   ~Stress();
