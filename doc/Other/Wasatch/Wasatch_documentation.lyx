@@ -4249,6 +4249,109 @@ where
  is the scalar dissipation rate.
 \end_layout
 
+\begin_layout Subsection
+Viscosity Model
+\end_layout
+
+\begin_layout Standard
+Wasatch has one model to account for the viscosity change of the fluid as
+ particles precipitate.
+ The two parameters dictating the viscosity are the volume fraction of particles
+ and the strain tensor magnitude.
+ The volume fraction is calculated as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi=\sum_{i}^{n}\frac{4\pi}{3}\left(\frac{m_{1,i}}{m_{0,i}}\right)^{3}m_{0,i}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $m_{1,i}$
+\end_inset
+
+ and 
+\begin_inset Formula $m_{0,i}$
+\end_inset
+
+ are the first and zeroth moments of the 
+\begin_inset Formula $i$
+\end_inset
+
+th polymorph phase.
+ In flows with low volume fractions of particles the relative viscosity
+ can be solved for using kinetic theory with ideal assumptions as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mu_{r}=\frac{\mu}{\mu_{0}}=1+2.5\lambda\phi
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ as a correction factor for non-idealities.
+ In some case particle flows will have a shear thining phenomena in which
+ case the viscosity can be expressed as a power law with relation to the
+ strain rate.
+ The model used by Wasatch combines this with the linear fit of the kinetic
+ theory assumptions so that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mu_{r}=(1+2.5\lambda\phi)\left|S\right|^{n}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\left|S\right|$
+\end_inset
+
+ is the strain tensor magnitude.
+ The parameters 
+\begin_inset Formula $n$
+\end_inset
+
+ and 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ should then be fit to experimental data.
+ If no shear thining is expected, 
+\begin_inset Formula $n$
+\end_inset
+
+ can be set as 
+\begin_inset Formula $0$
+\end_inset
+
+.
+ This formulation should only be used for low volume fractions of particles.
+\end_layout
+
 \begin_layout Chapter
 Summary of Current Capabilities and Work in Progress
 \end_layout
