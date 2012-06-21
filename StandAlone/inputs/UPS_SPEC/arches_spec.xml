@@ -206,6 +206,18 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="value REQUIRED DOUBLE 'positive'"/>
           </Stream_2>
+          <post_mix                     spec="OPTIONAL NO_DATA">
+            <!-- Notes on post stream mixing: 
+              1) Dependent variables that are not specified are assumed to be ZERO (even density)
+              2) If specifying density, specify the INVERSE value 
+            --> 
+            <stream                     spec="OPTIONAL NO_DATA"
+                                        attribute1="transport_label REQUIRED STRING">
+              <var                      spec="MULTIPLE NO_DATA"   
+                                        attribute1="label REQUIRED STRING" 
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+            </stream> 
+          </post_mix>
         </ColdFlow>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
@@ -248,6 +260,18 @@
           <slowfastchem                 spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <post_mix                     spec="OPTIONAL NO_DATA">
+            <!-- Notes on post stream mixing: 
+              1) Dependent variables that are not specified are assumed to be ZERO (even density)
+              2) If specifying density, specify the INVERSE value 
+            --> 
+            <stream                     spec="OPTIONAL NO_DATA"
+                                        attribute1="transport_label REQUIRED STRING">
+              <var                      spec="MULTIPLE NO_DATA"   
+                                        attribute1="label REQUIRED STRING" 
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+            </stream> 
+          </post_mix>
         </ClassicTable>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
