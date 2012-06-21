@@ -3302,7 +3302,7 @@ else
 
       if test "$petsc_version_major" == "2"; then
          if test -z "$PETSC_ARCH"; then
-            AC_MSG_ERROR(For PETSC version 2x, please set PETSC_ARCH.)
+            AC_MSG_ERROR(For PETSC version 2x - please set PETSC_ARCH.)
          fi
 	 AC_MSG_WARN(Looking for PETSc arch: $PETSC_ARCH)
          if test -z "$_sci_lib_dir"; then
