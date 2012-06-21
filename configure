@@ -38377,7 +38377,7 @@ else
 
       if test "$petsc_version_major" == "2"; then
          if test -z "$PETSC_ARCH"; then
-            as_fn_error please set PETSC_ARCH. "For PETSC version 2x" "$LINENO" 5
+            as_fn_error $? "For PETSC version 2x - please set PETSC_ARCH." "$LINENO" 5
          fi
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&5
 $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
