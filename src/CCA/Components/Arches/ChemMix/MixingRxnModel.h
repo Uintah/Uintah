@@ -330,11 +330,39 @@ namespace Uintah {
           }; 
       };
 
+      /** @brief Performs post mixing on table look up value based 
+       * on a set of inert streams set from the input file */ 
+      void post_mixing( double& mixvalue, double f, std::string label, doubleMap& the_map ){ 
+
+        // mixvalue is coming in with the post table-lookup value. 
+
+        doubleMap::iterator I = the_map.find( label ); 
+        double i_value = I->second; 
+
+        if ( I != the_map.end() ){
+
+          mixvalue = i_value * f + mixvalue * ( 1.0 - f ); 
+
+        } else {
+
+          // can't find it in the list.  Assume it is zero. 
+          mixvalue = ( 1.0 - f ) * mixvalue; 
+
+        } 
+
+      }; 
+
 
       VarMap d_dvVarMap;         ///< Dependent variable map
       VarMap d_ivVarMap;         ///< Independent variable map
       doubleMap d_constants;     ///< List of constants in table header
       InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
+      struct ConstVarContainer {
+
+        constCCVariable<double> var; 
+
+      }; 
+      typedef std::map<std::string, ConstVarContainer> StringToCCVar; 
 
       /** @brief Sets the mixing table's dependent variable list. */
       void setMixDVMap( const ProblemSpecP& root_params ); 
@@ -349,6 +377,7 @@ namespace Uintah {
       bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
       bool d_adiabatic;                       ///< Will not compute heat loss
       bool d_use_mixing_model;                ///< Turn on/off mixing model
+      bool d_does_post_mixing;                ///< Turn on/off post mixing of inerts
 
       std::string d_fp_label;                 ///< Primary mixture fraction name for a coal table
       std::string d_eta_label;                ///< Eta mixture fraction name for a coal table
@@ -375,10 +404,6 @@ namespace Uintah {
         return; 
 
       } 
-
-
-    private:
-
 
   }; // end class MixingRxnModel
 } // end namespace Uintah

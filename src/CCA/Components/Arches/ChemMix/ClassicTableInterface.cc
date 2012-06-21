@@ -311,10 +311,17 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
   // other variables 
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
-  if ( modify_ref_den )
+  if ( modify_ref_den ) {
     tsk->computes(time_labels->ref_density); 
+  }
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
+
+  // for inert mixing 
+  for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, gn, 0 ); 
+  } 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -439,6 +446,20 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
 
+    // for inert mixing 
+    StringToCCVar inert_mixture_fractions; 
+    inert_mixture_fractions.clear(); 
+    for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+      const VarLabel* label = VarLabel::find( iter->first ); 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, label, matlIndex, patch, gn, 0 ); 
+      ConstVarContainer container; 
+      container.var = variable; 
+
+      inert_mixture_fractions.insert( std::make_pair( iter->first, container) ); 
+
+    } 
+
     CCVariable<double> arches_density; 
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
 
@@ -459,35 +480,56 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-      //    double table_value = tableLookUp( iv, i->second.index ); 
 				double table_value = ND_interp->find_val( iv, i->second.index );
-          table_value *= eps_vol[c]; 
-          (*i->second.var)[c] = table_value;
 
-          if (i->first == "density") {
+        // for post look-up mixing
+        for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+            inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-            arches_density[c] = table_value; 
+          double inert_f = inert_iter->second.var[c];
+          doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
 
-            if (d_MAlab)
-              mpmarches_denmicro[c] = table_value; 
+          double temp_table_value = table_value; 
+          if ( i->first == "density" ){ 
+            temp_table_value = 1.0/table_value; 
+          } 
 
-          } else if (i->first == "temperature" && !d_coldflow) {
+          post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list ); 
 
-            arches_temperature[c] = table_value; 
+          if ( i->first == "density" ){ 
+            table_value = 1.0 / temp_table_value; 
+          } 
 
-          } else if (i->first == "specificheat" && !d_coldflow) {
+        }
 
-            arches_cp[c] = table_value; 
+        table_value *= eps_vol[c]; 
+        (*i->second.var)[c] = table_value;
 
-          } else if (i->first == "CO2" && !d_coldflow) {
 
-            arches_co2[c] = table_value; 
+        if (i->first == "density") {
 
-          } else if (i->first == "H2O" && !d_coldflow) {
+          arches_density[c] = table_value; 
 
-            arches_h2o[c] = table_value; 
+          if (d_MAlab)
+            mpmarches_denmicro[c] = table_value; 
 
-          }
+        } else if (i->first == "temperature" && !d_coldflow) {
+
+          arches_temperature[c] = table_value; 
+
+        } else if (i->first == "specificheat" && !d_coldflow) {
+
+          arches_cp[c] = table_value; 
+
+        } else if (i->first == "CO2" && !d_coldflow) {
+
+          arches_co2[c] = table_value; 
+
+        } else if (i->first == "H2O" && !d_coldflow) {
+
+          arches_h2o[c] = table_value; 
+
+        }
 
       }
     }
@@ -583,8 +625,27 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             //  double table_value = tableLookUp( iv, i->second.index ); 
 						double table_value = ND_interp->find_val( iv, i->second.index );
+
+            // for post look-up mixing
+            for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+                inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+              double inert_f = inert_iter->second.var[c];
+              doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
+
+              double temp_table_value = table_value; 
+              if ( i->first == "density" ){ 
+                temp_table_value = 1.0/table_value; 
+              } 
+
+              post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list ); 
+
+              if ( i->first == "density" ){ 
+                table_value = 1.0 / temp_table_value; 
+              } 
+            } 
+
             table_value *= eps_vol[c]; 
-            //double orig_save = (*i->second.var)[c]; 
             (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {

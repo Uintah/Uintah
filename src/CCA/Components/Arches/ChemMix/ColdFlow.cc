@@ -235,9 +235,16 @@ ColdFlow::sched_getState( const LevelP& level,
 
   // other variables 
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
-  if ( modify_ref_den )
+  if ( modify_ref_den ){
     tsk->computes(time_labels->ref_density); 
+  }
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+
+  // for inert mixing 
+  for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, gn, 0 ); 
+  } 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -342,6 +349,20 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
     }
 
+    // for inert mixing 
+    StringToCCVar inert_mixture_fractions; 
+    inert_mixture_fractions.clear(); 
+    for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+      const VarLabel* label = VarLabel::find( iter->first ); 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, label, matlIndex, patch, gn, 0 ); 
+      ConstVarContainer container; 
+      container.var = variable; 
+
+      inert_mixture_fractions.insert( std::make_pair( iter->first, container) ); 
+
+    } 
+
 
     CCVariable<double> arches_density; 
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
@@ -361,13 +382,30 @@ ColdFlow::getState( const ProcessorGroup* pc,
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
         if ( i->first == "density" || i->first == "temperature" ) { 
+
           std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
           double table_value = coldFlowMixing( iv, i_to_i->second ); 
+
+          // for post look-up mixing
+          for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+              inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+            double inert_f = inert_iter->second.var[c];
+            doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
+
+            post_mixing( table_value, inert_f, i->first, inert_species_map_list ); 
+          } 
+
           table_value *= eps_vol[c]; 
 
           if (i->first == "density") {
-            (*i->second.var)[c] = 1.0/table_value;
-            arches_density[c] = table_value; 
+            if ( table_value > 0.0 ){ 
+              (*i->second.var)[c] = 1.0/table_value;
+              arches_density[c] = 1.0/table_value; 
+            } else { 
+              (*i->second.var)[c] = 0.0; 
+              arches_density[c] = 0.0; 
+            } 
             if (d_MAlab)
               mpmarches_denmicro[c] = table_value; 
           } else if ( i->first == "temperature") { 
@@ -379,7 +417,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
           string species_name = i->first; 
 
           //look in stream 1: 
-          map<string,double>::iterator sp_iter = species_s1.find( species_name ); 
+          doubleMap::iterator sp_iter = species_s1.find( species_name ); 
           if ( sp_iter != species_s1.end() ){ 
 
             (*i->second.var)[c] = sp_iter->second * iv[0]; 
@@ -486,18 +524,35 @@ ColdFlow::getState( const ProcessorGroup* pc,
             if ( i->first == "density" || i->first == "temperature" ) { 
               std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
               double table_value = coldFlowMixing( iv, i_to_i->second ); 
+
+              // for post look-up mixing
+              for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+                  inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+                double inert_f = inert_iter->second.var[c];
+                doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
+
+                post_mixing( table_value, inert_f, i->first, inert_species_map_list ); 
+              } 
+
               table_value *= eps_vol[c]; 
-              (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
                 //double ghost_value = 2.0*table_value - arches_density[cp1];
-                arches_density[c] = 1.0/table_value;
                 //arches_density[c] = ghost_value; 
+                if ( table_value > 0.0 ){ 
+                  (*i->second.var)[c] = 1.0/table_value;
+                  arches_density[c] = 1.0/table_value; 
+                } else { 
+                  (*i->second.var)[c] = 0.0;
+                  arches_density[c] = 0.0; 
+                } 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
               } else if ( i->first == "temperature") { 
                 (*i->second.var)[c] = table_value;
               }
+
             } else { 
 
               //speciation

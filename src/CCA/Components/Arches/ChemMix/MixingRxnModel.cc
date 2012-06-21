@@ -65,6 +65,7 @@ using namespace Uintah;
 MixingRxnModel::MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlab ):
   d_lab(labels), d_MAlab(MAlab)
 {
+  d_does_post_mixing = false; 
 }
 
 //---------------------------------------------------------------------------
@@ -141,7 +142,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != 0; db_st = db_st->findNextBlock("stream") ){ 
 
       std::string phi; 
-      db_st->require("transport_label", phi); 
+      db_st->getAttribute("transport_label", phi); 
 
       doubleMap var_values; 
       var_values.clear(); 
@@ -156,7 +157,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
         db_var->getAttribute("value",value);
 
         doubleMap::iterator iter = var_values.find( label ); 
-        if ( iter != var_values.end() ){ 
+        if ( iter == var_values.end() ){ 
           var_values.insert( std::make_pair( label, value ) );
           found_vars = true; 
         }
@@ -165,8 +166,9 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
 
       if ( found_vars ){ 
 
+        d_does_post_mixing = true; 
         InertMasterMap::iterator iter = d_inertMap.find( phi ); 
-        if ( iter != d_inertMap.end() ){ 
+        if ( iter == d_inertMap.end() ){ 
           d_inertMap.insert( std::make_pair( phi, var_values ) );  
         } 
 
