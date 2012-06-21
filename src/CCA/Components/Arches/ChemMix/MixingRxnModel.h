@@ -89,6 +89,7 @@ namespace Uintah {
       typedef std::map<string, const VarLabel* >           VarMap;
       typedef std::map<string, CCVariable<double>* >       CCMap; 
       typedef std::map<string, double >                    doubleMap; 
+      typedef std::map<string, doubleMap>                   InertMasterMap; 
 
       MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
@@ -155,7 +156,7 @@ namespace Uintah {
 
           const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
 
-          i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+          d_dvVarMap.insert( std::make_pair( var_name, the_label ) ); 
 
           proc0cout << "    ---> " << var_name << endl; 
 
@@ -333,6 +334,7 @@ namespace Uintah {
       VarMap d_dvVarMap;         ///< Dependent variable map
       VarMap d_ivVarMap;         ///< Independent variable map
       doubleMap d_constants;     ///< List of constants in table header
+      InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
 
       /** @brief Sets the mixing table's dependent variable list. */
       void setMixDVMap( const ProblemSpecP& root_params ); 
