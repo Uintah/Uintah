@@ -3164,28 +3164,28 @@ if test "$sci_required_mpi" = "yes"; then
 
                 if test "$HAVE_MPI" != "yes"; then
 		   # try mpich with mpich_threadm and mpl library
-                   SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
+                   SCI_TRY_LINK(MPI,1. mpich library and header-2,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich_threadm mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
 
                    # try mpich_threadm again without mpl library 
                    if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                      SCI_TRY_LINK(MPI,2. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich_threadm $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
                    # try mpich with mpl library  
                    if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                      SCI_TRY_LINK(MPI,3. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
 
                    fi        
                    # try just plain mpich  
                    if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                      SCI_TRY_LINK(MPI,4. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
                    # try mpich again with pmpich
                    if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                      SCI_TRY_LINK(MPI,5. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich pmpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
                    if test "$HAVE_MPI" = "yes"; then
@@ -3269,50 +3269,7 @@ AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
-##  --  search for petsc stuff  ------------------------------------------
-
-PETSC_VERSION_DIR=petsc-2.3.2
-
-##if test -z "$PETSC_ARCH"; then
-##case $host in
-##  *linux*)
-##    if test "$enable_64bit" = "yes"; then
-##      PETSC_ARCH=linux64
-##    else
-##      PETSC_ARCH=linux
-##    fi
-##    ;;
-##  *-dec*)
-##    if test "$petsc"; then
-##      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
-##    else
-##      PETSC_ARCH=dec
-##    fi
-##    ;;
-##  *-aix*)
-##    PETSC_ARCH=aix5.1.0.0
-##    ;;
-##  *-darwin*)
-##      if test `uname -p` = "i386"; then
-##        PETSC_ARCH=i386
-##      else 
-##        PETSC_ARCH=ppc
-##      fi
-##    ;;
-##  *-pc-mingw*)
-##    PETSC_ARCH=win
-##    ;;
-##  *)
-##    PETSC_ARCH=""
-##    ;;
-##esac
-##fi
-
 #  --  search for PETSc  --------------------------------------------
-##if test -z "$PETSC_ARCH"; then
-##   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
-##fi
-
 if test "$with_petsc" == "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
@@ -3322,101 +3279,76 @@ else
      DEF_PETSC="#define HAVE_PETSC 1"
   else
     # Make sure we have either mpi, blas, and lapack
-    # It seems that under AIX and OSF, the libs that cover blas also cover lapack
+    # (It seems that under AIX and OSF, the libs that cover blas also cover lapack)
     if (test "$HAVE_MPI" = "yes" ) && test "$HAVE_BLAS" = "yes" && 
-       (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
-        test "$HAVE_LAPACK" = "yes"); then
-
+         (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" || test "$HAVE_LAPACK" = "yes"); then
       _sci_lib_dir=
-      _sci_inc=
 
-##      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
-      for petsc_arch in "$PETSC_ARCH"; do
-        if test "$HAVE_PETSC" = "yes"; then
-          break
-        fi
-	
-	if test "$with_petsc"; then
-             petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-             petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+      if test "$with_petsc"; then
+         if test "$with_petsc" == "yes"; then
+            AC_MSG_ERROR(--with-petsc=DIR requires a DIRectory to be specified.)
+         fi
+         version_file=$with_petsc/include/petscversion.h
+         _sci_inc="$with_petsc/include"
+      else
+         version_file=/usr/include/petsc/petscversion.h
+         lib_dir=/usr/lib
+         _sci_inc=/usr/include/petsc
+         BASE_LIB_PATH(_sci_lib_dir,$lib_dir)
+      fi
 
-        	case $petsc_version_major in
-			2)
-			if test "$petsc_version_minor" -le 2; then
-			   PETSC_SUB=lib/libO
-			fi
-			if test "$petsc_version_minor" -eq 3; then
-			   PETSC_SUB=lib
-			fi
-          		   _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-          	           _sci_inc="$with_petsc/include $with_petsc/bmake/$petsc_arch"
-			   SINGLE_LIB=0
-			;;
-			3)
-			   PETSC_SUB=lib
-          		   _sci_lib_dir="$with_petsc/$petsc_arch/$PETSC_SUB"
-          		   _sci_inc="$with_petsc/include $with_petsc/$petsc_arch/include"
-			   SINGLE_LIB=1
-			;;
-		esac
+      petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
+      petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
 
-        else
-          # Modify _sci_dirs to have correct path information:
-          for i in $sci_thirdparty_dir; do
-            if test ! -d "$i"; then
-              continue
+      if test "$petsc_version_major" == "2"; then
+         if test -z "$PETSC_ARCH"; then
+            AC_MSG_ERROR(For PETSC version 2x, please set PETSC_ARCH.)
+         fi
+	 AC_MSG_WARN(Looking for PETSc arch: $PETSC_ARCH)
+         if test -z "$_sci_lib_dir"; then
+            _sci_lib_dir="$with_petsc/lib/$PETSC_ARCH"
+            _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
+         fi
+      else
+         if test "$petsc_version_major" == "3"; then
+            if test -z "$_sci_lib_dir"; then
+               _sci_lib_dir="$with_petsc/lib"
             fi
-
-            # This is where the lib actually lives
-            if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
-              continue
+            if test "$PETSC_ARCH"; then
+               AC_MSG_ERROR(For PETSC version 3x - do NOT set PETSC_ARCH.)
             fi
+         else
+            AC_MSG_ERROR(Could not determine PETSc version number...)
+         fi
+      fi
 
-            _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include"
-            SINGLE_LIB=0
-          done  
+      SCI_TRY_LINK( PETSC,
+                    petsc libraries and headers,
+                    petsc.h,
+                    $_sci_inc,
+                    petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                    $_sci_lib_dir,
+                    $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                    ,
+                    optional)
 
-          # Try the default location of /usr/include and /usr/lib/
-           SINGLE_LIB=0       
-        fi      
-
-        # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-        # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-	if test "$SINGLE_LIB" = "0"; then
-
-        	SCI_TRY_LINK(PETSC,
-                     petsc libraries and headers (petsc_arch = $petsc_arch),
+      # 
+      if test "$HAVE_PETSC" != "yes"; then
+                SCI_TRY_LINK(PETSC,
+                     petsc library and header,
                      petsc.h,
-                     $_sci_inc /usr/include/petsc,
-                     petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                     $_sci_lib_dir,
-                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                     ,
-                     optional)
-	fi
-       	# For PETSC 3.x, a single petsc library is created called libpetsc 
-	if test "$SINGLE_LIB" = "1"; then
-		SCI_TRY_LINK(PETSC,
-                     petsc libraries and headers (petsc_arch = $petsc_arch),
-                     petsc.h,
-                     $_sci_inc /usr/include/petsc,
+                     $_sci_inc,
                      petsc,
                      $_sci_lib_dir,
                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                      ,
-                     optional)
-	fi
-
-        if test "$HAVE_PETSC" = "yes" ; then
-          DEF_PETSC="#define HAVE_PETSC 1"
-        fi    
-      done  
-      if test "$with_petsc" && test ! "$DEF_PETSC"; then
-        echo
-        AC_MSG_ERROR(One or more of the PETSc components is missing.)
-        echo
+                     required)
       fi
+
+      if test "$HAVE_PETSC" != "yes" ; then
+         AC_MSG_ERROR(Could not find PETSc...)
+      fi
+      DEF_PETSC="#define HAVE_PETSC 1"
 
     else
       AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
