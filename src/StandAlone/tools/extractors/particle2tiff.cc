@@ -117,6 +117,8 @@ class Bits{
                              tsize_t imageSize) = 0;
                            
     virtual tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ) = 0;
+    
+    virtual ~Bits(){};
 };
 
 //______________________________________________________________________
@@ -152,7 +154,7 @@ class eightBit  : public Bits
           
           for( uint32 i = 0; i < d_width; i++ ){
             IntVector c = IntVector(i,y, page) + lo;
-            d_slice[j * d_width + i] = ave[c];;
+            d_slice[j * d_width + i] = (uint8)ave[c];
           }
         }
       } 
@@ -236,7 +238,7 @@ class sixteenBit  : public Bits
           
           for(uint32 i = 0; i < d_width; i++){
             IntVector c = IntVector(i,y,page) + lo;
-            d_slice[j * d_width + i] = ave[c];
+            d_slice[j * d_width + i] = (uint16) ave[c];
           }
         }
       }
@@ -530,6 +532,7 @@ void write_tiff_volume(const tiffFlags* flags,
    
   }  // page loop
   TIFFClose(out);
+  delete whichBit;
 }
 
 
@@ -608,6 +611,7 @@ void write_tiff_slices(const tiffFlags* flags,
     TIFFClose(out);
    
   }  // page loop
+  delete whichBit;
 }
 
 
@@ -777,7 +781,7 @@ void scaleImage( const int nBits,
     double maxVal = -DBL_MAX;
     double minVal = DBL_MAX;
     int power = nBits/8;
-    double scale = pow(255, power);
+    double scale = pow( (double)255, power);
 
 
     for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
