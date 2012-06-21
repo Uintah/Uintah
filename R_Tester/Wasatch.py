@@ -43,6 +43,7 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-Re1000",   "turb-lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
@@ -96,6 +97,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison"] ),                   \
   ("turb-lid-driven-cavity-3D-Re1000",   "turb-lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),                   \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),                \
