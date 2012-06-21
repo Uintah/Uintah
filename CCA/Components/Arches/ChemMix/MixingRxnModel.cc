@@ -132,6 +132,52 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     _H_fuel = iter->second; 
   }
 
+  // For inert stream mixing // 
+  d_inertMap.clear(); 
+  if ( db->findBlock( "post_mix" ) ){ 
+
+    ProblemSpecP db_inert = db->findBlock( "post_mix" ); 
+
+    for ( ProblemSpecP db_st = db_inert->findBlock("stream"); db_st != 0; db_st = db_st->findNextBlock("stream") ){ 
+
+      std::string phi; 
+      db_st->require("transport_label", phi); 
+
+      doubleMap var_values; 
+      var_values.clear(); 
+      bool found_vars = false; 
+
+      for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != 0; db_var = db_var->findNextBlock("var") ){ 
+
+        std::string label; 
+        double value; 
+      
+        db_var->getAttribute("label",label); 
+        db_var->getAttribute("value",value);
+
+        doubleMap::iterator iter = var_values.find( label ); 
+        if ( iter != var_values.end() ){ 
+          var_values.insert( std::make_pair( label, value ) );
+          found_vars = true; 
+        }
+
+      } 
+
+      if ( found_vars ){ 
+
+        InertMasterMap::iterator iter = d_inertMap.find( phi ); 
+        if ( iter != d_inertMap.end() ){ 
+          d_inertMap.insert( std::make_pair( phi, var_values ) );  
+        } 
+
+      } else { 
+
+        proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!" << std::endl;
+
+      } 
+    } 
+  } 
+
 }
 
 //---------------------------------------------------------------------------
