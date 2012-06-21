@@ -102,7 +102,7 @@
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                             children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
                             PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
-                            PrecipitationSource)">  
+                            PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction)">  
       <TaskList                         spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag                          spec="REQUIRED" />
 
@@ -163,7 +163,24 @@
           <NameTag spec="REQUIRED"/>
         </Density>
       </PrecipitationSource> 
+      
+      <PrecipitateEffectiveViscosity spec = "OPTIONAL NO_DATA" 
+                                     attribute1 = "Correction_Fac REQUIRED DOUBLE"
+                                     attribute2 = "Power REQUIRED DOUBLE"
+                                     attribute3 = "BaseViscosity REQUIRED DOUBLE"
+                                     attribute4 = "MinStrain REQUIRED DOUBLE">
+        <VolumeFraction spec = "REQUIRED NO_DATA">
+          <NameTag spec = "REQUIRED"/>
+        </VolumeFraction>
+        <StrainMagnitude spec = "REQUIRED NO_DATA">
+          <NameTag spec = "REQUIRED"/>
+        </StrainMagnitude>  
+      </PrecipitateEffectiveViscosity>
        
+      <ParticleVolumeFraction spec = "OPTIONAL NO_DATA">
+        <Conversion_Fac spec = "REQUIRED DOUBLE" />
+      </ParticleVolumeFraction>  
+      
     </PrecipitationBasicExpression>
     <!-- ========================================= -->
 
