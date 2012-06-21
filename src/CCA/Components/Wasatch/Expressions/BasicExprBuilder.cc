@@ -43,6 +43,8 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationRCritical.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationSource.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/ParticleVolumeFraction.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitateEffectiveViscosity.h>
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
@@ -342,6 +344,48 @@ namespace Wasatch{
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
+    }
+    
+    else if (params->findBlock("PrecipitateEffectiveViscosity") ) {
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitateEffectiveViscosity");
+      double corrFac, power, baseViscos, minStrain;
+      const Expr::Tag volFracTag = parse_nametag( coefParams->findBlock("VolumeFraction")->findBlock("NameTag") );
+      const Expr::Tag strainMagTag = parse_nametag( coefParams->findBlock("StrainMagnitude")->findBlock("NameTag") );
+      coefParams -> getAttribute("Correction_Fac", corrFac);
+      coefParams -> getAttribute("Power", power);
+      coefParams -> getAttribute("BaseViscosity", baseViscos);
+      coefParams -> getAttribute("MinStrain", minStrain);
+      typedef typename PrecipitateEffectiveViscosity<FieldT>::Builder Builder;
+      builder= scinew Builder(tag, volFracTag, strainMagTag, corrFac, baseViscos, power, minStrain);
+    }
+    
+    else if (params->findBlock("ParticleVolumeFraction") ) {
+      Uintah::ProblemSpecP coefParams = params->findBlock("ParticleVolumeFraction");
+      double convFac;
+      coefParams -> get("Conversion_Fac", convFac);
+      std::string basePhiName;
+      Expr::Tag momentTag;
+      Expr::TagList zerothMomentTags;
+      Expr::TagList firstMomentTags;
+      //assumes all moment transport eqns are for particles
+      for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
+           momentParams != 0;
+           momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
+        momentParams ->get("PopulationName",basePhiName);
+        if (momentParams->findBlock("MultiEnvMixingModel") ) {
+          momentTag = Expr::Tag("m_" + basePhiName + "_0_ave", Expr::STATE_NONE);
+          zerothMomentTags.push_back(momentTag);
+          momentTag = Expr::Tag("m_" + basePhiName + "_1_ave", Expr::STATE_NONE);
+          firstMomentTags.push_back(momentTag);
+        } else {
+          momentTag = Expr::Tag("m_" + basePhiName + "_0", Expr::STATE_N);
+          zerothMomentTags.push_back(momentTag);
+          momentTag = Expr::Tag("m_" + basePhiName + "_1", Expr::STATE_N);
+          firstMomentTags.push_back(momentTag);
+        }
+      }
+      typedef typename ParticleVolumeFraction<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, zerothMomentTags, firstMomentTags, convFac);
     }
 
     else if (params->findBlock("PrecipitationSource") ) {
