@@ -42,7 +42,6 @@
 #  include <cuda_runtime_api.h>
 #  include <curand.h>
 #  include <curand_kernel.h>
-#  include <device_launch_parameters.h>
 
 
 #ifdef __cplusplus
