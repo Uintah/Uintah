@@ -84,9 +84,14 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   ProblemSpecP db_str1 = db_coldflow->findBlock("Stream_1"); 
   ProblemSpecP db_str2 = db_coldflow->findBlock("Stream_2"); 
 
-  db_str1->require( "density", d_stream[0][0] ); 
+  double den_1 = 0.0; 
+  db_str1->require( "density", den_1 ); 
+  d_stream[0][0] = 1.0/den_1; 
   db_str1->require( "temperature", d_stream[1][0] ); 
-  db_str2->require( "density", d_stream[0][1] ); 
+
+  double den_2 = 0.0; 
+  db_str2->require( "density", den_2 ); 
+  d_stream[0][1] = 1.0/den_2; 
   db_str2->require( "temperature", d_stream[1][1] ); 
 
   // allow speciation 
@@ -361,7 +366,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
           table_value *= eps_vol[c]; 
 
           if (i->first == "density") {
-            (*i->second.var)[c] = table_value;
+            (*i->second.var)[c] = 1.0/table_value;
             arches_density[c] = table_value; 
             if (d_MAlab)
               mpmarches_denmicro[c] = table_value; 
@@ -486,7 +491,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
               if (i->first == "density") {
                 //double ghost_value = 2.0*table_value - arches_density[cp1];
-                arches_density[c] = table_value;
+                arches_density[c] = 1.0/table_value;
                 //arches_density[c] = ghost_value; 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
@@ -546,7 +551,8 @@ void ColdFlow::oldTableHack( const InletStream& inStream, Stream& outStream, boo
   std::vector<double> iv(1);
   iv[0] = inStream.d_mixVars[0]; 
   int pos = 0; //for density
-  outStream.d_density = coldFlowMixing( iv, pos ); 
+  double density = coldFlowMixing( iv, pos ); 
+  outStream.d_density = 1.0 / density; 
 
 }
 
@@ -610,8 +616,7 @@ double
 ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 {
 
-  double value = iv[0] * 1.0/d_stream[pos][0] + ( 1 - iv[0] ) * 1.0/d_stream[pos][1]; 
-  value = 1.0/value; 
+  double value = iv[0] * d_stream[pos][0] + ( 1 - iv[0] ) * d_stream[pos][1]; 
   return value; 
 
 }
@@ -623,6 +628,7 @@ double ColdFlow::getTableValue( std::vector<double> iv, std::string variable )
 
     int pos = 0; 
     double value = coldFlowMixing( iv, pos );  
+    value = 1.0 / value; 
     return value; 
 
   } else if ( variable == "temperature" ) { 
