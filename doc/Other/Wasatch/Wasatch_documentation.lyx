@@ -4093,6 +4093,142 @@ pre-Growth coeffcient
 \end_layout
 
 \begin_layout Subsection
+Aggregation Models
+\end_layout
+
+\begin_layout Standard
+To account for aggregation in particulate systems, two terms must be considered
+ the death kernel from two particles combining alogn with the birth kernel
+ from the new particle.
+ The general form for each of these is in volume formulation
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{1}{2}\int_{0}^{v}\beta(v-\epsilon,\epsilon)n'(v-\epsilon;t)n'(\epsilon;t)d\epsilon
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-n'(v;t)\int_{0}^{\infty}\beta'(v,\epsilon)n'(\epsilon;t)d\epsilon
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Converting the population balance into a radius formulation, and applying
+ a moment transform, using quadrature on the integrals yields
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{1}{2}\sum_{i}w_{i}\sum_{j}w_{j}(r_{i}^{3}+r_{j}^{3})^{k/3}\beta_{ij}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-\sum_{i}r_{i}^{k}w_{i}\sum\beta_{ij}w_{j}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\beta_{ij}$
+\end_inset
+
+ is a specified frequency kernel, and 
+\begin_inset Formula $r_{i}$
+\end_inset
+
+ & 
+\begin_inset Formula $w_{i}$
+\end_inset
+
+ are the abscissae and weights.
+ The Wasatch formulation spilts the frequency term into two, the size dependent
+ frequncy and the fluid property frequency.
+ The fluid property frequency can then be factored outside of the summation.
+ For aggregation due to Brownian motion
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\beta_{ij}=\frac{2k_{B}T}{3\rho}\times\frac{(r_{i}+r_{j})^{2}}{r_{i}r_{j}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $k_{B}$
+\end_inset
+
+ is the Boltzmann cosntant, 
+\begin_inset Formula $T$
+\end_inset
+
+ is the temperature, and 
+\begin_inset Formula $\rho$
+\end_inset
+
+ is the fluid density.
+ For aggregation due to turbulent shear forces the frequency kernel is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\beta_{ij}=\frac{4}{3}\left(\frac{3\pi}{10}\right)^{1/2}\left(\frac{\epsilon}{\nu}\right)^{1/2}\times(r_{i}+r_{j}^{3})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ is the energy dissipation and 
+\begin_inset Formula $\nu$
+\end_inset
+
+ is the kinematic viscosity of the fluid.
+ In addition a simple constant frequency is included, 
+\begin_inset Formula $B_{ij}=1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
 Multi Environment Mixing Model
 \end_layout
 
