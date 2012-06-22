@@ -1434,20 +1434,38 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gVelocity,
                                                                  px[idx]);
       }
-      pDefGradInc = (velGrad_new*delT + Identity);
-      pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx]; 
+
+
       velGrad[idx] = velGrad_new;
+
+      Matrix3 F=pDefGrad[idx];
+      double Lnorm_dt = velGrad_new.Norm()*delT;
+      int num_scs = max(1,2*((int) Lnorm_dt));
+      if(num_scs > 1000){
+        cout << "NUM_SCS = " << num_scs << endl;
+      }
+      double dtsc = delT/(double (num_scs));
+      Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
+      for(int n=0;n<num_scs;n++){
+        F=OP_tensorL_DT*F;
+//          if(num_scs >1000){
+//          cerr << "n = " << n << endl;
+//          cerr << "F = " << F << endl;
+//          cerr << "J = " << F.Determinant() << endl << endl;
+//          }
+      }
+      pDefGrad_new[idx]=F;
+      pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
 
       // Check 1: Look at Jacobian
       J = pDefGrad_new[idx].Determinant();
       if (!(J > 0.0)) {
-        cerr << getpid() ;
-        cerr << "UCNH::idx = " << idx << " J = " << J 
-             << " matl = " << matl << endl;
+        cerr << "matl = "  << dwi << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_inc = " << pDefGradInc       << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "J = "     << J                 << endl;
+        cerr << "NUM_SCS = " << num_scs << endl;
         constParticleVariable<long64> pParticleID;
         old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
         cerr << "ParticleID = " << pParticleID[idx] << endl;
@@ -1530,8 +1548,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() ;
-        cerr << "idx = " << idx << " J = " << J << " matl = " << matl << endl;
+        cerr << "after pressure stab "          << endl;
+        cerr << "matl = "  << matl              << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_inc = " << pDefGradInc       << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
@@ -1542,8 +1560,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx]  << " which has mass "
              << pMass[idx] << endl;
-        // pDefGrad_new[idx] =  pDefGrad[idx];
-        throw InvalidValue("**ERROR**:Negative Jacobian in UCNH", __FILE__, __LINE__);
+        throw InvalidValue("**ERROR**:Negative Jacobian in UCNH",
+                            __FILE__, __LINE__);
       }
       
       // Get the volume preserving part of the deformation gradient increment
