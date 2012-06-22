@@ -27,6 +27,7 @@
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
+#include <CCA/Components/Wasatch/Expressions/PBE/Aggregation.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Birth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Growth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvSource.h>
@@ -202,7 +203,37 @@ namespace Wasatch {
   }
 
   //------------------------------------------------------------------
-
+  template<typename FieldT>
+  void setup_aggregation_expression ( Uintah::ProblemSpecP aggParams,
+                                              const std::string& thisPhiName,
+                                              const double momentOrder,
+                                              Expr::TagList& aggTags,
+                                              const Expr::TagList& weightsTagList,
+                                              const Expr::TagList& abscissaeTagList,
+                                              Expr::ExpressionFactory& factory) 
+  {
+    std::string aggModel;
+    double efficiencyCoef;
+    Expr::Tag aggTag;
+    Expr::ExpressionBuilder* builder = NULL;
+    
+    Expr::Tag aggCoefTag;
+    if( aggParams->findBlock("AggregationCoefficientExpression") ){
+      Uintah::ProblemSpecP nameTagParam = aggParams->findBlock("AggregationCoefficientExpression")->findBlock("NameTag");
+      aggCoefTag = parse_nametag( nameTagParam );
+    }
+    
+    aggParams->getWithDefault("EfficiencyCoefficient", efficiencyCoef, 1.0);
+    aggParams->get("AggregationModel", aggModel );
+    
+    aggTag = Expr::Tag( thisPhiName + "_agg_" + aggModel, Expr::STATE_NONE );
+    typedef typename Aggregation<FieldT>::Builder aggregation;
+    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, aggCoefTag, momentOrder, efficiencyCoef, aggModel);
+    aggTags.push_back(aggTag);
+    factory.register_expression( builder );
+  }
+  //------------------------------------------------------------------
+  
   std::string
   get_population_name( Uintah::ProblemSpecP params )
   {
@@ -311,6 +342,20 @@ namespace Wasatch {
                                        nEqs,
                                        rhsTags,
                                        factory);
+    }
+    
+    //_________________
+    // Aggregation
+    for( Uintah::ProblemSpecP aggParams=params->findBlock("AggregationExpression");
+        aggParams != 0;
+        aggParams = aggParams->findNextBlock("AggregationExpression") ){
+      setup_aggregation_expression <FieldT>( aggParams,
+                                             thisPhiName,
+                                             momentOrder,
+                                             rhsTags,
+                                             weightsTags,
+                                             abscissaeTags,
+                                             factory);
     }
 
     //_________________

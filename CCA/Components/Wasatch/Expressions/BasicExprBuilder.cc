@@ -38,6 +38,8 @@
 
 #include <CCA/Components/Wasatch/StringNames.h>
 
+#include <CCA/Components/Wasatch/Expressions/PBE/BrownianAggregationCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/TurbulentAggregationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationBulkDiffusionCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationMonosurfaceCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
@@ -344,6 +346,33 @@ namespace Wasatch{
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
+    }
+    
+    else if (params->findBlock("BrownianAggregationCoefficient") ) {
+      const double K_B = 1.3806488e-23;
+      double T, coef;
+      Uintah::ProblemSpecP coefParams = params->findBlock("BrownianAggregationCoefficient");
+      coefParams -> getAttribute("Temperature", T);
+      double ConvFac = 1.0;
+      if (coefParams->getAttribute("Conversion_Fac", ConvFac) )
+        coefParams->getAttribute("Conversion_Fac", ConvFac);
+      coef = 2* K_B * T / 3.0 * ConvFac ;
+      const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
+      typedef typename BrownianAggregationCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, densityTag, coef);
+    }
+    
+    else if (params->findBlock("TurbulentAggregationCoefficient") ) {
+      Uintah::ProblemSpecP coefParams = params->findBlock("TurbulentAggregationCoefficient");  
+      const Expr::Tag kinematicViscosityTag = parse_nametag( coefParams->findBlock("KinematicViscosity")->findBlock("NameTag") );
+      const Expr::Tag energyDissipationTag = parse_nametag( coefParams->findBlock("EnergyDissipation")->findBlock("NameTag") );
+      double coef;
+      double ConvFac = 1.0;
+      if (coefParams->getAttribute("Conversion_Fac", ConvFac) )
+        coefParams->getAttribute("Conversion_Fac", ConvFac);
+      coef = (4.0 / 3.0) * sqrt(3.0 * PI / 10.0) * ConvFac;
+      typedef typename TurbulentAggregationCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, kinematicViscosityTag, energyDissipationTag, coef);
     }
     
     else if (params->findBlock("PrecipitateEffectiveViscosity") ) {

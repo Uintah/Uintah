@@ -102,7 +102,8 @@
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                             children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
                             PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
-                            PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction)">  
+                            PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction, BrownianAggregationCoefficient,
+                            TurbulentAggregationCoefficient)">  
       <TaskList                         spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag                          spec="REQUIRED" />
 
@@ -180,6 +181,24 @@
       <ParticleVolumeFraction spec = "OPTIONAL NO_DATA">
         <Conversion_Fac spec = "REQUIRED DOUBLE" />
       </ParticleVolumeFraction>  
+      
+      <BrownianAggregationCoefficient spec = "OPTIONAL NO_DATA"
+                                      attribute1 = "Temperature REQUIRED DOUBLE"
+                                      attribute2 = "Conversion_Fac OPTIONAL DOUBLE">
+        <Density spec = "REQUIRED NO_DATA">
+          <NameTag spec = "REQUIRED" />
+        </Density>                                
+      </BrownianAggregationCoefficient>
+      
+      <TurbulentAggregationCoefficient spec	= "OPTIONAL NO_DATA"
+                                       attribute1 = "Conversion_Fac OPTIONAL DOUBLE">
+        <KinematicViscosity spec = "REQUIRED NO_DATA" >
+          <NameTag spec = "REQUIRED" />
+        </KinematicViscosity>
+        <EnergyDissipation spec = "REQUIRED NO_DATA" >
+          <NameTag spec = "REQUIRED" />
+        </EnergyDissipation>  
+      </TurbulentAggregationCoefficient>
       
     </PrecipitationBasicExpression>
     <!-- ========================================= -->
@@ -646,7 +665,18 @@
         
         <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
       </BirthExpression>      
-    
+      
+      <!-- ================================================================================== -->            
+      <!-- Aggregation Expression -->
+      <AggregationExpression spec = "MULTIPLE NO_DATA">
+        <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
+        <EfficiencyCoefficient spec = "OPTIONAL NO_DATA" />
+        
+        <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </AggregationCoefficientExpression>
+      </AggregationExpression>
+      
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression spec="MULTIPLE NO_DATA">
