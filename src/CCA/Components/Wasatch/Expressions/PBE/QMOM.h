@@ -200,6 +200,7 @@ evaluate()
   jMatrix_.resize( abSize*abSize );
   eigenValues_.resize( abSize );
   weights_.resize(abSize);
+  
   // loop over every point in the patch. get a sample iterator for any of the
   // fields.
   const FieldT* sampleField = knownMoments_[0];
@@ -311,7 +312,7 @@ evaluate()
 
 #ifdef WASATCH_QMOM_DIAGNOSTICS
     for (int iRow=0; iRow<abSize; iRow++) {
-      printf("a[%i] = %f \t \t",iRow,a[iRow]);
+      printf("a[%i] = %f \t \t",iRow,a_[iRow]);
     }
     printf("\n");
     for (int iRow=0; iRow<abSize; iRow++) {
@@ -320,6 +321,11 @@ evaluate()
     printf("\n");
 #endif
 
+    //need to initialize JMAtrix to zero at each point
+    for (int i = 0; i<abSize*abSize; i++) {
+      jMatrix_[i] = 0.0;
+    }
+    
     //___________________
     // construct J matrix
     for (int iRow=0; iRow<abSize - 1; ++iRow) {
