@@ -56,7 +56,7 @@ namespace Uintah {
     struct CMData {
       double gamma;
       double cv;
-      bool   UseArtificialViscosity;
+      double Pref;
     };
   private:
     CMData d_initialData;

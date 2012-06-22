@@ -58,12 +58,14 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
+  ps->getWithDefault("Pref",d_initialData.Pref,101325.);
 }
 
 IdealGasMP::IdealGasMP(const IdealGasMP* cm) : ConstitutiveModel(cm)
 {
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
+  d_initialData.Pref = cm->d_initialData.Pref;
 }
 
 IdealGasMP::~IdealGasMP()
@@ -80,6 +82,7 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   cm_ps->appendElement("gamma", d_initialData.gamma);
   cm_ps->appendElement("specific_heat",d_initialData.cv);
+  cm_ps->appendElement("Pref",d_initialData.Pref);
 }
 
 
@@ -360,7 +363,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       }
 #endif
 
-      double P = p - 101325.;
+      double P = p - d_initialData.Pref;
 
       double tmp = dp_drho + dp_de * p /(rhoM * rhoM);
 
@@ -441,29 +444,8 @@ void IdealGasMP::computePressEOSCM(double rhoM,
 
 double IdealGasMP::getCompressibility()
 {
-  return 1.0/101325.;
+  return 1.0/d_initialData.Pref;
 }
 
 namespace Uintah {
-
-#if 0
-static MPI_Datatype makeMPI_CMData()
-{
-   ASSERTEQ(sizeof(IdealGasMP::StateData), sizeof(double)*0);
-   MPI_Datatype mpitype;
-   MPI_Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(IdealGasMP::StateData*)
-{
-   static TypeDescription* td = 0;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-                               "IdealGasMP::StateData", true, &makeMPI_CMData);
-   }
-   return td;
-}
-#endif
 } // End namespace Uintah
