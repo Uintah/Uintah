@@ -114,6 +114,7 @@
     <failure_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull, uniform'" />
     <exponent               spec="OPTIONAL DOUBLE" />
     <failure_seed           spec="OPTIONAL INTEGER" />
+    <char_time              spec="OPTIONAL DOUBLE" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <scaling                       spec="OPTIONAL STRING 'none, kayenta'" />
     <reference_volume              spec="OPTIONAL DOUBLE 'positive'" />
@@ -137,6 +138,7 @@
     <G5                            spec="OPTIONAL DOUBLE" />
     <Gamma                         spec="OPTIONAL DOUBLE" />
     <gamma                         spec="OPTIONAL DOUBLE" />
+    <Pref                          spec="OPTIONAL DOUBLE" />
     <hardening_modulus             spec="OPTIONAL DOUBLE" />
     <he_constant_1                 spec="OPTIONAL DOUBLE 'positive'" />
     <he_constant_2                 spec="OPTIONAL DOUBLE 'positive'" />
