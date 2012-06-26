@@ -151,7 +151,12 @@ evaluate()
   }
 
   while (sampleIterator!=sampleField->interior_end() ) {
-    *resultsIter = - *weightsAndDerivsIters[1] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter ) - *weightsAndDerivsIters[5] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter );
+    if (*weightsAndDerivsIters[2] != 0.0) {
+      *resultsIter = - *weightsAndDerivsIters[1] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter ) - *weightsAndDerivsIters[5] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter );
+    } else {
+      *resultsIter = 0.0;
+    }
+    
     //increment iterators
     for (int i = 0; i< wdSize; i++) {
       weightsAndDerivsIters[i] += 1;
