@@ -416,8 +416,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
-    new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
-    new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(uVel, d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
 
@@ -459,7 +459,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, prNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, den, areaFraction, prNo, matlIndex, d_eqnName );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

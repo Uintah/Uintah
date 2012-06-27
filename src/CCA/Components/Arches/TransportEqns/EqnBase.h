@@ -80,11 +80,6 @@ public:
   void computeConv( const Patch* patch, fT& Fdiff, 
                          oldPhiT& oldPhi );
 
-  /** @brief Compute the diffusion terms */
-  template <class fT, class oldPhiT, class lambdaT> 
-  void computeDiff( const Patch* patch, fT& Fdiff, 
-                    oldPhiT& oldPhi, lambdaT& lambda );
-
   /** @brief Method for cleaning up after a transport equation at the end of a timestep */
   virtual void sched_cleanUp( const LevelP&, SchedulerP& sched ) = 0; 
 
