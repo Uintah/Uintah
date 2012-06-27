@@ -78,11 +78,12 @@ namespace Uintah{
        * for a non-constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, int mat_id, string varName );
+        constCCVariable<double>& density, constCCVariable<Vector>& areaFraction, 
+        constCCVariable<double>& prNo, int mat_id, string varName );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \nabla \phi \cdot dS \f$
-       * assuming a constant pr number */
+       * assuming a constant pr number -- only used now for DQMOM */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
         constCCVariable<Vector>& areaFraction, double const_prNo, int mat_id, string varName );
@@ -1668,14 +1669,15 @@ namespace Uintah{
     }
 
   //========================= Diffusion ======================================
-
-  //---------------------------------------------------------------------------
+  //
+  //-------------------------------------------------------
   // Method: Compute the diffusion term
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$ 
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, int mat_id, string varName )
+        constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
+        constCCVariable<double>& prNo, int mat_id, string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -1687,12 +1689,14 @@ namespace Uintah{
 
         FaceData1D face_gamma; 
         FaceData1D grad_phi; 
+        FaceData1D face_den; 
 
         coord[0] = 1; coord[1] = 0; coord[2] = 0; 
         double dx = Dx.x(); 
 
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dx, coord ); 
+        face_den   = centralInterp( c, coord, den ); 
 
         Vector c_af = areaFraction[c]; 
         Vector cp_af = areaFraction[c + coord]; 
@@ -1700,8 +1704,8 @@ namespace Uintah{
         double pr_no = prNo[c]; 
 
         Fdiff[c] = 1.0/pr_no * Dx.y()*Dx.z() * 
-                   ( face_gamma.plus * grad_phi.plus * cp_af.x() - 
-                     face_gamma.minus * grad_phi.minus * c_af.x() ); 
+                   ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.x() - 
+                     face_gamma.minus * face_den.minus * grad_phi.minus * c_af.x() ); 
 
 #ifdef YDIM
         coord[0] = 0; coord[1] = 1; coord[2] = 0; 
@@ -1709,12 +1713,13 @@ namespace Uintah{
 
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dy, coord ); 
+        face_den   = centralInterp( c, coord, den ); 
 
         cp_af = areaFraction[c + coord]; 
 
         Fdiff[c] += 1.0/pr_no * Dx.x()*Dx.z() *  
-                   ( face_gamma.plus * grad_phi.plus * cp_af.y() - 
-                     face_gamma.minus * grad_phi.minus * c_af.y() ); 
+                   ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.y() - 
+                     face_gamma.minus * face_den.minus * grad_phi.minus * c_af.y() ); 
 #endif
 #ifdef ZDIM
         coord[0] = 0; coord[1] = 0; coord[2] = 1; 
@@ -1722,12 +1727,13 @@ namespace Uintah{
 
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dz, coord ); 
+        face_den   = centralInterp( c, coord, den ); 
 
         cp_af = areaFraction[c + coord]; 
 
         Fdiff[c] += 1.0/pr_no * Dx.x()*Dx.y() * 
-                   ( face_gamma.plus * grad_phi.plus * cp_af.z() - 
-                      face_gamma.minus * grad_phi.minus * c_af.z() ); 
+                   ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.z() - 
+                      face_gamma.minus * face_den.minus * grad_phi.minus * c_af.z() ); 
 
 #endif
 
@@ -1769,7 +1775,9 @@ namespace Uintah{
             IntVector coord; 
             FaceData1D face_gamma; 
             FaceData1D grad_phi; 
+            FaceData1D face_den; 
             double dx; 
+
             switch (face) {
               case Patch::xminus:
 
@@ -1783,16 +1791,25 @@ namespace Uintah{
 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                             ( face_gamma.minus * grad_phi.minus * c_af.x() ); 
+                             ( face_gamma.minus * face_den.minus * grad_phi.minus * c_af.x() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
+                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
+
+                  // below(new) comes from: 
+                  // (phi_i + phi_i-1)/2.0 = phi_boundary
+                  // therefore, phi_i-1 = 2.0*phi_boundary - phi_i
+                  // then, dphi/dx = phi_i - phi_i-1/dx = phi_i/dx - (2.0*phi_boundary - phi_i)/dx = 2/dx* (phi_i-phi_b)
+
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
+                    ( face_gamma.minus * face_den.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
 
                 }
                 break; 
@@ -1805,18 +1822,24 @@ namespace Uintah{
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   IntVector c = *bound_ptr; 
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                             ( face_gamma.plus * grad_phi.plus * cp_af.x() ); 
+                             ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.x() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
+                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
+
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
+                    ( face_gamma.plus * face_den.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.x() * c_af.x() ); 
+
                 }
                 break; 
 #ifdef YDIM
@@ -1828,19 +1851,25 @@ namespace Uintah{
                 for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
-                  IntVector c = *bound_ptr; 
+                  IntVector c = *bound_ptr;
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                             ( face_gamma.minus * grad_phi.minus * c_af.y() ); 
+                             ( face_gamma.minus * face_den.minus * grad_phi.minus * c_af.y() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
+                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
+                  
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
+                    ( face_gamma.minus * face_den.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
+
                 }
                 break; 
               case Patch::yplus:
@@ -1851,19 +1880,25 @@ namespace Uintah{
                 for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
-                  IntVector c = *bound_ptr; 
+                  IntVector c = *bound_ptr;
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                             ( face_gamma.plus * grad_phi.plus * cp_af.y() ); 
+                             ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.y() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
+                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
+                             
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
+                    ( face_gamma.plus * face_den.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.y() * c_af.y() ); 
+
                 }
                 break;
 #endif 
@@ -1877,18 +1912,23 @@ namespace Uintah{
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   IntVector c = *bound_ptr; 
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                             ( face_gamma.minus * grad_phi.minus * c_af.z() ); 
+                             ( face_gamma.minus * face_den.minus * grad_phi.minus * c_af.z() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
+                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
+
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
+                    ( face_gamma.minus * face_den.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
 
                 }
                 break; 
@@ -1901,18 +1941,24 @@ namespace Uintah{
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   IntVector c = *bound_ptr; 
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+                  face_den   = centralInterp( bp1, coord, den ); 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                             ( face_gamma.plus * grad_phi.plus * cp_af.z() ); 
+                             ( face_gamma.plus * face_den.plus * grad_phi.plus * cp_af.z() ); 
 
                   // to match with the old code...
+                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
+                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
+
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
+                    ( face_gamma.plus * face_den.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.z() * c_af.z() ); 
+
                 }
                 break; 
 #endif
@@ -1925,7 +1971,6 @@ namespace Uintah{
         }
       }
     }
-
 
   //---------------------------------------------------------------------------
   // Method: Compute the diffusion term
