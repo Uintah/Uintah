@@ -321,10 +321,23 @@ main(int argc, char** argv)
     } else if(s == "-pic"){
       clf.do_PIC = true;
 
+      if(i+3 >= argc)
+      {
+         usage("-pic", argv[0]);
+         return 0;
+      } 
+
       cellx = strtoul(argv[++i],(char**)NULL,10);
       celly = strtoul(argv[++i],(char**)NULL,10);
       cellz = strtoul(argv[++i],(char**)NULL,10);
     } else if(s == "-pol") {
+      if(i+3 >= argc)
+      {
+         usage("-pol", argv[0]);
+         return 0;
+      } 
+
+
       axis = *argv[++i];
       ortho1 = strtoul(argv[++i],(char**)NULL,10);
       ortho2 = strtoul(argv[++i],(char**)NULL,10);
@@ -333,26 +346,31 @@ main(int argc, char** argv)
       clf.do_POL = true;
 
       // check if optional arguments were found
-      if(string(argv[i+1]) == "true")
+      if(i+1 < argc)
       {
-         doPOLAverage = true;
-         i++;
-      } else if(string(argv[i+1]) == "false")
-      {
-         doPOLAverage = false;
-         i++;
+        if(string(argv[i+1]) == "true")
+        {
+           doPOLAverage = true;
+           i++;
+        } else if(string(argv[i+1]) == "false")
+        {
+           doPOLAverage = false;
+           i++;
+        }
       }
 
-      if(string(argv[i+1]) == "true")
+      if(i+1 < argc)
       {
-         doPOLStressSplit = true;
-         i++;
-      } else if(string(argv[i+1]) == "false")
-      {
-         doPOLStressSplit = false;
-         i++;
+        if(string(argv[i+1]) == "true")
+        {
+           doPOLStressSplit = true;
+           i++;
+        } else if(string(argv[i+1]) == "false")
+        {
+           doPOLStressSplit = false;
+           i++;
+        }
       }
-
     } else if(s == "-AA_MMS_1"){
       clf.do_AA_MMS_1 = true;
     } else if(s == "-AA_MMS_2"){
@@ -363,6 +381,11 @@ main(int argc, char** argv)
       clf.do_ER_MMS = true;
     } else if(s == "-partvar"){
       clf.do_partvar = true;
+      if(i+1 >= argc)
+      {
+        usage("-partvar",argv[0]);
+        return 0;
+      }
       clf.particleVariable = argv[++i]; 
       if (clf.particleVariable[0] == '-') {
         usage("-partvar <particle variable name>", argv[0]);
@@ -424,6 +447,11 @@ main(int argc, char** argv)
       clf.do_patch = true;
     } else if (s == "-material" ||
                s == "-matl" || s == "-mat") {
+      if(i+1 >= argc)
+      {
+         usage("-mat", argv[0]);
+         return 0;
+      }
       clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
       mat = clf.matl_jim;
@@ -433,16 +461,31 @@ main(int argc, char** argv)
     } else if (s == "-timesteplow" ||
                s == "-timeStepLow" ||
                s == "-timestep_low") {
+      if(i+1 >= argc)
+      {
+         usage("-timesteplow", argv[0]);
+         return 0;
+      }
       clf.time_step_lower = strtoul(argv[++i],(char**)NULL,10);
       clf.tslow_set = true;
     } else if (s == "-timestephigh" ||
                s == "-timeStepHigh" ||
                s == "-timestep_high") {
+      if(i+1 >= argc)
+      {
+         usage("-timestephigh", argv[0]);
+         return 0;
+      }
       clf.time_step_upper = strtoul(argv[++i],(char**)NULL,10);
       clf.tsup_set = true;
     } else if (s == "-timestepinc" ||
                s == "-timestepInc" ||
                s == "-timestep_inc") {
+      if(i+1 >= argc)
+      {
+         usage("-timestepinc", argv[0]);
+         return 0;
+      }
       clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
