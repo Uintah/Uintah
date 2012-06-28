@@ -378,11 +378,12 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
 
   // Use the device with the highest number of multiprocessors (default is device(0))
   int num_devices, device;
+  cudaDeviceProp properties;
+  bool unifiedAddressing;
   cudaGetDeviceCount(&num_devices);
   if (num_devices > 1) {
     int max_multiprocessors = 0, max_device = 0;
     for (device = 0; device < num_devices; device++) {
-      cudaDeviceProp properties;
       cudaGetDeviceProperties(&properties, device);
       if (max_multiprocessors < properties.multiProcessorCount) {
         max_multiprocessors = properties.multiProcessorCount;
@@ -390,7 +391,14 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
       }
     }
     cudaSetDevice(max_device);
+  } else {
+    device = 0;
+    cudaSetDevice(device);
   }
+
+  cudaGetDeviceProperties(&properties, device);
+  unifiedAddressing = properties.unifiedAddressing;
+
 
   // Do time steps
   int numPatches = patches->size();
@@ -434,10 +442,12 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     CUDA_RT_SAFE_CALL( cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice) );
     CUDA_RT_SAFE_CALL( cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice) );
 
-    unsigned int flags = cudaHostAllocMapped;
-    size_t bytes = 1 * sizeof(double);
-    CUDA_RT_SAFE_CALL( cudaHostAlloc((void**)&residual_host, bytes, flags) );
-    CUDA_RT_SAFE_CALL( cudaHostGetDevicePointer((void**)&residual_device, (void*)residual_host, 0) );
+    if (unifiedAddressing) {
+      unsigned int flags = cudaHostAllocMapped;
+      size_t bytes = 1 * sizeof(double);
+      CUDA_RT_SAFE_CALL( cudaHostAlloc((void**)&residual_host, bytes, flags));
+      CUDA_RT_SAFE_CALL( cudaHostGetDevicePointer((void**)&residual_device, (void*)residual_host, 0) );
+    }
 
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow  = make_uint3(l.x(), l.y(), l.z());
@@ -489,7 +499,9 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   // free up allocated memory
   CUDA_RT_SAFE_CALL( cudaFree(phi_device) );
   CUDA_RT_SAFE_CALL( cudaFree(newphi_device) );
-  CUDA_RT_SAFE_CALL( cudaFreeHost(residual_host) );
+  if (unifiedAddressing) {
+    CUDA_RT_SAFE_CALL( cudaFreeHost(residual_host) );
+  }
   
 }
 
