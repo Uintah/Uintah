@@ -973,6 +973,7 @@ enable_optimize
 enable_64bit
 enable_32bit
 enable_output_avg_walltime
+enable_gencode
 enable_exename
 enable_largesos
 enable_sci_malloc
@@ -1634,6 +1635,8 @@ Optional Features:
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
+--enable-gencode        Specify compute capability for GPU code generation
+                          (12, 13, 20, 22, 31)
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -3772,6 +3775,15 @@ fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-output-avg-walltime --disable-output-avg-walltime"
 
+
+  # Check whether --enable-gencode was given.
+if test "${enable_gencode+set}" = set; then :
+  enableval=$enable_gencode; cuda_gencode="$enableval"
+else
+  cuda_gencode=${gencode=''}
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-gencode --disable-gencode"
 
 
   # Check whether --enable-exename was given.
@@ -43042,10 +43054,14 @@ fi
 
 
 
-# Compile for Fermi GPUS:
-#   The line below will compile the kernels specifically for Fermi architecture once and for all.
-#   If the flag is not specified, then the kernels must be recompiled at runtime every time.
-NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
+# Allow GPU code generation for specific compute capabilities: 1.2, 1.3, 2.0, 2.1, 3.1
+#   We need to be able to generate code for Fermi and Kepler,
+#   and also for earlier compute capabilites, even non-UVA environments.
+if test "$cuda_gencode" = ""; then
+	NVCC_CXXFLAGS=" "
+else
+	NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
+fi
 
 # Add one extra flag to pass to the host compiler when working with .cu to .o
 CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"

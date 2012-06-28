@@ -775,10 +775,14 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-# Compile for Fermi GPUS:
-#   The line below will compile the kernels specifically for Fermi architecture once and for all.
-#   If the flag is not specified, then the kernels must be recompiled at runtime every time.
-NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
+# Allow GPU code generation for specific compute capabilities: 1.2, 1.3, 2.0, 2.1, 3.1
+#   We need to be able to generate code for Fermi and Kepler,
+#   and also for earlier compute capabilites, even non-UVA environments.
+if test "$cuda_gencode" = ""; then
+	NVCC_CXXFLAGS=" "
+else	
+	NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
+fi
 
 # Add one extra flag to pass to the host compiler when working with .cu to .o
 CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
