@@ -189,7 +189,7 @@ namespace Wasatch{
   {
     typedef typename SpatialOps::structured::VolType<FluxT>::VolField  MomT;
     typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
-    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;   
+    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
     typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
     return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
   }
@@ -279,7 +279,7 @@ namespace Wasatch{
   MomentumTransportEquation( const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
-                             const Expr::Tag bodyForceTag,                            
+                             const Expr::Tag bodyForceTag,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
@@ -309,7 +309,7 @@ namespace Wasatch{
     if( !factory.have_entry( dilTag ) ){
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      const Expr::ExpressionID dilID = factory.register_expression( new Dilatation(dilTag, velTags_[0],velTags_[1],velTags_[2]) );
+      factory.register_expression( new Dilatation(dilTag, velTags_[0],velTags_[1],velTags_[2]) );
     }
 
     //___________________________________
@@ -331,9 +331,9 @@ namespace Wasatch{
     const Expr::Tag tauzt = tauTags[2];
     //
     const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
-        
+
     //--------------------------------------
-    // TURBULENCE	
+    // TURBULENCE
     // check if we have a turbulence model turned on
     Expr::Tag turbViscTag = Expr::Tag();
     if ( isTurbulent_ && isviscous_ ) {
@@ -346,41 +346,38 @@ namespace Wasatch{
       const Expr::Tag strTsrMagTag( "StrainTensorMagnitude", Expr::STATE_NONE );
       if( !factory.have_entry( strTsrMagTag ) ){
         typedef typename StrainTensorMagnitude::Builder StrTsrMagT;
-        const Expr::ExpressionID strTsrMagID_ = factory.register_expression( new StrTsrMagT(strTsrMagTag, velTags_[0], 
-                                                                                            velTags_[1], velTags_[2]) );
+        factory.register_expression( new StrTsrMagT(strTsrMagTag, velTags_[0], velTags_[1], velTags_[2]) );
       }
-      
+
       switch (turbulenceParams.turbulenceModelName) {
         case WALE: {
           // if WALE model is turned on, then create an expression for the square velocity gradient tensor
           sqStrTsrMagTag = Expr::Tag("SquareStrainTensorMagnitude", Expr::STATE_NONE);
           if( !factory.have_entry( sqStrTsrMagTag ) ){
             typedef typename SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
-            const Expr::ExpressionID sqStrTsrMagID_ = factory.register_expression( new SqStrTsrMagT(sqStrTsrMagTag, velTags_[0], 
-                                                                                                    velTags_[1], velTags_[2] ) );
-          }         
+            factory.register_expression( new SqStrTsrMagT(sqStrTsrMagTag, velTags_[0], velTags_[1], velTags_[2] ) );
+          }
         }
           break;
         case DYNAMIC: {
           // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
           dynSmagConstTag = Expr::Tag("DynamicSmagorinskyConstant", Expr::STATE_NONE);
           if( !factory.have_entry( dynSmagConstTag ) ){
-          }            
-          
+          }
+
         }
           break;
         default:
           break;
       }
-      
+
       if( !factory.have_entry( turbViscTag ) ){
         typedef typename TurbulentViscosity::Builder TurbViscT;
-        const Expr::ExpressionID turbViscID_ = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, 
-                                                                                              sqStrTsrMagTag, turbulenceParams ) );
+        factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, turbulenceParams ) );
         factory.attach_dependency_to_expression(turbViscTag, viscTag);
       }
     }
-    // END TURBULENCE	
+    // END TURBULENCE
     //--------------------------------------
     // check if inviscid or not
     if ( isviscous_ ) {
@@ -425,10 +422,11 @@ namespace Wasatch{
     //_________________________________________________________
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
-    const Expr::ExpressionID momRHSPartID= factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
-                                                                           cfxt, cfyt, cfzt,
-                                                                           tauxt, tauyt, tauzt, densityTag_,
-                                                                           bodyForceTag) );
+    const Expr::ExpressionID momRHSPartID = factory.register_expression(
+        new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
+                                                  cfxt, cfyt, cfzt,
+                                                  tauxt, tauyt, tauzt, densityTag_,
+                                                  bodyForceTag ) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
 
@@ -443,25 +441,25 @@ namespace Wasatch{
     //__________________
     // pressure
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
-    
+
     bool usePressureRefPoint = false;
     double refPressureValue = 0.0;
     SCIRun::IntVector refPressureLocation(0,0,0);
     if (pressureParams->findBlock("ReferencePressure")) {
       usePressureRefPoint = true;
-      Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");      
+      Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");
       refPressureParams->getAttribute("value", refPressureValue);
       refPressureParams->get("ReferenceCell", refPressureLocation);
     }
 
     bool use3DLaplacian = true;
     pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
-    
+
     Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );
-    
+
     if( !factory.have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
       Expr::Tag fxt, fyt, fzt;
@@ -471,14 +469,14 @@ namespace Wasatch{
 
       const StringNames& sName = StringNames::self();
       const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
-      
+
       Expr::TagList ptags;
       ptags.push_back( pressure_tag() );
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
       const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
                                                                                        d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *sparams, linSolver);
-      std::cout << "PRESSURE: " << std::endl
+      proc0cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;
       pressureID_ = factory.register_expression( pbuilder );
       //factory.cleave_from_children( pressureID_ );
@@ -638,7 +636,7 @@ namespace Wasatch{
                                         localPatches,
                                         patchInfoMap,
                                         materials );
-    
+
 
 //    // set bcs for density
 //    const Expr::Tag densTag( "density", Expr::STATE_NONE );
@@ -691,7 +689,7 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    
+
     if( icFactory.have_entry( thisVelTag_ ) ){
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file
