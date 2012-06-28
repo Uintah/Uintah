@@ -393,10 +393,9 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     cudaSetDevice(max_device);
   } else {
     device = 0;
+    cudaGetDeviceProperties(&properties, device);
     cudaSetDevice(device);
   }
-
-  cudaGetDeviceProperties(&properties, device);
   unifiedAddressing = properties.unifiedAddressing;
 
 
