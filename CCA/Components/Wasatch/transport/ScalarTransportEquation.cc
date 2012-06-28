@@ -124,7 +124,6 @@ namespace Wasatch{
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     if( factory.have_entry(phiTag) ){
-      const Expr::ExpressionID phiID = factory.get_id(phiTag);
       process_boundary_conditions<FieldT>( phiTag,
                                            this->solution_variable_name(),
                                            this->staggered_location(),
@@ -161,7 +160,7 @@ namespace Wasatch{
                                         localPatches,
                                         patchInfoMap,
                                         materials );
-    
+
   }
 
   //------------------------------------------------------------------
