@@ -1636,7 +1636,7 @@ Optional Features:
 --enable-output-avg-walltime
                           Output ellapsed wall-times
 --enable-gencode        Specify compute capability for GPU code generation
-                          (12, 13, 20, 22, 31)
+                          (allowable values: 12, 13, 20, 21, 31)
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -43056,7 +43056,7 @@ fi
 
 # Allow GPU code generation for specific compute capabilities: 1.2, 1.3, 2.0, 2.1, 3.1
 #   We need to be able to generate code for Fermi and Kepler,
-#   and also for earlier compute capabilites, even non-UVA environments.
+#   and also for earlier compute capabilities, even non-UVA environments.
 if test "$cuda_gencode" = ""; then
 	NVCC_CXXFLAGS=" "
 else

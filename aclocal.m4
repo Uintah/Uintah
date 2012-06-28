@@ -777,7 +777,7 @@ AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # Allow GPU code generation for specific compute capabilities: 1.2, 1.3, 2.0, 2.1, 3.1
 #   We need to be able to generate code for Fermi and Kepler,
-#   and also for earlier compute capabilites, even non-UVA environments.
+#   and also for earlier compute capabilities, even non-UVA environments.
 if test "$cuda_gencode" = ""; then
 	NVCC_CXXFLAGS=" "
 else	
