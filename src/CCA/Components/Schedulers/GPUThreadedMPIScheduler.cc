@@ -1308,7 +1308,7 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyHostToDevice, *stream) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \""
@@ -1358,7 +1358,7 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyHostToDevice, *stream) );
   if (gpudbg.active()) {
     cerrLock.lock();
     gpudbg << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \""
@@ -1531,7 +1531,7 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
   // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDeviceToHost, *stream) );
   CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
   dtask->incrementD2HCopyCount();
