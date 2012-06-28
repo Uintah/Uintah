@@ -509,7 +509,7 @@ SCI_ARG_ENABLE(output-avg-walltime,
   [output_avg_walltime=${output_avg_walltime='no'}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (12, 13, 20, 22, 31)),
+                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
 SCI_ARG_ENABLE(exename,
