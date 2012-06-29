@@ -4171,9 +4171,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       rho_init[m]=mpm_matl->getInitialDensity();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      Ghost::GhostType  gnone = Ghost::None;
-      new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch,gac,NGP);
-      new_dw->get(gmass[m],     lb->gMassLabel, dwi, patch, gnone, 0);
+      new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
+      new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);
     }
 
 /*
