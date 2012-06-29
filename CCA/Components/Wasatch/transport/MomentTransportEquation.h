@@ -133,7 +133,6 @@ namespace Wasatch{
                                                   Expr::TagList& weightsTags,
                                                   Expr::TagList& abscissaeTags,
                                                   const double momentOrder,
-                                                  Expr::TagList& multiEnvWeightsTags,
                                                   const double initialMoment);
 
     /**

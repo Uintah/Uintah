@@ -20,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase> QMOM_Batch_2Poly.uda </filebase>
+    <filebase> MultEnvTest_2Poly.uda </filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
 
@@ -391,6 +391,23 @@
     </PrecipitationClassicRStarValue>
   </PrecipitationBasicExpression>
 
+  <PrecipitationBasicExpression type="SVOL">
+    <TaskList> advance_solution </TaskList>
+    <NameTag name="MultiEnv" state="STATE_NONE" />
+      <MultiEnvMixingModel>
+        <MixtureFraction>
+          <NameTag name="mixfrac" state="STATE_N"/>
+        </MixtureFraction>
+        <ScalarVariance>
+          <NameTag name="scalarvar" state="STATE_N"/>
+        </ScalarVariance>
+        <ScalarDissipation>
+          <NameTag name="scalardiss" state="STATE_N" />
+        </ScalarDissipation>
+      </MultiEnvMixingModel>
+  </PrecipitationBasicExpression>
+
+
 <!-- Calcite Moment Transport -->
     <MomentTransportEquation>
       <PopulationName> Calcite </PopulationName>
@@ -421,6 +438,10 @@
           <NameTag name="RStarExpr_Calcite" state="STATE_N" />
         </RStarExpression> 
       </BirthExpression>
+
+      <MultiEnvMixingModel>
+        <NameTag name="MultiEnv" state="STATE_NONE"/>
+      </MultiEnvMixingModel>
 
       <!--ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
@@ -479,15 +500,7 @@
       </BirthExpression>
 
       <MultiEnvMixingModel>
-        <MixtureFraction>
-          <NameTag name="mixfrac" state="STATE_N"/>
-        </MixtureFraction>
-        <ScalarVariance>
-          <NameTag name="scalarvar" state="STATE_N"/>
-        </ScalarVariance>
-        <ScalarDissipation>
-          <NameTag name="scalardiss" state="STATE_N" />
-        </ScalarDissipation>
+        <NameTag name="MultiEnv" state="STATE_NONE" />
       </MultiEnvMixingModel>
 
       <!--ConvectiveFluxExpression>
