@@ -106,7 +106,8 @@ Wasatch
 
 \begin_layout Author
 Tony Saad, James C.
- Sutherland, Amir Biglari
+ Sutherland, Amir Biglari, Alex W.
+ Abboud
 \end_layout
 
 \begin_layout Standard
@@ -3723,20 +3724,41 @@ name "fig:boundary-condition-pressure-specification-1"
 \end_layout
 
 \begin_layout Standard
-Inlets and walls, whether moving or stationary, share the same type boundary
- conditions.
- The user specifies the momentum at those boundaries.
- Treatment of the pressure is derived from the pressure Poisson equation
+Inlets and walls, whether moving or stationary, share the same boundary
+ condition specification.
+ The user only specifies the momentum at those boundaries.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\rho\mathbf{u}=\rho(U,V,W)\label{eq:wasatch-bc-ppe-1d-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Treatment of the pressure is derived from the pressure Poisson equation
  as follows.
  For simplicity, we illustrate this in one-dimension at a boundary cell
- on the x-minus side of the computational domain.
+ on the x-minus side of the computational domain as shown in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:wasatch-boundary-condition-pressure-specification-1"
+
+\end_inset
+
+.
  In this case, the pressure poisson equation is written as
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial^{2}p}{\partial x^{2}}=\frac{\partial F}{\partial x}\label{eq:bc-ppe-1d}
+\frac{\partial^{2}p}{\partial x^{2}}=\frac{\partial F}{\partial x}\label{eq:wasatch-bc-ppe-1d}
 \end{equation}
 
 \end_inset
@@ -3744,7 +3766,7 @@ Inlets and walls, whether moving or stationary, share the same type boundary
 Using second order finite differencing, 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "eq:bc-ppe-1d"
+reference "eq:wasatch-bc-ppe-1d"
 
 \end_inset
 
@@ -3754,7 +3776,7 @@ reference "eq:bc-ppe-1d"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{p_{-1}-2p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}
+\frac{p_{-1}-2p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-bc-ppe-1d-discrete}
 \end{equation}
 
 \end_inset
@@ -3773,16 +3795,22 @@ Here, both
 \begin_inset Formula $x$
 \end_inset
 
--momentum equation, one can relate these quantities as follows.
- On an 
+-momentum equation, one can relate these quantities by projecting and evaluating
+ the momentum equations in the direction normal to the boundary.
+ In our example, on an 
 \begin_inset Formula $x$
 \end_inset
 
--minus cell, the 
+-minus face, we evaluate the 
 \begin_inset Formula $x$
 \end_inset
 
--momentum equation may be written as
+-momentum equation at the 
+\begin_inset Formula $x$
+\end_inset
+
+-minus face.
+ This yields
 \end_layout
 
 \begin_layout Standard
@@ -3807,7 +3835,54 @@ Again, using central finite differencing, one recovers
 or
 \begin_inset Formula 
 \begin{equation}
-\frac{p_{-1}-p_{0}}{\Delta x}=\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}+F_{i-\tfrac{1}{2}}
+\frac{p_{-1}-p_{0}}{\Delta x}=\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}+F_{-\tfrac{1}{2}}\label{eq:wasatch-xmom-1d}
+\end{equation}
+
+\end_inset
+
+The force balance in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-xmom-1d"
+
+\end_inset
+
+ states that the pressure gradient is balanced by accumulation of momentum
+ and convective and diffusive fluxes - a restatement of Newton's second
+ law.
+ One then substitutes 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-xmom-1d"
+
+\end_inset
+
+ into 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-bc-ppe-1d-discrete"
+
+\end_inset
+
+.
+ This operation returns the following Poisson equation at the boundary
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}+\frac{F_{-\tfrac{1}{2}}}{\Delta x}+\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:}
+\end{equation}
+
+\end_inset
+
+Notice how the diffusive and convective fluxes cancel and one is left with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}}{\Delta x}-\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final}
 \end{equation}
 
 \end_inset
@@ -3816,17 +3891,125 @@ or
 \end_layout
 
 \begin_layout Standard
-Both the pressure coefficient matrix and the pressure right-hand-side are
- modified accordingly.
- For practicaly reasons, we set the 
-\begin_inset Formula $F_{-\tfrac{1}{2}}=0$
+According to 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final"
+
 \end_inset
 
- on faces perpendicular to momentum directions.
+, both the pressure-coefficient-matrix and the pressure right-hand-side
+ must be modified.
+ Because 
+\begin_inset Formula $F_{-\tfrac{1}{2}}$
+\end_inset
+
+ never shows up in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final"
+
+\end_inset
+
+, we simply set it to zero in the Wasatch input file while also setting
+ the coefficient for 
+\begin_inset Formula $p_{-1}$
+\end_inset
+
+ to 0 (the code automatically takes care of that).
 \end_layout
 
 \begin_layout Subsection
 Pressure Outlet
+\end_layout
+
+\begin_layout Standard
+The designation of a pressure outlet has a different meaning for different
+ CFD schools of thought.
+ In Wasatch, a pressure outlet is simply an artificial location in space
+ where one does not have information about the velocity or momentum profile.
+ In practice, however, one may have knowledge of the pressure at such boundaries.
+\end_layout
+
+\begin_layout Standard
+The user must specify a value for the outlet pressure.
+ This value may be specified at the extra-cell or on the domain boundary
+ face.
+ Both options give stable results.
+ In Wasatch, we implement the latter option.
+\end_layout
+
+\begin_layout Standard
+Treatment of the pressure follows the same guidelines exposed in the previous
+ section.
+ In this case, however, the pressure 
+\begin_inset Formula $p_{-1}$
+\end_inset
+
+ may be related to 
+\begin_inset Formula $P_{-\tfrac{1}{2}}$
+\end_inset
+
+ on the boundary face.
+ Given that the pressure lives on scalar cell centers, using second order
+ approximation, we have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+P_{-\tfrac{1}{2}}=\frac{p_{-1}+p_{0}}{2}
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p_{-1}=2P_{-\tfrac{1}{2}}-p_{0}
+\end{equation}
+
+\end_inset
+
+then, the pressure poisson equation (evaluated at the boundary) returns
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{-3p_{0}+p_{1}}{\Delta x^{2}}=-2P_{-\tfrac{1}{2}}+\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-bc-ppe-1d-discrete-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The momentum partial right-hand-side remains unknown in the previous equation.
+ One can choose either of the following conditions
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+F_{-\tfrac{1}{2}}=0\\
+\frac{\partial F}{\partial x}=0
+\end{cases}
+\end{equation}
+
+\end_inset
+
+The former may be interpreted to imply a balance between diffusive and convectiv
+e fluxes at the pressure outlet boundary.
+ It may also be interpreted as a zero flux condition for convective and
+ diffusive fluxes.
+ The latter is self evident where one is assuming a self-similar profile
+ for convective and diffusive fluxes.
 \end_layout
 
 \begin_layout Chapter
