@@ -251,8 +251,10 @@ namespace Wasatch{
    */
   template<typename FieldT> inline int get_n_ghost(){
     const SpatialOps::structured::IntVec ngm = FieldT::Ghost::NGhostMinus::int_vec();
+#   ifndef NDEBUG
     const SpatialOps::structured::IntVec ngp = FieldT::Ghost::NGhostPlus::int_vec();
     assert( ngm==ngp && ngm[0]==ngm[1] && ngm[0]==ngm[2] );
+#   endif
     return ngm[0];
   }
 
