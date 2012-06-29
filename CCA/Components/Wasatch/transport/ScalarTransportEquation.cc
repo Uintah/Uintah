@@ -100,7 +100,6 @@ namespace Wasatch{
       }
       else {
         primVarTag_ = solnVarTag_;
-
       }
     }
   }
