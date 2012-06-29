@@ -40,6 +40,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/PBE/BrownianAggregationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/TurbulentAggregationCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvMixingModel.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationBulkDiffusionCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationMonosurfaceCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
@@ -417,6 +418,34 @@ namespace Wasatch{
       builder = scinew Builder(tag, zerothMomentTags, firstMomentTags, convFac);
     }
 
+    else if (params->findBlock("MultiEnvMixingModel") ) {
+      std::stringstream wID;
+      std::string baseName;
+      std::string stateType;
+      Uintah::ProblemSpecP multiEnvParams = params->findBlock("MultiEnvMixingModel");
+      Expr::TagList multiEnvWeightsTags;
+      params->findBlock("NameTag")->getAttribute("name",baseName);
+      params->findBlock("NameTag")->getAttribute("state",stateType);
+      const int numEnv = 3;
+      //create the expression for weights and derivatives if block found  
+      for (int i=0; i<numEnv; i++) {
+        wID.str(std::string());
+        wID << i;
+        if (stateType == "STATE_N") {
+          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_N) );
+          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_N) );
+        } else if (stateType == "STATE_NONE") {
+          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
+          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
+        }
+      }
+      
+      const Expr::Tag mixFracTag = parse_nametag( multiEnvParams->findBlock("MixtureFraction")->findBlock("NameTag") );
+      const Expr::Tag scalarVarTag = parse_nametag( multiEnvParams->findBlock("ScalarVariance")->findBlock("NameTag") );
+      const Expr::Tag scalarDissTag = parse_nametag( multiEnvParams->findBlock("ScalarDissipation")->findBlock("NameTag") );
+      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag);
+    }
+    
     else if (params->findBlock("PrecipitationSource") ) {
       //this loops over all possible non-convective/non-diffusive rhs terms and creates a taglist
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSource");

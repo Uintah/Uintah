@@ -252,7 +252,6 @@ namespace Wasatch {
                     Expr::TagList& weightsTags,
                     Expr::TagList& abscissaeTags,
                     const double momentOrder,
-                    Expr::TagList& multiEnvWeightsTags,
                     const double initialMoment)
   {
     std::stringstream momentOrderStr;
@@ -298,6 +297,26 @@ namespace Wasatch {
     //Multi Environment Mixing 
 
     if( params->findBlock("MultiEnvMixingModel") ){
+      Expr::TagList multiEnvWeightsTags;
+      std::string baseName;
+      std::string stateType;
+      std::stringstream wID;
+      const int numEnv = 3;
+      //create the tag list for the multi env weights
+      params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("name",baseName);
+      params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("state",stateType);
+      for (int i=0; i<numEnv; i++) {
+        wID.str(std::string());
+        wID << i;
+        if ( stateType == "STATE_NONE" ) {
+          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
+          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
+        } else if (stateType == "STATE_N" ) {
+          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_N) );
+          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_N) );
+        }
+      }
+      
       //register source term from mixing
       Expr::Tag mixingSourceTag = Expr::Tag( thisPhiName + "_mixing_source", Expr::STATE_NONE);
       typedef typename MultiEnvSource<FieldT>::Builder MixSource;

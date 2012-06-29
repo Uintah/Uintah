@@ -103,7 +103,7 @@
                             children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
                             PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
                             PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction, BrownianAggregationCoefficient,
-                            TurbulentAggregationCoefficient)">  
+                            TurbulentAggregationCoefficient, MultiEnvMixingModel)">  
       <TaskList                         spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag                          spec="REQUIRED" />
 
@@ -199,6 +199,18 @@
           <NameTag spec = "REQUIRED" />
         </EnergyDissipation>  
       </TurbulentAggregationCoefficient>
+      
+      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
+        <MixtureFraction spec = "REQUIRED NO_DATA" > 
+          <NameTag spec	= "REQUIRED"/>
+        </MixtureFraction>      
+        <ScalarVariance spec = "REQUIRED NO_DATA" > 
+          <NameTag spec	= "REQUIRED"/>
+        </ScalarVariance>
+        <ScalarDissipation spec="REQUIRED NO_DATA" >
+          <NameTag spec = "REQUIRED"/>
+        </ScalarDissipation>
+      </MultiEnvMixingModel>
       
     </PrecipitationBasicExpression>
     <!-- ========================================= -->
@@ -608,15 +620,7 @@
       </SupersaturationExpression>
       
       <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
-        <MixtureFraction spec = "REQUIRED NO_DATA" > 
-          <NameTag spec	= "REQUIRED"/>
-        </MixtureFraction>      
-        <ScalarVariance spec = "REQUIRED NO_DATA" > 
-          <NameTag spec	= "REQUIRED"/>
-        </ScalarVariance>
-        <ScalarDissipation spec="REQUIRED NO_DATA" >
-          <NameTag spec = "REQUIRED"/>
-        </ScalarDissipation>
+        <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
       
       <!-- ================================================================================== -->            
