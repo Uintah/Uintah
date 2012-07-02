@@ -357,7 +357,7 @@ namespace Wasatch{
       double ConvFac = 1.0;
       if (coefParams->getAttribute("Conversion_Fac", ConvFac) )
         coefParams->getAttribute("Conversion_Fac", ConvFac);
-      coef = 2* K_B * T / 3.0 * ConvFac ;
+      coef = 2.0 * K_B * T / 3.0 * ConvFac ;
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
       typedef typename BrownianAggregationCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, densityTag, coef);
@@ -452,12 +452,17 @@ namespace Wasatch{
       std::vector<double> Molec_Volumes;
       Expr::TagList sourceTagList;
       Expr::Tag sourceTag;
+      Expr::Tag midEnvWeightTag; //tag for central weight
       double molecVol;
       std::string modelType;
       std::string basePhiName;
 
       const Expr::Tag etaScaleTag = parse_nametag( coefParams->findBlock("EtaScale")->findBlock("NameTag") );
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
+      
+      if (coefParams->findBlock("MultiEnvWeight") ) {
+        midEnvWeightTag = parse_nametag( coefParams->findBlock("MultiEnvWeight")->findBlock("NameTag") );
+      }
 
       for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
             momentParams != 0;
@@ -488,7 +493,7 @@ namespace Wasatch{
         }
       }
       typedef typename PrecipitationSource<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, Molec_Volumes);
+      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, midEnvWeightTag, Molec_Volumes);
     }
     return builder;
   }

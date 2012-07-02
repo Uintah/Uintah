@@ -4,7 +4,9 @@
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
-
+#ifndef PI
+#define PI 3.1415926535897932384626433832795
+#endif
 /**
  *  \ingroup WasatchExpressions
  *  \class PrecipitationSource
@@ -16,7 +18,8 @@
  *  \brief This adds up the non diffusive/non convective source terms
  *  of the various populations for the 3rd moment and multiplies by
  *  the correct scaling factors to use as the reaction extent extent source term
- *  S = \frac{1}{\eta_{scale}} \sum \nu (B + G - D)
+ *  \f$ S = w_2 * \frac{1}{\eta_{scale}} \sum \nu (B + G - D) \f$
+ *  also has the optional w_2 for modifying by the middle weight in a multi environment model
  */
 template< typename FieldT >
 class PrecipitationSource
@@ -25,16 +28,19 @@ class PrecipitationSource
   const Expr::TagList sourceTagList_;      ///< these are the tags of all the known sources
   const Expr::Tag etaScaleTag_;            ///< this expression value can be read table header and takign inverse
   const Expr::Tag densityTag_;             ///< rho to multiply source term by, since scalar solution is for dphirho/dt
+  const Expr::Tag envWeightTag_;           // weight tag for middle environment of multi mix model (optional)
   const std::vector< double > molecVols_;  ///< \nu in the source evaluation
 
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec sources_;
   const FieldT* etaScale_;
   const FieldT* density_;
+  const FieldT* envWeight_;
 
   PrecipitationSource( const Expr::TagList sourceTagList_,
                        const Expr::Tag etaScaleTag_,
                        const Expr::Tag densityTag_,
+                       const Expr::Tag envWeightTag_,
                        const std::vector<double> molecVols_);
 
 public:
@@ -45,23 +51,26 @@ public:
              const Expr::TagList& sourceTagList,
              const Expr::Tag& etaScaleTag,
              const Expr::Tag& densityTag,
+             const Expr::Tag& envWeightTag,
              const std::vector<double> molecVols)
     : ExpressionBuilder(result),
       sourcetaglist_  (sourceTagList),
       etascalet_      (etaScaleTag),
       densityt_       (densityTag),
+      envweightt_     (envWeightTag),
       molecvols_      (molecVols)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationSource<FieldT>( sourcetaglist_, etascalet_, densityt_, molecvols_ );
+      return new PrecipitationSource<FieldT>( sourcetaglist_, etascalet_, densityt_, envweightt_, molecvols_ );
     }
 
   private:
     const Expr::TagList sourcetaglist_;    // these are the tags of all the known source
     const Expr::Tag etascalet_;          // eta scaling tag
     const Expr::Tag densityt_;           //density tag
+    const Expr::Tag envweightt_;         //middle environment weight tag
     const std::vector<double> molecvols_;  // vector for scaling source term
   };
 
@@ -85,11 +94,13 @@ PrecipitationSource<FieldT>::
 PrecipitationSource( const Expr::TagList sourceTagList,
                      const Expr::Tag etaScaleTag,
                      const Expr::Tag densityTag,
+                    const Expr::Tag envWeightTag,
                      const std::vector<double> molecVols)
 : Expr::Expression<FieldT>(),
   sourceTagList_  (sourceTagList),
   etaScaleTag_    (etaScaleTag),
   densityTag_     (densityTag),
+  envWeightTag_   (envWeightTag),
   molecVols_      (molecVols)
 {}
 
@@ -110,6 +121,8 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( sourceTagList_ );
   exprDeps.requires_expression( etaScaleTag_ );
   exprDeps.requires_expression( densityTag_ );
+  if ( envWeightTag_ != Expr::Tag() )
+    exprDeps.requires_expression( envWeightTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -126,6 +139,8 @@ bind_fields( const Expr::FieldManagerList& fml )
   }
   etaScale_ = &fm.field_ref( etaScaleTag_ );
   density_ = &fm.field_ref( densityTag_ );
+  if ( envWeightTag_ != Expr::Tag() )
+    envWeight_ = &fm.field_ref( envWeightTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -146,31 +161,17 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-
-  typename FieldT::const_interior_iterator etaScaleIter = etaScale_->interior_begin();
-  typename FieldT::const_interior_iterator densityIter = density_->interior_begin();
-  typename FieldT::interior_iterator resultsIterator = result.interior_begin();
+  
   const size_t nSources_ = molecVols_.size();
-
-  std::vector<typename FieldT::const_interior_iterator> sourceIterators;
-  for (size_t i=0; i < nSources_; i++) {
-    typename FieldT::const_interior_iterator thisIterator = sources_[i]->interior_begin();
-    sourceIterators.push_back(thisIterator);
-  }
-
-  double SumVal;
-  while (etaScaleIter!=etaScale_->interior_end() ) {
-    SumVal = 0.0;
-    for (size_t i = 0; i < nSources_; i++) {
-      SumVal +=  molecVols_[i] * *sourceIterators[i];  //need 4pi/3 here?
+  typename FieldVec::const_iterator sourceIterator = sources_.begin();
+  
+  for (size_t i = 0; i < nSources_; i++) {
+    if (envWeightTag_ != Expr::Tag () ) {
+      result <<= result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ * *envWeight_ / *etaScale_;
+    } else {
+      result <<= result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ / *etaScale_;
     }
-    *resultsIterator =  1 / *etaScaleIter * *densityIter * SumVal ;
-    for (size_t i = 0; i < nSources_; i++) {
-      ++sourceIterators[i];
-    }
-    ++resultsIterator;
-    ++etaScaleIter;
-    ++densityIter;
+    ++sourceIterator;
   }
 }
 
