@@ -150,7 +150,7 @@ evaluate()
   for ( typename FieldVec::const_iterator zerothMomentIterator=zerothMoments_.begin();
        zerothMomentIterator!=zerothMoments_.end();
        ++zerothMomentIterator, ++firstMomentIterator) {
-    result <<= result + 4/3 * PI * ( **firstMomentIterator * convFac_ ) * ( **firstMomentIterator * convFac_ ) *
+    result <<= result + 4.0/3.0 * PI * ( **firstMomentIterator * convFac_ ) * ( **firstMomentIterator * convFac_ ) *
                        ( **firstMomentIterator * convFac_ ) / **zerothMomentIterator / **zerothMomentIterator;
                                    
   }

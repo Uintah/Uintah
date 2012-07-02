@@ -163,6 +163,9 @@
         <Density spec = "REQUIRED NO_DATA" >
           <NameTag spec="REQUIRED"/>
         </Density>
+        <MultiEnvWeight spec = "OPTIONAL NO_DATA" >
+          <NameTag spec = "REQUIRED" />
+        </MultiEnvWeight>  
       </PrecipitationSource> 
       
       <PrecipitateEffectiveViscosity spec = "OPTIONAL NO_DATA" 
