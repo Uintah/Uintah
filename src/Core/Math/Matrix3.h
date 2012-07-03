@@ -180,6 +180,8 @@ namespace Uintah {
 
      void polarRotationAFFinvTran(Matrix3& R) const;
 
+     void prettyPrint(std::ostream &out_file) const;
+
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
     // in e1.  If it returns 2, the values are passed back in e1
