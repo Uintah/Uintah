@@ -796,14 +796,22 @@ int Matrix3::getXZEigenValues(double& e1, double& e2) const
   return SolveQuadratic(b, c, e2, e1);
 }
 
+void Matrix3::prettyPrint(std::ostream &out_file) const
+{
+    Matrix3 m3 = *this;
+    out_file <<  m3(0,0) << ' ' << m3(0,1) << ' ' << m3(0,2) << endl;
+    out_file <<  m3(1,0) << ' ' << m3(1,1) << ' ' << m3(1,2) << endl;
+    out_file <<  m3(2,0) << ' ' << m3(2,1) << ' ' << m3(2,2) << endl;
+}
+
 namespace Uintah {
   ostream &
   operator << (ostream &out_file, const Matrix3 &m3)
   {
     // Overload the output stream << operator
     
-    out_file <<  m3(0,0) << ' ' << m3(0,1) << ' ' << m3(0,2) << endl;
-    out_file <<  m3(1,0) << ' ' << m3(1,1) << ' ' << m3(1,2) << endl;
+    out_file <<  m3(0,0) << ' ' << m3(0,1) << ' ' << m3(0,2) << ' ';
+    out_file <<  m3(1,0) << ' ' << m3(1,1) << ' ' << m3(1,2) << ' ';
     out_file <<  m3(2,0) << ' ' << m3(2,1) << ' ' << m3(2,2) ;
     
     return out_file;
