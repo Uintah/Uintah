@@ -57,20 +57,27 @@ IS_STATIC_BUILD := @IS_STATIC_BUILD@
 
 
 # PTXDIR is the Nvidia assembler/bytecode subdirectory (for PTX or CUBIN)
+CREATE_PTXDIR := @HAVE_CUDA@
 ifeq ($(OBJTOP),.)
   LIBDIR := lib
-  PTXDIR := ptx
+  ifneq ($(CREATE_PTXDIR),)
+    PTXDIR := ptx
+  endif
 else
   LIBDIR := $(OBJTOP_ABS)/lib
-  PTXDIR := $(OBJTOP_ABS)/ptx
+  ifneq ($(CREATE_PTXDIR),)
+    PTXDIR := $(OBJTOP_ABS)/ptx
+  endif
 endif
 
 # squash any output from noisy environments, we just want the pwd output
 LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
 	           > /dev/null; pwd)
-	           
-PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR)\
-	           > /dev/null; pwd) 	           
+
+ifneq ($(CREATE_PTXDIR),)	           
+  PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR)\
+  	           > /dev/null; pwd)
+endif
 
 SCIRUN_LIBDIR := $(LIBDIR)
 
