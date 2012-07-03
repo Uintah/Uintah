@@ -804,6 +804,11 @@ int main(int argc, char** argv)
                           levelIndex, var_start, var_end, cells,
                           time_start, time_end, output_precision, *output_stream);    
         break;
+      case Uintah::TypeDescription::Matrix3:
+       printData<Matrix3>(archive, variable_name, td, material, use_cellIndex_file,
+                         levelIndex, var_start, var_end, cells,
+                         time_start, time_end, output_precision, *output_stream);    
+        break;
       case Uintah::TypeDescription::Other:
         if (subtype->getName() == "Stencil7") {
           printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
@@ -812,7 +817,6 @@ int main(int argc, char** argv)
           break;
         }
         // don't break on else - flow to the error statement
-      case Uintah::TypeDescription::Matrix3:
       case Uintah::TypeDescription::bool_type:
       case Uintah::TypeDescription::short_int_type:
       case Uintah::TypeDescription::long_type:
