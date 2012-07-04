@@ -386,6 +386,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #else
   PetscObjectExists((PetscObject)d_A, &exists);
 #endif
+
 #if 0
     // This one works
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
@@ -542,23 +543,23 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #else
     PetscObjectExists((PetscObject)d_A,&exists);
 #endif
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
     if (exists == PETSC_TRUE) {
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
       MatDestroy(&d_A);
       VecDestroy(&d_B);
       VecDestroy(&d_diagonal);
       VecDestroy(&d_x);
       VecDestroy(&d_t);
       VecDestroy(&d_flux);
-    }
 #else
-    MatDestroy(d_A);
-    VecDestroy(d_B);
-    VecDestroy(d_diagonal);
-    VecDestroy(d_x);
-    VecDestroy(d_t);
-    VecDestroy(d_flux);
+      MatDestroy(d_A);
+      VecDestroy(d_B);
+      VecDestroy(d_diagonal);
+      VecDestroy(d_x);
+      VecDestroy(d_t);
+      VecDestroy(d_flux);
 #endif
+    }
   }
   if (recursion == false) {
     d_DOF.clear();
