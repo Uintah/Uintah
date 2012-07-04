@@ -306,8 +306,13 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 
 {
   int ierr;
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 3))
+  ierr = MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#else
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -498,9 +503,9 @@ Models_PetscSolver::radLinearSolve()
 #endif
   if(ierr)
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   ierr = VecDestroy(&u_tmp);
-#else
+#else // v3.1
   ierr = VecDestroy(u_tmp);
 #endif
   if(ierr)
@@ -621,9 +626,9 @@ Models_PetscSolver::radLinearSolve()
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
 #if 1
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   ierr = KSPDestroy(&solver);
-#else
+#else // v3.1
   ierr = KSPDestroy(solver);
 #endif
   if(ierr)
@@ -692,7 +697,7 @@ Models_PetscSolver::destroyMatrix()
      are no longer needed.
   */
 #if 1
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   int ierr;
   ierr = VecDestroy(&d_u);
   if(ierr)
@@ -706,7 +711,7 @@ Models_PetscSolver::destroyMatrix()
   ierr = MatDestroy(&A);
   if(ierr)
     throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
-#else
+#else // v3.1
   int ierr;
   ierr = VecDestroy(d_u);
   if(ierr)
