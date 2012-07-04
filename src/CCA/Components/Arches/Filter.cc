@@ -157,8 +157,13 @@ Filter::matrixCreate(const PatchSet* allpatches,
   //__________________________________
   //  create the Petsc matrix A
   proc0cout << "Creating the patch matrix... \n Note: if sus crashes here, try increasing your resolution.\n"<<endl;
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 3))
+  int ierr = MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#else
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 

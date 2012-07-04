@@ -144,9 +144,9 @@ bool PetscLinearSolve(Mat& A,
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
   }
   
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   ierr = VecDestroy(&u_tmp);
-#else
+#else // v3.1
   ierr = VecDestroy(u_tmp);
 #endif
   if(ierr){
@@ -275,9 +275,9 @@ bool PetscLinearSolve(Mat& A,
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
   
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   ierr =  KSPDestroy(&solver);
-#else
+#else // v3.1
   ierr =  KSPDestroy(solver);
 #endif
   if (ierr)
@@ -432,7 +432,7 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
 {
   int ierr;
 
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 2))
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   PetscClassId id;
   if (U) {
     PetscObjectGetClassId((PetscObject)U, &id);
@@ -456,7 +456,7 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
   ierr = MatDestroy(&A);
   if(ierr)
     throw UintahPetscError(ierr, "destroyPetscObjects::MatDestroy", __FILE__, __LINE__);
-#else
+#else // v3.1
   PetscTruth flg;
   VecValid(U, &flg);
   

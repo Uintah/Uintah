@@ -202,8 +202,13 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
   //  create the Petsc matrix A and vectors X, B and U.  This routine is called
   // multiple times per radiation solve.
   int ierr;
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 3))
+  ierr = MatCreateAIJ(PETSC_COMM_WORLD, d_numlrows, d_numlcolumns, d_globalrows,
+                         d_globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#else
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, d_numlrows, d_numlcolumns, d_globalrows,
                          d_globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+#endif
   if(ierr)
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
