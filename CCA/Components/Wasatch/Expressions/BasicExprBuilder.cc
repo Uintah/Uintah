@@ -178,13 +178,20 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag );
     }
     
-    else if( params->findBlock("ReadFromFile") ){
+    else if( params->findBlock("ReadFromFile") ){            
+      std::string fieldType;
+      params->getAttribute("type",fieldType);
+      
       Uintah::ProblemSpecP valParams = params->findBlock("ReadFromFile");
-      std::string fileName;
-      valParams->get("FileName",fileName);
-      typedef typename ReadFromFileExpression<FieldT>::Builder Builder;
-      ReadFromFileExpression<FieldT>::readFromFileTagList.push_back(tag);
-      builder = scinew Builder( tag, fileName );
+      std::string fileName;      
+      valParams->get("FileName",fileName);      
+      
+      const Expr::Tag xTag("X" + fieldType, Expr::STATE_NONE);
+      const Expr::Tag yTag("Y" + fieldType, Expr::STATE_NONE);
+      const Expr::Tag zTag("Z" + fieldType, Expr::STATE_NONE);      
+      
+      typedef typename ReadFromFileExpression<FieldT>::Builder Builder;      
+      builder = scinew Builder( tag, xTag, yTag, zTag, fileName );      
     }
     
     return builder;

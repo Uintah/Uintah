@@ -525,16 +525,6 @@ namespace Wasatch{
             }            
           }    
           //
-          Expr::Tag rftag;
-          for( Expr::TagList::iterator rftag=ReadFromFileExpression<SVolField>::readFromFileTagList.begin();
-              rftag!=ReadFromFileExpression<SVolField>::readFromFileTagList.end();
-              ++rftag ){
-            if (tree->computes_field( *rftag )) {
-              ReadFromFileExpression<SVolField>& pexpr = dynamic_cast<ReadFromFileExpression<SVolField>&>( tree->get_expression( *rftag ) );
-              pexpr.set_patch(patches->get(ip));
-            }            
-          }              
-          //
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
           tree->execute_tree();

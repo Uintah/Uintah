@@ -25,9 +25,11 @@
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <spatialops/FieldReductions.h>
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 
 /**
@@ -308,17 +310,18 @@ public:
    *  \brief Save pointer to the patch associated with this expression. This
    *          is needed to set boundary conditions and extract other mesh info.
    */    
-  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
-  const Uintah::Patch* patch_;
-  static Expr::TagList readFromFileTagList;
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder(const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& zTag,
             const std::string fileName);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const std::string filename_;
+    const Expr::Tag xtag_, ytag_, ztag_;    
+    const std::string filename_;    
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -326,17 +329,30 @@ public:
   void evaluate();
 
 private:
-  ReadFromFileExpression( const std::string fileName );
-  const std::string filename_;
+  ReadFromFileExpression( const Expr::Tag& xTag,
+                          const Expr::Tag& yTag,
+                          const Expr::Tag& zTag,
+                          const std::string fileName );
+  const Expr::Tag xtag_, ytag_, ztag_;
+  const std::string filename_;  
+  const FieldT* x_;
+  const FieldT* y_;  
+  const FieldT* z_;    
 };
 
 //--------------------------------------------------------------------
 
 template<typename FieldT>
 ReadFromFileExpression<FieldT>::
-ReadFromFileExpression( const std::string fileName )
+ReadFromFileExpression( const Expr::Tag& xTag,
+                        const Expr::Tag& yTag,
+                        const Expr::Tag& zTag,                       
+                        const std::string fileName )
 : Expr::Expression<FieldT>(),
-filename_(fileName)
+  xtag_( xTag ),
+  ytag_( yTag ),
+  ztag_( zTag	),
+  filename_(fileName)
 {}
 
 //--------------------------------------------------------------------
@@ -345,7 +361,11 @@ template< typename FieldT >
 void
 ReadFromFileExpression<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
+{
+  exprDeps.requires_expression( xtag_ );
+  exprDeps.requires_expression( ytag_ );
+  exprDeps.requires_expression( ztag_ );  
+}
 
 //--------------------------------------------------------------------
 
@@ -353,7 +373,12 @@ template< typename FieldT >
 void
 ReadFromFileExpression<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
-{}
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  x_ = &fm.field_ref( xtag_ );
+  y_ = &fm.field_ref( ytag_ );  
+  z_ = &fm.field_ref( ztag_ );
+}
 
 //--------------------------------------------------------------------
 
@@ -366,7 +391,7 @@ evaluate()
   using namespace SpatialOps::structured;
   FieldT& phi = this->value();
   phi <<= 0.0;
-
+  
   std::ifstream fd(filename_.c_str(), std::ifstream::in);
   
   if(fd.fail()) {
@@ -374,42 +399,30 @@ evaluate()
     warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-    
-  int nx,ny,nz;
-  fd >> nx >> ny >> nz;     
   
-  const Uintah::Level* level = patch_->getLevel();
-  SCIRun::IntVector low, high;
-  level->findCellIndexRange(low, high);
-  SCIRun::IntVector range = high-low;
+
+  typename FieldT::const_interior_iterator xiter = x_->interior_begin();
+  typename FieldT::const_interior_iterator yiter = y_->interior_begin();
+  typename FieldT::const_interior_iterator ziter = z_->interior_begin();
+  typename FieldT::interior_iterator     phiiter = phi.interior_begin();    
   
-  if (!(range == SCIRun::IntVector(nx,ny,nz))) {
-    std::ostringstream warn;
-    warn << "ERROR Wasatch::ReadFromFileExpression: \nWrong grid size in input file " << range;
-    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  const double xMax = *(std::max_element( x_->interior_begin(), x_->interior_end() ) ); //field_max(*x_) does not seem to work...
+  const double xMin = *(std::min_element( x_->interior_begin(), x_->interior_end() ) );
+  const double yMax = *(std::max_element( y_->interior_begin(), y_->interior_end() ) );
+  const double yMin = *(std::min_element( y_->interior_begin(), y_->interior_end() ) );
+  const double zMax = *(std::max_element( z_->interior_begin(), z_->interior_end() ) );
+  const double zMin = *(std::min_element( z_->interior_begin(), z_->interior_end() ) );
+  
+  double x,y,z,val;  
+  while (fd.good()) {
+    fd >> x >> y >> z >> val;
+    const bool contains_value = x >= xMin && x <= xMax && y >= yMin && y <= yMax && z >= zMin && z <= zMax;
+    if (contains_value) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...
+      *phiiter = val;
+      ++phiiter;
+    }    
   }
   
-  const MemoryWindow& wghost = phi.window_with_ghost();
-  const MemoryWindow& wnoghost = phi.window_without_ghost();
-  
-  double val;
-  
-  SCIRun::IntVector indxLo = patch_->getCellLowIndex();
-  SCIRun::IntVector indxHi = patch_->getCellHighIndex();  
-
-  // THIS may be slow. all patches read the entire input file...
-  for (int colZ = 0; colZ < nz; colZ ++) {
-    for (int colY = 0; colY < ny; colY ++) {
-      for (int colX = 0; colX < nx; colX ++) {
-        SCIRun::IntVector currCell(colX, colY, colZ);        
-        IntVec localCurrCell(colX - indxLo.x(), colY - indxLo.y(), colZ - indxLo.z());
-        fd >> val;
-        if (patch_->containsCell(currCell)) {
-          phi[wnoghost.flat_index(localCurrCell)] = val;
-        }
-      }
-    }
-  }  
   fd.close();
 }
 
@@ -418,8 +431,14 @@ evaluate()
 template< typename FieldT >
 ReadFromFileExpression<FieldT>::Builder::
 Builder( const Expr::Tag& result,
-        const std::string fileName )
+         const Expr::Tag& xTag,
+         const Expr::Tag& yTag,
+         const Expr::Tag& zTag,
+         const std::string fileName )
 : ExpressionBuilder(result),
+  xtag_( xTag ),
+  ytag_( yTag ),
+  ztag_( zTag	),
   filename_(fileName)
 {}
 
@@ -430,10 +449,9 @@ Expr::ExpressionBase*
 ReadFromFileExpression<FieldT>::Builder::
 build() const
 {
-  return new ReadFromFileExpression<FieldT>( filename_ );
+  return new ReadFromFileExpression<FieldT>( xtag_, ytag_, ztag_, filename_ );
 }
 
 //--------------------------------------------------------------------
-template<typename FieldT> Expr::TagList ReadFromFileExpression<FieldT>::readFromFileTagList = Expr::TagList();
 
 #endif // Wasatch_MMS_Functions
