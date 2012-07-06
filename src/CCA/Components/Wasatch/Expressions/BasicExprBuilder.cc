@@ -178,6 +178,15 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag );
     }
     
+    else if( params->findBlock("ReadFromFile") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("ReadFromFile");
+      std::string fileName;
+      valParams->get("FileName",fileName);
+      typedef typename ReadFromFileExpression<FieldT>::Builder Builder;
+      ReadFromFileExpression<FieldT>::readFromFileTagList.push_back(tag);
+      builder = scinew Builder( tag, fileName );
+    }
+    
     return builder;
   }
 

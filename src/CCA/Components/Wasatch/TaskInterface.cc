@@ -42,6 +42,7 @@
 //-- Wasatch includes --//
 #include "TaskInterface.h"
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 
 #include <stdexcept>
@@ -448,7 +449,7 @@ namespace Wasatch{
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
       }      
     }    
-    //
+    //    
     
     hasBeenScheduled_ = true;
   }
@@ -523,6 +524,16 @@ namespace Wasatch{
               pexpr.bind_uintah_vars( newDW, patch, material, rkStage );          
             }            
           }    
+          //
+          Expr::Tag rftag;
+          for( Expr::TagList::iterator rftag=ReadFromFileExpression<SVolField>::readFromFileTagList.begin();
+              rftag!=ReadFromFileExpression<SVolField>::readFromFileTagList.end();
+              ++rftag ){
+            if (tree->computes_field( *rftag )) {
+              ReadFromFileExpression<SVolField>& pexpr = dynamic_cast<ReadFromFileExpression<SVolField>&>( tree->get_expression( *rftag ) );
+              pexpr.set_patch(patches->get(ip));
+            }            
+          }              
           //
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );

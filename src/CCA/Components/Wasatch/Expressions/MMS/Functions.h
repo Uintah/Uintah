@@ -24,6 +24,11 @@
 #define Wasatch_MMS_Functions
 
 #include <expression/Expression.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+
+#include <iostream>
+#include <fstream>
+
 
 /**
  *  \class SineTime
@@ -287,5 +292,148 @@ build() const
 }
 
 //--------------------------------------------------------------------
+
+/**
+ *  \class ReadFromFileExpression
+ *  \author Tony Saad
+ *  \date July, 2012
+ *  \brief Implementes an expression that reads data from a file.
+ */
+template< typename FieldT >
+class ReadFromFileExpression : public Expr::Expression<FieldT>
+{
+public:
+
+  /**
+   *  \brief Save pointer to the patch associated with this expression. This
+   *          is needed to set boundary conditions and extract other mesh info.
+   */    
+  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
+  const Uintah::Patch* patch_;
+  static Expr::TagList readFromFileTagList;
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    Builder(const Expr::Tag& result,
+            const std::string fileName);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const std::string filename_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+
+private:
+  ReadFromFileExpression( const std::string fileName );
+  const std::string filename_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+ReadFromFileExpression<FieldT>::
+ReadFromFileExpression( const std::string fileName )
+: Expr::Expression<FieldT>(),
+filename_(fileName)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ReadFromFileExpression<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ReadFromFileExpression<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ReadFromFileExpression<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  using namespace SpatialOps::structured;
+  FieldT& phi = this->value();
+  phi <<= 0.0;
+
+  std::ifstream fd(filename_.c_str(), std::ifstream::in);
+  
+  if(fd.fail()) {
+    std::ostringstream warn;
+    warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
+    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+    
+  int nx,ny,nz;
+  fd >> nx >> ny >> nz;     
+  
+  const Uintah::Level* level = patch_->getLevel();
+  SCIRun::IntVector low, high;
+  level->findCellIndexRange(low, high);
+  SCIRun::IntVector range = high-low;
+  
+  if (!(range == SCIRun::IntVector(nx,ny,nz))) {
+    std::ostringstream warn;
+    warn << "ERROR Wasatch::ReadFromFileExpression: \nWrong grid size in input file " << range;
+    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  const MemoryWindow& wghost = phi.window_with_ghost();
+  const MemoryWindow& wnoghost = phi.window_without_ghost();
+  
+  double val;
+  
+  SCIRun::IntVector indxLo = patch_->getCellLowIndex();
+  SCIRun::IntVector indxHi = patch_->getCellHighIndex();  
+
+  // THIS may be slow. all patches read the entire input file...
+  for (int colZ = 0; colZ < nz; colZ ++) {
+    for (int colY = 0; colY < ny; colY ++) {
+      for (int colX = 0; colX < nx; colX ++) {
+        SCIRun::IntVector currCell(colX, colY, colZ);        
+        IntVec localCurrCell(colX - indxLo.x(), colY - indxLo.y(), colZ - indxLo.z());
+        fd >> val;
+        if (patch_->containsCell(currCell)) {
+          phi[wnoghost.flat_index(localCurrCell)] = val;
+        }
+      }
+    }
+  }  
+  fd.close();
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ReadFromFileExpression<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const std::string fileName )
+: ExpressionBuilder(result),
+  filename_(fileName)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+ReadFromFileExpression<FieldT>::Builder::
+build() const
+{
+  return new ReadFromFileExpression<FieldT>( filename_ );
+}
+
+//--------------------------------------------------------------------
+template<typename FieldT> Expr::TagList ReadFromFileExpression<FieldT>::readFromFileTagList = Expr::TagList();
 
 #endif // Wasatch_MMS_Functions
