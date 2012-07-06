@@ -3301,43 +3301,45 @@ else
          BASE_LIB_PATH(_sci_lib_dir,$lib_dir)
       fi
 
-      petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
-      petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
+      if test -f "$version_file"; then
 
-      if test "$petsc_version_major" == "2"; then
-         if test -z "$PETSC_ARCH"; then
+        petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
+        petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
+
+        if test "$petsc_version_major" == "2"; then
+          if test -z "$PETSC_ARCH"; then
             AC_MSG_ERROR(For PETSC version 2x - please set PETSC_ARCH.)
-         fi
-	 AC_MSG_WARN(Looking for PETSc arch: $PETSC_ARCH)
-         if test -z "$_sci_lib_dir"; then
+          fi
+	  AC_MSG_WARN(Looking for PETSc arch: $PETSC_ARCH)
+          if test -z "$_sci_lib_dir"; then
             _sci_lib_dir="$with_petsc/lib/$PETSC_ARCH"
             _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
-         fi
-      else
-         if test "$petsc_version_major" == "3"; then
+          fi
+        else
+          if test "$petsc_version_major" == "3"; then
             if test -z "$_sci_lib_dir"; then
                _sci_lib_dir="$with_petsc/lib"
             fi
             if test "$PETSC_ARCH"; then
                AC_MSG_ERROR(For PETSC version 3x - do NOT set PETSC_ARCH.)
             fi
-         else
+          else
             AC_MSG_ERROR(Could not determine PETSc version number...)
-         fi
-      fi
+          fi
+        fi
 
-      SCI_TRY_LINK( PETSC,
-                    petsc libraries and headers,
-                    petsc.h,
-                    $_sci_inc,
-                    petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                    $_sci_lib_dir,
-                    $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                    ,
-                    optional)
+        SCI_TRY_LINK( PETSC,
+                      petsc libraries and headers,
+                      petsc.h,
+                      $_sci_inc,
+                      petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                      $_sci_lib_dir,
+                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                      ,
+                      optional)
 
-      # 
-      if test "$HAVE_PETSC" != "yes"; then
+        # 
+        if test "$HAVE_PETSC" != "yes"; then
                 SCI_TRY_LINK(PETSC,
                      petsc library and header,
                      petsc.h,
@@ -3347,13 +3349,15 @@ else
                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                      ,
                      required)
-      fi
+        fi
 
-      if test "$HAVE_PETSC" != "yes" ; then
-         AC_MSG_ERROR(Could not find PETSc...)
+        if test "$HAVE_PETSC" != "yes" ; then
+          AC_MSG_ERROR(Could not find PETSc...)
+        fi
+        DEF_PETSC="#define HAVE_PETSC 1"
+      else
+        AC_MSG_WARN(Could not find PETSc version file... Skipping.)
       fi
-      DEF_PETSC="#define HAVE_PETSC 1"
-
     else
       AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
       AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
