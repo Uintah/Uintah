@@ -832,7 +832,7 @@ else
 fi
 
 AC_MSG_CHECKING([for NVCC compilation to PTX])
-$NVCC -ptx -gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode $8
+$NVCC -ptx $8
 if test -f $_file_base_name.$NVCCEXT; then
   AC_MSG_RESULT([yes])
   HAVE_CUDA="yes"
