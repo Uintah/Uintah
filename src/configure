@@ -43118,7 +43118,7 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for NVCC compilation to PTX" >&5
 $as_echo_n "checking for NVCC compilation to PTX... " >&6; }
-$NVCC -ptx -gencode arch=compute_20,code=sm_20 cuda_conf_test.cu
+$NVCC -ptx -gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode cuda_conf_test.cu
 if test -f $_file_base_name.$NVCCEXT; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
