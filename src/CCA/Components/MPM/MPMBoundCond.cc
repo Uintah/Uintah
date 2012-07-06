@@ -136,8 +136,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   for(NodeIterator it(l,h); !it.done(); it++) { //extra nodes
                     IntVector nd = *it;
                     variable[nd] = Vector(-variable[nd+inner].x(),
-                                           variable[nd+inner].y(), 
-                                           variable[nd+inner].z());
+                                          variable[nd+inner].y(), 
+                                          variable[nd+inner].z());
                   }
                 }
               }  // cpdi, gimp or 3rdorderBS
@@ -232,8 +232,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               } // cpdi or gimp
             } // zplus/zminus
             delete bcb;
-          } else
+          } else{
             delete bcb;
+          }
         }
       }
     } else
