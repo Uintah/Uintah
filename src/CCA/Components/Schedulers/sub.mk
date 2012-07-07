@@ -51,6 +51,7 @@ SRCS += \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadedMPIScheduler.cc \
 	$(SRCDIR)/ThreadedMPIScheduler2.cc \
+	$(SRCDIR)/UnifiedScheduler.cc \
 	$(SRCDIR)/ThreadPool.cc \
 	$(SRCDIR)/DependencyException.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
