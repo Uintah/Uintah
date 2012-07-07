@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler2.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
@@ -54,6 +55,7 @@ using namespace std;
 using namespace Uintah;
 
 static DebugStream Threaded2("Threaded2",false);
+static DebugStream Unified("Unified",false);
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps, 
                                           const ProcessorGroup* world,
@@ -71,10 +73,13 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   if (Uintah::Parallel::usingMPI()) {
     if (scheduler == "") {
       if (Uintah::Parallel::getNumThreads() > 0) {
-        if (Threaded2.active())
-          scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI2" : "ThreadedMPI2");
-        else 
+        if (Threaded2.active()) {
+          scheduler = "ThreadedMPI2";
+        } else if (Unified.active()) {
+          scheduler = "Unified";
+        } else if ( (!Threaded2.active()) && (!Unified.active()) ) {
           scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
+        }
       } else {
         scheduler = "MPIScheduler";
       }
@@ -87,7 +92,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 
   if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "ThreadedMPI")
                                               &&  (scheduler != "ThreadedMPI2"
-                                              &&  (scheduler != "GPUThreadedMPI")))) {
+                                              &&  (scheduler != "GPUThreadedMPI")
+                                              &&  (scheduler != "UnifiedScheduler")))) {
     throw ProblemSetupException("Threaded or GPU Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
@@ -105,6 +111,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
   } else if(scheduler == "ThreadedMPI2"){
     sch = scinew ThreadedMPIScheduler2(world, output);
+  } else if(scheduler == "Unified"){
+    sch = scinew UnifiedScheduler(world, output);
   }
 #ifdef HAVE_CUDA
   else if (scheduler == "GPUThreadedMPI") {
