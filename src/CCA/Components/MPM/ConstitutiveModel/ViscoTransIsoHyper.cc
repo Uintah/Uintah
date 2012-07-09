@@ -458,7 +458,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> history1_old,history2_old,history3_old;
     constParticleVariable<Matrix3> history4_old,history5_old,history6_old;
     constParticleVariable<Matrix3> ElasticStress_old;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));

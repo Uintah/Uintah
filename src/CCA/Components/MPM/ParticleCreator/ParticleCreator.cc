@@ -416,7 +416,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   constParticleVariable<double> o_temperature;
   constParticleVariable<double> o_sp_vol;
   constParticleVariable<long64> o_particleID;
-  constParticleVariable<Vector> o_size;
+  constParticleVariable<Matrix3> o_size;
   constParticleVariable<int>    o_loadcurve;
   constParticleVariable<double> o_tempPrevious; // for thermal stress
   constParticleVariable<double> o_color;
@@ -568,24 +568,25 @@ ParticleCreator::initializeParticle(const Patch* patch,
 {
   IntVector ppc = (*obj)->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
-  Vector size(1./((double) ppc.x()),
-              1./((double) ppc.y()),
-              1./((double) ppc.z()));
+  Vector dxcc = patch->dCell();
+  Matrix3 size(1./((double) ppc.x()),0.,0.,
+              0.,1./((double) ppc.y()),0.,
+              0.,0.,1./((double) ppc.z()));
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
 //MMS
  string mms_type = d_flags->d_mms_type;
  if(!mms_type.empty()) {
 	MMS MMSObject;
 	MMSObject.initializeParticleForMMS(position,pvelocity,psize,pdisp,pmass,
-						pvolume,p,dxpp,size,patch,d_flags,i);
+						pvolume,p,dxcc,size,patch,d_flags,i);
  }  else {
 	  position[i] = p;
 	  if(d_flags->d_axisymmetric){
 	    // assume unit radian extent in the circumferential direction
-	    pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+	    pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
 	  } else {
 	    // standard voxel volume
-	    pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+	    pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
 	  }
 
 	  psize[i]    = size;

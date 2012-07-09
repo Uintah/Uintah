@@ -227,7 +227,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol,pMass;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       ParticleVariable<Vector>      pTemperatureGradient;
       constNCVariable<double>       gTemperature,gMass;
@@ -417,7 +417,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       constNCVariable<double> gTemperature, gMass;
       constParticleVariable<Point>  px;
       constParticleVariable<double> pMass;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,

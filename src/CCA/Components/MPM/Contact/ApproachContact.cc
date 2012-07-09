@@ -150,7 +150,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);

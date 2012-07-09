@@ -178,7 +178,7 @@ Crack::MoveCracks(const ProcessorGroup*,
       int dwi=mpm_matl->getDWIndex();
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize,lb->pSizeLabel,pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);

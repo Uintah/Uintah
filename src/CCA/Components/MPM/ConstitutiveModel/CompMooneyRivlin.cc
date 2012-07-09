@@ -218,7 +218,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume;
-    constParticleVariable<Vector> pvelocity,psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q;
 
     delt_vartype delT;

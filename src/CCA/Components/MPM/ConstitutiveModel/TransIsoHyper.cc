@@ -340,7 +340,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));

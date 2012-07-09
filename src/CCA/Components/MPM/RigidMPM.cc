@@ -320,8 +320,10 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, psize;
-      ParticleVariable<Vector> pvelocitynew, psizeNew;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
+      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature;
       ParticleVariable<double> pmassNew,pTempNew;
       constParticleVariable<long64> pids;

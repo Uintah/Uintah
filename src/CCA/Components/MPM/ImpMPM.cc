@@ -2188,7 +2188,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<double> pextheatrate,pextheatflux;
       constParticleVariable<Vector> pvelocity, pacceleration, pexternalforce;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
 
@@ -2335,7 +2335,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         
         // Create arrays for the particle data
         constParticleVariable<Point>  px;
-        constParticleVariable<Vector> psize;
+        constParticleVariable<Matrix3> psize;
         constParticleVariable<double> pTemperature;
         constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -3031,7 +3031,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
         constParticleVariable<Point>   px;
         constParticleVariable<double>  pvol;
         constParticleVariable<Matrix3> pstress;
-        constParticleVariable<Vector>  psize;
+        constParticleVariable<Matrix3> psize;
         constParticleVariable<Matrix3> pDeformationMeasure;
 
         parent_old_dw->get(px,                  lb->pXLabel,           pset);
@@ -3549,8 +3549,10 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, pacceleration;
-      constParticleVariable<Vector> pDispOld,psize;
-      ParticleVariable<Vector> pvelnew,paccNew,pDisp,psizeNew;
+      constParticleVariable<Vector> pDispOld;
+      constParticleVariable<Matrix3> psize;
+      ParticleVariable<Vector> pvelnew,paccNew,pDisp;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pvolume,pTempOld,pq;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pqNew;
       ParticleVariable<double> pTempPreNew;
@@ -3741,7 +3743,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
        constParticleVariable<Point>   px;
        constParticleVariable<double>  pvol;
-       constParticleVariable<Vector>  psize;
+       constParticleVariable<Matrix3>  psize;
        constParticleVariable<Matrix3> pstress;
        constParticleVariable<Matrix3> pDeformationMeasure;
 
@@ -4109,7 +4111,8 @@ void ImpMPM::refine(const ProcessorGroup*,
         // Create arrays for the particle data
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
-        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
+        ParticleVariable<Matrix3> psize;
         ParticleVariable<double> pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;

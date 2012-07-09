@@ -1347,7 +1347,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+      constParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
 
@@ -1618,7 +1619,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
 
       constNCVariable<Vector> gvelocity;
       ParticleVariable<double> p_q;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass,pvol;
       constParticleVariable<Matrix3> pDeformationMeasure;
@@ -1819,7 +1820,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_pressure;
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
-      constParticleVariable<Vector>  psize;
+      constParticleVariable<Matrix3>  psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
@@ -2573,7 +2574,7 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
       new_dw->get(GTemperature, lb->GTemperatureLabel, dwi,patch, gac, NGP);
 
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       old_dw->get(px,    lb->pXLabel,    pset);
@@ -2665,8 +2666,10 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, psize;
-      ParticleVariable<Vector> pvelocitynew, psizeNew;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
+      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;

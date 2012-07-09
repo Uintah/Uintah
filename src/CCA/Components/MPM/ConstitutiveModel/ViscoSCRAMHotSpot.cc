@@ -295,7 +295,8 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<double>  pMass, pVol, pTemp;
   constParticleVariable<double>  pCrackRadius;
   constParticleVariable<Point>   px;
-  constParticleVariable<Vector>  pVel, psize;
+  constParticleVariable<Vector>  pVel;
+  constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pDefGrad, pSig;
   constParticleVariable<double>  pHotSpotT1, pHotSpotT2;
   constParticleVariable<double>  pHotSpotPhi1, pHotSpotPhi2;

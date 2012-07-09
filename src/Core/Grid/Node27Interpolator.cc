@@ -62,7 +62,7 @@ Node27Interpolator* Node27Interpolator::clone(const Patch* patch)
 void Node27Interpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Vector& size,
+                                            const Matrix3& size,
                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -70,9 +70,9 @@ void Node27Interpolator::findCellAndWeights(const Point& pos,
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
   int nnx,nny,nnz;
-  double lx = size.x()/2.;
-  double ly = size.y()/2.;
-  double lz = size.z()/2.;
+  double lx = size(0,0)/2.;
+  double ly = size(1,1)/2.;
+  double lz = size(2,2)/2.;
   
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
@@ -201,7 +201,7 @@ void Node27Interpolator::findCellAndWeights(const Point& pos,
 void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Vector& size,
+                                                     const Matrix3& size,
                                                      const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -209,9 +209,9 @@ void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
   int nnx,nny,nnz;
-  double lx = size.x()/2.;
-  double ly = size.y()/2.;
-  double lz = size.z()/2.;
+  double lx = size(0,0)/2.;
+  double ly = size(1,1)/2.;
+  double lz = size(2,2)/2.;
   
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
@@ -374,7 +374,7 @@ Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
-                                                          const Vector& size,
+                                                          const Matrix3& size,
                                                           const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -382,9 +382,9 @@ Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
   int nnx,nny,nnz;
-  double lx = size.x()/2.;
-  double ly = size.y()/2.;
-  double lz = size.z()/2.;
+  double lx = size(0,0)/2.;
+  double ly = size(1,1)/2.;
+  double lz = size(2,2)/2.;
   
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }

@@ -433,7 +433,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress_new;
@@ -650,7 +650,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     ASSERTEQ(pset, pStatedata.getParticleSubset());
 
     constParticleVariable<Point> px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;

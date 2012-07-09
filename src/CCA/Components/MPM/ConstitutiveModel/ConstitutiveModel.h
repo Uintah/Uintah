@@ -226,7 +226,7 @@ namespace Uintah {
                                            constNCVariable<Vector> gDisp,
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleVariable<Matrix3> &Fnew,
                                            constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
@@ -236,7 +236,7 @@ namespace Uintah {
                                            constNCVariable<Vector> gVel,
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
@@ -250,7 +250,7 @@ namespace Uintah {
                                            ParticleVariable<Matrix3> &Fnew,
                                            constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp);
                                                                                 
     void computeDeformationGradientFromIncrementalDisplacement(
@@ -260,7 +260,7 @@ namespace Uintah {
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp);
   protected:
 

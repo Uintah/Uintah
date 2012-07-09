@@ -210,7 +210,7 @@ void MurnaghanMPM::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q;
 
     delt_vartype delT;

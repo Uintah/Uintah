@@ -120,8 +120,9 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     IntVector ppc = (*obj)->getInitialData_IntVector("res");
     Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
     Vector dcorner = dxpp*0.5;
-    Vector size(1./((double) ppc.x()), 1./((double) ppc.y()),
-                1./((double) ppc.z()));
+    Matrix3 size(1./((double) ppc.x()),0.,0.,
+                 0.,1./((double) ppc.y()),0.,
+                 0.,0.,1./((double) ppc.z()));
     
     // If the geometry object is a shell perform special 
     // operations else just treat the geom object in the standard

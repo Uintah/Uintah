@@ -110,7 +110,7 @@ namespace Uintah {
 			ParticleVariable<double>& pThickTop,
 			ParticleVariable<double>& pThickBot,
 			ParticleVariable<Vector>& pNormal,
-			ParticleVariable<Vector>& psize,
+			ParticleVariable<Matrix3>& psize,
 			particleIndex start);
 
 

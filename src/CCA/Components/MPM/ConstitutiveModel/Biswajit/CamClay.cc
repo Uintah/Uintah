@@ -422,7 +422,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle location, particle size, particle mass, particle volume
     constParticleVariable<Point>  px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<double> pMass, pVol_old;
     old_dw->get(px,       lb->pXLabel,      pset);
     old_dw->get(psize,    lb->pSizeLabel,   pset);

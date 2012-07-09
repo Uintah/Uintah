@@ -1137,7 +1137,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
       
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       ParticleVariable<double>p_partitionUnity;
     
       old_dw->get(px,     lb->pXLabel,     pset);
@@ -1188,7 +1188,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<Vector> pvelocity, pexternalforce;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -1667,7 +1668,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_pressure;
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
-      constParticleVariable<Vector>  psize;
+      constParticleVariable<Matrix3> psize;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
@@ -2116,9 +2117,11 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, psize;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
-      ParticleVariable<Vector> pvelocitynew, psizeNew;
+      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
       constParticleVariable<long64> pids;
@@ -2472,7 +2475,8 @@ void AMRMPM::refine(const ProcessorGroup*,
         // Create arrays for the particle data
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
-        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
+        ParticleVariable<Matrix3> psize;
         ParticleVariable<double> pTempPrev;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
@@ -2591,7 +2595,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     pset = old_dw->getParticleSubset(dwi, patch);
     
     constParticleVariable<Point>  px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<Matrix3> pDeformationMeasure;
     ParticleVariable<double>  pColor;
     

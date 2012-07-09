@@ -547,7 +547,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<double>    pMass, pVol, pTemperature;
   constParticleVariable<double>    pCrackRadius;
   constParticleVariable<Point>     px;
-  constParticleVariable<Vector>    pVelocity, psize;
+  constParticleVariable<Vector>    pVelocity;
+  constParticleVariable<Matrix3>   psize;
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constNCVariable<Vector>          gvelocity, Gvelocity;
   constParticleVariable<double>    pTempPrev;

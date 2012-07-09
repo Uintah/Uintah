@@ -242,7 +242,8 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pmass, pvolume, ptemperature;
     ParticleVariable<double> pvolume_new;
-    constParticleVariable<Vector> pvelocity, psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));

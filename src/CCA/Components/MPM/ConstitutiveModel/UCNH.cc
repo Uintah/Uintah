@@ -1300,7 +1300,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Point>   px;
     constParticleVariable<Matrix3> pDefGrad, bElBar;
-    constParticleVariable<Vector>  pSize;
+    constParticleVariable<Matrix3> pSize;
     constParticleVariable<Vector>  pVelocity;
     // New data containers
     ParticleVariable<int>          pLocalized_new;
@@ -1712,7 +1712,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   // Particle and grid variables
   constParticleVariable<double>  pVol,pMass,pvolumeold;
   constParticleVariable<Point>   px;
-  constParticleVariable<Vector>  pSize;
+  constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<double>       pVolume_new;
@@ -2230,7 +2230,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<double>  pMass, pPlasticStrain, pDamage;
   constParticleVariable<long64>  pParticleID;
   constParticleVariable<Point>   pX;
-  constParticleVariable<Vector>  pSize;
+  constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<int>          pLocalized_new;

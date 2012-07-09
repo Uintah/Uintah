@@ -71,13 +71,13 @@ using namespace std;
 void
 MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
 			      ParticleVariable<Vector> &pvelocity,
-                              ParticleVariable<Vector> &psize,
+                              ParticleVariable<Matrix3> &psize,
                               ParticleVariable<Vector> &pdisp,
                               ParticleVariable<double> &pmass,
                               ParticleVariable<double> &pvolume ,
                               Point p, 
-                              Vector dxpp, 
-                              Vector size , 
+                              Vector dxcc, 
+                              Matrix3 size , 
                               const Patch* patch,
 			      MPMFlags* flags,
 			      particleIndex i)
@@ -97,10 +97,10 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
   		position[i] = p;
   		if(flags->d_axisymmetric){
     		// assume unit radian extent in the circumferential direction
-    		pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+    		pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
   		} else {
     		// standard voxel volume
-    		pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+    		pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
   		}
   		pvelocity[i]    = Vector(u,v,w);
   		psize[i]    = size;
@@ -133,13 +133,15 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
 		position[i] = p+disp;
   		if(flags->d_axisymmetric){
     			// assume unit radian extent in the circumferential direction
-    			pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+    			pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
   		} else {
     			// standard voxel volume
-    			pvolume[i]  = J*dxpp.x()*dxpp.y()*dxpp.z();
+    			pvolume[i]  = J*size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
   		}
 
-  		psize[i]    = Vector(size.x()*Fxx,size.y()*Fyy,size.z()*Fzz);
+    psize[i] = Matrix3(size(0,0)*Fxx,0.,0.,
+                       0.,size(1,1)*Fyy,0.,
+                       0.,0.,size(2,2)*Fzz);
 
   		pvelocity[i]    = Vector(u,v,w);
   		pmass[i]        = rho0*pvolume[i]/J;
@@ -163,10 +165,10 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
   		position[i] = p;
  		if(flags->d_axisymmetric){
     		// assume unit radian extent in the circumferential direction
-    		pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+    		pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
   		} else {
     		// standard voxel volume
-    		pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+    		pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
   		}
   		psize[i]    = size;
   		pvelocity[i]    = Vector(u,v,w);

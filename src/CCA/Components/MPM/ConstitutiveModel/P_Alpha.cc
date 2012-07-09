@@ -286,7 +286,8 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> alpha_min_old, ptemperature, tempAlpha1_old;
     ParticleVariable<double> pvolume;
     ParticleVariable<double> alpha_min_new, alpha_new, tempAlpha1;
-    constParticleVariable<Vector> pvelocity, psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     constNCVariable<Vector> gvelocity;
     ParticleVariable<double> pdTdt,p_q;
     ParticleVariable<Matrix3>      velGrad;

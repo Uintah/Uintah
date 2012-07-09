@@ -306,7 +306,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pProgressF;
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q,pProgressF_new;
     ParticleVariable<Matrix3> velGrad;
     constParticleVariable<int> pLocalized;

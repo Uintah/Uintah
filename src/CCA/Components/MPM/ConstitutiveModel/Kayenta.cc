@@ -642,7 +642,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pmass, pvolume, ptemperature, peakI1IDist;
     ParticleVariable<double> pvolume_new, peakI1IDist_new;
-    constParticleVariable<Vector> pvelocity, psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     constParticleVariable<int> pLocalized;

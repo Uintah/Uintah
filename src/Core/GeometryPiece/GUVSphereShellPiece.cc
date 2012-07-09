@@ -223,7 +223,7 @@ GUVSphereShellPiece::createParticles(const Patch* ,
                                      ParticleVariable<double>& ,
                                      ParticleVariable<double>& ,
                                      ParticleVariable<Vector>& ,
-                                     ParticleVariable<Vector>& ,
+                                     ParticleVariable<Matrix3>& ,
                                      particleIndex )
 {
   cout << "**ERROR**GUVSphereShellPiece:: No create particles implemented.";

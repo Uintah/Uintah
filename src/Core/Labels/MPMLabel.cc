@@ -142,10 +142,10 @@ MPMLabel::MPMLabel()
 			ParticleVariable<long64>::getTypeDescription() );
 
   pSizeLabel = VarLabel::create( "p.size",
-			ParticleVariable<Vector>::getTypeDescription());
+			ParticleVariable<Matrix3>::getTypeDescription());
   
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
-			ParticleVariable<Vector>::getTypeDescription());
+			ParticleVariable<Matrix3>::getTypeDescription());
   
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );

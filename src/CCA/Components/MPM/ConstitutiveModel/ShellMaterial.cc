@@ -476,7 +476,8 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
   // Create arrays for the particle data
   constParticleVariable<double> pMass;
   constParticleVariable<Point>  pX;
-  constParticleVariable<Vector> pRotRate, pSize;
+  constParticleVariable<Vector> pRotRate;
+  constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> deformationGradient;
   constNCVariable<double> gMass;
 
@@ -621,8 +622,9 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     // Read from datawarehouses 
     constParticleVariable<double>  pMass, pThickTop, pThickBot, pThickTop0,
                                    pThickBot0; 
-    constParticleVariable<Point>   pX; 
-    constParticleVariable<Vector>  pSize, pVelocity, pRotRate, pNormal; 
+    constParticleVariable<Point>   pX;
+    constParticleVariable<Vector>  pVelocity, pRotRate, pNormal; 
+    constParticleVariable<Matrix3> pSize; 
     constParticleVariable<Matrix3> pStressTop, pStressCen, pStressBot, 
                                    pStress, 
                                    pDefGradTop, pDefGradCen, pDefGradBot, 
@@ -945,7 +947,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
 
     // Get stuff from datawarehouse
     constParticleVariable<Point>   pX;
-    constParticleVariable<Vector>  pSize;
+    constParticleVariable<Matrix3> pSize;
     constParticleVariable<Matrix3> pDefGrad;
     constParticleVariable<Matrix3> pAvMoment;
     old_dw->get(pX,         lb->pXLabel,                      pset);
@@ -1037,7 +1039,8 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     // Get stuff from datawarehouse
     constParticleVariable<Point>   pX;
     constParticleVariable<double>  pRotMass;
-    constParticleVariable<Vector>  pSize, pNormal, pNDotAvSig;
+    constParticleVariable<Vector>  pNormal, pNDotAvSig;
+    constParticleVariable<Matrix3> pSize;
     constParticleVariable<Matrix3> pDefGrad;
     constNCVariable<Vector>        gRotMoment;
     old_dw->get(pX,          lb->pXLabel,                      pset);
