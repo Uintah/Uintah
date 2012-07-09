@@ -2748,9 +2748,7 @@ if test "$with_mkl"; then
   fi
 
   if test "$with_mkl" = "yes"; then
-    _sci_lib=
-    _sci_inc=
-    _sci_optional=required
+    AC_MSG_ERROR(You must specify a directory with --with-mkl=DIR)
   elif test "$with_mkl"; then
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
@@ -2762,16 +2760,26 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
-                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,
-                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
-                                                                  float x[]={0.7f};
-                                                                  float y[]={0.8f};
-                                                                  float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
-                                                                  ],$_sci_optional)
-       SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
-                    $_sci_inc,mkl mkl_def guide,$_sci_lib,
-                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
+       # Newer version of MKL doesn't have libguide, so need two separate checks...
+
+       if test -e $_sci_lib/libguide.$SO_OR_ARCHIVE_EXTENSION; then
+         SCI_TRY_LINK(BLAS,1 - mkl version of (blas/lapack) libraries and headers,mkl_cblas.h mkl_lapack.h,
+                      $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,
+                      $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
+                                                                    float x[]={0.7f};
+                                                                    float y[]={0.8f};
+                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                    ],$_sci_optional)
+       else
+         SCI_TRY_LINK(BLAS,2 - mkl version of (blas/lapack) libraries and headers,mkl_cblas.h mkl_lapack.h,
+                      $_sci_inc,mkl mkl_core mkl_intel_lp64,$_sci_lib,
+                      $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
+                                                                    float x[]={0.7f};
+                                                                    float y[]={0.8f};
+                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                    ],$_sci_optional)
+       fi
+
        ;;
   esac
 

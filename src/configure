@@ -26762,9 +26762,7 @@ if test "$with_mkl"; then
   fi
 
   if test "$with_mkl" = "yes"; then
-    _sci_lib=
-    _sci_inc=
-    _sci_optional=required
+    as_fn_error $? "You must specify a directory with --with-mkl=DIR" "$LINENO" 5
   elif test "$with_mkl"; then
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
@@ -26776,9 +26774,12 @@ if test "$with_mkl"; then
        as_fn_error $? "We recommend that you don't use MKL on a Mac... use the default vecLib instead." "$LINENO" 5
        ;;
      *)
+       # Newer version of MKL doesn't have libguide, so need two separate checks...
+
+       if test -e $_sci_lib/libguide.$SO_OR_ARCHIVE_EXTENSION; then
 
 ##
-## SCI_TRY_LINK (BLAS):  mkl version of (blas) libraries and headers
+## SCI_TRY_LINK (BLAS):  1 - mkl version of (blas/lapack) libraries and headers
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -26810,8 +26811,8 @@ if test "$with_mkl"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BLAS
-## arg 2 : mkl version of (blas) libraries and headers
-## arg 3 : mkl_cblas.h
+## arg 2 : 1 - mkl version of (blas/lapack) libraries and headers
+## arg 3 : mkl_cblas.h mkl_lapack.h
 ## arg 4 : $_sci_inc
 ## arg 5 : mkl mkl_core mkl_intel_lp64 guide
 ## arg 6 : $_sci_lib
@@ -26830,12 +26831,12 @@ if test "$with_mkl"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for mkl version of (blas) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 1 - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mkl version of (blas) libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for mkl version of (blas) libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 1 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)" >&5
+$as_echo_n "checking for 1 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -26845,7 +26846,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for mkl version of (blas) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 1 - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -27039,7 +27040,7 @@ LIBS="$_sci_libs $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" mkl_cblas.h; do
+for inc in "" mkl_cblas.h mkl_lapack.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -27065,9 +27066,9 @@ int
 main ()
 {
 
-                                                                  float x[]={0.7f};
-                                                                  float y[]={0.8f};
-                                                                  float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+                                                                    float x[]={0.7f};
+                                                                    float y[]={0.8f};
+                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1);
 
   ;
   return 0;
@@ -27182,7 +27183,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" mkl_cblas.h; do
+  for i in "" mkl_cblas.h mkl_lapack.h; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      as_fn_error $? "Specifically requested BLAS include file '$_sci_inc/$i' was not found" "$LINENO" 5
@@ -27214,13 +27215,14 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BLAS):  mkl version of (blas) libraries and headers
+## END of SCI_TRY_LINK (BLAS):  1 - mkl version of (blas/lapack) libraries and headers
 ##
 
 
+       else
 
 ##
-## SCI_TRY_LINK (LAPACK):  mkl version of (lapack) libraries and headers
+## SCI_TRY_LINK (BLAS):  2 - mkl version of (blas/lapack) libraries and headers
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -27251,11 +27253,11 @@ _sci_includes=''
 ##
 ## Here are the specific values for this invocation:
 ##
-## arg 1 : LAPACK
-## arg 2 : mkl version of (lapack) libraries and headers
-## arg 3 : mkl_lapack.h
+## arg 1 : BLAS
+## arg 2 : 2 - mkl version of (blas/lapack) libraries and headers
+## arg 3 : mkl_cblas.h mkl_lapack.h
 ## arg 4 : $_sci_inc
-## arg 5 : mkl mkl_def guide
+## arg 5 : mkl mkl_core mkl_intel_lp64
 ## arg 6 : $_sci_lib
 ## arg 7 : $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -27264,20 +27266,20 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LAPACK_LIB_DIR        => lib path
-##      LAPACK_LIB_DIR_FLAG   => all the -L's
-##      LAPACK_LIB_FLAG       => all the -l's
-##      HAVE_LAPACK           => yes or no
-##      INC_LAPACK_H          => all the -I's
-##      HAVE_LAPACK_H         => yes or no
+##      BLAS_LIB_DIR        => lib path
+##      BLAS_LIB_DIR_FLAG   => all the -L's
+##      BLAS_LIB_FLAG       => all the -l's
+##      HAVE_BLAS           => yes or no
+##      INC_BLAS_H          => all the -I's
+##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for mkl version of (lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 2 - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mkl version of (lapack) libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for mkl version of (lapack) libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 2 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)" >&5
+$as_echo_n "checking for 2 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -27287,7 +27289,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for mkl version of (lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 2 - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -27296,7 +27298,7 @@ for inc in $_sci_inc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for LAPACK include files." "$LINENO" 5
+     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
   fi
 
   # Make sure it doesn't have any thing but -I
@@ -27310,8 +27312,8 @@ for inc in $_sci_inc; do
         # Has some other -?.
         if test "$debugging" = "yes"; then
           echo
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of LAPACK check.  Skipping $inc." >&5
-$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of LAPACK check.  Skipping $inc." >&2;}
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&2;}
         fi
         continue
      fi
@@ -27332,10 +27334,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "mkl mkl_def guide"; then
+if test -n "mkl mkl_core mkl_intel_lp64"; then
 
    found_framework=no
-   for lib in mkl mkl_def guide; do
+   for lib in mkl mkl_core mkl_intel_lp64; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -27360,8 +27362,8 @@ if test -n "mkl mkl_def guide"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
-$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&2;}
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
+$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
             fi
             continue
          fi
@@ -27401,8 +27403,8 @@ if test -n "$_sci_lib"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of LAPACK check (disregarding $path)." >&5
-$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check (disregarding $path)." >&2;}
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of BLAS check (disregarding $path)." >&5
+$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (disregarding $path)." >&2;}
             fi
             continue
          fi
@@ -27439,7 +27441,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -27457,7 +27459,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -27481,7 +27483,7 @@ LIBS="$_sci_libs $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" mkl_lapack.h; do
+for inc in "" mkl_cblas.h mkl_lapack.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -27507,6 +27509,10 @@ int
 main ()
 {
 
+                                                                    float x[]={0.7f};
+                                                                    float y[]={0.8f};
+                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1);
+
   ;
   return 0;
 }
@@ -27518,7 +27524,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LAPACK_LIB_DIR='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -27535,7 +27541,7 @@ _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 # Remove leading spaces
 _final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
 
-eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
+eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
@@ -27549,8 +27555,8 @@ done
 
 # Remove leading spaces
 final_libs=`echo $final_libs | sed "s/^ *//"`
-eval LAPACK_LIB_FLAG="'$final_libs'"
-eval HAVE_LAPACK="yes"
+eval BLAS_LIB_FLAG="'$final_libs'"
+eval HAVE_BLAS="yes"
 
 final_incs=
 for inc in "" $_sci_includes; do
@@ -27562,20 +27568,20 @@ done
 # Remove leading spaces
 final_incs=`echo $final_incs | sed "s/^ *//"`
 
-eval INC_LAPACK_H="'$final_incs'"
-eval HAVE_LAPACK_H="yes"
+eval INC_BLAS_H="'$final_incs'"
+eval HAVE_BLAS_H="yes"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
 else
 
-eval LAPACK_LIB_DIR=''
-eval LAPACK_LIB_DIR_FLAG=''
-eval LAPACK_LIB_FLAG=''
-eval HAVE_LAPACK="no"
-eval INC_LAPACK_H=''
-eval HAVE_LAPACK_H="no"
+eval BLAS_LIB_DIR=''
+eval BLAS_LIB_DIR_FLAG=''
+eval BLAS_LIB_FLAG=''
+eval HAVE_BLAS="no"
+eval INC_BLAS_H=''
+eval HAVE_BLAS_H="no"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
 if test "$_sci_optional" != "optional"; then
@@ -27606,9 +27612,9 @@ $as_echo "$as_me: WARNING:
   " >&2;}
 fi
 
-as_fn_error $? "Test for required LAPACK failed.
+as_fn_error $? "Test for required BLAS failed.
     To see the failed compile information, look in config.log,
-    search for LAPACK. Please install the relevant libraries
+    search for BLAS. Please install the relevant libraries
      or specify the correct paths and try to configure again." "$LINENO" 5
 
 fi
@@ -27620,14 +27626,14 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" mkl_lapack.h; do
+  for i in "" mkl_cblas.h mkl_lapack.h; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
-     as_fn_error $? "Specifically requested LAPACK include file '$_sci_inc/$i' was not found" "$LINENO" 5
+     as_fn_error $? "Specifically requested BLAS include file '$_sci_inc/$i' was not found" "$LINENO" 5
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" mkl mkl_def guide; do
+  for i in "" mkl mkl_core mkl_intel_lp64; do
     if test -z "$i"; then
        continue
     fi
@@ -27636,7 +27642,7 @@ if test "$_sci_optional" = "specific"; then
        i=`echo $i | sed 's/-l//g'`
     fi
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
-     as_fn_error $? "Specifically requested LAPACK library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
+     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
     fi
   done
 fi
@@ -27652,9 +27658,11 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (LAPACK):  mkl version of (lapack) libraries and headers
+## END of SCI_TRY_LINK (BLAS):  2 - mkl version of (blas/lapack) libraries and headers
 ##
 
+
+       fi
 
        ;;
   esac
