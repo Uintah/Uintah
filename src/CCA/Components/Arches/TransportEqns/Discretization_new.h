@@ -1793,17 +1793,12 @@ namespace Uintah{
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.x() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
-
-                  // below(new) comes from: 
-                  // (phi_i + phi_i-1)/2.0 = phi_boundary
-                  // therefore, phi_i-1 = 2.0*phi_boundary - phi_i
-                  // then, dphi/dx = phi_i - phi_i-1/dx = phi_i/dx - (2.0*phi_boundary - phi_i)/dx = 2/dx* (phi_i-phi_b)
-
+                  // Assumes piecewise constant at boundary
+                  // Note that if we were to interpolate back the wall value from bc_value and oldPhi[bp1]
+                  // then we are essentially putting back the contribution of diffusion (which we just 
+                  // removed in the line above)
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                    ( face_gamma.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
 
                 }
                 break; 
@@ -1826,12 +1821,9 @@ namespace Uintah{
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.x() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
-
+                  // Assumes piecewise constant at boundary
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.y()*Dx.z() * 
-                    ( face_gamma.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.x() * c_af.x() ); 
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
 
                 }
                 break; 
@@ -1855,13 +1847,9 @@ namespace Uintah{
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.y() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
-                  
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                    ( face_gamma.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
-
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
+                  
                 }
                 break; 
               case Patch::yplus:
@@ -1883,13 +1871,9 @@ namespace Uintah{
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.y() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
-                             
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.z() * 
-                    ( face_gamma.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.y() * c_af.y() ); 
-
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
+                             
                 }
                 break;
 #endif 
@@ -1913,12 +1897,8 @@ namespace Uintah{
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.z() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                  //          ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
-
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                    ( face_gamma.minus * 2.0 * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
 
                 }
                 break; 
@@ -1941,12 +1921,8 @@ namespace Uintah{
                   Fdiff[bp1] -= 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.z() ); 
 
-                  // to match with the old code...
-                  //Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                  //           ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
-
                   Fdiff[bp1] += 1.0/prNo[bp1] * Dx.x()*Dx.y() * 
-                    ( face_gamma.plus * 2.0 * ( bc_value - oldPhi[bp1] )/Dx.z() * c_af.z() ); 
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
 
                 }
                 break; 
