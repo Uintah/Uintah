@@ -61,7 +61,7 @@ axiCpdiInterpolator* axiCpdiInterpolator::clone(const Patch* patch)
 void axiCpdiInterpolator::findCellAndWeights(const Point& pos,
 					    vector<IntVector>& ni,
 					    vector<double>& S,
-					    const Vector& size,
+					    const Matrix3& size,
                                             const Matrix3& defgrad)
 {
   Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),
@@ -73,7 +73,7 @@ void axiCpdiInterpolator::findCellAndWeights(const Point& pos,
 void axiCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
 						     vector<IntVector>& ni,
 						     vector<Vector>& d_S,
-						     const Vector& size,
+						     const Matrix3& size,
                                                      const Matrix3& defgrad)
 {
   Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),
@@ -86,7 +86,7 @@ void axiCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos
 							  vector<IntVector>& ni,
 							  vector<double>& S,
 							  vector<Vector>& d_S,
-							  const Vector& size,
+							  const Matrix3& size,
                                                           const Matrix3& defgrad)
 {
   Matrix3 defgrad1=Matrix3(defgrad(0,0),defgrad(0,1),defgrad(0,2),

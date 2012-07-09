@@ -328,7 +328,7 @@ void JWLppSolid::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       pvolume;
     ParticleVariable<double>       pdTdt, p_q, pProgressF_new, pProgressdelF_new;
     constParticleVariable<Vector>  pvelocity;
-    constParticleVariable<Vector>  psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<Point>   px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3>      velGrad;

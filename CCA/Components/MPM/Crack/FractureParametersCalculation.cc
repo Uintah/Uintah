@@ -131,7 +131,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
       // Get particle's solutions
       constParticleVariable<Short27> pgCode;
       constParticleVariable<Point>   px;
-      constParticleVariable<Vector>  psize;
+      constParticleVariable<Matrix3>  psize;
       constParticleVariable<double>  pmass;
       constParticleVariable<double>  pstrainenergydensity;
       constParticleVariable<double>  pkineticenergydensity;
@@ -338,7 +338,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       new_dw->get(gvelGrads,  lb->gVelGradsLabel,     dwi,patch,gac,NGC);
       new_dw->get(GvelGrads,  lb->GVelGradsLabel,     dwi,patch,gac,NGC);
 
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);

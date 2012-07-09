@@ -153,7 +153,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass, pvolume;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
 
       old_dw->get(px,                  lb->pXLabel,                  pset);
@@ -240,7 +240,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pstress, deformationGradient;
 
       old_dw->get(px,                   lb->pXLabel,                  pset);

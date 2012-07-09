@@ -16,7 +16,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.00004</delt_min>
        <delt_max>0.004</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -27,6 +27,7 @@
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
        <save label = "TotalMomentum"/>
+       <save label = "p.particleID"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.stress"/>

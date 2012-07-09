@@ -397,7 +397,7 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
                                            constNCVariable<Vector> gDisp,
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleVariable<Matrix3> &Fnew,
                                            constParticleVariable<Matrix3> &Fold,
                                            Vector dx,
@@ -439,7 +439,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
                                            constNCVariable<Vector> gVel,
                                            ParticleSubset* pset,
                                            constParticleVariable<Point> px,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
@@ -498,7 +498,7 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
                                            ParticleVariable<Matrix3> &Fnew,
                                            constParticleVariable<Matrix3>& Fold,
                                            Vector dx,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp)
 {
   Matrix3 dispGrad,Identity;
@@ -531,7 +531,7 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           constParticleVariable<Vector> psize,
+                                           constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp)
 {
     Matrix3 IncDispGrad,deformationGradientInc, Identity;

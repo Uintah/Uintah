@@ -222,7 +222,7 @@ double BSplineInterpolator::evalType3BSplineGrad(const double& dx)
 void BSplineInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Vector& size,
+                                            const Matrix3& size,
                                             const Matrix3& defgrad)
 {
   IntVector low,hi;
@@ -266,7 +266,7 @@ void BSplineInterpolator::findCellAndWeights(const Point& pos,
 void BSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Vector& size,
+                                                     const Matrix3& size,
                                                      const Matrix3& defgrad)
 {
   IntVector low,hi;
@@ -320,7 +320,7 @@ BSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
-                                                          const Vector& size,
+                                                          const Matrix3& size,
                                                           const Matrix3& defgrad)
 {
   IntVector low,hi;

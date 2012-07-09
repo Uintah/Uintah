@@ -111,16 +111,15 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
     Vector dcorner = dxpp*0.5;
     // Size as a fraction of the cell size
-    Vector size(1./((double) ppc.x()),
-                1./((double) ppc.y()),
-                1./((double) ppc.z()));
-    
+    Matrix3 size(1./((double) ppc.x()),0.,0.,
+                 0.,1./((double) ppc.y()),0.,
+                 0.,0.,1./((double) ppc.z()));
 
     SphereMembraneGeometryPiece* SMGP =
       dynamic_cast<SphereMembraneGeometryPiece*>(piece.get_rep());
     if(SMGP){
       int numP = SMGP->createParticles(patch, position, pvolume,
-                                       pTang1, pTang2, pNorm, psize, start);
+                                       pTang1, pTang2, pNorm, psize, start); // CPTI
       for(int idx=0;idx<(start+numP);idx++){
         pvelocity[start+idx]=(*obj)->getInitialData_Vector("velocity");
         ptemperature[start+idx]=(*obj)->getInitialData_double("temperature");

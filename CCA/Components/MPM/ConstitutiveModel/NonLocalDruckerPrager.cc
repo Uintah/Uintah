@@ -316,7 +316,8 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Point> px;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume,p_q;
-    constParticleVariable<Vector> pvelocity,psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt;
     constParticleVariable<double> eta_old;
     constParticleVariable<double> eta_nl_old;

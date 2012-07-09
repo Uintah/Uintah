@@ -76,13 +76,13 @@ using namespace std;
 	
 	void initializeParticleForMMS(ParticleVariable<Point> &position,
 				      ParticleVariable<Vector> &pvelocity,
-                                      ParticleVariable<Vector> &psize,
+                                      ParticleVariable<Matrix3> &psize,
                                       ParticleVariable<Vector> &pdisp,
                                       ParticleVariable<double> &pmass,
                                       ParticleVariable<double> &pvolume ,
                                       Point p, 
-                                      Vector dxpp, 
-                                      Vector size , 
+                                      Vector dxcc, 
+                                      Matrix3 size , 
                                       const Patch* patch,
 				      MPMFlags* flags,
 				      particleIndex i );

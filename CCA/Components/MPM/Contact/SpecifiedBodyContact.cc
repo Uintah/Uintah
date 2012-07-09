@@ -293,7 +293,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                                       gan, NGP, lb->pXLabel);
      constParticleVariable<Point> px;
      constParticleVariable<double> pmass, pvolume;
-     constParticleVariable<Vector> psize;
+     constParticleVariable<Matrix3> psize;
      constParticleVariable<Matrix3> deformationGradient;
 
      old_dw->get(px,                  lb->pXLabel,                  pset);

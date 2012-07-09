@@ -424,7 +424,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     constParticleVariable<double> pmass,pvolumeold;
@@ -916,7 +916,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
      int dwi = matl->getDWIndex();
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
      constParticleVariable<Point> px;
-     constParticleVariable<Vector> psize;
+     constParticleVariable<Matrix3> psize;
      ParticleVariable<Matrix3> deformationGradient_new;
      constParticleVariable<Matrix3> deformationGradient;
      ParticleVariable<Matrix3> pstress;

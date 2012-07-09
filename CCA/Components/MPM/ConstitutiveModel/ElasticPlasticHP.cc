@@ -777,7 +777,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle location, particle size, particle mass, particle volume
     constParticleVariable<Point>  px;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<double> pMass;
     constParticleVariable<double> pVolume;
     old_dw->get(px,       lb->pXLabel,      pset);
@@ -1754,7 +1754,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                                  pStrainRate, pPlasticStrainRate,pEnergy;
 
   constParticleVariable<Point>   px;
-  constParticleVariable<Vector>  psize;
+  constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pDeformGrad, pStress, pRotation;
   constNCVariable<Vector>        gDisp;
 
@@ -2192,7 +2192,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                                  pPorosity;
 
   constParticleVariable<Point>   px;
-  constParticleVariable<Vector>  psize;
+  constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pDeformGrad, pStress;
   constNCVariable<Vector>        gDisp;
 

@@ -94,7 +94,7 @@ namespace Uintah {
     virtual void findCellAndWeights(const Point& p,
                                     vector<IntVector>& ni, 
 				         vector<double>& S,
-                                     const Vector& size, 
+                                     const Matrix3& size, 
                                      const Matrix3& defgrad);
                                 
                                     
@@ -138,7 +138,7 @@ namespace Uintah {
     virtual void findCellAndShapeDerivatives(const Point& pos,
 					          vector<IntVector>& ni,
 					          vector<Vector>& d_S,
-					          const Vector& size, 
+					          const Matrix3& size, 
                                              const Matrix3& defgrad);
                                         
 
@@ -206,7 +206,7 @@ namespace Uintah {
                                                        vector<IntVector>& ni,
                                                        vector<double>& S,
                                                        vector<Vector>& d_S,
-                                                       const Vector& size,
+                                                       const Matrix3& size,
                                                        const Matrix3& defgrad);
     virtual int size();
 

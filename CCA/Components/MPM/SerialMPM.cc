@@ -2140,7 +2140,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<Vector> pvelocity, pexternalforce;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -2324,8 +2325,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
         particleIndex idx = *iter;
 
 //        double length = sqrt(czlength[idx]);
-//        Vector size(length,length,length);
-        Vector size(0.1,0.1,0.1);
+        Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
         Matrix3 defgrad;
         defgrad.Identity();
 
@@ -2647,7 +2647,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_pressure;
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
-      constParticleVariable<Vector>  psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
@@ -3547,8 +3547,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, psize;
-      ParticleVariable<Vector> pvelocitynew, psizeNew;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
+      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature, pdTdt;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;
@@ -3701,10 +3703,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
        for(ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          psizeNew[idx]=Vector
-           (psize[idx].x()*(pFNew[idx](0,0)/pFOld[idx](0,0)),
-            psize[idx].y()*(pFNew[idx](1,1)/pFOld[idx](1,1)),
-            psize[idx].z()*(pFNew[idx](2,2)/pFOld[idx](2,2)));
+          psizeNew[idx]=Matrix3(
+                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
+                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
+                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
        }
       }
 
@@ -3819,7 +3821,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, psize;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
@@ -3952,8 +3955,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
-      ParticleVariable<Vector> psizeNew;
+      constParticleVariable<Matrix3> psize;
+      ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature, pdTdt;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;
@@ -4080,10 +4083,10 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
        for(ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          psizeNew[idx]=Vector
-           (psize[idx].x()*(pFNew[idx](0,0)/pFOld[idx](0,0)),
-            psize[idx].y()*(pFNew[idx](1,1)/pFOld[idx](1,1)),
-            psize[idx].z()*(pFNew[idx](2,2)/pFOld[idx](2,2)));
+          psizeNew[idx]=Matrix3(
+                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
+                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
+                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
        }
       }
 
@@ -4264,7 +4267,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
 //        double length = sqrt(czlength[idx]);
 //        Vector size(length,length,length);
-        Vector size(0.1,0.1,0.1);
+        Matrix3 size(0.1,0.,0.,0.,0.1,0.,0.,0.,0.1);
         Matrix3 defgrad;
         defgrad.Identity();
 
@@ -4477,7 +4480,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pScaleFactor;
       old_dw->get(psize,                   lb->pSizeLabel,         pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel,  pset);
@@ -4487,7 +4490,8 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = psize[idx]*dx;
+          pScaleFactor[idx] = 
+                  Vector(psize[idx](0,0),psize[idx](1,1),psize[idx](2,2))*dx;
         } // for particles
       } // isOutputTimestep
     } // matls
@@ -4522,7 +4526,8 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass;
-      constParticleVariable<Vector> pvelocity, psize;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -4793,7 +4798,8 @@ SerialMPM::refine(const ProcessorGroup*,
         // Create arrays for the particle data
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
-        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
+        ParticleVariable<Matrix3> psize;
         ParticleVariable<double> pTempPrev,p_q;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;

@@ -116,7 +116,7 @@ public:
                       ParticleVariable<Vector>& pt1,
                       ParticleVariable<Vector>& pt2,
                       ParticleVariable<Vector>& pn,
-                      ParticleVariable<Vector>& psize,
+                      ParticleVariable<Matrix3>& psize,
                       particleIndex start);
 
 

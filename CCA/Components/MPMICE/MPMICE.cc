@@ -1280,7 +1280,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
       ParticleVariable<double> pPressure;
       constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize,                Mlb->pSizeLabel,     pset);     
       old_dw->get(px,                   Mlb->pXLabel,        pset);     

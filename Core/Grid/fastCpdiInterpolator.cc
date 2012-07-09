@@ -63,13 +63,13 @@ fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
 void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
-                                            const Vector& size,
+                                            const Matrix3& size,
                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size.x()/2.0;
-  double ly = size.y()/2.0;
-  double lz = size.z()/2.0;
+  double lx = size(0,0)/2.0;
+  double ly = size(1,1)/2.0;
+  double lz = size(2,2)/2.0;
 
   vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
   // constuct the position vectors to each node in the reference configuration relative to the particle center:
@@ -213,13 +213,13 @@ void fastCpdiInterpolator::findCellAndWeights(const Point& pos,
 void fastCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
-                                                     const Vector& size,
+                                                     const Matrix3& size,
                                                      const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size.x()/2.0;
-  double ly = size.y()/2.0;
-  double lz = size.z()/2.0;
+  double lx = size(0,0)/2.0;
+  double ly = size(1,1)/2.0;
+  double lz = size(2,2)/2.0;
   Vector zero = Vector(0.0,0.0,0.0);
   vector<Vector> relative_node_reference_location(8,zero);
   // constuct the position vectors to each node/corner of the particle in the reference configuration relative to the particle center:
@@ -401,13 +401,13 @@ void fastCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& po
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
-                                                          const Vector& size,
+                                                          const Matrix3& size,
                                                           const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size.x()/2.0;
-  double ly = size.y()/2.0;
-  double lz = size.z()/2.0;
+  double lx = size(0,0)/2.0;
+  double ly = size(1,1)/2.0;
+  double lz = size(2,2)/2.0;
 
   Vector zero = Vector(0.0,0.0,0.0);
   vector<Vector> relative_node_reference_location(8,zero);

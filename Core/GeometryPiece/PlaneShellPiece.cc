@@ -194,7 +194,7 @@ PlaneShellPiece::createParticles(const Patch* patch,
                                  ParticleVariable<double>& pThickTop,
                                  ParticleVariable<double>& pThickBot,
                                  ParticleVariable<Vector>& pNormal,
-                                 ParticleVariable<Vector>& psiz,
+                                 ParticleVariable<Matrix3>& psiz,
                                  particleIndex start)
 {
   cout << "Calling plane shell particle creator" << endl;
@@ -243,7 +243,9 @@ PlaneShellPiece::createParticles(const Patch* patch,
         particleIndex pidx = start+count;
         pos[pidx] = p;
         vol[pidx] = d_thickness*area;
-        psiz[pidx] = Vector(.5,.5,.5);
+        psiz[pidx] = Matrix3(.5,0.,0.,
+                             0.,.5,0.,
+                             0.,0.,.5);
         pThickTop[pidx] = 0.5*d_thickness;
         pThickBot[pidx] = 0.5*d_thickness;
         pNormal[pidx]  = d_normal;

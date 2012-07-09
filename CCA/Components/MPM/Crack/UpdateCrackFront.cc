@@ -183,7 +183,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       new_dw->get(gmass, lb->gMassLabel, dwi, patch, gac, NGC);
       new_dw->get(Gmass, lb->GMassLabel, dwi, patch, gac, NGC);
 
-      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> deformationGradient;
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);

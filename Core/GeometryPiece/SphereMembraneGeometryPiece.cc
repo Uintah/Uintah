@@ -157,7 +157,7 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
                                                  ParticleVariable<Vector>& pt1,
                                                  ParticleVariable<Vector>& pt2,
                                                  ParticleVariable<Vector>& pn,
-                                                 ParticleVariable<Vector>& psiz,
+                                                 ParticleVariable<Matrix3>& psiz,
                                                  particleIndex start)
 {
   Box b = patch->getExtraBox();
@@ -198,7 +198,9 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
         pt2[start+count] = Vector(-sin(phi),cos(phi),0);
         pn[start+count]  = Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
                                                                  cos(theta));
-        psiz[start+count] = Vector(.5,.5,.5);
+        psiz[start+count] = Matrix3(.5,0.,0.,
+                             0.,.5,0.,
+                             0.,0.,.5);
 
 //        psiz[start+count]= Vector(fabs(-d_radius*sin(theta)*dphi*sin(phi)
 //                                +       d_radius*dtheta*cos(theta)*cos(phi)

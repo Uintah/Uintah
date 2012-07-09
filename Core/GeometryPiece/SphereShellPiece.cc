@@ -151,7 +151,7 @@ SphereShellPiece::createParticles(const Patch* patch,
                                   ParticleVariable<double>& pThickTop,
                                   ParticleVariable<double>& pThickBot,
                                   ParticleVariable<Vector>& pNormal,
-                                  ParticleVariable<Vector>& psiz,
+                                  ParticleVariable<Matrix3>& psiz,
                                   particleIndex start)
 {
   Box b = patch->getExtraBox();
@@ -190,7 +190,9 @@ SphereShellPiece::createParticles(const Patch* patch,
         pThickBot[pidx] = 0.5*d_h;
         pNormal[pidx]  = Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
                                   cos(theta));
-        psiz[pidx] = Vector(.5,.5,.5);
+        psiz[pidx] = Matrix3(.5,0.,0.,
+                             0.,.5,0.,
+                             0.,0.,.5);
         count++;
       }
       phi += dphi;

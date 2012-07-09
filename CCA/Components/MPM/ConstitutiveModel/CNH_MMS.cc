@@ -218,7 +218,7 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pcolor;
     ParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt;
     delt_vartype delT;
 

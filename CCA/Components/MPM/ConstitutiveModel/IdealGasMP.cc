@@ -214,7 +214,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass,ptemp;
     ParticleVariable<double> pvolume;
-    constParticleVariable<Vector> pvelocity, psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     constNCVariable<Vector> gvelocity;
     ParticleVariable<double> pdTdt,p_q;
     ParticleVariable<Matrix3>      velGrad;

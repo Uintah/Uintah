@@ -191,7 +191,7 @@ CylinderShellPiece::createParticles(const Patch* patch,
 				  ParticleVariable<double>& pThickTop,
 				  ParticleVariable<double>& pThickBot,
 				  ParticleVariable<Vector>& pNormal,
-				  ParticleVariable<Vector>& psiz,
+				  ParticleVariable<Matrix3>& psiz,
 				  particleIndex start)
 {
   // Get the patch box
@@ -243,7 +243,9 @@ CylinderShellPiece::createParticles(const Patch* patch,
         particleIndex pidx = start+count;
         pos[pidx] = p;
         vol[pidx] = incCircum*d_radius*d_thickness*axisThickness;
-        psiz[pidx] = Vector(.5,.5,.5);
+        psiz[pidx] = Matrix3(.5,0.,0.,
+                             0.,.5,0.,
+                             0.,0.,.5);
         pThickTop[pidx] = 0.5*d_thickness;
         pThickBot[pidx] = 0.5*d_thickness;
 

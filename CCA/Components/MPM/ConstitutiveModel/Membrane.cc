@@ -278,7 +278,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_new,defGradIP;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume;
-    constParticleVariable<Vector> pvelocity,psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<Vector> ptang1,ptang2,pnorm;
     ParticleVariable<double> pdTdt,p_q;
     ParticleVariable<Vector> T1,T2,T3;

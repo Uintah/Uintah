@@ -331,7 +331,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass, ptemperature;
     constParticleVariable<double> pstress_ve_v, pstress_e_v;
     ParticleVariable<double> pvolume_new, pstress_ve_v_new,pstress_e_v_new;
-    constParticleVariable<Vector> pvelocity, psize;
+    constParticleVariable<Vector> pvelocity;
+    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
