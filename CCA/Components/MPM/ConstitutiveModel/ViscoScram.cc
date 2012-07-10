@@ -1615,7 +1615,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
         f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
 
         // Compute the new pressure derivative
-        df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
+        df_drho = computedPdrhoBirchMurnaghan(rhoM, rho0);
 
         // factor by which to adjust rhoM
         delta = -relfac*(f/df_drho);
@@ -1627,11 +1627,11 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           // at the time the above code failed to converge.  Start over with this
           // copy and print more out.
           delta = 1.0;
-          rhoM  = 2.0*rho0;
+          rhoM  = 1.5*rho0;
 
           while(fabs(delta/rhoM) > epsilon){
             f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
-            df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
+            df_drho = computedPdrhoBirchMurnaghan(rhoM, rho0);
 
             // determine by how much to change
             delta = -relfac*(f/df_drho);
@@ -1773,8 +1773,8 @@ void ViscoScram::computePressEOSCM(double rho_cur,
 
     if(rho_cur >= rho_orig) {         // Compression
       double v = rho_orig/rho_cur;    // reduced volume
-      pressure = computePBirchMurnaghan(v);
-      dp_drho  = computedPdrhoBirchMurnaghan(v, rho_orig);
+      pressure = d_murnahanEOSData.P0 + computePBirchMurnaghan(v);
+      dp_drho  = computedPdrhoBirchMurnaghan(rho_cur, rho_orig);
     } else {                          // Expansion
       pressure = d_murnahanEOSData.P0*pow(rho_cur/rho_cur, (1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)));
       dp_drho  = (1.0/(d_murnahanEOSData.bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)-1.0));
@@ -1805,17 +1805,26 @@ double ViscoScram::computePBirchMurnaghan(double v)
 {
   double K = d_murnahanEOSData.bulkPrime;
   double n = d_murnahanEOSData.gamma;
-  return 3.0/(2.0*K) * (pow(v,-7.0/3.0) - pow(v,-5.0/3.0))
-                             * (1.0 + 0.75*(n-4.0)*(pow(v,-2.0/3.0)-1.0));
+  double P = 3.0/(2.0*K) * (pow(v,-7.0/3.0) - pow(v,-5.0/3.0))
+                             * (1.0 + 0.75*(n-4.0)*(pow(v,-2.0/3.0)-1.0))
+           + d_murnahanEOSData.P0;
+
+  return P;
+
 }
 
-double ViscoScram::computedPdrhoBirchMurnaghan(double v, double rho0)
+double ViscoScram::computedPdrhoBirchMurnaghan(double rho, double rho0)
 {
+  double v = rho0/rho;
+
   double K = d_murnahanEOSData.bulkPrime;
   double n = d_murnahanEOSData.gamma;
-  return 3.0/(2.0*K) * (-7.0*rho0/(3.0*pow(v,10.0/3.0)) + 5.0*rho0/(3.0*pow(v,8.0/3.0)))
-                         * (1.0 + (0.75*n-3.0)*(1.0/(pow(v,2.0/3.0))-1.0))
-                         - (1.0/K * (1.0/pow(v,7.0/3.0)-1.0/pow(v,5.0/3.0))*(0.75*n-3.0)*rho0/pow(v,5.0/3.0));
+  double dPdr = 1.5/K * (7.0*rho0/(3.0*pow(v,10.0/3.0)*rho*rho) - 5.0*rho0/(3.0*pow(v,8.0/3.0)*rho*rho))
+              * (1.0 + 0.75*(n-4.0)*(1.0/(pow(v,2.0/3.0)) - 1.0)) 
+              + (0.75/K * ((1/pow(v,7.0/3.0) - 1.0/pow(v,5.0/3.0))*(n-4.0)*rho0)/(pow(v,5.0/3.0)*rho*rho));
+
+  return dPdr;
+
 }
 
 //____________________________________________________________________________
