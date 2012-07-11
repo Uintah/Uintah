@@ -1,30 +1,66 @@
 #!/bin/csh
-#.......................................................................
-#  This script searches parses the output file from sus and 
-#  generates a data file that's used for scaling plots
+#______________________________________________________________________
+#  This script parses the output file from sus and 
+#  generates a data file used for scaling plots
 # 
-#  output file name must begin with "out"
+#  usage:
+#      extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >
 #  
-#.......................................................................
+#______________________________________________________________________
 
-set timestep = "11"  # timestep to extract elapsed time from.
+if ( $#argv < 3 ) then
+  echo "    Usage:  extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >"
+  exit
+endif
 
-/bin/rm  data
-touch data
+#__________________________________
+# DEFAULTS:  Edit these
+set startTimestep = "3"
+set endTimestep   = "50"  # timestep to extract elapsed time from.
+set nThreads      = 1     # number of threads per mpi process.
+#__________________________________
 
-foreach X ( out*)
+set out = ($argv)
 
-  echo $X > .file
-  grep "Patch layout:" $X | cut -d"(" -f2 > .patches
-  grep processors $X | awk -F" " '{ print $2 }' > .processors
-  grep "(timestep $timestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > .elapsedTime
+set here = .tmpFiles
+
+/bin/rm  -rf $here  >& /dev/null
+mkdir $here
+touch $here/data
+
+foreach X ( $out[*] )
+
+  grep -q "(timestep $endTimestep)" $X
   
-  paste -d " " .file .patches .processors .elapsedTime >> data
-  
-  echo "working on $X"
+  if ($status == 0 ) then
+    echo $X > $here/file
+    grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
+    grep processors $X | awk -v nThreads=$nThreads -F" " '{ print $2*nThreads }' > $here/processors
+    
+    grep "(timestep $startTimestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/startTime
+    grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/endTime
+
+    paste -d " " $here/file $here/processors $here/startTime $here/endTime >> $here/data
+
+    echo "working on $X"
+  else
+    echo "---------------------$X did not run to completion"
+  endif
   
 end
+#__________________________________
+# compute the average mean time per timestep
 
-more data
+@ n = $endTimestep - $startTimestep
+echo " computing average mean time per timestep for $n timesteps"
+echo "#file procs startTime endTime aveMean">$here/data2  
 
+awk -vnSteps=$n '{print ($4-$3)/nSteps}' $here/data >> $here/aveMeanTime
+
+paste -d " " $here/data $here/aveMeanTime >> $here/data2
+sort -n -k2 $here/data2 >scalingData
+
+more scalingData
+
+/bin/rm -rf $here
 exit
