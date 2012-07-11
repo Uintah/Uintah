@@ -71,7 +71,7 @@ awk -vnSteps=$n '{print ($4-$3)/nSteps}' $here/data >> $here/aveMeanTime
 awk -vnSteps=$n '{print ($5)/nSteps}'    $here/data >> $here/aveTotalSolveTime
 awk -vnSteps=$n '{print ($6)/nSteps}'    $here/data >> $here/aveSolveTime  
 
-paste -d " " data $here/aveMeanTime $here/aveTotalSolveTime $here/aveSolveTime>> $here/data2
+paste -d " " $here/data $here/aveMeanTime $here/aveTotalSolveTime $here/aveSolveTime>> $here/data2
 sort -n -k2 $here/data2 >sortedData
 
 more sortedData
