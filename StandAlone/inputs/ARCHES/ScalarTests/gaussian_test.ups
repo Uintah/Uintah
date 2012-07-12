@@ -156,9 +156,9 @@
           <turbulentPrandtlNumber>0.1</turbulentPrandtlNumber>
           <initialization type="gaussian">
             <direction>x</direction>
-            <a>-1</a>
-            <b>3</b>
-            <c>1</c>
+            <amplitude>-1</amplitude>
+            <center>3</center>
+            <std>1</std>
             <shift>1.0</shift>
           </initialization>
           <Clipping>

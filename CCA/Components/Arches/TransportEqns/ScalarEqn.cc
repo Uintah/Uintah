@@ -170,9 +170,9 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       }
     } else if ( d_initFunction == "gaussian" ) { 
 
-      db_initialValue->require( "a", d_a_gauss ); 
-      db_initialValue->require( "b", d_b_gauss ); 
-      db_initialValue->require( "c", d_c_gauss ); 
+      db_initialValue->require( "amplitude", d_a_gauss ); 
+      db_initialValue->require( "center", d_b_gauss ); 
+      db_initialValue->require( "std", d_c_gauss ); 
       std::string direction; 
       db_initialValue->require( "direction", direction ); 
       if ( direction == "X" || direction == "x" ){ 
