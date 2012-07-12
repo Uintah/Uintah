@@ -110,8 +110,8 @@
              <radius>           0.5               </radius>
              <axisymmetric_end>true</axisymmetric_end>
            </cylinder>
-             <res>                 [2,2,1]         </res>
          </geom_object>
+         <res>                 [2,2,1]         </res>
          <load_curve>
            <id>2</id>
            <time_point>
@@ -137,8 +137,8 @@
              <radius>           0.5               </radius>
              <axisymmetric_end>true</axisymmetric_end>
            </cylinder>
-             <res>                 [2,2,1]         </res>
          </geom_object>
+         <res>                 [2,2,1]         </res>
          <load_curve>
            <id>3</id>
            <time_point>
