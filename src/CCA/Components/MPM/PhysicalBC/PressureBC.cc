@@ -73,7 +73,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
     d_axisymmetric_end=cgp->axisymmetric_end();
     d_axisymmetric_side=cgp->axisymmetric_side();
     if(d_axisymmetric_end){
-      adult->require("res",d_res);
+      ps->require("res",d_res);
       Vector dx = grid->getLevel(0)->dCell();
       d_dxpp =  Vector(dx.x()/((double) d_res.x()),
                        dx.y()/((double) d_res.y()),
