@@ -407,7 +407,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
               arches_density[c] = 0.0; 
             } 
             if (d_MAlab)
-              mpmarches_denmicro[c] = table_value; 
+              mpmarches_denmicro[c] = 1.0/table_value; 
           } else if ( i->first == "temperature") { 
             (*i->second.var)[c] = table_value;
           } 
@@ -548,7 +548,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
                   arches_density[c] = 0.0; 
                 } 
                 if (d_MAlab)
-                  mpmarches_denmicro[c] = table_value; 
+                  mpmarches_denmicro[c] = 1.0/table_value; 
               } else if ( i->first == "temperature") { 
                 (*i->second.var)[c] = table_value;
               }

@@ -541,7 +541,7 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z'">
+                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
@@ -553,6 +553,14 @@
             <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
             <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
             <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+            <!-- gaussian initialization --> 
+            <!-- computes: y = a*exp( -1 * (x-b)^2/(2c^2) ) + shift --> 
+            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'" need_applies_to="type gaussian"/> <!-- direction of the gaussian --> 
+            <a                          spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- height of the gaussian --> 
+            <b                          spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
+            <c                          spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian --> 
+            <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant --> 
+
           </initialization>                              
 
           <Clipping                     spec="OPTIONAL NO_DATA">
