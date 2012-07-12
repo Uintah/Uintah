@@ -216,6 +216,13 @@ protected:
   int d_step_cellend;               ///< Cell location of step function end
   double d_step_value;              ///< Step function steps from 0 to d_step_value
 
+  // gaussian initialization function: 
+  double d_a_gauss;                 ///< constant a, height in gaussian function 
+  double d_b_gauss;                 ///< constant b, position of gaussian function 
+  double d_c_gauss;                 ///< constant c, width of gaussian function 
+  double d_shift_gauss;             ///< shifts the gaussian function up or down 
+  double d_dir_gauss;               ///< direction of the gaussian (0,1,2) == [x,y,z]
+
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
   double d_scalingConstant;         ///< Value by which to scale values 
@@ -439,6 +446,22 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
       //======= sin function in z ======
 
       phi[c] = sin( 2.0 * pi * z ); 
+
+    } else if ( d_initFunction == "gaussian" ) { 
+
+      if ( d_dir_gauss == 0 ){ 
+
+        phi[c] = d_a_gauss * exp( -1.0*std::pow(x-d_b_gauss,2.0)/(2.0*std::pow(d_c_gauss,2.0))) + d_shift_gauss;
+
+      } else if ( d_dir_gauss == 1 ){ 
+
+        phi[c] = d_a_gauss * exp( -1.0*std::pow(y-d_b_gauss,2.0)/(2.0*std::pow(d_c_gauss,2.0))) + d_shift_gauss;
+
+      } else { 
+
+        phi[c] = d_a_gauss * exp( -1.0*std::pow(z-d_b_gauss,2.0)/(2.0*std::pow(d_c_gauss,2.0))) + d_shift_gauss;
+
+      } 
 
     } else if (d_initFunction == "geometry_fill") {
       //======= Fills a geometry piece with the value of d_constant_init ======

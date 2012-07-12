@@ -168,7 +168,23 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       } else {
         throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__); 
       }
-    }
+    } else if ( d_initFunction == "gaussian" ) { 
+
+      db_initialValue->require( "a", d_a_gauss ); 
+      db_initialValue->require( "b", d_b_gauss ); 
+      db_initialValue->require( "c", d_c_gauss ); 
+      std::string direction; 
+      db_initialValue->require( "direction", direction ); 
+      if ( direction == "X" || direction == "x" ){ 
+        d_dir_gauss = 0; 
+      } else if ( direction == "Y" || direction == "y" ){ 
+        d_dir_gauss = 1; 
+      } else if ( direction == "Z" || direction == "z" ){
+        d_dir_gauss = 2; 
+      } 
+      db_initialValue->getWithDefault( "shift", d_shift_gauss, 0.0 ); 
+
+    } 
   }
 }
 //---------------------------------------------------------------------------
