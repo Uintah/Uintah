@@ -555,6 +555,7 @@
             <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
             <!-- gaussian initialization --> 
             <!-- computes: y = a*exp( -1 * (x-b)^2/(2c^2) ) + shift --> 
+            <!-- a = amplitude, b = center, c = std --> 
             <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'" need_applies_to="type gaussian"/> <!-- direction of the gaussian --> 
             <amplitude                  spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- height of the gaussian --> 
             <center                     spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
