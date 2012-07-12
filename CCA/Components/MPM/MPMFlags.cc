@@ -376,6 +376,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
+  ps->appendElement("use_load_curves", d_useLoadCurves);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
   ps->appendElement("manual_new_material", d_addNewMaterial);
