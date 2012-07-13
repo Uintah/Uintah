@@ -194,6 +194,18 @@ namespace Wasatch{
       builder = scinew Builder( tag, xTag, yTag, zTag, fileName );      
     }
     
+    else if ( params->findBlock("StepFunction") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("StepFunction");
+      double transitionPoint, lowValue, highValue;
+      valParams->getAttribute("transitionPoint",transitionPoint);
+      valParams->getAttribute("lowValue",lowValue);
+      valParams->getAttribute("highValue",highValue);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename StepFunction<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
+    }
+    
+    
     return builder;
   }
 
