@@ -454,4 +454,131 @@ build() const
 
 //--------------------------------------------------------------------
 
+//--------------------------------------------------------------------
+
+/**
+ *  \class StepFunction
+ *  \author Tony Saad
+ *  \date July, 2012
+ *  \brief Implements a StepFunction for initialization purposes among other things.
+ */
+template< typename FieldT >
+class StepFunction : public Expr::Expression<FieldT>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param indepVarTag   Tag of the independent variable.
+     * @param transitionPoint Location where the stepFunction switches values. This is the independent variable location.
+     * @param lowValue  Value of the step function for independentVar <  transitionPoint.
+     * @param highValue	Value of the step function for independentVar >= transitionPoint.
+     */
+    Builder(const Expr::Tag& result,
+            const Expr::Tag& indepVarTag,
+            const double transitionPoint=0.1,
+            const double lowValue = 1.0,
+            const double highValue = 0.0);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag indepVarTag_;
+    const double transitionPoint_, lowValue_, highValue_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  StepFunction( const Expr::Tag& indepVarTag,
+               const double transitionPoint,
+               const double lowValue,
+               const double highValue);
+  const Expr::Tag indepVarTag_;
+  const double transitionPoint_, lowValue_, highValue_;
+  const FieldT* indepVar_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+StepFunction<FieldT>::
+StepFunction( const Expr::Tag& indepVarTag,
+             const double transitionPoint,
+             const double lowValue,
+             const double highValue)
+: Expr::Expression<FieldT>(),
+indepVarTag_(indepVarTag), 
+transitionPoint_(transitionPoint), 
+lowValue_(lowValue),
+highValue_(highValue)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+StepFunction<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( indepVarTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+StepFunction<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  indepVar_ = &fm.field_ref( indepVarTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+StepFunction<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= cond( (*indepVar_ < transitionPoint_), lowValue_ )
+                 ( highValue_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+StepFunction<FieldT>::Builder::
+Builder(const Expr::Tag& result, 
+        const Expr::Tag& indepVarTag,
+        const double transitionPoint,
+        const double lowValue,
+        const double highValue)
+: ExpressionBuilder(result),
+indepVarTag_(indepVarTag), 
+transitionPoint_(transitionPoint), 
+lowValue_(lowValue),
+highValue_(highValue)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+StepFunction<FieldT>::Builder::
+build() const
+{
+  return new StepFunction<FieldT>( indepVarTag_, transitionPoint_, lowValue_, highValue_);
+}
+
+//--------------------------------------------------------------------
+
+
 #endif // Wasatch_MMS_Functions
