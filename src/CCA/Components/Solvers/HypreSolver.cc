@@ -914,8 +914,20 @@ namespace Uintah {
         param->getWithDefault ("jump",            p->jump,           0);          
         param->getWithDefault ("logging",         p->logging,        0);          
         param->getWithDefault ("relax_type",      p->relax_type,     1); 
-        // Jacobi = 0; weighted Jacobi = 1;                                                                                                                                                                                                                                                                                    
-        // red-black GS symmetric = 2; red-black GS non-symmetrix = 3;
+        
+        // Options from the HYPRE_ref_manual 2.8
+        // npre:   Number of relaxation sweeps before coarse grid correction
+        // npost:  Number of relaxation sweeps after coarse grid correction
+        // skip:   Skip relaxation on certain grids for isotropic 
+        //         problems. This can greatly improve effciency by eliminating
+        //         unnecessary relaxations when the underlying problem is isotropic.
+        // jump:   not in manual
+        //
+        // relax_type
+        // 0 : Jacobi                                                                   
+        // 1 : Weighted Jacobi (default)                                                
+        // 2 : Red/Black Gauss-Seidel (symmetric: RB pre-relaxation, BR post-relaxation)
+        // 3 : Red/Black Gauss-Seidel (nonsymmetric: RB pre- and post-relaxation)       
 
         found=true;
       }
