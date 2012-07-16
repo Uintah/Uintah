@@ -319,7 +319,6 @@ DORadiationModel::sched_computeSource( const LevelP& level,
     tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
   }
   
-  cout << " energy exchange " << d_boundaryCondition->getIfCalcEnergyExchange() << endl;
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
   }
