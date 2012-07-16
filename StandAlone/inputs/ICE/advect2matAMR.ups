@@ -208,7 +208,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
-         <material>
+         <material name="Atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -255,5 +255,34 @@
         </exchange_coefficients>
         </exchange_properties> 
     </MaterialProperties>           
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="lineExtract">
        
+        <material>Atmosphere</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <Variables>
+          <analyze label="press_CC" matl="0"/> 
+          <analyze label="rho_CC"/>
+          <analyze label="temp_CC"/>
+          <analyze label="delP_Dilatate"/>
+        </Variables>
+
+        <lines>
+          <line name="X_line"> 
+                <startingPt>  [0.0, 0.5, 0]   </startingPt>
+                <endingPt>    [1.0, 0.5, 0]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+          <line name="Y_line"> 
+                <startingPt>  [0.5, 0.0, 0]   </startingPt>
+                <endingPt>    [0.5, 1.0, 0]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+        </lines>
+      </Module>
+    </DataAnalysis>        
 </Uintah_specification>
