@@ -839,10 +839,13 @@ void UCNH::initializeCMData(const Patch* patch,
     } else {
       double p = d_init_pressure;
       Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+      double rho_orig = matl->getInitialDensity();
+      double rho_cur = d_eos->computeDensity(rho_orig, p);
+      double diag = cbrt(rho_cur/rho_orig);
       for(;iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pdTdt[idx] = 0.0;
-        pDefGrad[idx] = Identity;
+        pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
         pStress[idx] = sigInit;
       }
     }
