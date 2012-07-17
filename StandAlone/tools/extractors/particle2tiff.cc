@@ -75,6 +75,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
+#include <Core/Util/FileUtils.h>
 
 #include <fstream>
 #include <string>
@@ -494,6 +495,14 @@ void write_tiff_volume(const tiffFlags* flags,
   }
   
   tsize_t imageSize = imageHeight * imageWidth * depth;
+  
+  // remove existing file
+  if ( validFile( tname.str() ) ) {
+    ostringstream cmd;
+    cmd  << "rm -rf " << tname.str();
+    system( cmd.str().c_str() );
+    cout << "  removed existing file: " << tname.str() << endl;
+  }  
   
   // Open the TIFF file
   TIFF *out;
@@ -985,8 +994,7 @@ int main(int argc, char** argv)
   string input_uda_name;  
   string input_file_cellIndices;
 
-  string base_dir_name("-");  
-  Dir base_dir;                      // base output directory
+  string base_dir_name("-");
   
   IntVector var_start(0,0,0);
   IntVector var_end(0,0,0);
@@ -1175,17 +1183,18 @@ int main(int argc, char** argv)
       exit(1);
     }
     
-    // create the base output directory
-    if( Dir::removeDir(base_dir_name.c_str() ) ){
-      cout << "Removed directory: "<<base_dir_name<<"\n";
-    }
-    base_dir = Dir::create(base_dir_name);
-
-    if(base_dir.exists() ) {
-      cout << "Created directory: "<<base_dir_name<<"\n";
-    }else{
-      cout << "Failed creating  base output directory: "<<base_dir_name<<"\n";
-      exit(1);
+    Dir base_dir = Dir(base_dir_name);                      // base output directory
+    
+    
+    // create directory if it doesn't exist
+    if( !base_dir.exists() ){
+      base_dir = Dir::create(base_dir_name);
+      if(base_dir.exists() ) {
+        cout << "Created directory: "<<base_dir_name<<"\n";
+      }else{
+        cout << "Failed creating  base output directory: "<<base_dir_name<<"\n";
+        exit(1);
+      }
     }
 
     //__________________________________
@@ -1295,7 +1304,14 @@ int main(int argc, char** argv)
         ostringstream tname;
         tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step;
         
-        Dir timestep_dir = Dir::create(tname.str());
+        // remove existing directory
+        if( validDir( tname.str() ) ) {
+          Dir::removeDir( tname.str().c_str() );
+          cout << "  Removed existing directory: "<<tname.str()<<"\n";
+        }
+        
+        // open directory
+        Dir timestep_dir = Dir::create( tname.str() );
 
         if(timestep_dir.exists() ) {
           cout << "  Created directory: "<<tname.str()<<"\n";
