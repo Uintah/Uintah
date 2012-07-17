@@ -770,7 +770,7 @@ void compute_ave( vector<int>                          & matls,
 //______________________________________________________________________
 //  scale the pixel 
 // 8-bit:   0->255
-// 16-bit:  0->65025
+// 16-bit:  0->65535
 void scaleImage( const int nBits,
                  const IntVector& lo,
                  const IntVector& hi,
@@ -780,8 +780,7 @@ void scaleImage( const int nBits,
    
     double maxVal = -DBL_MAX;
     double minVal = DBL_MAX;
-    int power = nBits/8;
-    double scale = pow( (double)255, power);
+    double scale = pow( 2, nBits ) - 1.0;
 
 
     for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
