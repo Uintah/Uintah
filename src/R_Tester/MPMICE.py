@@ -33,7 +33,7 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
                    ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux", ["exactComparison"]),    \
                    ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),    \
                    ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),    \
-#                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint"]),\
+                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint"]),\
                    ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"])
     	       ]
 
