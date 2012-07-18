@@ -99,7 +99,7 @@ NIGHTLYTESTS = [
 # Tests that are run during local regression testing
 LOCALTESTS = [
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),                \
