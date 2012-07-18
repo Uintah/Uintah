@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
-#include <CCA/Components/OnTheFlyAnalysis/pointExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
@@ -73,8 +72,6 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
 
       if (module == "lineExtract") {
         modules.push_back (scinew lineExtract(module_ps, sharedState, dataArchiver));
-      } else if (module == "pointExtract") {
-        modules.push_back (scinew pointExtract(module_ps,sharedState, dataArchiver));
       } else if (module == "containerExtract") {
         modules.push_back (scinew containerExtract(module_ps,sharedState,dataArchiver));
       } else if (module == "particleExtract") {
