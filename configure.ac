@@ -3721,7 +3721,7 @@ if test "$with_boost"; then
     done
     # Check for libraries files
     BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt libboost_signals-mt libboost_serialization; do
+    for file in libboost_thread-mt libboost_signals-mt libboost_serialization libboost_system-mt; do
       EXT=$SO_OR_ARCHIVE_EXTENSION
       if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
         echo ""
