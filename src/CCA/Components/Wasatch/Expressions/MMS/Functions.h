@@ -31,6 +31,13 @@
 #include <fstream>
 #include <algorithm>
 
+#include <ctime>            // std::time
+
+// boost includes
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 /**
  *  \class SineTime
@@ -580,5 +587,124 @@ build() const
 
 //--------------------------------------------------------------------
 
+/**
+ *  \class  RandomField
+ *  \author Tony Saad
+ *  \date   July, 2012
+ *  \brief  Generates a pseudo-random field based.
+ */
+template< typename ValT >
+class RandomField : public Expr::Expression<ValT>
+{
+public:
+  
+  /**
+   *  \brief Builds a RandomField expression.
+   */
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    Builder( const Expr::Tag& result,
+            const double lo,
+            const double hi,
+            const double seed);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const double lo_, hi_, seed_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  const double lo_, hi_, seed_;
+  RandomField(const double lo, 
+              const double hi, 
+              const double seed );
+};
+
+//====================================================================
+
+template<typename ValT>
+RandomField<ValT>::
+RandomField(const double lo, 
+            const double hi, 
+            const double seed )
+: Expr::Expression<ValT>(),
+  lo_(lo),
+  hi_(hi),
+  seed_(seed)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+RandomField<ValT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+RandomField<ValT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+RandomField<ValT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  ValT& phi = this->value();
+  typename ValT::iterator phiIter = phi.begin();
+  
+  // This is a typedef for a random number generator.
+  typedef boost::mt19937 base_generator_type; // mersenne twister
+  // Define a random number generator and initialize it with a seed.
+  // (The seed is unsigned, otherwise the wrong overload may be selected
+  // when using mt19937 as the base_generator_type.)
+  // seed the random number generator based on the MPI rank
+  const int pid =  Uintah::Parallel::getMPIRank();
+  base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
+
+  boost::uniform_real<> rand_dist(lo_,hi_);
+  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);  
+  
+  while ( phiIter != phi.end() ) {
+    *phiIter = boost_rand();
+    ++phiIter;
+  }  
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+RandomField<ValT>::Builder::
+Builder( const Expr::Tag& result,
+        const double lo,
+        const double hi,
+        const double seed)
+: ExpressionBuilder(result),
+lo_(lo),
+hi_(hi),
+seed_(seed)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+Expr::ExpressionBase*
+RandomField<ValT>::Builder::build() const
+{
+  return new RandomField<ValT>(lo_, hi_, seed_ );
+}
+
+//--------------------------------------------------------------------
 
 #endif // Wasatch_MMS_Functions

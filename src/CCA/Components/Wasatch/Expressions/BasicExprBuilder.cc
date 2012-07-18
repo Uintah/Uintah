@@ -205,7 +205,15 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
     }
     
-    
+    else if( params->findBlock("RandomField") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
+      double low, high, seed;
+      valParams->getAttribute("low",low);
+      valParams->getAttribute("high",high);
+      valParams->getAttribute("seed",seed);
+      typedef typename RandomField<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, low, high, seed );
+    }        
     return builder;
   }
 

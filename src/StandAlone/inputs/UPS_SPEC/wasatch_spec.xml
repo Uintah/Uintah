@@ -12,7 +12,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
@@ -102,6 +102,14 @@
       <ReadFromFile     spec="OPTIONAL NO_DATA">
         <FileName       spec="REQUIRED STRING" />
       </ReadFromFile>
+
+      <!-- creates a pseudo-random field distribution between low and high. seed value helps distinguish random number distributions. -->
+      <RandomField     spec="OPTIONAL NO_DATA"
+                       attribute1="low  REQUIRED DOUBLE"
+                       attribute2="high REQUIRED DOUBLE"
+                       attribute3="seed REQUIRED DOUBLE">
+      </RandomField>
+      
       
     </BasicExpression>
 
