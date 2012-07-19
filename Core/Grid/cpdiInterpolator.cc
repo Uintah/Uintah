@@ -71,28 +71,28 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
                                     dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
                                     dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
                                     dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
                                     dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
 
   Vector current_corner_pos;
   double fx;
@@ -170,28 +170,28 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
                                     dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
                                     dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
                                     dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
                                     dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
 
   int i;
   Vector current_corner_pos;
@@ -334,28 +334,28 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
                                     dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
                                     dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
                                     dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
                                     dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
   Vector current_corner_pos;
   double fx;
   double fy;
