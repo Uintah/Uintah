@@ -249,6 +249,7 @@ namespace Wasatch{
     std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
+    Uintah::ProblemSpecP wasatchParams_;
 
     /**
      *  a container of information for constructing ExprLib graphs.

@@ -74,6 +74,7 @@
 #include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 #include "ParseTools.h"
+#include "FieldClippingTools.h"
 
 using std::endl;
 
@@ -178,7 +179,7 @@ namespace Wasatch{
                               Uintah::SimulationStateP& sharedState )
   {
     sharedState_ = sharedState;
-
+    wasatchParams_ = params->findBlock("Wasatch");
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -427,6 +428,7 @@ namespace Wasatch{
       forceOnGraphParams->getAttribute("tasklist", taskListName);
       force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
     }
+    
   }
 
   //--------------------------------------------------------------------
@@ -493,7 +495,7 @@ namespace Wasatch{
         TransportEquation* transEq = adaptor->equation();
         std::string eqnLabel = transEq->solution_variable_name();
         //______________________________________________________
-        // set up boundary conditions on this transport equation
+        // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
           transEq->setup_initial_boundary_conditions(*icGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
@@ -663,6 +665,11 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
+      
+      //
+      // process clipping on fields
+      //
+      process_field_clipping( wasatchParams_, graphCategories_, localPatches );      
     }
 
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
