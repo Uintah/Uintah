@@ -32,10 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
+#include <iostream>
 
 using namespace SCIRun;
 using namespace Uintah;
-
+using namespace std;
     
 cpdiInterpolator::cpdiInterpolator()
 {
@@ -65,26 +66,33 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
 
-  vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
-  // constuct the position vectors to each node in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]=Vector(-lx,-ly,-lz);//x1    ,y1    ,z1
-  relative_node_reference_location[1]=Vector( lx,-ly,-lz);//x1+r1x,y1    ,z1
-  relative_node_reference_location[2]=Vector( lx, ly,-lz);//x1+r1x,y1+r2y,z1
-  relative_node_reference_location[3]=Vector(-lx, ly,-lz);//x1    ,y1+r2y,z1
-  relative_node_reference_location[4]=Vector(-lx,-ly, lz);//x1    ,y1    ,z1+r3z
-  relative_node_reference_location[5]=Vector( lx,-ly, lz);//x1+r1x,y1    ,z1+r3z
-  relative_node_reference_location[6]=Vector( lx, ly, lz);//x1+r1x,y1+r2y,z1+r3z
-  relative_node_reference_location[7]=Vector(-lx, ly, lz);//x1    ,y1+r2y,z1+r3z
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
+  Matrix3 dsize=defgrad*size;
+  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
 
   Vector current_corner_pos;
   double fx;
@@ -109,7 +117,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     int i86 = i*8+6;
     int i87 = i*8+7;
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
@@ -157,19 +165,34 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                    const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
-  vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
-  // constuct the position vectors to each node/corner of the particle in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]= Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]= Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]= Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]= Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]= Vector(-lx,-ly,lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]= Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]= Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]= Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
+
+  Matrix3 dsize=defgrad*size;
+  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+
   int i;
   Vector current_corner_pos;
   double fx;
@@ -178,16 +201,14 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double fx1;
   double fy1;
   double fz1;
-  
-
   int ix,iy,iz;
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
-  double volume = Dot( Cross(r1,r2),r3);
+
+  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+
+  double volume = dsize.Determinant();
+
   double one_over_4V = 1.0/(4.0*volume);
   vector<Vector> alpha(8,Vector(0.0,0.0,0.0));
   vector<double> phi(8);
@@ -235,7 +256,7 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     int i86 = i*8+6;
     int i87 = i*8+7;
     //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
@@ -307,21 +328,34 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                           const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
-  double lx = size(0,0)/2.0;
-  double ly = size(1,1)/2.0;
-  double lz = size(2,2)/2.0;
 
- 
-  vector<Vector> relative_node_reference_location(8,Vector(0.0,0.0,0.0));
-  // constuct the position vectors to each node in the reference configuration relative to the particle center:
-  relative_node_reference_location[0]= Vector(-lx,-ly,-lz); // x1    , y1    , z1
-  relative_node_reference_location[1]= Vector( lx,-ly,-lz); // x1+r1x, y1    , z1
-  relative_node_reference_location[2]= Vector( lx, ly,-lz); // x1+r1x, y1+r2y, z1
-  relative_node_reference_location[3]= Vector(-lx, ly,-lz); // x1    , y1+r2y, z1
-  relative_node_reference_location[4]= Vector(-lx,-ly,lz); // x1    , y1    , z1+r3z
-  relative_node_reference_location[5]= Vector( lx,-ly, lz); // x1+r1x, y1    , z1+r3z
-  relative_node_reference_location[6]= Vector( lx, ly, lz); // x1+r1x, y1+r2y, z1+r3z
-  relative_node_reference_location[7]= Vector(-lx, ly, lz); // x1    , y1+r2y, z1+r3z
+  Matrix3 dsize=defgrad*size;
+
+  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))/2.0;
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))/2.0;
   Vector current_corner_pos;
   double fx;
   double fy;
@@ -332,14 +366,10 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
 
   int ix,iy,iz;
-  Vector r1=Vector(2.0*lx,0.0,0.0);
-  Vector r2=Vector(0.0,2.0*ly,0.0);
-  Vector r3=Vector(0.0,0.0,2.0*lz);
-  r1 = defgrad*r1;
-  r2 = defgrad*r2;
-  r3 = defgrad*r3;
-  //deformed volume:
-  double volume = Dot( Cross(r1,r2),r3);
+  Vector r1=Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+  Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+  Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+  double volume = dsize.Determinant();
   double one_over_4V = 1.0/(4.0*volume);
   double one_over_8 = 1.0/(8.0);
   vector<Vector> alpha(8,Vector(0.0,0.0,0.0));
@@ -377,12 +407,10 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   alpha[7][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]+r1[0]*r3[2]-r1[2]*r3[0]-r1[0]*r2[2]+r1[2]*r2[0]);
   alpha[7][2]   =  one_over_4V*(-r2[0]*r3[1]+r2[1]*r3[0]-r1[0]*r3[1]+r1[1]*r3[0]+r1[0]*r2[1]-r1[1]*r2[0]);
 
- 
-
- // now  we will loop over each of these "nodes" and use the deformation gradient to find the current location: 
+  // now  we will loop over each of these "nodes" and use the deformation gradient to find the current location: 
   for(int i=0;i<8;i++){
     //    first we need to find the position vector of the ith corner of the particle:
-    current_corner_pos = Vector(cellpos) + defgrad*relative_node_reference_location[i];
+    current_corner_pos = Vector(cellpos) + relative_node_location[i];
     int i8  = i*8;
     int i81 = i*8+1;
     int i82 = i*8+2;
