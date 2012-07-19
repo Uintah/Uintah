@@ -789,7 +789,7 @@ void scaleImage( const int nBits,
    
     double maxVal = -DBL_MAX;
     double minVal = DBL_MAX;
-    double scale = pow( 2, nBits ) - 1.0;
+    double scale = pow( 2.0, nBits ) - 1.0;
 
 
     for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
