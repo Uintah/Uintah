@@ -415,23 +415,23 @@ Array3<T>::output( const std::string &filename )
     return 0;
   }
   
-  int maxiosz=1024*1024;
+  const int maxiosz=1024*1024;
 
-  long size = dm1*long(dm2*dm3*sizeof(T));
+  const long size = dm1*long(dm2*dm3*sizeof(T));
   int n = size / maxiosz;
-  char *p = (char *)objs[0][0];
+  const char *p = (char *)objs[0][0];
 
-  printf("Start writing...%d %d %d\n", size, maxiosz, n);
+  printf("Start writing...%ld %d %i\n", size, maxiosz, n);
 
   for ( ; n> 0 ; n--, p+= maxiosz) {
-    int l = write( file, p, maxiosz);
+    const int l = write( file, p, maxiosz);
     if ( l != maxiosz ) 
       perror("write ");
   }
-  int sz = (size % maxiosz );
-  int l = write( file, p, sz); 
+  const int sz = (size % maxiosz );
+  const int l = write( file, p, sz);
   if ( l != (size % maxiosz ) ) {
-    printf("Error: wrote %d / %d\n", l,(size % maxiosz )); 
+    printf("Error: wrote %d / %ld\n", l,(size % maxiosz ));
     perror("write ");
   }
         
