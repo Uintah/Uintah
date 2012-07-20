@@ -162,6 +162,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_doDQMOM                        =  false;
   d_doMMS                          =  false;
   d_with_mpmarches                 =  false;
+  d_do_dummy_solve                 =  false; 
 }
 
 // ****************************************************************************
@@ -196,9 +197,9 @@ Arches::~Arches()
   }
   releasePort("solver");
 
-# ifdef WASATCH_IN_ARCHES
+#ifdef WASATCH_IN_ARCHES
   delete d_wasatch;
-# endif // WASATCH_IN_ARCHES
+#endif // WASATCH_IN_ARCHES
 }
 
 // ****************************************************************************
@@ -236,10 +237,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
   }
 
-//  db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
-//  if (d_set_initial_condition)
-//    db->require("init_cond_input_file", d_init_inputfile);
-//
   if (d_calcScalar) {
     if (d_calcReactingScalar) {
       throw InvalidValue("Transport of reacting scalar is being phased out.  Please email j.thornock@utah.edu if you have questions.", __FILE__, __LINE__);
@@ -1619,36 +1616,38 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
 
-  if (d_MAlab) {
+  if ( d_MAlab && d_do_dummy_solve ) {
 #ifndef ExactMPMArchesInitialize
-    //    if (nofTimeSteps < 2) {
     if (time < 1.0E-10) {
       proc0cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched
-#       ifdef WASATCH_IN_ARCHES
+#ifdef WASATCH_IN_ARCHES
           , *d_wasatch, d_timeIntegrator
-#       endif // WASATCH_IN_ARCHES
+#endif // WASATCH_IN_ARCHES
                           );
-    }
-    else
+    } else {
+
       d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch, d_timeIntegrator
-#       endif // WASATCH_IN_ARCHES
+#ifdef WASATCH_IN_ARCHES
+                                , *d_wasatch, d_timeIntegrator
+#endif // WASATCH_IN_ARCHES
           );
-#else
-    d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch, d_timeIntegrator
-#       endif // WASATCH_IN_ARCHES
+
+    }
+#else //ExactMPMArchesInitialize
+      d_nlSolver->nonlinearSolve(level, sched
+#ifdef WASATCH_IN_ARCHES
+                                , *d_wasatch, d_timeIntegrator
+#endif // WASATCH_IN_ARCHES
     );
 #endif
-  }
-  else {
+
+  } else {
+
     d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch, d_timeIntegrator
-#       endif // WASATCH_IN_ARCHES
+#ifdef WASATCH_IN_ARCHES
+                                , *d_wasatch, d_timeIntegrator
+#endif // WASATCH_IN_ARCHES
     );
   }
 

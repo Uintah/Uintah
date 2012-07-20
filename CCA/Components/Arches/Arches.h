@@ -411,6 +411,7 @@ private:
 
     bool d_doingRestart;
     bool d_newBC_on_Restart;
+    bool d_do_dummy_solve; 
 
 
 }; // end class Arches
