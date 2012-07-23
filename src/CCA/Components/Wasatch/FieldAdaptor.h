@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Grid/Variables/PerPatch.h>      /* single double per patch */
 #include <Core/Disclosure/TypeDescription.h>
+#include <sci_defs/uintah_defs.h>
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
@@ -271,9 +272,11 @@ namespace Wasatch{
   template<typename FieldT>
   inline Uintah::IntVector get_uintah_ghost_descriptor()
   {
-    const int ng = get_n_ghost<FieldT>();
-    return Uintah::IntVector(ng,ng,ng);
-//    return Uintah::IntVector(0,0,0);
+    int ng = get_n_ghost<FieldT>(); // no extra cells
+#ifdef WASATCH_IN_ARCHES
+    ng=0; // for extra cells
+#endif
+    return Uintah::IntVector(ng,ng,ng);    
   }
 
   template<>
