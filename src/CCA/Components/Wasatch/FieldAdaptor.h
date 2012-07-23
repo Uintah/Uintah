@@ -78,7 +78,8 @@ namespace Wasatch{
    */
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
+                                      const bool withoutGhost=false);
 
   /**
    *  \ingroup WasatchFields
