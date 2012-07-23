@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
@@ -38,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -586,6 +588,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
             createFile(filename);
           }
 
+          PerPatch<FileInfoP> filevar;
           FILE *fp;
           fp = fopen(filename.c_str(), "a");
           if (!fp){
