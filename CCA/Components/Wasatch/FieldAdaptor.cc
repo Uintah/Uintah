@@ -91,7 +91,8 @@ namespace Wasatch{
 
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch )
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
+                                      const bool withoutGhost)
   {
     SCIRun::IntVector bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
@@ -100,12 +101,15 @@ namespace Wasatch{
     const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     using SpatialOps::structured::IntVec;
-
-    const IntVec glob( gs[0] + get_n_ghost<FieldT>()*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
-                       gs[1] + get_n_ghost<FieldT>()*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
-                       gs[2] + get_n_ghost<FieldT>()*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
+    
+    const int nGhost = get_n_ghost<FieldT>();
+    const IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
+                       gs[1] + nGhost*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
+                       gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
+    
     const IntVec extent = glob;
-    const IntVec offset(0,0,0);
+    const int nOffset = withoutGhost ? nGhost : 0;
+    const IntVec offset(nOffset,nOffset,nOffset);
 
     return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
   }
@@ -138,7 +142,8 @@ namespace Wasatch{
   // macro shortcuts for explicit template instantiation
 #define declare_method( FIELDT )                                                \
   template SpatialOps::structured::MemoryWindow                                 \
-  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const );     \
+  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const,       \
+                                              const bool withoutGhost);         \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
 #define declare_variants( VOLT )                \
