@@ -28,6 +28,7 @@
 #include <fstream>
 
 //-- Uintah framework includes --//
+#include <sci_defs/uintah_defs.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -180,6 +181,8 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
+
+#ifndef WASATCH_IN_ARCHES          
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -214,6 +217,7 @@ namespace Wasatch{
         throw std::runtime_error( msg.str() );
       }
     }
+#endif    
 
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
