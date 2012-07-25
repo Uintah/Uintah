@@ -404,6 +404,18 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   //____________________________________________________________________________
+  // Register dependent (tabular sense) variables
+  //
+  std::string densityName = "density"; //***HACK***
+  const Expr::Tag densityTag( densityName, Expr::STATE_NONE );
+  if( !(solngh->exprFactory->have_entry( densityTag )) ) {
+    // register placeholder expressions for density field: "density"
+    typedef Expr::PlaceHolder<SVolField>  DensityT;
+    solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
+  }
+
+
+  //____________________________________________________________________________
   // Register the Wasatch transported variables as placeholder expressions.
   // Because we will NOT build a Wasatch timestepper, we should register the
   // transported Wasatch variables as placeholder expressions. We can grab those

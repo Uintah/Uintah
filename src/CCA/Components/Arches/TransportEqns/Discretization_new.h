@@ -78,6 +78,7 @@ namespace Uintah{
        * for a non-constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
+        double molecular_diff, 
         constCCVariable<Vector>& areaFraction, 
         constCCVariable<double>& prNo, int mat_id, string varName );
 
@@ -85,7 +86,7 @@ namespace Uintah{
        * \f$ \int_{S} \nabla \phi \cdot dS \f$
        * assuming a constant pr number -- only used now for DQMOM */
       template <class fT, class oldPhiT, class gammaT> void 
-        computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
+        computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma, double molecular_diff, 
         constCCVariable<Vector>& areaFraction, double const_prNo, int mat_id, string varName );
 
       //---------------------------------------------------------------------------
@@ -1676,7 +1677,7 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, 
+        double molecular_diff, constCCVariable<Vector>& areaFraction, 
         constCCVariable<double>& prNo, int mat_id, string varName )
     {
 
@@ -1696,6 +1697,9 @@ namespace Uintah{
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dx, coord ); 
 
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
+
         Vector c_af = areaFraction[c]; 
         Vector cp_af = areaFraction[c + coord]; 
 
@@ -1712,6 +1716,9 @@ namespace Uintah{
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dy, coord ); 
 
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
+
         cp_af = areaFraction[c + coord]; 
 
         Fdiff[c] += 1.0/pr_no * Dx.x()*Dx.z() *  
@@ -1724,6 +1731,9 @@ namespace Uintah{
 
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dz, coord ); 
+
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
 
         cp_af = areaFraction[c + coord]; 
 
@@ -1787,6 +1797,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -1815,6 +1828,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -1841,6 +1857,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -1864,6 +1883,9 @@ namespace Uintah{
 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
@@ -1891,6 +1913,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -1914,6 +1939,9 @@ namespace Uintah{
 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
@@ -1942,7 +1970,7 @@ namespace Uintah{
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
-    Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
+    Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma, double molecular_diff, 
         constCCVariable<Vector>& areaFraction, double const_prNo , int mat_id, string varName )
     {
 
@@ -1962,6 +1990,9 @@ namespace Uintah{
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dx, coord ); 
 
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
+
         Vector c_af = areaFraction[c]; 
         Vector cp_af = areaFraction[c + coord]; 
 
@@ -1976,6 +2007,9 @@ namespace Uintah{
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dy, coord ); 
 
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
+
         cp_af = areaFraction[c + coord]; 
 
         Fdiff[c] += 1.0/const_prNo * Dx.x()*Dx.z() *  
@@ -1988,6 +2022,9 @@ namespace Uintah{
 
         face_gamma = centralInterp( c, coord, gamma ); 
         grad_phi   = gradPtoF( c, oldPhi, dz, coord ); 
+
+        face_gamma.plus  += molecular_diff; 
+        face_gamma.minus += molecular_diff; 
 
         cp_af = areaFraction[c + coord]; 
 
@@ -2046,6 +2083,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -2063,6 +2103,9 @@ namespace Uintah{
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
@@ -2082,6 +2125,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -2098,6 +2144,9 @@ namespace Uintah{
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
@@ -2119,6 +2168,9 @@ namespace Uintah{
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
+
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 
 
@@ -2136,6 +2188,9 @@ namespace Uintah{
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
+
+                  face_gamma.plus  += molecular_diff; 
+                  face_gamma.minus += molecular_diff; 
 
                   Vector c_af = areaFraction[bp1]; 
                   Vector cp_af = areaFraction[bp1 + coord]; 

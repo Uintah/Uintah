@@ -110,6 +110,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   db->getWithDefault( "doDiff", d_doDiff, false);
   d_addSources = true; 
   d_addExtraSources = false; 
+  db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 
 
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
@@ -590,7 +591,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, d_turbPrNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, d_turbPrNo, matlIndex, d_eqnName );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

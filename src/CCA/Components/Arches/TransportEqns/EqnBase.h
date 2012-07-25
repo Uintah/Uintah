@@ -231,6 +231,7 @@ protected:
   bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
                                     ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
   vector<std::string> d_sources;    ///< List of source terms for this eqn
+  double d_mol_diff;                ///< Molecular Diffusivity
 
 private:
 
