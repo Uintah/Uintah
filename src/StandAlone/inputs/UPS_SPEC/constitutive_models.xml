@@ -692,6 +692,21 @@
     <useEOSFactory                    spec="OPTIONAL BOOLEAN" />
 
     <!--______________________________________________________________________ -->    
+    <!-- The following are for the JWLppMPM model -->
+    <ignition_pressure  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <murnaghan_K        spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <murnaghan_n        spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_A              spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_B              spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_C              spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_R1             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_R2             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_om             spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <jwl_rho0           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <reaction_G         spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <reaction_b         spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    
+    <!--______________________________________________________________________ -->    
     <!-- For CamClay and related models developed by Biswajit for ONR_MURI -->
     <pressure_model  spec="REQUIRED NO_DATA"
                      attribute1="type REQUIRED STRING 'borja_pressure'"
