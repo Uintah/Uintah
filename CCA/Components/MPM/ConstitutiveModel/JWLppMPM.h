@@ -51,22 +51,26 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     struct CMData {
+
+      // Igniition pressure
+      double ignition_pressure;
+  
       // These two parameters are used for the unburned Murnahan EOS
-      double d_K;
-      double d_n;
+      double K;
+      double n;
 
       // These parameters are used for the product JWL EOS
-      double d_A;
-      double d_B;
-      double d_C;
-      double d_R1;
-      double d_R2;
-      double d_om;
-      double d_rho0;
+      double A;
+      double B;
+      double C;
+      double R1;
+      double R2;
+      double omega;
+      double rho0;
 
       // These parameters are needed for the reaction model
-      double d_G;        // rate coefficient, JWL++
-      double d_b;        // pressure exponenet, JWL++
+      double G;        // rate coefficient, JWL++
+      double b;        // pressure exponenet, JWL++
     };
 
     const VarLabel* pProgressFLabel;

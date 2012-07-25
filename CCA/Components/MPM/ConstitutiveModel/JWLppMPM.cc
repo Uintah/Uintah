@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
@@ -58,22 +59,25 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
 {
   d_useModifiedEOS = false;
 
+  // Read the ignition pressure
+  ps->require("ignition_pressure", d_initialData.ignition_pressure);
+
   // These two parameters are used for the unburned Murnahan EOS
-  ps->require("K",    d_initialData.d_K);
-  ps->require("n",    d_initialData.d_n);
+  ps->require("murnaghan_K",    d_initialData.K);
+  ps->require("murnaghan_n",    d_initialData.n);
 
   // These parameters are used for the product JWL EOS
-  ps->require("A",    d_initialData.d_A);
-  ps->require("B",    d_initialData.d_B);
-  ps->require("C",    d_initialData.d_C);
-  ps->require("R1",   d_initialData.d_R1);
-  ps->require("R2",   d_initialData.d_R2);
-  ps->require("om",   d_initialData.d_om);
-  ps->require("rho0", d_initialData.d_rho0);
+  ps->require("jwl_A",    d_initialData.A);
+  ps->require("jwl_B",    d_initialData.B);
+  ps->require("jwl_C",    d_initialData.C);
+  ps->require("jwl_R1",   d_initialData.R1);
+  ps->require("jwl_R2",   d_initialData.R2);
+  ps->require("jwl_om",   d_initialData.omega);
+  ps->require("jwl_rho0", d_initialData.rho0);
 
   // These parameters are needed for the reaction model
-  ps->require("G",    d_initialData.d_G); // Rate coefficient
-  ps->require("b",    d_initialData.d_b); // Pressure exponent
+  ps->require("reaction_G",    d_initialData.G); // Rate coefficient
+  ps->require("reaction_b",    d_initialData.b); // Pressure exponent
 
   // Initial stress
   // Fix: Need to make it more general.  Add gravity turn-on option and 
@@ -84,9 +88,9 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
   } 
 
-  pProgressFLabel          = VarLabel::create("p.progressF",
+  pProgressFLabel             = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
-  pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
+  pProgressFLabel_preReloc    = VarLabel::create("p.progressF+",
                                ParticleVariable<double>::getTypeDescription());
   pProgressdelFLabel          = VarLabel::create("p.progressdelF",
                                ParticleVariable<double>::getTypeDescription());
@@ -98,19 +102,21 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
-  d_initialData.d_K = cm->d_initialData.d_K;
-  d_initialData.d_n = cm->d_initialData.d_n;
+  d_initialData.ignition_pressure = cm->d_initialData.ignition_pressure;
 
-  d_initialData.d_A = cm->d_initialData.d_A;
-  d_initialData.d_B = cm->d_initialData.d_B;
-  d_initialData.d_C = cm->d_initialData.d_C;
-  d_initialData.d_R1 = cm->d_initialData.d_R1;
-  d_initialData.d_R2 = cm->d_initialData.d_R2;
-  d_initialData.d_om = cm->d_initialData.d_om;
-  d_initialData.d_rho0 = cm->d_initialData.d_rho0;
+  d_initialData.K = cm->d_initialData.K;
+  d_initialData.n = cm->d_initialData.n;
 
-  d_initialData.d_G    = cm->d_initialData.d_G;
-  d_initialData.d_b    = cm->d_initialData.d_b;
+  d_initialData.A = cm->d_initialData.A;
+  d_initialData.B = cm->d_initialData.B;
+  d_initialData.C = cm->d_initialData.C;
+  d_initialData.R1 = cm->d_initialData.R1;
+  d_initialData.R2 = cm->d_initialData.R2;
+  d_initialData.omega = cm->d_initialData.omega;
+  d_initialData.rho0 = cm->d_initialData.rho0;
+
+  d_initialData.G    = cm->d_initialData.G;
+  d_initialData.b    = cm->d_initialData.b;
 
   // Initial stress
   d_useInitialStress = cm->d_useInitialStress;
@@ -142,19 +148,21 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","jwlpp_mpm");
   }
   
-  cm_ps->appendElement("K",    d_initialData.d_K);
-  cm_ps->appendElement("n",    d_initialData.d_n);
+  cm_ps->appendElement("ignition_pressure", d_initialData.ignition_pressure);
 
-  cm_ps->appendElement("A",    d_initialData.d_A);
-  cm_ps->appendElement("B",    d_initialData.d_B);
-  cm_ps->appendElement("C",    d_initialData.d_C);
-  cm_ps->appendElement("R1",   d_initialData.d_R1);
-  cm_ps->appendElement("R2",   d_initialData.d_R2);
-  cm_ps->appendElement("om",   d_initialData.d_om);
-  cm_ps->appendElement("rho0", d_initialData.d_rho0);
+  cm_ps->appendElement("murnaghan_K", d_initialData.K);
+  cm_ps->appendElement("murnaghan_n", d_initialData.n);
 
-  cm_ps->appendElement("b", d_initialData.d_b);
-  cm_ps->appendElement("G", d_initialData.d_G);
+  cm_ps->appendElement("jwl_A",    d_initialData.A);
+  cm_ps->appendElement("jwl_B",    d_initialData.B);
+  cm_ps->appendElement("jwl_C",    d_initialData.C);
+  cm_ps->appendElement("jwl_R1",   d_initialData.R1);
+  cm_ps->appendElement("jwl_R2",   d_initialData.R2);
+  cm_ps->appendElement("jwl_om",   d_initialData.omega);
+  cm_ps->appendElement("jwl_rho0", d_initialData.rho0);
+
+  cm_ps->appendElement("reaction_b", d_initialData.b);
+  cm_ps->appendElement("reaction_G", d_initialData.G);
 
   cm_ps->appendElement("useInitialStress", d_useInitialStress);
   if (d_useInitialStress) {
@@ -171,50 +179,57 @@ void JWLppMPM::initializeCMData(const Patch* patch,
                              const MPMMaterial* matl,
                              DataWarehouse* new_dw)
 {
-  // Initialize the variables shared by all constitutive models
-  // This method is defined in the ConstitutiveModel base class.
-  //initSharedDataForExplicit(patch, matl, new_dw);
-
-  Matrix3 Identity;
-  Identity.Identity();
-  Matrix3 zero(0.0);
+  // Initialize local variables
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-  ParticleVariable<double>  pdTdt;
-  ParticleVariable<Matrix3> pDefGrad;
-  ParticleVariable<Matrix3> pStress;
-
-  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
-
+  ParticleVariable<double> pProgress, pProgressdelF;
+  new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
+  new_dw->allocateAndPut(pProgressdelF,pProgressdelFLabel,pset);
   ParticleSubset::iterator iter = pset->begin();
-  // Initial stress option 
+  for(; iter != pset->end(); iter++){
+    pProgress[*iter]     = 0.0;
+    pProgressdelF[*iter] = 0.0;
+  }
+
+  // Initialize the variables shared by all constitutive models
   if (!d_useInitialStress) {
-    for(; iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      pdTdt[idx] = 0.0;
-      pDefGrad[idx] = Identity;
-      pStress[idx] = zero;
-    }
+    // This method is defined in the ConstitutiveModel base class.
+    initSharedDataForExplicit(patch, matl, new_dw);
+
   } else {
+    // Initial stress option 
+    Matrix3 Identity;
+    Identity.Identity();
+    Matrix3 zero(0.0);
+
+    ParticleVariable<double>  pdTdt;
+    ParticleVariable<Matrix3> pDefGrad;
+    ParticleVariable<Matrix3> pStress;
+
+    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+    new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+    new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+
+    // Set the initial pressure
     double p = d_init_pressure;
-    Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+    Matrix3 sigInit(-p, 0.0, 0.0, 0.0, -p, 0.0, 0.0, 0.0, -p);
+
+    // Compute deformation gradient
+    //  using the Murnaghan eos 
+    //     p = (1/nK) [J^(-n) - 1]
+    //     =>
+    //     det(F) = (1 + nKp)^(-1/n)
+    //     =>
+    //     F_{11} = F_{22} = F_{33} = (1 + nKp)^(-1/3n)
+    double F11 = pow((1.0 + d_initialData.K*d_initialData.n*p), (-1.0/(3.0*d_initialData.n)));
+    Matrix3 defGrad(F11, 0.0, 0.0, 0.0, F11, 0.0, 0.0, 0.0, F11);
+
+    iter = pset->begin();
     for(;iter != pset->end(); iter++){
       particleIndex idx = *iter;
       pdTdt[idx] = 0.0;
-      pDefGrad[idx] = Identity;
       pStress[idx] = sigInit;
+      pDefGrad[idx] = defGrad;
     }
-  }
-  
-  ParticleVariable<double> pProgress;
-  new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
-  ParticleVariable<double> pProgressdelF;
-  new_dw->allocateAndPut(pProgressdelF,pProgressdelFLabel,pset);
-  for(ParticleSubset::iterator iter=pset->begin(); iter != pset->end(); iter++){
-    pProgress[*iter]     = 0.0;
-    pProgressdelF[*iter] = 0.0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -281,9 +296,9 @@ void JWLppMPM::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double K    = d_initialData.d_K;
-  double n    = d_initialData.d_n;
-  double rho0 = d_initialData.d_rho0;
+  double K    = d_initialData.K;
+  double n    = d_initialData.n;
+  double rho0 = d_initialData.rho0;
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
@@ -300,35 +315,56 @@ void JWLppMPM::computeStableTimestep(const Patch* patch,
 }
 
 void JWLppMPM::computeStressTensor(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
+  // Constants 
+  Vector WaveSpeed(1.e-12, 1.e-12, 1.e-12);
+  Matrix3 Identity;
+  Identity.Identity();
+
+  // Material parameters
+  double d_ignition_pressure = d_initialData.ignition_pressure;
+  double d_K = d_initialData.K;
+  double d_n = d_initialData.n;
+  double d_A = d_initialData.A;
+  double d_B = d_initialData.B;
+  double d_C = d_initialData.C;
+  double d_R1 = d_initialData.R1;
+  double d_R2 = d_initialData.R2;
+  double d_omega = d_initialData.omega;
+  double d_rho0 = d_initialData.rho0; // matl->getInitialDensity();
+
+  double d_b = d_initialData.b;
+  double d_G = d_initialData.G;
+
+  // Loop through patches
   for(int pp=0; pp<patches->size(); pp++){
     const Patch* patch = patches->get(pp);
-    double p,se  = 0.0;
+
+    double se  = 0.0;
     double c_dil = 0.0;
-    Vector WaveSpeed(1.e-12, 1.e-12, 1.e-12);
-    Matrix3 Identity;
-    Identity.Identity();
 
-    Vector dx      = patch->dCell();
+    // Get data warehouse, particle set, and patch info
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    // double time = d_sharedState->getElapsedTime();
 
+    // Get interpolator
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector>    d_S(interpolator->size());
     vector<double>    S(interpolator->size());
-
-    int dwi              = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // variables to hold this timestep's values
     constParticleVariable<double>  pmass, pProgressF, pProgressdelF, pvolume_old;
     ParticleVariable<double>       pvolume;
     ParticleVariable<double>       pdTdt, p_q, pProgressF_new, pProgressdelF_new;
     constParticleVariable<Vector>  pvelocity;
-    constParticleVariable<Matrix3>  psize;
+    constParticleVariable<Matrix3> psize;
     constParticleVariable<Point>   px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3>      velGrad;
@@ -346,7 +382,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pvolume_old,         lb->pVolumeLabel,             pset);
-    old_dw->get(pstress,             lb->pStressLabel,            pset);
+    old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
     old_dw->get(pProgressdelF,       pProgressdelFLabel,           pset);
     
@@ -365,53 +401,17 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
-    double K = d_initialData.d_K;
-    double n = d_initialData.d_n;
-    double A = d_initialData.d_A;
-    double B = d_initialData.d_B;
-    double C = d_initialData.d_C;
-    double R1 = d_initialData.d_R1;
-    double R2 = d_initialData.d_R2;
-    double om = d_initialData.d_om;
-    double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
-
-    double b = d_initialData.d_b;
-    double G = d_initialData.d_G;
-
-    // These are used in the reaction model
-    double rctRho;
-    double prodRho;
-    double F;
-    double pressure;
 
     if(!flag->d_doGridReset){
       cerr << "The jwlpp_mpm model doesn't work without resetting the grid"
            << endl;
     }
 
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
+    // Compute deformation gradient and velocity gradient at each 
+    // particle before pressure stabilization
+    ParticleSubset::iterator iter = pset->begin();
+    for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
-
-      Point p = px[idx];
-       
-      // This is the burn logic
-      pressure = 1.0/3.0 * pstress[idx].Trace();
-      if( fabs(pressure) > 2.0e8)  // hard coded pressure threshold
-      {
-         // compute the burned fraction
-         rctRho  = pmass[idx]/pvolume[idx];
-         prodRho = rho0 - rctRho;  // this is suspect... Joseph 04/06/11
-
-         F = prodRho / (rctRho + prodRho);
-         if( F >= 0.0 && F < 0.99)
-         {
-            pProgressdelF_new[idx] = G * pow( pressure, b) * (1.0-F);
-         }
-
-         pProgressdelF_new[idx] *= delT;
-         pProgressF_new[idx]     = F;
-      }
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
@@ -422,7 +422,10 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
                                                       deformationGradient[idx]);
 
-        computeVelocityGradient(velGrad_new,ni,d_S, oodx, gvelocity);
+        // standard computation
+        //cerr << "JWL++::computeVelocityGradient for particle: " << idx  << " patch = " << pp 
+        //     << " px = " << px[idx] <<  " pmass = " << pmass[idx] << " pvelocity = " << pvelocity[idx] << endl;
+        computeVelocityGradient(velGrad_new, ni, d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
@@ -436,6 +439,10 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       deformationGradient_new[idx]=(velGrad_new*delT+Identity)
                                     *deformationGradient[idx];
       velGrad[idx] = velGrad_new;
+      //if (isnan(velGrad[idx].Norm())) {
+      //  cerr << "particle = " << idx << " velGrad = " << velGrad[idx] << endl;
+      //  throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
+      //}
     }
 
     // The following is used only for pressure stabilization
@@ -450,22 +457,22 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
       vol_0_CC.initialize(0.);
       vol_CC.initialize(0.);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
+      iter = pset->begin();
+      for(; iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
 
         // Get the deformed volume
-        double rho_cur = rho0/J;
+        double rho_cur = d_rho0/J;
         pvolume[idx] = pmass[idx]/rho_cur;
 
         IntVector cell_index;
         patch->findCell(px[idx],cell_index);
 
         vol_CC[cell_index]  +=pvolume[idx];
-        vol_0_CC[cell_index]+=pmass[idx]/rho0;
+        vol_0_CC[cell_index]+=pmass[idx]/d_rho0;
       }
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
@@ -474,8 +481,9 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       }
     } //end of pressureStabilization loop  at the patch level
 
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
+    // Actually compute the updated stress 
+    iter = pset->begin();
+    for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       double J = deformationGradient_new[idx].Determinant();
@@ -485,6 +493,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         cerr << "F_old = " << deformationGradient[idx]     << endl;
         cerr << "F_new = " << deformationGradient_new[idx] << endl;
         cerr << "VelGrad = " << velGrad[idx] << endl;
+        throw InvalidValue("**ERROR**: Error in deformation gradient", __FILE__, __LINE__);
       }
 
       // More Pressure Stabilization
@@ -498,37 +507,89 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         J=J_CC[cell_index];
       }
 
+      // Compute new mass density and update the deformed volume
+      double rho_cur = d_rho0/J;
+      pvolume[idx] = pmass[idx]/rho_cur;
+
+      // This is the burn logic used in the reaction model  (more complex versions
+      //   are available -- see LS-DYNA manual)
+      //       df/dt = G (1-f) p^b
+      //       Forward Euler: f_{n+1} = f_n + G*(1-f_n)*p_n^b*delT
+      //       Fourth-order R-K: f_{n+1} = f_n + 1/6(k1 + 2k2 + 2k3 + k4)
+      //         k1 = G*(1-f_n)*p_n^b*delT
+      //         k2 = G*(1-f_n-k1/2)*p_n^b*delT
+      //         k3 = G*(1-f_n-k2/2)*p_n^b*delT
+      //         k4 = G*(1-f_n-k3)*p_n^b*delT
+      // (ignition_pressure in previous versions hardcoded to 2.0e8 Pa)
+      double pressure = -(1.0/3.0)*pstress[idx].Trace();
+      double f_old = pProgressF[idx];
+      double f_inc = pProgressdelF[idx];
+      double f_new = f_old;
+      if(pressure > d_ignition_pressure)  
+      {
+        if (fabs(2.0*f_old - 1.0) <= 1.0) {
+          int numCycles = 20;
+          double delTinc = delT/((double)numCycles);
+          for (int ii = 0; ii < numCycles; ++ii) {
+            double fac = (delTinc*d_G)*pow(pressure, d_b);
+            // Forward Euler
+            // f_inc = (1.0 - f_old)*fac;
+            // Fourth-order R-K
+            double k1 = (1.0 - f_old)*fac;
+            double k2 = (1.0 - f_old - 0.5*k1)*fac;
+            double k3 = (1.0 - f_old - 0.5*k2)*fac;
+            double k4 = (1.0 - f_old - k3)*fac;
+            f_inc = 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
+            f_new = f_old + f_inc;
+          }
+        }
+        // if (fabs(2.0*f_new - 1.0) > 1.0) {
+        //   cerr << " after cycling volume fraction burned is " << f_new << endl;
+        // }
+      }
+      pProgressdelF_new[idx] = f_inc;
+      pProgressF_new[idx] = f_new;
+
       //  The following computes a pressure for partially burned particles
-      //  as a mixture of Murnahan and JWL pressures, based on pProgressF
+      //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
       //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
-      double pM = (1./(n*K))*(pow(J,-n)-1.);
-      double pJWL=pM;
+      double pM = (1.0/(d_n*d_K))*(pow(J,-d_n) - 1.0);
+      double pJWL = pM;
       if(pProgressF_new[idx] > 0.0){
-        double one_plus_omega = 1.+om;
-        double inv_rho_rat=J; //rho0/rhoM;
-        double rho_rat=1./J;  //rhoM/rho0;
-        double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
-        double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
-        double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
+        double one_plus_omega = 1.0 + d_omega;
+        double inv_rho_rat = J; //rho0/rhoM;
+        double rho_rat = 1.0/J;  //rhoM/rho0;
+        double A_e_to_the_R1_rho0_over_rhoM = d_A*exp(-d_R1*inv_rho_rat);
+        double B_e_to_the_R2_rho0_over_rhoM = d_B*exp(-d_R2*inv_rho_rat);
+        double C_rho_rat_tothe_one_plus_omega = d_C*pow(rho_rat, one_plus_omega);
 
         pJWL  = A_e_to_the_R1_rho0_over_rhoM +
                 B_e_to_the_R2_rho0_over_rhoM +
                 C_rho_rat_tothe_one_plus_omega;
       }
 
-      p = pM*(1.0-pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
-
-      // Get the deformed volume and current density
-      double rho_cur = rho0/J;
-      pvolume[idx] = pmass[idx]/rho_cur;
+      double pressure_new = pM*(1.0 - pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
 
       // compute the total stress
-      pstress_new[idx] = Identity*(-p);
+      pstress_new[idx] = Identity*(-pressure_new);
+      if (isnan(pstress_new[idx].Norm())) {
+        cerr << "particle = " << idx << " velGrad = " << velGrad[idx] << " stress_old = " << pstress[idx] << endl;
+        cerr << " stress = " << pstress_new[idx] 
+             << "  pProgressdelF_new = " << pProgressdelF_new[idx] 
+             << "  pProgressF_new = " << pProgressF_new[idx] 
+             << " pm = " << pM << " pJWL = " << pJWL <<  " rho_cur = " << rho_cur << endl;
+        cerr << " pmass = " << pmass[idx] << " pvol = " << pvolume[idx] << endl;
+        throw InvalidValue("**ERROR**: Nan in stress value", __FILE__, __LINE__);
+      }
 
       Vector pvelocity_idx = pvelocity[idx];
+      //if (isnan(pvelocity[idx].length())) {
+      //  cerr << "particle = " << idx << " velocity = " << pvelocity[idx] << endl;
+      //  throw InvalidValue("**ERROR**: Nan in particle velocity value", __FILE__, __LINE__);
+      //}
 
       // Compute wave speed at each particle, store the maximum
-      double dp_drho = (1./(K*rho0))*pow((rho_cur/rho0),n-1.);
+      double dp_drho = (1./(d_K*d_rho0))*pow((rho_cur/d_rho0),d_n-1.);
       c_dil = sqrt(dp_drho);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
@@ -537,7 +598,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-        double c_bulk = sqrt(1./(K*rho_cur));
+        double c_bulk = sqrt(1.0/(d_K*rho_cur));
         Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
@@ -625,7 +686,7 @@ double JWLppMPM::computeRhoMicroCM(double pressure,
 {
     cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR JWLppMPM"
        << endl;
-    double rho_orig = d_initialData.d_rho0; //matl->getInitialDensity();
+    double rho_orig = d_initialData.rho0; //matl->getInitialDensity();
 
     return rho_orig;
 }
@@ -636,21 +697,21 @@ void JWLppMPM::computePressEOSCM(const double rhoM,double& pressure,
                                     const MPMMaterial* matl,
                                     double temperature)
 {
-  double A = d_initialData.d_A;
-  double B = d_initialData.d_B;
-  double R1 = d_initialData.d_R1;
-  double R2 = d_initialData.d_R2;
-  double om = d_initialData.d_om;
-  double rho0 = d_initialData.d_rho0;
+  double A = d_initialData.A;
+  double B = d_initialData.B;
+  double R1 = d_initialData.R1;
+  double R2 = d_initialData.R2;
+  double omega = d_initialData.omega;
+  double rho0 = d_initialData.rho0;
   double cv = matl->getSpecificHeat();
   double V = rho0/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*cv*tmp*rhoM;
+  double P3 = omega*cv*tmp*rhoM;
 
   pressure = P1 + P2 + P3;
 
-  dp_drho = (R1*rho0*P1 + R2*rho0*P2)/(rhoM*rhoM) + om*cv*tmp;
+  dp_drho = (R1*rho0*P1 + R2*rho0*P2)/(rhoM*rhoM) + omega*cv*tmp;
 }
 
 // This is not yet implemented - JG- 7/26/10
