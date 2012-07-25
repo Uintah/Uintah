@@ -86,6 +86,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
+  db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 
   
   // algorithmic knobs
   //Keep USE_DENSITY_GUESS set to true until the algorithmic details are settled. - Jeremy 
@@ -475,7 +476,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, prNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, prNo, matlIndex, d_eqnName );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

@@ -536,6 +536,7 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
           <use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 
@@ -834,6 +835,7 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
             <!-- constant value initialization -->
@@ -868,6 +870,7 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->
