@@ -413,6 +413,13 @@ Arches::problemSetup(const ProblemSpecP& params,
     typedef Expr::PlaceHolder<SVolField>  DensityT;
     solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
+  
+  if( !(initgh->exprFactory->have_entry( densityTag )) ) {
+    // register placeholder expressions for density field: "density"
+    typedef Expr::PlaceHolder<SVolField>  DensityT;
+    initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
+  }
+  
 
 
   //____________________________________________________________________________
