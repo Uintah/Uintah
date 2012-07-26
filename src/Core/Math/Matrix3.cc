@@ -153,6 +153,33 @@ Matrix3 Matrix3::Inverse() const
 
 } //end Inverse()
 
+// A recursive Taylor series expansion (USE WITH CARE)
+// **WARNING** Expansion may not be convergent in which case use
+// eigenvalue expansion (not implemented)
+// Based on Ortiz et al.
+Matrix3 Matrix3::Exponential(int num_terms) const
+{
+  Matrix3 exp; exp.Identity();
+  for (int ii = 0; ii < num_terms; ++ii) {
+    exp += (exp*(*this))*(1.0/(double)(ii+1));
+  }
+  return exp;
+}
+
+// A recursive Taylor series expansion (USE WITH CARE)
+// **WARNING** Expansion may not be convergent in which case use
+// eigenvalue expansion (not implemented)
+// Based on Ortiz et al.
+Matrix3 Matrix3::Logarithm(int num_terms) const
+{
+  Matrix3 log, Id; Id.Identity();
+  log = *this - Id;
+  for (int ii = 1; ii <= num_terms; ++ii) {
+    log += (log*(*this -Id))*((double)ii/(double)(ii+1));
+  }
+  return log;
+}
+
 inline void swap(double& v1, double& v2)
 {
   double tmp = v1;

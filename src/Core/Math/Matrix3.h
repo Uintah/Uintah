@@ -164,6 +164,12 @@ namespace Uintah {
     //Transpose
     inline Matrix3 Transpose() const;
 
+    // Exponential of a matrix
+    Matrix3 Exponential(int num_terms) const;
+    
+    // Logarithm of a matrix
+    Matrix3 Logarithm(int num_terms) const;
+    
     // Get a left or right polar decomposition of a non-singular square matrix
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
