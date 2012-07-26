@@ -463,24 +463,29 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
       // Improve upon first order estimate of deformation gradient
       // Compute mid point velocity gradient
-      Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
-      int num_terms = 4;
-      Matrix3 Finc = Amat.Exponential(num_terms);
-      pDefGrad_new[idx] = Finc*pDefGrad[idx];
+      // Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
+      // int num_terms = 100;
+      // Matrix3 Finc = Amat.Exponential(num_terms);
+      // pDefGrad_new[idx] = Finc*pDefGrad[idx];
+      // Matrix3 Finc_old = velGrad_new*delT + Identity;
+      // Matrix3 Finc_diff = Finc_old - Finc;
+      // if (Finc_diff.Norm() > 0.1*Finc_old.Norm()) {
+      //    cerr << "Huge diff in F calcs." << " Finc_old = " << Finc_old << " Finc_new = " << Finc << " Amat = " << Amat << endl;
+      // } 
 
       // Improve upon first order estimate of deformation gradient
-      // Matrix3 F = pDefGrad[idx];
-      // double Lnorm_dt = velGrad_new.Norm()*delT;
-      // int num_subcycles = max(1,2*((int) Lnorm_dt));
-      // if(num_subcycles > 1000) {
-      //   cout << "NUM_SCS = " << num_subcycles << endl;
-      // }
-      // double dtsc = delT/(double (num_subcycles));
-      // Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
-      // for(int n=0; n<num_subcycles; n++){
-      //   F = OP_tensorL_DT*F;
-      // }
-      // pDefGrad_new[idx] = F;
+      Matrix3 F = pDefGrad[idx];
+      double Lnorm_dt = velGrad_new.Norm()*delT;
+      int num_subcycles = max(1,2*((int) Lnorm_dt));
+      if(num_subcycles > 1000) {
+         cout << "NUM_SCS = " << num_subcycles << endl;
+      }
+      double dtsc = delT/(double (num_subcycles));
+      Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
+      for(int n=0; n<num_subcycles; n++){
+         F = OP_tensorL_DT*F;
+      }
+      pDefGrad_new[idx] = F;
     }
 
     // The following is used only for pressure stabilization
