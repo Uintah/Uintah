@@ -96,6 +96,10 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
+  pVelGradLabel               = VarLabel::create("p.velGrad",
+                               ParticleVariable<double>::getTypeDescription());
+  pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
+                               ParticleVariable<double>::getTypeDescription());
 }
 
 JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
@@ -130,6 +134,10 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
                                ParticleVariable<double>::getTypeDescription());
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
+  pVelGradLabel               = VarLabel::create("p.velGrad",
+                               ParticleVariable<double>::getTypeDescription());
+  pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
+                               ParticleVariable<double>::getTypeDescription());
 }
 
 JWLppMPM::~JWLppMPM()
@@ -138,6 +146,8 @@ JWLppMPM::~JWLppMPM()
   VarLabel::destroy(pProgressFLabel_preReloc);
   VarLabel::destroy(pProgressdelFLabel);
   VarLabel::destroy(pProgressdelFLabel_preReloc);
+  VarLabel::destroy(pVelGradLabel);
+  VarLabel::destroy(pVelGradLabel_preReloc);
 }
 
 void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -180,14 +190,18 @@ void JWLppMPM::initializeCMData(const Patch* patch,
                              DataWarehouse* new_dw)
 {
   // Initialize local variables
+  Matrix3 zero(0.0);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<double> pProgress, pProgressdelF;
+  ParticleVariable<Matrix3> pVelGrad;
   new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
   new_dw->allocateAndPut(pProgressdelF,pProgressdelFLabel,pset);
+  new_dw->allocateAndPut(pVelGrad, pVelGradLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     pProgress[*iter]     = 0.0;
     pProgressdelF[*iter] = 0.0;
+    pVelGrad[*iter] = zero;
   }
 
   // Initialize the variables shared by all constitutive models
@@ -273,6 +287,8 @@ void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pProgressFLabel_preReloc);
   from.push_back(pProgressdelFLabel);
   to.push_back(pProgressdelFLabel_preReloc);
+  from.push_back(pVelGradLabel);
+  to.push_back(pVelGradLabel_preReloc);
 }
 
 void JWLppMPM::computeStableTimestep(const Patch* patch,
@@ -366,9 +382,10 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector>  pvelocity;
     constParticleVariable<Matrix3> psize;
     constParticleVariable<Point>   px;
-    constParticleVariable<Matrix3> deformationGradient, pstress;
-    ParticleVariable<Matrix3>      velGrad;
-    ParticleVariable<Matrix3>      deformationGradient_new;
+    constParticleVariable<Matrix3> pDefGrad, pstress;
+    constParticleVariable<Matrix3> pVelGrad;
+    ParticleVariable<Matrix3>      pVelGrad_new;
+    ParticleVariable<Matrix3>      pDefGrad_new;
     ParticleVariable<Matrix3>      pstress_new;
 
 
@@ -379,24 +396,25 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pvolume_old,         lb->pVolumeLabel,             pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
     old_dw->get(pProgressdelF,       pProgressdelFLabel,           pset);
+    old_dw->get(pVelGrad,            pVelGradLabel,                pset);
     
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,    pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,      pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,        pset);
-    new_dw->allocateAndPut(deformationGradient_new,
+    new_dw->allocateAndPut(pDefGrad_new,
                                   lb->pDeformationMeasureLabel_preReloc,   pset);
 
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,    pset);
     new_dw->allocateAndPut(pProgressdelF_new, pProgressdelFLabel_preReloc, pset);
 
-    new_dw->allocateTemporary(velGrad,                                     pset);
+    new_dw->allocateAndPut(pVelGrad_new,      pVelGradLabel_preReloc,      pset);
 
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -420,7 +438,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                      deformationGradient[idx]);
+                                                  pDefGrad[idx]);
 
         // standard computation
         //cerr << "JWL++::computeVelocityGradient for particle: " << idx  << " patch = " << pp 
@@ -430,19 +448,39 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                             psize[idx],
-                                                   deformationGradient[idx]);
+                                                            pDefGrad[idx]);
         // x -> r, y -> z, z -> theta
         computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gvelocity,
                                                                   px[idx]);
       }
 
-      deformationGradient_new[idx]=(velGrad_new*delT+Identity)
-                                    *deformationGradient[idx];
-      velGrad[idx] = velGrad_new;
-      //if (isnan(velGrad[idx].Norm())) {
-      //  cerr << "particle = " << idx << " velGrad = " << velGrad[idx] << endl;
+      pVelGrad_new[idx] = velGrad_new;
+      //if (isnan(velGrad_new.Norm())) {
+      //  cerr << "particle = " << idx << " velGrad = " << velGrad_new << endl;
       //  throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
       //}
+      //pDefGrad_new[idx]=(velGrad_new*delT+Identity)*pDefGrad[idx];
+
+      // Improve upon first order estimate of deformation gradient
+      // Compute mid point velocity gradient
+      Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
+      int num_terms = 4;
+      Matrix3 Finc = Amat.Exponential(num_terms);
+      pDefGrad_new[idx] = Finc*pDefGrad[idx];
+
+      // Improve upon first order estimate of deformation gradient
+      // Matrix3 F = pDefGrad[idx];
+      // double Lnorm_dt = velGrad_new.Norm()*delT;
+      // int num_subcycles = max(1,2*((int) Lnorm_dt));
+      // if(num_subcycles > 1000) {
+      //   cout << "NUM_SCS = " << num_subcycles << endl;
+      // }
+      // double dtsc = delT/(double (num_subcycles));
+      // Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
+      // for(int n=0; n<num_subcycles; n++){
+      //   F = OP_tensorL_DT*F;
+      // }
+      // pDefGrad_new[idx] = F;
     }
 
     // The following is used only for pressure stabilization
@@ -462,7 +500,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
 
         // get the volumetric part of the deformation
-        double J = deformationGradient_new[idx].Determinant();
+        double J = pDefGrad_new[idx].Determinant();
 
         // Get the deformed volume
         double rho_cur = d_rho0/J;
@@ -486,13 +524,13 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      double J = deformationGradient_new[idx].Determinant();
+      double J = pDefGrad_new[idx].Determinant();
       if (!(J > 0.0)) {
         cerr << "**ERROR in JWL++MPM** Negative Jacobian of deformation gradient" << endl;
         cerr << "idx = " << idx << " J = " << J << " matl = " << matl << endl;
-        cerr << "F_old = " << deformationGradient[idx]     << endl;
-        cerr << "F_new = " << deformationGradient_new[idx] << endl;
-        cerr << "VelGrad = " << velGrad[idx] << endl;
+        cerr << "F_old = " << pDefGrad[idx]     << endl;
+        cerr << "F_new = " << pDefGrad_new[idx] << endl;
+        cerr << "VelGrad = " << pVelGrad_new[idx] << endl;
         throw InvalidValue("**ERROR**: Error in deformation gradient", __FILE__, __LINE__);
       }
 
@@ -503,7 +541,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
         // Change F such that the determinant is equal to the average for
         // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        pDefGrad_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
         J=J_CC[cell_index];
       }
 
@@ -528,7 +566,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       if(pressure > d_ignition_pressure)  
       {
         if (fabs(2.0*f_old - 1.0) <= 1.0) {
-          int numCycles = 20;
+          int numCycles = (int) ceil(delT/5.0e-11);  // Time step harded at 5.0e-11 secs
           double delTinc = delT/((double)numCycles);
           for (int ii = 0; ii < numCycles; ++ii) {
             double fac = (delTinc*d_G)*pow(pressure, d_b);
@@ -573,7 +611,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       // compute the total stress
       pstress_new[idx] = Identity*(-pressure_new);
       if (isnan(pstress_new[idx].Norm())) {
-        cerr << "particle = " << idx << " velGrad = " << velGrad[idx] << " stress_old = " << pstress[idx] << endl;
+        cerr << "particle = " << idx << " velGrad = " << pVelGrad_new[idx] << " stress_old = " << pstress[idx] << endl;
         cerr << " stress = " << pstress_new[idx] 
              << "  pProgressdelF_new = " << pProgressdelF_new[idx] 
              << "  pProgressF_new = " << pProgressF_new[idx] 
@@ -599,7 +637,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(1.0/(d_K*rho_cur));
-        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        Matrix3 D=(pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
@@ -657,6 +695,8 @@ void JWLppMPM::addComputesAndRequires(Task* task,
   task->computes(pProgressFLabel_preReloc,        matlset);
   task->requires(Task::OldDW, pProgressdelFLabel, matlset, Ghost::None);
   task->computes(pProgressdelFLabel_preReloc,     matlset);
+  task->requires(Task::OldDW, pVelGradLabel,      matlset, Ghost::None);
+  task->computes(pVelGradLabel_preReloc,          matlset);
 }
 
 void JWLppMPM::addInitialComputesAndRequires(Task* task,
@@ -666,6 +706,7 @@ void JWLppMPM::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
   task->computes(pProgressdelFLabel,    matlset);
+  task->computes(pVelGradLabel,         matlset);
 }
 
 void 
