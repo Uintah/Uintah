@@ -156,12 +156,18 @@ Matrix3 Matrix3::Inverse() const
 // A recursive Taylor series expansion (USE WITH CARE)
 // **WARNING** Expansion may not be convergent in which case use
 // eigenvalue expansion (not implemented)
-// Based on Ortiz et al.
+// Based on Ortiz, Radovitzsky, Repetto (2001)
 Matrix3 Matrix3::Exponential(int num_terms) const
 {
-  Matrix3 exp; exp.Identity();
-  for (int ii = 0; ii < num_terms; ++ii) {
-    exp += (exp*(*this))*(1.0/(double)(ii+1));
+  Matrix3 exp(0.0);
+
+  // The k = 0 term
+  Matrix3 exp_k_term; exp_k_term.Identity();
+  exp += exp_k_term;
+
+  for (int kk = 0; kk < num_terms; ++kk) {
+    exp_k_term = (exp_k_term*(*this))*(1.0/(double)(kk+1));
+    exp += exp_k_term;
   }
   return exp;
 }
@@ -169,13 +175,21 @@ Matrix3 Matrix3::Exponential(int num_terms) const
 // A recursive Taylor series expansion (USE WITH CARE)
 // **WARNING** Expansion may not be convergent in which case use
 // eigenvalue expansion (not implemented)
-// Based on Ortiz et al.
+// Based on Ortiz, Radovitzsky, Repetto (2001)
 Matrix3 Matrix3::Logarithm(int num_terms) const
 {
-  Matrix3 log, Id; Id.Identity();
-  log = *this - Id;
+  Matrix3 log(0.0); 
+  Matrix3 One; One.Identity();
+
+  // The k = 0 term
+  Matrix3 log_0_term(0.0), log_k_term(0.0); 
+  log_0_term = *this - One;
+  log_k_term = log_0_term;
+  log += log_k_term;
+
   for (int ii = 1; ii <= num_terms; ++ii) {
-    log += (log*(*this -Id))*((double)ii/(double)(ii+1));
+    log_k_term = (log_k_term*log_0_term)*((double)ii/(double)(ii+1));
+    log += log_k_term;
   }
   return log;
 }
