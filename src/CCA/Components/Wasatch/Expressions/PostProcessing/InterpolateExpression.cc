@@ -85,12 +85,51 @@ InterpolateExpression<SrcT, DestT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
+template class InterpolateExpression< SpatialOps::structured::SVolField,
+                                      SpatialOps::structured::SVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::SVolField,
+                                      SpatialOps::structured::XVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::SVolField,
+                                      SpatialOps::structured::YVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::SVolField,
+                                      SpatialOps::structured::ZVolField >;
+
 template class InterpolateExpression< SpatialOps::structured::XVolField,
                                       SpatialOps::structured::SVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::XVolField,
+                                      SpatialOps::structured::XVolField >; 
+
+template class InterpolateExpression< SpatialOps::structured::XVolField,
+                                      SpatialOps::structured::YVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::XVolField,
+                                      SpatialOps::structured::ZVolField >;
 
 template class InterpolateExpression< SpatialOps::structured::YVolField,
                                       SpatialOps::structured::SVolField >;
 
+template class InterpolateExpression< SpatialOps::structured::YVolField,
+                                      SpatialOps::structured::XVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::YVolField,
+                                      SpatialOps::structured::YVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::YVolField,
+                                      SpatialOps::structured::ZVolField >;
+
 template class InterpolateExpression< SpatialOps::structured::ZVolField,
                                       SpatialOps::structured::SVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::ZVolField,
+                                      SpatialOps::structured::XVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::ZVolField,
+                                      SpatialOps::structured::YVolField >;
+
+template class InterpolateExpression< SpatialOps::structured::ZVolField,
+                                      SpatialOps::structured::ZVolField >;
 //==========================================================================

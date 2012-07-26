@@ -588,29 +588,29 @@ namespace Wasatch{
     else if( params->findBlock("InterpolateExpression") ){
       Uintah::ProblemSpecP valParams = params->findBlock("InterpolateExpression");
       std::string srcFieldType;
+      std::string destFieldType;
       valParams->getAttribute("type",srcFieldType);
       Expr::Tag srcTag = Expr::Tag();
       srcTag = parse_nametag( valParams->findBlock("NameTag") );
 
       switch( get_field_type(srcFieldType) ){
         case SVOL : {
-          std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << srcFieldType << "'" << ". Trying to interpolate SVOL to SVOL is redundant." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-
+          typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
+          builder = scinew Builder(tag, srcTag);
+          break;
         }
         case XVOL : {
-          typedef typename InterpolateExpression<XVolField, SVolField>::Builder Builder;
+          typedef typename InterpolateExpression<XVolField, FieldT>::Builder Builder;
           builder = scinew Builder(tag, srcTag);
           break;
         }
         case YVOL : {
-          typedef typename InterpolateExpression<YVolField, SVolField>::Builder Builder;
+          typedef typename InterpolateExpression<YVolField, FieldT>::Builder Builder;
           builder = scinew Builder(tag, srcTag);
           break;
         }
         case ZVOL : {
-          typedef typename InterpolateExpression<ZVolField, SVolField>::Builder Builder;
+          typedef typename InterpolateExpression<ZVolField, FieldT>::Builder Builder;
           builder = scinew Builder(tag, srcTag);
           break;
         }
@@ -754,6 +754,9 @@ namespace Wasatch{
 
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
+        case XVOL : builder = build_post_processing_expr< XVolField >( exprParams );  break;
+        case YVOL : builder = build_post_processing_expr< YVolField >( exprParams );  break;
+        case ZVOL : builder = build_post_processing_expr< ZVolField >( exprParams );  break;        
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'. Postprocessing expressions are setup with SVOLFields as destination fields only." << std::endl
