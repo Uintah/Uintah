@@ -79,12 +79,16 @@ namespace Uintah {
     const VarLabel* pProgressdelFLabel_preReloc;
     const VarLabel* pVelGradLabel;
     const VarLabel* pVelGradLabel_preReloc;
+    const VarLabel* pLocalizedLabel;
+    const VarLabel* pLocalizedLabel_preReloc;
 
   protected:
 
     CMData d_initialData;
     bool d_useModifiedEOS; 
     int d_8or27;
+    bool d_taylorSeriesForDefGrad;
+    int d_numTaylorTerms; // Number of terms in series expansion
 
     // Initial stress state
     bool d_useInitialStress;
