@@ -695,8 +695,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> phi;    // phi @ current sub-level 
     CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS; 
-    // why isn't DQMOMEqn using variable-density update?
-    // (ScalarEqn is)
     constCCVariable<double> rk1_phi; // phi @ n for averaging 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
