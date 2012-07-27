@@ -476,7 +476,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, prNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo, matlIndex, d_eqnName );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
