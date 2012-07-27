@@ -1016,6 +1016,7 @@ int main(int argc, char** argv)
   bool doVerification    = false;
   saveSlices sliceFormat = asVolume;
   vector<int> matls;                      // what matls to average
+  matls.push_back(0);                     // default matl index
   //__________________________________
   // Parse arguments
 
