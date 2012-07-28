@@ -104,9 +104,9 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
   pVelGradLabel               = VarLabel::create("p.velGrad",
-                               ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
-                               ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pLocalizedLabel             = VarLabel::create("p.localized",
                                ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc    = VarLabel::create("p.localized+",
@@ -150,9 +150,9 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
   pVelGradLabel               = VarLabel::create("p.velGrad",
-                               ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
-                               ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pLocalizedLabel             = VarLabel::create("p.localized",
                                ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc    = VarLabel::create("p.localized+",
@@ -429,10 +429,10 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pvolume_old,         lb->pVolumeLabel,             pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
+    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
     old_dw->get(pProgressdelF,       pProgressdelFLabel,           pset);
     old_dw->get(pVelGrad,            pVelGradLabel,                pset);
