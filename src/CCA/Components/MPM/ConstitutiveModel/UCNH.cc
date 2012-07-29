@@ -472,8 +472,8 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps->appendElement("alpha",                  d_initialData.Alpha);
     cm_ps->appendElement("yield_distrib",          d_yield.dist);
     if (d_yield.dist == "uniform") {
-      ps->appendElement("yield_range",             d_yield.range);
-      ps->appendElement("yield_seed",              d_yield.seed);
+      cm_ps->appendElement("yield_range",             d_yield.range);
+      cm_ps->appendElement("yield_seed",              d_yield.seed);
     }
   }
   
