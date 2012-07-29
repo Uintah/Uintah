@@ -2783,6 +2783,8 @@ if test "$with_mkl"; then
        ;;
   esac
 
+  HAVE_LAPACK=$HAVE_BLAS
+
   CBLAS_H="mkl_cblas.h"
   HAVE_CBLAS=$HAVE_BLAS
   DEF_CBLAS="#define HAVE_CBLAS 1"
