@@ -610,7 +610,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       }
 
       // More Pressure Stabilization
-      if(flag->d_doPressureStabilization && J > 0.0) {
+      if(flag->d_doPressureStabilization) {
         IntVector cell_index;
         patch->findCell(px[idx],cell_index);
 
@@ -628,6 +628,8 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       //   are available -- see LS-DYNA manual)
       //       df/dt = G (1-f) p^b
       //       Forward Euler: f_{n+1} = f_n + G*(1-f_n)*p_n^b*delT
+      //       Backward Euler: f_{n+1} = f_n + G*(1-f_{n+1})*p_n^b*delT
+      //                       or, f_{n+1} = (f_n + G*p_n^b*delT)/(1 + G*p_n^b*delT)
       //       Fourth-order R-K: f_{n+1} = f_n + 1/6(k1 + 2k2 + 2k3 + k4)
       //         k1 = G*(1-f_n)*p_n^b*delT
       //         k2 = G*(1-f_n-k1/2)*p_n^b*delT
@@ -640,25 +642,32 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       double f_new = f_old;
       if(pressure > d_ignition_pressure)  
       {
-        if (fabs(2.0*f_old - 1.0) <= 1.0) {
-          int numCycles = (int) ceil(delT/5.0e-11);  // Time step harded at 5.0e-11 secs
-          double delTinc = delT/((double)numCycles);
-          for (int ii = 0; ii < numCycles; ++ii) {
-            double fac = (delTinc*d_G)*pow(pressure, d_b);
-            // Forward Euler
-            // f_inc = (1.0 - f_old)*fac;
-            // Fourth-order R-K
-            double k1 = (1.0 - f_old)*fac;
-            double k2 = (1.0 - f_old - 0.5*k1)*fac;
-            double k3 = (1.0 - f_old - 0.5*k2)*fac;
-            double k4 = (1.0 - f_old - k3)*fac;
-            f_inc = 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
-            f_new = f_old + f_inc;
-          }
+        // cerr << " pressure = " << pressure << " ignition = " << d_ignition_pressure << endl;
+        int numCycles = max(1, (int) ceil(delT/5.0e-11));  // Time step harded at 5.0e-11
+        double delTinc = delT/((double)numCycles);
+        for (int ii = 0; ii < numCycles; ++ii) {
+          double fac = (delTinc*d_G)*pow(pressure, d_b);
+
+          // Forward Euler
+          // f_inc = (1.0 - f_old)*fac;
+          // f_new = f_old + f_inc;
+
+          // Backward Euler
+          f_new = (f_old + fac)/(1.0 + fac);
+          f_inc = f_new - f_old;
+
+          // Fourth-order R-K
+          // double k1 = (1.0 - f_old)*fac;
+          // double k2 = (1.0 - f_old - 0.5*k1)*fac;
+          // double k3 = (1.0 - f_old - 0.5*k2)*fac;
+          // double k4 = (1.0 - f_old - k3)*fac;
+          // f_inc = 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
+          // f_new = f_old + f_inc;
+
+          if (f_new < 0.0) f_new = 0.0;
+          if (f_new > 0.2) f_new = 0.2;  // Max volume fraction hardcoded to 20 %
+          
         }
-        // if (fabs(2.0*f_new - 1.0) > 1.0) {
-        //   cerr << " after cycling volume fraction burned is " << f_new << endl;
-        // }
       }
       pProgressdelF_new[idx] = f_inc;
       pProgressF_new[idx] = f_new;
@@ -685,15 +694,15 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
       // compute the total stress
       pstress_new[idx] = Identity*(-pressure_new);
-      if (isnan(pstress_new[idx].Norm())) {
-        cerr << "particle = " << idx << " velGrad = " << pVelGrad_new[idx] << " stress_old = " << pstress[idx] << endl;
-        cerr << " stress = " << pstress_new[idx] 
-             << "  pProgressdelF_new = " << pProgressdelF_new[idx] 
-             << "  pProgressF_new = " << pProgressF_new[idx] 
-             << " pm = " << pM << " pJWL = " << pJWL <<  " rho_cur = " << rho_cur << endl;
-        cerr << " pmass = " << pmass[idx] << " pvol = " << pvolume[idx] << endl;
-        throw InvalidValue("**JWLppMPM ERROR**: Nan in stress value", __FILE__, __LINE__);
-      }
+      //if (isnan(pstress_new[idx].Norm()) || pstress_new[idx].Norm() > 1.0e20) {
+      //  cerr << "particle = " << idx << " velGrad = " << pVelGrad_new[idx] << " stress_old = " << pstress[idx] << endl;
+      //  cerr << " stress = " << pstress_new[idx] 
+      //       << "  pProgressdelF_new = " << pProgressdelF_new[idx] 
+      //       << "  pProgressF_new = " << pProgressF_new[idx] 
+      //       << " pm = " << pM << " pJWL = " << pJWL <<  " rho_cur = " << rho_cur << endl;
+      //  cerr << " pmass = " << pmass[idx] << " pvol = " << pvolume[idx] << endl;
+      //  throw InvalidValue("**JWLppMPM ERROR**: Nan in stress value", __FILE__, __LINE__);
+      //}
 
       Vector pvelocity_idx = pvelocity[idx];
       //if (isnan(pvelocity[idx].length())) {
