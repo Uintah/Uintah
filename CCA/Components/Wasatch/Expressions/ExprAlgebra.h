@@ -25,61 +25,63 @@ template< typename FieldT,
 class ExprAlgebra
  : public Expr::Expression<FieldT>
 {
-
-  enum OperationType{
-    SUM,
-    DIFFERENCE,
-    PRODUCT
-  };
-
-  const Expr::Tag src1Tag_, src2Tag_;
-  const SrcT1* src1_;
-  const SrcT2* src2_;
-  const OperationType algebraicOperation_;
-
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT1, FieldT >::type  Src1InterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT2, FieldT >::type  Src2InterpT;
-
-  const Src1InterpT* src1InterpOp_; ///< Interpolate source 1 to the FieldT where we are building the result
-  const Src2InterpT* src2InterpOp_; ///< Interpolate source 21 to the FieldT where we are building the result
-
-    ExprAlgebra( const Expr::Tag& src1Tag,
-                 const Expr::Tag& src2Tag,
-                 const OperationType algebraicOperation );
 public:
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    /**
-     *  @brief Build a ExprAlgebra expression.  Note that this should
-     *   only be used for initialization or post-processing - not in
-     *   performance critical operations.
-     *
-     *  @param resultTag the tag for the value that this expression computes
-     *
-     *  @param src1Tag the tag to hold the value of the first source field
-     *
-     *  @param src2Tag the tag to hold the value of the second source field
-     *
-     *  @param algebraicOperation a string which contains the algebraic operator name
-     */
-    Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& src1Tag,
-             const Expr::Tag& src2Tag,
-             const std::string& algebraicOperation );
+   enum OperationType{
+     SUM,
+     DIFFERENCE,
+     PRODUCT
+   };
 
-    Expr::ExpressionBase* build() const;
+public:
+   class Builder : public Expr::ExpressionBuilder
+   {
+   public:
+     /**
+      *  @brief Build a ExprAlgebra expression.  Note that this should
+      *   only be used for initialization or post-processing - not in
+      *   performance critical operations.
+      *
+      *  @param resultTag the tag for the value that this expression computes
+      *
+      *  @param src1Tag the tag to hold the value of the first source field
+      *
+      *  @param src2Tag the tag to hold the value of the second source field
+      *
+      *  @param algebraicOperation selects the operation to apply
+      */
+     Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& src1Tag,
+              const Expr::Tag& src2Tag,
+              const OperationType algebraicOperation );
 
-  private:
-    const Expr::Tag src1Tag_, src2Tag_;
-    OperationType algebraicOperation_;
-  };
+     Expr::ExpressionBase* build() const;
 
-  ~ExprAlgebra();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void evaluate();
+   private:
+     const Expr::Tag src1Tag_, src2Tag_;
+     const OperationType algebraicOperation_;
+   };
+
+   ~ExprAlgebra();
+   void advertise_dependents( Expr::ExprDeps& exprDeps );
+   void bind_fields( const Expr::FieldManagerList& fml );
+   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+   void evaluate();
+
+private:
+   const Expr::Tag src1Tag_, src2Tag_;
+   const SrcT1* src1_;
+   const SrcT2* src2_;
+   const OperationType algebraicOperation_;
+
+   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT1, FieldT >::type  Src1InterpT;
+   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT2, FieldT >::type  Src2InterpT;
+
+   const Src1InterpT* src1InterpOp_; ///< Interpolate source 1 to the FieldT where we are building the result
+   const Src2InterpT* src2InterpOp_; ///< Interpolate source 21 to the FieldT where we are building the result
+
+  ExprAlgebra( const Expr::Tag& src1Tag,
+               const Expr::Tag& src2Tag,
+               const OperationType algebraicOperation );
 };
 
 
@@ -173,22 +175,12 @@ ExprAlgebra<FieldT,SrcT1,SrcT2>::
 Builder::Builder( const Expr::Tag& resultTag,
                   const Expr::Tag& src1Tag,
                   const Expr::Tag& src2Tag,
-                  const std::string& algebraicOperation )
+                  const OperationType algebraicOperation )
   : ExpressionBuilder( resultTag ),
     src1Tag_( src1Tag ),
-    src2Tag_( src2Tag )
-{
-  if      (algebraicOperation == "SUM"       ) algebraicOperation_ = SUM;
-  else if (algebraicOperation == "DIFFERENCE") algebraicOperation_ = DIFFERENCE;
-  else if (algebraicOperation == "PRODUCT"   ) algebraicOperation_ = PRODUCT;
-  else {
-    std::ostringstream msg;
-    msg << __FILE__ << " : " << __LINE__ << std::endl
-    << "ERROR: The operator " << algebraicOperation
-    << " is not supported in ExprAlgebra." << std::endl;
-    throw std::invalid_argument( msg.str() );
-  }
-}
+    src2Tag_( src2Tag ),
+    algebraicOperation_( algebraicOperation )
+{}
 
 //--------------------------------------------------------------------
 

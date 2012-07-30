@@ -693,9 +693,12 @@ namespace Wasatch{
     if( icFactory.have_entry( thisVelTag_ ) ){
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file
-      typedef typename ExprAlgebra<FieldT,FieldT,SVolField>::Builder ExprAlgbr;
-      return icFactory.register_expression( new ExprAlgbr( mom_tag(thisMomName_), thisVelTag_,
-                                                           Expr::Tag(densityTag_.name(),Expr::STATE_NONE), "PRODUCT") );
+      typedef ExprAlgebra<FieldT,FieldT,SVolField> ExprAlgbr;
+      return icFactory.register_expression(
+          new typename ExprAlgbr::Builder( mom_tag(thisMomName_),
+                                           thisVelTag_,
+                                           Expr::Tag(densityTag_.name(),Expr::STATE_NONE),
+                                           ExprAlgbr::PRODUCT ) );
     }
 
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
