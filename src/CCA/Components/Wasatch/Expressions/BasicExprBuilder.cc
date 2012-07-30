@@ -151,10 +151,22 @@ namespace Wasatch{
       const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
       const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
       valParams->getAttribute("algebraicOperation",algebraicOperation);
+
       // for now, only support parsing for fields of same type.  In the future,
       // we could extend parsing support for differing source field types.
-      typedef typename ExprAlgebra<FieldT,FieldT,FieldT>::Builder Builder;
-      builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );
+      typedef ExprAlgebra<FieldT,FieldT,FieldT> AlgExpr;
+      typename AlgExpr::OperationType optype;
+      if      (algebraicOperation == "SUM"       ) optype = AlgExpr::SUM;
+      else if (algebraicOperation == "DIFFERENCE") optype = AlgExpr::DIFFERENCE;
+      else if (algebraicOperation == "PRODUCT"   ) optype = AlgExpr::PRODUCT;
+      else {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: The operator " << algebraicOperation
+        << " is not supported in ExprAlgebra." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }
+      builder = scinew typename AlgExpr::Builder( tag, field1Tag, field2Tag, optype );
     }
 
     else if ( params->findBlock("Cylinder") ) {
