@@ -48,7 +48,9 @@ echo "Building Wasatch Thirdparty Libraries..."
 echo ""
 echo "  Using Boost: $BOOST_DIR"
 echo ""
-
+echo "  Using Cmake: "`which cmake`
+echo ""
+echo "------------------------------------------------------------------"
 ############################################################################
 # Go to build/install directory
 
