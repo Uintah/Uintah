@@ -337,7 +337,7 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
       
       varLabels.push_back(label);
       // so the variable is not scrubbed from the data warehouse
-      sched->overrideVariableBehavior(varName, false, false, true);
+      sched->overrideVariableBehavior(varName, false, false, true, false, false);
     }
 
     d_initVars[comp]->varLabels = varLabels;
@@ -351,7 +351,7 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
       d_carryOverVarLabels.push_back(label);
       
       // so variable is not scrubbed from the data warehouse
-      sched->overrideVariableBehavior(d_carryOverVars[i], false, false, true);
+      sched->overrideVariableBehavior(d_carryOverVars[i], false, false, true, false, false);
     }
     else {
       string error = "ERROR: Switcher: Cannot find carry_over VarLabel" + d_carryOverVars[i];

@@ -188,32 +188,42 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   //manual manipulate the scheduling of copy data
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
+
+  //overrideVariableBehavior(string var, bool treatAsOld, bool copyData, bool noScrub, bool notCopyData, bool noCheckpoint)
+  //                             (1)             (2)             (3)           (4)            (5)            (6)
+  //  treatAsOld:     var - will be checkpointed, copied, and only scrubbed from an OldDW
+  //  copyData:       copy variable between AMR levels
+  //  noScrub:        set variable not to scrub (normally when needed between a normal taskgraph
+  //                  and the regridding phase)
+  //  notCopyData:    ignore copying this variable between AMR levels
+  //  noCheckpoint:   do not checkpoint this variable.
+  
   // we need these for AMRICE::refine
-  sched->overrideVariableBehavior("specific_heat",true, true, false);
-  sched->overrideVariableBehavior("gamma",        true, true, false);
-  sched->overrideVariableBehavior("vol_frac_CC",  true, true, false);
-  sched->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true, false);
+  sched->overrideVariableBehavior("specific_heat",true, true, false, false, false);
+  sched->overrideVariableBehavior("gamma",        true, true, false, false, false);
+  sched->overrideVariableBehavior("vol_frac_CC",  true, true, false, false, false);
+  sched->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true,  false, false, false);
   if (d_with_mpm)
-    sched->overrideVariableBehavior("temp_CC",      true, true, false);
+    sched->overrideVariableBehavior("temp_CC",      true, true, false, false, false);
 
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
   
-  sched->overrideVariableBehavior("mass_X_FC_flux",     false, false, true);
-  sched->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true);
-  sched->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true);
-  sched->overrideVariableBehavior("mom_X_FC_flux",      false, false, true);
-  sched->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true);
-  sched->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true);
-  sched->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true);
-  sched->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true);
-  sched->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true);
-  sched->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true);
-  sched->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true);
-  sched->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true);
-  sched->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true);
-  sched->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true);
-  sched->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mass_X_FC_flux",     false, false, true, false, false);
+  sched->overrideVariableBehavior("mass_Y_FC_flux",     false, false, true, false, false);
+  sched->overrideVariableBehavior("mass_Z_FC_flux",     false, false, true, false, false);
+  sched->overrideVariableBehavior("mom_X_FC_flux",      false, false, true, false, false);
+  sched->overrideVariableBehavior("mom_Y_FC_flux",      false, false, true, false, false);
+  sched->overrideVariableBehavior("mom_Z_FC_flux",      false, false, true, false, false);
+  sched->overrideVariableBehavior("sp_vol_X_FC_flux",   false, false, true, false, false);
+  sched->overrideVariableBehavior("sp_vol_Y_FC_flux",   false, false, true, false, false);
+  sched->overrideVariableBehavior("sp_vol_Z_FC_flux",   false, false, true, false, false);
+  sched->overrideVariableBehavior("int_eng_X_FC_flux",  false, false, true, false, false);
+  sched->overrideVariableBehavior("int_eng_Y_FC_flux",  false, false, true, false, false);
+  sched->overrideVariableBehavior("int_eng_Z_FC_flux",  false, false, true, false, false);
+  sched->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true, false, false);
+  sched->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true, false, false);
+  sched->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true, false, false);
   
   //__________________________________
   // MODELS
@@ -224,9 +234,9 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string varLabelX = rvar->var_X_FC_flux->getName();
     string varLabelY = rvar->var_Y_FC_flux->getName();
     string varLabelZ = rvar->var_Z_FC_flux->getName();
-    sched->overrideVariableBehavior(varLabelX, false, false, true);
-    sched->overrideVariableBehavior(varLabelY, false, false, true);
-    sched->overrideVariableBehavior(varLabelZ, false, false, true);
+    sched->overrideVariableBehavior(varLabelX, false, false, true, false, false);
+    sched->overrideVariableBehavior(varLabelY, false, false, true, false, false);
+    sched->overrideVariableBehavior(varLabelZ, false, false, true, false, false);
   } 
 }
 //___________________________________________________________________              

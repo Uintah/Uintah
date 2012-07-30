@@ -216,10 +216,14 @@ WARNING
 
     //! override default behavior of copying, scrubbing, and such
     virtual void overrideVariableBehavior(std::string var, bool treatAsOld, 
-                                          bool copyData, bool noScrub);
+                                          bool copyData, bool noScrub,
+                                          bool notCopyData=false, bool notCheckpoint=false);
 
     const std::set<std::string>& getNoScrubVars() { return noScrubVars_;}
     const std::set<std::string>& getCopyDataVars() { return copyDataVars_;}
+    const std::set<std::string>& getNotCopyDataVars() { return notCopyDataVars_;}
+    virtual const std::set<std::string>& getNotCheckPointVars() const
+              { return notCheckpointVars_;}       
 
     virtual bool useInternalDeps();
     
@@ -294,12 +298,18 @@ WARNING
     // so we can manually copy vars between AMR levels
     std::set<std::string> copyDataVars_;
 
+    // ignore copying these vars between AMR levels
+    std::set<std::string> notCopyDataVars_;
+
     // vars manually set not to scrub (normally when needed between a normal taskgraph
     // and the regridding phase)
     std::set<std::string> noScrubVars_;
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
     std::set<std::string> treatAsOldVars_;
+    
+    // do not checkpoint these variables
+    std::set<std::string> notCheckpointVars_;
     
   private:
 
