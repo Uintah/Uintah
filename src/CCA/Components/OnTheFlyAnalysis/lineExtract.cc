@@ -30,13 +30,14 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
+
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -51,12 +52,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <sys/stat.h>
-#ifndef _WIN32
 #include <dirent.h>
-#endif
 #include <iostream>
 #include <fstream>
-
 #include <cstdio>
 
 
@@ -77,6 +75,7 @@ lineExtract::lineExtract(ProblemSpecP& module_spec,
   d_prob_spec = module_spec;
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
+  d_zero_matl = 0;
   ps_lb = scinew lineExtractLabel();
 }
 
@@ -87,7 +86,12 @@ lineExtract::~lineExtract()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
+   if(d_zero_matl && d_zero_matl->removeReference()) {
+    delete d_zero_matl;
+  } 
+  
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
+  VarLabel::destroy(ps_lb->fileVarsStructLabel);
   delete ps_lb;
   
   // delete each line
@@ -106,8 +110,6 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
   
   int numMatls  = d_sharedState->getNumMatls();
-  cout << " numMatls  "<< numMatls << endl;
-  
   if(!d_dataArchiver){
     throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
   }
@@ -115,12 +117,14 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
 
+  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo", 
+                                            PerPatch<FileInfoP>::getTypeDescription());       
+                                            
   //__________________________________
   //  Read in timing information
   d_prob_spec->require("samplingFrequency", d_writeFreq);
   d_prob_spec->require("timeStart",         d_StartTime);            
   d_prob_spec->require("timeStop",          d_StopTime);
-
 
   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
@@ -179,6 +183,11 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   //Construct the matl_set
   d_matl_set->addAll(m);
   d_matl_set->addReference();
+
+  // for fileInfo variable
+  d_zero_matl = scinew MaterialSubset();
+  d_zero_matl->add(0);
+  d_zero_matl->addReference();
   
   //__________________________________
   //  Read in variables label names                
@@ -339,6 +348,7 @@ void lineExtract::scheduleInitialize(SchedulerP& sched,
                   this, &lineExtract::initialize);
   
   t->computes(ps_lb->lastWriteTimeLabel);
+  t->computes(ps_lb->fileVarsStructLabel, d_zero_matl); 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -355,6 +365,14 @@ void lineExtract::initialize(const ProcessorGroup*,
     double tminus = -1.0/d_writeFreq;
     new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
 
+    //__________________________________
+    //  initialize fileInfo struct
+    PerPatch<FileInfoP> fileInfo;
+    FileInfo* myFileInfo = scinew FileInfo();
+    fileInfo.get() = myFileInfo;
+    
+    new_dw->put(fileInfo,    ps_lb->fileVarsStructLabel, 0, patch);
+    
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = d_dataArchiver->getOutputLocation();
 
@@ -383,10 +401,17 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   cout_doing << "lineExtract::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("lineExtract::doAnalysis", 
                    this,&lineExtract::doAnalysis);
+   
+  // Tell the scheduler to not copy this variable to a new AMR grid and 
+  // do not checkpoint it.
+  sched->overrideVariableBehavior("FileInfo", false, false, false, true, true); 
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
-  
+  t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, Ghost::None, 0);
+    
   Ghost::GhostType gac = Ghost::AroundCells;
+  
+
   
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
@@ -406,7 +431,10 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
       delete matSubSet;
     }
   }
+  
   t->computes(ps_lb->lastWriteTimeLabel);
+  t->computes(ps_lb->fileVarsStructLabel, d_zero_matl);
+  
   sched->addTask(t, level->eachPatch(), d_matl_set);
 
 }
@@ -432,6 +460,23 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    // open the struct that contains a map of the file pointers. 
+    // Note: after regridding this may not exist for this patch in the old_dw
+    PerPatch<FileInfoP> fileInfo;
+    
+    if( old_dw->exists( ps_lb->fileVarsStructLabel, 0, patch ) ){
+      old_dw->get(fileInfo, ps_lb->fileVarsStructLabel, 0, patch);
+    }else{  
+      FileInfo* myFileInfo = scinew FileInfo();
+      fileInfo.get() = myFileInfo;
+    }
+    
+    std::map<string, FILE *> myFiles;
+
+    if( fileInfo.get().get_rep() ){
+      myFiles = fileInfo.get().get_rep()->files;
+    }    
     
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
@@ -581,20 +626,25 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           ostringstream fname;
           fname<<path<<"/i"<< c.x() << "_j" << c.y() << "_k"<< c.z();
           string filename = fname.str();
-    
-          //create file and write the file header  
-          ifstream test(filename.c_str());
-          if (!test){
-            createFile(filename);
-          }
 
-          PerPatch<FileInfoP> filevar;
+          //__________________________________
+          //  Open the file pointer 
+          //  if it's not in the fileInfo struct then create it
           FILE *fp;
-          fp = fopen(filename.c_str(), "a");
-          if (!fp){
-            throw InternalError("\nERROR:dataAnalysisModule:lineExtract:  failed opening file"+filename,__FILE__, __LINE__);
+          
+          if( myFiles.count(filename) == 0 ){
+            createFile(filename);
+            fp = fopen(filename.c_str(), "a");
+            myFiles[filename] = fp;
+          
+          } else {
+            fp = myFiles[filename];
           }
           
+          if (!fp){
+            throw InternalError("\nERROR:dataAnalysisModule:lineExtract:  failed opening file"+filename,__FILE__, __LINE__);
+          }   
+
           // write cell position and time
           Point here = patch->cellPosition(c);
           double time = d_dataArchiver->getCurrentTime();
@@ -633,19 +683,30 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           }
           
           fprintf(fp,    "\n");
-          fclose(fp);
         }  // loop over points
       }  // loop over lines 
       lastWriteTime = now;     
     }  // time to write data
-     
-   new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel); 
+    
+    // put the file pointers into the DataWarehouse
+    // these could have been altered. You must
+    // reuse the Handle fileInfo and just replace the contents   
+    fileInfo.get().get_rep()->files = myFiles;
+
+    new_dw->put(fileInfo,                   ps_lb->fileVarsStructLabel, 0, patch);
+    new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel); 
   }  // patches
 }
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
 void lineExtract::createFile(string& filename)
-{ 
+{
+  // if the file already exists then exit.  The file could exist but not be owned by this processor
+  ifstream doExists( filename.c_str() );
+  if(doExists){
+    return;
+  }
+  
   FILE *fp;
   fp = fopen(filename.c_str(), "w");
   fprintf(fp,"X_CC      Y_CC      Z_CC      Time"); 

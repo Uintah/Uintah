@@ -39,14 +39,23 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
 struct FileInfo : public RefCounted {
-  std::vector<FILE *> files;
+  
+  std::map<string, FILE *> files;       // filename is the key
+  
   // constructor computes the values
   FileInfo() {};
+  
   ~FileInfo(){
-    for (vector<FILE *>::size_type i=0; i<files.size(); i++) 
-      fclose(files[i]);
+    std::map<string, FILE *>::iterator it;
+    
+    for ( it=files.begin() ; it != files.end(); it++ ){
+      //std::cout << " closing file " << (*it).first << std::endl;
+      fclose((*it).second);
+    }
+
   };
 };
+
 
 typedef Handle<FileInfo> FileInfoP;
 
