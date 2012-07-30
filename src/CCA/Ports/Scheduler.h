@@ -133,6 +133,8 @@ WARNING
     virtual const std::vector<const Task::Dependency*>& getInitialRequires() = 0;
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
+    virtual const std::set<std::string>& getNotCheckPointVars() const = 0;    
+    
 
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
@@ -180,7 +182,8 @@ WARNING
 
 
     virtual void overrideVariableBehavior(std::string var, bool treatAsOld, 
-                                          bool copyData, bool noScrub) = 0;
+                                          bool copyData, bool noScrub,
+                                          bool notCopyData, bool noCheckpoint) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing

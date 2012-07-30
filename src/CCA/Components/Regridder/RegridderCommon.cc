@@ -413,8 +413,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
 
   // we need these so they don't get scrubbed
-  sched_->overrideVariableBehavior("DilatedCellsStability", true, false, false);
-  sched_->overrideVariableBehavior("DilatedCellsRegrid", true, false, false);
+  sched_->overrideVariableBehavior("DilatedCellsStability", true, false, false, false, false);
+  sched_->overrideVariableBehavior("DilatedCellsRegrid",    true, false, false, false, false);
 
   //d_lastRegridTimestep=d_sharedState->getCurrentTopLevelTimeStep();
 

@@ -2163,6 +2163,10 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    dbg << "initCheckpoints called\n";
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
+   
+   // special variables to not checkpoint
+   const set<string>& notCheckPointVars = sched->getNotCheckPointVars();
+   
    SaveItem saveItem;
    d_checkpointReductionLabels.clear();
    d_checkpointLabels.clear();
@@ -2225,11 +2229,18 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
          hasDelT = true;
        }
      }
-     if (saveItem.label_->typeDescription()->isReductionVariable()) {
-       d_checkpointReductionLabels.push_back(saveItem);
+     
+     // Skip this variable if the default behavior of variable has been overwritten.
+     // For example ignore checkpointing PerPatch<FileInfo> variable
+     bool skipVar = ( notCheckPointVars.count(saveItem.label_->getName() ) > 0 );
+     
+     if( !skipVar ) {
+       if ( saveItem.label_->typeDescription()->isReductionVariable() ) {
+         d_checkpointReductionLabels.push_back(saveItem);
+       } else {
+         d_checkpointLabels.push_back(saveItem);
+       }
      }
-     else
-       d_checkpointLabels.push_back(saveItem);
    }
 
 

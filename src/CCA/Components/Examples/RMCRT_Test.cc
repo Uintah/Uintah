@@ -124,7 +124,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 
   //manually manipulate the scheduling of copy data for the shootRay task
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-  sched->overrideVariableBehavior("color",false, false, true);
+  sched->overrideVariableBehavior("color",false, false, true, false, false);
 
   //__________________________________
   //  RMCRT

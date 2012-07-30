@@ -1015,9 +1015,18 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       for( const Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next ){
         bool copyThisVar = dep->whichdw == Task::OldDW;
         // override to manually copy a var
-        if (!copyThisVar)
-          if (copyDataVars_.find(dep->var->getName()) != copyDataVars_.end())
+        if (!copyThisVar){
+         
+          if (copyDataVars_.find(dep->var->getName()) != copyDataVars_.end()) {
             copyThisVar = true;
+          }
+        }
+
+        // Overide the logic above.  There are PerPatch variables that cannot/shouldn't be copied to the new grid,
+        // for example PerPatch<FileInfo>.
+        if (notCopyDataVars_.count(dep->var->getName()) > 0  ){
+          copyThisVar = false;
+        }
 
         if (copyThisVar) {
           if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
@@ -1489,18 +1498,36 @@ SchedulerCommon::scheduleParticleRelocation(const LevelP& level,
 
 
 void SchedulerCommon::overrideVariableBehavior(string var, bool treatAsOld, 
-                                               bool copyData, bool noScrub)
+                                               bool copyData, bool noScrub,
+                                               bool notCopyData, bool noCheckpoint)
 {
+  // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
   if (treatAsOld) {
     treatAsOldVars_.insert(var);
   }
+  
+  // manually copy variable between AMR levels
   if (copyData) {
     copyDataVars_.insert(var);
     noScrubVars_.insert(var);
   }
+  
+  // ignore copying this variable between AMR levels
+  if (notCopyData) {
+    notCopyDataVars_.insert(var);
+  }
+    
+  // set variable not to scrub (normally when needed between a normal taskgraph
+  // and the regridding phase)
   if (noScrub) {
     noScrubVars_.insert(var);
   }
+  
+  // do not checkpoint this variable.
+  if ( noCheckpoint ){
+    notCheckpointVars_.insert(var);
+  }
+
 }
 
 //______________________________________________________________________
