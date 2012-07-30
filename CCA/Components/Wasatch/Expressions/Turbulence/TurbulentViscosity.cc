@@ -16,10 +16,10 @@ TurbulentViscosity( const Expr::Tag rhoTag,
 : Expr::Expression<SVolField>(),
   isConstSmag_(turbulenceParameters_.turbulenceModelName != Wasatch::DYNAMIC),
   turbulenceParameters_ ( turbParams ),
-  rhoTag_        ( rhoTag            ),
   strTsrMagTag_  ( strTsrMagTag      ),
   sqStrTsrMagTag_( sqStrTsrMagTag    ),
-  smagTag_       ( Expr::Tag() )
+  smagTag_       ( Expr::Tag()       ),
+  rhoTag_        ( rhoTag            )
 {}
 
 //--------------------------------------------------------------------
