@@ -189,7 +189,7 @@ EOF
 fi
 
 
-PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
+PATH="$PATH":"$SCRIPT_DIR"
 export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building
