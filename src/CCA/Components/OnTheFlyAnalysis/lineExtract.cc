@@ -152,6 +152,8 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in the optional material index from the variables that may be different
   //  from the default index
   vector<int> m;
+  
+  m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
@@ -407,7 +409,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   sched->overrideVariableBehavior("FileInfo", false, false, false, true, true); 
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
-  t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, Ghost::None, 0);
+  t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
     
   Ghost::GhostType gac = Ghost::AroundCells;
   
