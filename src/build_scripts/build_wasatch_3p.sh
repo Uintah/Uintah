@@ -67,6 +67,13 @@ run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps.git SpatialOps
 run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 
+# begin debugging
+run "pwd"
+run "ls -l"
+run "which cmake"
+run "cmake --version"
+# end debugging
+
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
 
 run \
