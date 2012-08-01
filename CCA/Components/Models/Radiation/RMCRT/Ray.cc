@@ -42,6 +42,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <time.h>
+#include<fstream>
+
 
 #include <sci_defs/cuda_defs.h>
 
@@ -144,10 +146,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Warnings and bulletproofing
-  if (_benchmark > 4 || _benchmark < 0  ){
+  if (_benchmark > 5 || _benchmark < 0  ){
     ostringstream warn;
     warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
-    warn << "Specify a value of 1 through 4 to run a benchmark case, or 0 otherwise." << endl;
+    warn << "Specify a value of 1 through 5 to run a benchmark case, or 0 otherwise." << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
@@ -335,7 +337,7 @@ Ray::initProperties( const ProcessorGroup* pc,
       }
     }
 
-    if(_benchmark == 4) {  // Siegel isotropic scattering
+    if(_benchmark == 4 || _benchmark == 5) {  // Siegel isotropic scattering
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
         abskg[c] = _abskgBench4;
@@ -653,14 +655,23 @@ Ray::rayTrace( const ProcessorGroup* pc,
     if( _solveBoundaryFlux){
       vector<Patch::FaceType> bf;
 
+      IntVector pLow;
+      IntVector pHigh;
+      level->findInteriorCellIndexRange(pLow, pHigh);
+      int Nx = pHigh[0] - pLow[0];
 
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
       if (CellToValuesMap.empty()){
+        CellToValuesMap.clear();
+        PatchToCellsMap.clear(); // !! Test to make sure this doesn't wipe out data from other patches
         // initialize fluxes to zero
         Flux Flux_;
         Flux_.incident = 0;
         Flux_.net = 0;
+
+
+
         for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector origin = *iter;
           
@@ -673,11 +684,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
           int nWallTypes = 3;
           int wallTypes[3] = {6,7,8}; // make a std::vector
           int face = -1;
+          if(_benchmark==4 || _benchmark==5) face = 5; // Benchmark4 benchmark5
           if (has_a_boundary(origin, wallTypes, nWallTypes, celltype, face)){
+          //  if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
             originAndFace.push_back( origin.x() );
             originAndFace.push_back( origin.y() );
             originAndFace.push_back( origin.z() );
             originAndFace.push_back( face );
+
 
 
             CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
@@ -688,9 +702,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 
-      IntVector pLow;
-      IntVector pHigh;
-      level->findInteriorCellIndexRange(pLow, pHigh);
+
 
       //_____________________________________________
       //   Ordering for Surface Method
@@ -730,10 +742,58 @@ Ray::rayTrace( const ProcessorGroup* pc,
       locationShift[5] = IntVector(0, 0, 0);
 
 
+      /*  Benchmark4
+      // Loop over 40 kappa and sigma_s values
 
+      // open sigma_s
+      char inputFilename[] = "sigma_s.txt";
+      ifstream inFile;
+      inFile.open(inputFilename, ios::in);
+      if (!inFile) {
+        cerr << "Can't open input file " << inputFilename << endl;
+        exit(1);
+      }
+      double sigma_s[40];
+      double kappa[40];
+
+      // open kappa
+      char inputFilename2[] = "kappa.txt";
+      ifstream inFile2;
+      inFile2.open(inputFilename2, ios::in);
+      if (!inFile2) {
+        cerr << "Can't open input file 2" << inputFilename << endl;
+        exit(1);
+      }
+
+      //assign kappa and sigma_s and LOOP over 40 values
+      int i_s=0;
+      while (!inFile.eof()) {
+        inFile >> sigma_s[i_s];
+        i_s++;
+      }
+      i_s = 0;
+      while(!inFile2.eof()) {
+        inFile2 >> kappa[i_s];
+        i_s++;
+      }
+
+      i_s=0;
+       while(i_s<40) {
+
+        _abskgBench4 = kappa[i_s];
+        _sigmaScat = sigma_s[i_s];
+        i_s++;
+
+
+        //cout << _sigmaScat << endl;
+        //cout << _abskgBench4 << endl;
+*/
+      FILE * f;
+      if(_benchmark==5){
+        f=fopen("benchmark5.txt", "w");
+      }
     //__________________________________
     // Loop over boundary faces and compute incident radiative flux
-
       for (map<std::vector<int>,Flux>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
         int i = itr->first[0];
         int j = itr->first[1];
@@ -743,12 +803,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
         int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
         IntVector origin = IntVector(i,j,k);
 
-        //  int i = origin.x();
-        //  int j = origin.y();
-        //  int k = origin.z();
+         // int i = origin.x();
+         // int j = origin.y();
+         // int k = origin.z();
+
 
         // quick flux debug test
-        //if(face==3 && j==Ny-1 && k==Nz/2){  // Burns flux locations
+        //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
+        //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
 
         double sumI     = 0;
         double sumProjI = 0;
@@ -777,7 +839,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           
           // Put direction vector as coming from correct face
           adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
-
+//cout << "direction_vector: " << direction_vector << endl;
           Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
           double DyDxRatio = Dx.y() / Dx.x(); //noncubic
@@ -792,15 +854,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
           
           // Put point on correct face
           adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
-
+//cout << "ray location: " << ray_location << endl;
           ray_location[0] += i;
           ray_location[1] += j;
           ray_location[2] += k;
-
-          updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+         updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
 
           sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                 // from all the rays up to that point
+
+
+          // from all the rays up to that point
           sumI_prev = sumI;
 
         } // end of flux ray loop
@@ -809,11 +872,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //  Compute Net Flux to the boundary
         //itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
         itr->second.incident = sumProjI * 2*_pi/_NoOfRays;
-        itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi;
-        // cout << itr->second << endl;
+        itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
+
+        cout << itr->second.incident << endl;
+        if(_benchmark==5)fprintf(f, "%lf \n",itr->second.incident);
 
         //} // end of quick flux debug
       } // end of iterating through boundary map
+      if(_benchmark==5) fclose(f);
+
+    //}// end of file for benchmark4 verification test
     } // end if _solveBoundaryFlux
         
          
@@ -1993,7 +2061,7 @@ void Ray::carryForward ( const ProcessorGroup*,
 
 //______________________________________________________________________
 void Ray::updateSumI ( Vector& inv_direction_vector,
-                       const Vector& ray_location,
+                       Vector& ray_location,
                        const IntVector& origin,
                        const Vector& Dx,
                        const IntVector& domainLo,
@@ -2005,9 +2073,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
                        MTRand * _mTwister)
 
 {
+
   IntVector cur = origin;
   IntVector prevCell = cur;
-
   // Step and sign for ray marching
    int step[3];                                          // Gives +1 or -1 based on sign
    bool sign[3];
@@ -2045,8 +2113,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    //#define SCATTER 1
    #ifdef SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
+   if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
-   // determine the length at which scattering will occur
+   // Determine the length at which scattering will occur
    // CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
    double scatLength = -log(_mTwister->randDblExc() ) / scatCoeff;
    double curLength = 0;
@@ -2106,6 +2175,30 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          }
        }
 
+       ray_location[0] = ray_location[0] + (disMin  / inv_direction_vector[0]);
+       ray_location[1] = ray_location[1] + (disMin  / inv_direction_vector[1]);
+       ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
+
+    /*   if(disMin>2){ // THIS IS A GOOD DEBUG TEST FOR RAY MARCHING IN SCATTERING
+
+         cout << "=============================" << endl;
+         cout << "tMax calculation" << endl;
+         cout << "====================" << endl;
+
+         if(tMaxX > 1 && tMaxY >1 && tMaxZ > 1){
+         if(tMaxX >18) cout << "tMaxX" << tMaxX << endl;
+         if(tMaxY >18) cout << "tMaxY" << tMaxY << endl;
+         if(tMaxZ >18) cout << "tMaxZ" << tMaxZ << endl;
+         }
+
+         cout << "cur: " << cur << endl;
+         cout << "sign: " << sign[0] << "  " << sign[1] << "  "  << sign[2] << endl;
+         cout << "ray location: " << ray_location << endl;
+         cout << "inv_dir_vector: " << inv_direction_vector << endl;
+         cout << "DyDxs: " << DyDxRatio << "  " <<  DzDxRatio << endl;
+       }
+*/
+
        in_domain = containsCell(domainLo, domainHi, cur, face);
 
        //__________________________________
@@ -2116,8 +2209,10 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
        // The running total of alpha*length
        double optical_thickness_prev = optical_thickness;
-       optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
+       optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
        // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
+       //optical_thickness += Dx.x() * _abskgBench4*disMin; // Use this line for Benchmark4 rather than the above line
+
 
        size++;
 
@@ -2126,9 +2221,25 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
        #ifdef SCATTER
-       curLength += disMin;
-       if (curLength > scatLength){
-         // get new direction (below is isotropic scatteirng)
+       curLength += disMin * Dx.x(); // July 18
+       if (curLength > scatLength && in_domain){
+
+         // get new scatLength for each scattering event
+         scatLength = -log(_mTwister->randDblExc() ) / scatCoeff; 
+         //store old step
+         int stepOld = step[face];
+         // I commented out the following section because ray_location is now
+         // being updated with every step, not just at scattering events. It
+         // wasn't working the way I had it below, which is why I changed.
+         // But for efficiency, it would be nice to get the following lines working,
+         // and only update ray_location when we need it for scattering.
+         // get location of scattering event
+         //ray_location[0] = ray_location[0] + (curLength  / inv_direction_vector[0]);
+         //ray_location[1] = ray_location[1] + (curLength  / inv_direction_vector[1]);
+         //ray_location[2] = ray_location[2] + (curLength  / inv_direction_vector[2]);
+         //cout << "ray location at scattering event: " << ray_location << endl;
+
+         // Get new direction (below is isotropic scatteirng)
          double plusMinus_one = 2 * _mTwister->randDblExc() - 1;
          double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
          double theta = 2 * M_PI * _mTwister->randDblExc();            // Uniform betwen 0-2Pi
@@ -2137,11 +2248,10 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          direction_vector[0] = r*cos(theta);                   // Convert to cartesian
          direction_vector[1] = r*sin(theta);
          direction_vector[2] = plusMinus_one;
+
          inv_direction_vector = Vector(1.0)/direction_vector;
 
          // get new step and sign
-         int step[3];                                          // Gives +1 or -1 based on sign
-         bool sign[3];
          for ( int ii= 0; ii<3; ii++){
            if (inv_direction_vector[ii]>0){
              step[ii] = 1;
@@ -2153,10 +2263,15 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
            }
          }
 
+         // if sign[face] changes sign, put ray back into prevCell (back scattering)
+         // a sign change only occurs when the product of old and new is negative
+         if( step[face] * stepOld < 0 ){
+           cur = prevCell;
+         }
          // get new tMax
-         tMaxX = (origin[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
-         tMaxY = (origin[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
-         tMaxZ = (origin[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
+         tMaxX = (cur[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
+         tMaxY = (cur[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
+         tMaxZ = (cur[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
 
          // get new tDelta
          //Length of t to traverse one cell
@@ -2164,6 +2279,22 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
          tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
          tMax_prev = 0;
+
+         // At a scattering event, one of the tMax's will be zero since the ray location will lie on
+         //  a cell face.  We must set this value to the appropriate tDelta, else the ray will 
+         // erroneously step immdeiately in the face direction.
+         if(0 == tMaxX){
+           tMaxX = tDeltaX;
+         }
+         else if( 0 == tMaxY){
+           tMaxY = tDeltaY;
+         }
+         else if (0 == tMaxZ){
+           tMaxZ = tDeltaZ;
+         }
+
+         curLength = 0;  // allow for multiple scattering events per ray
+         if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 
        #endif
@@ -2180,7 +2311,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      //__________________________________
      //  Reflections
      if (intensity > _Threshold){
-
+       
        ++nReflect;
        fs = fs * (1-abskg[cur]);
 
@@ -2190,6 +2321,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        // apply reflection condition
        step[face] *= -1;                      // begin stepping in opposite direction
        sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
+       inv_direction_vector[face] *= -1;
 
        in_domain = 1;
 

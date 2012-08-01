@@ -111,7 +111,7 @@ namespace Uintah{
                                          
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( Vector& inv_direction_vector, // can change if scattering occurs
-                         const Vector& ray_location,
+                         Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
                          const IntVector& domainLo,
@@ -225,7 +225,7 @@ namespace Uintah{
       Vector _orient;
       IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
       IntVector _VRLocationsMax;        // What happens if the resolution changes
-      
+
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
