@@ -507,6 +507,11 @@ SCI_ARG_ENABLE(output-avg-walltime,
                  Output ellapsed wall-times),
   [output_avg_walltime="$enableval"],
   [output_avg_walltime=${output_avg_walltime='no'}])
+SCI_ARG_ENABLE(ray-scatter,
+  AC_HELP_STRING(--ray-scatter,
+                 Turn on ray scattering in Arches),
+  [ray_scatter="$enableval"],
+  [ray_scatter=${ray_scatter=''}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
                  Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
@@ -1956,7 +1961,14 @@ AC_SUBST(REFCOUNT_IMPL)
 AC_SUBST(ATOMIC_IMPL)
 
 
-##  --  Enable VisIt -----------------------------
+##  --  Enable Ray Scatter -----------------------------
+
+if test "$ray_scatter" = "yes"; then
+  DEF_RAY_SCATTER="#define RAY_SCATTER 1"
+fi
+AC_SUBST(DEF_RAY_SCATTER)
+
+##  --  With VisIt -----------------------------
 
 if test "$with_visit"; then
 
