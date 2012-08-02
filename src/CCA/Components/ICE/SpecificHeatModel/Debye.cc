@@ -27,7 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -72,7 +71,7 @@ double DebyeCv::getSpecificHeat(double T)
   {
     double eToX = std::exp(x);
     double toAdd = dx * (x*x*x*x*eToX)/((eToX-1.0)*(eToX-1.0));
-    if(isnan(toAdd) || isinf(toAdd)) {
+    if(std::isnan(toAdd) || std::isinf(toAdd)) {
        std::cerr << "Integral portion of Debye Cv was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
        continue;
     }
@@ -100,7 +99,7 @@ double DebyeCv::getInternalEnergy(double T)
   {
     double eToX = std::exp(x);
     double toAdd = dx * (x*x*x)/((eToX-1.0));
-    if(isnan(toAdd) || isinf(toAdd)) {
+    if(std::isnan(toAdd) || std::isinf(toAdd)) {
        std::cerr << "Integral portion of Debye U was inf or nan.  Ignoring and moving to next iteration..." << std::endl;
        continue;
     }
