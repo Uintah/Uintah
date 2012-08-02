@@ -182,7 +182,6 @@ namespace Wasatch{
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
 
-#ifndef WASATCH_IN_ARCHES          
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -209,6 +208,7 @@ namespace Wasatch{
           }
         }
       }
+#ifndef WASATCH_IN_ARCHES                
       if( foundExtraCells ){
         msg << endl
             << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
@@ -216,8 +216,18 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
+#endif
+#ifdef	WASATCH_IN_ARCHES
+      if( !foundExtraCells ){
+        msg << endl
+        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
+        << "  Please add an 'extraCells' block to your input file" << endl
+        << endl;
+        throw std::runtime_error( msg.str() );
+      }      
+#endif
     }
-#endif    
+
 
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
