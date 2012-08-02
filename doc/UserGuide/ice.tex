@@ -542,6 +542,88 @@ The input parameters for the Tillotson equation of state \cite{ref:gathers} for 
   <rho0>    1700.0  </rho0>
 </EOS>
 \end{Verbatim}
+
+%
+%______________________________________________________________________
+\subsection{Specific Heat Models}
+In Uintah, temperature dependent specific heat models are available for ICE materials.
+Three models currently exist including the Debye model, a common gas component model,
+and a generalized polynomial model.  NOTE: Not all of these models are energy conservative,
+most notably the component based model.  The input specification belongs in the material 
+definition and the input file and takes the form:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<SpecificHeatModel type="...">
+  ...
+</SpecificHeatModel>
+\end{Verbatim}
+
+The \textbf{Debye} specific heat model follows the Debye equation for temperature dependence
+in a solid latice:
+\\
+
+\begingroup
+\everymath{\normalsize}
+$C_v(T)=9Nk_B\left(\frac{T}{T_D}\right)^3\int_0^\frac{T_D}{T} \! \frac{x^4e^x}{\left(e^x-1\right)^2}$
+\endgroup
+\\
+
+\noindent where $k_B$ is the Boltzmann constant. The input parameters are the number of atoms $N$ and the 
+Debye temperature $T_D$ in Kelvin.  these are specified in the input file as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<SpecificHeatModel type="Debye">
+  <Atoms> 3 </Atoms>
+  <DebyeTemperature> 290 </DebyeTemperature>
+</SepcificHeatModel>
+\end{Verbatim}
+
+The \textbf{Component} model is designed to allow the specification of the mole fraction of 
+a number gas species, and the mixture specific heat will be calculated.  Gas species supported
+include CO$_2$, H$_2$O, CO, H$_2$, O$_2$, N$_2$, OH, NO, O and H.  Data comes from NASA's thermochemical
+code and includes fits that run from 300K to 5000K.  Outside of these ranges the specific heat
+is clamped to these endpoints.  The input file specification is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<SpecificHeatModel type="Component">
+  <XCO2> 0.5 <XCO2>
+  <XH2O> 0.4 <XH2O>
+  <XCO> 0.0 <XCO>
+  <XH2> 0.0 <XH2>
+  <XO2> 0.0 <XO2>
+  <XN2> 0.0 <XN2>
+  <XOH> 0.1 <XOH>
+  <XNO> 0.0 <XNO>
+  <XO> 0.0 <XO>
+  <XH> 0.0 <XH>
+</SepcificHeatModel>
+\end{Verbatim}
+
+The \textbf{Polynomial} model is designed to be a general polynomial that limits towards an
+upper asymptote.  The form of the equation is:
+\\
+
+\begingroup
+\everymath{\normalsize}
+$C_v(T)=\frac{\sum\limits_{i=0}^n a_i*T^i}{T^n}$
+\endgroup
+\\
+
+\noindent where $n$ is the maximum order of the polynomial and $a_i$ are the fitting coefficients.  There 
+must be $n+1$ coefficients specified as well as a maximum order of the polynomial.  Optionally, a
+minimum and maximum temperature may be assigned that will clamp the specific heat at each end. These
+default to 0K and 1,000,000K. The input file specification is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<SpecificHeatModel type="Polynomial">
+  <MaxOrder> 7 </MaxOrder>
+  <Tmin>     250 </Tmin>
+  <Tmax>     1e6 </Tmax>
+  <coefficient> [1.2, 3.0, 4.0, 5.3, 6.7, 2.2, 4.1, 4.9] </cofficient>
+</SepcificHeatModel>
+\end{Verbatim}
+ 
+
 %
 %______________________________________________________________________
 \subsection{Exchange Properties}
