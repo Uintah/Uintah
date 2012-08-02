@@ -423,16 +423,15 @@ Arches::problemSetup(const ProblemSpecP& params,
   // Register dependent (tabular sense) variables
   //
   std::string densityName = "density"; //***HACK***
+  typedef Expr::PlaceHolder<SVolField>  DensityT;
   const Expr::Tag densityTag( densityName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( densityTag )) ) {
     // register placeholder expressions for density field: "density"
-    typedef Expr::PlaceHolder<SVolField>  DensityT;
     solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
   
   if( !(initgh->exprFactory->have_entry( densityTag )) ) {
     // register placeholder expressions for density field: "density"
-    typedef Expr::PlaceHolder<SVolField>  DensityT;
     initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
   
