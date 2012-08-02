@@ -731,7 +731,8 @@ ThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, 
     ostr.clear();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
-          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)||
+          (notCopyDataVars_.count(req->req->var->getName()) > 0  )){
         // See comment in DetailedDep about CommCondition
         if( dbg.active()) 
         dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;

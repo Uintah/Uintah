@@ -834,7 +834,8 @@ ThreadedMPIScheduler2::postMPIRecvs( DetailedTask * task, bool only_old_recvs, i
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
       //dbg.setActive(req->req->lookInOldTG );
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
-          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0) ||
+          (notCopyDataVars_.count(req->req->var->getName()) > 0  )){
         // See comment in DetailedDep about CommCondition
 
         dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << endl;
@@ -1022,7 +1023,8 @@ ThreadedMPIScheduler2::postMPISends( DetailedTask         * task, int iteration,
     ostr.clear();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
-          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0) ||
+          (notCopyDataVars_.count(req->req->var->getName()) > 0  )){
         // See comment in DetailedDep about CommCondition
         if( dbg.active()) 
         dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
