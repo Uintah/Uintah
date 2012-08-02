@@ -1310,7 +1310,7 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
+    if test "$OS_VERSION" -ge 10; then
         AC_MSG_WARN( Running under Snow Leopard or later)
         DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
         IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
