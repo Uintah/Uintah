@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CCVariable.h>
-
+#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <Core/Geometry/Vector.h>
 
 #include <vector>
@@ -89,6 +89,10 @@ WARNING
    //////////
    // Return correct EOS model pointer for this material
    EquationOfState* getEOS() const;
+
+   // Get the associated specific heat model.  
+   // If there is none specified, this will return a null (0) pointer
+   SpecificHeat* getSpecificHeatModel() const;
    
    //for HeatConductionModel
    double getGamma() const;
@@ -114,6 +118,7 @@ WARNING
    
    // Specific constitutive model associated with this material
    EquationOfState *d_eos;
+   SpecificHeat    *d_cv;  // Specific heat model
    double d_viscosity;
    double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.

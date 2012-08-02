@@ -162,6 +162,27 @@
           <beta               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
           
         </EOS>
+        <SpecificHeatModel    spec="OPTIONAL NO_DATA"  
+                              attribute1="type REQUIRED STRING 'Debye Component Polynomial'" >
+          <Atoms              spec="REQUIRED INTEGER 'positive'" need_applies_to='type Debye' />
+          <DebyeTemperature   spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Debye' />
+
+          <XCO2               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XCO                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH2O               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XO2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XN2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XOH                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XNO                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XO                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+
+          <MaxOrder           spec="REQUIRED INTEGER 'positive'" need_applies_to='type Polynomial'/>
+          <Tmin               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial' />
+          <Tmax               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial' />
+          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to='type Polynomial'/>
+        </SpecificHeatModel>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />

@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/TurbulenceFactory.h>
 #include <CCA/Components/ICE/Turbulence.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
+#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -714,6 +715,13 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     setBC(speedSound, "zeroNeumann", patch, d_sharedState, indx, new_dw); 
     setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
             
+    SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
+    if(cvModel != 0) {
+      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        cv[*iter] = cvModel->getSpecificHeat(Temp_CC[*iter]);
+        gamma[*iter] = cvModel->getGamma(Temp_CC[*iter]);
+      }
+    }
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       sp_vol_CC[c] = 1.0/rho_micro[c];
@@ -1067,7 +1075,8 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   // dummy variable needed to keep the taskgraph in sync
   //t->requires(Task::NewDW,lb->AMR_SyncTaskgraphLabel,Ghost::None,0);
   //}           
-  
+  t->requires(Task::OldDW,lb->temp_CCLabel, ice_matls->getUnion(), Ghost::None, 0);  
+
   t->computes(lb->viscosityLabel);
   t->computes(lb->thermalCondLabel);
   t->computes(lb->gammaLabel);
@@ -2179,7 +2188,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       cv[indx].initialize(    ice_matl->getSpecificHeat());    
       viscosity.initialize  ( ice_matl->getViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
-      
+       
     }
     // --------bulletproofing
     if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
@@ -2229,6 +2238,14 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
+      SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
+      if(cvModel != 0) {
+        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          gamma[indx][c] = cvModel->getGamma(Temp_CC[indx][c]); 
+          cv[indx][c]    = cvModel->getSpecificHeat(Temp_CC[indx][c]); 
+        }
+      } 
             
       for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
@@ -2386,7 +2403,8 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
 
   const Level* level = getLevel(patches);
   int levelIndex = level->getIndex();
-  
+ 
+ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << " ---------------------------------------------- L-"<< levelIndex<< endl;
@@ -2398,6 +2416,10 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
+
+      constCCVariable<double> temp_CC;
+      old_dw->get(temp_CC, lb->temp_CCLabel, indx,patch,Ghost::None,0);
+
       CCVariable<double> viscosity, thermalCond, gamma, cv;
       
       new_dw->allocateAndPut(thermalCond, lb->thermalCondLabel,  indx, patch);  
@@ -2408,7 +2430,18 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
       thermalCond.initialize( ice_matl->getThermalConductivity());
       gamma.initialize  (     ice_matl->getGamma());
       cv.initialize(          ice_matl->getSpecificHeat());
+      SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
+      if(cvModel != 0) {
+        // loop through cells and compute pointwise
+        for(CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
+          IntVector c = *iter;
+          cv[c] = cvModel->getSpecificHeat(temp_CC[c]);
+          gamma[c] = cvModel->getGamma(temp_CC[c]);
+        }
+      }
     }
+
+    
 
     //__________________________________
     // Is it time to dump printData ?
@@ -4373,9 +4406,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
             mom_L[c][dir] = mom_source[c][dir] +
                   plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
           }
-          // must have a minimum int_eng   
+          // must have a minimum int_eng  
           double min_int_eng = min_mass * cv[c] * temp_CC[c];
-          double int_eng_tmp = mass * cv[c] * temp_CC[c];
+          double int_eng_tmp = mass * cv[c] * temp_CC[c]; 
 
           //  Glossary:
           //  int_eng_tmp    = the amount of internal energy for this
