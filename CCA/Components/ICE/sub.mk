@@ -48,7 +48,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/customInitialize.cc   \
        $(SRCDIR)/ExchangeCoefficients.cc   	
        
-SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
+SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs $(SRCDIR)/SpecificHeatModel
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 

@@ -46,6 +46,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouse.h>
 #include <iostream>
 #include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
 
 //#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
@@ -67,6 +69,13 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    if(!d_eos) {
      throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
    }
+   
+   ProblemSpecP cvModel_ps = ps->findBlock("SpecificHeatModel");
+   d_cv = 0;
+   if(cvModel_ps != 0) {
+     std::cout << "CreatingSpecific heat model." << std::endl;
+     d_cv = SpecificHeatFactory::create(ps);
+   }  
    
    // Step 2 -- get the general material properties
    ps->require("thermal_conductivity",d_thermalConductivity);
@@ -124,6 +133,8 @@ ICEMaterial::~ICEMaterial()
 {
   delete d_eos;
   delete lb;
+  if(d_cv)
+    delete d_cv;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
@@ -136,6 +147,8 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",d_specificHeat);
+  if(d_cv != 0)
+    d_cv->outputProblemSpec(ice_ps);
   ice_ps->appendElement("dynamic_viscosity",d_viscosity);
   ice_ps->appendElement("gamma",d_gamma);
   ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
@@ -154,6 +167,11 @@ EquationOfState * ICEMaterial::getEOS() const
 {
   // Return the pointer to the constitutive model 
   return d_eos;
+}
+
+SpecificHeat *ICEMaterial::getSpecificHeatModel() const
+{
+  return d_cv;
 }
 
 double ICEMaterial::getGamma() const
