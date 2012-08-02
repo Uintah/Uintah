@@ -99,10 +99,8 @@ private:
   std::vector<size_t> bndFaceIncr_;
   
   // boundary information
-  bool hasMinusBoundary_;
-  bool hasPlusBoundary_;
+  bool hasPlusBoundary_, hasMinusBoundary_;
   
-  //
   int calculate_stride(const std::vector<int>& dim,
                        const std::vector<bool> hasPlusFace) const;
   

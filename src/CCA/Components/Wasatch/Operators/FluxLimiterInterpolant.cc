@@ -35,9 +35,10 @@
 template< typename PhiVolT, typename PhiFaceT >
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 FluxLimiterInterpolant( const std::vector<int>& dim,
-                       const std::vector<bool> hasPlusFace,
-                       const std::vector<bool> hasMinusBoundary):
-hasPlusBoundary_(false), hasMinusBoundary_(false)
+                        const std::vector<bool> hasPlusFace,
+                        const std::vector<bool> hasMinusBoundary )
+: hasPlusBoundary_ (false),
+  hasMinusBoundary_(false)
 {
   stride_ = calculate_stride(dim, hasPlusFace);
   
