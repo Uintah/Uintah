@@ -334,31 +334,47 @@ Arches::problemSetup(const ProblemSpecP& params,
   // Register the velocity field from Arches as placeholder expressions.
   // put these in the advance solution graph
   std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
-  const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
+  typedef Expr::PlaceHolder<XVolField>  XVelT;
+  const Expr::Tag xVelTag( xVelName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( xVelTag )) ) {
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
-    typedef Expr::PlaceHolder<XVolField>  XVelT;
     solngh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );
   }
+  const Expr::Tag xVelTagN( xVelName, Expr::STATE_N );
+  if( !(solngh->exprFactory->have_entry( xVelTagN )) ) {
+    // register placeholder expressions for x velocity string name: "uVelocitySPBC"
+    solngh->exprFactory->register_expression( new XVelT::Builder(xVelTagN) );
+  }
+  
 
   //
   std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
-  const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
+  typedef Expr::PlaceHolder<YVolField>  YVelT;  
+  const Expr::Tag yVelTag( yVelName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( yVelTag )) ) {
     // register placeholder expressions for y velocity string name: "vVelocitySPBC"
-    typedef Expr::PlaceHolder<YVolField>  YVelT;
     solngh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
   }
-
+  const Expr::Tag yVelTagN( yVelName, Expr::STATE_N );
+  if( !(solngh->exprFactory->have_entry( yVelTagN )) ) {
+    // register placeholder expressions for y velocity string name: "vVelocitySPBC"
+    solngh->exprFactory->register_expression( new YVelT::Builder(yVelTagN) );
+  }
+  
   //
   std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
-  const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
+  typedef Expr::PlaceHolder<ZVolField>  ZVelT;  
+  const Expr::Tag zVelTag( zVelName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( zVelTag )) ) {
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
-    typedef Expr::PlaceHolder<ZVolField>  ZVelT;
     solngh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );
   }
-
+  const Expr::Tag zVelTagN( zVelName, Expr::STATE_N );
+  if( !(solngh->exprFactory->have_entry( zVelTagN )) ) {
+    // register placeholder expressions for z velocity string name: "wVelocitySPBC"
+    solngh->exprFactory->register_expression( new ZVelT::Builder(zVelTagN) );
+  }
+  
   //____________________________________________________________________________
   // Register the volume and area fractions for embedded geometry
   // volume fraction
