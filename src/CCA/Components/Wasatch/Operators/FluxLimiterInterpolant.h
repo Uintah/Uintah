@@ -23,14 +23,14 @@
 #ifndef FluxLimiterInterpolant_h
 #define FluxLimiterInterpolant_h
 /* -------------------------------------------------------
-%%       %%%% %%     %% %%%% %%%%%%%% %%%%%%%% %%%%%%%%
-%%        %%  %%%   %%%  %%     %%    %%       %%     %%
-%%        %%  %%%% %%%%  %%     %%    %%       %%     %%
-%%        %%  %% %%% %%  %%     %%    %%%%%%   %%%%%%%%
-%%        %%  %%     %%  %%     %%    %%       %%   %%
-%%        %%  %%     %%  %%     %%    %%       %%    %%
-%%%%%%%% %%%% %%     %% %%%%    %%    %%%%%%%% %%     %%
-----------------------------------------------------------*/
+ %%       %%%% %%     %% %%%% %%%%%%%% %%%%%%%% %%%%%%%%
+ %%        %%  %%%   %%%  %%     %%    %%       %%     %%
+ %%        %%  %%%% %%%%  %%     %%    %%       %%     %%
+ %%        %%  %% %%% %%  %%     %%    %%%%%%   %%%%%%%%
+ %%        %%  %%     %%  %%     %%    %%       %%   %%
+ %%        %%  %%     %%  %%     %%    %%       %%    %%
+ %%%%%%%% %%%% %%     %% %%%%    %%    %%%%%%%% %%     %%
+ ----------------------------------------------------------*/
 
 #include <vector>
 #include <string>
@@ -68,47 +68,52 @@
 
 template < typename PhiVolT, typename PhiFaceT >
 class FluxLimiterInterpolant {
-
+  
 private:
-
+  
   // Here, the advectivevelocity has been already interpolated to the phi cell
   // faces. The destination field should be of the same type as the advective
   // velocity, i.e. a staggered, cell centered field.
   const PhiFaceT* advectiveVelocity_;
-
+  
   // holds the limiter type to be used, i.e. SUPERBEE, VANLEER, etc...
   Wasatch::ConvInterpMethods limiterType_;
-
+  
   // An integer denoting the offset for the face index owned by the control
   // volume in question. For the x direction, theStride = 0.
   // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
   size_t stride_;
-
+  
   // for the plus face, bndPlusStrideCoef is useful to define how many strides
   // one will have to move
   size_t bndPlusStrideCoef_;
-
+  
   // some counters to help in the evaluate member function
   std::vector<size_t> faceCount_;
   std::vector<size_t> volIncr_;
   std::vector<size_t> faceIncr_;
-
+  
   // boundary counters
   std::vector<size_t> bndFaceCount_; // counter for faces at the boundary
   std::vector<size_t> bndVolIncr_;
   std::vector<size_t> bndFaceIncr_;
+  
+  // boundary information
+  bool hasMinusBoundary_;
+  bool hasPlusBoundary_;
+  
   //
   int calculate_stride(const std::vector<int>& dim,
                        const std::vector<bool> hasPlusFace) const;
-
-
+  
+  
 public:
-
+  
   typedef typename PhiVolT::Location   SrcLocation;
   typedef typename PhiFaceT::Location  DestLocation;
   typedef PhiVolT SrcFieldType;
   typedef PhiFaceT DestFieldType;
-
+  
   /**
    *  \brief Constructor for flux limiter interpolant.
    *  \param dim: A 3D vector containing the number of control volumes
@@ -117,13 +122,14 @@ public:
    *         boundary on its plus side.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
-                          const std::vector<bool> hasPlusFace );
-
+                         const std::vector<bool> hasPlusFace,
+                         const std::vector<bool> hasMinusBoundary);
+  
   /**
    *  \brief Destructor for flux limiter interpolant.
    */
   ~FluxLimiterInterpolant();
-
+  
   /**
    *  \brief Sets the advective velocity field for the flux limiter interpolator.
    *
@@ -132,13 +138,13 @@ public:
    *         destination field, i.e. a face centered field.
    */
   void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);  
-
+  
   /**
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
   void set_flux_limiter_type (Wasatch::ConvInterpMethods limiterType);
-
+  
   /**
    *  \brief Applies the flux limiter interpolation to the source field.
    *
@@ -150,7 +156,7 @@ public:
    *         i. It will be stored on the staggered cell centers.
    */
   void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const;
-
+  
   void apply_embedded_boundaries(const PhiVolT &src, PhiFaceT &dest) const;
 };
 
