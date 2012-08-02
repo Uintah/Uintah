@@ -6966,7 +6966,7 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
+    if test "$OS_VERSION" -ge 10; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard or later" >&5
 $as_echo "$as_me: WARNING: Running under Snow Leopard or later" >&2;}
         DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
