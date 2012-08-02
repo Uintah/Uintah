@@ -772,6 +772,7 @@ DL_LIB_FLAG
 VISIT_INSTALL_DIR
 UINTAH_UDA_TO_VIS_LIB
 BUILD_VISIT
+DEF_RAY_SCATTER
 ATOMIC_IMPL
 REFCOUNT_IMPL
 SEMAPHORE_LIB_FLAG
@@ -973,6 +974,7 @@ enable_optimize
 enable_64bit
 enable_32bit
 enable_output_avg_walltime
+enable_ray_scatter
 enable_gencode
 enable_exename
 enable_largesos
@@ -1635,6 +1637,7 @@ Optional Features:
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
+--ray-scatter           Turn on ray scattering in Arches
 --enable-gencode        Specify compute capability for GPU code generation
                           (allowable values: 12, 13, 20, 21, 31)
 --enable-exename=<name> Use name for executable name instead of the default:
@@ -3774,6 +3777,16 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-output-avg-walltime --disable-output-avg-walltime"
+
+
+  # Check whether --enable-ray-scatter was given.
+if test "${enable_ray_scatter+set}" = set; then :
+  enableval=$enable_ray_scatter; ray_scatter="$enableval"
+else
+  ray_scatter=${ray_scatter=''}
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-ray-scatter --disable-ray-scatter"
 
 
   # Check whether --enable-gencode was given.
@@ -10793,7 +10806,14 @@ fi
 
 
 
-##  --  Enable VisIt -----------------------------
+##  --  Enable Ray Scatter -----------------------------
+
+if test "$ray_scatter" = "yes"; then
+  DEF_RAY_SCATTER="#define RAY_SCATTER 1"
+fi
+
+
+##  --  With VisIt -----------------------------
 
 if test "$with_visit"; then
 
