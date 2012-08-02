@@ -407,11 +407,7 @@ evaluate()
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
-
-  typename FieldT::const_interior_iterator xiter = x_->interior_begin();
-  typename FieldT::const_interior_iterator yiter = y_->interior_begin();
-  typename FieldT::const_interior_iterator ziter = z_->interior_begin();
-  typename FieldT::interior_iterator     phiiter = phi.interior_begin();    
+  typename FieldT::interior_iterator phiiter = phi.interior_begin();
   
   const double xMax = *(std::max_element( x_->interior_begin(), x_->interior_end() ) ); //field_max(*x_) does not seem to work...
   const double xMin = *(std::min_element( x_->interior_begin(), x_->interior_end() ) );
