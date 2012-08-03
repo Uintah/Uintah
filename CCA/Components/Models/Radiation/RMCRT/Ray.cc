@@ -42,10 +42,9 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <time.h>
-#include<fstream>
+#include <fstream>
+#include <include/sci_defs/uintah_testdefs.h.in>
 
-
-#include <sci_defs/cuda_defs.h>
 
 //--------------------------------------------------------------
 //
@@ -146,6 +145,37 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Warnings and bulletproofing
+
+#ifndef RAY_SCATTER
+  cout<< "sigmaScat: " << _sigmaScat << endl;
+  if(_sigmaScat>0){
+    ostringstream warn;
+    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
+    warn << "--enable-ray-scatter" << endl;
+    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << endl;
+    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+#endif
+
+#ifdef RAY_SCATTER
+  if(_sigmaScat<1e-99){
+    ostringstream warn;
+    warn << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
+    warn << "--enable-ray-scatter" << endl;
+    warn << "As such, this task will run slower than is necessary." << endl;
+    warn << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
+    warn << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+#endif
+
+#ifdef RAY_SCATTER
+cout<< endl << "RAY_SCATTER IS DEFINED" << endl; 
+#endif
+
+
+
   if (_benchmark > 5 || _benchmark < 0  ){
     ostringstream warn;
     warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
@@ -2110,8 +2140,8 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    double optical_thickness = 0;
 
 
-   //#define SCATTER 1
-   #ifdef SCATTER
+   //#define RAY_SCATTER 1
+   #ifdef RAY_SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
@@ -2220,7 +2250,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
        sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
-       #ifdef SCATTER
+       #ifdef RAY_SCATTER
        curLength += disMin * Dx.x(); // July 18
        if (curLength > scatLength && in_domain){
 
