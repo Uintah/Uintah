@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <string>
 #include "InternalVar_BorjaPressure.h"
+#include "InternalVar_AreniscaKappa.h"
 
 using namespace UintahBB;
 using Uintah::ProblemSpecP;
@@ -54,6 +55,8 @@ InternalVariableModel* InternalVariableModelFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for internal_var_model", __FILE__, __LINE__);
    if (mat_type == "borja_consolidation_pressure")
       return(scinew InternalVar_BorjaPressure(child));
+   else if (mat_type == "arenisca_kappa")
+      return(scinew InternalVar_AreniscaKappa(child));
    else {
       throw ProblemSetupException("Unknown InternalVariable Model ("+mat_type+")", __FILE__, __LINE__);
    }
@@ -64,6 +67,9 @@ InternalVariableModelFactory::createCopy(const InternalVariableModel* pm)
 {
    if (dynamic_cast<const InternalVar_BorjaPressure*>(pm))
       return(scinew InternalVar_BorjaPressure(dynamic_cast<const InternalVar_BorjaPressure*>(pm)));
+
+   else if (dynamic_cast<const InternalVar_AreniscaKappa*>(pm))
+      return(scinew InternalVar_AreniscaKappa(dynamic_cast<const InternalVar_AreniscaKappa*>(pm)));
 
    else {
       throw Uintah::ProblemSetupException("Cannot create copy of unknown internal var model", __FILE__, __LINE__);

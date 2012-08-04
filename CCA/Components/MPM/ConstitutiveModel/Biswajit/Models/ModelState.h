@@ -63,6 +63,8 @@ namespace UintahBB {
     double epse_v_tr; // trial volumetric elastic strain
     double epse_s_tr; // trial deviatoric elastic strain 
 
+    double local_var[10]; // Keep aside 10 spaces for local scalar variables
+
     ModelState();
 
     ModelState(const ModelState& state);

@@ -63,6 +63,8 @@ ModelState::ModelState():PlasticityState()
   backStress = Uintah::Matrix3(0.0);
   elasticStrain = Uintah::Matrix3(0.0);
   elasticStrainTrial = Uintah::Matrix3(0.0);
+
+  for (int ii = 0; ii < 10; ii++) local_var[ii] = 0.0;
 }
 
 ModelState::ModelState(const ModelState& state)
@@ -97,6 +99,8 @@ ModelState::ModelState(const ModelState& state)
   backStress = state.backStress;
   elasticStrain = state.elasticStrain;
   elasticStrainTrial = state.elasticStrainTrial;
+
+  for (int ii = 0; ii < 10; ii++) local_var[ii] = state.local_var[ii];
 }
 
 ModelState::ModelState(const ModelState* state)
@@ -131,6 +135,8 @@ ModelState::ModelState(const ModelState* state)
   backStress = state->backStress;
   elasticStrain = state->elasticStrain;
   elasticStrainTrial = state->elasticStrainTrial;
+
+  for (int ii = 0; ii < 10; ii++) local_var[ii] = state->local_var[ii];
 }
 
 ModelState::~ModelState()
@@ -171,6 +177,7 @@ ModelState::operator=(const ModelState& state)
   backStress = state.backStress;
   elasticStrain = state.elasticStrain;
   elasticStrainTrial = state.elasticStrainTrial;
+  for (int ii = 0; ii < 10; ii++) local_var[ii] = state.local_var[ii];
   return *this;
 }
 
@@ -208,5 +215,6 @@ ModelState::operator=(const ModelState* state)
   backStress = state->backStress;
   elasticStrain = state->elasticStrain;
   elasticStrainTrial = state->elasticStrainTrial;
+  for (int ii = 0; ii < 10; ii++) local_var[ii] = state->local_var[ii];
   return this;
 }

@@ -133,16 +133,21 @@ namespace UintahBB {
                                      Uintah::DataWarehouse* new_dw);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute and update the internal variable */
+    // Get the internal variable
+    virtual double getInternalVariable(const Uintah::particleIndex idx) const;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Update the internal variable
+    virtual void updateInternalVariable(const Uintah::particleIndex idx,
+                                        const double& value); 
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute the internal variable */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeInternalVariable(const ModelState* state,
                                            const double& delT,
                                            const Uintah::MPMMaterial* matl,
                                            const Uintah::particleIndex idx);
-
-    // Update the internal variable
-    virtual void updateInternalVariable(const Uintah::particleIndex idx,
-                                        const double& value); 
 
     // Compute derivative of internal variable with respect to volumetric
     // elastic strain

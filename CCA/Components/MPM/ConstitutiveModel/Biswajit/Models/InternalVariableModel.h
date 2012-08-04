@@ -100,18 +100,23 @@ namespace UintahBB {
     virtual void allocateAndPutRigid(Uintah::ParticleSubset* pset,
                                      Uintah::DataWarehouse* new_dw){}; 
 
-    //////////
+    ///////////////////////////////////////////////////////////////////////////
+    // Get the internal variable
+    virtual double getInternalVariable(const Uintah::particleIndex idx) const = 0; 
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Update the internal variable
+    virtual void updateInternalVariable(const Uintah::particleIndex idx,
+                                        const double& value) = 0; 
+
+    ///////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the internal variable and return new value  */
-    //////////
     virtual double computeInternalVariable(const ModelState* state,
                                            const double& delT,
                                            const Uintah::MPMMaterial* matl,
                                            const Uintah::particleIndex idx) = 0;
 
-    // Update the internal variable
-    virtual void updateInternalVariable(const Uintah::particleIndex idx,
-                                        const double& value) = 0;
- 
+    ///////////////////////////////////////////////////////////////////////////
     // Compute derivative of internal variable with respect to volumetric
     // elastic strain
     virtual double computeVolStrainDerivOfInternalVariable(const ModelState* state) const = 0;
