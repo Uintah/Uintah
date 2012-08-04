@@ -179,11 +179,30 @@ InternalVar_BorjaPressure::allocateAndPutRigid(ParticleSubset* pset ,
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////
+//  Get the internal variable
+double 
+InternalVar_BorjaPressure::getInternalVariable(const particleIndex idx) const
+{
+  return pPc[idx];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//  Update the internal variable
+void 
+InternalVar_BorjaPressure::updateInternalVariable(const particleIndex idx,
+                                                  const double& pc)
+{
+  pPc_new[idx] = pc;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//  Compute the internal variable
 double 
 InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
-                                             const double& ,
-                                             const MPMMaterial* ,
-                                             const particleIndex idx)
+                                                   const double& ,
+                                                   const MPMMaterial* ,
+                                                   const particleIndex idx)
 {
   // Get old p_c
   double pc_n = pPc[idx];
@@ -199,13 +218,7 @@ InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
   return pc;
 }
 
-void 
-InternalVar_BorjaPressure::updateInternalVariable(const particleIndex idx,
-                                            const double& pc)
-{
-  pPc_new[idx] = pc;
-}
-
+////////////////////////////////////////////////////////////////////////////////////////
 // Compute derivative of internal variable with respect to volumetric
 // elastic strain
 double 

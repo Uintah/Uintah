@@ -53,7 +53,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class CamClay : public Uintah::ConstitutiveModel {
+  class CamClay : public ConstitutiveModel {
 
   public:
 
