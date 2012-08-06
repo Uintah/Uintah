@@ -31,7 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #include "InternalVar_AreniscaKappa.h"
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <Core/Exceptions/InvalidValue.h>
+
+#include <errno.h>
+#include <fenv.h>
 
 using namespace UintahBB;
 using namespace Uintah;
@@ -544,7 +548,26 @@ InternalVar_AreniscaKappa::computeF2(const double& kappa,
                                      const double& H) const
 {
   double p1p3 = d_p1*d_p3;
-  double f2 = (1.0/p1p3)*pow((kappa/d_p0),(1 - d_p0*p1p3));
+  double p0p1p3 = d_p0*p1p3;
+  double kappa_p0 = kappa/d_p0;
+  if (fabs(kappa_p0 - 1.0) < 1.0e-10) kappa_p0 = 1.0;
+  
+  //feclearexcept(FE_ALL_EXCEPT);
+  //double pow_kappa_p0 = pow(kappa_p0, p0p1p3);
+  double pow_kappa_p0 = kappa_p0/pow(kappa_p0, p0p1p3);
+  //cerr << "Location 3: Floating point exception in particle ? " << hex << fetestexcept(FE_ALL_EXCEPT) << endl;
+  //cerr << setiosflags(ios::fixed) << setprecision(20) << scientific << endl;
+  //cerr << " kappa0 - p0 " << kappa - d_p0 << endl;
+  //cerr << " kappa/p0 = " << kappa_p0 << " p0p1p3 = " << p0p1p3 << " power = " << pow_kappa_p0 << endl;
+
+  //double lnb = log(kappa_p0);
+  //double clnb = p0p1p3*lnb;
+  //pow_kappa_p0 = exp(clnb);
+  //cerr << "Location 3: Floating point exception in particle ? " << hex << fetestexcept(FE_ALL_EXCEPT) << endl;
+  //cerr << setiosflags(ios::fixed) << setprecision(10) << " kappa/p0 = " << kappa_p0 << " p0p1p3 = " << p0p1p3 << " lnb = " << lnb
+  //     << " c lnb = " << clnb << " power = " << pow_kappa_p0 << endl;
+
+  double f2 = (1.0/p1p3)*(double)pow_kappa_p0;
   return (f2 - G + H); 
 }
 
