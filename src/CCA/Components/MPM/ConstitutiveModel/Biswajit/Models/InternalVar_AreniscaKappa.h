@@ -216,6 +216,13 @@ namespace UintahBB {
                                 const double& delEpsv) const;
 
     //--------------------------------------------------------------------------------------
+    // Compute the value of kappa at which function X1 is a minimum
+    //  where
+    //       X1(kappa_{n+1}) = kappa_{n+1} - kappa_n - F1(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
+    //--------------------------------------------------------------------------------------
+    double computeKappaAtX1Min(const double& delEpsv) const;
+
+    //--------------------------------------------------------------------------------------
     // Compute the function X2(kappa_{n+1})
     //  where 
     //       X2(kappa_{n+1}) = kappa_{n+1} - kappa_n - F2(kappa_{n+1},epsv_{n+1}) Delta epsv = 0

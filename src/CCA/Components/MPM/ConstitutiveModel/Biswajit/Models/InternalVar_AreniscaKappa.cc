@@ -242,26 +242,38 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state,
 
   // Calculate new kappa
   double tolerance = 1.0e-3;
-  int maxiter = 20;
+  int maxiter = 10;
 
   if (kappa_old - d_p0 < 0.0) {
     // Update \kappa in the cae of X < p0
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual)
-    // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca_BB manual)
+    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+    // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
     kappa_new = computeKappaFromX1(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
+    if (isnan(kappa_new) || kappa_new > 0) {
+        cerr << "Particle = " << idx <<  " kappa_new = " << kappa_new
+             << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
+             << " delta_eps_v = " << delta_eps_v << endl;
+        throw InvalidValue("**ERROR**: Nan in kappa_new - case 1", __FILE__, __LINE__);
+    }
   } else if (kappa_old < max_kappa) {
     // Update \kappa in the cae of p0 <= X < max_X
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual)
-    // (see "eq:evolutionOfKappaFluidEffect1" in the Arenisca_BB manual)
-    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca_BB manual)
+    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+    // (see "eq:evolutionOfKappaFluidEffect1" in the Arenisca manual)
+    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     kappa_new = computeKappaFromX2(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
+    if (isnan(kappa_new) || kappa_new > 0) {
+        cerr << "Particle = " << idx <<  " kappa_new = " << kappa_new
+             << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
+             << " delta_eps_v = " << delta_eps_v << endl;
+        throw InvalidValue("**ERROR**: Nan in kappa_new - case 2", __FILE__, __LINE__);
+    }
   } else {
     // Update \kappa in the cae of X >= max_X
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual)
+    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
     // In this case it is assumed that X=max_X
-    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca_BB manual)
+    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     // pKappaState is a particle variable variable which defines if the particle
     // meet any of the limitation for \kappa and X or not?
     // pKappaState=1: means that the particle met the max_X limitation
@@ -295,16 +307,35 @@ InternalVar_AreniscaKappa::computeKappaFromX1(const double& kappa_old,
   double H = computeH(epsv, B);
 
   // Calculate new kappa
-  double kappa_new = kappa_old;
+  double kappa_new_iter = kappa_old;
+  double kappa_new_iter_old = kappa_new_iter;
+  double X1 = 0.0;
+  double dX1dkappa = 0.0;
   int iter = 0;
   do {
-    double X1 = computeX1(kappa_old, kappa_new, G, H, deltaEpsv);
-    double dX1dkappa = computeDerivX1dkappa(kappa_old, kappa_new, deltaEpsv);
-    kappa_new = kappa_old - X1/dX1dkappa;
+    X1 = computeX1(kappa_old, kappa_new_iter, G, H, deltaEpsv);
+    dX1dkappa = computeDerivX1dkappa(kappa_old, kappa_new_iter, deltaEpsv);
+    kappa_new_iter_old = kappa_new_iter;
+    kappa_new_iter -= X1/dX1dkappa;
     ++iter;
-  } while((fabs(kappa_new - kappa_old) < tolerance) && (iter < maxiter));
+  } while((fabs(kappa_new_iter - kappa_new_iter_old) > tolerance) && (iter < maxiter));
+  kappa_new_iter_old = kappa_new_iter;
+  if (!(iter < maxiter) || isnan(kappa_new_iter)) {
+    kappa_new_iter = computeKappaAtX1Min(deltaEpsv);
+    if (isnan(kappa_new_iter) & !(isnan(kappa_new_iter_old))) kappa_new_iter = kappa_new_iter_old;
+    //cerr << "Func 1: kappa_new = " << kappa_new_iter << endl;
+    //cerr << "    epsv = " << epsv << " deltaEpsv = " << deltaEpsv << " kappa_old = " << kappa_old << endl;
+  }
+  // if (isnan(kappa_new_iter)) {
+  //   cerr << " iter = " << iter << " maxiter = " << maxiter << " kappa[k+1] = " << kappa_new_iter 
+  //        << " kappa[k] = " << kappa_new_iter_old << " X1 = " << X1 
+  //        << " dX1dkappa = " << dX1dkappa << endl;
+  //   cerr << "    epsv = " << epsv << " deltaEpsv = " << deltaEpsv << " kappa_old = " << kappa_old
+  //        << " kappa[k+1] - kappa[k] = " << fabs(kappa_new_iter - kappa_new_iter_old) 
+  //        << " tol = " << tolerance << endl;
+  // }
 
-  return kappa_new;
+  return kappa_new_iter;
 }
 
 //--------------------------------------------------------------------------------------
@@ -322,21 +353,31 @@ InternalVar_AreniscaKappa::computeKappaFromX2(const double& kappa_old,
                                               const int& maxiter) const
 {
   // Compute B, G and H
-  double B = computeB();        // **NOTE** This should be computed while creating the oebject
+  double B = computeB();        // This should be computed while creating the oebject
   double G = computeG(epsv, B);
   double H = computeH(epsv, B);
 
   // Calculate new kappa
-  double kappa_new = kappa_old;
+  double kappa_new_iter = kappa_old;
+  double kappa_new_iter_old = kappa_new_iter;
   int iter = 0;
   do {
-    double X2 = computeX2(kappa_old, kappa_new, G, H, deltaEpsv);
-    double dX2dkappa = computeDerivX2dkappa(kappa_old, kappa_new, deltaEpsv);
-    kappa_new = kappa_old - X2/dX2dkappa;
+    double X2 = computeX2(kappa_old, kappa_new_iter, G, H, deltaEpsv);
+    double dX2dkappa = computeDerivX2dkappa(kappa_old, kappa_new_iter, deltaEpsv);
+    kappa_new_iter_old = kappa_new_iter;
+    kappa_new_iter -= X2/dX2dkappa;
     ++iter;
-  } while((fabs(kappa_new - kappa_old) < tolerance) && (iter < maxiter));
+    if (isnan(kappa_new_iter) || kappa_new_iter > 0) {
+      cerr << " iter = " << iter << " maxiter = " << maxiter << " kappa[k+1] = " << kappa_new_iter 
+           << " kappa[k] = " << kappa_new_iter_old << " X2 = " << X2 
+           << " dX2dkappa = " << dX2dkappa << endl;
+      cerr << "    epsv = " << epsv << " deltaEpsv = " << deltaEpsv 
+           << " kappa[k+1] - kappa[k] " << fabs(kappa_new_iter - kappa_new_iter_old) 
+           << " tol = " << tolerance << endl;
+    }
+  } while((fabs(kappa_new_iter - kappa_new_iter_old) > tolerance) && (iter < maxiter));
 
-  return kappa_new;
+  return kappa_new_iter;
 }
 
 //--------------------------------------------------------------------------------------
@@ -369,6 +410,18 @@ InternalVar_AreniscaKappa::computeDerivX1dkappa(const double& kappa_old,
   double dF1dkappa = computeDerivF1dkappa(kappa_new);
   double dX1dkappa = 1.0 - dF1dkappa*delEpsv;
   return dX1dkappa;
+}
+
+//--------------------------------------------------------------------------------------
+// Compute the value of kappa at which function X1 is a minimum
+//  where
+//       X1(kappa_{n+1}) = kappa_{n+1} - kappa_n - F1(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
+//--------------------------------------------------------------------------------------
+double 
+InternalVar_AreniscaKappa::computeKappaAtX1Min(const double& delEpsv) const
+{
+  double kappa = d_p0 - 1.0/d_p1*log(-d_p3/delEpsv);
+  return kappa;
 }
 
 //--------------------------------------------------------------------------------------
@@ -461,7 +514,7 @@ InternalVar_AreniscaKappa::computeF1(const double& kappa,
                                      const double& G,
                                      const double& H) const
 {
-  double f1 = 1.0/(d_p1*d_p3)*exp(-d_p1*kappa - d_p0);
+  double f1 = 1.0/(d_p1*d_p3)*exp(-d_p1*(kappa - d_p0));
   return (f1 - G + H); 
 }
 
@@ -472,7 +525,7 @@ InternalVar_AreniscaKappa::computeF1(const double& kappa,
 double
 InternalVar_AreniscaKappa::computeDerivF1dkappa(const double& kappa) const
 {
-  double df1dkappa = -1.0/d_p3*exp(-d_p1*kappa - d_p0);
+  double df1dkappa = -1.0/d_p3*exp(-d_p1*(kappa - d_p0));
   return df1dkappa;
 }
 

@@ -805,6 +805,11 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
             // Update the volumetric part of the plastic strain
             pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
+            //if (pPlasticStrainVol_new[idx] < 0.0) {
+            //  cerr << " eps_v_p[n+1] = " << pPlasticStrainVol_new[idx] 
+            //       << " eps_v_p[n] = " << pPlasticStrainVol[idx] 
+            //       << " Delta eps_v_p = " << strain_iteration.Trace() << endl;
+            //}
 
             // Update the volumetric part of the elastic strain
             pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
@@ -836,6 +841,12 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
             // Compute internal variable
             kappa_new = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
+            if (kappa_new > 0.0) {
+              cout << " kappa > 0 in particle " << idx << " kappa_new = " << kappa_new 
+                   << " kappa_temp = " << kappa_temp << " cap_radius = " << cap_radius
+                   << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol[idx]
+                   << " del eps_v = " << strain_iteration.Trace()/var1 << endl;
+            }
 
             // Set the kappa state flag
             if (kappa_new == (max_X + cap_radius)) pKappaState_new[idx] = 1.0;
@@ -923,6 +934,11 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
           }
           Matrix3 trial_stress_loop;
 
+          //if (pPlasticStrainVol_new[idx] < 0.0) {
+          //  cerr << " eps_v_p[n+1] = " << pPlasticStrainVol_new[idx] 
+          //       << " eps_v_p[n] = " << pPlasticStrainVol[idx] << endl;
+          //}
+
           // Loop over sub-cycles in the plasticity return algorithm
           for (int subcycle_counter=0 ; subcycle_counter<=num_subcycles-1 ; subcycle_counter++){
 
@@ -939,7 +955,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             double beta_cap,FSLOPE_cap;
             double f_new_loop = 1e99;
             Matrix3 pBackStress_loop = pBackStress_new[idx];
-            double pKappa_loop = kappa_new;
+            double kappa_loop = kappa_new;
             int counter = 1;
             Matrix3 P,M,G;
             Matrix3 stress_iteration=trial_stress[idx];
@@ -972,8 +988,8 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 // in the Arenisca_BB manual). In this case, the fast returned position is the vertex.
                 stress_iteration = Identity*(PI1_h_over_FSLOPE)/3.0;
 
-              } else if ( (I1_iteration<pKappa_loop-0.9*cap_radius)
-                       || (I1_iteration<pKappa_loop && J2_iteration<0.01) ){
+              } else if ( (I1_iteration<kappa_loop-0.9*cap_radius)
+                       || (I1_iteration<kappa_loop && J2_iteration<0.01) ){
 
                 // Fast return algorithm in the case of I1<X+0.1R (see "fig:CapEccentricity"
                 // in the Arenisca_BB manual) OR ( I1<\kappa && J2<0.01)
@@ -990,7 +1006,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
 
                 // Compute the yield function of the fast returned stress in the loop
-                f_iteration2=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,
+                f_iteration2=YieldFunction(stress_iteration,FSLOPE,kappa_loop,
                                            cap_radius,PEAKI1_hardening);
 
                 if(f_iteration2<0.0){
@@ -1000,7 +1016,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                   // should be outside the yield surface.
 
                   // \kappa-2R is outside the yield surface
-                  I1_iteration1=pKappa_loop-2.0*cap_radius;
+                  I1_iteration1=kappa_loop-2.0*cap_radius;
 
                   // I1_iteration is inside the yield surface
                   I1_iteration2=I1_iteration;
@@ -1016,16 +1032,16 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                   // We start with a value for I1_iteration2 which is guessed to be inside
                   // the yield surface.
-                  if (pKappa_loop>PI1_h_over_FSLOPE) {
-                    I1_iteration2=(pKappa_loop-cap_radius + PI1_h_over_FSLOPE)/2.0;
+                  if (kappa_loop>PI1_h_over_FSLOPE) {
+                    I1_iteration2=(kappa_loop-cap_radius + PI1_h_over_FSLOPE)/2.0;
                   } else {
-                    I1_iteration2=pKappa_loop;
+                    I1_iteration2=kappa_loop;
                   }
 
                   // Check if the selected value for I1_iteration2 is inside the yield surface or not?
                   stress_iteration_temp = stress_iteration + Identity*I1_iteration*one_third*
                                            (I1_iteration2/I1_iteration-1.0);
-                  f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
+                  f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,kappa_loop,
                                                cap_radius,PEAKI1_hardening);
 
                   if (f_new_loop>=0.0){
@@ -1056,27 +1072,27 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                       }
 
                       // Compute a new value for the stress related to I1_iteration2
-                      beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration_temp)*(pKappa_loop-I1_iteration_temp)/
+                      beta_cap = sqrt( 1.0 - (kappa_loop-I1_iteration_temp)*(kappa_loop-I1_iteration_temp)/
                                ( (cap_radius)*(cap_radius) ) );
                       var1=var1*0.5;
                       stress_iteration_temp = stress_iteration_temp_old + S_iteration_temp*(sqrt(var1)-1);
 
                       // Compute the yield function at the stress related to I1_iteration2
-                      f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
+                      f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,kappa_loop,cap_radius,PEAKI1_hardening);
 
                     }
 
                     // Update the fast returned stress in the loop
-                    beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
+                    beta_cap = sqrt( 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                              ( (cap_radius)*(cap_radius) ) );
                     stress_iteration = stress_iteration + S_iteration*(sqrt(var1)-1);
                     computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-                    f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
+                    f_new_loop=YieldFunction(stress_iteration,FSLOPE,kappa_loop,cap_radius,PEAKI1_hardening);
 
                     // If the fast returned stress in the loop is inside the yield surface,
                     // re-compute I1_iteration1 and I1_iteration2.
                     if (f_new_loop<=0.0){
-                      I1_iteration1=pKappa_loop-2.0*cap_radius;
+                      I1_iteration1=kappa_loop-2.0*cap_radius;
                       I1_iteration2=I1_iteration;
                     }
 
@@ -1091,7 +1107,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                                             *(I1_iteration3/I1_iteration-1.0);
 
                 // Compute the invariants of the stress related to I1_iteration3
-                f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
+                f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,kappa_loop,
                                                           cap_radius,PEAKI1_hardening);
 
                 // Loop to finally find the fast returned back stress
@@ -1124,17 +1140,17 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                                                     *(I1_iteration3/I1_iteration-1.0);
 
                   // Compute the invariants of the stress related to I1_iteration3
-                  f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
+                  f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,kappa_loop,
                                                       cap_radius,PEAKI1_hardening);
 
                 }
                 stress_iteration = stress_iteration_temp;
 
-              }else if (I1_iteration<pKappa_loop){
+              }else if (I1_iteration<kappa_loop){
 
                 // Fast return algorithm in the case of I1<\kappa (see "fig:Arenisca_BBYieldSurface"
                 // in the Arenisca_BB manual). In this case, the radial fast returning is used.
-                beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
+                beta_cap = sqrt( 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                          ( (cap_radius)*(cap_radius) ) );
                 stress_iteration = stress_iteration + S_iteration*
                                    ((PEAKI1_hardening-FSLOPE*I1_iteration)*
@@ -1153,7 +1169,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 	      // Compute the invariants of the fast returned stress in the loop
 	      computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
 
-	      if (I1_iteration>=pKappa_loop){
+	      if (I1_iteration>=kappa_loop){
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
@@ -1169,11 +1185,11 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 // direction of the plastic strain at the fast returned stress for the case
                 // of I1<\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
                 // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
-                beta_cap = 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
+                beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                            ( (cap_radius)*(cap_radius) );
                 double FS_I1_i_PI1_h = FSLOPE*I1_iteration-PEAKI1_hardening;
                 FSLOPE_cap = -2.0*(FS_I1_i_PI1_h)*(FS_I1_i_PI1_h)
-                                 *(pKappa_loop-I1_iteration)/( cap_radius*cap_radius ) 
+                                 *(kappa_loop-I1_iteration)/( cap_radius*cap_radius ) 
                              -2.0*FSLOPE*beta_cap*(FSLOPE*I1_iteration-PEAKI1_hardening);
                 G = Identity*FSLOPE_cap + S_iteration;
                 M = G/G.Norm();
@@ -1207,7 +1223,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
               // Loop to apply hardening in calculation of multiplier Gamma
               int condGamma = 1;
-              double kappa_loop_old = pKappa_loop;
+              double kappa_loop_old = kappa_loop;
               int counter_gamma1=0;
               while (condGamma == 1) {
 
@@ -1259,7 +1275,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 double hardeningEnsCond=-1.0;
                 double FS_I1_i_PI1_h = FSLOPE*I1_iteration-PEAKI1_hardening;
 
-                if (I1_iteration>=pKappa_loop){
+                if (I1_iteration>=kappa_loop){
 
                   // Compute the hardening ensemble for the case of I1>=\kappa 
                   // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
@@ -1272,7 +1288,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                   // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
 
                   // Declare and initialize some auxiliaryvariables
-                  beta_cap = 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
+                  beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                              ( (cap_radius)*(cap_radius) );
                   double pKappa_tempA = exp(p3_crush_curve+p4_fluid_effect
                                         +pPlasticStrainVol_new[idx]+(M*gamma).Trace());
@@ -1288,14 +1304,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                     // if the limit has been met or not?
                     // Compute auxiliary variable in the case that the limit has not been met.
                     pKappa_tempA2 = 2.0/G.Norm()*CR*(FS_I1_i_PI1_h*FS_I1_i_PI1_h*FS_I1_i_PI1_h)
-                                            *(pKappa_loop-I1_iteration)
+                                            *(kappa_loop-I1_iteration)
                                             /( cap_radius*cap_radius*cap_radius*(1.0+FSLOPE*CR) );
 
                   } else {
 
                     // Compute auxiliary variable in the case that the limit has been met.
                     pKappa_tempA2 = -2.0*FS_I1_i_PI1_h*FS_I1_i_PI1_h
-                                             *(pKappa_loop-I1_iteration)
+                                             *(kappa_loop-I1_iteration)
                                              /( G.Norm()*cap_radius*cap_radius );
 
                   }
@@ -1304,7 +1320,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                   hardeningEnsCond = -2.0*beta_cap*FS_I1_i_PI1_h
                                      *hardening_modulus/G.Norm()
                                  +pKappa_tempA2
-                                     *( exp(-p1_crush_curve*(pKappa_loop-cap_radius-p0_crush_curve))
+                                     *( exp(-p1_crush_curve*(kappa_loop-cap_radius-p0_crush_curve))
                                         /( p3_crush_curve*p1_crush_curve ) -
                                         3.0*fluid_B0*0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)
                                         *pKappa_tempA
@@ -1314,7 +1330,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                                         /( (pKappa_tempA1-1.0)*(pKappa_tempA1-1.0) ) )
                                      *M.Trace();
 
-                  if (pKappa_loop-cap_radius-p0_crush_curve<0 || hardeningEnsCond>0) {
+                  if (kappa_loop-cap_radius-p0_crush_curve<0 || hardeningEnsCond>0) {
 
                     // In the case of X<p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual),
                     // consider the hardening ensemble.
@@ -1367,10 +1383,24 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 state->local_var[5] = var1;                        // scale factor for Delta eps_v
 
                 // Compute internal variable
-                pKappa_loop = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
+                if (kappa_loop > 0.0) {
+                  cout << " kappa > 0 in particle " << idx << " subcycle = " << subcycle_counter
+                       << " kappa_loop = " << kappa_loop 
+                       << " kappa_loop_oldp = " << kappa_loop_old << " cap_radius = " << cap_radius
+                       << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol_new[idx]
+                       << " del eps_v = " << (M*gamma).Trace()/var1 << endl;
+                }
+                kappa_loop = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
+
+                //cerr << "Particle = " << idx << " kappa = " << kappa_loop << endl;
+                //if (pPlasticStrainVol_new[idx] < 0.0) {
+                //  cerr << " After compute int var with M: eps_v_p[n+1] = " << pPlasticStrainVol_new[idx] 
+                //       << " eps_v_p[n] = " << pPlasticStrainVol[idx] 
+                //       << " Delta eps_v_p = " << (M*gamma).Trace() << endl;
+                //}
 
                 // Set the kappa state flag
-                if (pKappa_loop == (max_X + cap_radius)) pKappaState_new[idx] = 1.0;
+                if (kappa_loop == (max_X + cap_radius)) pKappaState_new[idx] = 1.0;
 
                 // Apply the lower limit for \kappa. 
                 // (for the limitation of min_kappa see "eq:limitationForKappa"
@@ -1378,8 +1408,8 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 // pKappaState is a particle variable variable which defines if the particle
                 // meet any of the limitation for \kappa and X or not?
                 // pKappaState=2: means that the particle met the min_kappa limitation.
-                if (pKappa_loop < min_kappa){
-                  pKappa_loop = min_kappa;
+                if (kappa_loop < min_kappa){
+                  kappa_loop = min_kappa;
                   pKappaState_new[idx] = 2.0;
                 }
 
@@ -1393,10 +1423,10 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 // If the limit has been met, updated \kappa should be modified.
                 if (cond_fixed_cap_radius==0) {
                   double cap_radius_old=cap_radius;
-                  cap_radius_fac = FSLOPE*pKappa_loop - PEAKI1_hardening;
+                  cap_radius_fac = FSLOPE*kappa_loop - PEAKI1_hardening;
                   cap_radius=-CR*cap_radius_fac;
                   if (cap_radius<0.1*cap_r_initial || cap_radius_fac > 0.0) {
-                    pKappa_loop +=  (-cap_radius_old + 0.1*cap_r_initial);
+                    kappa_loop +=  (-cap_radius_old + 0.1*cap_r_initial);
                     cap_radius = 0.1*cap_r_initial;
                     cond_fixed_cap_radius = 1;
                   }
@@ -1408,13 +1438,13 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 // meet any of the limitation for \kappa and X or not?
                 // pKappaState=1: means that the particle met the max_X limitation
                 // If the limit has been met, updated \kappa should be modified.
-                if (pKappa_loop>max_X+cap_radius) {
-                  pKappa_loop = max_X+cap_radius;
+                if (kappa_loop>max_X+cap_radius) {
+                  kappa_loop = max_X+cap_radius;
                   pKappaState_new[idx] = 1.0;
                 }
 
                 // Compute the yield function at the returned back stress in the loop
-                f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,
+                f_new_loop=YieldFunction(stress_iteration,FSLOPE,kappa_loop,
                                          cap_radius,PEAKI1_hardening);
 
                 // If the returned back stress is inside the yield surface, gamma 
@@ -1435,12 +1465,12 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             // Transfer the back stress, \kappa, and final stress in the current subcycle
             // to the associated particle variables
             pBackStress_new[idx] = pBackStress_loop;
-            kappa_new = pKappa_loop;
+            kappa_new = kappa_loop;
             d_intvar->updateInternalVariable(idx, kappa_new);
 
             stress_new[idx] = stress_iteration;
             if (isnan(stress_new[idx].Trace())) {
-              cerr << "Particle = " << idx << " stress = " << stress_new[idx] << endl;
+              cerr << "Particle = " << idx << " stress = " << stress_new[idx] << " kappa = " << kappa_new << endl;
               throw InvalidValue("**ERROR**: Nan in stress value", __FILE__, __LINE__);
             }
 
@@ -1458,7 +1488,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 	    pPlasticStrain_new[idx] = pPlasticStrain_new[idx] + strain_iteration.Norm();
 
             // Update the volumetric part of the plastic strain
+            //cerr << " Before update plastic strain: eps_v_p[n+1][k] = " << pPlasticStrainVol_new[idx] 
+            //     << " Delta eps_v_p = " << strain_iteration.Trace() << endl;
             pPlasticStrainVol_new[idx] = pPlasticStrainVol_new[idx] + strain_iteration.Trace();
+            //if (pPlasticStrainVol_new[idx] < 0.0) {
+            //  cerr << " After update plastic strain: eps_v_p[n+1][k+1] = " << pPlasticStrainVol_new[idx] 
+            //       << " eps_v_p[n] = " << pPlasticStrainVol[idx] 
+            //       << " Delta eps_v_p = " << strain_iteration.Trace() << endl;
+            //}
 
             // Update the volumetric part of the elastic strain
             pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
