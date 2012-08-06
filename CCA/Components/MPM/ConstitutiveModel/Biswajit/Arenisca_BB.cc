@@ -75,6 +75,9 @@ porosity).
 #include <sci_values.h>
 #include <iostream>
 
+#include <errno.h>
+#include <fenv.h>
+
 using std::cerr;
 
 using namespace Uintah;
@@ -624,6 +627,8 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
         cerr << "  " << " trial_stress = " << trial_stress[idx] << " backStress = " << pBackStress[idx] << endl;
         throw InvalidValue("**ERROR**: Nan in f_trial value", __FILE__, __LINE__);
       }
+
+      feclearexcept(FE_ALL_EXCEPT);
       if (f_trial[idx]<0){
 
         // An elastic step: the updated stres at the end of the current time step
@@ -846,6 +851,9 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                    << " kappa_temp = " << kappa_temp << " cap_radius = " << cap_radius
                    << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol[idx]
                    << " del eps_v = " << strain_iteration.Trace()/var1 << endl;
+            }
+            if (fetestexcept(FE_INVALID) != 0) {
+              cerr << "Location 1: Floating point exception in particle = " << idx << endl;
             }
 
             // Set the kappa state flag
@@ -1391,6 +1399,9 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                        << " del eps_v = " << (M*gamma).Trace()/var1 << endl;
                 }
                 kappa_loop = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
+                if (fetestexcept(FE_INVALID) != 0) {
+                  cerr << "Location 2: Floating point exception in particle = " << idx << endl;
+                }
 
                 //cerr << "Particle = " << idx << " kappa = " << kappa_loop << endl;
                 //if (pPlasticStrainVol_new[idx] < 0.0) {
