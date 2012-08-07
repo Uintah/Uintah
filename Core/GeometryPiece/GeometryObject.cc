@@ -50,7 +50,7 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
           if(it->name == "volumeFraction")
           {
               ps->getWithDefault(it->name,val,-1.0);
-          } else 
+          } else
           {
               ps->require(it->name,val);
           }
@@ -67,7 +67,26 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Vector:
         {
           Uintah::Vector val;
-          ps->require(it->name,val);
+          if(it->name == "affineTransformation_A0")
+          {
+              ps->getWithDefault(it->name,val,Uintah::Vector(1.,0.,0.));
+
+          } else if(it->name == "affineTransformation_A1")
+          {
+              ps->getWithDefault(it->name,val,Uintah::Vector(0.,1.,0.));
+
+          } else if(it->name == "affineTransformation_A2")
+          {
+              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,1.));
+
+          } else if(it->name == "affineTransformation_b")
+          {
+              ps->getWithDefault(it->name,val,Uintah::Vector(0.,0.,0.));
+
+          } else
+          {
+              ps->require(it->name,val);
+          }
           d_vector_data[it->name] = val;
           break;
         }
