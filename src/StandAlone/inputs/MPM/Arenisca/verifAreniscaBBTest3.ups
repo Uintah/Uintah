@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>Hydrostatic compression verification test</title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+      <maxTime>1.0</maxTime>
+      <initTime>0.0</initTime>
+      <delt_min>0.001</delt_min>
+      <delt_max>0.001</delt_max>
+      <timestep_multiplier>0.3</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+      <filebase>verifAreniscaBBTest3.uda</filebase>
+      <outputInterval>0.001</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.color"/>
+      <save label = "p.temperature"/>
+      <save label = "p.velocity"/>
+      <save label = "p.particleID"/>
+      <save label = "p.stress"/>
+      <save label = "g.mass"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "g.acceleration"/>
+      <save label = "p.plasticStrain"/>
+      <save label = "p.plasticStrainVol"/>
+      <save label = "p.elasticStrainVol"/>
+      <save label = "p.arenisca_kappa"/>
+      <checkpoint cycle = "2" timestepInterval = "20"/>
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>            explicit </time_integrator>
+    <interpolator>                linear    </interpolator>
+    <use_load_curves>            false    </use_load_curves>
+    <minimum_particle_mass>      1.0e-15  </minimum_particle_mass>
+    <minimum_mass_for_acc>       1.0e-15  </minimum_mass_for_acc>
+    <maximum_particle_velocity>  1.0e5    </maximum_particle_velocity>
+    <artificial_damping_coeff>    0.0     </artificial_damping_coeff>
+    <artificial_viscosity>        true    </artificial_viscosity>
+    <artificial_viscosity_heating>false   </artificial_viscosity_heating>
+    <do_contact_friction_heating> false   </do_contact_friction_heating>
+    <create_new_particles>        false   </create_new_particles>
+    <UseMomentumForm>             false   </UseMomentumForm>
+    <withColor>                   true    </withColor>
+    <UsePrescribedDeformation>    true    </UsePrescribedDeformation>
+    <PrescribedDeformationFile>   verifAreniscaTest3_PrescribedDeformation.inp </PrescribedDeformationFile>
+    <erosion algorithm = "none"/>
+  </MPM>
+
+  <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <MPM>
+      <material name="SimplifiedPlasticity">
+        <density>1050</density>
+        <melt_temp>3695.0</melt_temp>
+        <room_temp>294.0</room_temp>
+        <thermal_conductivity>174.0e-7</thermal_conductivity>
+        <specific_heat>134.0e-8</specific_heat>
+
+        <constitutive_model type="arenisca">
+
+            <B0>10000</B0>
+            <G0>15000</G0>
+            <hardening_modulus>0.0</hardening_modulus>
+            <FSLOPE> 0.057735026919 </FSLOPE>
+            <FSLOPE_p> 0.057735026919 </FSLOPE_p>
+            <PEAKI1> 6.123724356953976e2 </PEAKI1>
+            <CR> 14.8 </CR>
+            <p0_crush_curve> -1837.0724 </p0_crush_curve>
+            <p1_crush_curve> 6.6666666666666666e-4 </p1_crush_curve>
+            <p3_crush_curve> 0.5 </p3_crush_curve>
+            <p4_fluid_effect> 0.0 </p4_fluid_effect>
+            <fluid_B0> 0.0 </fluid_B0>
+            <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+            <subcycling_characteristic_number> 100 </subcycling_characteristic_number>
+            <internal_variable_model type="arenisca_kappa">
+              <arenisca_fSlope> 0.057735026919 </arenisca_fSlope>
+              <arenisca_peakI1> 6.123724356953976e2 </arenisca_peakI1>
+              <arenisca_Cr> 14.8 </arenisca_Cr>
+              <arenisca_B0> 0.0 </arenisca_B0>
+              <arenisca_p0> -1837.0724  </arenisca_p0>
+              <arenisca_p1> 6.6666666666666666e-4  </arenisca_p1>
+              <arenisca_p3> 0.5 </arenisca_p3>
+              <arenisca_p4> 0.0 </arenisca_p4>
+            </internal_variable_model>
+        </constitutive_model>
+
+        <geom_object>
+          <box label = "Plate1">
+            <min>[0.0,0.0,0.0]</min>
+            <max>[1.0,1.0,1.0]</max>
+        </box>
+        <res>[1,1,1]</res>
+        <velocity>[0.0,0.0,0.0]</velocity>
+        <temperature>294</temperature>
+        <color>0</color>
+        </geom_object>
+      </material>
+      <contact>
+        <type>null</type>
+        <materials>[0]</materials>
+        <mu>0.1</mu>
+      </contact>
+    </MPM>
+  </MaterialProperties>
+
+  <Grid>
+      <BoundaryConditions>                      
+      </BoundaryConditions>
+      <Level>
+        <Box label = "1">
+            <lower>[-2.0, -2.0, -2.0]</lower>
+            <upper>[3.0, 3.0, 3.0]</upper>
+            <resolution>[5,5,5]</resolution>
+            <extraCells>[0,0,0]</extraCells>
+            <patches>[1,1,1]</patches>
+        </Box>
+      </Level>
+  </Grid>
+
+</Uintah_specification>
