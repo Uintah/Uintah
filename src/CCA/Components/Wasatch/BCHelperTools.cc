@@ -220,10 +220,6 @@ namespace Wasatch {
     Expr::ExpressionFactory& factory = *gh.exprFactory;
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiTag, patch->getID(), true ) );
     
-    //const FieldT& phiField = phiExpr.value();
-    //const int iGhost = phiField.window_without_ghost().flat_index( ghostPointIJK );
-    //const double ghostBCValue = 2*bcValue - interiorValue
-
     if (isStaggered) {
       if (bc_kind.compare("Dirichlet")==0) {
         BC bound_cond(bcPointIndex, BCVal(bcValue));
@@ -246,8 +242,8 @@ namespace Wasatch {
   /**
    *  \ingroup WasatchCore
    *
-   *  \brief This function sets the boundary condition on a point. this gets
-   called from set_bc_on_face.
+   *  \brief This function sets the boundary condition on a collection of points. 
+   this gets called from set_bc_on_face.
    *
    */
   template < typename FieldT, typename BCOpT >
@@ -271,28 +267,20 @@ namespace Wasatch {
     
     const bool withoutGhost = true;
     SpatialOps::structured::MemoryWindow fieldWindow = get_memory_window_for_uintah_field<FieldT>(patch, withoutGhost);
-    //typedef Wasatch::BoundaryCondition<FieldT,BCVal> BCNew;
-    //const FieldT& phiField = phiExpr.value();
-    //const int iGhost = phiField.window_without_ghost().flat_index( ghostPointIJK );
-    //const double ghostBCValue = 2*bcValue - interiorValue
     
     if (isStaggered) {
       if (bc_kind.compare("Dirichlet")==0) {
-        //BC bound_cond(bcPointIndex, BCVal(bcValue));
         BC bound_cond(fieldWindow,bcPointsIJK,BCVal(bcValue));
         phiExpr.process_after_evaluate( fieldName, bound_cond );
-        //BC bound_cond_ghost(ghostPointIJK, BCVal(bcValue));
         BC bound_cond_ghost(fieldWindow,ghostPointsIJK, BCVal(bcValue));
         phiExpr.process_after_evaluate( fieldName, bound_cond_ghost );
       } else {
-//        BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
         BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );        
         phiExpr.process_after_evaluate(fieldName, bcOp );
-//        //BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
-//        //phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
+        //BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
+        //phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
       }
     } else {
-//      BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
       BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );              
       phiExpr.process_after_evaluate(fieldName, bcOp );
     }
@@ -458,6 +446,8 @@ namespace Wasatch {
     
       bcPointsIJK.push_back(bcPointIJK);
       ghostPointsIJK.push_back(ghostPointIJK);
+
+//    //!!!!!! TSAAD: PLEASE DO NOT DELETE THE FOLLOWING BLOCK !!!!    
 //      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
 //                                     bcPointIJK, ghostPointIJK, bcSide, bc_value,
 //                                     opdb, is_staggered_bc(staggeredLocation, face),
@@ -469,7 +459,7 @@ namespace Wasatch {
                                      opdb, is_staggered_bc(staggeredLocation, face),
                                      bc_kind);
     
-    
+//    //!!!!!! TSAAD: PLEASE DO NOT DELETE THE FOLLOWING BLOCK !!!!    
 //    for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 //      SCIRun::IntVector bc_point_indices(*bound_ptr);
 //      //std::cout << "bc point indices " << bc_point_indices << std::endl << std::endl;
@@ -941,9 +931,9 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
-              //const double ghostValue = 2.0*bc_value - poissonField[iInterior];
-              //poissonRHS[iInterior] += bc_value/denom;
+//            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
+//            const double ghostValue = 2.0*bc_value - poissonField[iInterior];
+//            poissonRHS[iInterior] += bc_value/denom;
               poissonRHS[iInterior] += 2.0*bc_value/denom;
             }
           } else if (bc_kind=="Neumann") {
@@ -960,9 +950,9 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
-              //const double ghostValue = spacing*bc_value + poissonField[iInterior];
-              //poissonRHS[iInterior] += ghostValue/denom;
+//            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
+//            const double ghostValue = spacing*bc_value + poissonField[iInterior];
+//            poissonRHS[iInterior] += ghostValue/denom;
               poissonRHS[iInterior] += spacing*bc_value/denom;
             }
           } else {
