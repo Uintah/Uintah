@@ -635,14 +635,13 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           FILE *fp;
           
           if( myFiles.count(filename) == 0 ){
-            createFile(filename);
-            fp = fopen(filename.c_str(), "a");
+            createFile(filename, fp);
             myFiles[filename] = fp;
           
           } else {
             fp = myFiles[filename];
           }
-          
+
           if (!fp){
             throw InternalError("\nERROR:dataAnalysisModule:lineExtract:  failed opening file"+filename,__FILE__, __LINE__);
           }   
@@ -701,15 +700,15 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 }
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
-void lineExtract::createFile(string& filename)
+void lineExtract::createFile(string& filename,  FILE*& fp)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
   ifstream doExists( filename.c_str() );
   if(doExists){
+    fp = fopen(filename.c_str(), "a");
     return;
   }
   
-  FILE *fp;
   fp = fopen(filename.c_str(), "w");
   fprintf(fp,"X_CC      Y_CC      Z_CC      Time"); 
   
@@ -781,7 +780,7 @@ void lineExtract::createFile(string& filename)
     }
   }
   fprintf(fp,"\n");
-  fclose(fp);
+  
   cout << Parallel::getMPIRank() << " lineExtract:Created file " << filename << endl;
 }
 //______________________________________________________________________
