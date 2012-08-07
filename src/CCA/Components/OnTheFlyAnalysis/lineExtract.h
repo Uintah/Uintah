@@ -109,7 +109,7 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename);
+    void createFile(string& filename, FILE*& fp);
     
     void createDirectory(string& lineName, string& levelIndex);
                     
