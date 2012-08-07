@@ -312,14 +312,18 @@
         <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
       </image>
 
-      <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
-      <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
-      <level                  spec="OPTIONAL INTEGER"/> 
-      <temperature            spec="OPTIONAL DOUBLE" />
-      <color                  spec="OPTIONAL DOUBLE" />
-      <density                spec="OPTIONAL DOUBLE" />
-      <pressure               spec="OPTIONAL DOUBLE" />
-      <volumeFraction         spec="OPTIONAL DOUBLE" />
+      <res                     spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
+      <velocity                spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
+      <level                   spec="OPTIONAL INTEGER"/> 
+      <temperature             spec="OPTIONAL DOUBLE" />
+      <color                   spec="OPTIONAL DOUBLE" />
+      <density                 spec="OPTIONAL DOUBLE" />
+      <pressure                spec="OPTIONAL DOUBLE" />
+      <volumeFraction          spec="OPTIONAL DOUBLE" />
+      <affineTransformation_A0 spec="OPTIONAL VECTOR" /> <!-- If you like to add some new input variables to ... -->
+      <affineTransformation_A1 spec="OPTIONAL VECTOR" /> <!-- "geom_object" section, you should also mention them in ... -->
+      <affineTransformation_A2 spec="OPTIONAL VECTOR" /> <!-- /src/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.cc -->
+      <affineTransformation_b  spec="OPTIONAL VECTOR" />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 

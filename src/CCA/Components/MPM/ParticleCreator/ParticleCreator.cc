@@ -523,7 +523,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
   if(hasFiner){
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
-
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
@@ -536,7 +535,20 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
        continue;
       }
     }
-    
+
+    // Affine transformation for making conforming particle distributions
+    //  to be used in the conforming CPDI simulations. The input vectors are
+    //  optional and if you do not liketo use afine transformation, just do
+    //  not define them in the input file.
+    Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
+    Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
+    Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
+    Vector affineTrans_b= obj->getInitialData_Vector("affineTransformation_b");
+    Matrix3 affineTrans_A(
+            affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
+            affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
+            affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
+
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
@@ -547,6 +559,11 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
             throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
           }
           if (piece->inside(p)){ 
+            Vector p1(p(0),p(1),p(2));
+            p1=affineTrans_A*p1+affineTrans_b;
+            p(0)=p1[0];
+            p(1)=p1[1];
+            p(2)=p1[2];
             d_object_points[key].push_back(p);
           }
         }  // z
@@ -569,9 +586,24 @@ ParticleCreator::initializeParticle(const Patch* patch,
   IntVector ppc = (*obj)->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
   Vector dxcc = patch->dCell();
+
+  // Affine transformation for making conforming particle distributions
+  //  to be used in the conforming CPDI simulations. The input vectors are
+  //  optional and if you do not liketo use afine transformation, just do
+  //  not define them in the input file.
+  Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
+  Vector affineTrans_A1=(*obj)->getInitialData_Vector("affineTransformation_A1");
+  Vector affineTrans_A2=(*obj)->getInitialData_Vector("affineTransformation_A2");
+  Vector affineTrans_b= (*obj)->getInitialData_Vector("affineTransformation_b");
+  Matrix3 affineTrans_A(
+          affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
+          affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
+          affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
   Matrix3 size(1./((double) ppc.x()),0.,0.,
               0.,1./((double) ppc.y()),0.,
               0.,0.,1./((double) ppc.z()));
+
+  size=affineTrans_A*size;
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
 //MMS
  string mms_type = d_flags->d_mms_type;

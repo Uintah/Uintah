@@ -127,10 +127,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   // Step 3 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
-  geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
-  geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
-  geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
-  geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",   GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
+  geom_obj_data.push_back(GeometryObject::DataItem("temperature",            GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("velocity",               GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A0",GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A1",GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A2",GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_b", GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",         GeometryObject::Double));
 
   if(flags->d_with_color){
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
