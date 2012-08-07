@@ -868,11 +868,11 @@ namespace Wasatch {
      5. For each child, get the cell faces and set appropriate
      boundary conditions
      */
-    // check if we have plus boundary faces on this patch
-    bool hasPlusFace[3] = {false,false,false};
-    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
-    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
-    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
+//    // check if we have plus boundary faces on this patch
+//    bool hasPlusFace[3] = {false,false,false};
+//    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
+//    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
+//    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
     namespace SS = SpatialOps::structured;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
@@ -941,7 +941,7 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
+//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
               //const double ghostValue = 2.0*bc_value - poissonField[iInterior];
               //poissonRHS[iInterior] += bc_value/denom;
               poissonRHS[iInterior] += 2.0*bc_value/denom;
@@ -960,7 +960,7 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
+//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
               //const double ghostValue = spacing*bc_value + poissonField[iInterior];
               //poissonRHS[iInterior] += ghostValue/denom;
               poissonRHS[iInterior] += spacing*bc_value/denom;
@@ -1163,11 +1163,11 @@ namespace Wasatch {
                             SVolField& poissonField,
                             const Uintah::Patch* patch,
                             const int material) {
-    // check if we have plus boundary faces on this patch
-    bool hasPlusFace[3] = {false,false,false};
-    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
-    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
-    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
+//    // check if we have plus boundary faces on this patch
+//    bool hasPlusFace[3] = {false,false,false};
+//    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
+//    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
+//    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
     namespace SS = SpatialOps::structured;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
