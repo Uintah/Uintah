@@ -223,7 +223,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("maximum_particle_velocity",d_max_vel);
   mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){
-    mpm_flag_ps->get("PresribedDeformationFile",d_prescribedDeformationFile);
+    mpm_flag_ps->get("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
 //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
@@ -394,7 +394,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("maximum_particle_velocity",d_max_vel);
   ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){
-    ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
+    ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
 //MMS
   ps->appendElement("RunMMSProblem",d_mms_type);
