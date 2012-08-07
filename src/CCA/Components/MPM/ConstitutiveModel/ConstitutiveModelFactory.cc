@@ -67,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arenisca_BB.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -114,6 +115,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew NonLocalDruckerPrager(child,flags));
   else if (mat_type == "Arenisca")
     return(scinew Arenisca(child,flags));
+  else if (mat_type == "arenisca")
+    return(scinew Arenisca_BB(child,flags));
 
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
