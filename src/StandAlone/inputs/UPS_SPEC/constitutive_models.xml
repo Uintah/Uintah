@@ -7,7 +7,7 @@
                                                                         ideal_gas, membrane, murnaghanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
-                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, Arenisca, camclay'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, Arenisca, arenisca, camclay'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -666,21 +666,21 @@
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
   <!--______________________________________________________________________ -->
-  <!-- The floowing are for the Arenisca model -->
-    <FSLOPE                           spec="OPTIONAL DOUBLE"  />
-    <FSLOPE_p                         spec="OPTIONAL DOUBLE"  />
-    <B0                               spec="OPTIONAL DOUBLE"  />
-    <G0                               spec="OPTIONAL DOUBLE"  />
-    <PEAKI1                           spec="OPTIONAL DOUBLE"  />
-    <CR                               spec="OPTIONAL DOUBLE"  />
-    <p0_crush_curve                   spec="OPTIONAL DOUBLE"  />
-    <p1_crush_curve                   spec="OPTIONAL DOUBLE"  />
-    <p3_crush_curve                   spec="OPTIONAL DOUBLE"  />
-    <p4_fluid_effect                  spec="OPTIONAL DOUBLE"  />
-    <kinematic_hardening_constant     spec="OPTIONAL DOUBLE"  />
-    <fluid_B0                         spec="OPTIONAL DOUBLE"  />
-    <fluid_pressure_initial           spec="OPTIONAL DOUBLE"  />
-    <subcycling_characteristic_number spec="OPTIONAL DOUBLE"  />
+  <!-- The following are for the Arenisca model -->
+    <FSLOPE                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <FSLOPE_p                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <B0                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <G0                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <PEAKI1                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <CR                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <p0_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <p1_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <p3_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <p4_fluid_effect                  spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <kinematic_hardening_constant     spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <fluid_B0                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <fluid_pressure_initial           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
+    <subcycling_characteristic_number spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arenisca" />
     
   <!--______________________________________________________________________ -->    
   <!-- The following are for the UCNH & JWLppMPM model initial stress -->
@@ -733,11 +733,19 @@
       <M spec="REQUIRED DOUBLE 'positive'" need_applies_to="type camclay_yield_function"/>
     </plastic_yield_condition>
     <internal_variable_model  spec="REQUIRED NO_DATA"
-                              attribute1="type REQUIRED STRING 'borja_consolidation_pressure'"
-                              need_applies_to="type camclay">
+                              attribute1="type REQUIRED STRING 'borja_consolidation_pressure,arenisca_kappa'"
+                              need_applies_to="type camclay arenisca">
       <pc0 spec="REQUIRED DOUBLE 'negative'" need_applies_to="type borja_consolidation_pressure"/>
       <lambdatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_consolidation_pressure"/>
       <kappatilde spec="REQUIRED DOUBLE 'positive'" need_applies_to="type borja_consolidation_pressure"/>
+      <arenisca_fSlope spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_peakI1 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_Cr spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_B0 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_p0 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_p1 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_p3 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
+      <arenisca_p4 spec="REQUIRED DOUBLE" need_applies_to="type arenisca_kappa" />
     </internal_variable_model>
 
   </constitutive_model>
