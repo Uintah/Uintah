@@ -219,8 +219,8 @@ namespace Wasatch {
     typedef typename BCOpT::BCEvalT BCEvaluator;
     Expr::ExpressionFactory& factory = *gh.exprFactory;
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiTag, patch->getID(), true ) );
-
-    //FieldT& phiField = phiExpr.value();
+    
+    //const FieldT& phiField = phiExpr.value();
     //const int iGhost = phiField.window_without_ghost().flat_index( ghostPointIJK );
     //const double ghostBCValue = 2*bcValue - interiorValue
 
@@ -242,6 +242,62 @@ namespace Wasatch {
     }
   }
 
+  //-----------------------------------------------------------------------------
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief This function sets the boundary condition on a point. this gets
+   called from set_bc_on_face.
+   *
+   */
+  template < typename FieldT, typename BCOpT >
+  void set_bc_on_points( const Uintah::Patch* const patch,
+                        const GraphHelper& gh,
+                        const Expr::Tag phiTag,
+                        const std::string fieldName,
+                        const std::vector<SpatialOps::structured::IntVec>& bcPointsIJK,
+                        const std::vector<SpatialOps::structured::IntVec>& ghostPointsIJK,
+                        const SpatialOps::structured::BCSide bcSide,
+                        const double bcValue,
+                        const SpatialOps::OperatorDatabase& opdb,
+                        const bool isStaggered,
+                        const std::string& bc_kind )
+  {
+    typedef SpatialOps::structured::ConstValEval BCVal;
+    typedef SpatialOps::structured::BoundaryCondition<FieldT,BCVal> BC;
+    typedef typename BCOpT::BCEvalT BCEvaluator;
+    Expr::ExpressionFactory& factory = *gh.exprFactory;
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiTag, patch->getID(), true ) );
+    
+    const bool withoutGhost = true;
+    SpatialOps::structured::MemoryWindow fieldWindow = get_memory_window_for_uintah_field<FieldT>(patch, withoutGhost);
+    //typedef Wasatch::BoundaryCondition<FieldT,BCVal> BCNew;
+    //const FieldT& phiField = phiExpr.value();
+    //const int iGhost = phiField.window_without_ghost().flat_index( ghostPointIJK );
+    //const double ghostBCValue = 2*bcValue - interiorValue
+    
+    if (isStaggered) {
+      if (bc_kind.compare("Dirichlet")==0) {
+        //BC bound_cond(bcPointIndex, BCVal(bcValue));
+        BC bound_cond(fieldWindow,bcPointsIJK,BCVal(bcValue));
+        phiExpr.process_after_evaluate( fieldName, bound_cond );
+        //BC bound_cond_ghost(ghostPointIJK, BCVal(bcValue));
+        BC bound_cond_ghost(fieldWindow,ghostPointsIJK, BCVal(bcValue));
+        phiExpr.process_after_evaluate( fieldName, bound_cond_ghost );
+      } else {
+//        BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
+        BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );        
+        phiExpr.process_after_evaluate(fieldName, bcOp );
+//        //BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
+//        //phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
+      }
+    } else {
+//      BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
+      BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );              
+      phiExpr.process_after_evaluate(fieldName, bcOp );
+    }
+  }
+  
   //-----------------------------------------------------------------------------
   /**
    *  @struct BCOpTypeSelectorBase
@@ -388,6 +444,10 @@ namespace Wasatch {
     SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
     proc0cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << std::endl;
+    
+    std::vector<SS::IntVec> bcPointsIJK;
+    std::vector<SS::IntVec> ghostPointsIJK;
+    
     for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
       SCIRun::IntVector bc_point_indices(*bound_ptr);
       //std::cout << "bc point indices " << bc_point_indices << std::endl << std::endl;
@@ -395,11 +455,33 @@ namespace Wasatch {
       SS::IntVec bcPointIJK;
       SS::IntVec ghostPointIJK;
       get_bc_points_ijk ( staggeredLocation, face, bcSide, bc_kind, bc_point_indices, faceOffset, insideCellDir, bcPointIJK,ghostPointIJK, hasExtraCells);
-      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
-                                     bcPointIJK, ghostPointIJK, bcSide, bc_value,
+    
+      bcPointsIJK.push_back(bcPointIJK);
+      ghostPointsIJK.push_back(ghostPointIJK);
+//      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
+//                                     bcPointIJK, ghostPointIJK, bcSide, bc_value,
+//                                     opdb, is_staggered_bc(staggeredLocation, face),
+//                                     bc_kind);
+    }
+    
+      set_bc_on_points< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
+                                     bcPointsIJK, ghostPointsIJK, bcSide, bc_value,
                                      opdb, is_staggered_bc(staggeredLocation, face),
                                      bc_kind);
-    }
+    
+    
+//    for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+//      SCIRun::IntVector bc_point_indices(*bound_ptr);
+//      //std::cout << "bc point indices " << bc_point_indices << std::endl << std::endl;
+//      bc_point_indices = bc_point_indices - patchCellOffset; // get local cell index (with respect to patch). SpatialOps needs local cell indices.
+//      SS::IntVec bcPointIJK;
+//      SS::IntVec ghostPointIJK;
+//      get_bc_points_ijk ( staggeredLocation, face, bcSide, bc_kind, bc_point_indices, faceOffset, insideCellDir, bcPointIJK,ghostPointIJK, hasExtraCells);
+//      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
+//                                     bcPointIJK, ghostPointIJK, bcSide, bc_value,
+//                                     opdb, is_staggered_bc(staggeredLocation, face),
+//                                     bc_kind);
+//    }
   }
 
   //-----------------------------------------------------------------------------
@@ -786,11 +868,11 @@ namespace Wasatch {
      5. For each child, get the cell faces and set appropriate
      boundary conditions
      */
-//    // check if we have plus boundary faces on this patch
-//    bool hasPlusFace[3] = {false,false,false};
-//    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
-//    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
-//    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
+    // check if we have plus boundary faces on this patch
+    bool hasPlusFace[3] = {false,false,false};
+    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
+    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
+    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
     namespace SS = SpatialOps::structured;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
@@ -859,7 +941,7 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               //const double ghostValue = 2.0*bc_value - poissonField[iInterior];
               //poissonRHS[iInterior] += bc_value/denom;
               poissonRHS[iInterior] += 2.0*bc_value/denom;
@@ -878,7 +960,7 @@ namespace Wasatch {
                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-//              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
+              const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);            
               //const double ghostValue = spacing*bc_value + poissonField[iInterior];
               //poissonRHS[iInterior] += ghostValue/denom;
               poissonRHS[iInterior] += spacing*bc_value/denom;
@@ -1081,11 +1163,11 @@ namespace Wasatch {
                             SVolField& poissonField,
                             const Uintah::Patch* patch,
                             const int material) {
-//    // check if we have plus boundary faces on this patch
-//    bool hasPlusFace[3] = {false,false,false};
-//    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
-//    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
-//    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
+    // check if we have plus boundary faces on this patch
+    bool hasPlusFace[3] = {false,false,false};
+    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
+    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
+    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
     namespace SS = SpatialOps::structured;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
