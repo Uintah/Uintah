@@ -89,12 +89,18 @@ evaluate()
 
   SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( StrTsrMag );
   SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( StrTsrMag );
+  *xyfield <<= 0.0;
+  *yxfield <<= 0.0;
 
   SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( StrTsrMag );
   SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( StrTsrMag );
+  *xzfield <<= 0.0;
+  *zxfield <<= 0.0;
 
   SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( StrTsrMag );
   SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( StrTsrMag );
+  *yzfield <<= 0.0;
+  *zyfield <<= 0.0;
 
   if ( doX_ ) {
     dudxOp_->apply_to_field( *vel1_, *tmp1 );      // S_11 = 0.5 * (du/dx + du/dx)
@@ -195,12 +201,18 @@ evaluate()
 
   SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( StrTsrMag );
   SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( StrTsrMag );
+  *xyfield <<= 0.0;
+  *yxfield <<= 0.0;
 
   SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( StrTsrMag );
   SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( StrTsrMag );
+  *xzfield <<= 0.0;
+  *zxfield <<= 0.0;
 
   SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( StrTsrMag );
   SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( StrTsrMag );
+  *zyfield <<= 0.0;
+  *yzfield <<= 0.0;
 
   SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( StrTsrMag );
   SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( StrTsrMag );
