@@ -84,10 +84,10 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     struct CMData {
-      double FSLOPE;
-      double FSLOPE_p;
+      double fSlope;
+      double fSlope_p;
       double hardening_modulus;
-      double CR;
+      double cap_ratio;
       double p0_crush_curve;
       double p1_crush_curve;
       double p3_crush_curve;
@@ -96,13 +96,13 @@ namespace Uintah {
       double fluid_B0;
       double fluid_pressure_initial;
       double subcycling_characteristic_number;
-      double PEAKI1;
+      double peakI1;
       double B0;
       double G0;
     };
 
   private:
-    CMData d_initialData;
+    CMData d_cm;
 
     // Prevent copying of this class
     // copy constructor
@@ -141,10 +141,10 @@ namespace Uintah {
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
 
-    double YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double& PEAKI1);
+    double YieldFunction(const Matrix3& stress, const double& fSlope, const double& kappa, const double& cap_radius, const double& peakI1);
 
 
-    double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1);
+    double YieldFunction(Matrix3& stress, const double& fSlope, const double& kappa, const double& cap_radius, const double&peakI1);
 
     ////////////////////////////////////////////////////////////////////////
     /* Make the value for pLocalized computed locally available outside of the model. */
