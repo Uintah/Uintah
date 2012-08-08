@@ -133,8 +133,10 @@ void tolerance_failure()
     Thread::exitAll(2);
 }
 
-void displayProblemLocation(const string& var, int matl,
-                            const Patch* patch, double time)
+void displayProblemLocation(const string& var, 
+                            int matl,
+                            const Patch* patch, 
+                            double time)
 {
   cerr << "Time: " << time << endl <<
     "Variable: " << var << endl <<
@@ -144,8 +146,10 @@ void displayProblemLocation(const string& var, int matl,
 
 }
 
-void displayProblemLocation(const string& var, int matl,
-                            const Patch* patch, const Patch* patch2,
+void displayProblemLocation(const string& var, 
+                            int matl,
+                            const Patch* patch, 
+                            const Patch* patch2,
                             double time)
 {
   cerr << "Time: " << time << " "<<
@@ -215,9 +219,9 @@ bool compare(Vector a, Vector b, double abs_tolerance, double rel_tolerance)
   }
 
   return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
-    compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
-    compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
-}
+         compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
+         compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
+}   
 
 bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
 { 
@@ -580,15 +584,15 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
 //______________________________________________________________________
 //
 template <class T>
-bool MaterialParticleVarData::
-compare(MaterialParticleVarData& data2, 
-        ParticleVariable<T>* value1,
-        ParticleVariable<T>* value2, 
-        int matl,
-        double time1, 
-        double /*time2*/, 
-        double abs_tolerance,
-        double rel_tolerance)
+  bool MaterialParticleVarData::compare(MaterialParticleVarData& data2,
+                                        ParticleVariable<T>* value1,
+                                        ParticleVariable<T>* value2, 
+                                        int matl,
+                                        double time1, 
+                                        double /*time2*/, 
+                                        double abs_tolerance,
+                                        double rel_tolerance)
+
 {
   bool passes = true;
   ParticleSubset* pset1 = value1->getParticleSubset();
@@ -749,16 +753,16 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 
 //__________________________________
 template <class T>
-void compareParticles(DataArchive* da1, 
-                      DataArchive* da2, 
-                      const string& var,
-                      int matl, 
-                      const Patch* patch1, 
-                      const Patch* patch2,
-                      double time, 
-                      int timestep, 
-                      double abs_tolerance,
-                      double rel_tolerance)
+  void compareParticles(DataArchive* da1, 
+                        DataArchive* da2, 
+                        const string& var,
+                        int matl, 
+                        const Patch* patch1, 
+                        const Patch* patch2,
+                        double time, 
+                        int timestep, 
+                        double abs_tolerance,
+                        double rel_tolerance)
 {
   ParticleVariable<T> value1;
   ParticleVariable<T> value2;
@@ -865,11 +869,12 @@ class SpecificFieldComparator : public FieldComparator
 {
 public:
   SpecificFieldComparator(Iterator begin)
-    : begin_(begin) { }
+    : d_begin(begin) { }
   virtual ~SpecificFieldComparator() {}
   
   virtual void
-  compareFields(DataArchive* da1, DataArchive* da2, 
+  compareFields(DataArchive* da1, 
+                DataArchive* da2, 
                 const string& var,
                 ConsecutiveRangeSet matls, 
                 const Patch* patch,
@@ -878,7 +883,7 @@ public:
                 double abs_tolerance,
                 double rel_tolerance);
 private:
-  Iterator begin_;
+  Iterator d_begin;
 };
 
 //__________________________________
@@ -1034,22 +1039,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
 
 //__________________________________
 template <class Field, class Iterator>
-void SpecificFieldComparator<Field, Iterator>::
-
-compareFields(DataArchive* da1, 
-              DataArchive* da2, 
-              const string& var,
-              ConsecutiveRangeSet matls, 
-              const Patch* patch,
-              const Array3<const Patch*>& patch2Map,
-              double time1, 
-              int timestep, 
-              double abs_tolerance,
-              double rel_tolerance)
+  void SpecificFieldComparator<Field, Iterator>::compareFields(DataArchive* da1, 
+                                                             DataArchive* da2, 
+                                                             const string& var,
+                                                             ConsecutiveRangeSet matls, 
+                                                             const Patch* patch,
+                                                             const Array3<const Patch*>& patch2Map,
+                                                             double time1, 
+                                                             int timestep, 
+                                                             double abs_tolerance,
+                                                             double rel_tolerance)     
 {
-  Field* pField2;
+  Field* field2;
   bool firstMatl = true;
   
+  //__________________________________
+  //  Matl loop
   for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
        matlIter != matls.end(); matlIter++){
     int matl = *matlIter;
@@ -1061,32 +1066,34 @@ compareFields(DataArchive* da1,
     typename map<const Patch*, Field*>::iterator findIter;
     
     
-    for (Iterator iter = begin_ ; !iter.done(); iter++ ) {
+    for (Iterator iter = d_begin ; !iter.done(); iter++ ) {
       const Patch* patch2 = patch2Map[*iter];
     
       findIter = patch2FieldMap.find(patch2);
+      
       if (findIter == patch2FieldMap.end()) {
         if (firstMatl) { // check only needs to be made the first round
           ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
           ASSERT(matls == matls2); // check should have been made previously
         }
-        pField2 = scinew Field();
-        patch2FieldMap[patch2] = pField2;
-        da2->query(*pField2, var, matl, patch2, timestep);
+        field2 = scinew Field();
+        patch2FieldMap[patch2] = field2;
+        da2->query(*field2, var, matl, patch2, timestep);
       }
       else {
-        pField2 = (*findIter).second;
+        field2 = (*findIter).second;
       }
 
 
-      if (!compare(field[*iter], (*pField2)[*iter], abs_tolerance, rel_tolerance)) {
+      if (!compare(field[*iter], (*field2)[*iter], abs_tolerance, rel_tolerance)) {
+      
         cerr << "DIFFERENCE " << *iter << "  ";
         displayProblemLocation(var, matl, patch, patch2, time1);
  
         cerr << d_filebase1 << " (1)\t\t" << d_filebase2 << " (2)"<<endl;
         print(cerr, field[*iter]);
         cerr << "\t\t";
-        print(cerr, (*pField2)[*iter]);
+        print(cerr, (*field2)[*iter]);
         cerr << endl;
 
         tolerance_failure();
@@ -1102,7 +1109,7 @@ compareFields(DataArchive* da1,
 }
 
 
-//__________________________________
+//______________________________________________________________________
 // map nodes to their owning patch in a level.
 // Nodes are used because I am assuming that whoever owns the node at
 // that index also owns the cell, or whatever face at that same index.
