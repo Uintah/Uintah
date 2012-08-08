@@ -255,17 +255,17 @@ class MaterialParticleVarData
 {
 public:
   MaterialParticleVarData()
-    : name_(""), particleIDData_(0), patchMap_(0) {}
+    : d_name(""), d_particleIDData(0), d_patchMap(0) {}
   MaterialParticleVarData(const string& name)
-    : name_(name), particleIDData_(0), patchMap_(0) {}
+    : d_name(name), d_particleIDData(0), d_patchMap(0) {}
   
-  ~MaterialParticleVarData(); // needs to delete the particleVars_
+  ~MaterialParticleVarData(); // needs to delete the d_particleVars
                               // and patchMap if "p.particleID"
 
   void setVarName(const string& varName)
-  { name_ = varName; }
+  { d_name = varName; }
   
-  const string& getName() { return name_; }
+  const string& getName() { return d_name; }
   
   // add for each patch
   void add(ParticleVariableBase* pvb, const Patch* patch);
@@ -281,12 +281,12 @@ public:
   
   void setParticleIDData(MaterialParticleVarData* particleIDData)
   {
-    particleIDData_ = particleIDData;
-    patchMap_ = particleIDData->patchMap_;
+    d_particleIDData = particleIDData;
+    d_patchMap = particleIDData->d_patchMap;
   }
 
   const vector<ParticleVariableBase*>& getParticleVars()
-  { return particleVars_; }
+  { return d_particleVars; }
 
   long64 getParticleID(particleIndex index);
   const Patch* getPatch(particleIndex index);
@@ -297,14 +297,14 @@ private:
           double time1, double time2,
           double abs_tolerance, double rel_tolerance);
   
-  string name_;
+  string d_name;
   // vector elements each represent a patch -- doesn't matter which
-  vector<ParticleVariableBase*> particleVars_;
+  vector<ParticleVariableBase*> d_particleVars;
   vector<ParticleSubset*> subsets_;
-  vector<const Patch*> patches_;
+  vector<const Patch*> d_patches;
 
-  MaterialParticleVarData* particleIDData_;
-  map<long64, const Patch*>* patchMap_;
+  MaterialParticleVarData* d_particleIDData;
+  map<long64, const Patch*>* d_patchMap;
 };
 
 class MaterialParticleData
@@ -349,13 +349,13 @@ private:
 //__________________________________
 MaterialParticleVarData::~MaterialParticleVarData()
 {
-  vector<ParticleVariableBase*>::iterator iter = particleVars_.begin();
-  for ( ; iter != particleVars_.end(); iter++){
+  vector<ParticleVariableBase*>::iterator iter = d_particleVars.begin();
+  for ( ; iter != d_particleVars.end(); iter++){
     delete *iter;
   }
     
-  if (name_ == "p.particleID")
-    delete patchMap_;
+  if (d_name == "p.particleID")
+    delete d_patchMap;
 }
 
 //__________________________________
@@ -373,16 +373,16 @@ void MaterialParticleData::createPatchMap()
 //__________________________________
 void MaterialParticleVarData::createPatchMap()
 {
-  ASSERT(name_ == "p.particleID");
-  if (patchMap_)
-    delete patchMap_;
+  ASSERT(d_name == "p.particleID");
+  if (d_patchMap)
+    delete d_patchMap;
   
-  patchMap_ = scinew map<long64, const Patch*>();
+  d_patchMap = scinew map<long64, const Patch*>();
   
-  for (unsigned int patch = 0; patch < particleVars_.size(); patch++) {
-    particleIndex count = particleVars_[patch]->getParticleSubset()->numParticles();
+  for (unsigned int patch = 0; patch < d_particleVars.size(); patch++) {
+    particleIndex count = d_particleVars[patch]->getParticleSubset()->numParticles();
     
-    ParticleVariable<long64>* particleID = dynamic_cast< ParticleVariable<long64>* >(particleVars_[patch]);
+    ParticleVariable<long64>* particleID = dynamic_cast< ParticleVariable<long64>* >(d_particleVars[patch]);
     
     if (particleID == 0) {
       cerr << "p.particleID must be a ParticleVariable<long64>\n";
@@ -390,7 +390,7 @@ void MaterialParticleVarData::createPatchMap()
     }
     
     for (int i = 0; i < count; i++) {
-      (*patchMap_)[(*particleID)[i]] = patches_[patch];
+      (*d_patchMap)[(*particleID)[i]] = d_patches[patch];
     }
   }
 }
@@ -506,21 +506,21 @@ void MaterialParticleData::gather(ParticleSubset* gatherSubset)
 void MaterialParticleVarData::add(ParticleVariableBase* pvb,
                                   const Patch* patch)
 {
-  particleVars_.push_back(pvb);
+  d_particleVars.push_back(pvb);
   subsets_.push_back(pvb->getParticleSubset());
-  patches_.push_back(patch);
+  d_patches.push_back(patch);
 }
 
 //__________________________________
 void MaterialParticleVarData::gather(ParticleSubset* gatherSubset)
 {
-  ASSERT(particleVars_.size() > 0);
-  ParticleVariableBase* pvb = particleVars_[0]->clone();
-  pvb->gather(gatherSubset, subsets_, particleVars_, 0);
-  particleVars_.clear();
+  ASSERT(d_particleVars.size() > 0);
+  ParticleVariableBase* pvb = d_particleVars[0]->clone();
+  pvb->gather(gatherSubset, subsets_, d_particleVars, 0);
+  d_particleVars.clear();
   
   subsets_.clear();
-  patches_.clear();
+  d_patches.clear();
   add(pvb, 0 /* all patches */);
 }
 
@@ -529,12 +529,12 @@ bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
         double abs_tolerance, double rel_tolerance)
 {
-  cerr << "\tVariable: " << name_ << ", comparing via particle ids" << endl;
-  ASSERT(particleVars_.size() == 1 && subsets_.size() == 1 &&
-         data2.particleVars_.size() == 1 && data2.subsets_.size() == 1);
+  cerr << "\tVariable: " << d_name << ", comparing via particle ids" << endl;
+  ASSERT(d_particleVars.size() == 1 && subsets_.size() == 1 &&
+         data2.d_particleVars.size() == 1 && data2.subsets_.size() == 1);
   
-  ParticleVariableBase* pvb1 = particleVars_[0];
-  ParticleVariableBase* pvb2 = data2.particleVars_[0];
+  ParticleVariableBase* pvb1 = d_particleVars[0];
+  ParticleVariableBase* pvb2 = data2.d_particleVars[0];
 
   // type checks should have been made earlier
   ASSERT(pvb1->virtualGetTypeDescription() ==
@@ -597,7 +597,7 @@ compare(MaterialParticleVarData& data2,
   if (pset1->numParticles() != pset2->numParticles()) {
     cerr << "Inconsistent number of particles.\n";
     
-    displayProblemLocation(name_, matl, 0, time1);    
+    displayProblemLocation(d_name, matl, 0, time1);    
     
     cerr << d_filebase1 << " has " << pset1->numParticles() << " particles.\n";
     cerr << d_filebase2 << " has " << pset2->numParticles() << " particles.\n";
@@ -609,7 +609,7 @@ compare(MaterialParticleVarData& data2,
   // sort/gather achieves.
   for (int i = 0; i < pset1->numParticles(); i++) {
     if (!(::compare((*value1)[i], (*value2)[i], abs_tolerance, rel_tolerance))) {
-      if (name_ != "p.particleID") {
+      if (d_name != "p.particleID") {
         ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       
@@ -625,7 +625,7 @@ compare(MaterialParticleVarData& data2,
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
       
-      displayProblemLocation(name_, matl, patch1, patch2, time1);  
+      displayProblemLocation(d_name, matl, patch1, patch2, time1);  
          
       cerr << d_filebase1 << ":\n" << (*value1)[i] << endl;
       cerr << d_filebase2 << ":\n" << (*value2)[i] << endl;
@@ -641,10 +641,10 @@ compare(MaterialParticleVarData& data2,
 //__________________________________
 long64 MaterialParticleVarData::getParticleID(particleIndex index)
 {
-  ASSERT(particleIDData_ != 0);
-  ASSERT(particleIDData_->particleVars_.size() == 1);
+  ASSERT(d_particleIDData != 0);
+  ASSERT(d_particleIDData->d_particleVars.size() == 1);
   ParticleVariable<long64>* particleIDs =
-    dynamic_cast<ParticleVariable<long64>*>(particleIDData_->particleVars_[0]);
+    dynamic_cast<ParticleVariable<long64>*>(d_particleIDData->d_particleVars[0]);
   ASSERT(particleIDs != 0);
   
   return (*particleIDs)[index];
@@ -653,8 +653,8 @@ long64 MaterialParticleVarData::getParticleID(particleIndex index)
 //__________________________________
 const Patch* MaterialParticleVarData::getPatch(particleIndex index)
 {
-  ASSERT(patchMap_ != 0);
-  return (*patchMap_)[getParticleID(index)];
+  ASSERT(d_patchMap != 0);
+  return (*d_patchMap)[getParticleID(index)];
 }
 
 /*
@@ -1111,7 +1111,8 @@ compareFields(DataArchive* da1,
 void buildPatchMap(LevelP level, 
                    const string& filebase,
                    Array3<const Patch*>& patchMap, 
-                   double time, Patch::VariableBasis basis)
+                   double time, 
+                   Patch::VariableBasis basis)
 {
   const PatchSet* allPatches = level->allPatches();
   const PatchSubset* patches = allPatches->getUnion();
