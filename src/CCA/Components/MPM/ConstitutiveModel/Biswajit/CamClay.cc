@@ -474,10 +474,12 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pDeltaGamma_new,      
                            pDeltaGammaLabel_preReloc,             pset);
 
-    // Get the nternal variable and allocate space for the updated internal 
+    // Get the internal variable and allocate space for the updated internal 
     // variables
-    d_intvar->getInternalVariable(pset, old_dw);
-    d_intvar->allocateAndPutInternalVariable(pset, new_dw);
+    constParticleVariable<double> pPc;
+    ParticleVariable<double> pPc_new;
+    d_intvar->getInternalVariable(pset, old_dw, pPc);
+    d_intvar->allocateAndPutInternalVariable(pset, new_dw, pPc_new);
 
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
@@ -581,6 +583,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       state->elasticStrainTrial = strain_elast_tr;
       state->epse_v_tr = strain_elast_v_tr;
       state->epse_s_tr = strain_elast_s_tr;
+      state->p_c = pPc[idx];
 
       // Compute mu and q
       double mu = d_shear->computeShearModulus(state);
@@ -597,8 +600,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       double c_dil = sqrt((bulk + 4.0*mu/3.0)/rho_cur);
 
       // Get internal state variable (p_c)
-      double pc_n = d_intvar->computeInternalVariable(state, delT, matl, idx);
+      double pc_n = d_intvar->computeInternalVariable(state);
       state->p_c = pc_n;
+      pPc_new[idx] = pc_n;
         
       //-----------------------------------------------------------------------
       // Stage 2: Elastic-plastic stress update
@@ -731,11 +735,12 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           mu = d_shear->computeShearModulus(state);
           q = d_shear->computeQ(state);
           p = d_eos->computePressure(matl, state, zero, zero, 0.0);
-          pc = d_intvar->computeInternalVariable(state, delT, matl, idx);
+          pc = d_intvar->computeInternalVariable(state);
           state->shearModulus = mu;
           state->q = q;
           state->p = p;
           state->p_c = pc;
+          pPc_new[idx] = pc;
 
           dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
           dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
@@ -874,9 +879,10 @@ CamClay::carryForward(const PatchSubset* patches,
     new_dw->allocateAndPut(pDeltaGamma_new,      
                            pDeltaGammaLabel_preReloc,        pset);
 
-    // Get the internal variables
-    d_intvar->getInternalVariable(pset, old_dw);
-    d_intvar->allocateAndPutRigid(pset, new_dw);
+    // Get and copy the internal variables
+    constParticleVariable<double> pPc;
+    d_intvar->getInternalVariable(pset, old_dw, pPc);
+    d_intvar->allocateAndPutRigid(pset, new_dw, pPc);
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){

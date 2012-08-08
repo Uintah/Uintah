@@ -74,9 +74,6 @@ namespace UintahBB {
   public:
 
     // Internal variables
-    Uintah::constParticleVariable<double> pKappa;
-    Uintah::ParticleVariable<double> pKappa_new;
-
     const Uintah::VarLabel* pKappaLabel; 
     const Uintah::VarLabel* pKappaLabel_preReloc; 
 
@@ -135,29 +132,20 @@ namespace UintahBB {
                                             Uintah::DataWarehouse* new_dw);
 
     virtual void getInternalVariable(Uintah::ParticleSubset* pset,
-                                     Uintah::DataWarehouse* old_dw);
+                                     Uintah::DataWarehouse* old_dw,
+                                     Uintah::constParticleVariableBase& intvar);
 
     virtual void allocateAndPutInternalVariable(Uintah::ParticleSubset* pset,
-                                                Uintah::DataWarehouse* new_dw); 
+                                                Uintah::DataWarehouse* new_dw,
+                                                Uintah::ParticleVariableBase& intvar); 
 
     virtual void allocateAndPutRigid(Uintah::ParticleSubset* pset, 
-                                     Uintah::DataWarehouse* new_dw);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Get the internal variable
-    virtual double getInternalVariable(const Uintah::particleIndex idx) const;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Update the internal variable
-    virtual void updateInternalVariable(const Uintah::particleIndex idx,
-                                        const double& value); 
+                                     Uintah::DataWarehouse* new_dw,
+                                     Uintah::constParticleVariableBase& intvar);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the internal variable */
-    virtual double computeInternalVariable(const ModelState* state,
-                                           const double& delT,
-                                           const Uintah::MPMMaterial* matl,
-                                           const Uintah::particleIndex idx);
+    virtual double computeInternalVariable(const ModelState* state) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // Compute derivative of internal variable with respect to volumetric

@@ -145,67 +145,52 @@ InternalVar_BorjaPressure::allocateCMDataAdd(DataWarehouse* old_dw,
 
 void 
 InternalVar_BorjaPressure::initializeInternalVariable(ParticleSubset* pset,
-                                                DataWarehouse* new_dw)
+                                                      DataWarehouse* new_dw)
 {
-  new_dw->allocateAndPut(pPc_new, pPcLabel, pset);
+  ParticleVariable<double> pPc;
+  new_dw->allocateAndPut(pPc, pPcLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++) {
-    pPc_new[*iter] = d_pc0;
+    pPc[*iter] = d_pc0;
   }
 }
 
 void 
 InternalVar_BorjaPressure::getInternalVariable(ParticleSubset* pset ,
-                                         DataWarehouse* old_dw) 
+                                               DataWarehouse* old_dw,
+                                               constParticleVariableBase& pPc) 
 {
   old_dw->get(pPc, pPcLabel, pset);
 }
 
 void 
 InternalVar_BorjaPressure::allocateAndPutInternalVariable(ParticleSubset* pset,
-                                                     DataWarehouse* new_dw) 
+                                                          DataWarehouse* new_dw,
+                                                          ParticleVariableBase& pPc_new) 
 {
   new_dw->allocateAndPut(pPc_new, pPcLabel_preReloc, pset);
 }
 
 void
 InternalVar_BorjaPressure::allocateAndPutRigid(ParticleSubset* pset ,
-                                DataWarehouse* new_dw )
+                                               DataWarehouse* new_dw,
+                                               constParticleVariableBase& pPc)
 {
+  ParticleVariable<double> pPc_new;
   new_dw->allocateAndPut(pPc_new, pPcLabel_preReloc, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++){
-     pPc_new[*iter] = 0.0;
+     pPc_new[*iter] = dynamic_cast<constParticleVariable<double>& >(pPc)[*iter];
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//  Get the internal variable
-double 
-InternalVar_BorjaPressure::getInternalVariable(const particleIndex idx) const
-{
-  return pPc[idx];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//  Update the internal variable
-void 
-InternalVar_BorjaPressure::updateInternalVariable(const particleIndex idx,
-                                                  const double& pc)
-{
-  pPc_new[idx] = pc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //  Compute the internal variable
 double 
-InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
-                                                   const double& ,
-                                                   const MPMMaterial* ,
-                                                   const particleIndex idx)
+InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state) const
 {
   // Get old p_c
-  double pc_n = pPc[idx];
+  double pc_n = state->p_c;  // Old Pc
 
   // Get the trial elastic strain and the updated elastic strain
   // (volumetric part)
@@ -214,7 +199,6 @@ InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state,
 
   // Calculate new p_c
   double pc = pc_n*exp((strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
-  pPc_new[idx] = pc;
   return pc;
 }
 

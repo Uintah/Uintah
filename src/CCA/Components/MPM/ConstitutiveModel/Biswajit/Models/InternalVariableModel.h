@@ -92,29 +92,20 @@ namespace UintahBB {
                                             Uintah::DataWarehouse* new_dw){};
 
     virtual void getInternalVariable(Uintah::ParticleSubset* pset,
-                                     Uintah::DataWarehouse* old_dw){};
+                                     Uintah::DataWarehouse* old_dw,
+                                     Uintah::constParticleVariableBase& intvar){};
 
     virtual void allocateAndPutInternalVariable(Uintah::ParticleSubset* pset,
-                                                Uintah::DataWarehouse* new_dw){}; 
+                                                Uintah::DataWarehouse* new_dw,
+                                                Uintah::ParticleVariableBase& intvar){}; 
 
     virtual void allocateAndPutRigid(Uintah::ParticleSubset* pset,
-                                     Uintah::DataWarehouse* new_dw){}; 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Get the internal variable
-    virtual double getInternalVariable(const Uintah::particleIndex idx) const = 0; 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Update the internal variable
-    virtual void updateInternalVariable(const Uintah::particleIndex idx,
-                                        const double& value) = 0; 
+                                     Uintah::DataWarehouse* new_dw,
+                                     Uintah::constParticleVariableBase& intvar){}; 
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the internal variable and return new value  */
-    virtual double computeInternalVariable(const ModelState* state,
-                                           const double& delT,
-                                           const Uintah::MPMMaterial* matl,
-                                           const Uintah::particleIndex idx) = 0;
+    virtual double computeInternalVariable(const ModelState* state) const = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     // Compute derivative of internal variable with respect to volumetric

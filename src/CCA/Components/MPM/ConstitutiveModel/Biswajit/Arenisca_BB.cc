@@ -33,7 +33,7 @@ This source code is for a simplified constitutive model, named ``Arenisca_BB'',
 which has some of the basic features needed for modeling geomaterials.
 To better explain the source code, the comments in this file frequently refer
 to the equations in the following three references:
-1. The Arenisca_BB manual,
+1. The Arenisca manual,
 2. R.M.	Brannon and S. Leelavanichkul, "A multi-stage return algorithm for
    solving the classical damage component of constitutive models for rocks,
    ceramics, and other rock-like media", International Journal of Fracture,
@@ -42,7 +42,7 @@ to the equations in the following three references:
    Computational Algorithms, and Topics in Shock Physics", Shock Wave Science
    and Technology Reference Library: Solids I, Springer 2: pp. 189-274, 2007.
 
-As shown in "fig:Arenisca_BBYieldSurface" of the Arenisca_BB manual, Arenisca_BB is
+As shown in "fig:Arenisca_BBYieldSurface" of the Arenisca manual, Arenisca_BB is
 a two-surface plasticity model combining a linear Drucker-Prager
 pressure-dependent strength (to model influence of friction at microscale
 sliding surfaces) and a cap yield function (to model influence of microscale
@@ -103,6 +103,13 @@ Arenisca_BB::Arenisca_BB(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("B0",d_initialData.B0);
   ps->require("G0",d_initialData.G0);
 
+  // Use subcyling for def grad calculation by default.  Else use
+  // Taylor series expansion
+  ps->getWithDefault("useTaylorSeriesForDefGrad", d_taylorSeriesForDefGrad, false);
+  if (d_taylorSeriesForDefGrad) {
+    ps->getWithDefault("num_taylor_terms", d_numTaylorTerms, 10);
+  } 
+
   d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
   if(!d_intvar){
     ostringstream desc;
@@ -132,6 +139,10 @@ Arenisca_BB::Arenisca_BB(const Arenisca_BB* cm)
   d_initialData.B0 = cm->d_initialData.B0;
   d_initialData.G0 = cm->d_initialData.G0;
 
+  // Taylor series for deformation gradient calculation
+  d_taylorSeriesForDefGrad = cm->d_taylorSeriesForDefGrad;
+  d_numTaylorTerms = cm->d_numTaylorTerms;
+
   d_intvar = UintahBB::InternalVariableModelFactory::createCopy(cm->d_intvar);
 
   initializeLocalMPMLabels();
@@ -153,6 +164,8 @@ Arenisca_BB::~Arenisca_BB()
   VarLabel::destroy(pKappaStateLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
+  VarLabel::destroy(pVelGradLabel);
+  VarLabel::destroy(pVelGradLabel_preReloc);
 
   delete d_intvar;
 }
@@ -180,6 +193,11 @@ void Arenisca_BB::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("B0",d_initialData.B0);
   cm_ps->appendElement("G0",d_initialData.G0);
 
+  cm_ps->appendElement("useTaylorSeriesForDefGrad", d_taylorSeriesForDefGrad);
+  if (d_taylorSeriesForDefGrad) {
+    cm_ps->appendElement("num_taylor_terms", d_numTaylorTerms);
+  }
+
   d_intvar->outputProblemSpec(cm_ps);
 }
 
@@ -203,6 +221,7 @@ void Arenisca_BB::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pBackStressIso;
   ParticleVariable<double> pKappaState;
   ParticleVariable<int> pLocalized;
+  ParticleVariable<Matrix3> pVelGrad;
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainVol,     pPlasticStrainVolLabel, pset);
   new_dw->allocateAndPut(pElasticStrainVol,     pElasticStrainVolLabel, pset);
@@ -210,8 +229,9 @@ void Arenisca_BB::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pBackStressIso,  pBackStressIsoLabel, pset);
   new_dw->allocateAndPut(pKappaState,     pKappaStateLabel, pset);
   new_dw->allocateAndPut(pLocalized,      pLocalizedLabel,  pset);
+  new_dw->allocateAndPut(pVelGrad, pVelGradLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
-  Matrix3 Identity;
+  Matrix3 Identity, zero(0.0);
   Identity.Identity();
   for(;iter != pset->end();iter++){
     pPlasticStrain[*iter] = 0.0;
@@ -221,6 +241,7 @@ void Arenisca_BB::initializeCMData(const Patch* patch,
     pBackStressIso[*iter] = Identity*d_initialData.fluid_pressure_initial;
     pKappaState[*iter] = 0.0;
     pLocalized[*iter] = 0.0;
+    pVelGrad[*iter] = zero;
   }
   computeStableTimestep(patch, matl, new_dw);
 
@@ -256,8 +277,8 @@ void Arenisca_BB::allocateCMDataAdd(DataWarehouse* new_dw,
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void Arenisca_BB::computeStableTimestep(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* new_dw)
+                                        const MPMMaterial* matl,
+                                        DataWarehouse* new_dw)
 {
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
@@ -309,9 +330,9 @@ required data such plastic strain, elastic strain, cap position, etc.
 */
 
 void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
-                                           const MPMMaterial* matl,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   // Define some constants
   double one_third = 1.0/(3.0);
@@ -325,7 +346,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
     // Declare and initial value assignment for some variables
     const Patch* patch = patches->get(p);
-    Matrix3 Identity,D,tensorL(0.0);
+    Matrix3 Identity,D, velGrad(0.0);
     Identity.Identity();
     double J,c_dil=0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -343,8 +364,8 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Declare some particle variables
-    ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<Matrix3> deformationGradient;
+    ParticleVariable<Matrix3> pDefGrad_new;
+    constParticleVariable<Matrix3> pDefGrad;
     constParticleVariable<Matrix3> stress_old;
     ParticleVariable<Matrix3> stress_new;
     constParticleVariable<Point> px;
@@ -367,8 +388,10 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>  pKappaState_new;
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>  pLocalized_new;
-    ParticleVariable<Matrix3> velGrad,rotation,trial_stress;
+    ParticleVariable<Matrix3> rotation,trial_stress;
     ParticleVariable<double> f_trial,rho_cur;
+    constParticleVariable<Matrix3> pVelGrad;
+    ParticleVariable<Matrix3>      pVelGrad_new;
     delt_vartype delT;
 
     // Get, allocate, and put the particle variables
@@ -380,6 +403,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pBackStressIso, pBackStressIsoLabel, pset);
     old_dw->get(pKappaState, pKappaStateLabel, pset);
     old_dw->get(pLocalized, pLocalizedLabel, pset);
+    old_dw->get(pVelGrad,            pVelGradLabel,                pset);
     new_dw->allocateAndPut(pPlasticStrain_new,pPlasticStrainLabel_preReloc,pset);
     new_dw->allocateAndPut(pPlasticStrainVol_new,pPlasticStrainVolLabel_preReloc,pset);
     new_dw->allocateAndPut(pElasticStrainVol_new,pElasticStrainVolLabel_preReloc,pset);
@@ -387,28 +411,30 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pBackStressIso_new,pBackStressIsoLabel_preReloc,pset);
     new_dw->allocateAndPut(pKappaState_new,pKappaStateLabel_preReloc,pset);
     new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc,pset);
+    new_dw->allocateAndPut(pVelGrad_new,      pVelGradLabel_preReloc,      pset);
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
     old_dw->get(psize,               lb->pSizeLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
+    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel,       pset);
     old_dw->get(stress_old,             lb->pStressLabel,                pset);
     new_dw->allocateAndPut(stress_new,  lb->pStressLabel_preReloc,       pset);
     new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,          pset);
     new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,            pset);
-    new_dw->allocateAndPut(deformationGradient_new,
+    new_dw->allocateAndPut(pDefGrad_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,              pset);
-    new_dw->allocateTemporary(velGrad,      pset);
     new_dw->allocateTemporary(rotation,     pset);
     new_dw->allocateTemporary(trial_stress, pset);
     new_dw->allocateTemporary(f_trial, pset);
     new_dw->allocateTemporary(rho_cur,pset);
 
     // Get and allocate the internal variables
-    d_intvar->getInternalVariable(pset, old_dw);
-    d_intvar->allocateAndPutInternalVariable(pset, new_dw);
+    constParticleVariable<double> pKappa;
+    ParticleVariable<double> pKappa_new;
+    d_intvar->getInternalVariable(pset, old_dw, pKappa);
+    d_intvar->allocateAndPutInternalVariable(pset, new_dw, pKappa_new);
 
     // Get the Arenisca_BB model parameters
     const double FSLOPE = d_initialData.FSLOPE;
@@ -441,57 +467,69 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
       //re-zero the velocity gradient:
       pLocalized_new[idx]=pLocalized[idx];
-      tensorL.set(0.0);
+      velGrad.set(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   deformationGradient[idx]);
-        computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
+                                                   pDefGrad[idx]);
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
 
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                   psize[idx],deformationGradient[idx]);
+                                   psize[idx],pDefGrad[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
-      velGrad[idx]=tensorL;
-      if (isnan(velGrad[idx].Trace())) {
-        cerr << "Particle = " << idx <<  " velGrad = " << velGrad[idx] << endl;
-        cerr << "  " << " deformation gradient = " <<  deformationGradient[idx] << endl;
+      if (isnan(velGrad.Trace())) {
+        cerr << "Particle = " << idx <<  " velGrad = " << velGrad << endl;
+        cerr << "  " << " deformation gradient = " <<  pDefGrad[idx] << endl;
         throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
       }
 
-      // Update the deformation gradient in a new way using subcycling
-      Matrix3 one; one.Identity();
-      Matrix3 F=deformationGradient[idx];
-      double Lnorm_dt = tensorL.Norm()*delT;
-      int num_scs = max(1,2*((int) Lnorm_dt));
-      if(num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-      double dtsc = delT/(double (num_scs));
-      Matrix3 OP_tensorL_DT = one + tensorL*dtsc;
-      for(int n=0;n<num_scs;n++){
-        F=OP_tensorL_DT*F;
-      }
-      deformationGradient_new[idx]=F;
+      pVelGrad_new[idx] = velGrad;
+
       // Update the deformation gradient, Old First Order Way
-      // deformationGradient_new[idx]=(tensorL*delT+Identity)*deformationGradient[idx];
+      //pDefGrad_new[idx]=(velGrad_new*delT+Identity)*pDefGrad[idx];
+
+      // Improve upon first order estimate of deformation gradient
+      int num_scs = 1;
+      if (d_taylorSeriesForDefGrad) {
+        // Use Taylor series expansion
+        // Compute mid point velocity gradient
+        Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
+        Matrix3 Finc = Amat.Exponential(d_numTaylorTerms);
+        Matrix3 Fnew = Finc*pDefGrad[idx];
+        pDefGrad_new[idx] = Fnew;
+      } else {
+        // Update the deformation gradient using subcycling
+        Matrix3 F=pDefGrad[idx];
+        double Lnorm_dt = velGrad.Norm()*delT;
+        num_scs = max(num_scs, 2*((int) Lnorm_dt));
+        if(num_scs > 1000){
+          cout << "NUM_SCS = " << num_scs << endl;
+        }
+        double dtsc = delT/(double (num_scs));
+        Matrix3 OP_velGrad_DT = Identity + velGrad*dtsc;
+        for(int n=0;n<num_scs;n++){
+          F=OP_velGrad_DT*F;
+        }
+        pDefGrad_new[idx]=F;
+      }
 
       // Compute the Jacobian and delete the particle in the case of negative Jacobian
-      J = deformationGradient_new[idx].Determinant();
+      J = pDefGrad_new[idx].Determinant();
       if (J<=0){
         cout<< "ERROR, negative J! "<<endl;
         cout<<"J= "<<J<<endl;
-        cout<<"Fnew= "<<F<<endl;
-        cout<<"Fold= "<<deformationGradient[idx]<<endl;
-        cout<<"L= "<<tensorL<<endl;
+        cout<<"Fnew= "<< pDefGrad_new[idx] <<endl;
+        cout<<"Fold= "<<pDefGrad[idx]<<endl;
+        cout<<"L= "<<velGrad<<endl;
         cout<<"num_scs= "<<num_scs<<endl;
         pLocalized_new[idx] = -999;
         cout<<"DELETING Arenisca_BB particle " << endl;
         J=1;
-        deformationGradient_new[idx] = one;
+        pDefGrad_new[idx] = Identity;
         //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
       }
 
@@ -501,11 +539,11 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
     }
 
     // Compute the initial value of R=\kappa-X (see "fig:CapEccentricity" and
-    // "eq:initialValueOfR" in the Arenisca_BB manual)
+    // "eq:initialValueOfR" in the Arenisca manual)
     double cap_r_initial = CR*FSLOPE*(PEAKI1-p0_crush_curve)/(1.0+CR*FSLOPE);
 
     // Define two limitations for \kappa and X (see "eq:limitationForX" and
-    // "eq:limitationForKappa" in the Arenisca_BB manual)
+    // "eq:limitationForKappa" in the Arenisca manual)
     double min_kappa = 1.0e5 * p0_crush_curve;
     double max_X = 0.00001 * p0_crush_curve;
 
@@ -532,7 +570,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
       // pKappaState is a particle variable variable which defines if the particle
       // meet any of the limitation for \kappa and X or not? (see "eq:limitationForX"
-      // and "eq:limitationForKappa" in the Arenisca_BB manual)
+      // and "eq:limitationForKappa" in the Arenisca manual)
       // 1: meet the max_X limitation, 2: meet the min_kappa limitation.
       pKappaState_new[idx] = pKappaState[idx];
 
@@ -540,14 +578,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
       double PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain[idx];
 
       // Compute the current value of R=\kappa-X (see "fig:CapEccentricity" and
-      // "eq:initialValueOfR" in the Arenisca_BB manual)
-      double kappa_old = d_intvar->getInternalVariable(idx);
+      // "eq:initialValueOfR" in the Arenisca manual)
+      double kappa_old = pKappa[idx];
       double cap_radius_fac = FSLOPE*kappa_old - PEAKI1_hardening;
       double cap_radius = -CR*cap_radius_fac;
       double kappa_temp = kappa_old;
       double kappa_new = kappa_old;
 
-      // Apply the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca_BB manual).
+      // Apply the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
       // The condition of "pKappa1>PEAKI1_hardening/FSLOPE" in the following IF condition
       // indicates that the limitation should be applied if cap_radius<0.
       // cond_fixed_cap_radius is a variable which indicates if the limit has been met or not?
@@ -559,16 +597,16 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute the symmetric part of the velocity gradient
-      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
-      if (isnan(velGrad[idx].Trace())) {
-        cerr << "Particle = " << idx <<  " velGrad = " << velGrad[idx] << endl;
+      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      if (isnan(velGrad.Trace())) {
+        cerr << "Particle = " << idx <<  " velGrad = " << velGrad << endl;
         cerr << "  " << " rate of deformation = " <<  D << endl;
         throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
       }
 
       // Use polar decomposition to compute the rotation and stretch tensors
       Matrix3 tensorR, tensorU;
-      deformationGradient[idx].polarDecompositionRMB(tensorU, tensorR);
+      pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
       rotation[idx]=tensorR;
 
       // Compute the unrotated symmetric part of the velocity gradient
@@ -608,7 +646,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
       pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx];
       pElasticStrainVol_new[idx] = pElasticStrainVol[idx] + D.Trace()*delT;
       kappa_new = kappa_temp;
-      d_intvar->updateInternalVariable(idx, kappa_new);
+      pKappa_new[idx] = kappa_new;
       pBackStress_new[idx] = pBackStress[idx];
       pBackStressIso_new[idx] = pBackStressIso[idx];
 
@@ -628,7 +666,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
         throw InvalidValue("**ERROR**: Nan in f_trial value", __FILE__, __LINE__);
       }
 
-      feclearexcept(FE_ALL_EXCEPT);
+      //feclearexcept(FE_ALL_EXCEPT);
       if (f_trial[idx]<0){
 
         // An elastic step: the updated stres at the end of the current time step
@@ -819,7 +857,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             // Update the volumetric part of the elastic strain
             pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
 
-            // Update the back stress (see "eq:backStressFluidEffect" in the Arenisca_BB manual)
+            // Update the back stress (see "eq:backStressFluidEffect" in the Arenisca manual)
             pBackStress_new[idx] = Identity*( -3.0*fluid_B0*
                                    (exp(pPlasticStrainVol_new[idx])-1.0)
                                     * exp(p3_crush_curve+p4_fluid_effect)
@@ -828,10 +866,10 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                                    (pPlasticStrainVol_new[idx]);
 
             // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect" in the
-            // Arenisca_BB manual. (Also, see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual)
+            // Arenisca manual. (Also, see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
 
             // Compute the var1 which relates dX/de to d(kappa)/de: d(kappa)/de=dX/de * (1/var1)
-            // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca_BB manual).
+            // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
             // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
             double var1 = 1.0;
             if (cond_fixed_cap_radius==0) var1 += FSLOPE*CR;
@@ -845,23 +883,23 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             state->local_var[5] = var1;                        // scale factor for Delta eps_v
 
             // Compute internal variable
-            kappa_new = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
+            kappa_new = d_intvar->computeInternalVariable(state);
             if (kappa_new > 0.0) {
               cout << " kappa > 0 in particle " << idx << " kappa_new = " << kappa_new 
                    << " kappa_temp = " << kappa_temp << " cap_radius = " << cap_radius
                    << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol[idx]
                    << " del eps_v = " << strain_iteration.Trace()/var1 << endl;
             }
-            if (fetestexcept(FE_INVALID) != 0) {
-              cerr << "Location 1: Floating point exception in particle = " << idx << endl;
-            }
+            //if (fetestexcept(FE_INVALID) != 0) {
+            //  cerr << "Location 1: Floating point exception in particle = " << idx << endl;
+            //}
 
             // Set the kappa state flag
             if (kappa_new == (max_X + cap_radius)) pKappaState_new[idx] = 1.0;
 
             // Apply the lower limit for \kappa. 
             // (for the limitation of min_kappa see "eq:limitationForKappa"
-            // in the Arenisca_BB manual)
+            // in the Arenisca manual)
             // pKappaState is a particle variable variable which defines if the particle
             // meet any of the limitation for \kappa and X or not?
             // pKappaState=2: means that the particle met the min_kappa limitation.
@@ -875,7 +913,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain_new[idx];
             cap_radius_fac = FSLOPE*kappa_new - PEAKI1_hardening;
 
-            // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca_BB manual).
+            // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
             // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
             // If the limit has been met, updated \kappa should be modified.
             if (cond_fixed_cap_radius==0) {
@@ -888,7 +926,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             }
 
             // Apply the upper limit for X. 
-            // (for the limitation of max_X see "eq:limitationForX" in the Arenisca_BB manual)
+            // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
             // pKappaState is a particle variable variable which defines if the particle
             // meet any of the limitation for \kappa and X or not?
             // pKappaState=1: means that the particle met the max_X limitation
@@ -899,8 +937,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             }
 
             // Update the internal variable
-            d_intvar->updateInternalVariable(idx, kappa_new);
-
+            pKappa_new[idx] = kappa_new;
 
           }
         }
@@ -993,14 +1030,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
               if (I1_iteration>PI1_h_over_FSLOPE){
 
                 // Fast return algorithm in the case of I1>PEAKI1 (see "fig:Arenisca_BBYieldSurface"
-                // in the Arenisca_BB manual). In this case, the fast returned position is the vertex.
+                // in the Arenisca manual). In this case, the fast returned position is the vertex.
                 stress_iteration = Identity*(PI1_h_over_FSLOPE)/3.0;
 
               } else if ( (I1_iteration<kappa_loop-0.9*cap_radius)
                        || (I1_iteration<kappa_loop && J2_iteration<0.01) ){
 
                 // Fast return algorithm in the case of I1<X+0.1R (see "fig:CapEccentricity"
-                // in the Arenisca_BB manual) OR ( I1<\kappa && J2<0.01)
+                // in the Arenisca manual) OR ( I1<\kappa && J2<0.01)
 
                 // Declare some needed variables for the fast return algorithm.
                 Matrix3 stress_iteration_temp;
@@ -1157,7 +1194,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
               }else if (I1_iteration<kappa_loop){
 
                 // Fast return algorithm in the case of I1<\kappa (see "fig:Arenisca_BBYieldSurface"
-                // in the Arenisca_BB manual). In this case, the radial fast returning is used.
+                // in the Arenisca manual). In this case, the radial fast returning is used.
                 beta_cap = sqrt( 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                          ( (cap_radius)*(cap_radius) ) );
                 stress_iteration = stress_iteration + S_iteration*
@@ -1167,7 +1204,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
               }else{
 
                 // Fast return algorithm in other cases (see "fig:Arenisca_BBYieldSurface"
-                // in the Arenisca_BB manual). In this case, the radial fast returning is used.
+                // in the Arenisca manual). In this case, the radial fast returning is used.
 	        stress_iteration = stress_iteration + S_iteration*
                                     ((PEAKI1_hardening-FSLOPE*I1_iteration)/
                                      sqrt(J2_iteration)-1);
@@ -1181,7 +1218,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
-                // of I1>=\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
+                // of I1>=\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
                 // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
                 G = Identity*(-2.0)*FSLOPE*(FSLOPE*I1_iteration-PEAKI1_hardening) + S_iteration;
                 M = Identity*(-2.0)*FSLOPE_p*(FSLOPE*I1_iteration-PEAKI1_hardening) + S_iteration;
@@ -1191,7 +1228,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
-                // of I1<\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
+                // of I1<\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
                 // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
                 beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                            ( (cap_radius)*(cap_radius) );
@@ -1286,14 +1323,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 if (I1_iteration>=kappa_loop){
 
                   // Compute the hardening ensemble for the case of I1>=\kappa 
-                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
+                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
                   // Also, see Eq. 6.53 in 'Brannon 2007'.
                   hardeningEns = -2.0*hardening_modulus*FS_I1_i_PI1_h/G.Norm();
 
                 }else{
 
                   // Compute the hardening ensemble for the case of I1<\kappa 
-                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual).
+                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
 
                   // Declare and initialize some auxiliaryvariables
                   beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
@@ -1307,7 +1344,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                   if (cond_fixed_cap_radius==0) {
 
                     // Consider the limitation for R=\kappa-X
-                    // (see "eq:limitationForR" in the Arenisca_BB manual).
+                    // (see "eq:limitationForR" in the Arenisca manual).
                     // cond_fixed_cap_radius is a variable which indicates
                     // if the limit has been met or not?
                     // Compute auxiliary variable in the case that the limit has not been met.
@@ -1340,13 +1377,13 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                   if (kappa_loop-cap_radius-p0_crush_curve<0 || hardeningEnsCond>0) {
 
-                    // In the case of X<p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual),
+                    // In the case of X<p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual),
                     // consider the hardening ensemble.
                     hardeningEns = hardeningEnsCond;
 
                   } else {
 
-                    // In the case of X>p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual),
+                    // In the case of X>p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual),
                     // do not consider the full hardening ensemble. Consider only the Drucker-Prager
                     // hardening ensemble. This may slow down the convergence of the plasticity return
                     // algorithm but, it increases its robustness.
@@ -1374,10 +1411,10 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 	        stress_iteration = trial_stress_loop - P*gamma;
 
                 // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect"
-                // in the Arenisca_BB manual
+                // in the Arenisca manual
 
                 // Compute the var1 which relates dX/de to d(kappa)/de: d(kappa)/de=dX/de * (1/var1)
-                // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca_BB manual).
+                // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
                 // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
                 double var1 = 1.0;
                 if (cond_fixed_cap_radius==0) var1 += FSLOPE*CR;
@@ -1398,10 +1435,10 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                        << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol_new[idx]
                        << " del eps_v = " << (M*gamma).Trace()/var1 << endl;
                 }
-                kappa_loop = d_intvar->computeInternalVariable(state, 0.0, matl, idx);
-                if (fetestexcept(FE_INVALID) != 0) {
-                  cerr << "Location 2: Floating point exception in particle = " << idx << endl;
-                }
+                kappa_loop = d_intvar->computeInternalVariable(state);
+                //if (fetestexcept(FE_INVALID) != 0) {
+                //  cerr << "Location 2: Floating point exception in particle = " << idx << endl;
+                //}
 
                 //cerr << "Particle = " << idx << " kappa = " << kappa_loop << endl;
                 //if (pPlasticStrainVol_new[idx] < 0.0) {
@@ -1415,7 +1452,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                 // Apply the lower limit for \kappa. 
                 // (for the limitation of min_kappa see "eq:limitationForKappa"
-                // in the Arenisca_BB manual)
+                // in the Arenisca manual)
                 // pKappaState is a particle variable variable which defines if the particle
                 // meet any of the limitation for \kappa and X or not?
                 // pKappaState=2: means that the particle met the min_kappa limitation.
@@ -1429,7 +1466,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*(pPlasticStrain_new[idx]
                                    +(M*gamma).Norm());
 
-                // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca_BB manual).
+                // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
                 // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
                 // If the limit has been met, updated \kappa should be modified.
                 if (cond_fixed_cap_radius==0) {
@@ -1444,7 +1481,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 }
 
                 // Apply the upper limit for X. 
-                // (for the limitation of max_X see "eq:limitationForX" in the Arenisca_BB manual)
+                // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
                 // pKappaState is a particle variable variable which defines if the particle
                 // meet any of the limitation for \kappa and X or not?
                 // pKappaState=1: means that the particle met the max_X limitation
@@ -1477,7 +1514,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
             // to the associated particle variables
             pBackStress_new[idx] = pBackStress_loop;
             kappa_new = kappa_loop;
-            d_intvar->updateInternalVariable(idx, kappa_new);
+            pKappa_new[idx] = kappa_new;
 
             stress_new[idx] = stress_iteration;
             if (isnan(stress_new[idx].Trace())) {
@@ -1597,7 +1634,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
       // Use polar decomposition to compute the rotation and stretch tensors
       Matrix3 tensorU, tensorR;
-      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+      pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
       rotation[idx]=tensorR;
 
       // Compute the rotated stress at the end of the current timestep
@@ -1703,7 +1740,7 @@ double Arenisca_BB::YieldFunction(const Matrix3& stress, const double& FSLOPE, c
                                const double& cap_radius, const double&PEAKI1){
 
   // Compute the yield function.
-  // See "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual.
+  // See "fig:Arenisca_BBYieldSurface" in the Arenisca manual.
 
   Matrix3 S;
   double I1,J2,b,var1,var2;
@@ -1717,7 +1754,7 @@ double Arenisca_BB::YieldFunction(const Matrix3& stress, const double& FSLOPE, c
   if (I1>kappa){
 
     // If I1>kappa, a linear Drucker-Prager yield function is calculated.
-    // See "eq:DruckerPragerPart" in the Arenisca_BB manual.
+    // See "eq:DruckerPragerPart" in the Arenisca manual.
     double sqrtJ2=sqrt(J2);
     var1 = sqrtJ2 - FSI1_PI1;
     var2 = sqrtJ2 + FSI1_PI1;
@@ -1731,7 +1768,7 @@ double Arenisca_BB::YieldFunction(const Matrix3& stress, const double& FSLOPE, c
 
     // If I1<kappa, the yield function is obtained by multiplying the linear Drucker-Prager
     // yield function and a cap function.
-    // See "eq:CapPartOfTheYieldSurface" in the Arenisca_BB manual.
+    // See "eq:CapPartOfTheYieldSurface" in the Arenisca manual.
     b = 1.0 - ((kappa-I1)*(kappa-I1))/((cap_radius)*(cap_radius));
     return J2 - b * FSI1_PI1*FSI1_PI1;
 
@@ -1744,7 +1781,7 @@ double Arenisca_BB::YieldFunction(Matrix3& stress, const double& FSLOPE, const d
                                 const double& cap_radius, const double&PEAKI1){
 
   // Compute the yield function.
-  // See "fig:Arenisca_BBYieldSurface" in the Arenisca_BB manual.
+  // See "fig:Arenisca_BBYieldSurface" in the Arenisca manual.
 
   Matrix3 S;
   double I1,J2,b,var1,var2;
@@ -1758,7 +1795,7 @@ double Arenisca_BB::YieldFunction(Matrix3& stress, const double& FSLOPE, const d
   if (I1>kappa){
 
     // If I1>kappa, a linear Drucker-Prager yield function is calculated.
-    // See "eq:DruckerPragerPart" in the Arenisca_BB manual.
+    // See "eq:DruckerPragerPart" in the Arenisca manual.
     double sqrtJ2=sqrt(J2);
     var1 = sqrtJ2 - FSI1_PI1;
     var2 = sqrtJ2 + FSI1_PI1;
@@ -1772,7 +1809,7 @@ double Arenisca_BB::YieldFunction(Matrix3& stress, const double& FSLOPE, const d
 
     // If I1<kappa, the yield function is obtained by multiplying the linear Drucker-Prager
     // yield function and a cap function.
-    // See "eq:CapPartOfTheYieldSurface" in the Arenisca_BB manual.
+    // See "eq:CapPartOfTheYieldSurface" in the Arenisca manual.
     b = 1.0 - ((kappa-I1)*(kappa-I1))/((cap_radius)*(cap_radius));
     return J2 - b * FSI1_PI1*FSI1_PI1;
 
@@ -1829,9 +1866,10 @@ void Arenisca_BB::carryForward(const PatchSubset* patches,
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
-    // Get the internal variables
-    d_intvar->getInternalVariable(pset, old_dw);
-    d_intvar->allocateAndPutRigid(pset, new_dw);
+    // Get and copy the internal variables
+    constParticleVariable<double> pKappa;
+    d_intvar->getInternalVariable(pset, old_dw, pKappa);
+    d_intvar->allocateAndPutRigid(pset, new_dw, pKappa);
     
     // Carry forward the data local to this constitutive model
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
@@ -1857,6 +1895,7 @@ void Arenisca_BB::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pBackStressIsoLabel);
   from.push_back(pKappaStateLabel);
   from.push_back(pLocalizedLabel);
+  from.push_back(pVelGradLabel);
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainVolLabel_preReloc);
   to.push_back(pElasticStrainVolLabel_preReloc);
@@ -1864,6 +1903,7 @@ void Arenisca_BB::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pBackStressIsoLabel_preReloc);
   to.push_back(pKappaStateLabel_preReloc);
   to.push_back(pLocalizedLabel_preReloc);
+  to.push_back(pVelGradLabel_preReloc);
 
   // Add the particle state for the internal variable models
   d_intvar->addParticleState(from, to);
@@ -1888,6 +1928,7 @@ void Arenisca_BB::addInitialComputesAndRequires(Task* task,
   task->computes(pBackStressIsoLabel, matlset);
   task->computes(pKappaStateLabel,    matlset);
   task->computes(pLocalizedLabel,     matlset);
+  task->computes(pVelGradLabel,     matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addInitialComputesAndRequires(task, matl, patch);
@@ -1910,6 +1951,7 @@ void Arenisca_BB::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pBackStressIsoLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, pKappaStateLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel,     matlset, Ghost::None);
+  task->requires(Task::OldDW, pVelGradLabel,     matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
   task->computes(pPlasticStrainLabel_preReloc,     matlset);
   task->computes(pPlasticStrainVolLabel_preReloc,  matlset);
@@ -1918,6 +1960,7 @@ void Arenisca_BB::addComputesAndRequires(Task* task,
   task->computes(pBackStressIsoLabel_preReloc,     matlset);
   task->computes(pKappaStateLabel_preReloc,        matlset);
   task->computes(pLocalizedLabel_preReloc,         matlset);
+  task->computes(pVelGradLabel_preReloc,         matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addComputesAndRequires(task, matl, patches);
@@ -2022,6 +2065,10 @@ void Arenisca_BB::initializeLocalMPMLabels()
     ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
     ParticleVariable<int>::getTypeDescription());
+  pVelGradLabel = VarLabel::create("p.velGrad",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
+    ParticleVariable<Matrix3>::getTypeDescription());
 
 }
 
@@ -2043,7 +2090,7 @@ Arenisca_BB::computeEffectiveModuli(const double& eps_v,
   bulk_modulus = d_initialData.B0 + (d_initialData.fluid_B0*numer1*numer2)/denom;
 
   // Apply the limitation for the effective bulk modulus
-  // (see "eq:limitationForKe" in the Arenisca_BB manual).
+  // (see "eq:limitationForKe" in the Arenisca manual).
   if (bulk_modulus > 5.0*d_initialData.B0) bulk_modulus = 5.0*d_initialData.B0;
 
   // Compute the lame constant using the bulk and shear modulus

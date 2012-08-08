@@ -168,65 +168,48 @@ void
 InternalVar_AreniscaKappa::initializeInternalVariable(ParticleSubset* pset,
                                                       DataWarehouse* new_dw)
 {
-  new_dw->allocateAndPut(pKappa_new, pKappaLabel, pset);
+  Uintah::ParticleVariable<double> pKappa;
+  new_dw->allocateAndPut(pKappa, pKappaLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++) {
-    pKappa_new[*iter] = (d_p0 + d_Cr*d_fSlope*d_peakI1)/(d_Cr*d_fSlope + 1.0); 
+    pKappa[*iter] = (d_p0 + d_Cr*d_fSlope*d_peakI1)/(d_Cr*d_fSlope + 1.0); 
   }
 }
 
 void 
 InternalVar_AreniscaKappa::getInternalVariable(ParticleSubset* pset ,
-                                               DataWarehouse* old_dw) 
+                                               DataWarehouse* old_dw,
+                                               constParticleVariableBase& pKappa) 
 {
   old_dw->get(pKappa, pKappaLabel, pset);
 }
 
 void 
 InternalVar_AreniscaKappa::allocateAndPutInternalVariable(ParticleSubset* pset,
-                                                          DataWarehouse* new_dw) 
+                                                          DataWarehouse* new_dw,
+                                                          ParticleVariableBase& pKappa_new) 
 {
   new_dw->allocateAndPut(pKappa_new, pKappaLabel_preReloc, pset);
 }
 
 void
-InternalVar_AreniscaKappa::allocateAndPutRigid(ParticleSubset* pset ,
-                                               DataWarehouse* new_dw )
+InternalVar_AreniscaKappa::allocateAndPutRigid(ParticleSubset* pset,
+                                               DataWarehouse* new_dw,
+                                               constParticleVariableBase& pKappa)
 {
+  ParticleVariable<double> pKappa_new;
   new_dw->allocateAndPut(pKappa_new, pKappaLabel_preReloc, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++){
-     pKappa_new[*iter] = 0.0;
+     pKappa_new[*iter] = dynamic_cast<constParticleVariable<double>& >(pKappa)[*iter];
   }
-}
-
-//--------------------------------------------------------------------------------------
-// Get internal variables from data warehouse
-//--------------------------------------------------------------------------------------
-double 
-InternalVar_AreniscaKappa::getInternalVariable(const particleIndex idx) const
-{
-  return pKappa[idx];
-}
-
-//--------------------------------------------------------------------------------------
-// Write internal variables to data warehouse
-//--------------------------------------------------------------------------------------
-void 
-InternalVar_AreniscaKappa::updateInternalVariable(const particleIndex idx,
-                                                  const double& kappa)
-{
-  pKappa_new[idx] = kappa;
 }
 
 //--------------------------------------------------------------------------------------
 // Compute kappa_new using Newton's method
 //--------------------------------------------------------------------------------------
 double 
-InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state,
-                                                   const double& ,
-                                                   const MPMMaterial* ,
-                                                   const particleIndex idx)
+InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) const
 {
   // Get the local variables needed
   double kappa_old = state->local_var[0];        // old value of kappa may have
@@ -239,6 +222,8 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state,
 
   // Scale the volumetric plastic strain
   delta_eps_v /= scale_fac;
+
+  return kappa_old;
 
   // Subtract cap_radius from kappa and init new kappa
   kappa_old -= cap_radius;
@@ -255,7 +240,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state,
     kappa_new = computeKappaFromX1(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
     if (isnan(kappa_new) || kappa_new > 0) {
-        cerr << "Particle = " << idx <<  " kappa_new = " << kappa_new
+        cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
         throw InvalidValue("**ERROR**: Nan in kappa_new - case 1", __FILE__, __LINE__);
@@ -268,7 +253,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state,
     kappa_new = computeKappaFromX2(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
     if (isnan(kappa_new) || kappa_new > 0) {
-        cerr << "Particle = " << idx <<  " kappa_new = " << kappa_new
+        cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
         throw InvalidValue("**ERROR**: Nan in kappa_new - case 2", __FILE__, __LINE__);
