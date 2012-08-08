@@ -223,8 +223,6 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
   // Scale the volumetric plastic strain
   delta_eps_v /= scale_fac;
 
-  return kappa_old;
-
   // Subtract cap_radius from kappa and init new kappa
   kappa_old -= cap_radius;
   double kappa_new = kappa_old;
