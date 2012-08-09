@@ -217,8 +217,5 @@ evaluate()
   template class DiffusiveFlux2< VOL, SpatialOps::structured::FaceTypes<VOL>::ZFace >;
 
 DECLARE_DIFF_FLUX( SpatialOps::structured::SVolField );
-DECLARE_DIFF_FLUX( SpatialOps::structured::XVolField );
-DECLARE_DIFF_FLUX( SpatialOps::structured::YVolField );
-DECLARE_DIFF_FLUX( SpatialOps::structured::ZVolField );
 //
 //==========================================================================

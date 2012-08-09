@@ -203,8 +203,5 @@ evaluate()
                                      SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FZ >;
 
 DECLARE_DIFF_VELOCITY( SpatialOps::structured::SVolField );
-DECLARE_DIFF_VELOCITY( SpatialOps::structured::XVolField );
-DECLARE_DIFF_VELOCITY( SpatialOps::structured::YVolField );
-DECLARE_DIFF_VELOCITY( SpatialOps::structured::ZVolField );
 //
 //==========================================================================

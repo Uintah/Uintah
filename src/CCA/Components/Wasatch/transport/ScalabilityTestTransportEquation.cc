@@ -245,9 +245,6 @@ namespace Wasatch{
   //==================================================================
   // Explicit template instantiation
   template class ScalabilityTestTransportEquation< SVolField >;
-  template class ScalabilityTestTransportEquation< XVolField >;
-  template class ScalabilityTestTransportEquation< YVolField >;
-  template class ScalabilityTestTransportEquation< ZVolField >;
   //==================================================================
 
 

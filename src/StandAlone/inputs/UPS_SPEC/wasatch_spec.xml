@@ -401,10 +401,6 @@
       <StrongForm         spec="REQUIRED BOOLEAN"/>
       <PrimitiveVariable  spec="OPTIONAL STRING" />
 
-      
-      <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
-      <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
-      
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression spec="MULTIPLE NO_DATA">
