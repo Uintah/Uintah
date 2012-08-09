@@ -619,6 +619,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_rct = mpm_matl->getSpecificHeat();
     IntVector nodeIdx[8];
+    MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
     //__________________________________
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
