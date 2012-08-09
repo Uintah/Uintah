@@ -63,7 +63,7 @@
     <filebase>read_from_file.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "1" interval = "5"/>
+    <checkpoint cycle = "1" interval = "0.1"/>
     <save label="phi-scalar" />
   </DataArchiver> 
 
