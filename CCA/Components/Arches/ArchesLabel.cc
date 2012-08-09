@@ -127,6 +127,7 @@ ArchesLabel::ArchesLabel()
   
   // Viscosity Labels
   d_viscosityCTSLabel           = VarLabel::create("viscosityCTS",            CC_double);
+  d_tauSGSLabel                 = VarLabel::create("tauSGS",                  CC_double);
   d_scalarDiffusivityLabel      = VarLabel::create("scalarDiffusivity",       CC_double);
   d_enthalpyDiffusivityLabel    = VarLabel::create("enthalpyDiffusivity",     CC_double);
   d_reactScalarDiffusivityLabel = VarLabel::create("reactScalarDiffusivity",  CC_double);
@@ -538,6 +539,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_filterdrhodtLabel);
   VarLabel::destroy(d_drhodfCPLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
+  VarLabel::destroy(d_tauSGSLabel); 
   VarLabel::destroy(d_scalarDiffusivityLabel);
   VarLabel::destroy(d_enthalpyDiffusivityLabel);
   VarLabel::destroy(d_reactScalarDiffusivityLabel);
