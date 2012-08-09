@@ -1864,7 +1864,7 @@ Uintah.  These are
   \end{equation}
   where $\mu$ is the shear modulus.  This model is invoked using
   \begin{Verbatim}[fontsize=\footnotesize]  
-      <deviatoric_stress_model type="default_hypo">
+      <deviatoric_stress_model type="hypoElastic">
       </deviatoric_stress_model>
   \end{Verbatim}
   If a deviatoric stress model is not specified then this model is the
@@ -1886,14 +1886,12 @@ Uintah.  These are
   \end{equation}
   This model is invoked using
   \begin{Verbatim}[fontsize=\footnotesize]  
-      <deviatoric_stress_model type="hypo_viscoelasticity">
-        <N> 2 </N>
-        <shear_modulus_1> 3.0 </shear_modulus_1>
-        <tau_1> 1.67 </tau_1>
-        <shear_modulus_2> 40.0 </shear_modulus_2>
-        <tau_2> 8.2 </tau_2>
+      <deviatoric_stress_model type="hypoViscoElastic">
+        <mu> [3.0, 5.0, 7.0] </mu>
+        <tau> [1.67, 10.7, 107.0] </tau>
       </deviatoric_stress_model>
   \end{Verbatim}
+where the number of elements in arrays mu and tau must be the same.
 
 \paragraph{Melting Temperature}
   \subparagraph{Default model}
