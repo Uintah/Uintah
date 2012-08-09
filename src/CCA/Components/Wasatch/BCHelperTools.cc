@@ -277,8 +277,8 @@ namespace Wasatch {
       } else {
         BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );        
         phiExpr.process_after_evaluate(fieldName, bcOp );
-        //BCOpT bcOp_ghost( ghostPointIJK, bcSide, BCEvaluator(bcValue), opdb );
-        //phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
+	//        BCOpT bcOp_ghost(fieldWindow, ghostPointsIJK, bcSide, BCEvaluator(bcValue), opdb );
+	//        phiExpr.process_after_evaluate(fieldName, bcOp_ghost );
       }
     } else {
       BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, BCEvaluator(bcValue), opdb );              

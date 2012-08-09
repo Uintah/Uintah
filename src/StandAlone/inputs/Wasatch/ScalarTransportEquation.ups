@@ -54,110 +54,6 @@
       </DiffusiveFluxExpression>
 
     </TransportEquation>
-
-
-    
-    <!-- Set the initial condition for x-staggered scalar transport equation -->
-    <BasicExpression type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-xStaggered" state="STATE_N" />
-      <DoubleTanhFunction amplitude="1.0" width="2.0" midpointUp="3.0" midpointDown="7.0">
-        <NameTag name="YXVOL" state="STATE_NONE" />
-      </DoubleTanhFunction>
-    </BasicExpression>
-
-    <!-- Build an x-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-
-      <SolutionVariable>phi-xStaggered</SolutionVariable>
-      <StrongForm>true</StrongForm>
-
-      <StaggeredDirection>X</StaggeredDirection>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.1</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.3</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>    
-    
-    <!-- Set the initial condition for y-staggered scalar transport equation -->
-    <BasicExpression type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-yStaggered" state="STATE_N" />
-      <LinearFunction slope="0.1" intercept="0.1">
-        <NameTag name="XYVOL" state="STATE_NONE" />
-      </LinearFunction>
-    </BasicExpression>
-
-    <!-- Build a y-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-
-      <SolutionVariable>phi-yStaggered</SolutionVariable>
-      <StrongForm>true</StrongForm>
-
-      <StaggeredDirection>Y</StaggeredDirection>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.1</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.3</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
-
-    <!-- Set the initial condition for x-staggered scalar transport equation -->
-    <BasicExpression type="ZVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-zStaggered" state="STATE_N" />
-      <LinearFunction slope="0.1" intercept="0.1">
-        <NameTag name="ZZVOL" state="STATE_NONE" />
-      </LinearFunction>
-    </BasicExpression>
-
-    <!-- Build a z-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-
-      <SolutionVariable>phi-zStaggered</SolutionVariable>
-      <StrongForm>true</StrongForm>
-
-      <StaggeredDirection>Z</StaggeredDirection>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.1</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.3</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
   </Wasatch>
 
 
@@ -177,9 +73,6 @@
     <checkpoint cycle = "1" interval = "5"/>
     <compression>gzip</compression>
     <save label="phi-scalar" />
-    <save label="phi-xStaggered" />
-    <save label="phi-yStaggered" />
-    <save label="phi-zStaggered" />
   </DataArchiver> 
 
   <Grid>

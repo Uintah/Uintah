@@ -19,45 +19,6 @@
       <Constant>1.0</Constant>
     </BasicExpression>
     
-    <BasicExpression type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-x-scalar" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-y-scalar" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-
-    <BasicExpression type="ZVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="phi-z-scalar" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-
-    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
-    <BasicExpression type="XVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-x" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-    
-    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
-    <BasicExpression type="YVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-y" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-    
-    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
-    <BasicExpression type="ZVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-z" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
 
@@ -81,81 +42,6 @@
 
     </TransportEquation>
     
-    <!-- Build an x-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-    
-      <StaggeredDirection>X</StaggeredDirection>
-    
-      <SolutionVariable>phi-x-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
-      
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
-
-    <!-- Build a y-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-    
-      <StaggeredDirection>Y</StaggeredDirection>
-    
-      <SolutionVariable>phi-y-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
-            
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
-
-    <!-- Build a z-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-    
-      <StaggeredDirection>Z</StaggeredDirection>
-    
-      <SolutionVariable>phi-z-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
-      
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
-
   </Wasatch>
 
 
@@ -176,9 +62,6 @@
     <checkpoint cycle = "2" interval = "0.00001"/>
     <compression>gzip</compression>
     <save label="phi-scalar"/>
-    <save label="phi-x-scalar"/>
-    <save label="phi-y-scalar"/>
-    <save label="phi-z-scalar"/>
   </DataArchiver> 
 
   <Grid>
@@ -215,104 +98,6 @@
           <value> 0.0 </value>
         </BCType>
       </Face>
-      
-      <!-- BOUNDARY CONDITIONS FOR X-STAGGERED SCALAR -->
-      <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="phi-x-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="phi-x-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-x-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-x-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z-">
-        <BCType id="all" var="Neumann" label="phi-x-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi-x-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-
-      <!-- BOUNDARY CONDITIONS FOR Y-STAGGERED SCALAR -->
-      <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="phi-y-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="phi-y-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-y-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-y-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z-">
-        <BCType id="all" var="Neumann" label="phi-y-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi-y-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-
-      <!-- BOUNDARY CONDITIONS FOR Z-STAGGERED SCALAR -->
-      <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y-">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z-">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="z+">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-
-
     </BoundaryConditions>
 
     <Level>
