@@ -407,16 +407,15 @@ evaluate()
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
+  const double xMax = field_max_interior(*x_);
+  const double xMin = field_min_interior(*x_);
+  const double yMax = field_max_interior(*y_);
+  const double yMin = field_min_interior(*y_);
+  const double zMax = field_max_interior(*z_);
+  const double zMin = field_min_interior(*z_);  
+  
   typename FieldT::interior_iterator phiiter = phi.interior_begin();
-  
-  const double xMax = *(std::max_element( x_->interior_begin(), x_->interior_end() ) ); //field_max(*x_) does not seem to work...
-  const double xMin = *(std::min_element( x_->interior_begin(), x_->interior_end() ) );
-  const double yMax = *(std::max_element( y_->interior_begin(), y_->interior_end() ) );
-  const double yMin = *(std::min_element( y_->interior_begin(), y_->interior_end() ) );
-  const double zMax = *(std::max_element( z_->interior_begin(), z_->interior_end() ) );
-  const double zMin = *(std::min_element( z_->interior_begin(), z_->interior_end() ) );
-  
-  double x,y,z,val;  
+  double x,y,z,val;
   while (fd.good()) {
     fd >> x >> y >> z >> val;
     const bool contains_value = x >= xMin && x <= xMax && y >= yMin && y <= yMax && z >= zMin && z <= zMax;
