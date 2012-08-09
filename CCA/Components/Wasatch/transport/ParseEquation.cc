@@ -118,67 +118,16 @@ namespace Wasatch{
     Expr::ExpressionID rhsID;
 
     if( eqnLabel == "generic" ){
-       // find out if this corresponds to a staggered or non-staggered field
-      std::string staggeredDirection;
-      Uintah::ProblemSpecP scalarStaggeredParams = params->get( "StaggeredDirection", staggeredDirection );
-
-      if ( scalarStaggeredParams ) {
-        // if staggered, then determine the staggering direction
-        proc0cout << "Detected staggered scalar '" << eqnLabel << "'" << std::endl;
-
-        // make proper calls based on the direction
-        if ( staggeredDirection=="X" ) {
-          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
-          typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
-          rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params );
-          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
-                                            params,
-                                            densityTag,
-                                            isConstDensity,
-                                            rhsID );
-          adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn );
-
-        } else if ( staggeredDirection=="Y" ) {
-          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
-          typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
-          rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params );
-          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
-                                           params,
-                                           densityTag,
-                                           isConstDensity,
-                                           rhsID );
-          adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn );
-
-        } else if (staggeredDirection=="Z") {
-          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
-          typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
-          rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params );
-          transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
-                                           params,
-                                           densityTag,
-                                           isConstDensity,
-                                           rhsID );
-          adaptor = scinew EqnTimestepAdaptor< ZVolField >( transeqn );
-
-        } else {
-          std::ostringstream msg;
-          msg << "ERROR: No direction is specified for staggered field '" << eqnLabel << "'. Please revise your input file." << std::endl;
-          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
-        }
-
-      } else if ( !scalarStaggeredParams ) {
-        // in this case, the scalar field is not staggered
-        proc0cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
-        typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
+       typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
         rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params );
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
-                                         params,
-                                         densityTag,
-                                         isConstDensity,
-                                         rhsID );
+                                          params,
+                                          densityTag,
+                                          isConstDensity,
+                                          rhsID );
         adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
-      }
-    } else {
+    }
+    else {
       std::ostringstream msg;
       msg << "ERROR: No transport equation was specified '" << eqnLabel << "'. Please revise your input file" << std::endl;
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
@@ -216,15 +165,11 @@ namespace Wasatch{
     std::string basePhiName;
     params->get( "SolutionVariable", basePhiName );
 
-    std::string stagLoc;
-    Uintah::ProblemSpecP stagLocParams = params->get( "StaggeredDirection", stagLoc );
-
     int nEqs = 1;
     params->get( "NumberOfEquations", nEqs );
 
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
-
 
     for( int iEq=0; iEq<nEqs; iEq++ ){
 
@@ -235,65 +180,18 @@ namespace Wasatch{
       std::string thisPhiName = basePhiName + ss.str();
       // set initial condition and register it
       Expr::Tag icTag( thisPhiName, Expr::STATE_N );
-      Expr::ExpressionID rhsID;
 
-      if( stagLocParams ){
+      Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
+      typedef Expr::SinFunction<SVolField>::Builder Builder;
+      icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
-        // X-Staggered scalar
-        if( stagLoc=="X" ){
-          Expr::Tag indepVarTag( "XXVOL", Expr::STATE_NONE );
-          typedef Expr::SinFunction<XVolField>::Builder Builder;
-          icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
-
-          // create the transport equation with all-to-all source term
-          typedef ScalabilityTestTransportEquation< XVolField > ScalTestEqn;
-          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                *solnGraphHelper->exprFactory,
-                                                params );
-          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
-          adaptors.push_back( scinew EqnTimestepAdaptor< XVolField >( scaltesteqn ) );
-        }
-        else if( stagLoc=="Y" ){
-          Expr::Tag indepVarTag( "XYVOL", Expr::STATE_NONE );
-          typedef Expr::SinFunction<YVolField>::Builder Builder;
-          icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
-
-          // create the transport equation with all-to-all source term
-          typedef ScalabilityTestTransportEquation< YVolField > ScalTestEqn;
-          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                *solnGraphHelper->exprFactory,
-                                                params );
-          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
-          adaptors.push_back( scinew EqnTimestepAdaptor< YVolField >( scaltesteqn ) );
-        }
-        else if(stagLoc=="Z" ){
-          Expr::Tag indepVarTag( "ZZVOL", Expr::STATE_NONE );
-          typedef Expr::SinFunction<ZVolField>::Builder Builder;
-          icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
-
-          // create the transport equation with all-to-all source term
-          typedef ScalabilityTestTransportEquation< ZVolField > ScalTestEqn;
-          rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                *solnGraphHelper->exprFactory,
-                                                params );
-          scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
-          adaptors.push_back( scinew EqnTimestepAdaptor< ZVolField >( scaltesteqn ) );
-        }
-
-      }
-      else{
-        Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
-        typedef Expr::SinFunction<SVolField>::Builder Builder;
-        icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
-
-        // create the transport equation with all-to-all source term
-        typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
-        rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                              *solnGraphHelper->exprFactory,
-                                              params );
-        scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
-        adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
-      }
+      // create the transport equation with all-to-all source term
+      typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
+      const Expr::ExpressionID rhsID = ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                                                     *solnGraphHelper->exprFactory,
+                                                                     params );
+      scaltesteqn = scinew ScalTestEqn( thisPhiName, rhsID );
+      adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
 
       solnGraphHelper->rootIDs.insert(rhsID);
 
@@ -598,8 +496,6 @@ namespace Wasatch{
     params->get( "PopulationName", basePhiName );
     basePhiName = "m_" + basePhiName;
 
-    std::string stagLoc;
-    Uintah::ProblemSpecP stagLocParams = params->get( "StaggeredDirection", stagLoc );
     int nEnv = 1;
     params->get( "NumberOfEnvironments", nEnv );
     const int nEqs = 2*nEnv;
@@ -628,110 +524,30 @@ namespace Wasatch{
       }
     }
     
-    if (stagLocParams) {
-
-      // X-Staggered scalar
-      if (stagLoc=="X") {
-        for (int iMom=0; iMom<nEqs; iMom++) {
-          preprocess_moment_transport_qmom<XVolField>(params, *solnGraphHelper->exprFactory,
-                                        transportedMomentTags, abscissaeTags,
-                                        weightsTags);
-
-          const double momentID = (double) iMom; //here we will add any fractional moments
-          std::stringstream ss;
-          ss << iMom;
-          std::string thisPhiName = basePhiName + "_" + ss.str();
-
-          // create moment transport equation
-          typedef MomentTransportEquation< XVolField > MomTransEq;
-          momtranseq = scinew MomTransEq( thisPhiName,
-                                          MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
-                                                                      params,
-                                                                      weightsTags,
-                                                                      abscissaeTags,
-                                                                      momentID,
-                                                                      initialMoments[iMom])
-                                         );
-          adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
-          adaptors.push_back(adaptor);
-        }
-      } else if (stagLoc=="Y") {
-        preprocess_moment_transport_qmom<YVolField>(params, *solnGraphHelper->exprFactory,
+    preprocess_moment_transport_qmom<SVolField>( params, *solnGraphHelper->exprFactory,
                                                  transportedMomentTags, abscissaeTags,
                                                  weightsTags );
-        for (int iMom=0; iMom<nEqs; iMom++) {
-          const double momentID = (double) iMom; //here we will add any fractional moments
-          std::stringstream ss;
-          ss << iMom;
-          std::string thisPhiName = basePhiName + "_" + ss.str();
 
-          // create moment transport equation
-          typedef MomentTransportEquation< YVolField > MomTransEq;
-          momtranseq = scinew MomTransEq( thisPhiName,
-                                         MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
-                                                                       params,
-                                                                       weightsTags,
-                                                                       abscissaeTags,
-                                                                       momentID,
-                                                                       initialMoments[iMom])
-                                         );
-          adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
-          adaptors.push_back(adaptor);
-        }
+    for( int iMom=0; iMom<nEqs; iMom++ ){
+      const double momentID = (double) iMom; //here we will add any fractional moments
+      std::stringstream ss;
+      ss << iMom;
+      std::string thisPhiName = basePhiName + "_" + ss.str();
 
-      } else if (stagLoc=="Z") {
-        preprocess_moment_transport_qmom<ZVolField>(params, *solnGraphHelper->exprFactory,
-                                                 transportedMomentTags, abscissaeTags,
-                                                 weightsTags);
+      // create moment transport equation
+      typedef MomentTransportEquation< SVolField > MomTransEq;
+      const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
+                                                                      params, weightsTags, abscissaeTags,
+                                                                      momentID, initialMoments[iMom]);
+      momtranseq = scinew MomTransEq( thisPhiName, rhsID);
+      adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
+      adaptors.push_back(adaptor);
+      // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
+      // THAT ELSEWHERE, BUT THIS IS NEEDED TO MAKE THINGS EASIER WHEN USING
+      // WASATCH IN ARCHES.
+      solnGraphHelper->rootIDs.insert(rhsID);
+    }
 
-        for (int iMom=0; iMom<nEqs; iMom++) {
-          const double momentID = (double) iMom; //here we will add any fractional moments
-          std::stringstream ss;
-          ss << iMom;
-          std::string thisPhiName = basePhiName + "_" + ss.str();
-
-          // create moment transport equation
-          typedef MomentTransportEquation< ZVolField > MomTransEq;
-          momtranseq = scinew MomTransEq( thisPhiName,
-                                         MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
-                                                                       params,
-                                                                       weightsTags,
-                                                                       abscissaeTags,
-                                                                       momentID,
-                                                                       initialMoments[iMom])
-                                         );
-          adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
-          adaptors.push_back(adaptor);
-        }
-      }
-    } else if (!stagLocParams) {
-      preprocess_moment_transport_qmom<SVolField>(params, *solnGraphHelper->exprFactory,
-                                               transportedMomentTags, abscissaeTags,
-                                               weightsTags );
-
-      for (int iMom=0; iMom<nEqs; iMom++) {
-        const double momentID = (double) iMom; //here we will add any fractional moments
-        std::stringstream ss;
-        ss << iMom;
-        std::string thisPhiName = basePhiName + "_" + ss.str();
-
-        // create moment transport equation
-        typedef MomentTransportEquation< SVolField > MomTransEq;
-        const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
-                                                                       params,
-                                                                       weightsTags,
-                                                                       abscissaeTags,
-                                                                       momentID,
-                                                                       initialMoments[iMom]);
-        momtranseq = scinew MomTransEq( thisPhiName, rhsID);
-        adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
-        adaptors.push_back(adaptor);
-        // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
-        // THAT ELSEWHERE, BUT THIS IS NEEDED TO MAKE THINGS EASIER WHEN USING
-        // WASATCH IN ARCHES.
-        solnGraphHelper->rootIDs.insert(rhsID);
-        }
-      }
     //
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
@@ -757,7 +573,7 @@ namespace Wasatch{
       }
       proc0cout << "------------------------------------------------" << std::endl;
     }
-    //
+
     return adaptors;
   }
 
@@ -1043,7 +859,7 @@ namespace Wasatch{
 
   //==================================================================
   // explicit template instantiation
-#define INSTANTIATE( FIELDT )                                   \
+#define INSTANTIATE_DIFFUSION( FIELDT )                         \
                                                                 \
     template void setup_diffusive_flux_expression<FIELDT>(      \
        Uintah::ProblemSpecP diffFluxParams,                     \
@@ -1057,8 +873,9 @@ namespace Wasatch{
        Uintah::ProblemSpecP diffVelParams,                      \
        const Expr::Tag primVarTag,                              \
        Expr::ExpressionFactory& factory,                        \
-       FieldTagInfo& info );                                    \
-                                                                \
+       FieldTagInfo& info );
+
+#define INSTANTIATE_CONVECTION( FIELDT )                        \
     template void setup_convective_flux_expression<FIELDT>(     \
         const std::string dir,                                  \
         const Expr::Tag solnVarTag,                             \
@@ -1076,10 +893,14 @@ namespace Wasatch{
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 
-  INSTANTIATE( SVolField )
-  INSTANTIATE( XVolField )
-  INSTANTIATE( YVolField )
-  INSTANTIATE( ZVolField )
+  // diffusive fluxes only for scalars.
+  INSTANTIATE_DIFFUSION ( SVolField )
+
+  // convective fluxes are supported for momentum as well.
+  INSTANTIATE_CONVECTION( SVolField )
+  INSTANTIATE_CONVECTION( XVolField )
+  INSTANTIATE_CONVECTION( YVolField )
+  INSTANTIATE_CONVECTION( ZVolField )
 
   //-----------------------------------------------------------------
 

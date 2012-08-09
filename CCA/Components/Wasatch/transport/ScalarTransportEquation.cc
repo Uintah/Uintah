@@ -330,8 +330,5 @@ namespace Wasatch{
   //==================================================================
   // explicit template instantiation
   template class ScalarTransportEquation< SVolField >;
-  template class ScalarTransportEquation< XVolField >;
-  template class ScalarTransportEquation< YVolField >;
-  template class ScalarTransportEquation< ZVolField >;
 
 } // namespace Wasatch

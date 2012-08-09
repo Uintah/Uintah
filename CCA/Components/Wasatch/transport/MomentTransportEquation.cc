@@ -483,9 +483,6 @@ namespace Wasatch {
   //==================================================================
   // Explicit template instantiation
   template class MomentTransportEquation< SVolField >;
-  template class MomentTransportEquation< XVolField >;
-  template class MomentTransportEquation< YVolField >;
-  template class MomentTransportEquation< ZVolField >;
   //==================================================================
 
 } // namespace Wasatch
