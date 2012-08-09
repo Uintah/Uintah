@@ -352,10 +352,13 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       // This may not be the most efficient way of adding the sources
       // to the RHS but in general we only expect 1 src to be added.
       // If the numbers of sources grow (>2), we may need to redo this. 
+      Vector Dx = patch->dCell(); 
+      double volume = Dx.x()*Dx.y()*Dx.z(); 
+
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
 
         IntVector c = *iter; 
-        vars.pressNonlinearSrc[c] += src_value[c]; 
+        vars.pressNonlinearSrc[c] += src_value[c] / delta_t * volume; 
 
       }
     }
