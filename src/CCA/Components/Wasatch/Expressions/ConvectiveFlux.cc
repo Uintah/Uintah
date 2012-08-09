@@ -226,16 +226,12 @@ evaluate()
   }
   
   // second order interpolant - for central and other flux limiters
-  //if (!isUpwind_) {
   phiInterpHiOp_->apply_to_field( *phi_, *phiHi );
-  //}
   
   // result
-  //if      ( isUpwind_  ) result <<= *phiLow;
   if ( isCentral_ ) result <<= *phiHi;
   else              result <<= *phiLow - *psi * (*phiLow - *phiHi);
   result <<= result * *velInterp;
-  //result <<= *velInterp;
 }
 
 //--------------------------------------------------------------------
