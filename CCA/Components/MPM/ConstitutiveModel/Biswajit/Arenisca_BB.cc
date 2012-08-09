@@ -893,12 +893,12 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
             // Compute internal variable
             kappa_new = d_intvar->computeInternalVariable(state);
-            if (kappa_new > 0.0) {
-              cout << " kappa > 0 in particle " << idx << " kappa_new = " << kappa_new 
-                   << " kappa_temp = " << kappa_temp << " cap_radius = " << cap_radius
-                   << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol[idx]
-                   << " del eps_v = " << strain_iteration.Trace()/var1 << endl;
-            }
+            //if (kappa_new > 0.0) {
+            //  cout << " kappa > 0 in particle " << idx << " kappa_new = " << kappa_new 
+            //       << " kappa_temp = " << kappa_temp << " cap_radius = " << cap_radius
+            //       << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol[idx]
+            //       << " del eps_v = " << strain_iteration.Trace()/var1 << endl;
+            //}
             //if (fetestexcept(FE_INVALID) != 0) {
             //  cerr << "Location 1: Floating point exception in particle = " << idx << endl;
             //}
@@ -1437,13 +1437,13 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 state->local_var[5] = var1;                        // scale factor for Delta eps_v
 
                 // Compute internal variable
-                if (kappa_loop > 0.0) {
-                  cout << " kappa > 0 in particle " << idx << " subcycle = " << subcycle_counter
-                       << " kappa_loop = " << kappa_loop 
-                       << " kappa_loop_oldp = " << kappa_loop_old << " cap_radius = " << cap_radius
-                       << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol_new[idx]
-                       << " del eps_v = " << (M*gamma).Trace()/var1 << endl;
-                }
+                //if (kappa_loop > 0.0) {
+                //  cout << " kappa > 0 in particle " << idx << " subcycle = " << subcycle_counter
+                //       << " kappa_loop = " << kappa_loop 
+                //       << " kappa_loop_oldp = " << kappa_loop_old << " cap_radius = " << cap_radius
+                //       << " max_X = " << max_X << " eps_v = " << pPlasticStrainVol_new[idx]
+                //       << " del eps_v = " << (M*gamma).Trace()/var1 << endl;
+                //}
                 kappa_loop = d_intvar->computeInternalVariable(state);
                 //if (fetestexcept(FE_INVALID) != 0) {
                 //  cerr << "Location 2: Floating point exception in particle = " << idx << endl;

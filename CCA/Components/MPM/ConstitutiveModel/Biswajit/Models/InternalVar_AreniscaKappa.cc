@@ -237,7 +237,8 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
     // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
     kappa_new = computeKappaFromX1(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
-    if (isnan(kappa_new) || kappa_new > 0) {
+    //if (isnan(kappa_new) || kappa_new > 0) {
+    if (isnan(kappa_new)) {
         cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
@@ -250,7 +251,8 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
     // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     kappa_new = computeKappaFromX2(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
-    if (isnan(kappa_new) || kappa_new > 0) {
+    //if (isnan(kappa_new) || kappa_new > 0) {
+    if (isnan(kappa_new)) {
         cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
