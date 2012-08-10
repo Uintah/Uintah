@@ -201,12 +201,13 @@ evaluate()
   eigenValues_.resize( abSize );
   weights_.resize(abSize);
   
-  // loop over every point in the patch. get a sample iterator for any of the
-  // fields.
+  // loop over interior points in the patch. To do this, we grab a sample
+  // iterator from any of the exisiting fields, for example, m0.
   const FieldT* sampleField = knownMoments_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
 
-  // grab an iterator for the supersaturation ratio field, set to m_0 if blank
+  // grab an iterator for the supersaturation ratio field, set to m_0 if no
+  // no supersaturation tag is provided.
   if ( superSaturationTag_ == Expr::Tag() ) {
     superSaturation_ = knownMoments_[0];
   }
@@ -214,7 +215,7 @@ evaluate()
 
   double m0;
   //
-  // create vector of iterators for the known moments and for the results
+  // create a vector of iterators for the known moments and for the results
   //
   std::vector<typename FieldT::const_interior_iterator> knownMomentsIterators;
   std::vector<typename FieldT::interior_iterator> resultsIterators;
@@ -226,10 +227,11 @@ evaluate()
     resultsIterators.push_back(thisResultsIterator);
   }
 
-  //
+  const double epsilon = 1.0e-10;
+  // now loop over the interior points, construct the matrix, and solve for the weights & abscissae
   while (sampleIterator!=sampleField->interior_end()) {
 
-    // check if we are in a region where supersaturation is nonzero
+    // check if we are in a region where supersaturation is zero
     if ( (superSaturationTag_ != Expr::Tag() && *supersatIter < 1e-10) || (superSaturationTag_ != Expr::Tag() && *knownMomentsIterators[0] == 0) ) {
       // in case the supersaturation or m_0 is zero, set the weights to zero and abscissae to 1
       // helps with numerical stabilization of problem
