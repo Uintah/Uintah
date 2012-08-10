@@ -1156,6 +1156,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           // Update the internal variables
           d_flow->updateElastic(idx);
 
+          // Update internal Cauchy stresses (only for viscoelasticity)
+          Matrix3 dp = zero;
+          d_devStress->updateInternalStresses(idx, dp, defState, delT);
+
         } else {
 
           plastic = true;
