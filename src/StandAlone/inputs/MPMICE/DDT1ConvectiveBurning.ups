@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+   <Meta>
+       <title>2D pbx9501 cylinder</title>
+   </Meta>  
+   <SimulationComponent type="mpmice" />
+   <Solver type="hypre"/>
+   
+   <LoadBalancer type="DLB">
+     <timestepInterval> 200         </timestepInterval>
+     <hasParticles> true </hasParticles>
+   </LoadBalancer>
+   
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0001    </maxTime>
+       <initTime>           0.0       </initTime>
+       <delt_min>           0.0       </delt_min>
+       <delt_max>           1.0       </delt_max>
+       <delt_init>          1e-20    </delt_init>
+       <timestep_multiplier>0.2       </timestep_multiplier>
+       <max_delt_increase>  0.5      </max_delt_increase>
+       <max_Timesteps>       100       </max_Timesteps>
+   </Time>    
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+       <Face side="x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType> 
+      </Face>
+      <Face side = "x+">
+       <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+        </Face>
+      <Face side = "y-">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all"  label = "Symmetric"   var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    
+       <Level>
+           <Box label = "1">
+              <lower>        [ 0.000, 0.000, 0.0000] </lower>
+              <upper>        [ 0.05, 0.001,  0.001]    </upper>
+              <extraCells>   [1,1,1]                 </extraCells>
+              <patches>      [1,1,1]       </patches> 
+              <resolution>   [50, 1, 1]               </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>DDT1PBX9501.uda</filebase>
+      <!--<outputInterval> 1e-7</outputInterval>-->
+      <outputTimestepInterval> 1 </outputTimestepInterval> 
+      <save label="press_CC"/>
+      <save label="temp_CC"/>
+      <save label="rho_CC"/>
+      <save label="detonating"/>
+      <save label="burning"/>
+      
+      <checkpoint cycle = "2" timestepInterval = "1000"/>
+    </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.15</cfl>
+     <ICE>
+      <TimeStepControl>
+        <Scheme_for_delT_calc> aggressive  </Scheme_for_delT_calc>
+        <knob_for_speedSound>  1      </knob_for_speedSound>
+      </TimeStepControl>
+                 
+      <ImplicitSolver>
+        <max_outer_iterations>      20     </max_outer_iterations>
+        <outer_iteration_tolerance> 1.01e-7 </outer_iteration_tolerance>
+        <iters_before_timestep_restart> 16 </iters_before_timestep_restart>
+        <Parameters>
+           <tolerance>  1.e-8      </tolerance>
+           <norm>       LInfinity  </norm>
+           <criteria>   Absolute   </criteria>
+           <solver>         cg     </solver>
+           <preconditioner> pfmg   </preconditioner>
+           <maxiterations>  200    </maxiterations>
+           <npre>           1      </npre>
+           <npost>          1      </npost>
+           <skip>           1      </skip>
+           <jump>           0      </jump>
+        </Parameters>
+      </ImplicitSolver>
+      <advection type="SecondOrder"/>
+      <ClampSpecificVolume>  true  </ClampSpecificVolume>
+    </ICE>
+  </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+      <time_integrator>                explicit   </time_integrator>
+      <interpolator>                   gimp        </interpolator>
+      <minimum_particle_mass>          3.e-10     </minimum_particle_mass>
+      <maximum_particle_velocity>      1.e3      </maximum_particle_velocity>
+      <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+      <artificial_viscosity>           true       </artificial_viscosity>
+      <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
+      <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
+      <use_load_curves>                false       </use_load_curves>
+      <do_contact_friction_heating>    false	</do_contact_friction_heating>
+      <create_new_particles>           false      </create_new_particles>
+      <DoThermalExpansion>             false      </DoThermalExpansion>
+      <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
+      <erosion algorithm = "ZeroStress"/>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "PBX9501">
+         <density>              1832.0 </density>
+        <thermal_conductivity> 0.452  </thermal_conductivity>
+        <specific_heat>        996.0  </specific_heat>
+        <C_p>                  996.0  </C_p>
+        <room_temp>            294.0  </room_temp>
+        <melt_temp>            688.0  </melt_temp>
+           <constitutive_model type = "visco_scram">
+             <PR>                     0.3      </PR>
+             <CoeffThermalExpansion>  12.5e-5   </CoeffThermalExpansion>
+             <CrackParameterA>        1.0e-3   </CrackParameterA>
+             <InitialCrackRadius>     3.0e-5   </InitialCrackRadius>
+             <CrackPowerValue>        10.0     </CrackPowerValue>
+             <CrackMaxGrowthRate>     300.0    </CrackMaxGrowthRate>
+             <StressIntensityF>       500.0    </StressIntensityF>
+             <CrackFriction>          0.35     </CrackFriction>
+             <CrackGrowthRate>        12.0     </CrackGrowthRate>
+             <G1>                     3.5e8    </G1>
+             <G2>                     1.739e8  </G2>
+             <G3>                     5.212e8  </G3>
+             <G4>                     9.085e8  </G4>
+             <G5>                     6.875e8  </G5>
+             <RTau1>                  0.0      </RTau1>
+             <RTau2>                  7.32e3   </RTau2>
+             <RTau3>                  7.32e4   </RTau3>
+             <RTau4>                  7.32e5   </RTau4>
+             <RTau5>                  2.e6     </RTau5>
+             <Beta>                   1.5e-4   </Beta>
+             <Gamma>                  1.0      </Gamma>
+             <DCp_DTemperature>       3.30773  </DCp_DTemperature>
+             <Chi>                    0.95     </Chi>
+             <delH>                   5.5e6    </delH>
+             <Z>                      5.0e19   </Z>
+             <EoverR>                 2.62069e4  </EoverR>
+             <dynamic_coeff_friction> 0.25     </dynamic_coeff_friction>
+             <volfracHE>              0.95     </volfracHE>
+             
+	       <T0> 298.0 </T0>
+  		<C1> 6.5 </C1>
+  		<C2> 120.0 </C2>
+
+             <useJWLEOS> true </useJWLEOS>
+             <useJWLCEOS> false </useJWLCEOS>
+             <A> 732000e9     </A>
+             <B>  -5.2645e9     </B>
+             <Cv> 2.780236e6      </Cv>
+             <R1> 14.1         </R1>
+             <R2> 1.41         </R2>
+             <om> 0.8867        </om>
+             <rho0> 1832      </rho0>
+	      <randomize_parameters>          false </randomize_parameters>
+             <use_time_temperature_equation> false </use_time_temperature_equation>
+             <useObjectiveRate>              false </useObjectiveRate>
+             <useModifiedEOS>               true </useModifiedEOS>
+           </constitutive_model>
+           
+           <geom_object>
+	      <box label="wholeDomain">
+		   <min>     [0.002, 0.0, 0.0]  </min>
+		   <max>     [.100, 0.001, 0.001] </max>
+		   </box>
+	       <res>                 [4,4,4]         </res>
+              <velocity>            [0.0,0.0,0.0]   </velocity>
+              <temperature>         298.0           </temperature>
+	     </geom_object>
+	     </material>
+
+          <contact>                                               
+           <type>approach</type>                                 
+           <materials>              [0]         </materials>   
+           <mu> 0.0 </mu>                                        
+         </contact>
+       </MPM>
+
+<!--__________________________________-->
+       <ICE>    
+	   <material name="product">
+             <EOS type="JWL">
+               <A>    1668.9e9 </A>
+               <B>    59.69e9  </B>
+               <C>    6.43e8   </C>
+               <R1>   5.9      </R1>
+               <R2>   2.1      </R2>
+               <om>   0.45     </om>
+               <rho0> 1832     </rho0>
+             </EOS>
+             <dynamic_viscosity>      0.0              </dynamic_viscosity>
+             <thermal_conductivity>   0.0              </thermal_conductivity>
+             <specific_heat>          594.96           </specific_heat>
+             <gamma>                  1.63              </gamma>
+	     <isSurroundingMatl> true 		     </isSurroundingMatl>
+	     <geom_object>
+
+               <box label="outOfDomain">
+                 <min>           [99.0, 99.0, 99.0 ]   </min>
+                 <max>           [100.0, 100.0, 100.0 ]</max>
+               </box>
+	       <res>            [2,2,2]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    300.0                   </temperature>
+               <!--<density>        1.38934929              </density>-->
+               <density>        200              </density>
+               <pressure>       101325.0                </pressure>
+             </geom_object>
+            <geom_object>  
+	       <difference>
+	       <box label="1">
+		     <min>     [0.0, 0.0, 0.0]  </min>
+		     <max>     [0.1, 0.001, 0.001] </max>
+		     </box>
+		     <box label="wholeDomain">
+		     </box>
+		     </difference>
+               <res>            [2,2,2]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    3000.0                  </temperature>
+               <density>         20        </density>
+               <pressure>       101325.0                </pressure>
+             </geom_object>
+           </material>
+         </ICE>       
+<!--__________________________________-->
+
+      <exchange_properties>
+       <!-- <heatExchangeCoeff>  constant  </heatExchangeCoeff>-->
+        <exchange_coefficients>
+          <momentum>  [ 1e8]   </momentum>
+          <heat>      [  1e5]   </heat>
+        </exchange_coefficients>
+      </exchange_properties>
+      
+    </MaterialProperties>
+
+<!--______________________________________________________________________-->
+
+   <Models>
+	<Model type="DDT1">
+        <fromMaterial> PBX9501   </fromMaterial> 
+        <toMaterial>   product   </toMaterial>
+        
+        <G>       2.33e-6 </G>
+        <b>       1.2     </b>
+        <rho0>    1832.0  </rho0>
+        <E0>      5.0e6   </E0>
+        <useCrackModel>      true  </useCrackModel>
+        <Gcrack>             3.7e-18 </Gcrack>
+        <CrackVolThreshold>  1e-14   </CrackVolThreshold>
+        <nCrack>             1.84    </nCrack>
+
+        <ThresholdPressureJWL> 5.3e9        </ThresholdPressureJWL>
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <IgnitionTemp>         550          </IgnitionTemp> 
+        <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
+      </Model>
+    </Models>
+                                        
+</Uintah_specification>
+
