@@ -267,9 +267,10 @@ void HypoViscoElasticDevStress::updateInternalStresses( const particleIndex idx,
 
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
 
-    ( *d_sigmaDev_new[j] )[idx] += (  2.0 * d_mu_MW[j] * (tensorEta - dp)  - ( *d_sigmaDev[j] )[idx] * d_inv_tau_MW[j] ) * delT;
+    ( *d_sigmaDev_new[j] )[idx] = ( *d_sigmaDev[j] )[idx] + (  2.0 * d_mu_MW[j] * (tensorEta - dp)  - ( *d_sigmaDev[j] )[idx] * d_inv_tau_MW[j] ) * delT;
     //^^^^^^^^^^^^^^^^^^
     //  I don't like this notation -Todd
+    //cout << "    d_sigmaDev_new " << ( *d_sigmaDev_new[j] )[idx] << " d_sigmaDev " << ( *d_sigmaDev[j] )[idx] << endl;
   }
 }
 
@@ -280,6 +281,7 @@ void HypoViscoElasticDevStress::rotateInternalStresses( const particleIndex idx,
   dbg << " hypoViscoElastic:rotateInternalStresses " << endl;
   
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
-    ( *d_sigmaDev_new[j] )[idx] = tensorR.Transpose() * ( ( *d_sigmaDev[j] )[idx] * tensorR );
+    ( *d_sigmaDev_new[j] )[idx] = tensorR.Transpose() * ( ( *d_sigmaDev_new[j] )[idx] * tensorR );
+    //cout << "    d_sigmaDev_new " << ( *d_sigmaDev_new[j] )[idx] << " d_sigmaDev " << ( *d_sigmaDev[j] )[idx] << endl;
   }
 }
