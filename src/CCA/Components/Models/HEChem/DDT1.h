@@ -100,6 +100,7 @@ WARNING
 					       const LevelP& level,
 					       const ModelInfo*);
       
+ 
     virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
@@ -123,13 +124,26 @@ WARNING
 
 
   private:    
-    void computeModelSources(const ProcessorGroup*, const PatchSubset*,
-                             const MaterialSubset*, DataWarehouse*, 
-                             DataWarehouse*, const ModelInfo*);
+    void computeBurnLogic(const ProcessorGroup*, 
+                          const PatchSubset*,
+                          const MaterialSubset*, 
+                          DataWarehouse*, 
+                          DataWarehouse*, 
+                          const ModelInfo*);
+                             
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset*,
+                             const MaterialSubset*, 
+                             DataWarehouse*, 
+                             DataWarehouse*, 
+                             const ModelInfo*);
       
-    void computeNumPPC(const ProcessorGroup*, const PatchSubset*,
-                       const MaterialSubset*, DataWarehouse*, 
-                       DataWarehouse*, const ModelInfo*);
+    void computeNumPPC(const ProcessorGroup*, 
+                       const PatchSubset*,
+                       const MaterialSubset*, 
+                       DataWarehouse*, 
+                       DataWarehouse*, 
+                       const ModelInfo*);
       
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,
                              double surfArea, double delT, double solidMass);
@@ -153,6 +167,10 @@ WARNING
     const VarLabel* delFLabel;   // diagnostic labels
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
+    const VarLabel* inductionTimeLabel;
+    const VarLabel* countTimeLabel;
+    const VarLabel* BurningCriteriaLabel;
+
 
     const VarLabel* pCrackRadiusLabel;
     
@@ -199,7 +217,7 @@ WARNING
     double BP;  /* Number of Particles at Boundary          */
     double d_thresholdPress_SB; /*Threshold Press for burning */
     double ignitionTemp;        /* IgnitionTemp  */
-      
+    
     double MIN_MASS_IN_A_CELL;
     
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
