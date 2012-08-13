@@ -149,6 +149,7 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
+    std::set<string> d_isDirCreated;
     
     MaterialSubset* d_zero_matl;
     

@@ -582,7 +582,10 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         string levelIndex = li.str();
         string path = linePath + "/" + levelIndex;
         
-        createDirectory(linePath, levelIndex);
+        if( d_isDirCreated.count(path) == 0){
+          createDirectory(linePath, levelIndex);
+          d_isDirCreated.insert(path);
+        }
         
         // find the physical domain and index range
         // associated with this patch
