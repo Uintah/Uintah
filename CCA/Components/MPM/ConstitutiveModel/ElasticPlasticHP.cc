@@ -2039,6 +2039,10 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         // Update the internal variables
         d_flow->updateElastic(idx);
 
+	// Update internal Cauchy stresses (only for viscoelasticity)
+	Matrix3 dp = Zero;
+	d_devStress->updateInternalStresses(idx, dp, defState, delT);
+
         // Compute stability criterion
         pLocalized_new[idx] = pLocalized[idx];
 
@@ -2422,6 +2426,10 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         pPlasticStrain_new[idx]     = pPlasticStrain[idx];
         pPlasticStrainRate_new[idx] = 0.0;
         
+	// Update internal Cauchy stresses (only for viscoelasticity)
+	Matrix3 dp = Zero;
+	d_devStress->updateInternalStresses(idx, dp, defState, delT);
+
         computeElasticTangentModulus(bulk, shear, D);
 
       } else {
