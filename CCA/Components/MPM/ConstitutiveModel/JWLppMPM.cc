@@ -212,8 +212,8 @@ JWLppMPM* JWLppMPM::clone()
 }
 
 void JWLppMPM::initializeCMData(const Patch* patch,
-                             const MPMMaterial* matl,
-                             DataWarehouse* new_dw)
+                                const MPMMaterial* matl,
+                                DataWarehouse* new_dw)
 {
   // Initialize local variables
   Matrix3 zero(0.0);
@@ -279,9 +279,9 @@ void JWLppMPM::initializeCMData(const Patch* patch,
 }
 
 void JWLppMPM::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* ) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches,
+                                         MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -293,11 +293,11 @@ void JWLppMPM::allocateCMDataAddRequires(Task* task,
 
 
 void JWLppMPM::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*,
-                                    ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
+                                 ParticleSubset* addset,
+                                 map<const VarLabel*,
+                                   ParticleVariableBase*>* newState,
+                                 ParticleSubset* delset,
+                                 DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -309,7 +309,7 @@ void JWLppMPM::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
-                                   std::vector<const VarLabel*>& to)
+                                std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(pProgressFLabel);
@@ -323,8 +323,8 @@ void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void JWLppMPM::computeStableTimestep(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* new_dw)
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -462,11 +462,11 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
     // Compute deformation gradient and velocity gradient at each 
     // particle before pressure stabilization
-    ParticleSubset::iterator iter = pset->begin();
-    for(; iter != pset->end(); iter++){
+    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       // If the particle has already failed just ignore
+      pLocalized_new[idx] = 0;
       if (pLocalized[idx]) {
         pstress_new[idx] = pstress[idx];
         pvolume[idx] = pvolume_old[idx];
@@ -549,8 +549,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 
       vol_0_CC.initialize(0.);
       vol_CC.initialize(0.);
-      iter = pset->begin();
-      for(; iter != pset->end(); iter++){
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // If the particle has already failed just ignore
@@ -577,8 +576,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     } //end of pressureStabilization loop  at the patch level
 
     // Actually compute the updated stress 
-    iter = pset->begin();
-    for(; iter != pset->end(); iter++){
+    for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       double J = pDefGrad_new[idx].Determinant();
