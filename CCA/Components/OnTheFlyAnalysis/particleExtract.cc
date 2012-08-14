@@ -47,12 +47,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <sys/stat.h>
-#ifndef _WIN32
+
 #include <dirent.h>
-#endif
 #include <iostream>
 #include <fstream>
-
 #include <cstdio>
 
 
@@ -69,8 +67,8 @@ particleExtract::particleExtract(ProblemSpecP& module_spec,
                          Output* dataArchiver)
   : AnalysisModule(module_spec, sharedState, dataArchiver)
 {
-  d_sharedState = sharedState;
-  d_prob_spec = module_spec;
+  d_sharedState  = sharedState;
+  d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   ps_lb = scinew particleExtractLabel();
@@ -84,7 +82,9 @@ particleExtract::~particleExtract()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
+  
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
+  VarLabel::destroy(ps_lb->filePointerLabel);
   delete ps_lb;
   delete M_lb;
 }
@@ -103,14 +103,27 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("particleExtract:couldn't get output port", __FILE__, __LINE__);
   }
   
-  vector<int> m(1);
-  m[0] = d_matl->getDWIndex();
+  vector<int> m;
+  m.push_back( d_matl->getDWIndex() );
+  
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it;
+  it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+  
   d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
-  d_matl_set->addReference();                          
+  d_matl_set->addReference();   
   
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
+                                            
+   ps_lb->filePointerLabel  =  VarLabel::create("filePointer", 
+                                            ParticleVariable< FILE* >::getTypeDescription() );
+   ps_lb->filePointerLabel_preReloc  =  VarLabel::create("filePointer+", 
+                                            ParticleVariable< FILE* >::getTypeDescription() );
+                                             
   //__________________________________
   //  Read in timing information
   d_prob_spec->require("samplingFrequency", d_writeFreq);
@@ -164,6 +177,12 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
   if(d_StartTime > d_StopTime){
     throw ProblemSetupException("\n ERROR:particleExtract: startTime > stopTime. \n", __FILE__, __LINE__);
   }
+ 
+ // Tell the shared state that these variable need to be relocated
+  int matl = d_matl->getDWIndex();
+  sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
+  sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
+  
 }
 
 //______________________________________________________________________
@@ -174,8 +193,14 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("particleExtract::initialize", 
                   this, &particleExtract::initialize);
   
-  t->computes(ps_lb->lastWriteTimeLabel);
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+  // Tell the scheduler to not copy this variable to a new AMR grid and 
+  // do not checkpoint it.
+  sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
+//  sched->overrideVariableBehavior("filePointer+", false, false, true, true, true);
+  
+  t->computes( ps_lb->lastWriteTimeLabel );
+  t->computes( ps_lb->filePointerLabel ) ;
+  sched->addTask( t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
 void particleExtract::initialize(const ProcessorGroup*, 
@@ -189,11 +214,15 @@ void particleExtract::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
      
     double tminus = -1.0/d_writeFreq;
-    new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
+    new_dw->put( max_vartype( tminus ), ps_lb->lastWriteTimeLabel );
+    
+    ParticleVariable<FILE*> myFiles;
+    int indx = d_matl->getDWIndex(); 
+    ParticleSubset* pset = new_dw->getParticleSubset( indx, patch );
+    new_dw->allocateAndPut( myFiles, ps_lb->filePointerLabel, pset );
     
     //__________________________________
     //bullet proofing
-    int indx = d_matl->getDWIndex();
     if( ! new_dw->exists(M_lb->pColorLabel, indx, patch ) ){
       ostringstream warn;
       warn << "ERROR:particleExtract  In order to use the DataAnalysis Module particleExtract "
@@ -222,7 +251,50 @@ void particleExtract::restartInitialize()
 // need to do something here
 //  new_dw->put(max_vartype(0.0), ps_lb->lastWriteTimeLabel);
 }
+//______________________________________________________________________
+void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                         const LevelP& level)
+{ 
+  int L_indx = level->getIndex();
+  if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){
+    return;
+  }
 
+  cout<< "particleExtract::scheduleDoAnalysis_preReloc " << endl;
+  Task* t = scinew Task("particleExtract::doAnalysis_preReloc", 
+                   this,&particleExtract::doAnalysis_preReloc);
+                     
+  Ghost::GhostType gn = Ghost::None;
+  t->requires( Task::OldDW,  ps_lb->filePointerLabel, gn, 0 );
+  t->computes( ps_lb->filePointerLabel_preReloc  );
+  
+  sched->addTask(t, level->eachPatch(),  d_matl_set);
+}
+//______________________________________________________________________
+void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int indx = d_matl->getDWIndex();
+    
+    ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
+    constParticleVariable<FILE*>myFiles;
+    ParticleVariable<FILE*> myFiles_preReloc;
+    
+    old_dw->get(            myFiles,          ps_lb->filePointerLabel,          pset );
+    new_dw->allocateAndPut( myFiles_preReloc, ps_lb->filePointerLabel_preReloc, pset );
+
+    for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      myFiles_preReloc[idx]=myFiles[idx];
+    }
+  }
+}   
+ 
 //______________________________________________________________________
 void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
                                          const LevelP& level)
@@ -250,10 +322,14 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
     }
     t->requires(Task::NewDW,d_varLabels[i], gn, 0);
   }
-  t->requires(Task::NewDW,  M_lb->pXLabel,          gn);
-  t->requires(Task::NewDW,  M_lb->pParticleIDLabel, gn);
-  t->requires(Task::NewDW,  M_lb->pColorLabel,      gn);
-  t->computes(ps_lb->lastWriteTimeLabel);
+  t->requires( Task::NewDW,  M_lb->pXLabel,           gn );
+  t->requires( Task::NewDW,  M_lb->pParticleIDLabel,  gn );
+  t->requires( Task::NewDW,  M_lb->pColorLabel,       gn );
+  t->requires( Task::NewDW,  ps_lb->filePointerLabel, gn );
+  
+  t->computes( ps_lb->lastWriteTimeLabel );
+  t->modifies( ps_lb->filePointerLabel );
+  
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -305,6 +381,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       constParticleVariable<long64> pid;
       constParticleVariable<Point> px;  
       constParticleVariable<double>pColor;
+
             
       Ghost::GhostType  gn = Ghost::None;
       int NGP = 0;
@@ -316,6 +393,10 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       new_dw->get(pid,    M_lb->pParticleIDLabel, pset);
       new_dw->get(px,     M_lb->pXLabel,          pset);
       new_dw->get(pColor, M_lb->pColorLabel,      pset);
+      
+      // file pointers
+      ParticleVariable<FILE*>myFiles;
+      new_dw->getModifiable( myFiles,    ps_lb->filePointerLabel, pset );
       
       //__________________________________
       //  Put particle data into arrays <double,int,....>_data
@@ -396,7 +477,14 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           
           // open the file
           FILE *fp;
-          fp = fopen(filename.c_str(), "a");
+          
+          if( myFiles[idx] ){           // if the filepointer has been previously stored.
+            fp = myFiles[idx];
+          } else {
+            fp = fopen(filename.c_str(), "a");
+            myFiles[idx] = fp;
+          }
+          
           if (!fp){
             throw InternalError("\nERROR:dataAnalysisModule:particleExtract:  failed opening file"+filename,__FILE__, __LINE__);
           }
@@ -435,7 +523,6 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           }        
 
           fprintf(fp,    "\n");
-          fclose(fp);
         }
       }  // loop over particles
       lastWriteTime = now;     

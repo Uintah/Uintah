@@ -93,8 +93,10 @@ WARNING
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
+    
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                    const LevelP& level);
    
-                                      
   private:
 
     void initialize(const ProcessorGroup*, 
@@ -103,6 +105,12 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
+    void doAnalysis_preReloc(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw);
+    
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
@@ -120,6 +128,8 @@ WARNING
     class particleExtractLabel {
     public:
       VarLabel* lastWriteTimeLabel;
+      VarLabel* filePointerLabel;
+      VarLabel* filePointerLabel_preReloc;
     };
     
     particleExtractLabel* ps_lb;
@@ -137,6 +147,7 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
+    MaterialSubset* d_matl_subset;
   };
 }
 

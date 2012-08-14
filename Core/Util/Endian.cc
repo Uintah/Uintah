@@ -40,6 +40,7 @@ void swapbytes( long long& i ) { LONG_LONG_SWAP(i); }
 void swapbytes( bool& )       { }
 void swapbytes( int8_t& )     { }
 void swapbytes( uint8_t& )    { }
+void swapbytes( FILE* & )     { }
 void swapbytes( int16_t& i )  { SWAP_2(i); }
 void swapbytes( uint16_t& i ) { SWAP_2(i); }
 void swapbytes( int32_t& i )  { SWAP_4(i); }
@@ -72,6 +73,7 @@ bool isLittleEndian()
   return !isBigEndian();
 }
  
+
 string endianness()
 {
   if( isBigEndian() ){
