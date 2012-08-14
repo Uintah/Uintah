@@ -583,6 +583,160 @@ build() const
 //--------------------------------------------------------------------
 
 /**
+ *  \class PlusProfile
+ *  \author Amir Biglari
+ *  \date July, 2012
+ *  \brief Implements a PlusProfile for initialization purposes among other things.
+ */
+template< typename FieldT >
+class PlusProfile : public Expr::Expression<FieldT>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param xStart Location where the plusProfile starts in x direction. This is the independent variable location.
+     * @param yStart Location where the plusProfile starts in y direction. This is the independent variable location.
+     * @param xWidth the width of the plusProfile starts in x direction.
+     * @param xWidth the width of the plusProfile starts in y direction.
+     * @param lowValue  Value of the step function for independentVar <  transitionPoint.
+     * @param highValue	Value of the step function for independentVar >= transitionPoint.
+     */
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const double xStart,
+             const double yStart,
+             const double xWidth,
+             const double yWidth,
+             const double lowValue = 1.0,
+             const double highValue = 0.0);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag xTag_, yTag_;
+    const double xStart_, yStart_, xWidth_, yWidth_, lowValue_, highValue_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  PlusProfile( const Expr::Tag& xTag,
+               const Expr::Tag& yTag,              
+               const double xStart,
+               const double yStart,
+               const double xWidth,
+               const double yWidth,
+               const double lowValue,
+               const double highValue );
+  const Expr::Tag xTag_, yTag_;;
+  const double xStart_, yStart_, xWidth_, yWidth_, lowValue_, highValue_;
+  const FieldT *x_, *y_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+PlusProfile<FieldT>::
+PlusProfile( const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const double xStart,
+             const double yStart,
+             const double xWidth,
+             const double yWidth,
+             const double lowValue,
+             const double highValue )
+: Expr::Expression<FieldT>(),
+xTag_     ( xTag      ), 
+yTag_     ( yTag      ), 
+xStart_   ( xStart    ), 
+yStart_   ( yStart    ), 
+xWidth_   ( xWidth    ), 
+yWidth_   ( yWidth    ), 
+lowValue_ ( lowValue  ),
+highValue_( highValue )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+PlusProfile<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+PlusProfile<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+PlusProfile<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= cond( ( ((*x_ > xStart_)&&(*x_ < xStart_+xWidth_)) || ((*y_ > yStart_)&&(*y_ < yStart_+yWidth_)) ), highValue_ )
+  ( lowValue_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+PlusProfile<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xTag,
+         const Expr::Tag& yTag,
+         const double xStart,
+         const double yStart,
+         const double xWidth,
+         const double yWidth,
+         const double lowValue,
+         const double highValue)
+: ExpressionBuilder(result),
+xTag_     ( xTag     ), 
+yTag_     ( yTag     ), 
+xStart_   ( xStart   ), 
+yStart_   ( yStart   ), 
+xWidth_   ( xWidth   ), 
+yWidth_   ( yWidth   ), 
+lowValue_ ( lowValue ),
+highValue_( highValue)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+PlusProfile<FieldT>::Builder::
+build() const
+{
+  return new PlusProfile<FieldT>( xTag_, yTag_, xStart_, yStart_, xWidth_, yWidth_, lowValue_, highValue_);
+}
+
+//--------------------------------------------------------------------
+
+/**
  *  \class  RandomField
  *  \author Tony Saad
  *  \date   July, 2012

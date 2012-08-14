@@ -25,6 +25,9 @@ namespace Wasatch {
     
     // get the kolmogorov scale
     turbulenceInputParams->getWithDefault("KolmogorovScale",turbParams.kolmogorovScale, 1e100);    
+
+    // get the turbulent Schmidt Number
+    turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbulentSchmidt, 1.0);      
   }
   
 }

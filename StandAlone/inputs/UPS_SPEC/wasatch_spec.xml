@@ -12,7 +12,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
@@ -43,7 +43,22 @@
         <NameTag            spec="REQUIRED"/>
       </StepFunction>
 
-      
+      <!-- Plus Profile makes a + sign as the initial condition with HighValue on + area and LowValue everywhere else!-->
+      <PlusProfile       spec="OPTIONAL NO_DATA"
+                           attribute1="xStart REQUIRED DOUBLE"
+                           attribute2="yStart REQUIRED DOUBLE"
+                           attribute3="xWidth REQUIRED DOUBLE"
+                           attribute4="yWidth REQUIRED DOUBLE"
+                           attribute5="lowValue REQUIRED DOUBLE"
+                           attribute6="highValue REQUIRED DOUBLE">
+        <Coordinate1      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate1>
+        <Coordinate2      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate2>
+      </PlusProfile>
+            
       <!-- Sine function with frequency, amplitude, and offset !-->
       <SineFunction       spec="OPTIONAL NO_DATA"
                             attribute1="amplitude REQUIRED DOUBLE"
@@ -483,9 +498,10 @@
     <!-- ======================================================================== -->
     <!-- Spec for a turbulent viscosity in our LES modeling:                      -->
     <!-- Here we can specify wether we want to use the constant Smagorinsky model -->
-    <!-- or the dynamic Smagorinsky model in order to obtain turbulent viscosity? -->
+    <!-- or the dynamic Smagorinsky model in order to obtain turbulent viscosity  -->
     <!-- ======================================================================== -->       
     <Turbulence              spec="OPTIONAL NO_DATA">
+      <TurbulentSchmidt        spec="OPTIONAL DOUBLE"/>                                   
       <KolmogorovScale         spec="OPTIONAL DOUBLE"/>                                   
       <EddyViscosityConstant   spec="OPTIONAL DOUBLE"/>                               
       <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE'">

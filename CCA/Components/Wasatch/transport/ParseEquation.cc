@@ -95,6 +95,7 @@ namespace Wasatch{
   //==================================================================
 
   EqnTimestepAdaptorBase* parse_equation( Uintah::ProblemSpecP params,
+                                          TurbulenceParameters turbParams,
                                           const Expr::Tag densityTag,
                                           const bool isConstDensity,
                                           GraphCategories& gc )
@@ -119,7 +120,7 @@ namespace Wasatch{
 
     if( eqnLabel == "generic" ){
        typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
-        rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params );
+        rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params, turbParams );
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                           params,
                                           densityTag,
@@ -697,15 +698,17 @@ namespace Wasatch{
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
                         const Expr::Tag& diffFluxTag,
                         const Expr::Tag& primVarTag,
-                        const Expr::Tag& densityTag )
+                        const Expr::Tag& densityTag,
+                        const Expr::Tag& turbDiffTag )
   {
+    
     if( diffFluxParams->findBlock("ConstantDiffusivity") ){
       double coef;
       diffFluxParams->get("ConstantDiffusivity",coef);
       typedef typename DiffusiveFlux< typename OpT::SrcFieldType,
                                       typename OpT::DestFieldType
                                       >::Builder Flux;
-      return scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
+      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -721,7 +724,7 @@ namespace Wasatch{
       typedef typename DiffusiveFlux2< typename OpT::SrcFieldType,
                                        typename OpT::DestFieldType
                                        >::Builder Flux;
-      return scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
+      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     return NULL;
   }
@@ -731,6 +734,7 @@ namespace Wasatch{
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
                                         const bool isStrong,
+                                        const Expr::Tag turbDiffTag,  
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
@@ -751,9 +755,9 @@ namespace Wasatch{
       diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir, Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
-      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
-      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarTag,densityTag);
+      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
 
       if( builder == NULL ){
         std::ostringstream msg;
@@ -782,13 +786,15 @@ namespace Wasatch{
   Expr::ExpressionBuilder*
   build_diff_vel_expr( Uintah::ProblemSpecP diffVelParams,
                        const Expr::Tag& diffVelTag,
-                       const Expr::Tag& primVarTag )
+                       const Expr::Tag& primVarTag,
+                       const Expr::Tag& turbDiffTag )
   {
+    
     if( diffVelParams->findBlock("ConstantDiffusivity") ){
       typedef typename DiffusiveVelocity<GradT>::Builder Velocity;
       double coef;
       diffVelParams->get("ConstantDiffusivity",coef);
-      return scinew Velocity( diffVelTag, primVarTag, coef );
+      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     else if( diffVelParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -802,7 +808,7 @@ namespace Wasatch{
        */
       typedef typename DiffusiveVelocity2< GradT, InterpT >::Builder Velocity;
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      return scinew Velocity( diffVelTag, primVarTag, coef );
+      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     return NULL;
   }
@@ -810,6 +816,7 @@ namespace Wasatch{
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
                                             const Expr::Tag primVarTag,
+                                            const Expr::Tag turbDiffTag,  
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
@@ -830,10 +837,10 @@ namespace Wasatch{
       diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )       builder = build_diff_vel_expr<typename MyOpTypes::GradX,typename MyOpTypes::InterpC2FX>(diffVelParams,diffVelTag,primVarTag);
-      else if( dir=="Y" )  builder = build_diff_vel_expr<typename MyOpTypes::GradY,typename MyOpTypes::InterpC2FY>(diffVelParams,diffVelTag,primVarTag);
-      else if( dir=="Z")   builder = build_diff_vel_expr<typename MyOpTypes::GradZ,typename MyOpTypes::InterpC2FZ>(diffVelParams,diffVelTag,primVarTag);
-
+      if( dir=="X" )       builder = build_diff_vel_expr<typename MyOpTypes::GradX,typename MyOpTypes::InterpC2FX>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Y" )  builder = build_diff_vel_expr<typename MyOpTypes::GradY,typename MyOpTypes::InterpC2FY>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Z")   builder = build_diff_vel_expr<typename MyOpTypes::GradZ,typename MyOpTypes::InterpC2FZ>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+ 
       if( builder == NULL ){
         std::ostringstream msg;
         msg << "Could not build a diffusive velocity expression for '"
@@ -866,12 +873,14 @@ namespace Wasatch{
        const Expr::Tag densityTag,                              \
        const Expr::Tag primVarTag,                              \
        const bool isStrong,                                     \
+       const Expr::Tag turbDiffTag,                             \
        Expr::ExpressionFactory& factory,                        \
        FieldTagInfo& info );                                    \
                                                                 \
     template void setup_diffusive_velocity_expression<FIELDT>(  \
        Uintah::ProblemSpecP diffVelParams,                      \
        const Expr::Tag primVarTag,                              \
+       const Expr::Tag turbDiffTag,                             \
        Expr::ExpressionFactory& factory,                        \
        FieldTagInfo& info );
 

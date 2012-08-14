@@ -1,0 +1,498 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Lid Driven Cavity 3D Problem</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+      <TimeIntegrator> FE </TimeIntegrator>
+
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    <Turbulence>
+       <TurbulentSchmidt>1.0</TurbulentSchmidt>
+       <KolmogorovScale>1000000000000</KolmogorovScale>
+      <EddyViscosityConstant>0.15</EddyViscosityConstant>
+      <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
+    </Turbulence>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vel_magnitude" state="STATE_N" />
+      <VelocityMagnitude>
+      <XVelocity>
+        <NameTag name="u" state="STATE_NONE" />
+      </XVelocity>
+      <YVelocity>
+        <NameTag name="v" state="STATE_NONE" />
+      </YVelocity>
+      <ZVelocity>
+        <NameTag name="w" state="STATE_NONE" />
+      </ZVelocity>
+      </VelocityMagnitude>
+    </PostProcessingExpression>
+    
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="xvelcc" state="STATE_N" />
+      <InterpolateExpression type="XVOL">
+          <NameTag name="u" state="STATE_NONE"/>
+      </InterpolateExpression>
+    </PostProcessingExpression>
+
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="yvelcc" state="STATE_N" />
+      <InterpolateExpression type="YVOL">
+          <NameTag name="v" state="STATE_NONE"/>
+      </InterpolateExpression>
+    </PostProcessingExpression>
+  
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="zvelcc" state="STATE_N" />
+      <InterpolateExpression type="ZVOL">
+          <NameTag name="w" state="STATE_NONE"/>
+      </InterpolateExpression>
+    </PostProcessingExpression>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="xvelcc" state="STATE_N" />
+      <NameTag name="yvelcc" state="STATE_N" />
+      <NameTag name="zvelcc" state="STATE_N" />
+    </ForceOnGraph>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f" state="STATE_N" />
+      <PlusProfile xStart="0.45" yStart="0.45" xWidth="0.1" yWidth="0.1" lowValue="0.0" highValue="1.0">
+        <Coordinate1>
+          <NameTag name="XSVOL" state="STATE_NONE" />
+        </Coordinate1>
+        <Coordinate2>
+          <NameTag name="YSVOL" state="STATE_NONE" />
+        </Coordinate2>
+      </PlusProfile>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="x-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="y-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="z-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+                       
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.0001</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>f</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="u" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="w" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+      
+    </TransportEquation>  
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+        <NameTag name="f" state="STATE_N"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+       <ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>    true</Use3DLaplacian>
+
+        <Parameters>
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-13  </tolerance>
+            <maxiterations>  100   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>60</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <!-- max_Timesteps> 4 </max_Timesteps -->
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>new-scalar-3D-driven_lid.uda</filebase>
+    <outputTimestepInterval>500</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
+    <compression>gzip</compression>
+    <!-- save label="x-mom"/ -->
+    <!-- save label="y-mom"/ -->
+    <!-- save label="z-mom"/ -->
+    <save label="TurbulentViscosity"/>
+    <save label="TurbulentDiffusivity"/>
+    <save label="StrainTensorMagnitude"/>
+    <!-- save label="u"/ -->
+    <!-- save label="v"/ -->
+    <save label="xvelcc"/>
+    <save label="yvelcc"/>
+    <save label="zvelcc"/>
+    <save label="pressure"/>
+    <save label="f"/>
+    <save label="vel_magnitude"/>        
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="x-">
+     
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+
+      </Face>
+      
+      <Face side="x+">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                       
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>                       
+                        
+      </Face>
+      
+      <Face side="y-">        
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+
+
+      </Face>
+      
+      <Face side="y+">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 1.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 1.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+                                   
+      </Face>
+
+      <Face side="z-">        
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+
+
+      </Face>
+      
+      <Face side="z+">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="f">
+          <value> 0.0 </value>
+        </BCType>
+                
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>     
+                                   
+      </Face>
+
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[32,32,32]</resolution>
+        <!--extraCells>[1,1,0]</extraCells-->
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

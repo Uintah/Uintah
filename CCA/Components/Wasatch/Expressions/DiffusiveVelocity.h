@@ -25,6 +25,9 @@
 
 #include <expression/Expression.h>
 
+//-- SpatialOps includes --//
+#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+
 /**
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveVelocity
@@ -32,7 +35,7 @@
  *  \date   Aug, 2011
  *
  *  \brief Calculates a simple diffusive velocity of the form
- *         \f$ V_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$
+ *         \f$ V_i = -(\Gamma + \Gamma_T) \frac{\partial \phi}{\partial x_i} \f$
  *         where \f$i=1,2,3\f$ is the coordinate direction.
  *         This requires knowledge of a the velocity field. This
  *         expression is suitable mostly for the cases that we
@@ -57,18 +60,25 @@ class DiffusiveVelocity
   typedef typename GradT::DestFieldType VelT;
   typedef typename GradT::SrcFieldType  ScalarT;
 
-  const bool isConstCoef_;
-  const Expr::Tag phiTag_, coefTag_;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,VelT>::type  SVolInterpT;
+
+  const bool isConstCoef_, isTurbulent_;
+  const Expr::Tag phiTag_, coefTag_, turbDiffTag_;
   const double coefVal_;
 
-  const GradT* gradOp_;
-  const ScalarT* phi_;
-  const VelT* coef_;
+  const SVolInterpT* sVolInterpOp_;  
+  const GradT*   gradOp_;
 
-  DiffusiveVelocity( const Expr::Tag phiTag,
+  const ScalarT*   phi_;
+  const SVolField* turbDiff_;
+  const VelT*      coef_;
+
+  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
+                     const Expr::Tag phiTag,
                      const Expr::Tag coefTag );
 
-  DiffusiveVelocity( const Expr::Tag phiTag,
+  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
+                     const Expr::Tag phiTag,
                      const double coefTag );
 
 public:
@@ -82,50 +92,58 @@ public:
   public:
     /**
      *  \brief Construct a diffusive velocity given expressions for
-     *         \f$\phi\f$ and \f$\Gamma\f$
+     *         \f$\phi\f$, \f$\Gamma_T\f$ and \f$\Gamma\f$
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the diffusive velocity field).
+     *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
-             const Expr::Tag& coefTag )
+             const Expr::Tag& coefTag,
+             const Expr::Tag& turbDiffTag = Expr::Tag() )
       : ExpressionBuilder(result),
         isConstCoef_( false ),
-        phit_ ( phiTag  ),
-        coeft_( coefTag ),
-        coef_ ( 0.0     )
+        phit_     ( phiTag      ),
+        coeft_    ( coefTag     ),
+        turbDifft_( turbDiffTag ),
+        coef_     ( 0.0         )
     {}
 
     /**
      *  \brief Construct a diffusive velocity given an expression for
-     *         \f$\phi\f$ and a constant value for \f$\Gamma\f$.
+     *         \f$\phi\f$ and \f$\Gamma_T\f$ and a constant value for \f$\Gamma\f$.
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *
      *  \param coef the value (constant in space and time) for the
      *         diffusion coefficient.
+     *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
-             const double coef )
+             const double coef,
+             const Expr::Tag& turbDiffTag = Expr::Tag() )
       : ExpressionBuilder(result),
-        isConstCoef_( true ),
-        phit_ ( phiTag      ),
-        coeft_( Expr::Tag() ),
-        coef_ ( coef        )
+        isConstCoef_( true        ),
+        turbDifft_  ( turbDiffTag ),
+        phit_       ( phiTag      ),
+        coeft_      ( Expr::Tag() ),
+        coef_       ( coef        )
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      if( isConstCoef_ ) return new DiffusiveVelocity<GradT>( phit_, coef_ );
-      else               return new DiffusiveVelocity<GradT>( phit_, coeft_);
+      if( isConstCoef_ ) return new DiffusiveVelocity<GradT>( turbDifft_, phit_, coef_  );
+      else               return new DiffusiveVelocity<GradT>( turbDifft_, phit_, coeft_);
     }
   private:
     const bool isConstCoef_;
-    const Expr::Tag phit_, coeft_;
+    const Expr::Tag phit_, coeft_, turbDifft_;
     const double coef_;
   };
 
@@ -145,7 +163,7 @@ public:
  *  \author Amir Biglari
  *  \date   Aug, 2011
  *
- *  \brief Calculates a generic diffusive velocity, \f$V = -\Gamma
+ *  \brief Calculates a generic diffusive velocity, \f$V = -(\Gamma + \Gamma_T)
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
  *         located at the same location as \f$\phi\f$.
  *
@@ -166,15 +184,21 @@ class DiffusiveVelocity2
   typedef typename GradT::DestFieldType VelT;
   typedef typename GradT::SrcFieldType  ScalarT;
 
-  const Expr::Tag phiTag_, coefTag_;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,VelT>::type  SVolInterpT;
+
+  const bool isTurbulent_;
+  const Expr::Tag phiTag_, coefTag_, turbDiffTag_;
 
   const GradT* gradOp_;
   const InterpT* interpOp_;
-
+  const SVolInterpT* sVolInterpOp_;
+  
   const ScalarT* phi_;
   const ScalarT* coef_;
+  const SVolField* turbDiff_;
 
-  DiffusiveVelocity2( const Expr::Tag& phiTag,
+  DiffusiveVelocity2( const Expr::Tag& turbDiffTag,
+                      const Expr::Tag& phiTag,
                       const Expr::Tag& coefTag );
 
 public:
@@ -194,17 +218,20 @@ public:
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the scalar field).
+     *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
-             const Expr::Tag& coefTag )
+             const Expr::Tag& coefTag,
+             const Expr::Tag& turbDiffTag = Expr::Tag() )
       : ExpressionBuilder(result),
-        phit_(phiTag), coeft_( coefTag )
+        phit_(phiTag), coeft_( coefTag ), turbDifft_( turbDiffTag )
     {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const{ return new DiffusiveVelocity2<GradT,InterpT>( phit_, coeft_ ); }
+    Expr::ExpressionBase* build() const{ return new DiffusiveVelocity2<GradT,InterpT>( turbDifft_, phit_, coeft_ ); }
   private:
-    const Expr::Tag phit_,coeft_;
+    const Expr::Tag phit_, coeft_, turbDifft_;
   };
 
   ~DiffusiveVelocity2();

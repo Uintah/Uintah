@@ -90,6 +90,7 @@ namespace Wasatch{
    */
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
+                  TurbulenceParameters turbParams,
                   const Expr::Tag densityTag,
                   const bool isConstDensity,
                   GraphCategories& gc );
@@ -162,11 +163,13 @@ namespace Wasatch{
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
                                         const bool isStrong,
+                                        const Expr::Tag turbDiffTag,  
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info );
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
                                             const Expr::Tag primVarTag,
+                                            const Expr::Tag turbDiffTag,  
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info );
 

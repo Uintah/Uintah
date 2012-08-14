@@ -217,6 +217,21 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
     }
     
+    else if ( params->findBlock("PlusProfile") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("PlusProfile");
+      double xStart, yStart, xWidth, yWidth, lowValue, highValue;
+      valParams->getAttribute("xStart",xStart);
+      valParams->getAttribute("yStart",yStart);
+      valParams->getAttribute("xWidth",xWidth);
+      valParams->getAttribute("xWidth",yWidth);
+      valParams->getAttribute("lowValue",lowValue);
+      valParams->getAttribute("highValue",highValue);
+      const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
+      const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
+      typedef typename PlusProfile<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
+    }
+    
     else if( params->findBlock("RandomField") ){
       Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
       double low, high, seed;

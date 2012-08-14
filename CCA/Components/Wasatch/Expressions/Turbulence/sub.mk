@@ -32,5 +32,6 @@ SRCDIR   := CCA/Components/Wasatch/Expressions/Turbulence
 
 SRCS     +=                         \
 	$(SRCDIR)/TurbulentViscosity.cc		\
-	$(SRCDIR)/StrainTensorMagnitude.cc \
+	$(SRCDIR)/TurbulentDiffusivity.cc	\
+	$(SRCDIR)/StrainTensorMagnitude.cc 	\
  $(SRCDIR)/TurbulenceParameters.cc

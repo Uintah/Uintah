@@ -31,28 +31,34 @@
 
 template< typename ScalarT, typename FluxT >
 DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
+                                              const Expr::Tag& turbDiffTag,
                                               const Expr::Tag& phiTag,
                                               const Expr::Tag& coefTag )
   : Expr::Expression<FluxT>(),
     isConstCoef_( false ),
-    phiTag_ ( phiTag  ),
-    coefTag_( coefTag ),
-    rhoTag_ ( rhoTag  ),
-    coefVal_( 0.0 )
+    isTurbulent_( turbDiffTag != Expr::Tag() ),
+    phiTag_     ( phiTag      ),
+    coefTag_    ( coefTag     ),
+    turbDiffTag_( turbDiffTag ),
+    rhoTag_     ( rhoTag      ),
+    coefVal_    ( 0.0         )
 {}
 
 //--------------------------------------------------------------------
 
 template< typename ScalarT, typename FluxT >
 DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
+                                              const Expr::Tag& turbDiffTag,
                                               const Expr::Tag& phiTag,
                                               const double coef )
   : Expr::Expression<FluxT>(),
-    isConstCoef_( true  ),
-    phiTag_ ( phiTag ),
-    coefTag_( "NULL", Expr::INVALID_CONTEXT ),
-    rhoTag_ ( rhoTag ),
-    coefVal_( coef )
+    isConstCoef_( true        ),
+    isTurbulent_( turbDiffTag != Expr::Tag()    ),
+    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
+    phiTag_     ( phiTag      ),
+    turbDiffTag_( turbDiffTag ),
+    rhoTag_     ( rhoTag      ),
+    coefVal_    ( coef        )
 {}
 
 //--------------------------------------------------------------------
@@ -70,7 +76,8 @@ DiffusiveFlux<ScalarT, FluxT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( phiTag_ );
-  if( !isConstCoef_    ) exprDeps.requires_expression( coefTag_ );
+  if( isTurbulent_  ) exprDeps.requires_expression( turbDiffTag_ );
+  if( !isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
   exprDeps.requires_expression( rhoTag_  );
 }
 
@@ -83,7 +90,8 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   phi_ = &fml.template field_manager<ScalarT  >().field_ref( phiTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( !isConstCoef_ ) coef_ = &fml.template field_manager<FluxT>().field_ref( coefTag_ );
+  if( isTurbulent_  ) turbDiff_ = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_ );
+  if( !isConstCoef_ ) coef_     = &fml.template field_manager<FluxT>().field_ref  ( coefTag_  );
 }
 
 //--------------------------------------------------------------------
@@ -94,7 +102,7 @@ DiffusiveFlux<ScalarT, FluxT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   gradOp_          = opDB.retrieve_operator<GradT>();
-  densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
+  sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
 }
 
 //--------------------------------------------------------------------
@@ -109,15 +117,23 @@ evaluate()
 
   gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
 
+  SpatFldPtr<FluxT> tmp = SpatialFieldStore::get<FluxT>( result );
+  *tmp <<= 0.0;
+  
+  if (isTurbulent_) {
+    sVolInterpOp_->apply_to_field( *turbDiff_, *tmp );
+  }
+  
   if( isConstCoef_ ){
-    result <<= -result * coefVal_;  // J = - gamma * grad(phi)
+    *tmp <<= *tmp + coefVal_;     // gamma_mix = gamma + gamma_T
   }
   else{
-    result <<= -result * *coef_;  // J =  - gamma * grad(phi)
+    *tmp <<= *tmp + *coef_;       // gamma_mix = gamma + gamma_T
   }
-
+  result <<= -result * *tmp;      // J =  - gamma * grad(phi)
+  
   SpatFldPtr<FluxT> interpRho = SpatialFieldStore::get<FluxT>(result);
-  densityInterpOp_->apply_to_field( *rho_, *interpRho );
+  sVolInterpOp_->apply_to_field( *rho_, *interpRho );
   result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
 }
 
@@ -128,12 +144,15 @@ evaluate()
 template< typename ScalarT, typename FluxT >
 DiffusiveFlux2<ScalarT, FluxT>::
 DiffusiveFlux2( const Expr::Tag& rhoTag,
+                const Expr::Tag& turbDiffTag,
                 const Expr::Tag& phiTag,
                 const Expr::Tag& coefTag )
   : Expr::Expression<FluxT>(),
-    phiTag_ ( phiTag  ),
-    coefTag_( coefTag ),
-    rhoTag_ ( rhoTag  )
+    isTurbulent_( turbDiffTag != Expr::Tag() ),
+    phiTag_     ( phiTag      ),
+    coefTag_    ( coefTag     ),
+    turbDiffTag_( turbDiffTag ),
+    rhoTag_     ( rhoTag      )
 {}
 
 //--------------------------------------------------------------------
@@ -153,6 +172,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( phiTag_ );
   exprDeps.requires_expression( coefTag_ );
   exprDeps.requires_expression( rhoTag_ );
+  if (isTurbulent_) exprDeps.requires_expression( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -166,6 +186,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
+  if (isTurbulent_) turbDiff_  = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_  );
 }
 
 //--------------------------------------------------------------------
@@ -175,9 +196,9 @@ void
 DiffusiveFlux2<ScalarT, FluxT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_   = opDB.retrieve_operator<GradT  >();
-  densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
-  interpOp_ = opDB.retrieve_operator<InterpT>();
+  gradOp_       = opDB.retrieve_operator<GradT  >();
+  sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
+  interpOp_     = opDB.retrieve_operator<InterpT>();
 }
 
 //--------------------------------------------------------------------
@@ -192,11 +213,19 @@ evaluate()
 
   SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore::get<FluxT>( result );
 
-  gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)
-  interpOp_->apply_to_field( *coef_, result  );
+  gradOp_  ->apply_to_field( *phi_, result );  // J = grad(phi)  
+  interpOp_->apply_to_field( *coef_, *fluxTmp  );
+  
+  SpatFldPtr<FluxT> tmp = SpatialFieldStore::get<FluxT>( result );
+  *tmp <<= 0.0;
+  if (isTurbulent_) {
+    sVolInterpOp_->apply_to_field( *turbDiff_, *tmp );
+    *fluxTmp <<= *fluxTmp + *tmp;                // gamma_mix = gamma + gamma_T
+  }
+  
   result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
 
-  densityInterpOp_->apply_to_field( *rho_, *fluxTmp );
+  sVolInterpOp_->apply_to_field( *rho_, *fluxTmp );
   result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
 }
 
