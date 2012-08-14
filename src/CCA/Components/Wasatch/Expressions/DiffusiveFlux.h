@@ -37,7 +37,7 @@
  *  \date July, 2011. (Originally created: June, 2010).
  *
  *  \brief Calculates a simple diffusive flux of the form
- *         \f$ J_i = -\rho \Gamma \frac{\partial \phi}{\partial x_i} \f$
+ *         \f$ J_i = -\rho (\Gamma + \Gamma_T) \frac{\partial \phi}{\partial x_i} \f$
  *         where \f$i=1,2,3\f$ is the coordinate direction.
  *         This requires knowledge of a the velocity field.
  *
@@ -54,24 +54,27 @@ class DiffusiveFlux
   : public Expr::Expression< FluxT >
 {
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  SVolInterpT;
 
-  const bool  isConstCoef_;
-  const Expr::Tag phiTag_, coefTag_, rhoTag_;
+  const bool  isConstCoef_, isTurbulent_;
+  const Expr::Tag phiTag_, coefTag_, rhoTag_, turbDiffTag_;
   const double coefVal_;
 
   const GradT*          gradOp_;
-  const DensityInterpT* densityInterpOp_;
+  const SVolInterpT* sVolInterpOp_;
 
   const ScalarT*   phi_;
+  const SVolField* turbDiff_;
   const SVolField* rho_;
   const FluxT*     coef_;
 
   DiffusiveFlux( const Expr::Tag& rhoTag,
+                 const Expr::Tag& turbDiffTag,
                  const Expr::Tag& phiTag,
                  const Expr::Tag& coefTag );
 
   DiffusiveFlux( const Expr::Tag& rhoTag,
+                 const Expr::Tag& turbDiffTag,
                  const Expr::Tag& phiTag,
                  const double coefTag );
 
@@ -86,57 +89,65 @@ public:
   public:
     /**
      *  \brief Construct a diffusive flux given expressions for
-     *         \f$\phi\f$ and \f$\Gamma\f$
+     *         \f$\phi\f$, \f$\Gamma_T\f$ and \f$\Gamma\f$
      *
-     *  \param phiTag  the Expr::Tag for the scalar field
+     *  \param phiTag the Expr::Tag for the scalar field
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the flux field).
+     *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
              const Expr::Tag& coefTag,
+             const Expr::Tag& turbDiffTag = Expr::Tag(),
              const Expr::Tag rhoTag = Expr::Tag() )
       : ExpressionBuilder(result),
         isConstCoef_( false ),
-        phit_ (phiTag),
-        coeft_(coefTag),
-        rhot_ (rhoTag),
-        coef_ (0.0)
+        phit_     ( phiTag      ),
+        coeft_    ( coefTag     ),
+        turbDifft_( turbDiffTag ),
+        rhot_     ( rhoTag      ),
+        coef_     ( 0.0         )
     {}
 
     /**
-     *  \brief Construct a diffusive flux given an expression for
-     *         \f$\phi\f$ and a constant value for \f$\Gamma\f$.
+     *  \brief Construct a diffusive flux given expressions for
+     *         \f$\phi\f$ and \f$\Gamma_T\f$ and a constant value for \f$\Gamma\f$.
      *
      *  \param phiTag  the Expr::Tag for the scalar field
      *
      *  \param coef the value (constant in space and time) for the
      *         diffusion coefficient.
      *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
+     *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
              const double coef,
+             const Expr::Tag& turbDiffTag = Expr::Tag(),
              const Expr::Tag rhoTag = Expr::Tag() )
       : ExpressionBuilder(result),
-        isConstCoef_( true ),
-        phit_(phiTag),
-        rhot_(rhoTag),
-        coef_(coef)
+        isConstCoef_( true        ),
+        turbDifft_  ( turbDiffTag ),
+        phit_       ( phiTag      ),
+        rhot_       ( rhoTag      ),
+        coef_       ( coef        )
     {}
 
     Expr::ExpressionBase* build() const
     {
-      if( isConstCoef_ ) return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coef_  );
-      else               return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coeft_ );
+      if( isConstCoef_ ) return new DiffusiveFlux<ScalarT, FluxT>( rhot_, turbDifft_, phit_, coef_  );
+      else               return new DiffusiveFlux<ScalarT, FluxT>( rhot_, turbDifft_, phit_, coeft_ );
     }
   private:
     const bool isConstCoef_;
-    const Expr::Tag phit_,coeft_,rhot_;
+    const Expr::Tag phit_,coeft_,rhot_,turbDifft_;
     const double coef_;
   };
 
@@ -156,9 +167,9 @@ public:
  *  \authors James C. Sutherland, Amir Biglari
  *  \date July,2011. (Originally created: June, 2010).
  *
- *  \brief Calculates a generic diffusive flux, \f$J = -\rho \Gamma
- *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
- *         located at the same location as \f$\phi\f$.
+ *  \brief Calculates a generic diffusive flux, \f$J = -\rho (\Gamma + \Gamma_T)
+ *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is located at 
+ *         the same location as \f$\phi\f$.
  *
  *  \tparam ScalarT the type for the scalar primary variable.
  *
@@ -175,27 +186,30 @@ class DiffusiveFlux2
 {
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  SVolInterpT;
 
-  const Expr::Tag phiTag_, coefTag_, rhoTag_;
+  const bool isTurbulent_;
+  const Expr::Tag phiTag_, coefTag_, rhoTag_, turbDiffTag_;
 
   const GradT* gradOp_;
   const InterpT* interpOp_;
-  const DensityInterpT* densityInterpOp_;
+  const SVolInterpT* sVolInterpOp_;
 
-  const ScalarT* phi_;
+  const ScalarT*   phi_;
+  const SVolField* turbDiff_;
   const SVolField* rho_;
-  const ScalarT* coef_;
+  const ScalarT*   coef_;
 
   DiffusiveFlux2( const Expr::Tag& rhoTag,
+                  const Expr::Tag& turbDiffTag,
                   const Expr::Tag& phiTag,
                   const Expr::Tag& coefTag );
 
 public:
   /**
-   *  \brief Builder for a diffusive flux \f$ J = - \rho \Gamma \frac{\partial
-   *         \phi}{\partial x} \f$ where \f$\Gamma\f$ is stored at the
-   *         same location as \f$\phi\f$.
+   *  \brief Builder for a diffusive flux \f$ J = - \rho (\Gamma + \Gamma_T) \frac{\partial
+   *         \phi}{\partial x} \f$ where \f$\Gamma\f$ is stored at the same location as 
+   *         \f$\phi\f$.
    */
   class Builder : public Expr::ExpressionBuilder
   {
@@ -209,21 +223,25 @@ public:
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the scalar field).
      *
+     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
+     *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
              const Expr::Tag& coefTag,
+             const Expr::Tag& turbDiffTag = Expr::Tag(),
              const Expr::Tag rhoTag = Expr::Tag() )
     : ExpressionBuilder(result),
-      phit_(phiTag),
-      coeft_( coefTag ),
-      rhot_(rhoTag)
+      phit_     ( phiTag      ),
+      coeft_    ( coefTag     ),
+      turbDifft_( turbDiffTag ),
+      rhot_     ( rhoTag      )
     {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const{ return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, phit_, coeft_ ); }
+    Expr::ExpressionBase* build() const{ return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, turbDifft_, phit_, coeft_ ); }
   private:
-    const Expr::Tag phit_,coeft_,rhot_;
+    const Expr::Tag phit_,coeft_,rhot_,turbDifft_;
   };
 
   ~DiffusiveFlux2();

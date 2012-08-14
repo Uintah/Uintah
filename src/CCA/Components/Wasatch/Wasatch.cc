@@ -296,7 +296,7 @@ namespace Wasatch{
     // get the turbulence params, if any, and parse them
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchParams->findBlock("Turbulence");
-    struct TurbulenceParameters turbParams = {0.1,0.1,NONE};
+    struct TurbulenceParameters turbParams = {1.0,0.1,0.1,NONE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
     //
@@ -344,7 +344,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, densityTag, isConstDensity, graphCategories_ ) );
+      adaptors_.push_back( parse_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
     }
 
     //

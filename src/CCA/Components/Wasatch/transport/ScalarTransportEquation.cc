@@ -211,7 +211,8 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::get_rhs_expr_id( const Expr::Tag densityTag,
                                                     const bool isConstDensity,
                                                     Expr::ExpressionFactory& factory,
-                                                    Uintah::ProblemSpecP params )
+                                                    Uintah::ProblemSpecP params,
+                                                    TurbulenceParameters turbulenceParams)
   {
     FieldTagInfo info;
 
@@ -262,7 +263,21 @@ namespace Wasatch{
     if (params->findBlock("ZAreaFractionExpression")) {
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
-
+    
+    
+    Expr::Tag turbDiffTag = Expr::Tag();
+    // TURBULENCE
+    if (turbulenceParams.turbulenceModelName != NONE ) { 
+      Expr::Tag turbViscTag = Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+      turbDiffTag = Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
+      
+      if( !factory.have_entry( turbDiffTag ) ){
+        typedef typename TurbulentDiffusivity::Builder TurbDiffT;
+        factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbulentSchmidt, turbViscTag ) );
+      }      
+    }
+    // END TURBULENCE
+    
     //_________________
     // Diffusive Fluxes
     if (!isConstDensity) {
@@ -270,7 +285,7 @@ namespace Wasatch{
            diffFluxParams != 0;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
 
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, factory, info );
+        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, turbDiffTag, factory, info );
       }
     }
     else {
@@ -278,7 +293,7 @@ namespace Wasatch{
           diffVelParams != 0;
           diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") ){
 
-        setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, factory, info );
+        setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, turbDiffTag, factory, info );
       }
     }
 

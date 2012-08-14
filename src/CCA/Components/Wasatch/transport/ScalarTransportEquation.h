@@ -30,6 +30,8 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentDiffusivity.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -203,7 +205,8 @@ namespace Wasatch{
     static Expr::ExpressionID get_rhs_expr_id( const Expr::Tag densityTag,
                                                const bool isConstDensity,
                                                Expr::ExpressionFactory& factory,
-                                               Uintah::ProblemSpecP params );
+                                               Uintah::ProblemSpecP params,
+                                               TurbulenceParameters turbulenceParams);
 
     /**
      *  \brief Parse the input file to get the name of the solution

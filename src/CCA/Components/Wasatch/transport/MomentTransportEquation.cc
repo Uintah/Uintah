@@ -382,7 +382,8 @@ namespace Wasatch {
     for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
         diffFluxParams != 0;
         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-      setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, factory, info );
+      Expr::Tag turbDiffTag = Expr::Tag();
+      setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, turbDiffTag, factory, info );
     }
 
     //__________________
