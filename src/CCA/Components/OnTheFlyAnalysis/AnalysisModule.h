@@ -69,6 +69,8 @@ namespace Uintah {
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level) =0;
     
+    virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                    const LevelP& level) =0;
   };
 }
 

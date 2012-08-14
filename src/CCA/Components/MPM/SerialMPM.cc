@@ -701,6 +701,15 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     //  time to add a new material
     scheduleSetNeedAddMaterialFlag(         sched, level,   matls);
   }
+  
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis_preReloc( sched, level);
+    }
+  }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
                                     d_sharedState->d_particleState_preReloc,

@@ -654,7 +654,16 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                                               "finalizeTimestep");
 
   d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
-                                                              all_matls);
+                                                             all_matls);
+  
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleDoAnalysis_preReloc( sched, level);
+    }
+  }
                                                               
   // only do on finest level until we get AMR MPM
   if (level->getIndex() == level->getGrid()->numLevels()-1)

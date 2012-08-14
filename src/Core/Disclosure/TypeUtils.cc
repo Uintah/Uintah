@@ -111,6 +111,16 @@ const TypeDescription* fun_getTypeDescription(short int*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(FILE**)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::ParticleVariable,
+                               "filePointer",true, MPI_BYTE);
+   }
+   return td;
+}
+
 //  const TypeDescription* fun_getTypeDescription(long*)
 //  {
 //     static TypeDescription* td;

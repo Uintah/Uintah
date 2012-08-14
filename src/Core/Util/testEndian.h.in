@@ -102,6 +102,7 @@ SCISHARE void swapbytes(float& i);
 SCISHARE void swapbytes(double& i);
 SCISHARE void swapbytes(Point &i);
 SCISHARE void swapbytes(Vector &i);
+SCISHARE void swapbytes(FILE* &i);
 
 SCISHARE bool isBigEndian();
 

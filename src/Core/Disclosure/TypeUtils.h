@@ -81,12 +81,15 @@ typedef int64_t long64;
  const TypeDescription* fun_getTypeDescription(Short27*);
 
  const TypeDescription* fun_getTypeDescription(Stencil7*);
+ const TypeDescription* fun_getTypeDescription(Stencil4*);
+ 
+ const TypeDescription* fun_getTypeDescription(FILE**);
 
 // Added by Oren for implicit ICE AMR pressure solver type that
 // appears in ICELabel.cc.
  const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
- const TypeDescription* fun_getTypeDescription(Stencil4*);
+
 
 
 // these functions are for getting safe values of types
