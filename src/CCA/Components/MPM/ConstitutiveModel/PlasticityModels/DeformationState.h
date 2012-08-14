@@ -47,6 +47,7 @@ namespace Uintah {
     Matrix3 tensorD;
     Matrix3 tensorEta;
     Matrix3 devStressInc;
+    double viscoElasticWorkInc;
     ~DeformationState() {};
   };
 } // End namespace Uintah

@@ -93,7 +93,7 @@ HypoElasticDevStress::allocateAndPutRigid( ParticleSubset* ,
 
 void HypoElasticDevStress::updateInternalStresses( const particleIndex,
                                                    const Matrix3& ,
-                                                   const DeformationState* ,
+                                                   DeformationState* ,
                                                    const double) {}
 
 void HypoElasticDevStress::rotateInternalStresses( const particleIndex,

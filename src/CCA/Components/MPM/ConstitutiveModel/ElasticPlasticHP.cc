@@ -1102,8 +1102,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
       DeformationState* defState = scinew DeformationState();
-      defState->tensorD   = tensorD;
-      defState->tensorEta = tensorEta;
+      defState->tensorD    = tensorD;
+      defState->tensorEta  = tensorEta;
+      defState->viscoElasticWorkInc = 0.0;
+      
       d_devStress->computeDeviatoricStressInc(idx, state, defState, delT);
 
       Matrix3 trialS = tensorS + defState->devStressInc;
@@ -1302,6 +1304,11 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
 
         pdTdt[idx] += Tdot_PW;
+
+        // Calculate Tdot from viscoelasticity
+        double Tdot_VW = defState->viscoElasticWorkInc*fac;
+
+        pdTdt[idx] += Tdot_VW;
       }
 
       //-----------------------------------------------------------------------
