@@ -102,7 +102,7 @@ namespace Uintah {
 
     virtual void updateInternalStresses( const particleIndex idx,
                                          const Matrix3&,
-                                         const DeformationState* defState,
+                                         DeformationState* defState,
                                          const double delT );
 
     virtual void rotateInternalStresses( const particleIndex idx,

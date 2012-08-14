@@ -260,10 +260,11 @@ void HypoViscoElasticDevStress::computeDeviatoricStressInc( const particleIndex 
 //
 void HypoViscoElasticDevStress::updateInternalStresses( const particleIndex idx,
                                                         const Matrix3& dp,
-                                                        const DeformationState* defState,
+                                                        DeformationState* defState,
                                                         const double delT ){
   dbg << " hypoViscoElastic:updateInternalStresses " << endl; 
   const Matrix3 tensorEta = defState->tensorEta;
+  double A = 0.0;
 
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
 
@@ -271,7 +272,11 @@ void HypoViscoElasticDevStress::updateInternalStresses( const particleIndex idx,
     //^^^^^^^^^^^^^^^^^^
     //  I don't like this notation -Todd
     //cout << "    d_sigmaDev_new " << ( *d_sigmaDev_new[j] )[idx] << " d_sigmaDev " << ( *d_sigmaDev[j] )[idx] << endl;
+    
+    double B = ( ( *d_sigmaDev_new[j] )[idx] * ( *d_sigmaDev_new[j] )[idx] ).NormSquared();
+    A += B * d_inv_tau_MW[j]/(2.0*d_mu_MW[j] ) * delT;
   }
+  defState->viscoElasticWorkInc = A;
 }
 
 //______________________________________________________________________
