@@ -206,7 +206,7 @@
       <bottom                 spec="REQUIRED VECTOR" />
       <top                    spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
-      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="OPTIONAL DOUBLE 'positive'" />
       <num_radial             spec="REQUIRED DOUBLE 'positive'" />
       <num_axial              spec="REQUIRED DOUBLE 'positive'" />
     </smoothcyl>

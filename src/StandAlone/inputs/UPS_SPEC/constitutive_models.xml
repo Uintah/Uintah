@@ -705,6 +705,8 @@
     <jwl_rho0           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
     <reaction_G         spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
     <reaction_b         spec="REQUIRED DOUBLE 'positive'" need_applies_to="type jwlpp_mpm"/>
+    <max_burn_timestep_size   spec="OPTIONAL DOUBLE" need_applies_to="type jwlpp_mpm" />
+    <max_burned_fraction      spec="OPTIONAL DOUBLE" need_applies_to="type jwlpp_mpm" />
     <useTaylorSeriesForDefGrad   spec="OPTIONAL BOOLEAN" need_applies_to="type jwlpp_mpm arenisca" />
     <num_taylor_terms            spec="OPTIONAL INTEGER" need_applies_to="type jwlpp_mpm arenisca"/>
     
