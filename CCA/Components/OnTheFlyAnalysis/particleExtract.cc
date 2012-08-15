@@ -193,10 +193,6 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
   Task* t = scinew Task("particleExtract::initialize", 
                   this, &particleExtract::initialize);
   
-  // Tell the scheduler to not copy this variable to a new AMR grid and 
-  // do not checkpoint it.
-  sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
-  
   t->computes( ps_lb->lastWriteTimeLabel );
   t->computes( ps_lb->filePointerLabel ) ;
   sched->addTask( t, level->eachPatch(), d_matl_set );
@@ -268,6 +264,10 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
   cout_doing<< "particleExtract::scheduleDoAnalysis_preReloc " << endl;
   Task* t = scinew Task("particleExtract::doAnalysis_preReloc", 
                    this,&particleExtract::doAnalysis_preReloc);
+
+  // Tell the scheduler to not copy this variable to a new AMR grid and 
+  // do not checkpoint it.  Put it here so it will be registered during a restart
+  sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
                      
   Ghost::GhostType gn = Ghost::None;
   t->requires( Task::OldDW,  ps_lb->filePointerLabel, gn, 0 );
