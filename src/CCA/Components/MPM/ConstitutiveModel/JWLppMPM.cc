@@ -29,24 +29,24 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
+#include <Core/Math/FastMatrix.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Math/MinMax.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 
@@ -60,24 +60,28 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   d_useModifiedEOS = false;
 
   // Read the ignition pressure
-  ps->require("ignition_pressure", d_initialData.ignition_pressure);
+  ps->require("ignition_pressure", d_cm.ignition_pressure);
 
   // These two parameters are used for the unburned Murnahan EOS
-  ps->require("murnaghan_K",    d_initialData.K);
-  ps->require("murnaghan_n",    d_initialData.n);
+  ps->require("murnaghan_K",    d_cm.K);
+  ps->require("murnaghan_n",    d_cm.n);
 
   // These parameters are used for the product JWL EOS
-  ps->require("jwl_A",    d_initialData.A);
-  ps->require("jwl_B",    d_initialData.B);
-  ps->require("jwl_C",    d_initialData.C);
-  ps->require("jwl_R1",   d_initialData.R1);
-  ps->require("jwl_R2",   d_initialData.R2);
-  ps->require("jwl_om",   d_initialData.omega);
-  ps->require("jwl_rho0", d_initialData.rho0);
+  ps->require("jwl_A",    d_cm.A);
+  ps->require("jwl_B",    d_cm.B);
+  ps->require("jwl_C",    d_cm.C);
+  ps->require("jwl_R1",   d_cm.R1);
+  ps->require("jwl_R2",   d_cm.R2);
+  ps->require("jwl_om",   d_cm.omega);
+  ps->require("jwl_rho0", d_cm.rho0);
 
   // These parameters are needed for the reaction model
-  ps->require("reaction_G",    d_initialData.G); // Rate coefficient
-  ps->require("reaction_b",    d_initialData.b); // Pressure exponent
+  ps->require("reaction_G",    d_cm.G); // Rate coefficient
+  ps->require("reaction_b",    d_cm.b); // Pressure exponent
+  // Maximum time increment for burn model subcycling
+  ps->getWithDefault("max_burn_timestep_size", d_cm.max_burn_timestep, 1.0e-12);
+  // Limit on the fraction that remains unburned
+  ps->getWithDefault("max_burned_fraction", d_cm.max_burned_frac, 1.0);
 
   // Initial stress
   // Fix: Need to make it more general.  Add gravity turn-on option and 
@@ -117,21 +121,23 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
-  d_initialData.ignition_pressure = cm->d_initialData.ignition_pressure;
+  d_cm.ignition_pressure = cm->d_cm.ignition_pressure;
 
-  d_initialData.K = cm->d_initialData.K;
-  d_initialData.n = cm->d_initialData.n;
+  d_cm.K = cm->d_cm.K;
+  d_cm.n = cm->d_cm.n;
 
-  d_initialData.A = cm->d_initialData.A;
-  d_initialData.B = cm->d_initialData.B;
-  d_initialData.C = cm->d_initialData.C;
-  d_initialData.R1 = cm->d_initialData.R1;
-  d_initialData.R2 = cm->d_initialData.R2;
-  d_initialData.omega = cm->d_initialData.omega;
-  d_initialData.rho0 = cm->d_initialData.rho0;
+  d_cm.A = cm->d_cm.A;
+  d_cm.B = cm->d_cm.B;
+  d_cm.C = cm->d_cm.C;
+  d_cm.R1 = cm->d_cm.R1;
+  d_cm.R2 = cm->d_cm.R2;
+  d_cm.omega = cm->d_cm.omega;
+  d_cm.rho0 = cm->d_cm.rho0;
 
-  d_initialData.G    = cm->d_initialData.G;
-  d_initialData.b    = cm->d_initialData.b;
+  d_cm.G    = cm->d_cm.G;
+  d_cm.b    = cm->d_cm.b;
+  d_cm.max_burn_timestep = cm->d_cm.max_burn_timestep;
+  d_cm.max_burned_frac = cm->d_cm.max_burned_frac;
 
   // Initial stress
   d_useInitialStress = cm->d_useInitialStress;
@@ -179,21 +185,23 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","jwlpp_mpm");
   }
   
-  cm_ps->appendElement("ignition_pressure", d_initialData.ignition_pressure);
+  cm_ps->appendElement("ignition_pressure", d_cm.ignition_pressure);
 
-  cm_ps->appendElement("murnaghan_K", d_initialData.K);
-  cm_ps->appendElement("murnaghan_n", d_initialData.n);
+  cm_ps->appendElement("murnaghan_K", d_cm.K);
+  cm_ps->appendElement("murnaghan_n", d_cm.n);
 
-  cm_ps->appendElement("jwl_A",    d_initialData.A);
-  cm_ps->appendElement("jwl_B",    d_initialData.B);
-  cm_ps->appendElement("jwl_C",    d_initialData.C);
-  cm_ps->appendElement("jwl_R1",   d_initialData.R1);
-  cm_ps->appendElement("jwl_R2",   d_initialData.R2);
-  cm_ps->appendElement("jwl_om",   d_initialData.omega);
-  cm_ps->appendElement("jwl_rho0", d_initialData.rho0);
+  cm_ps->appendElement("jwl_A",    d_cm.A);
+  cm_ps->appendElement("jwl_B",    d_cm.B);
+  cm_ps->appendElement("jwl_C",    d_cm.C);
+  cm_ps->appendElement("jwl_R1",   d_cm.R1);
+  cm_ps->appendElement("jwl_R2",   d_cm.R2);
+  cm_ps->appendElement("jwl_om",   d_cm.omega);
+  cm_ps->appendElement("jwl_rho0", d_cm.rho0);
 
-  cm_ps->appendElement("reaction_b", d_initialData.b);
-  cm_ps->appendElement("reaction_G", d_initialData.G);
+  cm_ps->appendElement("reaction_b",             d_cm.b);
+  cm_ps->appendElement("reaction_G",             d_cm.G);
+  cm_ps->appendElement("max_burn_timestep_size", d_cm.max_burn_timestep);
+  cm_ps->appendElement("max_burned_fraction",    d_cm.max_burned_frac);
 
   cm_ps->appendElement("useInitialStress", d_useInitialStress);
   if (d_useInitialStress) {
@@ -263,7 +271,7 @@ void JWLppMPM::initializeCMData(const Patch* patch,
     //     det(F) = (1 + nKp)^(-1/n)
     //     =>
     //     F_{11} = F_{22} = F_{33} = (1 + nKp)^(-1/3n)
-    double F11 = pow((1.0 + d_initialData.K*d_initialData.n*p), (-1.0/(3.0*d_initialData.n)));
+    double F11 = pow((1.0 + d_cm.K*d_cm.n*p), (-1.0/(3.0*d_cm.n)));
     Matrix3 defGrad(F11, 0.0, 0.0, 0.0, F11, 0.0, 0.0, 0.0, F11);
 
     iter = pset->begin();
@@ -343,9 +351,9 @@ void JWLppMPM::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double K    = d_initialData.K;
-  double n    = d_initialData.n;
-  double rho0 = d_initialData.rho0;
+  double K    = d_cm.K;
+  double n    = d_cm.n;
+  double rho0 = d_cm.rho0;
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
@@ -372,19 +380,9 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
   Identity.Identity();
 
   // Material parameters
-  double d_ignition_pressure = d_initialData.ignition_pressure;
-  double d_K = d_initialData.K;
-  double d_n = d_initialData.n;
-  double d_A = d_initialData.A;
-  double d_B = d_initialData.B;
-  double d_C = d_initialData.C;
-  double d_R1 = d_initialData.R1;
-  double d_R2 = d_initialData.R2;
-  double d_omega = d_initialData.omega;
-  double d_rho0 = d_initialData.rho0; // matl->getInitialDensity();
-
-  double d_b = d_initialData.b;
-  double d_G = d_initialData.G;
+  double d_K = d_cm.K;
+  double d_n = d_cm.n;
+  double d_rho0 = d_cm.rho0; // matl->getInitialDensity();
 
   // Loop through patches
   for(int pp=0; pp<patches->size(); pp++){
@@ -591,7 +589,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "VelGrad = " << pVelGrad_new[idx] << endl;
-        cerr << "**Particle is being removed for the computation**" << endl;
+        cerr << "**Particle is being removed from the computation**" << endl;
         //throw InvalidValue("**ERROR**: Error in deformation gradient", __FILE__, __LINE__);
 
         pstress_new[idx] = Identity*(0.0);
@@ -622,76 +620,21 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       rho_cur = d_rho0/J;
       pvolume[idx] = pmass[idx]/rho_cur;
 
-      // This is the burn logic used in the reaction model  (more complex versions
-      //   are available -- see LS-DYNA manual)
-      //       df/dt = G (1-f) p^b
-      //       Forward Euler: f_{n+1} = f_n + G*(1-f_n)*p_n^b*delT
-      //       Backward Euler: f_{n+1} = f_n + G*(1-f_{n+1})*p_n^b*delT
-      //                       or, f_{n+1} = (f_n + G*p_n^b*delT)/(1 + G*p_n^b*delT)
-      //       Fourth-order R-K: f_{n+1} = f_n + 1/6(k1 + 2k2 + 2k3 + k4)
-      //         k1 = G*(1-f_n)*p_n^b*delT
-      //         k2 = G*(1-f_n-k1/2)*p_n^b*delT
-      //         k3 = G*(1-f_n-k2/2)*p_n^b*delT
-      //         k4 = G*(1-f_n-k3)*p_n^b*delT
-      // (ignition_pressure in previous versions hardcoded to 2.0e8 Pa)
-      double pressure = -(1.0/3.0)*pstress[idx].Trace();
+      // Update the burn fraction and pressure
+      double p_old = -(1.0/3.0)*pstress[idx].Trace();
       double f_old = pProgressF[idx];
-      double f_inc = pProgressdelF[idx];
       double f_new = f_old;
-      if(pressure > d_ignition_pressure)  
-      {
-        // cerr << " pressure = " << pressure << " ignition = " << d_ignition_pressure << endl;
-        int numCycles = max(1, (int) ceil(delT/5.0e-11));  // Time step harded at 5.0e-11
-        double delTinc = delT/((double)numCycles);
-        for (int ii = 0; ii < numCycles; ++ii) {
-          double fac = (delTinc*d_G)*pow(pressure, d_b);
+      double p_new = p_old;
+      double tolerance = 1.0e-3;
+      int maxIter = 10;
+      computeUpdatedFractionAndPressure(J, f_old, p_old, delT, tolerance, maxIter,
+                                        f_new, p_new);
 
-          // Forward Euler
-          // f_inc = (1.0 - f_old)*fac;
-          // f_new = f_old + f_inc;
-
-          // Backward Euler
-          f_new = (f_old + fac)/(1.0 + fac);
-          f_inc = f_new - f_old;
-
-          // Fourth-order R-K
-          // double k1 = (1.0 - f_old)*fac;
-          // double k2 = (1.0 - f_old - 0.5*k1)*fac;
-          // double k3 = (1.0 - f_old - 0.5*k2)*fac;
-          // double k4 = (1.0 - f_old - k3)*fac;
-          // f_inc = 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
-          // f_new = f_old + f_inc;
-
-          if (f_new < 0.0) f_new = 0.0;
-          if (f_new > 0.2) f_new = 0.2;  // Max volume fraction hardcoded to 20 %
-          
-        }
-      }
-      pProgressdelF_new[idx] = f_inc;
+      // Update the volume fraction and the stress in the data warehouse
+      pProgressdelF_new[idx] = f_new - f_old;
       pProgressF_new[idx] = f_new;
+      pstress_new[idx] = Identity*(-p_new);
 
-      //  The following computes a pressure for partially burned particles
-      //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
-      //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
-      double pM = (1.0/(d_n*d_K))*(pow(J,-d_n) - 1.0);
-      double pJWL = pM;
-      if(pProgressF_new[idx] > 0.0){
-        double one_plus_omega = 1.0 + d_omega;
-        double inv_rho_rat = J; //rho0/rhoM;
-        double rho_rat = 1.0/J;  //rhoM/rho0;
-        double A_e_to_the_R1_rho0_over_rhoM = d_A*exp(-d_R1*inv_rho_rat);
-        double B_e_to_the_R2_rho0_over_rhoM = d_B*exp(-d_R2*inv_rho_rat);
-        double C_rho_rat_tothe_one_plus_omega = d_C*pow(rho_rat, one_plus_omega);
-
-        pJWL  = A_e_to_the_R1_rho0_over_rhoM +
-                B_e_to_the_R2_rho0_over_rhoM +
-                C_rho_rat_tothe_one_plus_omega;
-      }
-
-      double pressure_new = pM*(1.0 - pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
-
-      // compute the total stress
-      pstress_new[idx] = Identity*(-pressure_new);
       //if (isnan(pstress_new[idx].Norm()) || pstress_new[idx].Norm() > 1.0e20) {
       //  cerr << "particle = " << idx << " velGrad = " << pVelGrad_new[idx] << " stress_old = " << pstress[idx] << endl;
       //  cerr << " stress = " << pstress_new[idx] 
@@ -739,9 +682,9 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
 }
 
 void JWLppMPM::carryForward(const PatchSubset* patches,
-                               const MPMMaterial* matl,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
+                            const MPMMaterial* matl,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -764,8 +707,8 @@ void JWLppMPM::carryForward(const PatchSubset* patches,
 }
 
 void JWLppMPM::addComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* patches) const
+                                      const MPMMaterial* matl,
+                                      const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -784,51 +727,51 @@ void JWLppMPM::addComputesAndRequires(Task* task,
 }
 
 void JWLppMPM::addInitialComputesAndRequires(Task* task,
-                                         const MPMMaterial* matl,
-                                         const PatchSet*) const
+                                             const MPMMaterial* matl,
+                                             const PatchSet*) const
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
   task->computes(pProgressdelFLabel,    matlset);
   task->computes(pVelGradLabel,         matlset);
-  task->computes(pLocalizedLabel,         matlset);
+  task->computes(pLocalizedLabel,       matlset);
 }
 
 void 
 JWLppMPM::addComputesAndRequires(Task* ,
-                                   const MPMMaterial* ,
-                                   const PatchSet* ,
-                                   const bool ) const
+                                 const MPMMaterial* ,
+                                 const PatchSet* ,
+                                 const bool ) const
 {
 }
 
 
 // This is not yet implemented - JG- 7/26/10
 double JWLppMPM::computeRhoMicroCM(double pressure, 
-                                      const double p_ref,
-                                      const MPMMaterial* matl,
-                                      double temperature,
-                                      double rho_guess)
+                                   const double p_ref,
+                                   const MPMMaterial* matl,
+                                   double temperature,
+                                   double rho_guess)
 {
     cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR JWLppMPM"
        << endl;
-    double rho_orig = d_initialData.rho0; //matl->getInitialDensity();
+    double rho_orig = d_cm.rho0; //matl->getInitialDensity();
 
     return rho_orig;
 }
 
 void JWLppMPM::computePressEOSCM(const double rhoM,double& pressure, 
-                                    const double p_ref,
-                                    double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl,
-                                    double temperature)
+                                 const double p_ref,
+                                 double& dp_drho, double& tmp,
+                                 const MPMMaterial* matl,
+                                 double temperature)
 {
-  double A = d_initialData.A;
-  double B = d_initialData.B;
-  double R1 = d_initialData.R1;
-  double R2 = d_initialData.R2;
-  double omega = d_initialData.omega;
-  double rho0 = d_initialData.rho0;
+  double A = d_cm.A;
+  double B = d_cm.B;
+  double R1 = d_cm.R1;
+  double R2 = d_cm.R2;
+  double omega = d_cm.omega;
+  double rho0 = d_cm.rho0;
   double cv = matl->getSpecificHeat();
   double V = rho0/rhoM;
   double P1 = A*exp(-R1*V);
@@ -847,5 +790,260 @@ double JWLppMPM::getCompressibility()
   return 1.0;
 }
 
-namespace Uintah {
-} // End namespace Uintah
+// This is the burn logic used in the reaction model  (more complex versions
+//   are available -- see LS-DYNA manual)
+//       df/dt = G (1-f) p^b
+//       Forward Euler: f_{n+1} = f_n + G*(1-f_n)*p_n^b*delT
+//       Backward Euler: f_{n+1} = f_n + G*(1-f_{n+1})*p_n^b*delT
+//                       or, f_{n+1} = (f_n + G*p_n^b*delT)/(1 + G*p_n^b*delT)
+//       Fourth-order R-K: f_{n+1} = f_n + 1/6(k1 + 2k2 + 2k3 + k4)
+//         k1 = G*(1-f_n)*p_n^b*delT
+//         k2 = G*(1-f_n-k1/2)*p_n^b*delT
+//         k3 = G*(1-f_n-k2/2)*p_n^b*delT
+//         k4 = G*(1-f_n-k3)*p_n^b*delT
+// (ignition_pressure in previous versions hardcoded to 2.0e8 Pa)
+void
+JWLppMPM::computeUpdatedFractionAndPressure(const double& J,
+                                            const double& f_old_orig,
+                                            const double& p_old_orig,
+                                            const double& delT,
+                                            const double& tolerance,
+                                            const int& maxIter,
+                                            double& f_new,
+                                            double& p_new) const
+{
+  // Compute Murnaghan and JWL pressures
+  double pM = computePressureMurnaghan(J);
+  double pJWL = computePressureJWL(J);
+
+  if (p_old_orig > d_cm.ignition_pressure && f_old_orig < d_cm.max_burned_frac )  {
+
+    // cerr << " p_old = " << p_old << " ignition = " << d_cm.ignition_pressure << endl;
+    int numCycles = max(1, (int) ceil(delT/d_cm.max_burn_timestep));  
+    double delTinc = delT/((double)numCycles);
+    double p_old = p_old_orig;
+    double f_old = f_old_orig;
+    f_new = f_old_orig;
+    p_new = p_old_orig;
+    for (int ii = 0; ii < numCycles; ++ii) {
+
+      //computeWithTwoStageBackwardEuler(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+      computeWithNewtonIterations(J, f_old, p_old, delTinc, tolerance, maxIter, pM, pJWL, 
+                                  f_new, p_new);
+      f_old = f_new;
+      p_old = p_new;
+
+    }
+  } else {
+    //  The following computes a pressure for partially burned particles
+    //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
+    //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
+    f_new = f_old_orig;
+    p_new = pM*(1.0 - f_new) + pJWL*f_new;
+  }
+
+  return;
+}
+
+//  This is the original two stage Backward Euler
+void
+JWLppMPM::computeWithTwoStageBackwardEuler(const double& J,
+                                           const double& f_old,
+                                           const double& p_old,
+                                           const double& delT,
+                                           const double& pM,
+                                           const double& pJWL,
+                                           double& f_new,
+                                           double& p_new) const
+{
+  double fac = (delT*d_cm.G)*pow(p_old, d_cm.b);
+
+  // Forward Euler
+  // f_new = f_old + (1.0 - f_old)*fac;
+
+  // Backward Euler
+  f_new = (f_old + fac)/(1.0 + fac);
+
+  // Fourth-order R-K
+  // double k1 = (1.0 - f_old)*fac;
+  // double k2 = (1.0 - f_old - 0.5*k1)*fac;
+  // double k3 = (1.0 - f_old - 0.5*k2)*fac;
+  // double k4 = (1.0 - f_old - k3)*fac;
+  // f_new = f_old + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
+
+  //if (f_new < 0.0) f_new = 0.0;
+  //if (f_new > 0.2) f_new = 0.2;  // Max volume fraction hardcoded to 20 %
+  if (f_new > d_cm.max_burned_frac) f_new = d_cm.max_burned_frac;  // Max burned volume fraction 
+          
+  //  The following computes a pressure for partially burned particles
+  //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
+  //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
+  p_new = pM*(1.0 - f_new) + pJWL*f_new;
+
+  return;
+}
+
+//  This is the Newton iteration with Backward Euler
+void
+JWLppMPM::computeWithNewtonIterations(const double& J,
+                                      const double& f_old,
+                                      const double& p_old,
+                                      const double& delT,
+                                      const double& tolerance,
+                                      const int& maxIter,
+                                      const double& pM,
+                                      const double& pJWL,
+                                      double& f_new,
+                                      double& p_new) const
+{
+  // Initialize matrices
+  vector<double> G(2);  // The vector [F_n+1 P_n+1]^T = 0
+  FastMatrix JacobianG(2,2);
+
+  // Initial values of f and p
+  f_new = f_old;
+  p_new = p_old;
+
+  // Set iteration controls
+  int iter = 0;
+  double norm = 0.0;
+
+  // Compute G
+  computeG(J, f_old, f_new, p_new, pM, pJWL, delT, G);
+
+  // Do Newton iterations
+  do {
+
+    // Compute Jacobian of G
+    computeJacobianG(J, f_new, p_new, pM, pJWL, delT, JacobianG);
+
+    // Invert Jacobian of G 
+    FastMatrix Jinv(2,2);
+    Jinv.destructiveInvert(JacobianG);
+
+    // Compute increment
+    vector<double> Finc(2);
+    Jinv.multiply(G, Finc);
+  
+    // Update the variables
+    f_new -= Finc[0];
+    p_new -= Finc[1];
+
+    // Compute G
+    computeG(J, f_old, f_new, p_new, pM, pJWL, delT, G);
+
+    // Compute L2 norm and increment iter
+    norm = sqrt(G[0]*G[0] + G[1]*G[1]);
+    iter++;
+
+    if (isnan(p_new) || isnan(f_new) || iter > maxIter) {
+      cerr << "iter = " << iter << " norm = " << norm << " tol = " << tolerance
+           << " p_new = " << p_new << " f_new = " << f_new 
+           << " p_old = " << p_old << " f_old = " << f_old << endl;
+      cerr << " pM = " << pM << " pJWL = " << pJWL 
+           << " G = [" << G[0] << "," << G[1] << "]"
+           << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
+           << JacobianG(1,0) << "," << JacobianG(1,1) << "]]" << endl;
+      cerr << " Jinv = [[" << Jinv(0,0) << "," << Jinv(0,1) << "],["
+           << Jinv(1,0) << "," << Jinv(1,1) << "]]" 
+           << " Finc = [" << Finc[0] << "," << Finc[1] << "]" << endl;
+      throw InvalidValue("**JWLppMPM ERROR**: Nan in p_new/f_new value or no convergence", __FILE__, __LINE__);
+    }
+
+  } while (norm > tolerance && iter < maxIter);
+
+  return;
+}
+
+//------------------------------------------------------------------
+// Compute G
+//  G = [F_n+1 P_n+1]^T
+//   F_n+1 = 0 = f_n+1 - f_n - G*(1 - f_n+1)*(p_n+1)^b*Delta t    
+//   P_n+1 = 0 = p_n+1 - (1 - f_n+1) p_m - f_n+1 p_jwl
+//------------------------------------------------------------------
+void 
+JWLppMPM::computeG(const double& J,
+                   const double& f_old, 
+                   const double& f_new, 
+                   const double& p_new,
+                   const double& pM,
+                   const double& pJWL,
+                   const double& delT,
+                   vector<double>& G) const
+{
+  double dfdt_new = computeBurnRate(f_new, p_new);
+  double f_func = f_new - f_old - dfdt_new*delT;
+  double p_func = p_new - (1.0 - f_new)*pM - f_new*pJWL;
+  G[0] = f_func;
+  G[1] = p_func;
+  return;
+}
+
+//------------------------------------------------------------------
+// Compute the Jacobian of G
+//  J_G = [[dF_n+1/df_n+1 dF_n+1/dp_n+1];[dP_n+1/df_n+1 dP_n+1/dp_n+1]]
+//   F_n+1 = 0 = f_n+1 - f_n - G*(1 - f_n+1)*(p_n+1)^b*Delta t    
+//   P_n+1 = 0 = p_n+1 - (1 - f_n+1) p_m - f_n+1 p_jwl
+//   dF_n+1/df_n+1 = 1 + G*(p_n+1)^b*Delta t    
+//   dF_n+1/dp_n+1 =  b*G*(1 - f_n+1)*(p_n+1)^(b-1)*Delta t    
+//   dP_n+1/df_n+1 =  p_m - p_jwl
+//   dP_n+1/dp_n+1 = 1
+//------------------------------------------------------------------
+void 
+JWLppMPM::computeJacobianG(const double& J,
+                           const double& f_new, 
+                           const double& p_new,
+                           const double& pM,
+                           const double& pJWL,
+                           const double& delT,
+                           FastMatrix& JacobianG) const
+{
+  double fac = d_cm.G*pow(p_new, d_cm.b)*delT;
+  double dF_df = 1.0 + fac;
+  double dF_dp = d_cm.b*(1.0 - f_new)*(fac/p_new);
+  double dP_df = pM - pJWL;
+  JacobianG(0,0) = dF_df;
+  JacobianG(0,1) = dF_dp;
+  JacobianG(1,0) = dP_df;
+  JacobianG(1,1) = 1.0;
+  return;
+}
+
+//------------------------------------------------------------------
+//  df/dt = G (1-f) p^b
+//------------------------------------------------------------------
+double
+JWLppMPM::computeBurnRate(const double& f,
+                          const double& p) const
+{
+  double dfdt = d_cm.G*(1.0 - f)*pow(p, d_cm.b);
+  return dfdt;
+}
+
+//------------------------------------------------------------------
+//  p_m = (1/nK) [J^(-n) - 1]
+//------------------------------------------------------------------
+double
+JWLppMPM::computePressureMurnaghan(const double& J) const
+{
+  double pM = (1.0/(d_cm.n*d_cm.K))*(pow(J,-d_cm.n) - 1.0);
+  return pM;
+}
+
+//------------------------------------------------------------------
+// p_jwl = A exp(-R1 J) + B exp(-R2 J) + C J^[-(1+omega)]
+//------------------------------------------------------------------
+double
+JWLppMPM::computePressureJWL(const double& J) const
+{
+  double one_plus_omega = 1.0 + d_cm.omega;
+  double A_e_to_the_R1_rho0_over_rhoM = d_cm.A*exp(-d_cm.R1*J);
+  double B_e_to_the_R2_rho0_over_rhoM = d_cm.B*exp(-d_cm.R2*J);
+  double C_rho_rat_tothe_one_plus_omega = d_cm.C*pow(J, -one_plus_omega);
+
+  double pJWL = A_e_to_the_R1_rho0_over_rhoM +
+                B_e_to_the_R2_rho0_over_rhoM +
+                C_rho_rat_tothe_one_plus_omega;
+  return pJWL;
+}
+
