@@ -196,7 +196,6 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
   sched->overrideVariableBehavior("filePointer", false, false, false, true, true);
-//  sched->overrideVariableBehavior("filePointer+", false, false, true, true, true);
   
   t->computes( ps_lb->lastWriteTimeLabel );
   t->computes( ps_lb->filePointerLabel ) ;
@@ -266,7 +265,7 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
     return;
   }
 
-  cout<< "particleExtract::scheduleDoAnalysis_preReloc " << endl;
+  cout_doing<< "particleExtract::scheduleDoAnalysis_preReloc " << endl;
   Task* t = scinew Task("particleExtract::doAnalysis_preReloc", 
                    this,&particleExtract::doAnalysis_preReloc);
                      
@@ -278,10 +277,10 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
 }
 //______________________________________________________________________
 void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset*,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
+                                          const PatchSubset* patches,
+                                          const MaterialSubset*,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -290,13 +289,25 @@ void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
     ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
     constParticleVariable<FILE*>myFiles;
     ParticleVariable<FILE*> myFiles_preReloc;
-    
-    old_dw->get(            myFiles,          ps_lb->filePointerLabel,          pset );
+
     new_dw->allocateAndPut( myFiles_preReloc, ps_lb->filePointerLabel_preReloc, pset );
 
-    for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      myFiles_preReloc[idx]=myFiles[idx];
+
+    // Only transfer forward myFiles if they exist.  The filePointerLabel is NOT
+    // saved in the checkpoints and so you can't get it from the old_dw.
+    if( old_dw->exists( ps_lb->filePointerLabel, indx, patch ) ){
+      old_dw->get( myFiles,  ps_lb->filePointerLabel,  pset );
+      
+      for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        myFiles_preReloc[idx] = myFiles[idx];
+      } 
+    } else{
+    
+      for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        myFiles_preReloc[idx] = NULL;
+      }
     }
   }
 }   
