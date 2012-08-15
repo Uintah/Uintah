@@ -117,7 +117,7 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename);
+    void createFile(string& filename, FILE*& fp);
     
     void createDirectory(string& lineName, string& levelIndex);
     
@@ -148,6 +148,8 @@ WARNING
     const Material* d_matl;
     MaterialSet* d_matl_set;
     MaterialSubset* d_matl_subset;
+    std::set<string> d_isDirCreated;
+        
   };
 }
 
