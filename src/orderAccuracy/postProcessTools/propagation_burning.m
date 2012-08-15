@@ -102,7 +102,7 @@ end
 % Deteriming the starting and ending cells
 % to extract data from.
 if(pDir == 1)
-  startEnd = sprintf('-istart 0 0 0 -iend %i 0 0',resolution(pDir)-1);
+  startEnd = sprintf('-istart 0 0 0 -iend %i 1 0',resolution(pDir)-1);
 elseif(pDir == 2)
   startEnd = sprintf('-istart 0 0 0 -iend 0 %i 0',resolution(pDir)-1);
 elseif(pDir == 3)
@@ -131,7 +131,13 @@ for ts=1:n_ts
     endif
   end
   ix
-  fprintf(fid,"%e %15.16f\n", physicalTime(ts), x_CC(ix));
+  
+  if( ix == 0 )    % If there is no burning
+    fprintf( fid,"%e %15.16f\n", physicalTime(ts), -9 );
+  else             % if there is burning
+    fprintf( fid,"%e %15.16f\n", physicalTime(ts), x_CC(ix) );
+  end    
+  
 end
 
 fclose(fid);
