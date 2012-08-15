@@ -221,6 +221,12 @@ void particleExtract::initialize(const ProcessorGroup*,
     ParticleSubset* pset = new_dw->getParticleSubset( indx, patch );
     new_dw->allocateAndPut( myFiles, ps_lb->filePointerLabel, pset );
     
+    for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      myFiles[idx] = NULL;
+    }
+    
+    
     //__________________________________
     //bullet proofing
     if( ! new_dw->exists(M_lb->pColorLabel, indx, patch ) ){
@@ -455,8 +461,12 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       li<<"L-"<<level->getIndex();
       string levelIndex = li.str();
       string path = pPath + "/" + levelIndex;
-
-      createDirectory(pPath, levelIndex);  
+      
+      if( d_isDirCreated.count(path) == 0){
+        createDirectory(pPath, levelIndex);
+        d_isDirCreated.insert(path);
+      }
+        
 
       //__________________________________
       // loop over the particle
@@ -468,12 +478,6 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           ostringstream fname;
           fname<<path<<"/"<<pid[idx];
           string filename = fname.str();
-
-          //create file and write the file header if the file doesn't exist
-          ifstream test(filename.c_str());
-          if (!test){
-            createFile(filename);
-          }
           
           // open the file
           FILE *fp;
@@ -481,9 +485,10 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           if( myFiles[idx] ){           // if the filepointer has been previously stored.
             fp = myFiles[idx];
           } else {
-            fp = fopen(filename.c_str(), "a");
+            createFile(filename, fp);
             myFiles[idx] = fp;
           }
+          
           
           if (!fp){
             throw InternalError("\nERROR:dataAnalysisModule:particleExtract:  failed opening file"+filename,__FILE__, __LINE__);
@@ -533,9 +538,15 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
 }
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
-void particleExtract::createFile(string& filename)
+void particleExtract::createFile(string& filename, FILE*& fp)
 { 
-  FILE *fp;
+  // if the file already exists then exit.  The file could exist but not be owned by this processor
+  ifstream doExists( filename.c_str() );
+  if(doExists){
+    fp = fopen(filename.c_str(), "a");
+    return;
+  }
+  
   fp = fopen(filename.c_str(), "w");
   fprintf(fp,"Time    X      Y      Z     "); 
   
@@ -582,7 +593,7 @@ void particleExtract::createFile(string& filename)
     }
   }
   fprintf(fp,"\n");
-  fclose(fp);
+
   cout << Parallel::getMPIRank() << " particleExtract:Created file " << filename << endl;
 }
 //______________________________________________________________________
