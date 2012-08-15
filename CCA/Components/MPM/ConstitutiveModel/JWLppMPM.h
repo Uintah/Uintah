@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 #include "ConstitutiveModel.h"  
 #include <Core/Math/Matrix3.h>
+#include <Core/Math/FastMatrix.h>
 #include <vector>
 #include <Core/Disclosure/TypeDescription.h>
 
@@ -71,6 +72,8 @@ namespace Uintah {
       // These parameters are needed for the reaction model
       double G;        // rate coefficient, JWL++
       double b;        // pressure exponenet, JWL++
+      double max_burn_timestep;  // Maximum time increment for burn model subcycling
+      double max_burned_frac;    // Limit on the fraction that remains unburned
     };
 
     const VarLabel* pProgressFLabel;
@@ -84,7 +87,7 @@ namespace Uintah {
 
   protected:
 
-    CMData d_initialData;
+    CMData d_cm;
     bool d_useModifiedEOS; 
     int d_8or27;
     bool d_taylorSeriesForDefGrad;
@@ -175,6 +178,95 @@ namespace Uintah {
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
+
+  private:
+
+    //------------------------------------------------------------------
+    // Do Newton iterations or two step Backward Euler
+    //------------------------------------------------------------------
+    void computeUpdatedFractionAndPressure(const double& J,
+                                           const double& f_old,
+                                           const double& p_old,
+                                           const double& delT,
+                                           const double& tolerance,
+                                           const int& maxIter,
+                                           double& f_new,
+                                           double& p_new) const;
+
+    //------------------------------------------------------------------
+    // Two step Backward Euler
+    //------------------------------------------------------------------
+    void computeWithTwoStageBackwardEuler(const double& J,
+                                          const double& f_old,
+                                          const double& p_old,
+                                          const double& delT,
+                                          const double& pM,
+                                          const double& pJWL,
+                                          double& f_new,
+                                          double& p_new) const;
+
+    //------------------------------------------------------------------
+    // Newton iterations
+    //------------------------------------------------------------------
+    void computeWithNewtonIterations(const double& J,
+                                     const double& f_old,
+                                     const double& p_old,
+                                     const double& delT,
+                                     const double& tolerance,
+                                     const int& maxIter,
+                                     const double& pM,
+                                     const double& pJWL,
+                                     double& f_new,
+                                     double& p_new) const;
+
+    //------------------------------------------------------------------
+    // Compute G
+    //  G = [F_n+1 P_n+1]^T
+    //   F_n+1 = 0 = f_n+1 - f_n - G*(1 - f_n+1)*(p_n+1)^b*Delta t    
+    //   P_n+1 = 0 = p_n+1 - (1 - f_n+1) p_m - f_n+1 p_jwl
+    //------------------------------------------------------------------
+    void computeG(const double& J,
+                  const double& f_old, 
+                  const double& f_new, 
+                  const double& p_new,
+                  const double& pM,
+                  const double& pJWL,
+                  const double& delT,
+                  vector<double>& G) const;
+
+    //------------------------------------------------------------------
+    // Compute the Jacobian of G
+    //  J_G = [[dF_n+1/df_n+1 dF_n+1/dp_n+1];[dP_n+1/df_n+1 dP_n+1/dp_n+1]]
+    //   F_n+1 = 0 = f_n+1 - f_n - G*(1 - f_n+1)*(p_n+1)^b*Delta t    
+    //   P_n+1 = 0 = p_n+1 - (1 - f_n+1) p_m - f_n+1 p_jwl
+    //   dF_n+1/df_n+1 = 1 + G*(p_n+1)^b*Delta t    
+    //   dF_n+1/dp_n+1 =  b*G*(1 - f_n+1)*(p_n+1)^(b-1)*Delta t    
+    //   dP_n+1/df_n+1 =  p_m - p_jwl
+    //   dP_n+1/dp_n+1 = 1
+    //------------------------------------------------------------------
+    void computeJacobianG(const double& J,
+                          const double& f_new, 
+                          const double& p_new,
+                          const double& pM,
+                          const double& pJWL,
+                          const double& delT,
+                          FastMatrix& JacobianG) const;
+
+    //------------------------------------------------------------------
+    //  df/dt = G (1-f) p^b
+    //------------------------------------------------------------------
+    double computeBurnRate(const double& f,
+                           const double& p) const;
+
+    //------------------------------------------------------------------
+    //  p_m = (1/nK) [J^(-n) - 1]
+    //------------------------------------------------------------------
+    double computePressureMurnaghan(const double& J) const;
+
+    //------------------------------------------------------------------
+    // p_jwl = A exp(-R1 J) + B exp(-R2 J) + C J^[-(1+omega)]
+    //------------------------------------------------------------------
+    double computePressureJWL(const double& J) const;
 
   };
 } // End namespace Uintah
