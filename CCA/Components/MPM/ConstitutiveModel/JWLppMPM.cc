@@ -99,6 +99,12 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->getWithDefault("num_taylor_terms", d_numTaylorTerms, 10);
   } 
 
+  // Use Newton iterations for stress update by default.  Else use two step
+  // algorithm.
+  ps->getWithDefault("doFastStressCompute", d_fastCompute, false);
+  ps->getWithDefault("tolerance_for_Newton_iterations", d_newtonIterTol, 1.0e-3);
+  ps->getWithDefault("max_number_of_Newton_iterations", d_newtonIterMax, 20);
+
   pProgressFLabel             = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc    = VarLabel::create("p.progressF+",
@@ -147,6 +153,11 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
   d_taylorSeriesForDefGrad = cm->d_taylorSeriesForDefGrad;
   d_numTaylorTerms = cm->d_numTaylorTerms;
 
+  // Stress compute algorithms
+  d_fastCompute = cm->d_fastCompute;
+  d_newtonIterTol = cm->d_newtonIterTol;
+  d_newtonIterMax = cm->d_newtonIterMax;
+  
   pProgressFLabel          = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
@@ -212,6 +223,10 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   if (d_taylorSeriesForDefGrad) {
     cm_ps->appendElement("num_taylor_terms", d_numTaylorTerms);
   }
+
+  cm_ps->appendElement("doFastStressCompute", d_fastCompute);
+  cm_ps->appendElement("tolerance_for_Newton_iterations", d_newtonIterTol);
+  cm_ps->appendElement("max_number_of_Newton_iterations", d_newtonIterMax);
 }
 
 JWLppMPM* JWLppMPM::clone()
@@ -625,10 +640,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       double f_old = pProgressF[idx];
       double f_new = f_old;
       double p_new = p_old;
-      double tolerance = 1.0e-3;
-      int maxIter = 10;
-      computeUpdatedFractionAndPressure(J, f_old, p_old, delT, tolerance, maxIter,
-                                        f_new, p_new);
+      computeUpdatedFractionAndPressure(J, f_old, p_old, delT, f_new, p_new);
 
       // Update the volume fraction and the stress in the data warehouse
       pProgressdelF_new[idx] = f_new - f_old;
@@ -807,8 +819,6 @@ JWLppMPM::computeUpdatedFractionAndPressure(const double& J,
                                             const double& f_old_orig,
                                             const double& p_old_orig,
                                             const double& delT,
-                                            const double& tolerance,
-                                            const int& maxIter,
                                             double& f_new,
                                             double& p_new) const
 {
@@ -825,14 +835,22 @@ JWLppMPM::computeUpdatedFractionAndPressure(const double& J,
     double f_old = f_old_orig;
     f_new = f_old_orig;
     p_new = p_old_orig;
-    for (int ii = 0; ii < numCycles; ++ii) {
+    if (d_fastCompute) {
+      for (int ii = 0; ii < numCycles; ++ii) {
 
-      //computeWithTwoStageBackwardEuler(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
-      computeWithNewtonIterations(J, f_old, p_old, delTinc, tolerance, maxIter, pM, pJWL, 
-                                  f_new, p_new);
-      f_old = f_new;
-      p_old = p_new;
+        computeWithTwoStageBackwardEuler(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        f_old = f_new;
+        p_old = p_new;
 
+      }
+    } else {
+      for (int ii = 0; ii < numCycles; ++ii) {
+
+        computeWithNewtonIterations(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        f_old = f_new;
+        p_old = p_new;
+
+      }
     }
   } else {
     //  The following computes a pressure for partially burned particles
@@ -858,11 +876,11 @@ JWLppMPM::computeWithTwoStageBackwardEuler(const double& J,
 {
   double fac = (delT*d_cm.G)*pow(p_old, d_cm.b);
 
-  // Forward Euler
-  // f_new = f_old + (1.0 - f_old)*fac;
-
   // Backward Euler
   f_new = (f_old + fac)/(1.0 + fac);
+
+  // Forward Euler
+  // f_new = f_old + (1.0 - f_old)*fac;
 
   // Fourth-order R-K
   // double k1 = (1.0 - f_old)*fac;
@@ -872,7 +890,6 @@ JWLppMPM::computeWithTwoStageBackwardEuler(const double& J,
   // f_new = f_old + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
 
   //if (f_new < 0.0) f_new = 0.0;
-  //if (f_new > 0.2) f_new = 0.2;  // Max volume fraction hardcoded to 20 %
   if (f_new > d_cm.max_burned_frac) f_new = d_cm.max_burned_frac;  // Max burned volume fraction 
           
   //  The following computes a pressure for partially burned particles
@@ -889,8 +906,6 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
                                       const double& f_old,
                                       const double& p_old,
                                       const double& delT,
-                                      const double& tolerance,
-                                      const int& maxIter,
                                       const double& pM,
                                       const double& pJWL,
                                       double& f_new,
@@ -912,17 +927,17 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
   computeG(J, f_old, f_new, p_new, pM, pJWL, delT, G);
 
   // Do Newton iterations
+  FastMatrix Jinv(2,2);
+  vector<double> Finc(2);
   do {
 
     // Compute Jacobian of G
     computeJacobianG(J, f_new, p_new, pM, pJWL, delT, JacobianG);
 
     // Invert Jacobian of G 
-    FastMatrix Jinv(2,2);
     Jinv.destructiveInvert(JacobianG);
 
     // Compute increment
-    vector<double> Finc(2);
     Jinv.multiply(G, Finc);
   
     // Update the variables
@@ -936,21 +951,35 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
     norm = sqrt(G[0]*G[0] + G[1]*G[1]);
     iter++;
 
-    if (isnan(p_new) || isnan(f_new) || iter > maxIter) {
-      cerr << "iter = " << iter << " norm = " << norm << " tol = " << tolerance
+  } while ((norm > d_newtonIterTol) && (iter < d_newtonIterMax));
+
+  if (iter > d_newtonIterMax) {
+    cerr << "**JWLppMPM** Newton iterations failed to converge." << endl;
+    cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
            << " p_old = " << p_old << " f_old = " << f_old << endl;
-      cerr << " pM = " << pM << " pJWL = " << pJWL 
+    cerr << " pM = " << pM << " pJWL = " << pJWL 
            << " G = [" << G[0] << "," << G[1] << "]"
            << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
            << JacobianG(1,0) << "," << JacobianG(1,1) << "]]" << endl;
-      cerr << " Jinv = [[" << Jinv(0,0) << "," << Jinv(0,1) << "],["
+    cerr << " Jinv = [[" << Jinv(0,0) << "," << Jinv(0,1) << "],["
            << Jinv(1,0) << "," << Jinv(1,1) << "]]" 
            << " Finc = [" << Finc[0] << "," << Finc[1] << "]" << endl;
-      throw InvalidValue("**JWLppMPM ERROR**: Nan in p_new/f_new value or no convergence", __FILE__, __LINE__);
-    }
+  }
+  if (isnan(p_new) || isnan(f_new)) {
+    cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
+           << " p_new = " << p_new << " f_new = " << f_new 
+           << " p_old = " << p_old << " f_old = " << f_old << endl;
+    cerr << " pM = " << pM << " pJWL = " << pJWL 
+           << " G = [" << G[0] << "," << G[1] << "]"
+           << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
+           << JacobianG(1,0) << "," << JacobianG(1,1) << "]]" << endl;
+    cerr << " Jinv = [[" << Jinv(0,0) << "," << Jinv(0,1) << "],["
+           << Jinv(1,0) << "," << Jinv(1,1) << "]]" 
+           << " Finc = [" << Finc[0] << "," << Finc[1] << "]" << endl;
+    throw InvalidValue("**JWLppMPM ERROR**: Nan in p_new/f_new value or no convergence", __FILE__, __LINE__);
+  }
 
-  } while (norm > tolerance && iter < maxIter);
 
   return;
 }

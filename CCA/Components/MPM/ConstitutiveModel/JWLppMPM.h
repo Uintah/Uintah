@@ -88,14 +88,21 @@ namespace Uintah {
   protected:
 
     CMData d_cm;
-    bool d_useModifiedEOS; 
-    int d_8or27;
-    bool d_taylorSeriesForDefGrad;
-    int d_numTaylorTerms; // Number of terms in series expansion
+    bool   d_useModifiedEOS; 
+    int    d_8or27;
+    bool   d_taylorSeriesForDefGrad;
+    int    d_numTaylorTerms; // Number of terms in series expansion
 
     // Initial stress state
-    bool d_useInitialStress;
+    bool   d_useInitialStress;
     double d_init_pressure;  // Initial pressure
+
+    // Stress update algorithm flag
+    bool   d_fastCompute;          // true = two stage backward Euler
+                                   // false = backward Euler with newton iterations
+    double d_newtonIterTol;        // Tolerance on the norm of [frac pressure] vector
+                                   // to stop iterations
+    int    d_newtonIterMax;        // Maximum number of Newton iterations
 
   private:
     // Prevent copying of this class
@@ -188,8 +195,6 @@ namespace Uintah {
                                            const double& f_old,
                                            const double& p_old,
                                            const double& delT,
-                                           const double& tolerance,
-                                           const int& maxIter,
                                            double& f_new,
                                            double& p_new) const;
 
@@ -212,8 +217,6 @@ namespace Uintah {
                                      const double& f_old,
                                      const double& p_old,
                                      const double& delT,
-                                     const double& tolerance,
-                                     const int& maxIter,
                                      const double& pM,
                                      const double& pJWL,
                                      double& f_new,
