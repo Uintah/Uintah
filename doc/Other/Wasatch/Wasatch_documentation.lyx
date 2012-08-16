@@ -24,6 +24,24 @@
 \newrefformat{pro}{Proposition \ref{#1}}
 \newrefformat{tbl}{Table \ref{#1} }
 \newrefformat{fig}{Fig. \ref{#1}}
+\usepackage{color}
+  \definecolor{darkblue}{rgb}{0.0,0.0,0.5}
+  \definecolor{darkred}{rgb}{0.8,0.0,0} % MOD: added darkred color
+\definecolor{codegray}{RGB}{240,240,240}
+
+\usepackage{listings}
+\lstset{
+  backgroundcolor=\color{codegray},
+  captionpos=b,
+  numberstyle={\tiny \sffamily},
+  frame=lines,
+  basicstyle={\small \ttfamily},
+  language={xml},
+  keywordstyle=\color[rgb]{0,0,1},
+  commentstyle=\color[rgb]{0.133,0.545,0.133},
+  stringstyle=\color[rgb]{0.627,0.126,0.941},
+  breaklines=true,
+} 
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -101,7 +119,7 @@
 \begin_body
 
 \begin_layout Title
-Wasatch
+Wasatch Documentation
 \end_layout
 
 \begin_layout Author
@@ -281,7 +299,7 @@ reference "fig:wasatch-navier-stokes-graph"
 placement !t
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -1333,18 +1351,7 @@ And limiters can be used on the terms on the RHS easily.
 \end_layout
 
 \begin_layout Subsection
-LES Modeling 
-\begin_inset Note Note
-status open
-
-\begin_layout Subsection
-AMIR, CAN YOU PLEASE FILL IN THIS SECTION WITH YOUR RECENTLY COMMITTED CLOSURE
- MODEL?
-\end_layout
-
-\end_inset
-
-
+LES Modeling
 \end_layout
 
 \begin_layout Standard
@@ -5934,6 +5941,393 @@ Taylor Flow in a Channel
 The Taylor flow in a channel describes the steady inviscid state of a fluid
  in a channel with permeable sidewalls.
  This is a great case for testing inlet and outflow boundary conditions.
+\end_layout
+
+\begin_layout Chapter
+Summary of Supported Expressions
+\end_layout
+
+\begin_layout Section*
+ExponentialVortex
+\end_layout
+
+\begin_layout Standard
+This expression implements a rotating vortex in a uniform stream.
+ The corresponding streamfunction is given by the superposition of an exponentia
+l vortex and a uniform flow and is given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\psi=C_{0}\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)+U_{0}y
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $C_{0}$
+\end_inset
+
+ is the strength of the vortex, 
+\begin_inset Formula $r=\sqrt{(x-x_{0})^{2}+(y-y_{0})^{2}}$
+\end_inset
+
+ is the radial distance from the center of the vortex, 
+\begin_inset Formula $R_{0}$
+\end_inset
+
+ is the radius of the vortex, and 
+\begin_inset Formula $U_{0}$
+\end_inset
+
+ is the free stream velocity.
+ The velocity is then calculated using the Stokes' streamfunction
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+u=\frac{\partial\psi}{\partial y}=U-\frac{C_{0}}{R_{0}^{2}}(y-y_{0})\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)
+\end{equation}
+
+\end_inset
+
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+v=-\frac{\partial\psi}{\partial x}=\frac{C_{0}}{R_{0}^{2}}(x-x_{0})\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This expression is best used as an initialization for the momentum or velocity
+ fields.
+ Here's an example for initializating the axial and transverse momentum
+ components with an exponential vortex, centered at 
+\begin_inset Formula $[0.5,0.5]$
+\end_inset
+
+ with a strength of 
+\begin_inset Formula $10^{-3}$
+\end_inset
+
+, a radius of 
+\begin_inset Formula $R_{0}=0.1$
+\end_inset
+
+, and a free stream velocity 
+\begin_inset Formula $U_{0}=1$
+\end_inset
+
+.
+ Note that you must specify both velocity or momentum components to recover
+ physically relevant initial conditions.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of an exponential vortex as initial condition
+ for axial momentum.,label=lst:wasatch-exponentialvortex-ymom} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="XVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="x-mom" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <ExponentialVortex xCenter="0.5" yCenter="0.5" 
+\end_layout
+
+\begin_layout Plain Layout
+
+                     vortexStrength="1e-3" vortexRadius="0.1" 
+\end_layout
+
+\begin_layout Plain Layout
+
+                     freeStreamVelocity="1" velocityComponent="X1"> 		 
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate1> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XXVOL" state="STATE_NONE"/> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate1> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate2> 				
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="YXVOL" state="STATE_NONE"/> 		  
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate2>		          
+\end_layout
+
+\begin_layout Plain Layout
+
+  </ExponentialVortex>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of an exponential vortex as initial condition
+ for transverse momentum.,label=lst:wasatch-exponentialvortex-ymom} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="YVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="y-mom" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <ExponentialVortex xCenter="0.5" yCenter="0.5" 
+\end_layout
+
+\begin_layout Plain Layout
+
+                     vortexStrength="1e-3" vortexRadius="0.1" 
+\end_layout
+
+\begin_layout Plain Layout
+
+                     freeStreamVelocity="1" velocityComponent="X1"> 		 
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate1> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XYVOL" state="STATE_NONE"/> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate1> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate2> 				
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="YYVOL" state="STATE_NONE"/> 		  
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate2>		          
+\end_layout
+
+\begin_layout Plain Layout
+
+  </ExponentialVortex>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The resulting flow field generated by this initialization is shown below.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-exponential-vortex-xmom.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+-momentum
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+-momentum
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-exponential-vortex-ymom.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Momentum field resulting from ExponentialVortex initialization.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
