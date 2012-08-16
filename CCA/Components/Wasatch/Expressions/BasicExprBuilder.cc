@@ -232,6 +232,37 @@ namespace Wasatch{
       builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
     }
     
+    else if ( params->findBlock("ExponentialVortex") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("ExponentialVortex");
+      double xCenter, yCenter, vortexStrength, vortexRadius, freeStreamVelocity;
+      std::string velocityComponent;
+      
+      valParams->getAttribute("xCenter",xCenter);
+      valParams->getAttribute("yCenter",yCenter);
+      valParams->getAttribute("vortexStrength",vortexStrength);
+      valParams->getAttribute("vortexRadius",vortexRadius);
+      valParams->getAttribute("freeStreamVelocity",freeStreamVelocity);
+      valParams->getAttribute("velocityComponent",velocityComponent);
+      
+      // for now, only support parsing for fields of same type.  In the future,
+      // we could extend parsing support for differing source field types.
+      typedef ExponentialVortex<FieldT> ExpVortex;
+      typename ExpVortex::VelocityComponent velComponent;            
+      if      (velocityComponent == "X1") velComponent = ExpVortex::X1;
+      else if (velocityComponent == "X2") velComponent = ExpVortex::X2;
+      else {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: The velocity component " << velocityComponent
+        << " is not supported in the ExponentialVortex expression." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }      
+      const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
+      const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
+
+      builder = scinew typename ExpVortex::Builder( tag, xTag, yTag, xCenter, yCenter, vortexStrength, vortexRadius, freeStreamVelocity, velComponent );
+    }    
+    
     else if( params->findBlock("RandomField") ){
       Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
       double low, high, seed;
