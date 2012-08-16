@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>2D compression with localization</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>.003</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>2.e-15</delt_min>
+       <delt_max>2.e-3</delt_max>
+       <timestep_multiplier>0.5</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+     <filebase>output_2D_compression_split_nonlocal_dx0.1.uda</filebase>
+       <outputInterval>5.0e-5</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.mass"/>
+       <save label = "p.stress"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.plasticStrain"/>
+       <save label = "p.color"/>
+       <save label = "p.particleID"/>
+       <save label="RigidReactionForce"/>
+       <save label="BndyForce_zminus"/>
+       <save label="BndyForce_zplus"/>
+       <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>cpdi</interpolator>
+       <withColor>      true      </withColor>                                   
+<boundary_traction_faces>[zminus,zplus]</boundary_traction_faces> 
+<artificial_viscosity>true</artificial_viscosity>
+<artificial_viscosity_coeff1>0.4</artificial_viscosity_coeff1>
+<artificial_viscosity_coeff2>4.0</artificial_viscosity_coeff2>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e9</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>26.e9</G>
+                 <K>76.e9</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "piston">
+                     <min>[0.0,0.0,1.0]</min>
+                     <max>[1.0,0.1,1.1]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+		  <color>0</color>
+                  <velocity>[0.0,0.0,-15.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material name = "strong plastic">
+	     <density>1000.0</density>
+             <constitutive_model type="nonlocal_drucker_prager"> 
+	       <bulk_modulus>76.e9</bulk_modulus>
+	       <shear_modulus>26.0e9</shear_modulus>
+	       <alpha>0.0</alpha>
+	       <k_o>400.0e6</k_o>
+	       <h_local>0.0e9</h_local>
+	       <h_nonlocal>-1.0e9</h_nonlocal>
+	       <alpha_p>0.0</alpha_p>
+	       <l_nonlocal>0.25</l_nonlocal>
+	       <minimum_yield_stress>100.0</minimum_yield_stress>
+	       <initial_xstress>0.0</initial_xstress>
+	       <initial_ystress>0.0</initial_ystress>
+	       <initial_zstress>0.0</initial_zstress>
+	     </constitutive_model>
+             <thermal_conductivity>1.0</thermal_conductivity>
+             <specific_heat>5</specific_heat>
+             <geom_object>
+	       <difference>
+		 <box label = "strong_box">
+                   <min>[0.0,0.0, 0.0]</min>
+                   <max>[1.0,0.1, 1.0]</max>
+		 </box>
+		 <box label = "weak_box">
+		   <min>[0.0,0.0,0.0]</min>
+		   <max>[0.2,0.1,0.20]</max>
+		 </box>
+	       </difference>
+               <res>[1,1,2]</res>
+	       <color>1</color>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>12</temperature>
+             </geom_object>
+           </material>
+           <material name = "weak plastic">
+	     <density>1000.0</density>
+             <constitutive_model type="nonlocal_drucker_prager"> 
+	       <bulk_modulus>76.e9</bulk_modulus>
+	       <shear_modulus>26.e9</shear_modulus>
+	       <alpha>0.0</alpha>
+	       <k_o>375.0e6</k_o>
+	       <h_local>0.0e9</h_local>
+	       <h_nonlocal>-1.0e9</h_nonlocal>
+	       <alpha_p>0.0</alpha_p>
+	       <l_nonlocal>0.25</l_nonlocal>
+	       <minimum_yield_stress>100.0</minimum_yield_stress>
+	       <initial_xstress>0.0</initial_xstress>
+	       <initial_ystress>0.0</initial_ystress>
+	       <initial_zstress>0.0</initial_zstress>
+	     </constitutive_model>
+             <thermal_conductivity>1.0</thermal_conductivity>
+             <specific_heat>5</specific_heat>
+             <geom_object>
+	       <box label = "weak_box"/>
+               <res>[1,1,2]</res>
+	       <color>2</color>
+               <velocity>[0.0,0.0,0.0]</velocity>
+               <temperature>12</temperature>
+             </geom_object>
+           </material>
+	   <contact>
+	     <type>single_velocity</type>
+	     <materials>[1,2]</materials>
+	   </contact>
+           <contact>
+             <type>specified</type>
+              <stop_time>999999.9 </stop_time>
+	      <direction>[0,0,1]</direction>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric">
+</BCType>
+           </Face>
+           <Face side = "x+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric">  
+	    </BCType>
+           </Face>
+           <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> 	   
+</BCType>
+           </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> 	   
+</BCType>
+           </Face>                  
+           <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric">
+</BCType>
+           </Face>                  
+          <Face side = "z+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> 	   
+</BCType>
+           </Face>                 
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-0.1,0.0,0.0]</lower>
+              <upper>[1.1,.1, 1.2]</upper>
+              <resolution>[12,1,12]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells> [1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    
+</Uintah_specification>
+

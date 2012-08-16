@@ -1,0 +1,360 @@
+#!/bin/bash
+
+#
+# replace_gold_standard
+#
+#   This script is used to place a new 'gold standard' uda into the
+# gold standard directory.
+#
+# Usage:
+#
+#    replace_gold_standard [Options] <new_gold_uda> <gold_standard_dir> <testname> <comment>
+#        new_gold_uda      : Required:  the new uda
+#        gold_standard_dir : Required:  location of the gold standard udas
+#        testname          : Required:  
+#        force             : -f | -m 
+#                            -f : it won't ask you yes/no questions
+#                            -m : it won't ask, but will only replace memory stats
+#       comment            : Required:  Comment for the log file
+#
+#__________________________________
+# Defaults
+do_all="false"
+do_uda="false"
+do_mem="false"
+do_perf="false"
+do_input="false"
+do_checkpoint="false"
+
+#__________________________________
+# Machine specific variables
+MACHINE=`hostname`
+if [ "$MACHINE" == "rt" ]; then
+  COMMON_GROUP="uintah"
+fi
+if [ "$MACHINE" == "blaze" ]; then
+  COMMON_GROUP="csafe"
+fi
+
+#__________________________________
+# usage
+printUsage(){
+  echo "replace_gold_standard  [options] <new goldStandard uda> < gold Standard Dir> <test name>"
+  echo "  Required:"
+  echo "      new gold standard uda"
+  echo "      gold standard directory"
+  echo "      test name"
+  echo "  Options:"
+  echo "       -a | --all          replace the uda, memory stats, and performance stats"
+  echo "       -c | --checkpoints  replace just the checkpoint directory"
+  echo "       -h | --help"
+  echo "       -i | --inputFile    replace the input file"
+  echo "       -m | --memory       replace the memory stats file"
+  echo "       -p | --performance  replace the performance file"
+  echo "       -u | --uda          replace the uda"
+  exit
+}
+
+#______________________________________________________________________
+# Evaluate the command line options
+INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "$@"`
+if [ $? != 0 ] ; then 
+  echo "Invalid input option.  Now exiting..." >&2 ; 
+  exit 1 ; 
+fi  
+
+#__________________________________
+# If user didn't input an options or a comment
+if [ $# -le 3 ]; then
+  inputs=`dialog --stdout --separate-output --checklist "Select what you want to replace" 20 50 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "all" "" on`
+  
+  # add "--" to the input options
+  options=""
+  for opt in ${inputs[@]}
+    do
+      options=( ${options[@]} `echo $opt|sed s/^/\ --/` )
+    done
+  
+  #__________________________________                                                         
+  # input the comment message must say something                                                
+  logMessage=""                                                                               
+  while [ `echo $logMessage |wc -w` == 0 ];                                                
+    do                                                                                            
+      logMessage=`dialog --stdout --inputbox "Mandatory: Enter goldStandard log message:" 8 80` 
+      if [ $? != 0 ] ; then                                                                
+        echo "cancel selected"                                                                  
+        exit                                                                                    
+      fi                                                                                        
+  done  
+  # evaluate the user inputs
+  tmp=("${options[@]}" "$@" "${logMessage[@]}" "--" )
+  INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "${tmp[@]}"`                                                                                     
+fi
+echo "------------------------"
+#echo ${INPUTS[@]}
+
+# Note the quotes around `$INPUTS': they are essential!
+eval set -- "$INPUTS"
+
+while true ; do
+  case "$1" in                                                    
+    -a|--all)         echo " replace all" ;         do_all="true";        shift ;;          
+    -c|--checkpoints) echo " replace Checkpoints" ; do_checkpoint="true"; shift ;;
+    -h|--help)        echo " replace help"        ; printHelp="true";     shift ;;
+    -i|--inputFile)   echo " replace input file" ;  do_input="true";      shift ;; 
+    -m|--memory)      echo " replace memory" ;      do_mem="true";        shift ;;
+    -p|--performance) echo " replace performance" ; do_perf="true" ;      shift ;;
+    -u|--uda)         echo " replace uda"         ; do_uda="true";        shift ;;                                                                                    
+    --) shift ; break ;;                                                  
+    *) echo "Internal error!" ; exit 1 ;;                                 
+  esac                                                                          
+done
+
+#echo "Remaining arguments:"
+#for arg do 
+#  echo '--> '"\`$arg'" ;
+#done
+
+if [ "printUsage" = "true" ]; then
+  printHelp
+fi
+
+shift $(($OPTIND - 1))
+
+# The shifts and eval set is to preserve white spaces in the comment variable 
+gold_standard_dir="$1"; shift;
+replacement_dir="$1";   shift;
+testname="$1";          shift;
+eval set -- "$@"
+comment="$@"
+
+# Info for a log file, to keep track of who replaced gold standards
+logfile="$gold_standard_dir/$testname/replace.log"
+user=`whoami`
+
+#__________________________________
+# bulletproofing
+if [ ! -d $gold_standard_dir/$testname ]; then
+  echo "ERROR: $gold_standard_dir/$testname does not exist.  Now exiting!"
+  exit 1
+fi
+
+#__________________________________
+replaced_uda="false"
+replaced_mem="false"
+replaced_perf="false"
+replaced_input="false"
+replaced_checkpoint="false"
+#__________________________________
+# replace UDA
+if [[ "$do_uda" = "true"|| "$do_all" = "true" ]]; then
+  if [ ! -d $replacement_dir/$testname/*.uda ]; then
+    echo "No udas to replace, or not replacing them"
+  else
+  
+    # remove the udas, sus.log.txt, and copy the new ones
+    failcode="0"
+    echo -n "Replacing $testname udas ... "
+    rm -rf $gold_standard_dir/$testname/*.uda
+    rm -rf $gold_standard_dir/$testname/sus.log.txt
+    
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname replacement failed - could not remove old udas"
+    fi
+
+    # if it has a --dereference option, then use it
+    cp -r --dereference $replacement_dir/$testname/*.uda       $gold_standard_dir/$testname/. > /dev/null 2>&1
+    cp -r --dereference $replacement_dir/$testname/sus.log.txt $gold_standard_dir/$testname/. > /dev/null 2>&1
+    
+    # sometimes it doesn't work with --dereference...
+    if [ $? != "0" ]; then
+      cp -r $replacement_dir/$testname/*.uda       $gold_standard_dir/$testname/.
+      cp -r $replacement_dir/$testname/sus.log.txt $gold_standard_dir/$testname/.
+      
+      if [ $? != "0" ]; then
+        failcode="1"
+	 echo "$testname replacement failed - could not copy new udas"
+      fi
+    fi
+    
+    if [ "$failcode" = "0" ]; then
+      echo "udas successfully replaced"
+      replaced_uda="true"
+    fi
+    
+  fi
+fi
+
+#__________________________________
+# replace only the checkpoints
+if [ "$do_checkpoint" = "true" ]; then
+
+  if [ ! -d $replacement_dir/$testname/*.uda/checkpoints ]; then
+    echo "No checkpoints to replace, or not replacing them"
+  else
+
+    # remove the checkpoints, and copy the new ones
+    failcode="0"
+    echo -n "Replacing $testname checkpoints ... "
+    
+    rm -rf $gold_standard_dir/$testname/*.uda/checkpoints
+  
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname checkpoint replacement failed - could not remove old checkpoint directory"
+    fi
+
+    # if it has a --dereference option, then use it
+    cp -r --dereference $replacement_dir/$testname/*.uda/checkpoints $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
+
+    # sometimes it doesn't work with --dereference...
+    if [ $? != "0" ]; then
+      cp -r $replacement_dir/$testname/*.uda/checkpoints $gold_standard_dir/$testname/*.uda/.
+      
+      if [ $? != "0" ]; then
+        failcode="1"
+	echo "$testname checkpoint replacement failed - could not copy the new checkpoint"
+      fi
+    fi
+    
+    if [ "$failcode" = "0" ]; then
+      echo "checkpoint successfully replaced"
+      replaced_checkpoint="true"
+    fi
+   
+  fi
+fi
+
+#__________________________________
+# replace memory usage stats
+if [[ "$do_mem" = "true" || "$do_all" = "true" ]]; then
+
+  if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
+    echo "No memory stats to replace"
+  else
+  
+    # replace the memory usage (both normal and restart)
+    failcode="0"
+    echo "Replacing $testname memory results"
+    
+    rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
+    
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname memory usage replacement failed - could not remove old memory stats file"
+    fi
+    
+    cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
+    cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
+    
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname memory usage replacement failed - could not copy the new memory usage file from either the original uda or the restart"
+    fi
+    
+    if [ "$failcode" = "0" ]; then
+      echo "memory stats successfully replaced"
+      replaced_mem="true"
+    fi
+    
+  fi
+fi
+
+#__________________________________
+# replace performance stats
+if  [[ "$do_perf" = "true" || "$do_all" = "true" ]]; then
+  if [ ! -f $replacement_dir/$testname/timestamp ]; then
+    echo "No performance stats to replace"
+  else
+    # replace the performance results (both normal and restart)
+    failcode="0"
+    echo "Replacing $testname performance results"
+    
+    rm $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
+    
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname performance replacement failed - could not remove old performance stats"
+    fi
+    
+    cp $replacement_dir/$testname/timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+    cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+    
+    if [ $? != "0" ]; then
+      failcode="1"
+      echo "$testname performance replacement failed - could not copy the new performance stats from either the original uda or the restart"
+    fi
+    if [ "$failcode" = "0" ]; then
+      echo "performance stats successfully replaced"
+      replaced_perf="true"
+    fi
+    
+  fi
+fi
+
+#__________________________________
+# replace input file
+if [ "$do_input" = "true" ]; then
+  echo "Replacing $testname input file"
+  cp $replacement_dir/$testname/*.uda/input*.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
+fi
+
+#__________________________________
+# LOG FILE
+if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_input" = "true" -o "$do_checkpoint" = "true" -o "$do_all" = "true" ]; then
+  # make a log
+  if [ ! -f $logfile ]; then
+    echo "Replacement log for $gold_standard_dir/$testname" >> $logfile
+    echo "---------------------------------------------------------------------" >> $logfile
+  fi
+
+  echo -n "`date`: user $user Replaced:" >> $logfile
+  if [ "$replaced_uda" = "true" ]; then
+    echo -n " uda," >> $logfile
+  fi
+  
+  if [[ "$replaced_checkpoint" = "true" || "$replaced_uda" = "true" ]]; then
+    echo -n " checkpoints," >> $logfile
+  fi
+  
+  if [ "$replaced_mem" = "true" ]; then
+      echo -n " memory usage," >> $logfile
+  fi
+  
+  if [ "$replaced_perf" = "true" ]; then
+    echo -n " performance results," >> $logfile
+  fi
+  
+  if [ "$do_input" = "true" ]; then
+    echo -n " input file," >> $logfile
+  fi 
+  
+  echo -n "       Comment: $comment" >> $logfile
+  
+  echo >> $logfile
+
+  #__________________________________
+  # Email John whenever there is a change to a GS
+  if [[ "$replaced_uda" = "true" && "$MACHINE" = "rt" ]]; then
+    tail -1 $logfile > message
+    # Also email Alan whenever there is a change to a GS (for GPU RT)
+    echo "Now sending mail to Alan indicating that the GS has been replaced"
+    mutt  -s "GoldStandard Change:$testname" ahumphrey@sci.utah.edu < message
+    /bin/rm message
+  fi
+
+# change groups and permissions so (hopefully) anybody can replace them later
+#  find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod g+wrX
+#  find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod o+rX  
+#  find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chgrp uintah 
+
+  find "$gold_standard_dir/$testname" -user `whoami` -exec chmod g+wrX {} \;
+  find "$gold_standard_dir/$testname" -user `whoami` -exec chmod o+rX {}  \; 
+  find "$gold_standard_dir/$testname" -user `whoami` -exec chgrp $COMMON_GROUP {} > /dev/null 2>&1 \;
+
+
+fi
+
+echo
+

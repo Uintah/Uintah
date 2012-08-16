@@ -1,0 +1,58 @@
+#!/bin/csh
+#______________________________________________________________________
+#  Usage: findReplace <find pattern> <replacement Pattern> < filename>
+#
+#  This script performs a find and replace on the input file
+#______________________________________________________________________
+if ( $#argv != 3) then
+  echo "Usage:  findReplace <find pattern> <replacement Pattern> < filename>"
+  exit(1)
+endif
+
+set findPattern    = "$argv[1]"  # find pattern
+set replacePattern = "$argv[2]"  # replacePattern
+set f              = $argv[3]    # filename
+
+if (! -e $f || ! -f $f) then  
+  echo " file ($f) not found"
+  echo "Usage:  findReplace <find pattern> <replacement Pattern> < filename>"
+  exit(1)
+endif
+
+#echo "Find: $findPattern Replace: $replacePattern"
+
+grep -q $findPattern $f
+set statusFind = $status
+
+# bulletproofing
+if($statusFind != 0 ) then
+  echo "ERROR findReplace"
+  echo "       Error finding pattern ($findPattern)"
+  echo " Now exiting"
+  exit(1)
+endif
+
+# change </xmlTag>  to <\/xmlTag> so sed can use it
+echo "$replacePattern"> .tmp
+set replacePattern = `sed s/'\/'/"\\\/"/g .tmp`
+/bin/rm .tmp
+
+#Test to see if the sed command will work
+cp $f $f.tmp
+sed -i s/"$findPattern"/"$replacePattern"/g $f.tmp >&/dev/null
+
+grep -q $replacePattern $f.tmp
+
+if($status != 0 ) then
+  echo "ERROR findReplace:"
+  echo "       Error replacing with pattern ($replacePattern)"
+  echo " Now exiting"
+  exit(1)
+endif
+
+#Now perform the sed command on the file
+sed -i s/"$findPattern"/"$replacePattern"/g $f
+
+/bin/rm $f.tmp 
+
+exit(0)

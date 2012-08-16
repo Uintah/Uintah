@@ -1,0 +1,33 @@
+#!/bin/csh
+
+set NUM_PROCS=4
+
+if ( $# > 1) then
+    echo
+    echo "Error"
+    echo "Usage: $0 [num procs]"
+    echo
+    exit
+else
+  if ( $# == 1 ) then
+    set NUM_PROCS=$1
+  endif
+endif
+
+echo "Making..."
+
+gmake -j2
+
+if ($?) then
+   exit
+endif
+
+echo "Running... ($NUM_PROCS procs)"
+rm -f log
+mpirun -np $NUM_PROCS ./mydriver > & log
+
+#if ($?) then
+#   exit
+#endif
+
+less log

@@ -1,0 +1,85 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Scalability Test</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+  
+    <TaskParallelThreadCount>1</TaskParallelThreadCount>
+    <FieldParallelThreadCount>0</FieldParallelThreadCount>
+  
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="x-vel" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="y-vel" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="z-vel" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <ScalabilityTest> 
+        <MonolithicRHS>true</MonolithicRHS>
+        <SolutionVariable>phi</SolutionVariable>        
+        <NumberOfEquations>30</NumberOfEquations>
+        <DoConvection>false</DoConvection>
+        <X-Velocity> 
+            <NameTag name="x-vel" state="STATE_N"/>
+        </X-Velocity>
+        <Y-Velocity>
+            <NameTag name="y-vel" state="STATE_N"/>
+        </Y-Velocity>
+        <Z-Velocity > 
+            <NameTag name="z-vel" state="STATE_N"/>
+        </Z-Velocity>        
+        <DoDiffusion>true</DoDiffusion>
+        <DoSourceTerm>true</DoSourceTerm>
+    </ScalabilityTest>
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.001</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>wasatch-scalability-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <compression>gzip</compression>
+    <save label="phi0" />
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

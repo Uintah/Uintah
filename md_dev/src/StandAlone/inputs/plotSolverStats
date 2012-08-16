@@ -1,0 +1,110 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plot it using gnuplot.
+#  Usage:
+#     plotStat <sus output file> <dump postScript File (y/Y), default is no>
+#  This requires gnuplot 3.8 or greater.
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "plotStat <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .plotStats_tmp .tmp
+cp $out .tmp
+
+grep Time= .tmp |grep Mem >& .plotStats_tmp1
+#__________________________________
+# extract the data
+echo "Now extracting the data"
+
+# When running on frost, the mpirun utility will prepend all text output with "   n:" 
+# where n is the processor rank.  This extra colon screws up the grepping below. 
+# Check for this pattern of "  0:" and remove it from the .plotStats_tmp file.
+sed -e 's/^   0://' .plotStats_tmp1 >& .plotStats_tmp
+
+echo "?">&.meanTime
+echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
+echo "?">>.meanTime
+echo "?">>.meanTime
+ 
+grep "solve only" .tmp   | cut -d":" -f2 | cut -d" " -f2 >& .solverTime
+grep "solve only" .tmp   | cut -d":" -f2 | cut -d" " -f4 >& .solverIters
+grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
+grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
+
+
+paste -d "  " .elapsedTime .meanTime .physicalTime .solverTime .solverIters >& .data
+
+rm -f .elapsedTime .meanTime .physicalTime .solverTime .solverIters
+rm -f .plotStats_tmp .plotStats_tmp1 .tmp
+echo "Done extracting data"
+
+echo "" > gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotSolverStats.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 9
+set output "plotSolverStat.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set multiplot
+set size 1.0,0.5
+set origin 0.0,0.5
+set autoscale
+#set xdata time
+#set timefmt "%s"             ------- try turning these on
+set grid xtics ytics
+
+set y2tics
+set ylabel 'Physical Time'       textcolor lt 1
+set y2label 'Mean Time/timestep' textcolor lt 2
+
+plot '.data' using 1:3           t 'Physical Time' with lines,\
+     '.data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
+     '.data' using 1:4 axes x1y2 t 'solver Time ' with lines
+    #----------second plot-------------
+set size 1.0,0.5       
+set origin 0.0,0.0
+set ylabel
+set y2label
+
+plot '.data' using 1:5           t 'solver iterations' with lines
+
+set nomultiplot
+pause -1 "Hit return to exit"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+
+#__________________________________
+# clean up
+rm -f gp .data
+
+exit(1)

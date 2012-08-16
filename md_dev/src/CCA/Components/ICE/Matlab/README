@@ -1,0 +1,17 @@
+--------------------------------------------------------------
+README - ICE/Matlab directory
+This directory contains MATLAB scripts related to ICE.
+Please keep some log messages here describing the contents of
+the directories.
+--------------------------------------------------------------
+
+Description of current directories:
+
+Advection - 1D compatible flux advection operator test. 
+
+
+ShockTube1D - 1D shock tube simulation of ICE,
+
+SolverBug - matlab scripts and data files comparing the Uintah and
+          Hypre matrices in implicit ICE (one level, not AMR),
+          July 2005.

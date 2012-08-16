@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: -->
+<Uintah_specification>
+
+   <Meta>
+        <title>Test Cylinder Generation</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+        <maxTime>1.0e-9</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-10</delt_min>
+        <delt_max>1.e-1</delt_max>
+        <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>TCG.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <save label = "p.x"/>
+        <save label = "p.mass"/>
+        <save label = "g.mass"/>
+   </DataArchiver>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+    </MPM>
+
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+        <MPM>
+            <material name = "quartz_grains">
+                <density>2.2e6</density>
+                <constitutive_model type = "comp_neo_hook_plastic">
+                  <bulk_modulus>       3.7e5       </bulk_modulus>
+                  <shear_modulus>      3.1e5       </shear_modulus>
+                  <yield_stress>       4.8e2        </yield_stress>
+                  <hardening_modulus>  3.7e3        </hardening_modulus>
+                  <alpha>              0.0          </alpha>
+                </constitutive_model>
+                <thermal_conductivity>1.4e-7</thermal_conductivity>
+                <specific_heat>670.e-8</specific_heat>
+
+                <geom_object>
+                    <include href="Test2D.xml"/>
+                    <res>[2,2,1]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <contact>
+              <type>null</type>
+            </contact>
+        </MPM>
+    </MaterialProperties>
+        
+    <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[0.0, 0.0,-0.0025]</lower>
+                <upper>[0.1, 0.1, 0.0025]</upper>
+                <resolution>[200,200,1]</resolution>
+		<patches>[2,2,1]</patches>
+                <extraCells>[1,1,1]</extraCells>
+            </Box>
+            <periodic>[0,0,0]</periodic>
+        </Level>
+        <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" label = "Velocity" var = "Neumann">
+                    <value> [0.,0.,0.] </value>
+             </BCType>
+          </Face>
+          <Face side = "x+">
+             <BCType id = "all" label = "Velocity" var = "Neumann">
+                    <value> [0.,0.,0.] </value>
+             </BCType>
+          </Face>
+         <Face side = "y-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                    <value> [0.0,0.,0.] </value>
+             </BCType>
+         </Face>
+         <Face side = "y+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                    <value> [0.,0.,0.] </value>
+             </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "z+">
+           <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_specification>
+  <Meta>
+    <title>Arches Methane Plume Multi Patch Run with Radiation</title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+
+  <Time>
+    <maxTime>.10</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.35</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>methane_1m.uda</filebase>
+    <outputInterval>0.01</outputInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>       
+    <save label="viscosityCTS"/>
+    <save label="cellType"/>
+
+    <save label="mixture_fraction"/>
+    <save label="enthalpy"/>
+    <save label="scalarVarSP"/>
+    <save label="heatLoss"/>
+    <save label="areaFraction"/>
+
+    <!-- properties --> 
+    <save label="soot"/>
+    <save label="absorpIN"/>
+    <save label="new_abskg"/>
+
+    <!-- table look ups --> 
+    <save label="density" table_lookup="true"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="divQ"/>
+
+    <checkpoint cycle="2" interval="0.01"/>
+    <outputDoubleAsFloat/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,4,4]</upper>
+        <resolution>[25,50,50]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,2,2]</patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <!-- Secondary, Co-Flow Inlet --> 
+      <Face side="x-">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="co-flow inlet" var="MassFlowInlet">
+          <value>1.204</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Dirichlet">
+          <value>-112.327</value> <!-- Pure oxidizer enthalpy --> 
+        </BCType>
+        <!-- Other BCs --> 
+      </Face>
+      <!-- Bottom Annular Ring -->
+      <Face annulus="x-" origin="0.0 2.0 2.0" inner_radius="0.5" outer_radius="1.01">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="annular ring" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value> 
+        </BCType>
+        <!-- Other BCs --> 
+      </Face>
+      <!-- Primary Flow Inlet --> 
+      <Face circle="x-" origin="0.0 2.0 2.0" radius="0.5">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="primary inlet" var="MassFlowInlet">
+          <value>0.0990</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Dirichlet">
+          <value>-4.65039e+06</value> <!-- Pure fuel enthalpy --> 
+        </BCType>
+        <!-- Other BCs --> 
+      </Face>
+      <!-- Pressure BC's --> 
+      <Face side="y-">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="y- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value> 
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="y+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value> 
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="z- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value> 
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="z+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value> 
+        </BCType>
+      </Face>
+      <!-- Outlet --> 
+      <Face side="x+">
+        <!-- Momentum BCs --> 
+        <BCType id="0" label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs --> 
+        <BCType id="0" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="scalar_variance" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <!-- Energy BC --> 
+        <BCType id="0" label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type = "CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="enthalpy" type = "CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>true</addSources>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
+        <Sources>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>10</calc_frequency>
+            <soot_label>soot</soot_label>
+            <abskp_label>absorpIN</abskp_label>
+            <DORadiationModel>
+              <opl>3.0</opl>
+              <LinearSolver type="hypre">
+                  <res_tol>1.0e-10</res_tol>
+                  <ksptype>gmres</ksptype>
+                  <pctype>jacobi</pctype>
+                  <max_iter>175</max_iter>
+              </LinearSolver>
+            </DORadiationModel>
+          </src>
+        </Sources>
+      </TransportEqns>
+
+      <PropertyModels> 
+        <model label="soot" type="empirical_soot" initialization="constant"> 
+          <carbon_content>.75</carbon_content> 
+          <scaling_factor>1.0</scaling_factor> 
+        </model> 
+      </PropertyModels> 
+
+      <Turbulence model="compdynamicprocedure">
+        <variance_coefficient>0.1</variance_coefficient>
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+      </Turbulence>
+
+      <Properties>
+          <use_mixing_model>true</use_mixing_model>
+          <ClassicTable>
+            <enthalpy_label>enthalpy</enthalpy_label>
+            <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+          </ClassicTable>
+      </Properties>
+
+      <BoundaryConditions>
+        <use_new_bcs/>
+      </BoundaryConditions>
+
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <variable_dt>true</variable_dt>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    7500   </maxiterations>
+            <relax_type>       2      </relax_type>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
+        <newEnthalpySolver/>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>

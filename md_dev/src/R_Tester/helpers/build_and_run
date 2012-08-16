@@ -1,0 +1,133 @@
+#!/bin/bash
+#______________________________________________________________________
+#  This script calls two separate scripts to 
+#  compile the code and run the regression testss
+#
+#__________________________________
+# bulletproof the inputs
+if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$NOTESTS" = "" -o "$COMMON_GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA" = "" ]; then
+  echo "ERROR:build_and_run  One of the environmental variables has not been set"
+  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, NOTESTS: $NOTESTS, GROUP: $COMMON_GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA: $TEST_DATA"
+  exit -1
+fi
+
+mode=$1 # dbg or opt
+didCompile=0
+
+#__________________________________
+#  Create the build directory and compile the code.
+if [ "$COMPILE" = "yes" ]; then
+  # create the build directory 
+  if [ ! -d "${BUILDROOT}/${mode}/build" ]; then
+    mkdir "${BUILDROOT}/${mode}/build"
+  fi
+  cd "${BUILDROOT}/${mode}/build"
+
+  # configure and compile the code
+  build $mode
+  didCompile=$?
+  
+  #change the permissions
+  echo "Changing permissions in `pwd`"
+  chgrp -R $COMMON_GROUP .
+  chmod -R g+rwX . 
+fi
+
+# exit if compile failed or there no tests to run
+if [ "$didCompile" != "0" -a "$NOTESTS" = "0" ]; then
+  exit $didCompile
+fi
+
+
+#__________________________________
+# If the code compiled successfully
+#    - generate the symbolic links
+#    - check for the goldStandards
+cd "${BUILDROOT}/${mode}"
+
+if [ ! -d TestScripts ]; then
+  ln -s ../src/R_Tester TestScripts
+fi
+
+if [ ! -d tools ]; then
+  ln -s ../src/tools tools
+fi
+
+if [ ! -f replace_all_GS ]; then
+  ln -s ../src/R_Tester/helpers/replace_all_GS replace_all_GS
+fi
+
+if [ ! -d susdir ]; then
+  ln -s build/StandAlone susdir
+fi
+
+if [ ! -d inputs ]; then
+  ln -s ../src/StandAlone/inputs inputs
+fi
+
+if [ ! -d CheckPoints ]; then
+  ln -s  $CHECKPOINTS CheckPoints
+fi
+
+# remove this in case it points to the wrong place
+if [ -d goldStandard ]; then
+  rm -f goldStandard
+fi
+ln -s "${TEST_DATA}/${mode}" goldStandard
+
+summary_log="${BUILDROOT}/${mode}/summary_log"
+rm -f $summary_log
+touch $summary_log
+
+
+# checking for GoldStandards
+if [ ! -d "$TEST_DATA" ]; then
+  echo "TEST_DATA directory doesn't exist: $TEST_DATA"
+  exit -1;
+fi
+
+if [ ! -d "${TEST_DATA}/${mode}" ]; then
+  mkdir "${TEST_DATA}/${mode}"
+fi
+
+
+#__________________________________
+#  Run the component tests
+cd TestScripts
+failed=0
+
+# If the env var TEST_COMPONENTS is set, use it instead of all the components
+if test ${TEST_COMPONENTS:+1}; then
+  echo ""
+  echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
+  componentTests=$TEST_COMPONENTS
+else
+  # find all of the component tests which are python scripts
+  componentTests=`ls *.py | grep -v __init__ | sed "s/.py//g"`
+fi
+
+#  main loop over components RT tests
+for componentTest in $componentTests; do
+  # if the file is an executable
+  if [ -f "$componentTest.py" -a -x "$componentTest.py" ]; then
+
+    #echo ""
+    #echo "Running test \"${componentTest}-${mode}\" at `date`"
+    runComponentTests $mode $componentTest
+    retval=$?
+
+    if [ $retval = "1" ]; then
+      failed=1
+    fi
+  fi
+done
+
+echo ""
+echo "Finished $mode tests on `date`"
+if [ $failed = "0" ]; then
+  echo "All $mode tests passed!"
+else
+  echo "*** Some $mode tests failed."
+fi
+
+exit $failed

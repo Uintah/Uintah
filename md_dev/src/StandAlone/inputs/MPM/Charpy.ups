@@ -1,0 +1,197 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Unnotched Charpy Impact</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+  <Time>
+       <maxTime>200.0e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.5e-14</delt_min>
+       <delt_max>1.e-7</delt_max>
+       <timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>Charpy.uda</filebase>
+       <outputInterval>10e-6</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.particleID"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stress"/>
+       <save label = "p.color"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.damage"/>
+       <save label = "p.plasticStrain"/>	
+
+       <checkpoint cycle = "2" interval = "10e-6"/>
+<!--
+-->
+   </DataArchiver> 
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <withColor>true</withColor>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+	<artificial_viscosity> true </artificial_viscosity>
+	<erosion algorithm = "none"/>
+    </MPM>
+   <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>	
+        <material>
+             <density>7.850</density>
+             <constitutive_model type="elastic_plastic">
+  		<shear_modulus>80.0e10</shear_modulus>
+  		<bulk_modulus>173.33e10</bulk_modulus>
+                <yield_condition type="vonMises">
+                </yield_condition>
+  		<flow_model type="zerilli_armstrong">
+    		  <c_0>50e7</c_0>
+    		  <B>1800e7</B>
+    		  <beta_0>0.0015</beta_0>
+    		  <beta_1>0.000045</beta_1>
+    		  <B_0>0.0</B_0>
+    		  <alpha_0>0.0</alpha_0>
+    		  <alpha_1>0.0</alpha_1>
+    		  <K>1200e7</K>
+    		  <n>0.62</n>
+ 		</flow_model>
+                <damage_model type="johnson_cook">
+                  <D1>-0.65</D1>
+                  <D2>2.25</D2>
+                  <D3>-0.5</D3>
+                  <D4>0.004</D4>
+                  <D5>0.0</D5>
+                  </damage_model>
+                <equation_of_state type="mie_gruneisen">
+    		  <C_0>461000</C_0>
+    		  <Gamma_0>1.67</Gamma_0>
+    		  <S_alpha>1.73</S_alpha>
+                </equation_of_state>
+             </constitutive_model>
+                <thermal_conductivity>38.0e5</thermal_conductivity> <!-- 1 Watt/(m.Kelvin) = 1 (Kg . m^2 / s^3)/(m.Kelvin) = 10^5 (g. cm^2/ s^3)/(cm.Kelvin)-->
+                <specific_heat>477.0e4</specific_heat> <!-- 1 Joule/(Kg.Kelvin)= 1(Kg m^2/s^2)/Kg.Kelvin = 10^4 (g cm^2/s^2)/g.Kelvin -->
+                <room_temp>298.0</room_temp>
+                <melt_temp>1793.0</melt_temp>
+            <geom_object>
+              <box label = "target">
+                <min>[-2.75,-0.25, -0.5]</min>
+              	<max>[ 2.75, 0.25,  0.5]</max>
+              </box>
+              <res>[2,2,1]</res>
+              <velocity>[0.0,0.0,0.0]</velocity>
+              <temperature>298.0</temperature>
+              <color>0</color>
+            </geom_object>
+         </material>
+	<material>
+              <density>1.e5</density>
+              <thermal_conductivity>1.0e5</thermal_conductivity>
+              <specific_heat>5e4</specific_heat>
+            <constitutive_model type="rigid">
+          	<shear_modulus> 12.e12  </shear_modulus>
+          	<bulk_modulus> 32.e12 </bulk_modulus>
+          	<coeff_thermal_expansion> 0.00 </coeff_thermal_expansion>
+            </constitutive_model>
+            <geom_object>
+	    <difference>
+              <box label = "Anvil">
+                <min>[-2.5,  -0.5,  -0.5]</min>
+              	<max>[ 2.5, -0.26,  0.5]</max>
+              </box>
+              <box label = "CenterDeletion">
+                <min>[-2.0,   -0.5,  -0.5]</min>
+              	<max>[ 2.0,   -0.26,  0.5]</max>
+              </box>
+	      </difference>
+		<res>[2,2,1]</res>
+              <velocity>[0.0,0.0,0.0]</velocity>
+              <temperature>298.0</temperature>
+              <color>1</color>
+            </geom_object>
+          </material>
+	<material> 
+              <density>13425.26</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>7.5188e11</G>
+                 <K>1.9608e12</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0e5</thermal_conductivity>
+              <specific_heat>5e4</specific_heat>
+            <geom_object>
+		<difference>
+		<difference>
+              <box label = "StrikerBack">
+                <min>[-0.5, 0.375, -0.5]</min>
+              	<max>[ 0.5, 2.59,   0.5]</max>
+              </box>
+              <parallelepiped label = "RightDiff">
+                <p1>[ 0.2, 0.375,  0.5]</p1>
+                <p2>[ 0.2, 0.375, -0.5]</p2>
+                <p3>[ 0.5, 0.375,  0.5]</p3>
+                <p4>[ 0.5, 0.99,   0.5]</p4>
+              </parallelepiped>
+              </difference>
+              <parallelepiped label = "LeftDiff">
+                <p1>[ -0.2, 0.375,  0.5]</p1>
+                <p2>[ -0.2, 0.375, -0.5]</p2>
+                <p3>[ -0.5, 0.375,  0.5]</p3>
+                <p4>[ -0.5, 0.99,   0.5]</p4>
+              </parallelepiped>
+              </difference>
+                  <res>[2,2,1]</res>
+                  <velocity>[0,-8174,0.0]</velocity>
+                  <temperature>298</temperature>
+		  <color>2</color>
+             </geom_object>
+	</material>
+
+	<contact>
+             <type>friction</type>
+             <mu> 0.2 </mu>
+        </contact>
+       </MPM>
+    </MaterialProperties>
+    <Grid>
+        <BoundaryConditions>
+           <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "1" var = "Dirichlet" label = "Velocity"> <value>[0, 0, 0]</value> </BCType>
+           </Face>                  
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "1" var = "Dirichlet" label = "Velocity"> <value>[0, 0, 0]</value> </BCType>
+           </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-3.0, -2.75, -0.5]</lower>
+              <upper>[ 3.0,  2.75,  0.5]</upper>
+	      <resolution>[40,20,1]</resolution>	
+              <patches>[4,2,1]</patches>
+              <extraCells> [1,1,1]</extraCells>
+           </Box>
+           <!--<spacing>[0.5e-3,0.5e-3,0.5e-3]</spacing> -->
+       </Level>
+    </Grid>
+</Uintah_specification> 

@@ -1,0 +1,909 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <Wasatch                             spec="OPTIONAL NO_DATA" >
+    <include href="wasatch_spec.xml" section="Wasatch"/>
+  </Wasatch>
+
+  <CFD>
+    <ARCHES                             spec="OPTIONAL NO_DATA" >
+          
+      <set_initial_condition             spec="OPTIONAL NO_DATA"
+                                        attribute1="inputfile REQUIRED STRING"/>
+      <new_BC_on_restart                spec="OPTIONAL NO_DATA" />
+      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
+      <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
+
+      <VarID                            spec="OPTIONAL NO_DATA"> <!-- matches variables to specific CFD roles --> 
+        <var                            spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy'"/>
+      </VarID>
+
+      <PropertyModels                   spec="OPTIONAL NO_DATA" >
+        <model                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
+                                                                          scalar_diss, laminar_pr, 
+                                                                          extent_rxn, tab_strip_factor, 
+                                                                          absorption_coefficient, 
+                                                                          empirical_soot'"
+                                        attribute3="initialization REQUIRED STRING 'constant'">
+
+          <!-- constant property model and scalar dissipation rate model --> 
+          <constant                     spec="OPTIONAL DOUBLE"/>
+
+          <!-- extent of reaction model --> 
+          <scalar_label                 spec="OPTIONAL STRING"/>
+          <fuel_mass_fraction           spec="OPTIONAL DOUBLE"/>
+
+          <!-- scalar dissipation rate model --> 
+          <constant_diss                spec="OPTIONAL NO_DATA"/>
+
+          <!-- laminar pr --> 
+          <atm_pressure                 spec="OPTIONAL DOUBLE"/>
+          <mix_frac_label               spec="OPTIONAL STRING"/>
+          <D                            spec="OPTIONAL DOUBLE"/>
+
+          <fuel                         spec="OPTIONAL NO_DATA">
+            <!-- laminar pr --> 
+            <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
+            <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
+            <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
+          </fuel>
+          <oxidizer                     spec="OPTIONAL NO_DATA">
+            <!-- laminar pr --> 
+            <molar_mass                 spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_temperature       spec="OPTIONAL DOUBLE 'positive'"/>
+            <critical_pressure          spec="OPTIONAL DOUBLE 'positive'"/>
+            <dipole_moment              spec="OPTIONAL DOUBLE 'positive'"/>
+            <viscosity                  spec="OPTIONAL DOUBLE 'positive'"/>
+          </oxidizer>
+
+          <!-- Tabulated stripping factor --> 
+          <X                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <Y                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <co2_label                    spec="OPTIONAL STRING 'co2IN, CO2'"/>
+          <ch4_label                    spec="OPTIONAL STRING 'ch4IN, CH4'"/>
+          <small                        spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <!-- Emperical soot --> 
+          <carbon_content_fuel          spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of fuel --> 
+          <carbon_content_ox            spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- carbon content, mass of carbon atoms/mass of oxidizer --> 
+          <opl                          spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- this is optional because the radiation model may specify it --> 
+          <C1                           spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- default of 0.1, valid values range between 0-0.2 (see Hottel & Sarofim, 1978) --> 
+          <E_cr                         spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Critical equivilence ratio, default 1.0 --> 
+          <E_inf                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at infinity, default = 2*E_cr --> 
+          <E_st                         spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- Equivilence ratio at stoich --> 
+          <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type empirical_soot"/> <!-- default of 1950.0 --> 
+          <density_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/> <!-- default of "density" --> 
+          <temperature_label            spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/> <!-- default of "temperature" --> 
+          <absorption_label             spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
+          <mixture_fraction_label       spec="OPTIONAL STRING"
+                                        need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
+                                        
+        </model>
+      </PropertyModels>
+
+      <EfficiencyCalculator             spec="OPTIONAL NO_DATA">
+
+        <calculator                     spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'combustion_efficiency'">
+
+          <mixture_fraction             spec="REQUIRED NO_DATA"
+                                        attribute1="mf_label_1 REQUIRED STRING"
+                                        attribute2="mf_label_2 OPTIONAL STRING"
+                                        attribute3="N          REQUIRED INTEGER 'positive'"
+                                        need_applies_to="type combustion_efficiency"/>
+          <phi_label                    spec="REQUIRED STRING"
+                                        need_applies_to="type combustion_efficiency"/>
+          <phi_at_feq1                  spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type combustion_efficiency"/>
+
+        </calculator>
+
+      </EfficiencyCalculator>
+
+
+
+      <MMS                              spec="OPTIONAL NO_DATA"
+                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
+                                          children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
+        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  
+        <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
+          <cu                           spec="REQUIRED DOUBLE" />
+          <cv                           spec="REQUIRED DOUBLE" />
+          <cw                           spec="REQUIRED DOUBLE" />
+          <cp                           spec="REQUIRED DOUBLE" />
+          <phi0                         spec="REQUIRED DOUBLE" />
+        </constantMMS>
+        <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
+          <amplitude                    spec="REQUIRED DOUBLE" />
+          <viscosity                    spec="REQUIRED DOUBLE" />
+        </almgrenMMS>
+      </MMS>
+      
+      <Coal_Properties                  spec="OPTIONAL NO_DATA">
+        <C                              spec="REQUIRED DOUBLE" />
+        <H                              spec="REQUIRED DOUBLE" />
+        <N                              spec="REQUIRED DOUBLE" />
+        <O                              spec="REQUIRED DOUBLE" />
+        <S                              spec="REQUIRED DOUBLE" />
+        <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_rawcoal_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <initial_fixcarb_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <particle_density               spec="OPTIONAL DOUBLE" />
+      </Coal_Properties>
+      
+      <Turbulence                       spec="REQUIRED NO_DATA"
+                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
+
+        <variance_coefficient           spec="OPTIONAL DOUBLE" />
+        <mixture_fraction_label         spec="OPTIONAL STRING" /> <!-- for matching scalar with its label for variance calculation --> 
+        <!--smagorinsky -->
+        <cf                             spec="OPTIONAL DOUBLE 'positive'" />  
+        <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
+        <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
+        <!--dyn. smagorinsky -->
+        <dynamicScalarModel             spec="OPTIONAL BOOLEAN" />
+        <filter_variance_limit_scalar   spec="OPTIONAL BOOLEAN" />
+        <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
+        <!-- going to leave complocal out based on the 'this model is a mess' comment-->
+        <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
+
+        <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
+      </Turbulence>
+
+      <Properties                       spec="REQUIRED NO_DATA"
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
+
+        <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default if false --> 
+        <empirical_soot                 spec="OPTIONAL BOOLEAN" />
+        <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
+        <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
+        <inverse_density_average        spec="OPTIONAL BOOLEAN" />
+        <mixture_fraction_label         spec="OPTIONAL STRING" />
+        <independent_variable           spec="MULTIPLE NO_DATA" 
+                                            attribute1="active OPTIONAL STRING 'yes, true, no, false'"
+                                            attribute2="name   REQUIRED STRING"
+                                            attribute3="value  OPTIONAL DOUBLE" /> <!-- Default value for "active" is true, default value for "value" is 0; 
+                                                                                        You can put as many independent variable tags as you want -->
+        <ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
+          <Stream                       spec="MULTIPLE NO_DATA" >
+            <density                    spec="REQUIRED DOUBLE 'positive'" />
+            <temperature                spec="REQUIRED DOUBLE 'positive'" />
+          </Stream>
+        </ColdFlowMixingModel>
+
+        <ColdFlow                       spec="OPTIONAL NO_DATA" >
+          <mixture_fraction_label       spec="REQUIRED STRING"/>
+          <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
+          <Stream_1                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+            <species                    spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+          </Stream_1>
+          <Stream_2                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+            <species                    spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+          </Stream_2>
+          <post_mix                     spec="OPTIONAL NO_DATA">
+            <!-- Notes on post stream mixing: 
+              1) Dependent variables that are not specified are assumed to be ZERO (even density)
+              2) If specifying density, specify the INVERSE value 
+            --> 
+            <stream                     spec="OPTIONAL NO_DATA"
+                                        attribute1="transport_label REQUIRED STRING">
+              <var                      spec="MULTIPLE NO_DATA"   
+                                        attribute1="label REQUIRED STRING" 
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+            </stream> 
+          </post_mix>
+        </ColdFlow>
+
+        <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
+          <co_output                    spec="OPTIONAL BOOLEAN" />
+          <inputfile                    spec="REQUIRED STRING" />
+          <soot_precursors              spec="OPTIONAL BOOLEAN" />
+          <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
+          <tabulated_soot               spec="OPTIONAL BOOLEAN" />
+          <loud_heatloss_warning        spec="OPTIONAL BOOLEAN" />
+        </NewStaticMixingTable>
+
+        <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
+
+        <TabProps                       spec="OPTIONAL NO_DATA" >
+          <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+          <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
+          <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
+          <coal                         spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+        </TabProps>
+
+        <ClassicTable                   spec="OPTIONAL NO_DATA">
+          <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- use for simple two stream mixing --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" />  <!-- initial heat loss value in the domain --> 
+          <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
+          <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
+          <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
+          <coal                         spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <acidbase                     spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <slowfastchem                 spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <post_mix                     spec="OPTIONAL NO_DATA">
+            <!-- Notes on post stream mixing: 
+              1) Dependent variables that are not specified are assumed to be ZERO (even density)
+              2) If specifying density, specify the INVERSE value 
+            --> 
+            <stream                     spec="OPTIONAL NO_DATA"
+                                        attribute1="transport_label REQUIRED STRING">
+              <var                      spec="MULTIPLE NO_DATA"   
+                                        attribute1="label REQUIRED STRING" 
+                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+            </stream> 
+          </post_mix>
+        </ClassicTable>
+
+        <emperical_soot               spec="OPTIONAL BOOLEAN" />
+        <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
+
+      </Properties>
+
+      <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
+
+        <intrusions                 spec="OPTIONAL NO_DATA">
+         <!-- NOTES: --> 
+         <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... --> 
+         <!-- variable = mass_flow_rate is a specific variable that sets the velocity components based
+         on a specified mass flow rate. -->   
+         <!-- If multiple directions are entered, then the mass flow rate is divided across 
+         all valid face directions with non-zero velocity normal to that face. --> 
+         <!-- Enthalpy is computed based on independ. table variables, including heat loss --> 
+         <intrusion                     spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING">       <!-- type = how bc is applied, 
+                                                                                       label= unique name for this intrusion boundary --> 
+           <geom_object/>                                                         <!-- geometry object associated with this intrusion --> 
+           <flux_dir                    spec="MULTIPLE STRING 'x-,X-,x+,X+,
+                                                               y-,Y-,y+,Y+,
+                                                               z-,Z-,z+,Z+"/>     <!-- direction to apply type of BC, otherwise treated as wall --> 
+           <variable                    spec="MULTIPLE NO_DATA"                     
+                                        attribute1="label REQUIRED STRING"       
+                                        attribute2="value REQUIRED DOUBLE"/>      <!-- label= variable name, 
+                                                                                       value= variable boundary value -->
+
+           <velocity                    spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'flat, from_file, massflow'">
+
+            <!-- flat velocity profile -->                             
+            <u                          spec="OPTIONAL DOUBLE" 
+                                        need_applies_to="type flat"/>
+            <v                          spec="OPTIONAL DOUBLE" 
+                                        need_applies_to="type flat"/>
+            <w                          spec="OPTIONAL DOUBLE" 
+                                        need_applies_to="type flat"/>
+            <!-- from input file --> 
+            <input_file                 spec="REQUIRED STRING"
+                                        need_applies_to="type from_file"/>
+
+            <!-- mass flow --> 
+            <flow_rate                  spec="REQUIRED DOUBLE"
+                                        need_applies_to="type massflow"/>
+
+
+           </velocity>
+           <scalars                     spec="OPTIONAL NO_DATA">
+
+            <scalar                     spec="MULTIPLE NO_DATA"
+                                        attribute1="label OPTIONAL STRING"
+                                        attribute2="type REQUIRED STRING 'flat, from_file'">
+              <input_file               spec="OPTIONAL STRING"
+                                        need_applies_to="type from_file"/>
+              <constant                 spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type flat"/>
+            </scalar>
+
+           </scalars>
+           <inverted                    spec="OPTIONAL NO_DATA"/>                 <!-- inverts the solid def. so that points inside the solid 
+                                                                                       are actually outside the solid and vice versa --> 
+
+           <constant_temperature        spec="OPTIONAL NO_DATA"
+                                        attribute1="T REQUIRED DOUBLE 'positive'"/>       <!-- Set the intrusion to a constant temperature --> 
+           <mpm_temperature             spec="OPTIONAL NO_DATA"/> <!-- This tag turns on two-way energy exchange between the solid and gas --> 
+                                                                                                                                                             
+           
+         </intrusion>
+        </intrusions>
+
+        <use_new_bcs                    spec="OPTIONAL NO_DATA"/>
+        
+        <TurbulentInlet                 spec="OPTIONAL NO_DATA" >
+          <cell_low                     spec="REQUIRED INTEGER"/>
+          <cell_high                    spec="REQUIRED INTEGER"/>
+          <Ntimestep                    spec="REQUIRED INTEGER"/>
+          <turbulence_intensity         spec="REQUIRED DOUBLE"/>
+        </TurbulentInlet>
+
+        <ScalarEfficiency               spec="OPTIONAL NO_DATA" >
+          <scalar                       spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="fuel_ratio REQUIRED STRING"
+                                        attribute3="air_ratio REQUIRED STRING">
+            <species                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="mol_ratio REQUIRED STRING"/>
+            <inlet                      spec="MULTIPLE STRING"/>
+          </scalar>
+        </ScalarEfficiency>
+        <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
+        <Prefill                        spec="OPTIONAL NO_DATA"
+                                        attribute1="bc REQUIRED STRING">
+          <geom_object/>
+        </Prefill>
+        <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
+          <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>
+  
+          <vel_vector                   spec="OPTIONAL DOUBLE"/>
+          <vel_filename                 spec="OPTIONAL STRING"/>
+          <scalar_filename              spec="OPTIONAL STRING"/>
+          <vel_function                 spec="OPTIONAL STRING"/>
+          <scalar_function              spec="OPTIONAL STRING"/>
+          <swirl_cent                   spec="OPTIONAL VECTOR"/>
+          <swirl_no                     spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <name                         spec="OPTIONAL STRING" />
+          <Flow_rate                    spec="OPTIONAL DOUBLE" />
+          <InletVelocity                spec="OPTIONAL DOUBLE" />
+          <mixture_fraction             spec="REQUIRED DOUBLE" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
+          <Prefill                      spec="OPTIONAL NO_DATA"
+                                          attribute1="direction REQUIRED STRING 'X, Y, Z'" >
+            <geom_object />
+          </Prefill>
+          <geom_object />
+        </FlowInlet>
+
+        <PressureBC                     spec="OPTIONAL NO_DATA" >
+          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
+          <geom_object/>
+        </PressureBC>
+
+        <OutletBC                       spec="OPTIONAL NO_DATA" >
+          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
+          <geom_object/>
+        </OutletBC>
+
+        <WallBC                         spec="OPTIONAL NO_DATA" >
+          <geom_object/>
+        </WallBC>
+      </BoundaryConditions>
+
+      <ExplicitSolver                   spec="REQUIRED NO_DATA" >
+
+        <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
+        <variable_dt                    spec="REQUIRED BOOLEAN" />
+        <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
+        <extraProjection                spec="OPTIONAL BOOLEAN" /> 
+        <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
+        <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
+          <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
+          <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
+          <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
+          <radiationCalcFreq            spec="OPTIONAL INTEGER" />
+          <radCalcForAllRKSteps         spec="OPTIONAL BOOLEAN" />
+          <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING" />
+
+          <DORadiationModel             spec="OPTIONAL NO_DATA" >
+            <opl                        spec="REQUIRED DOUBLE" />
+            <ordinates                  spec="OPTIONAL INTEGER" />
+            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
+            <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
+            <LinearSolver               spec="OPTIONAL NO_DATA" 
+                                        attribute1="type REQUIRED STRING 'hypre, petsc'">
+              <res_tol                  spec="REQUIRED DOUBLE" />
+              <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
+              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+              <max_iter                 spec="REQUIRED INTEGER" />
+            </LinearSolver>
+            <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
+            <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
+            <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
+          </DORadiationModel>
+        </EnthalpySolver>
+
+        <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
+
+        <maxDensityLag                  spec="OPTIONAL DOUBLE" />
+
+        <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
+          <initial_value                spec="OPTIONAL DOUBLE" />
+          <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
+          <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
+          <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
+        </MixtureFractionSolver>
+
+        <MomentumSolver                 spec="REQUIRED NO_DATA" >
+          <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
+          <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING"/>
+
+          <initialization               spec="OPTIONAL NO_DATA"           
+                                        attribute1="type REQUIRED STRING 'constant, taylor-green, almgren'">
+
+           <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_w                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+
+           <c                           spec="REQUIRED DOUBLE" need_applies_to="type taylor-green"/> 
+
+           <A                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
+           <B                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
+           <plane                       spec="OPTIONAL STRING 'x-y, y-z, z-x'" need_applies_to="type almgren"/>
+
+          </initialization>
+        </MomentumSolver>
+
+        <PressureSolver                 spec="REQUIRED NO_DATA" >
+          <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
+          <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
+          <use_ref_point                spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE"/> 
+        <Parameters                     spec="OPTIONAL NO_DATA"
+                                          attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+          <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
+          <criteria                     spec="OPTIONAL STRING 'Absolute relative'" />                     
+          <jump                         spec="OPTIONAL INTEGER" />                                        
+          <logging                      spec="OPTIONAL INTEGER 'positive'" />                             
+          <maxiterations                spec="OPTIONAL INTEGER 'positive'" />                             
+          <norm                         spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+          <npost                        spec="OPTIONAL INTEGER" />                                        
+          <npre                         spec="OPTIONAL INTEGER" />                                        
+          <preconditioner               spec="OPTIONAL STRING 'none, pfmg, smg jacobi'" />                            
+          <outputEquations              spec="OPTIONAL BOOLEAN" />                                        
+          <skip                         spec="OPTIONAL INTEGER" />                                        
+          <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />                         
+          <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
+          <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+        </Parameters>
+        </PressureSolver>
+
+        <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
+        <NoisyDensityGuess              spec="OPTIONAL BOOLEAN" /> <!--default = false-->
+        <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
+        <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
+      </ExplicitSolver>
+
+      <!-- This is new stuff -->
+      <TimeIntegrator                   spec="OPTIONAL NO_DATA" >
+        <ExplicitIntegrator             spec="OPTIONAL NO_DATA"
+                                        attribute1="order REQUIRED STRING 'first, second, third'"/>
+      </TimeIntegrator>  
+
+      <TransportEqns                    spec="OPTIONAL NO_DATA" >
+
+        <Eqn                            spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type  REQUIRED STRING 'CCscalar'">
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <doDiff                       spec="OPTIONAL BOOLEAN"/>
+          <doConv                       spec="OPTIONAL BOOLEAN"/>
+          <addSources                   spec="OPTIONAL BOOLEAN"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
+          <use_laminar_pr               spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+          <scaling_const                spec="OPTIONAL DOUBLE"/>                              
+          <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian'">
+            <!-- constant value initialization -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+            <!-- constant within a geometry piece (geometry_fill) -->
+            <geom_object                spec="OPTIONAL"/>
+            <!-- step function initialization --> 
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
+            <step_value                 spec="OPTIONAL DOUBLE"/>         <!-- step from 0 to (value) - VALUE IS UNSCALED!!! -->
+            <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
+            <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
+            <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
+            <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+            <!-- gaussian initialization --> 
+            <!-- computes: y = a*exp( -1 * (x-b)^2/(2c^2) ) + shift --> 
+            <!-- a = amplitude, b = center, c = std --> 
+            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'" need_applies_to="type gaussian"/> <!-- direction of the gaussian --> 
+            <amplitude                  spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- height of the gaussian --> 
+            <center                     spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
+            <std                        spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian --> 
+            <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant --> 
+
+          </initialization>                              
+
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+          </Clipping>
+
+        </Eqn>
+
+        <Sources                        spec="OPTIONAL NO_DATA">
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING  'constant_src, 
+                                                                           westbrook_dryer, 
+                                                                           coal_gas_oxi,                                                         
+                                                                           coal_gas_heat,                                                        
+                                                                           coal_gas_devol,                                                       
+                                                                           coal_gas_momentum,                                                    
+                                                                           cc_inject_src,                                                        
+                                                                           fx_inject_src,                                                        
+                                                                           fy_inject_src,                                                          
+                                                                           fz_inject_src,                                                          
+                                                                           tab_rxn_rate,                                                           
+                                                                           cc_intrusion_inlet,                                                     
+                                                                           fx_intrusion_inlet,                                                     
+                                                                           fy_intrusion_inlet,                                                     
+                                                                           fz_intrusion_inlet,                                                     
+                                                                           do_radiation,                                                           
+                                                                           rmcrt_radiation, 
+                                                                           bowman_nox,
+                                                                           wasatch_expr'">                                                           
+
+            <!-- Specs for coal gas devol model -->
+            <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
+
+            <!-- Spec for the heat transfer source --> 
+            <heat_model_name            spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
+
+            <!-- Tabulated reaction rate --> 
+            <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
+            
+            <!-- Wasatch expression as a source - needs ForceOnGraph in Wasatch block -->
+            <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
+
+            <!-- Spec for constant and multi-point constant source term model -->
+            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant_src" />
+
+            <!-- Spec for the char oxidation source --> 
+            <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
+
+            <!-- Multi-point constant injection --> 
+            <injector                   spec="MULTIPLE NO_DATA">
+              <geom_object/>
+            </injector>
+
+            <!-- Radiation models --> 
+            <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+            <abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" />
+            <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
+            <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
+            <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
+            <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
+            <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
+            <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
+              <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
+              <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
+              <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
+              <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
+              <LinearSolver               spec="OPTIONAL NO_DATA"                                      
+                                          attribute1="type REQUIRED STRING 'hypre, petsc'">
+                <res_tol                  spec="REQUIRED DOUBLE" />
+                <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
+                <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+                <max_iter                 spec="REQUIRED INTEGER" />
+              </LinearSolver>
+              <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
+              <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
+              <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
+            </DORadiationModel>
+            
+            <!-- RMCRT -->
+            <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
+              <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
+              <randomSeed                spec="OPTIONAL BOOLEAN"/>
+              <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
+              <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
+              <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
+              <abskgBench4               spec="OPTIONAL DOUBLE  'positive'"/>
+              <NoOfRays                  spec="OPTIONAL INTEGER 'positive'"/>        
+              <Threshold                 spec="OPTIONAL DOUBLE  'positive'"/>        
+              <Slice                     spec="OPTIONAL DOUBLE"/>                    
+              <StefanBoltzmann           spec="OPTIONAL DOUBLE  'positive'"/>        
+              <benchmark                 spec="OPTIONAL INTEGER 'positive'"/>                    
+              <solveBoundaryFlux         spec="OPTIONAL BOOLEAN"/>                   
+              <CCRays                    spec="OPTIONAL BOOLEAN"/>
+              <VirtRadiometer            spec="OPTIONAL BOOLEAN"/>
+              <VRViewAngle               spec="OPTIONAL DOUBLE 'positive'"/>
+              <VROrientation             spec="OPTIONAL VECTOR"/>
+              <VRLocationsMin            spec="OPTIONAL VECTOR 'positive'"/>
+              <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
+              <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
+              <halo                      spec="OPTIONAL VECTOR 'positive'"/>
+              
+              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon'">
+                <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
+                <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
+                <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />
+              </property_calculator> 
+            </RMCRT>
+
+            
+
+            <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
+            <!-- see Turns, pg. 156-157 -->
+            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor --> 
+            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature --> 
+            <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+            <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+            <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
+            <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
+            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
+            <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
+            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
+            <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
+            <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
+            <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 
+            <pos                        spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"/><!-- source term is positive --> 
+            <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
+              <geom_object/>                                                                            <!-- defines the location of the pilot --> 
+              <max_time                 spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines how long does the pilot last -->  
+              <temperature              spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines the temperature of the pilot --> 
+            </hot_spot>
+
+            <!-- Bowman NOx rate expression --> 
+            <!-- A, E_R, o2_label, density_label, temperature_label are defined above in the westbrook dryer model --> 
+            <no2_label                  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for NO2 (default = NO2) --> 
+                                        
+            <!-- Intrusion inlets --> 
+            <intrusion                  spec="OPTIONAL NO_DATA">
+              <geom_object/>
+            </intrusion>
+            <normal                     spec="OPTIONAL STRING '+X,-X,+Y,-Y,+Z,-Z'"/>
+            <velocity                   spec="OPTIONAL DOUBLE"/>
+            <density                    spec="OPTIONAL DOUBLE"/>
+            <phi                        spec="OPTIONAL DOUBLE"/>
+          </src>
+
+        </Sources>
+
+      </TransportEqns>
+
+      <DQMOM                            spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'unweightedAbs, weightedAbs">
+
+        <!-- Tags for verification of DQMOM AX=B solution procedure -->
+        <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">
+            <A                          spec="REQUIRED STRING" />
+            <X                          spec="REQUIRED STRING" /> 
+            <B                          spec="REQUIRED STRING" /> 
+            <R                          spec="REQUIRED STRING" /> 
+            <normR                      spec="REQUIRED STRING" /> 
+            <norms                      spec="REQUIRED STRING" /> 
+            <dimension                  spec="REQUIRED INTEGER 'positive'" />
+            <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
+        </Verify_Linear_Solver>
+
+        <!-- Tags for verification of DQMOM A and B construction procedure -->
+        <Verify_AB_Construction         spec="OPTIONAL NO_DATA">
+            <A                          spec="REQUIRED STRING" />
+            <B                          spec="REQUIRED STRING" />
+            <inputs                     spec="REQUIRED STRING" />
+            <moments                    spec="REQUIRED STRING" />
+            <number_environments          spec="REQUIRED INTEGER 'positive'" />
+            <number_internal_coordinates  spec="REQUIRED INTEGER 'positive'" />
+            <tolerance                  spec="OPTIONAL DOUBLE 'positive'" />
+        </Verify_AB_Construction>
+
+        <!-- Block of tags for specifying the linear solver used for DQMOM -->
+        <LinearSolver                   spec="OPTIONAL NO_DATA">
+          <tolerance                    spec="OPTIONAL DOUBLE 'positive'" />
+          <type                         spec="OPTIONAL STRING 'Lapack-invert, Lapack-svd, LU, Optimize'" />
+          <Optimization                 spec="OPTIONAL NO_DATA" >
+            <Optimal_abscissas          spec="REQUIRED MULTIPLE_DOUBLES" />
+          </Optimization>
+          <maxConditionNumber           spec="OPTIONAL DOUBLE 'positive'" />
+          <calcConditionNumber          spec="OPTIONAL BOOLEAN" /> <!-- this tag can be added if the linear solver you choose doesn't do an SVD, but you still want a condition number -->
+                                                                   <!-- NOTE: this doesn't actually do anything if you're using a linear solver that uses SVD -->
+        </LinearSolver>
+
+        <!-- This block is (will be) used for coupled multiphysics coal calculations.
+             It allows the CoalModelFactory to determine which internal coordinates correspond
+             to which physical roles.  It may (should) replace the <Model> tags currently used
+             (but only for coupled coal particle calculations, and only after a way of
+             indicating models is added to this block!)
+        -->
+        <coalParticleCalculation        spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'coupled, separable'" >
+            <Length                     spec="OPTIONAL STRING" /> <!-- Particle length internal coordinate label -->
+            <RawCoal                    spec="OPTIONAL STRING" /> <!-- Particle raw coal internal coordinate label -->
+            <Char                       spec="OPTIONAL STRING" /> <!-- Particle char internal coordinate label -->
+            <ParticleTemperature        spec="OPTIONAL STRING" /> <!-- Particle temperature internal coordinate label -->
+            <ParticleEnthalpy           spec="OPTIONAL STRING" /> <!-- Particle enthalpy internal coordinate label -->
+            <Moisture                   spec="OPTIONAL STRING" /> <!-- Particle moisture internal coordinate label -->
+            <Ash                        spec="OPTIONAL STRING" /> <!-- Particle ash internal coordinate label -->
+            <!-- A method for indicating the combination of multiphysics models to use still needs to be added -->
+        </coalParticleCalculation>
+
+        <number_quad_nodes              spec="REQUIRED INTEGER 'positive'"/>
+        <adiabGas_nonadiabPart          spec="OPTIONAL BOOLEAN"/> <!-- FIXME: What is this for? -->
+        <save_moments                   spec="OPTIONAL BOOLEAN"/> <!-- Allows saving any moments being used for DQMOM -->
+
+        <VelModel                       spec="MULTIPLE NO_DATA"
+                                        attribute1="label OPTIONAL STRING"
+                                        attribute2="type REQUIRED STRING 'Balachandar, Dragforce'">
+
+          <kinematic_viscosity          spec="OPTIONAL DOUBLE 'positive'"/>
+          <L                            spec="OPTIONAL DOUBLE 'positive'"/>
+          <rho_ratio                    spec="OPTIONAL DOUBLE 'positive'"/>
+          <regime                       spec="OPTIONAL INTEGER '1 3'"/>
+          <eta                          spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <upper_limit_multiplier       spec="OPTIONAL DOUBLE"/>
+          <clip_low                     spec="OPTIONAL DOUBLE"/>
+          <partvelBC_eq_gasvelBC        spec="OPTIONAL BOOLEAN"/>
+          <min_vel_ratio                spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <iter                         spec="OPTIONAL INTEGER 'positive'"/>
+          <tol                          spec="OPTIONAL DOUBLE  'positive'"/>
+
+        </VelModel>
+
+        <Models                         spec="OPTIONAL NO_DATA">
+        
+          <model                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                                                          SimpleHeatTransfer, 
+                                                                          XDrag, YDrag, ZDrag, 
+                                                                          ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
+
+            <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
+              <variable                 spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="role REQUIRED STRING"/>
+            </ICVars>
+
+            <scalarVars                 spec="OPTIONAL NO_DATA"> <!-- block containing list of scalar variables the DQMOM model depends on -->
+              <variable                 spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="role REQUIRED STRING"/>
+            </scalarVars>
+
+            <low_clip                   spec="OPTIONAL DOUBLE 'positive'"/> <!-- lowest value the DQMOM model term can have -->
+            <high_clip                  spec="OPTIONAL DOUBLE 'positive'"/> <!-- highest value the DQMOM model term can have -->
+
+            <!-- Heat Transfer Model -->
+            <noRadiation                spec="OPTIONAL NO_DATA"/>
+
+            <!-- Constant Model -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+
+          </model>
+        </Models>
+
+        <Weights                        spec="REQUIRED NO_DATA">
+          <doDiff                       spec="OPTIONAL BOOLEAN"/>
+          <doConv                       spec="OPTIONAL BOOLEAN"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
+            <!-- constant value initialization -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+            <env_constant               spec="MULTIPLE NO_DATA"
+                                        attribute1="qn REQUIRED INTEGER 'positive'"
+                                        attribute2="value REQUIRED DOUBLE" />
+            <!-- step function initialization --> 
+            <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
+            <step_value                 spec="OPTIONAL DOUBLE"/>         <!-- step from 0 to (value) -->
+            <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
+            <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
+            <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
+            <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+            <env_step_value             spec="MULTIPLE NO_DATA"
+                                        attribute1="qn REQUIRED INTEGER 'positive'"
+                                        attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
+          </initialization>                              
+          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+          </Clipping>
+        </Weights>
+
+
+        <Ic                             spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING">
+          <doDiff                       spec="OPTIONAL BOOLEAN"/>
+          <doConv                       spec="OPTIONAL BOOLEAN"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
+            <!-- environment constant value initialization -->
+            <env_constant               spec="MULTIPLE NO_DATA"
+                                        attribute1="qn REQUIRED INTEGER 'positive'"
+                                        attribute2="value REQUIRED DOUBLE" />
+            <constant                   spec="OPTIONAL DOUBLE"/>
+            <!-- step function initialization --> 
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
+            <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
+            <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
+            <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
+            <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+            <env_step_value             spec="MULTIPLE NO_DATA"
+                                        attribute1="qn REQUIRED INTEGER 'positive'"
+                                        attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
+          </initialization>                              
+          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <model                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/>    <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/>    <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+          </Clipping>
+        </Ic>
+
+        <Moment                         spec="MULTIPLE NO_DATA">
+          <m                            spec="REQUIRED MULTIPLE_INTEGERS"/>
+        </Moment>
+
+      </DQMOM>
+
+    </ARCHES>
+  </CFD>
+
+</Uintah_Include>

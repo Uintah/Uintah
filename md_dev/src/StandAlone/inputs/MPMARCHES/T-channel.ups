@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>T-channel</title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>25</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+<!--<max_Timesteps> 10 </max_Timesteps> -->
+    <timestep_multiplier>0.1</timestep_multiplier>
+  </Time>
+
+<!--__________________________________-->
+  <DataArchiver>
+    <filebase>T-channel.uda</filebase>
+<!--<outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval> -->
+    <outputInterval>0.01</outputInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="scalarSP"/>
+    <save label="CCVelocity"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+<!--__________________________________-->
+<!--   You must run this with 16 proc -->
+  <Grid>
+    <Level>
+      <Box label="horizontalLeg">
+        <lower>        [-1.0, 0.5, -0.5]  </lower>
+        <upper>        [ 1.0, 1.0,  0.5]  </upper>
+        <extraCells>   [1,1,1]            </extraCells>
+        <patches>      [5,1,2]            </patches>
+        <resolution>   [200,25,25]        </resolution>
+      </Box>
+      <Box label="verticalLeg">
+        <lower>        [-0.2, 0.0, -0.5]  </lower>
+        <upper>        [ 0.2, 0.5,  0.5]  </upper>
+        <extraCells>   [1,1,1]            </extraCells>
+        <patches>      [3,1,2]            </patches>
+        <resolution>   [40,25,25]         </resolution>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <Face rectangle="x-" lower="-1.0 0.5 -0.5" upper="-1.0 1.0 0.5" name="x+oulet">
+        <BCType id="all" label="Outlet x-" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" name="x- face">
+        <BCType id="all" label="Wall x-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ face">
+        <BCType id="all" label="Wall x+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face rectangle="x+" lower="1.0 0.5 -0.5" upper="1.0 1.0 0.5" name="x+oulet">
+        <BCType id="all" label="Outlet x+" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- face">
+        <BCType id="all" label="Wall y-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face rectangle="y-" lower="-.2 0.0 -.5" upper=".2 0.0 .5" name="y-inlet">
+        <BCType id="all" label="Inlet y-" var="VelocityInlet">
+          <value>[0.0,1.0,0.0]</value>
+        </BCType>
+        <BCType id="all" label="f" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ face">
+        <BCType id="all" label="Wall y+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- face">
+        <BCType id="all" label="Wall z-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ face">
+        <BCType id="all" label="Wall z+" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="f" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+
+<!--__________________________________-->
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[80,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+
+<!--__________________________________-->
+  <CFD>
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+      <TransportEqns>
+        <Eqn label="f" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+
+      <Turbulence model="smagorinsky">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <cf>0.0</cf>
+        <fac_mesh>1.0</fac_mesh>
+        <filterl>0.000001</filterl>
+        <var_const>0.1</var_const>
+      </Turbulence>
+
+      <Properties>
+        <use_mixing_model>false</use_mixing_model>
+        <ColdFlow>
+          <mixture_fraction_label>f</mixture_fraction_label>
+          <Stream_1>
+            <density>1.0</density>
+            <temperature>298</temperature>
+          </Stream_1>
+          <Stream_2>
+            <density>1.0</density>
+            <temperature>298</temperature>
+          </Stream_2>
+        </ColdFlow>
+      </Properties>
+
+<!--__________________________________-->
+      <BoundaryConditions>
+        <use_new_bcs/>
+      </BoundaryConditions>
+
+<!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>1.0</initial_dt>
+        <variable_dt>true</variable_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-9</tolerance>
+            <solver>        cg    </solver>
+            <preconditioner>pfmg  </preconditioner>
+            <maxiterations> 75    </maxiterations>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>
