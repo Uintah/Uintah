@@ -69,7 +69,7 @@
 \use_esint 1
 \use_mhchem 1
 \use_mathdots 1
-\cite_engine basic
+\cite_engine natbib_authoryear
 \use_bibtopic false
 \use_indices false
 \paperorientation portrait
@@ -146,7 +146,8 @@ Wasatch currently supports basic physical models of transport phenomena
  as needed.
  Transport equations are derived from a base class and each specializes
  in solving a particular class of problems.
- Currently, Wasatch supports the following transport equations:
+ Currently, Wasatch currently supports the following transport equations
+ with constant density:
 \end_layout
 
 \begin_layout Itemize
@@ -163,8 +164,9 @@ Population balances via moment transport
 
 \begin_layout Standard
 A wide range of expressions are currently implemented in Wasatch.
- These include the standard convective and diffusive fluxes as well as stresses.
- In addition, a variety of source terms.
+ These include the standard convective and diffusive fluxes as well as stresses
+ as well as a variety of source terms that are inherent from specific physical
+ models such as precipitation among others.
 \end_layout
 
 \begin_layout Section
@@ -236,7 +238,7 @@ The rate of strain tensor
 \begin_layout Standard
 The code supports central, upwind, and over ten flux limiters for the discretiza
 tion of the convective flux.
- The pressure is resolved by solving the pressure Poisson equation.
+ The pressure is resolved by solving the pressure Poisson equation (PPE).
  This is constructed by first taking the divergence of the momentum equations.
  Then the continuity equation is used to substitute for the temporal term
  in the resulting equation.
@@ -362,7 +364,7 @@ For a constant density flow, the Pressure-Poisson-Equation reduces to
 
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 LES Modeling
 \end_layout
 
@@ -399,8 +401,8 @@ where the overbar denotes a traditional filtering operation.
 
 \end_layout
 
-\begin_layout Subsection
-Momentum Equations
+\begin_layout Paragraph
+Filtered Momentum Equations
 \end_layout
 
 \begin_layout Standard
@@ -448,7 +450,8 @@ Moving on to the momentum equation, the filtering operation yields
 
 \end_inset
 
-It is best to transform to Favre filtering term-by-term
+It is best to transform to Favre-filtered terms one at a time.
+ This leads to the following
 \end_layout
 
 \begin_layout Itemize
@@ -525,7 +528,7 @@ where
 \end_inset
 
  are subgrid-scale stress tensors (SGS) that result from applying filtering
- to the convective and diffusive terms in the momentum equations.
+ to the convective and diffusive terms in the momentum equations, respectively.
  At the outset, the filtered momentum equations may be written as
 \end_layout
 
@@ -561,18 +564,36 @@ reference "eq:wasatch-filtered-momentum-eq"
 \begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
 \end_inset
 
- resulting from viscous stresses is negligible compared to 
+ resulting from the viscous terms is negligible compared to 
 \begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
 \end_inset
 
  that results from filtering of the convective terms 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "geurts_les_1993,vreman_subgrid-modelling_1995"
 
 \end_inset
 
 .
+ Hence, the resulting filtered momentum equations take the form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}\label{eq:wasatch-filtered-momentum-eq-2}
+\end{equation}
+
+\end_inset
+
+The subgrid stress tensor 
+\begin_inset Formula $\tau_{ij}^{R}$
+\end_inset
+
+ requires closure as it introduces unknown quantities.
+ The subject of closure is at the heart of the LES method and will be discussed
+ in the next subsection.
 \end_layout
 
 \begin_layout Standard
@@ -600,6 +621,10 @@ where
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 And ~ shows the Favre averaged variables.
 \end_layout
 
@@ -608,11 +633,19 @@ And ~ shows the Favre averaged variables.
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+THIS SECTION DOESN'T BELONG HERE ANYMORE.
+\end_layout
+
 \begin_layout Subsubsection
 Energy Equation:THIS SECTION REQUIRES REVISION
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The filtered energy equation is
 \begin_inset Formula 
 \begin{equation}
@@ -624,7 +657,7 @@ C_{v}\frac{\partial\bar{\rho}\tilde{T}}{\partial t}+C_{v}\frac{\partial}{\partia
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Similarly for the filtered energy equation, the diffusive term needs to
  be modeled somehow.
  Again, by considering eddy viscosity SGS model we can obtain
@@ -654,7 +687,12 @@ Pr_{t}=C\left\langle \hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|\frac{\par
 
 \end_layout
 
-\begin_layout Subsection
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
 Subgrid Closure
 \end_layout
 
@@ -663,7 +701,7 @@ The most common approach to modeling the subgrid-scale tensors is based
  on eddy-viscosity models.
  First propsed by 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citet
 key "smagorinsky_general_1963"
 
 \end_inset
@@ -713,7 +751,7 @@ The isotropic subgrid-stress tensor
 
  may be absorbed into the filtered pressure or entirely neglected 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "erlebacher_toward_1992,garnier_les_compressible_2009"
 
 \end_inset
@@ -722,7 +760,7 @@ key "erlebacher_toward_1992,garnier_les_compressible_2009"
  This is based on the observation that small scales are generally incompressible
  
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "garnier_les_compressible_2009"
 
 \end_inset
@@ -801,7 +839,7 @@ Constant Smagorinsky-Lilly Model
 In the constant Smagorinsky-Lilly model, a simple algebraic relation is
  proposed for the eddy-viscosity 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "smagorinsky_general_1963"
 
 \end_inset
@@ -1115,7 +1153,7 @@ Wall-Adapting Local Eddy-Viscosity (WALE)
 \begin_layout Standard
 In the WALE model 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "geurts_les_1993"
 
 \end_inset
@@ -1146,7 +1184,7 @@ Here,
  is the traceless symmetric part f the square of the velocity gradient tensor,
  given by 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "nicoud_subgrid-scale_1999"
 
 \end_inset
@@ -1170,7 +1208,18 @@ Care must be taken in evaluating the components of
 \end_layout
 
 \begin_layout Section
-Generic Scalar Transport
+Generic Scalar Transport 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+POORLY WRITTEN.
+ REQUIRES CLEANUP.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1281,7 +1330,38 @@ The main reason that wasatch keeps both strong and weak form is to compare
 And limiters can be used on the terms on the RHS easily.
  The scalar variable in this case should be assumed to be approximately
  constant in each cell on the grid.
- 
+\end_layout
+
+\begin_layout Subsection
+LES Modeling 
+\begin_inset Note Note
+status open
+
+\begin_layout Subsection
+AMIR, CAN YOU PLEASE FILL IN THIS SECTION WITH YOUR RECENTLY COMMITTED CLOSURE
+ MODEL?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The process of filtering the generic scalar transport equation follows from
+ that used for the momentum equations.
+\end_layout
+
+\begin_layout Paragraph
+Filtered Scalar Transport Equation
+\end_layout
+
+\begin_layout Standard
+Application of the Favre filtering to the scalar transport equation yields
+\end_layout
+
+\begin_layout Subsubsection
+Subgird Scalar Closure
 \end_layout
 
 \begin_layout Section
@@ -1398,11 +1478,19 @@ We recently implemented the moment transport equation in Wasatch with the
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+SOME OLD STUFF...
+\end_layout
+
 \begin_layout Section
 Basic CFD Algorithm using Expression Graphs
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Wasatch is currently able to solve the momentum equations in three dimensional
  space with periodic boundary conditions using the graph-based algorithm.
  An example problem that uses two dimensional
@@ -1412,7 +1500,7 @@ Wasatch is currently able to solve the momentum equations in three dimensional
 Improved Boundary Conditions Support
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 We have recently revisited the boundary conditions processing in Wasatch.
  The user/developer has the flexibility of automatically specifying Dirichlet
  or Neumann boundary conditions on any field type (Scalar, Staggered) and
@@ -1427,7 +1515,7 @@ We have recently revisited the boundary conditions processing in Wasatch.
 Runge-Kutta Time Integrator
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 There is currently a working version of a third order, strong stability
  preserving Runge-Kutta integrator.
  There are two problems to be resolved as of this writing, one pertaining
@@ -1438,16 +1526,22 @@ There is currently a working version of a third order, strong stability
  the future.
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Order of Accuracy Verification
 \end_layout
 
 \begin_layout Standard
 Order-of-accuracy analysis is based on the concept that the error must be
- reduced as spatial and temporal steps are reduced.
- By comparing the errors at different grid levels, one can estimate the
- theoretical order of accuracy for a code.
- First, we review the general concept.
+ reduced as spatial and temporal resolutions are increased.
+ By comparing the errors at different grid and time resolutions, one can
+ estimate the theoretical order of accuracy for a code.
+ We first review the general concept of analyzing the order of accuracy
+ of a code and follow that with the accuracy verification in Wasatch.
  
 \end_layout
 
@@ -1456,7 +1550,14 @@ The order of accuracy of a discretization method is defined as
 \shape italic
 the exponent of the leading order term in the total error
 \shape default
- incurred by the discretization process.
+ incurred by the discretization process 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "oberkampf_verification_2010"
+
+\end_inset
+
+.
  The total error refers to the accumulation of truncation and round off
  errors throughout the spatial and temporal domains.
  It can be generally defined as
@@ -1746,7 +1847,7 @@ This excludes all terms that have mixed orders in them.
 \end_layout
 
 \begin_layout Section
-Verification of Wasatch
+Order-of-Accuracy Verification in Wasatch
 \end_layout
 
 \begin_layout Paragraph
@@ -1837,7 +1938,7 @@ t.
 \begin_inset Float table
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -4669,6 +4770,889 @@ Where
 
 .
  This formulation should only be used for low volume fractions of particles.
+\end_layout
+
+\begin_layout Chapter
+Verification and Benchmark Studies
+\end_layout
+
+\begin_layout Section
+Constant Density Lid-Driven-Cavity
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement !b
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_geometry.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Lid-Driven-Cavity geometry.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This case aims at verifying the results obtained by the Wasatch pressure
+ projection method with wall boundary conditions.
+ Although experimental data is scarcely available for this test case, there
+ are several numerical studies on the lid-driven-cavity that one may employ
+ for comparison purposes.
+ Our choice falls on the study by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ghia_lid_driven_cavity_1982"
+
+\end_inset
+
+ which presents a comprehensive review of data in the literature as well
+ as a reliable benchmark for comparison purposes.
+ Here, we reproduce all the cases discussed in their study.
+\end_layout
+
+\begin_layout Subsection
+Problem Description
+\end_layout
+
+\begin_layout Standard
+Consider a 
+\begin_inset Formula $1\mathrm{m}\mathrm{x}1\mathrm{m}$
+\end_inset
+
+ square cavity that is filled with a fluid with the top lid moving at a
+ constant speed.
+ We choose water at 293 K as our working fluid.
+ The domain is discretized into 
+\begin_inset Formula $N_{x}=N_{y}=128$
+\end_inset
+
+ equally spaced control volumes (Note that in Uintah, we must specify a
+ nonzero dimension in the orthogonal direction to the cavity's plane.
+ here, we set 
+\begin_inset Formula $L_{z}=1\mathrm{m}$
+\end_inset
+
+ and 
+\begin_inset Formula $N_{z}=2$
+\end_inset
+
+ with periodic conditions in the 
+\begin_inset Formula $z$
+\end_inset
+
+-direction.
+ We also only solve the momentum equations in the plane of the driven cavity).
+\end_layout
+
+\begin_layout Standard
+We test seven cases with different Reynolds number.
+ The Reynolds number for the cavity is defined as 
+\begin_inset Formula $\text{Re}=\frac{\rho U_{\text{wall}}L}{\mu}$
+\end_inset
+
+ where 
+\begin_inset Formula $\rho$
+\end_inset
+
+ is the density of the fluid (in this case, water @ 293 K), 
+\begin_inset Formula $U_{\text{wall}}$
+\end_inset
+
+ is the velocity of the lid, 
+\begin_inset Formula $L$
+\end_inset
+
+ is the width of the lid, and 
+\begin_inset Formula $\mu$
+\end_inset
+
+ is the dynamic viscosity.
+ The Reynolds numbers range is given by Re = {100, 400, 1000, 3200, 5000,
+ 7500, 10000} as dictated by the reference data.
+ The boundary conditions on all walls are set to no-slip and no-permeability
+ conditions (
+\begin_inset Formula $\rho\mathbf{u}=\mathbf{0}$
+\end_inset
+
+) except on the moving lid where the tangential momentum is set to reproduce
+ 
+\begin_inset Formula $U_{\text{wall}}$
+\end_inset
+
+ that corresponds to the desired Reynolds number while the normal velocity
+ is set to zero.
+ A summary of these conditions is given in Table
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Summary of parameters used for the various cases.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="4">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Re
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\rho U_{\text{wall}}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Delta t$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+CFL
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+100
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.1002
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.0096
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+400
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.4008
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.0385
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+1000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.002
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.0963
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+3200
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.2064
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.3083
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+5000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.3212
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+7500
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7.515
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.25
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.2409
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+10000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10.02
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.125
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.1606
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_x_velocity_Re100.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $u$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_y_velocity_Re100.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $y$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Comparison of Wasatch results with those presented in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ghia_lid_driven_cavity_1982"
+
+\end_inset
+
+ for Re = 100.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_x_velocity_Re400.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $u$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_y_velocity_Re400.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $y$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Comparison of Wasatch results with those presented in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ghia_lid_driven_cavity_1982"
+
+\end_inset
+
+ for Re = 400.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_x_velocity_Re1000.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $u$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_y_velocity_Re1000.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $y$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Comparison of Wasatch results with those presented in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ghia_lid_driven_cavity_1982"
+
+\end_inset
+
+ for Re = 1000.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_x_velocity_Re3200.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $u$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_verification_cavity_y_velocity_Re3200.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Normalized 
+\begin_inset Formula $y$
+\end_inset
+
+-velocity component.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Comparison of Wasatch results with those presented in 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ghia_lid_driven_cavity_1982"
+
+\end_inset
+
+ for Re = 100.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
