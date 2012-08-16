@@ -3977,7 +3977,8 @@ reference "eq:wasatch-bc-ppe-1d-discrete"
 
 \end_inset
 
-Notice how the diffusive and convective fluxes cancel and one is left with
+Notice how the diffusive and convective fluxes cancel out and one is left
+ with
 \end_layout
 
 \begin_layout Standard
@@ -5275,7 +5276,7 @@ CFL
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -5380,7 +5381,7 @@ key "ghia_lid_driven_cavity_1982"
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -5473,7 +5474,7 @@ key "ghia_lid_driven_cavity_1982"
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -5642,7 +5643,7 @@ key "ghia_lid_driven_cavity_1982"
 
 \end_inset
 
- for Re = 100.
+ for Re = 3200.
 \end_layout
 
 \end_inset
@@ -5653,6 +5654,16 @@ key "ghia_lid_driven_cavity_1982"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Taylor Flow in a Channel
+\end_layout
+
+\begin_layout Standard
+The Taylor flow in a channel describes the steady inviscid state of a fluid
+ in a channel with permeable sidewalls.
+ This is a great case for testing inlet and outflow boundary conditions.
 \end_layout
 
 \begin_layout Chapter
