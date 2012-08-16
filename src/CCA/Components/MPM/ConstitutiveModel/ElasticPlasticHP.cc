@@ -1109,8 +1109,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       d_devStress->computeDeviatoricStressInc(idx, state, defState, delT);
 
       Matrix3 trialS = tensorS + defState->devStressInc;
-      
-      delete defState;
             
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
@@ -1208,6 +1206,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         } // end of flow_rule if
       } // end of temperature if
 
+      delete defState;
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
