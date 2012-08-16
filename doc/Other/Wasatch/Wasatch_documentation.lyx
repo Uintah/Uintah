@@ -1357,11 +1357,281 @@ Filtered Scalar Transport Equation
 \end_layout
 
 \begin_layout Standard
-Application of the Favre filtering to the scalar transport equation yields
+By applying the traditional filter on the strong form of the scalar transport
+ equation with variable density for capturing the most general form of the
+ equation, the filtered scalar equation will be:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho\phi}}{\partial t}=-\nabla\cdot\overline{\rho\phi\mathbf{u}}+\nabla\cdot\overline{\rho\Gamma_{\phi}\nabla\phi}+\overline{S_{\phi}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Application of the Favre filtering to the scalar transport equation term-by-term
+ yields:
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\frac{\partial\overline{\rho\phi}}{\partial t}=\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\nabla\cdot\overline{\rho\phi\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\phi\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\widetilde{\phi\mathbf{u}}-\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla\cdot J_{t}^{R};\quad J_{t}^{R}\equiv\overline{\rho}\widetilde{\phi\mathbf{u}}-\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\nabla\cdot\overline{\rho\Gamma_{\phi}\nabla\phi}=\nabla.(\overline{\rho}\widetilde{\Gamma_{\phi}\nabla\phi})=\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\left(\nabla.(\overline{\rho}\widetilde{\Gamma_{\phi}\nabla\phi})-\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})\right)=\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla.J_{t}^{L};\quad J_{t}^{L}=\nabla.(\overline{\rho}\widetilde{\Gamma_{\phi}\nabla\phi})-\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\overline{S_{\phi}}=\overline{S_{\phi}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ are subgrid-scale diffusive fluxes that result from applying filtering
+ to the convective and diffusive terms in the scalar transport equations,
+ respectively.
+ At the outset, the filtered scalar equations may be written as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\underset{neglect}{\underbrace{\nabla.J_{t}^{L}}}+\overline{S_{\phi}}\label{eq:wasatch-filtered-scalar-eq}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It is evident from 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-filtered-scalar-eq"
+
+\end_inset
+
+ that both subgrid diffusive fluxes 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ require closure.
+ However, it may be argued that the subgrid diffusive flux 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ resulting from the diffusive terms is negligible compared to 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+ that results from filtering of the convective terms or not.
+ As long as we model these turbulent closure terms with a turbulent diffusive
+ term, one may argue that 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ is more like a diffusive term, if you look at what it is representing,
+ rather than 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+, which is representing a convective form term, so, 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+ should be neglected comparing to 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+.
+ But we keep neglecting 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ just to be consistent with the same approximation that we made in momentum
+ equation in LES mode.
+ Hence, the resulting filtered momentum equations take the form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\overline{S_{\phi}}\label{eq:wasatch-filtered-scalar-eq-2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note that we could even get a total turbulent diffusive flux as 
+\begin_inset Formula $J_{t}=J_{t}^{L}+J_{t}^{R}$
+\end_inset
+
+ and say that our closure model is representing both of the subgrid diffusive
+ fluxes.
+ Which is like merging 
+\begin_inset Formula $J_{t}^{L}$
+\end_inset
+
+ into our current subgrid closure model.
+ 
+\end_layout
+
+\begin_layout Standard
+As we mentioned, the subgrid diffusive flux 
+\begin_inset Formula $J_{t}^{R}$
+\end_inset
+
+ again requires closure as it introduces unknown quantities.
+ The scalar closure model will be discussed in the next subsection.
 \end_layout
 
 \begin_layout Subsubsection
 Subgird Scalar Closure
+\end_layout
+
+\begin_layout Standard
+We model our subgrid diffusive flux term(s) as some diffusive form terms
+ in Wasatch.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+J_{t}^{R}=\Gamma_{\phi_{T}}\nabla\widetilde{\phi}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\Gamma_{\phi_{T}}$
+\end_inset
+
+ is turbulent diffusivity and in order to obtain this constant we utilize
+ the turbulent Schmidt number which is defined as:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+Sc_{t}=\frac{\mu_{t}}{\rho\Gamma_{\phi_{t}}}=\frac{\nu_{t}}{\Gamma_{\phi_{t}}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With this definition if we just define the Schmidt number of our problem,
+ by getting the turbulent viscosity, 
+\begin_inset Formula $\mu_{t}$
+\end_inset
+
+, from one of our closure models for momentum equation, we can obtain turbulent
+ diffusivity as 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\Gamma_{\phi_{t}}=\frac{\rho Sc_{t}}{\mu_{t}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Finally, our filtered scalar transport equation will be like this:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}(\overline{\Gamma_{\phi}}+\overline{\Gamma_{\phi_{t}}})\nabla\widetilde{\phi})+\overline{S_{\phi}}
+\end{equation}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
