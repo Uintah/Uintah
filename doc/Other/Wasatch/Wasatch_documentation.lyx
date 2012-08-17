@@ -42,6 +42,8 @@
   stringstyle=\color[rgb]{0.627,0.126,0.941},
   breaklines=true,
 } 
+
+\usepackage[varg]{txfonts}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -5960,13 +5962,13 @@ l vortex and a uniform flow and is given by
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\psi=C_{0}\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)+U_{0}y
+\psi=\Gamma\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)-Vx+Uy
 \end{equation}
 
 \end_inset
 
 where 
-\begin_inset Formula $C_{0}$
+\begin_inset Formula $\Gamma$
 \end_inset
 
  is the strength of the vortex, 
@@ -5974,21 +5976,26 @@ where
 \end_inset
 
  is the radial distance from the center of the vortex, 
-\begin_inset Formula $R_{0}$
+\begin_inset Formula $R$
 \end_inset
 
  is the radius of the vortex, and 
-\begin_inset Formula $U_{0}$
+\begin_inset Formula $V$
 \end_inset
 
- is the free stream velocity.
- The velocity is then calculated using the Stokes' streamfunction
+ and 
+\begin_inset Formula $U$
+\end_inset
+
+ are the the transverse and axial free stream velocities, respectively.
+ The resulting velocity field is then calculated using the Stokes' streamfunctio
+n
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u=\frac{\partial\psi}{\partial y}=U-\frac{C_{0}}{R_{0}^{2}}(y-y_{0})\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)
+u=\frac{\partial\psi}{\partial y}=U-\frac{\Gamma}{R^{2}}(y-y_{0})\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)
 \end{equation}
 
 \end_inset
@@ -5999,7 +6006,7 @@ and
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-v=-\frac{\partial\psi}{\partial x}=\frac{C_{0}}{R_{0}^{2}}(x-x_{0})\text{Exp}\left(-\frac{r^{2}}{2R_{0}^{2}}\right)
+v=-\frac{\partial\psi}{\partial x}=V+\frac{\Gamma}{R^{2}}(x-x_{0})\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)
 \end{equation}
 
 \end_inset
@@ -6010,7 +6017,11 @@ v=-\frac{\partial\psi}{\partial x}=\frac{C_{0}}{R_{0}^{2}}(x-x_{0})\text{Exp}\le
 \begin_layout Standard
 This expression is best used as an initialization for the momentum or velocity
  fields.
- Here's an example for initializating the axial and transverse momentum
+ 
+\end_layout
+
+\begin_layout Standard
+What follows is an example for initializating the axial and transverse momentum
  components with an exponential vortex, centered at 
 \begin_inset Formula $[0.5,0.5]$
 \end_inset
@@ -6030,6 +6041,23 @@ This expression is best used as an initialization for the momentum or velocity
 .
  Note that you must specify both velocity or momentum components to recover
  physically relevant initial conditions.
+ You can find the 
+\begin_inset Quotes eld
+\end_inset
+
+ups
+\begin_inset Quotes erd
+\end_inset
+
+ file in the Wasatch inputs directory under the name 
+\begin_inset Quotes eld
+\end_inset
+
+exponential-vortex-example.ups
+\begin_inset Quotes erd
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -6071,18 +6099,8 @@ status open
 
 \begin_layout Plain Layout
 
-  <ExponentialVortex xCenter="0.5" yCenter="0.5" 
-\end_layout
-
-\begin_layout Plain Layout
-
-                     vortexStrength="1e-3" vortexRadius="0.1" 
-\end_layout
-
-\begin_layout Plain Layout
-
-                     freeStreamVelocity="1" velocityComponent="X1"> 		 
-  
+  <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityCompone
+nt="X1"> 		  
 \end_layout
 
 \begin_layout Plain Layout
@@ -6169,18 +6187,8 @@ status open
 
 \begin_layout Plain Layout
 
-  <ExponentialVortex xCenter="0.5" yCenter="0.5" 
-\end_layout
-
-\begin_layout Plain Layout
-
-                     vortexStrength="1e-3" vortexRadius="0.1" 
-\end_layout
-
-\begin_layout Plain Layout
-
-                     freeStreamVelocity="1" velocityComponent="X1"> 		 
-  
+  <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityCompone
+nt="X2"> 		  
 \end_layout
 
 \begin_layout Plain Layout
