@@ -13,9 +13,9 @@ TurbulentDiffusivity( const Expr::Tag rhoTag,
                       const double tSchmidt,
                       const Expr::Tag tViscTag )
 : Expr::Expression<SVolField>(),
+  tViscTag_ ( tViscTag ),
   rhoTag_   ( rhoTag   ),
-  tSchmidt_ ( tSchmidt ),
-  tViscTag_ ( tViscTag )
+  tSchmidt_ ( tSchmidt )
 {}
 
 //--------------------------------------------------------------------

@@ -109,8 +109,8 @@ public:
         isConstCoef_( false ),
         phit_     ( phiTag      ),
         coeft_    ( coefTag     ),
-        turbDifft_( turbDiffTag ),
         rhot_     ( rhoTag      ),
+        turbDifft_( turbDiffTag ),
         coef_     ( 0.0         )
     {}
 
@@ -134,9 +134,9 @@ public:
              const Expr::Tag rhoTag = Expr::Tag() )
       : ExpressionBuilder(result),
         isConstCoef_( true        ),
-        turbDifft_  ( turbDiffTag ),
         phit_       ( phiTag      ),
         rhot_       ( rhoTag      ),
+        turbDifft_  ( turbDiffTag ),
         coef_       ( coef        )
     {}
 
