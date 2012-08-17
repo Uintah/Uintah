@@ -48,39 +48,32 @@ class QMOM : public Expr::Expression<FieldT>
 {
   typedef std::vector<const FieldT*> FieldTVec;
   FieldTVec knownMoments_;
-
-  const FieldT* superSaturation_;
   const Expr::TagList knownMomentsTagList_;
-  const Expr::Tag superSaturationTag_;
 
   const int nMoments_;
 
   double **pmatrix_;
   std::vector<double> a_, b_, alpha_, jMatrix_, eigenValues_, weights_, work_;
 
-  QMOM( const Expr::TagList knownMomentsTagList,
-       const Expr::Tag superSaturationTag );
+  QMOM( const Expr::TagList knownMomentsTagList );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::TagList& result,
-             const Expr::TagList& knownMomentsTagList,
-             const Expr::Tag& superSaturationTag)
+             const Expr::TagList& knownMomentsTagList)
     : ExpressionBuilder(result),
-      knownMomentsTagList_( knownMomentsTagList ),
-      supersaturationt_ ( superSaturationTag  )
+      knownMomentsTagList_( knownMomentsTagList )
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new QMOM<FieldT>( knownMomentsTagList_, supersaturationt_ );
+      return new QMOM<FieldT>( knownMomentsTagList_);
     }
 
   private:
     const Expr::TagList knownMomentsTagList_;
-    const Expr::Tag     supersaturationt_;
   };
 
   ~QMOM();
@@ -102,11 +95,9 @@ public:
 
 template<typename FieldT>
 QMOM<FieldT>::
-QMOM( const Expr::TagList knownMomentsTaglist,
-      const Expr::Tag     superSaturationTag )
+QMOM( const Expr::TagList knownMomentsTaglist)
   : Expr::Expression<FieldT>(),
     knownMomentsTagList_( knownMomentsTaglist ),
-    superSaturationTag_ ( superSaturationTag  ),
     nMoments_( knownMomentsTaglist.size() )
 {
   pmatrix_ = new double *[nMoments_];
@@ -138,9 +129,6 @@ QMOM<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( knownMomentsTagList_ );
-  if ( superSaturationTag_ != Expr::Tag () ) {
-    exprDeps.requires_expression( superSaturationTag_ );
-  }
 }
 //--------------------------------------------------------------------
 
@@ -155,9 +143,6 @@ bind_fields( const Expr::FieldManagerList& fml )
        iMomTag!=knownMomentsTagList_.end();
        ++iMomTag ){
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
-  }
-  if ( superSaturationTag_ != Expr::Tag () ) {
-    superSaturation_ = &fm.field_ref( superSaturationTag_ );
   }
 }
 
@@ -206,13 +191,6 @@ evaluate()
   const FieldT* sampleField = knownMoments_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
 
-  // grab an iterator for the supersaturation ratio field, set to m_0 if no
-  // no supersaturation tag is provided.
-  if ( superSaturationTag_ == Expr::Tag() ) {
-    superSaturation_ = knownMoments_[0];
-  }
-  typename FieldT::const_interior_iterator supersatIter = superSaturation_->interior_begin();
-
   double m0;
   //
   // create a vector of iterators for the known moments and for the results
@@ -231,9 +209,8 @@ evaluate()
   // now loop over the interior points, construct the matrix, and solve for the weights & abscissae
   while (sampleIterator!=sampleField->interior_end()) {
 
-    // check if we are in a region where supersaturation is zero
-    if ( (superSaturationTag_ != Expr::Tag() && *supersatIter < 1e-10) || (superSaturationTag_ != Expr::Tag() && *knownMomentsIterators[0] == 0) ) {
-      // in case the supersaturation or m_0 is zero, set the weights to zero and abscissae to 1
+    if (  *knownMomentsIterators[0] == 0 ) {
+      // in case m_0 is zero, set the weights to zero and abscissae to 1
       // helps with numerical stabilization of problem
       for (int i=0; i<abSize; ++i) {
         int matLoc = 2*i;
@@ -246,7 +223,6 @@ evaluate()
         knownMomentsIterators[i] += 1;
         resultsIterators[i] += 1;
       }
-      ++supersatIter;
       continue;
     }
 
@@ -301,7 +277,8 @@ evaluate()
         errorMsg << endl
                  << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
                  << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
-        std::cout << superSaturationTag_ << std::endl;
+//        std::cout << superSaturationTag_ << std::endl;
+        std::cout << knownMomentsTagList_ << std::endl; //if there is an error display which set of equations failed (in case there are multiple polymorphs)
         for (int i = 0; i<nMoments_; i++) {
           std::cout << "Value: M["<<i<<"] = "<<*knownMomentsIterators[i] << std::endl;
         }

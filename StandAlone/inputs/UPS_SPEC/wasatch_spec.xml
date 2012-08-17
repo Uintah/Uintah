@@ -667,10 +667,6 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
       
-      <SupersaturationExpression spec = "OPTIONAL NO_DATA">
-        <NameTag spec="REQUIRED" />
-      </SupersaturationExpression>
-      
       <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
@@ -726,7 +722,7 @@
       <!-- Aggregation Expression -->
       <AggregationExpression spec = "MULTIPLE NO_DATA">
         <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
-        <EfficiencyCoefficient spec = "OPTIONAL NO_DATA" />
+        <EfficiencyCoefficient spec = "OPTIONAL DOUBLE" />
         
         <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
