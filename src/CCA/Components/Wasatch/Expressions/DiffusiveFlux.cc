@@ -54,10 +54,10 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
   : Expr::Expression<FluxT>(),
     isConstCoef_( true        ),
     isTurbulent_( turbDiffTag != Expr::Tag()    ),
-    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
     phiTag_     ( phiTag      ),
-    turbDiffTag_( turbDiffTag ),
+    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
     rhoTag_     ( rhoTag      ),
+    turbDiffTag_( turbDiffTag ),
     coefVal_    ( coef        )
 {}
 
