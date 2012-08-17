@@ -29,17 +29,17 @@ CoalModelFactory::~CoalModelFactory()
       delete i->second;
   }
 
-  for( DevolModelMap::iterator i=devolmodels_.begin(); i!=devolmodels_.end(); ++i ){
-      delete i->second;
-  }
+//  for( DevolModelMap::iterator i=devolmodels_.begin(); i!=devolmodels_.end(); ++i ){
+//      delete i->second;
+//  }
 
-  for( CharOxiModelMap::iterator i=charoximodels_.begin(); i!=charoximodels_.end(); ++i ){
-      delete i->second;
-  }
+//  for( CharOxiModelMap::iterator i=charoximodels_.begin(); i!=charoximodels_.end(); ++i ){
+//      delete i->second;
+//  }
 
-  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
-      delete i->second;
-  }
+//  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
+//      delete i->second;
+//  }
 
   VarLabel::destroy(d_Length_ICLabel); 
   VarLabel::destroy(d_Length_GasLabel); 
