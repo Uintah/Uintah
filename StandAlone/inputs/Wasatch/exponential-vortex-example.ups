@@ -74,7 +74,7 @@
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="x-mom" state="STATE_N" />
-       <ExponentialVortex xCenter="0.5" yCenter="0.5" vortexStrength="1e-3" vortexRadius="0.1" freeStreamVelocity="1" velocityComponent="X1">
+       <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityComponent="X1">
 		   <Coordinate1>
 				<NameTag name="XXVOL" state="STATE_NONE"/>
 		   </Coordinate1>
@@ -87,8 +87,8 @@
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="y-mom" state="STATE_N" />
-       <ExponentialVortex xCenter="0.5" yCenter="0.5" vortexStrength="1e-3" vortexRadius="0.1" freeStreamVelocity="1" velocityComponent="X2">
-		   <Coordinate1>
+       <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityComponent="X2">
+       	   <Coordinate1>
 				<NameTag name="XYVOL" state="STATE_NONE"/>
 		   </Coordinate1>
 		   <Coordinate2>
@@ -152,7 +152,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps> 3 </max_Timesteps>            
+    <max_Timesteps> 4 </max_Timesteps>            
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 

@@ -127,12 +127,13 @@
       
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
       <ExponentialVortex       spec="OPTIONAL NO_DATA"
-                           attribute1="xCenter REQUIRED DOUBLE"
-                           attribute2="yCenter REQUIRED DOUBLE"
-                           attribute3="vortexStrength REQUIRED DOUBLE"
-                           attribute4="vortexRadius REQUIRED DOUBLE"
-                           attribute5="freeStreamVelocity REQUIRED DOUBLE"
-                           attribute6="velocityComponent REQUIRED STRING 'X1, X2'">
+                           attribute1="x0 REQUIRED DOUBLE"
+                           attribute2="y0 REQUIRED DOUBLE"
+                           attribute3="G REQUIRED DOUBLE"
+                           attribute4="R REQUIRED DOUBLE"
+                           attribute5="U REQUIRED DOUBLE"
+                           attribute6="V REQUIRED DOUBLE"                           
+                           attribute7="velocityComponent REQUIRED STRING 'X1, X2'">
         <Coordinate1      spec="REQUIRED NO_DATA">
           <NameTag        spec="REQUIRED"/>
         </Coordinate1>

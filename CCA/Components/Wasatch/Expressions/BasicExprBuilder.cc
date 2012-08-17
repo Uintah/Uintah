@@ -234,18 +234,17 @@ namespace Wasatch{
     
     else if ( params->findBlock("ExponentialVortex") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("ExponentialVortex");
-      double xCenter, yCenter, vortexStrength, vortexRadius, freeStreamVelocity;
+      double x0, y0, G, R, U, V;
       std::string velocityComponent;
       
-      valParams->getAttribute("xCenter",xCenter);
-      valParams->getAttribute("yCenter",yCenter);
-      valParams->getAttribute("vortexStrength",vortexStrength);
-      valParams->getAttribute("vortexRadius",vortexRadius);
-      valParams->getAttribute("freeStreamVelocity",freeStreamVelocity);
+      valParams->getAttribute("x0",x0);
+      valParams->getAttribute("y0",y0);
+      valParams->getAttribute("G",G);
+      valParams->getAttribute("R",R);
+      valParams->getAttribute("U",U);
+      valParams->getAttribute("V",V);      
       valParams->getAttribute("velocityComponent",velocityComponent);
       
-      // for now, only support parsing for fields of same type.  In the future,
-      // we could extend parsing support for differing source field types.
       typedef ExponentialVortex<FieldT> ExpVortex;
       typename ExpVortex::VelocityComponent velComponent;            
       if      (velocityComponent == "X1") velComponent = ExpVortex::X1;
@@ -257,10 +256,11 @@ namespace Wasatch{
         << " is not supported in the ExponentialVortex expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }      
+      
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
       const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
 
-      builder = scinew typename ExpVortex::Builder( tag, xTag, yTag, xCenter, yCenter, vortexStrength, vortexRadius, freeStreamVelocity, velComponent );
+      builder = scinew typename ExpVortex::Builder( tag, xTag, yTag, x0, y0, G, R, U, V, velComponent );
     }    
     
     else if( params->findBlock("RandomField") ){
