@@ -55,8 +55,8 @@ public:
              const Expr::Tag  tViscTag )
       : ExpressionBuilder(result),
         rhot_   ( rhoTag   ),
-        tSc_    ( tSchmidt ),
-        tVisct_ ( tViscTag )
+        tVisct_ ( tViscTag ),
+        tSc_    ( tSchmidt )
     {}
     
     Expr::ExpressionBase* build() const

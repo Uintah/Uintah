@@ -911,7 +911,7 @@ namespace Wasatch {
             case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
             case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
             case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
-            default:                                                                                    break;
+            default:                                                                                                  break;
           } // switch
 
           // cell offset used to calculate local cell index with respect to patch.
