@@ -85,6 +85,7 @@ particleExtract::~particleExtract()
   
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
   VarLabel::destroy(ps_lb->filePointerLabel);
+  VarLabel::destroy(ps_lb->filePointerLabel_preReloc);
   delete ps_lb;
   delete M_lb;
 }
