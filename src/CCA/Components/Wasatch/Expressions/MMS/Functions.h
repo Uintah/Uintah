@@ -900,13 +900,14 @@ public:
             const double yCenter,
             const double vortexStrength,
             const double vortexRadius,
-            const double freeStreamVelocity,
-            const VelocityComponent velocityComponent );
+            const double U,
+            const double V,
+            const VelocityComponent velocityComponent);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const Expr::Tag xTag_, yTag_;
-    const double xCenter_, yCenter_, vortexStrength_, vortexRadius_, freeStreamVelocity_;
+    const double xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_;
     const VelocityComponent velocityComponent_;
   };
   
@@ -922,10 +923,11 @@ private:
                     const double yCenter,                    
                     const double vortexStrength,
                     const double vortexRadius,
-                    const double freeStreamVelocity,
-                    const VelocityComponent velocityComponent );
+                    const double U,
+                    const double V,
+                    const VelocityComponent velocityComponent);
   const Expr::Tag xTag_, yTag_;
-  const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, freeStreamVelocity_;
+  const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, U_, V_;
   const VelocityComponent velocityComponent_;
   const FieldT *x_, *y_;
 };
@@ -940,8 +942,9 @@ ExponentialVortex( const Expr::Tag& xTag,
                   const double yCenter,                  
                   const double vortexStrength,
                   const double vortexRadius,
-                  const double freeStreamVelocity,
-                  const VelocityComponent velocityComponent )
+                  const double U,
+                  const double V,
+                  const VelocityComponent velocityComponent)
 : Expr::Expression<FieldT>(),
 xTag_     ( xTag      ), 
 yTag_     ( yTag      ), 
@@ -949,7 +952,8 @@ xCenter_  ( xCenter   ),
 yCenter_  ( yCenter   ),
 vortexStrength_   ( vortexStrength    ), 
 vortexRadius_ ( vortexRadius ),
-freeStreamVelocity_ ( freeStreamVelocity ),
+U_ ( U ),
+V_ ( V ),
 velocityComponent_  ( velocityComponent )
 {}
 
@@ -992,12 +996,13 @@ evaluate()
   *tmp <<= 0.0;
   *tmp <<= (*x_ - xCenter_)*(*x_ - xCenter_) + (*y_ - yCenter_)*(*y_- yCenter_);
   result <<= expFactor * exp(- *tmp/denom );
+
   switch (velocityComponent_) {
     case X1:
-      result <<= freeStreamVelocity_ - (*y_ - yCenter_)*result;
+      result <<=U_ - (*y_ - yCenter_)*result;
       break;
     case X2:
-      result <<= (*x_ - xCenter_)*result;
+      result <<=V_ + (*x_ - xCenter_)*result;
       break;
     default:
       break;
@@ -1015,8 +1020,9 @@ Builder( const Expr::Tag& result,
         const double yCenter,                  
         const double vortexStrength,
         const double vortexRadius,
-        const double freeStreamVelocity, 
-        const VelocityComponent velocityComponent )
+        const double U,
+        const double V,
+        const VelocityComponent velocityComponent)
 : ExpressionBuilder(result),
 xTag_     ( xTag      ), 
 yTag_     ( yTag      ), 
@@ -1024,7 +1030,8 @@ xCenter_  ( xCenter   ),
 yCenter_  ( yCenter   ),
 vortexStrength_   ( vortexStrength    ), 
 vortexRadius_ ( vortexRadius ),
-freeStreamVelocity_ ( freeStreamVelocity ),
+U_( U ),
+V_( V ),
 velocityComponent_  ( velocityComponent )
 {}
 
@@ -1035,9 +1042,10 @@ Expr::ExpressionBase*
 ExponentialVortex<FieldT>::Builder::
 build() const
 {
-  return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, freeStreamVelocity_, velocityComponent_);
+  return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_, velocityComponent_);
 }
 
 //--------------------------------------------------------------------
+
 
 #endif // Wasatch_MMS_Functions
