@@ -28,9 +28,9 @@ ABSKP::~ABSKP( )
 
   }
 
-  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
-      delete i->second;
-  }
+//  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
+//      delete i->second;
+//  }
 
   // Clean up anything else here ... 
 }
