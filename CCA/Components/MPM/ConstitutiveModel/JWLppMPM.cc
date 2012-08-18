@@ -636,11 +636,12 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       pvolume[idx] = pmass[idx]/rho_cur;
 
       // Update the burn fraction and pressure
+      double J_old = pDefGrad[idx].Determinant();
       double p_old = -(1.0/3.0)*pstress[idx].Trace();
       double f_old = pProgressF[idx];
       double f_new = f_old;
       double p_new = p_old;
-      computeUpdatedFractionAndPressure(J, f_old, p_old, delT, f_new, p_new);
+      computeUpdatedFractionAndPressure(J_old, J, f_old, p_old, delT, f_new, p_new);
 
       // Update the volume fraction and the stress in the data warehouse
       pProgressdelF_new[idx] = f_new - f_old;
@@ -815,44 +816,61 @@ double JWLppMPM::getCompressibility()
 //         k4 = G*(1-f_n-k3)*p_n^b*delT
 // (ignition_pressure in previous versions hardcoded to 2.0e8 Pa)
 void
-JWLppMPM::computeUpdatedFractionAndPressure(const double& J,
+JWLppMPM::computeUpdatedFractionAndPressure(const double& J_old,
+                                            const double& J,
                                             const double& f_old_orig,
                                             const double& p_old_orig,
                                             const double& delT,
                                             double& f_new,
                                             double& p_new) const
 {
-  // Compute Murnaghan and JWL pressures
-  double pM = computePressureMurnaghan(J);
-  double pJWL = computePressureJWL(J);
-
   if (p_old_orig > d_cm.ignition_pressure && f_old_orig < d_cm.max_burned_frac )  {
 
-    // cerr << " p_old = " << p_old << " ignition = " << d_cm.ignition_pressure << endl;
+    // cerr << " p_old = " << p_old_orig << " ignition = " << d_cm.ignition_pressure << endl;
     int numCycles = max(1, (int) ceil(delT/d_cm.max_burn_timestep));  
     double delTinc = delT/((double)numCycles);
+    double delJ = J/J_old;
+    double delJinc = pow(delJ, 1.0/((double)numCycles));
     double p_old = p_old_orig;
     double f_old = f_old_orig;
+    double J_new = J_old;
     f_new = f_old_orig;
     p_new = p_old_orig;
+   
     if (d_fastCompute) {
+      //cerr << "Using Fast" << endl;
       for (int ii = 0; ii < numCycles; ++ii) {
 
-        computeWithTwoStageBackwardEuler(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        // Compute Murnaghan and JWL pressures
+        J_new *= delJinc;
+        double pM = computePressureMurnaghan(J_new);
+        double pJWL = computePressureJWL(J_new);
+
+        computeWithTwoStageBackwardEuler(J_new, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
         f_old = f_new;
         p_old = p_new;
 
       }
     } else {
+      //cerr << "Using Newton" << endl;
       for (int ii = 0; ii < numCycles; ++ii) {
 
-        computeWithNewtonIterations(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        // Compute Murnaghan and JWL pressures
+        J_new *= delJinc;
+        double pM = computePressureMurnaghan(J_new);
+        double pJWL = computePressureJWL(J_new);
+
+        computeWithNewtonIterations(J_new, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
         f_old = f_new;
         p_old = p_new;
 
       }
     }
   } else {
+    // Compute Murnaghan and JWL pressures
+    double pM = computePressureMurnaghan(J);
+    double pJWL = computePressureJWL(J);
+
     //  The following computes a pressure for partially burned particles
     //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
     //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
