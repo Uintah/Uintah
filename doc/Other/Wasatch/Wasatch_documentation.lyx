@@ -5950,6 +5950,257 @@ Summary of Supported Expressions
 \end_layout
 
 \begin_layout Section*
+Linear Function
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+LinearFunction
+\end_layout
+
+\end_inset
+
+ expression applies a linear transformation to any field of your choice
+ according to the following formula
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\psi=a\phi+b
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\psi$
+\end_inset
+
+ is the destination field, 
+\begin_inset Formula $\phi$
+\end_inset
+
+ is the source field, 
+\begin_inset Formula $a$
+\end_inset
+
+ is the slope, and 
+\begin_inset Formula $b$
+\end_inset
+
+ is the intercept.
+ Below is an example of using the LinearFunction expression to initialize
+ a scalar field 
+\begin_inset Formula $\phi$
+\end_inset
+
+ as a linear function of the the coordinate 
+\begin_inset Formula $x$
+\end_inset
+
+ as 
+\begin_inset Formula $\phi=0.1x+1.25$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of a LinearFunction as an initialization for
+ a scalar field $
+\backslash
+phi$.,label=lst:wasatch-linear-function} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="SVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="phi" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <LinearFunction slope="0.1" intercept="1.25"> 	
+\end_layout
+
+\begin_layout Plain Layout
+
+      <!-- specify the tag of the independent variable -->	  
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XSVOL" state="STATE_NONE"/> 
+\end_layout
+
+\begin_layout Plain Layout
+
+  </LinearFunction>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Parabolic Function
+\end_layout
+
+\begin_layout Standard
+As the name implies, the 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ParabolicFunction
+\end_layout
+
+\end_inset
+
+ expression generates a field of the form
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi=ax^{2}+bx+c
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The following listing shows how to initialize a field with a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ParabolicFunction
+\end_layout
+
+\end_inset
+
+ as 
+\begin_inset Formula $\phi=0.1x^{2}+1.25x+0.3$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of a LinearFunction as an initialization for
+ a scalar field $
+\backslash
+phi$.,label=lst:wasatch-linear-function} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="SVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="phi" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <ParabolicFunction a="0.1" b="1.25" c="0.3"> 	
+\end_layout
+
+\begin_layout Plain Layout
+
+      <!-- specify the tag of the independent variable -->	  
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XSVOL" state="STATE_NONE"/> 
+\end_layout
+
+\begin_layout Plain Layout
+
+  </ParabolicFunction>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
 ExponentialVortex
 \end_layout
 
@@ -6058,9 +6309,6 @@ exponential-vortex-example.ups
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
 \begin_inset ERT
 status open
 
@@ -6146,9 +6394,6 @@ nt="X1">
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
 \begin_inset ERT
 status open
 
@@ -6285,10 +6530,6 @@ status collapsed
 wide false
 sideways false
 status collapsed
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption
