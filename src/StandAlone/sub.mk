@@ -182,6 +182,9 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ifeq ($(BUILD_ARCHES),yes)
   SRCS    := $(SRCDIR)/../CCA/Components/Arches/DigitalFilter/DigitalFilterGenerator.cc
   PROGRAM := StandAlone/DigitalFilterGenerator
+  ifneq ($(IS_STATIC_BUILD),yes)
+    PSELIBS := $(PSELIBS) Core/IO
+  endif
 
   include $(SCIRUN_SCRIPTS)/program.mk
 endif
