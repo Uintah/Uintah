@@ -180,9 +180,6 @@ $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/wvelsrc_fort.h
 ##############################################
 # DigitalFilterGenerator
 
-SRCS    := $(SRCDIR)/DigitalFilter/DigitalFilterGenerator.cc
-PROGRAM := StandAlone/DigitalFilterGenerator
-
-include $(SCIRUN_SCRIPTS)/program.mk
+# See build specification in .../src/StandAlone/sub.mk
 
 ##############################################

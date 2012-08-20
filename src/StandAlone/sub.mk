@@ -175,6 +175,17 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+
+##############################################
+# DigitalFilterGenerator
+
+ifeq ($(BUILD_ARCHES),yes)
+  SRCS    := $(SRCDIR)/../CCA/Components/Arches/DigitalFilter/DigitalFilterGenerator.cc
+  PROGRAM := StandAlone/DigitalFilterGenerator
+
+  include $(SCIRUN_SCRIPTS)/program.mk
+endif
+
 ##############################################
 # parvarRange
 
