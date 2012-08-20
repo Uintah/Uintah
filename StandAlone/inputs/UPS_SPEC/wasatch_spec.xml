@@ -35,7 +35,7 @@
       <SineTime    spec="OPTIONAL NO_DATA">
       </SineTime>
 
-      <!-- Step Function with transition point, lowValue and HighValue !-->
+      <!-- Step Function with transition point, lowValue (value when x <= transition point), and HighValue (value when x > transition point) !-->
       <StepFunction       spec="OPTIONAL NO_DATA"
                             attribute1="transitionPoint REQUIRED DOUBLE"
                             attribute2="lowValue REQUIRED DOUBLE"
