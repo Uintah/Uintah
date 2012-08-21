@@ -63,6 +63,17 @@ Vector::get_string() const
     return buf;
 }
 
+Vector
+Vector::vec_rint() const
+{
+   Vector v(*this);
+   v.x(rint(x_));
+   v.y(rint(y_));
+   v.z(rint(z_));
+
+   return v;
+}
+
 void
 Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
@@ -101,7 +112,7 @@ Vector::normal() const
 {
    Vector v(*this);
    v.normalize();
-   return v;			// 
+   return v;			//
 }
 
 ostream& operator<<( ostream& os, const Vector& v )

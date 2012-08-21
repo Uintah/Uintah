@@ -849,6 +849,9 @@
   <LJPotentialTest            spec="OPTIONAL NO_DATA" >
     <doOutput                 spec="OPTIONAL INTEGER" />
     <doGhostCells             spec="OPTIONAL INTEGER" />
+    <cutoffDistance           spec="REQUIRED DOUBLE" />
+    <R12                      spec="REQUIRED DOUBLE" />
+    <R6                       spec="REQUIRED DOUBLE" />
   </LJPotentialTest>
   
   <!--  Wave  Component -->
