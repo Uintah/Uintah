@@ -9,7 +9,7 @@
    <SimulationComponent type="ljpotentialtest" />
 
    <Time>
-       <maxTime>1.0</maxTime>
+       <maxTime>10.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>1</delt_min>
        <delt_max>1</delt_max>
@@ -34,6 +34,9 @@
    <LJPotentialTest>
       <doOutput>1</doOutput>
       <doGhostCells>0</doGhostCells>
+      <cutoffDistance>10.0</cutoffDistance>
+      <R12>1.0E5</R12>
+      <R6>1.0E3</R6>
    </LJPotentialTest>
 
     <Grid>

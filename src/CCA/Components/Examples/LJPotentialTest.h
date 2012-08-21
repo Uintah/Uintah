@@ -134,12 +134,11 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
 
       // fields specific to non-bonded interaction (LJ Potential)
-      int numAtoms;
-      double cut;  // the short ranged cut off distances (in Angstroms)
-      double vdwEnergy;  // energy
-      double box[3];  // the size of simulation cell (x,y,z dimensions)
-      double ff_A12;  // this is the v.d.w. repulsive parameter
-      double ff_B6;  // this is the v.d.w. dispersion parameter
+      unsigned int numAtoms;
+      double cutoffDistance;  // the short ranged cut off distances (in Angstroms)
+      Vector box;  // the size of simulation
+      double R12;  // this is the v.d.w. repulsive parameter
+      double R6;  // this is the v.d.w. attractive parameter
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
       vector<vector<int> > neighborList;
