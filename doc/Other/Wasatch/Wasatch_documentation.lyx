@@ -42,8 +42,8 @@
   stringstyle=\color[rgb]{0.627,0.126,0.941},
   breaklines=true,
 } 
-
-\usepackage[varg]{txfonts}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage[varg]{txfonts} % this should always be invoked AFTER ams packages
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -85,10 +85,10 @@
 \pdf_quoted_options "linkcolor=blue,citecolor=red,urlcolor=blue,filecolor=blue"
 \papersize default
 \use_geometry true
-\use_amsmath 1
-\use_esint 1
-\use_mhchem 1
-\use_mathdots 1
+\use_amsmath 0
+\use_esint 0
+\use_mhchem 0
+\use_mathdots 0
 \cite_engine natbib_authoryear
 \use_bibtopic false
 \use_indices false
