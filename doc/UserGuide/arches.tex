@@ -465,7 +465,7 @@ The transport equation for each moment must be written in terms of higher order 
 
 \subsubsection{Quadrature}\label{subsubsec:quadrature}
 
-Quadrature approximates the integral of an unknown function with tabulated known values as a summation of a set of $N$ weighted abscissas. It determines a polynomial of degree $2N-1$ whose zeros are the $N$ weighted abscissas, and approximates the unknown function using this polynomial [Press 1992]. There are several common quadrature formulations, including the midpoint rule (the unknown function is assumed to be a constant, or zero-order polynomial), the trapezoid rule (the unknown function is assumed to be a straight line, or ﬁrst-order polynomial), and Simpson’s rule (the unknown function is assumed to be a second-order polynomial). Note that while the unknown function does not have to be a polynomial, the quadrature approximation becomes much better if it is (and exact if the unknown function is a polynomial of degree $2N-1$ or less). The general $N$-point quadrature formula can be written as:
+Quadrature approximates the integral of an unknown function with tabulated known values as a summation of a set of $N$ weighted abscissas. It determines a polynomial of degree $2N-1$ whose zeros are the $N$ weighted abscissas, and approximates the unknown function using this polynomial [Press 1992]. There are several common quadrature formulations, including the midpoint rule (the unknown function is assumed to be a constant, or zero-order polynomial), the trapezoid rule (the unknown function is assumed to be a straight line, or first-order polynomial), and Simpson's rule (the unknown function is assumed to be a second-order polynomial). Note that while the unknown function does not have to be a polynomial, the quadrature approximation becomes much better if it is (and exact if the unknown function is a polynomial of degree $2N-1$ or less). The general $N$-point quadrature formula can be written as:
 
 \begin{equation}\label{eq:quadrature-definition}
 \int_{a}^{b}w(r)g(r)\, dx\approx{\displaystyle \sum_{\alpha=1}^{N}w_{\alpha}g(r_{\alpha})}
@@ -547,6 +547,84 @@ Starting with the NDF transport equation, the moment transform can be taken, yie
 \subsubsection{Summary}\label{subsubsec:summary}
 In summary, the DQMOM solution procedure requires solving several transport equations, given by \ref{eq:a-b-transport-eqns}. These transport equations describe the changes in the quadrature weights and weighted abscissas used to approximate the NDF.  The source terms for these transport equations, $a_{\alpha}$ and $b_{n,\alpha}$, come from the solution to a linear system, $\mathbf{Ax}=\mathbf{B}$, in which the vector $\mathbf{x}$ contains the source terms.  This linear system comes from the quadrature-approximated moment trasport equation, equation \ref{eq:quadrature-approximated-moment-xport-eqn}, of which there are $\left(N_{\xi} + 1\right)N$.  It is because this set of equations is linear in the unknowns $a_{\alpha}$ and $b_{n,\alpha}$ that it can be re-cast in the form of a linear system.
 
+\subsection{Digital Filter Generator for Turbulent Inlet Conditions}\label{sec:DFG}
+The digital filter method generates a set of both spatially and temporally correlated random data in order to create a synthetic turbulent inlet.  In the Arches implementation, the data is generated a priori.
+
+\subsubsection{Digital Filter}
+Let $r_m$ be a set of random data such that $\left\rangle r_m \right\rangle = 0$ and $\left\lbrace r_m^2 \right\lbrace =1$.  Then there exists a set of filter coefficients $b_n$ for the convolution such that
+
+\begin{equation} \label{eq:DFGconv}
+u_m = \sum_{-N}^N b_n r_{m+n}
+\end{equation}
+
+where $N$ is the support of the filter. If \ref{eq:DFGconv} is rearranged in the form of an autocorrelation function then it follows that
+
+\begin{equation} \label{eq:DFGauto}
+\frac{\bar{u_m u_{m+k} } }{ \bar{u_m u_m }  } = \sum_{j=-N+k}^N b_j b_{j-k} \big/ \sum_{j=-N}^N b_j^2
+\end{equation}
+
+For extending filter coefficients to three dimensions a simple convolution of the three one-dimensional filters is used.
+
+\begin{equation} \label{eq:DFG3D}
+b_{ijk} = b_i \cdot b_j \cdot b_k
+\end{equation}
+
+Now consider a fully developed flow.  A fit line for its autocorrelation function can be expressed as an exponential decay
+
+\begin{equation}
+R_{uu} (r) = \exp \left( - \frac{ \pi r^2}{4 L^2} \right)
+\end{equation}
+
+where L is the integral length scale. If the grid spacing is $\Delta x$ then the length scale can be set as $L = n \Delta x$, and the discrete autocorrelation function is then
+
+\begin{equation}
+R_{uu} ( k \Delta x) = \exp \left( - \frac{ \pi (k \Delta x)^2}{4 (n \Delta x)^2} \right) = \exp \left( - \frac{ \pi k^2}{4 n^2} \right)
+\end{equation}
+
+Now apply \ref{eq:DFGauto} to relate the discrete autocorrelation function to the filter coefficients
+
+\begin{equation}
+R_{uu} (k \Delta x) = \frac{ \bar{ u_m u_{m+k} } }{ \bar{u_m u_m} } = \sum_{j=-N+k}^N b_j b_{j-k} \big/ \exp \left( - \frac{ \pi k^2}{4 n^2} \right)
+\end{equation}
+
+There is an approximate solution to the filter coefficients available
+
+\begin{equation} \label{eq:DFGfiltercoef}
+b_k \approx \tilde{b}_k \big/ \left(  \sum_-N^N  \tilde{b}_j^2 \right)^{1/2} \; \; \text{with} \; \; \tilde{b}_k = \exp \left( - \frac{ \pi k^2}{2 n^2} \right)
+\end{equation}
+
+which is a valid approximation as long the the filter support is sufficiently large, $N \geq 2n$.  This maintains the the support of the filter is large enough to capture twice the length scale. This is a brief explanation of the method from Klein's paper \cite{Klein2003}. Note that as $ N \rightarrow 0$ this method approaches white noise.
+
+\subsubsection{Implementation Algorithm}
+The steps in generating the inlet data are listed here directly from Klein's procedure for isotropic flow \cite{Klein2003}.
+
+\begin{enumerate}
+\item Choose a length scale for each coordinate direction as$ L_{y}=n_{y}\Delta y , L_{z}=n_{z}\Delta z $ and a timescale for the flow direction (or length scale by Talyor's hypothesis) $T_{x}=n_{t}\Delta t$  (or $L_{x} = n_x \Delta x$ ), set the size of the support $N_{\alpha}\geq 2n_{\alpha} $ for $\alpha=x,y,z$ . Also prescribe a mean flow profile.
+\item Initialize three random fields $\mathcal{R}_{\alpha}$  of dimensions $[-N_{x}:N_{x},-N_{y}+1:M_{y}+N_{y},-N_{z}+1:M_{z}+N_{z} ]$ , with $M_{y}\times M_{z}$  denoting the resolution of the grid of the inflow plane. The size is actually $[2N_{x}+1,2N_{y}+M_{y},2N_{z}+M_{z} ]$.
+\item Calculate the filter coefficients b(i,j,k), using \ref{eq:DFGfiltercoef}
+\item 4. Loop over the inlet dimensions j  and k  and apply the filter operation for each velocity fluctuation
+\begin{equation} \label{eq:DFGmain}
+\mathcal{U}_{\alpha}(j,k)=\sum_{i'=-N_{x}}^{N_{x}}\sum_{j'=-N_{y}}^{N_{y}}\sum_{k'=-N_{z}}^{N_{z}}b(i',j',k')\mathcal{R}_{\alpha}(i',j+j',k+k') 
+\end{equation}
+\item 5. Using the time-averaged Reynold's stress tensor ($R_{ij}$)  solve for the transformation matrix $a_{ij}$
+\begin{equation}
+ a_{ij}=\left[\begin{array}{ccc}
+(R_{11})^{1/2} & 0 & 0\\
+R_{21}/a_{11} & (R_{22}-a_{21}^{2})^{1/2} & 0\\
+R_{31}/a_{11} & (R_{32}-a_{21}a_{31})/a_{22} & (R_{33}-a_{31}^{2}-a_{32}^{2})^{1/2}
+\end{array}\right] 
+\end{equation}
+\item  Now solve for each of the velocity components
+\begin{equation}
+u_{i}=\bar{u_{i}}+a_{ij}\mathcal{U}_{j} 
+\end{equation}
+\item Shift the random data set by the flow direction $\mathcal{R}_{\alpha}(i,j,k)=\mathcal{R}_{\alpha}(i+1,j,k)$ , and fill the last plane $\mathcal{R}_{\alpha}(N_{x},j,k)$  with new random numbers.
+\item Repeat steps 4 through 7 for each timestep
+\end{enumerate}
+
+In Arches two major changes are made to this algorithm. First the data is all pre generated into a table that is loaded when the simulation starts. This happens because the summation in \ref{eq:DFGmain} can become very expensive at high resolution and occurs at each point in the boundary, and some issues with trying to deal with the random field at patch boundaries. The second is that the option to use Taylor's hypothesis of frozen turbulence is utilized so that the length scale is specified in the flow direction, rather than the time scale. Then the same flow profile is reused for several timesteps, this period is either specified as the number of steps or as a time.
+
+
 % ==========================================================
 % =============== Uintah Specifications =========================
 % ==========================================================
@@ -592,6 +670,7 @@ Boundary conditions for momentum include (with the corresponding \verb=<BCTyep v
 \item Specified mass flow rate (\verb=MassFlowInlet=)
 \item Specified swirl inlet (\verb=Swirl=)
 \item Velocity inlet read from file (\verb=VelocityFileInput=)
+\item Digital Filter turbulence inlet from file (\verb=TurbulentInlet=)
 \item Pressure boundary condition (\verb=PressureBC=)
 \item Outlet boundary condition (\verb=OutletBC=)
 \item Wall boundary condition (\verb=WallBC=)
@@ -658,6 +737,22 @@ specifies a mass flow inlet in a circular region on the x-minus face with a swir
 \subsubsection*{Velocity File Input Inlet}
 % 
 Work in progress....please check back later. 
+
+\subsubsection*{Turbulent Inlet} \label{subsubsec:TurbInlet}
+%
+The turbulent inlet loads a pre-generated table consisting of cell indices for each realization time index provided.  It requires a period, which specifies the amount of simulation time to use the same profile, a vector value to set up the iterator, and the input file to load.  An example specification is
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face circle="x-" radius="0.25" origin="0 0.5 0.5">
+  <BCType id-"all" var="TurbulentInlet" label="my_turbulent_inlet">
+    <value> [1.0, 0.0, 0.0] </value>
+    <period> 10 </period>
+    <inputfile> tubulent_input_file.gz </inputfile>
+  </BCType>    
+</Face>
+\end{Verbatim}
+%
+This loads the table and changes the time index of the realization to use once every 10 simulation timesteps.  The period is an optional parameter that defaults to 1. If a timescale is used for generation the period should be one, but if a length scale is used for the flow direction, then the period needs to be such that sufficient time elapses to convect the velocity through one cell.  A \verb=<timeperiod>= specification can also be used, which is more convenient for a variable \verb=dt= problem. The input file needs to have the number of total realizations generated and the non axial dimensions of the box around the inlet in the first line.  The next line needs to be the minimum (i, j, k) cell index of the bounding box of the inlet, all of the indices of the velocity vectors stored are in relation to the corner being at (0, 0, 0), so this adjusts from the simulation's (i, j, k) to match.  Then a list of the (t, j,k) points and (u, v, w) vectors, varying first by k, then j, then t (for a x- or x+ face).  For other faces either (t, i, k) or (t, i, j) points are listed instead.  It is recommended to use the \verb=DigitalFilterGenerator= executable for creating a table.
 
 \subsubsection*{Pressure Boundary Condition}
 %
@@ -1643,7 +1738,39 @@ The sections have the following significance:
 \end{enumerate}
 
 
+\subsection{Digital Filter Generator}
+In order to utilize the digital filter turbulent inlet condition  in \ref{subsubsec:TurbInlet}, the executable \verb=DigitalFilterGenerator= is the best way to generate the table needed.  This executable lies in the \verb=StandAlone= folder.  Its usage is simply 
 
+\begin{verbatim}
+./DigitalFilterGenerator input_file output_table_file
+\end{verbatim}
+
+If not output table file is specified this writes out to \verb=DFGInlet=.  The input file is a small text file with the grid size and geometries specified on individual lines.  Currently it must be specified in a specific order.
+
+\begin{enumerate}
+\item Grid resolution \verb=<int> <int> <int>=
+\item Lower grid points \verb=<double> <double> <double>=
+\item Upper grid points \verb=<double> <double> <double>=
+\item Inlet face \verb=<string>= (x+, x-, y-, y+, z-, z+)
+\item Inlet geometry shape \verb=<string>= (box/circle/ellipse/annulus)
+\item Geometry parameters \verb=<double>= (varies on geometry, same order as BCGeom objects )
+\item Number of realizations in file \verb=<int>=
+\item Lengthscales \verb=<double> <double> <double>=
+\item Accuracy of filter (min 2) \verb=<double>=
+\item Average velocity vector \verb=<double> <double> <double>=
+\item Average Reynold's stress tensor (lower diagonal) \verb=<double> <double> <double>= \\
+\verb=<double> <double> <double>= $R_{11},\; R_{21},\; R_{22},\; R_{31},\; R_{32},\; R_{33} $
+\item Use spatial variations \verb=<string>= (y, yes, n, no)
+\item Variation direction \verb=<string>= (x, y, z, none) used if a planar geometric relation is needed
+\item Velocity variation type \verb=<string>= (tanh, power, laminar, none)
+\item Stress variation type \verb=<string>= (channel, jet, none)
+\item Lengthscale variation type \verb=<string>= (channel, jet, none)
+\end{enumerate}
+
+An example input file for the digital filter is located in \\ \verb=StandAlone/inputs/ARCHES/DigitalFilter/ChannelInletGenerator.txt=.  It is recommended to gzip the file that is created to save space.
+
+
+ 
 % ====================================================
 % ===================== Examples ======================
 % ====================================================
