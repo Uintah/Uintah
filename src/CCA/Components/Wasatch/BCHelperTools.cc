@@ -1152,7 +1152,8 @@ namespace Wasatch {
   void process_poisson_bcs( const Expr::Tag& poissonTag,
                             SVolField& poissonField,
                             const Uintah::Patch* patch,
-                            const int material) {
+                            const int material )
+  {
 //    // check if we have plus boundary faces on this patch
 //    bool hasPlusFace[3] = {false,false,false};
 //    if (patch->getBCType(Uintah::Patch::xplus)==Uintah::Patch::None) hasPlusFace[0]=true;
@@ -1196,17 +1197,16 @@ namespace Wasatch {
           const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
           
           SS::IntVec bcPointGhostOffset(0,0,0);
-          double denom   = 1.0;
           double spacing = 1.0;
           
           switch( face ){
-            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
-            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
-            default:                                                                                    break;
+            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx;  break;
+            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx;  break;
+            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy;  break;
+            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy;  break;
+            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz;  break;
+            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz;  break;
+            default:                                                                                     break;
           } // switch
           
           // cell offset used to calculate local cell index with respect to patch.
