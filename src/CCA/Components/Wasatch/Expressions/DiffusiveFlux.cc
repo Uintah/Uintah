@@ -151,8 +151,8 @@ DiffusiveFlux2( const Expr::Tag& rhoTag,
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     phiTag_     ( phiTag      ),
     coefTag_    ( coefTag     ),
-    turbDiffTag_( turbDiffTag ),
-    rhoTag_     ( rhoTag      )
+    rhoTag_     ( rhoTag      ),
+    turbDiffTag_( turbDiffTag )
 {}
 
 //--------------------------------------------------------------------
