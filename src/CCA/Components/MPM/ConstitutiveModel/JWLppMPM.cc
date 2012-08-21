@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 using namespace Uintah;
@@ -824,9 +825,12 @@ JWLppMPM::computeUpdatedFractionAndPressure(const double& J_old,
                                             double& f_new,
                                             double& p_new) const
 {
-  if (p_old_orig > d_cm.ignition_pressure && f_old_orig < d_cm.max_burned_frac )  {
+  if ((p_old_orig > d_cm.ignition_pressure) && (f_old_orig < d_cm.max_burned_frac))  {
 
-    // cerr << " p_old = " << p_old_orig << " ignition = " << d_cm.ignition_pressure << endl;
+    //cerr << setprecision(10) << scientific
+    //     << " p_old = " << p_old_orig << " ignition = " << d_cm.ignition_pressure 
+    //     << " f_old = " << f_old_orig << " max_burn = " << d_cm.max_burned_frac 
+    //     << " f_old - max_f = " << f_old_orig - d_cm.max_burned_frac << endl;
     int numCycles = max(1, (int) ceil(delT/d_cm.max_burn_timestep));  
     double delTinc = delT/((double)numCycles);
     double delJ = J/J_old;
@@ -866,6 +870,12 @@ JWLppMPM::computeUpdatedFractionAndPressure(const double& J_old,
 
       }
     }
+    if (f_new > d_cm.max_burned_frac) {
+      f_new = d_cm.max_burned_frac;
+      double pM = computePressureMurnaghan(J);
+      double pJWL = computePressureJWL(J);
+      p_new = pM*(1.0 - f_new) + pJWL*f_new;
+    } 
   } else {
     // Compute Murnaghan and JWL pressures
     double pM = computePressureMurnaghan(J);
