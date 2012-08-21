@@ -12,6 +12,7 @@ real(8), allocatable :: xyz(:,:) !, qq(:), q(:),V(:,:)
 real(8), allocatable :: fxx(:) , fyy(:) , fzz(:) ! x y z component of forces
 integer, allocatable :: list(:,:) ! list (i, :) contains the idensity of all atoms located within a short ranged cut off from atom "i"
 integer, allocatable ::  size_list(:) ! size_list(i) is the number of atoms within cut off from a central atom "i"
+real :: start_overall, start_forces, stop_overall, stop_forces
 end module data_module
 
 
@@ -177,12 +178,23 @@ use local_initializations_module ! this contains the initializations that we use
 use IO_module                    ! input (read config) and output 
 use list_generator_module        ! generate the list ; for each atom we store in an array how many other atoms are within cut off 
 use vdw_forces_modules           ! evaluate energy forces 
+use data_module, only : start_overall, start_forces, stop_overall, stop_forces
 implicit none
 
+call cpu_time(start_forces)
 call read_config('input.medium') ! get the configuration with atom coordinates; change 'input.small' with whatever file i.e. input.large (if needed)
-call local_init ! initialize the local variablibels used in this test program 
+call local_init ! initialize the local variablibels used in this test program
+
+call cpu_time(start_forces)
 call forces(.true.) ! compute forces ! this is the main thing
+call cpu_time(stop_forces)
+print*
+print '("Time = ",f6.4," seconds in FORCE computation.")', stop_forces-start_forces
+print*
 call out_results
+call cpu_time(stop_overall)
+print*
+print '("Time = ",f6.4," seconds overall.")', stop_overall-start_overall
  
 end program main
 
