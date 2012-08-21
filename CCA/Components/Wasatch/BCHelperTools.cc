@@ -1167,9 +1167,6 @@ namespace Wasatch {
     const double dx = spacing[0];
     const double dy = spacing[1];
     const double dz = spacing[2];
-    const double dx2 = dx*dx;
-    const double dy2 = dy*dy;
-    const double dz2 = dz*dz;
     
     const std::string phiName = poissonTag.name();
     
