@@ -546,7 +546,7 @@
                                         attribute1="label REQUIRED STRING"/>
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
-          <is_mixture_fraction          spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
+          <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <D_mol                        spec="OPTIONAL NO_DATA" 

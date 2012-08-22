@@ -149,7 +149,7 @@
 
       <TransportEqns>
         <Eqn label="f" type="CCscalar">
-          <is_mixture_fraction/>
+          <determines_properties/>
           <D_mol_constant value="0.0"/>
           <doDiff>true</doDiff>
           <doConv>true</doConv>

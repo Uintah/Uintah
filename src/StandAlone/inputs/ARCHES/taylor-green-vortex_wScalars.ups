@@ -69,7 +69,7 @@
         <Eqn label="mixture_fraction_sb" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <is_mixture_fraction/>
+          <determines_properties/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="geometry_fill">
@@ -90,7 +90,7 @@
         <Eqn label="mixture_fraction_rmm" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <is_mixture_fraction/>
+          <determines_properties/>
           <conv_scheme>roe_minmod</conv_scheme>
           <addSources>false</addSources>
           <initialization type="geometry_fill">

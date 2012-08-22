@@ -96,7 +96,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
      d_use_density_guess = true; 
 
   }
-  if ( db->findBlock("is_mixture_fraction") ){ 
+  if ( db->findBlock("determines_properties") ){ 
 
     d_use_density_guess = true; 
 
