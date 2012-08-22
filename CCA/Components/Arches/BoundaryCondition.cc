@@ -162,7 +162,10 @@ BoundaryCondition::~BoundaryCondition()
         bc_iter != d_bc_information.end(); bc_iter++){
 
     VarLabel::destroy( bc_iter->second.total_area_label ); 
-
+    
+    if (bc_iter->second.type ==  TURBULENT_INLET ){
+      bc_iter->second.TurbIn->~DigitalFilterInlet() ;
+    }
   }
 
   if (_using_new_intrusion) { 
