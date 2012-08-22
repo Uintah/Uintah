@@ -148,9 +148,11 @@ vector<vector <double> > setEllipseD ( int jSize, int kSize, string faceSide, do
 {
   vector<vector <double> > distProf  (jSize, vector<double> (kSize) );
 
-  double x1, x2;
+  double x1 = 0.0;
+  double x2 = 0.0;
   vector<double> rotation (4);
-  double r1, r2;
+  double r1 = 0.0;
+  double r2 = 0.0;
   angle = angle*PI/180.0;
   
   for (int j = 0; j< jSize; j++) {
@@ -925,8 +927,9 @@ int main( int argc, const char* argv[] )
   vector<double> lower (3); vector<double> upper (3);
   vector<double> origin (3);
   double radius;
-  double major_radius, minor_radius;
-  double angle;
+  double major_radius = 0.0;
+  double minor_radius = 0.0;
+  double angle = 0.0;
   double charDim = 0.0; //charateristic dimension needed for spatial correlations
   
   if (faceShape=="box" || faceSide=="rectangle") {
@@ -1075,7 +1078,7 @@ int main( int argc, const char* argv[] )
   vector<int> maxCell (3,0);
   //find bounding box
   minCell[0] = ptList[0].x(); minCell[1] = ptList[0].y(); minCell[2] = ptList[0].z();
-  for (int i = 0; i< ptList.size(); i++) {
+  for (int i = 0; i< (int)ptList.size(); i++) {
     if (minCell[0] > ptList[i].x() )
       minCell[0] = ptList[i].x();
     if (minCell[1] > ptList[i].y() )
