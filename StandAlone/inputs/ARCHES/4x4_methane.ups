@@ -251,7 +251,7 @@
         <Eqn label="mixture_fraction" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <is_mixture_fraction/>
+          <determines_properties/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="constant">
