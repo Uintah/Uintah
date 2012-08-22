@@ -10,7 +10,7 @@ real(8) totalE, en_vdw, box(3)
 real(8) ff_A12, ff_B6 ! force field parameters
 real(8), allocatable :: xyz(:,:) !, qq(:), q(:),V(:,:)
 real(8), allocatable :: fxx(:) , fyy(:) , fzz(:) ! x y z component of forces
-integer, allocatable :: list(:,:) ! list (i, :) contains the idensity of all atoms located within a short ranged cut off from atom "i"
+integer, allocatable :: list(:,:) ! list (i, :) contains the idendity of all atoms located within a short ranged cut off from atom "i"
 integer, allocatable ::  size_list(:) ! size_list(i) is the number of atoms within cut off from a central atom "i"
 real :: start_overall, start_forces, stop_overall, stop_forces
 end module data_module
@@ -91,7 +91,7 @@ do i = 1,N-1
             if(dabs(t(1)) < cut) then
               r2=dsqrt(t(1)**2 + t(2)**2 + t(3)**2)
                 if (r2 < cut_sq ) then  ! select only atoms "j" within spherical cut-off around atom "i"
-                  size_list(i) = size_list(i) + 1 ! count one more atom around i
+                  size_list(i) = size_list(i) + 1 ! count one more atom around "i"
                   if (size_list(i)  > MAX_NEIGH ) then ! If array overflow STOP
                     print*,'ERROR size_list(i)  > MAX_NEIGH: Increase MAX_NEIGH'
                     stop
@@ -104,7 +104,7 @@ do i = 1,N-1
       endif ! i/=j
     enddo   ! just finished the loop
 enddo   ! just finished the list builder
-!end generate list
+! end generate list
 print*, 'LIST GENERATED '
 end subroutine build_list
 end module list_generator_module
@@ -126,7 +126,7 @@ fxx=0.0d0; fyy=0.0d0; fzz=0.0d0;
 do i = 1,N
   fxx_i=0.0d0; fyy_i=0.0d0; fzz_i=0.0d0
   do k = 1, size_list(i)  ! loop over all neighbours of "i"
-    j = list(i,k)  ! extract the identity of neighbour
+    j = list(i,k)  ! extract the identity of neighbour "j"
     t = xyz(i,:) - xyz(j,:)
     t = t - ANINT(t/box)*box   ! this is required for periodic boudary conditions
     r2=(t(1)**2+t(2)**2+t(3)**2)
@@ -142,11 +142,11 @@ do i = 1,N
     fxx(j) = fxx(j) - ffxx  ! the force on atom j
     fyy(j) = fyy(j) - ffyy
     fzz(j) = fzz(j) - ffzz
-    fxx_i = fxx_i + ffxx ! the contribution of force on atom i
+    fxx_i = fxx_i + ffxx ! the contribution of force on atom "i"
     fyy_i = fyy_i + ffyy
     fzz_i = fzz_i + ffzz
   enddo
-  fxx(i) = fxx(i) + fxx_i ! sum up contributions to force for atom i
+  fxx(i) = fxx(i) + fxx_i ! sum up contributions to force for atom "i"
   fyy(i) = fyy(i) + fyy_i
   fzz(i) = fzz(i) + fzz_i
 enddo
@@ -173,17 +173,17 @@ end module vdw_forces_modules
 !==============================================================================
 ! main driver, program entry point
 !==============================================================================
-program main                     ! finally the main program
-use local_initializations_module ! this contains the initializations that we use in this test
+program main                     ! main program
+use local_initializations_module ! initializations
 use IO_module                    ! input (read config) and output 
-use list_generator_module        ! generate the list ; for each atom we store in an array how many other atoms are within cut off 
+use list_generator_module        ! generate neighbor list ; each atom has an array to store index atoms within a short ranged cut off
 use vdw_forces_modules           ! evaluate energy forces 
 use data_module, only : start_overall, start_forces, stop_overall, stop_forces
 implicit none
 
 call cpu_time(start_forces)
-call read_config('input.medium') ! get the configuration with atom coordinates; change 'input.small' with whatever file i.e. input.large (if needed)
-call local_init ! initialize the local variablibels used in this test program
+call read_config('input.medium') ! get the configuration with atom coordinates;
+call local_init ! initialize the local variables used
 
 call cpu_time(start_forces)
 call forces(.true.) ! compute forces ! this is the main thing

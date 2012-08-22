@@ -86,13 +86,21 @@ void LJPotentialTest::problemSetup(const ProblemSpecP& params,
 
   ps->getWithDefault("doOutput", doOutput_, 0);
   ps->getWithDefault("doGhostCells", doGhostCells_, 0);
-  ps->get("cutoffDistance", cutoffDistance);
-  ps->get("numAtoms", numAtoms);
-  ps->get("R12", R12);
-  ps->get("R6", R6);
+  ps->get("coordinateFile", coordinateFile_);
+  ps->get("numAtoms", numAtoms_);
+  ps->get("boxSize", box_);
+  ps->get("cutoffDistance", cutoffDistance_);
+  ps->get("R12", R12_);
+  ps->get("R6", R6_);
 
   mymat_ = scinew SimpleMaterial();
   sharedState_->registerSimpleMaterial(mymat_);
+
+  // do file I/O to get atom coordinates and simulation cell size
+  extractCoordinates();
+
+  // create neighbor list for each atom in the system
+  generateNeighborList();
 }
 
 void LJPotentialTest::scheduleInitialize(const LevelP& level,
@@ -120,18 +128,12 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   const MaterialSet* matls = sharedState_->allMaterials();
   Task* task = scinew Task("timeAdvance", this, &LJPotentialTest::timeAdvance);
 
-  // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost around-node, and 2 mixes them
-  if (doGhostCells_ == 0) {
-    task->requires(Task::OldDW, pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pEnergyLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pForceLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pParticleIDLabel, Ghost::None, 0);
-  } else if (doGhostCells_ == 1) {
-    task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, pEnergyLabel, Ghost::None, 1);
-    task->requires(Task::OldDW, pForceLabel, Ghost::None, 1);
-    task->requires(Task::OldDW, pParticleIDLabel, Ghost::AroundNodes, 1);
-  } else if (doGhostCells_ == 2) {
+  if (doGhostCells_ == 1) {
+    task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, SHRT_MAX);
+    task->requires(Task::OldDW, pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
+    task->requires(Task::OldDW, pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+    task->requires(Task::OldDW, pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  } else {
     task->requires(Task::OldDW, pXLabel, Ghost::None, 0);
     task->requires(Task::OldDW, pEnergyLabel, Ghost::None, 0);
     task->requires(Task::OldDW, pForceLabel, Ghost::None, 0);
@@ -162,8 +164,8 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
     d_particleState_preReloc.push_back(vars_preReloc);
   }
 
-  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState, pParticleIDLabel,
-                                    matls);
+  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState,
+                                    pParticleIDLabel, matls);
 }
 
 void LJPotentialTest::computeStableTimestep(const ProcessorGroup* /*pg*/,
@@ -175,24 +177,57 @@ void LJPotentialTest::computeStableTimestep(const ProcessorGroup* /*pg*/,
   new_dw->put(delt_vartype(1), sharedState_->get_delt_label(), getLevel(patches));
 }
 
-void LJPotentialTest::generateNeighborList(constParticleVariable<Point> px)
+void LJPotentialTest::extractCoordinates()
 {
+  ifstream inputFile;
+  inputFile.open(coordinateFile_.c_str());
+  if (!inputFile.is_open()) {
+    string message = "\tCannot open input file: " + coordinateFile_;
+    throw ProblemSetupException(message, __FILE__, __LINE__);
+  }
+
+  // do file IO to extract atom coordinates
+  string line;
+  unsigned int numRead;
+  for (unsigned int i = 0; i < numAtoms_; i++) {
+    // get the atom coordinates
+    getline(inputFile, line);
+    double x, y, z;
+    numRead = sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
+    if (numRead != 3) {
+      string message = "\tMalformed input file. Should have [x,y,z] coordinates per line: ";
+      throw ProblemSetupException(message, __FILE__, __LINE__);
+    }
+    Point pnt(x, y, z);
+    atomList.push_back(pnt);
+  }
+  inputFile.close();
+}
+
+void LJPotentialTest::generateNeighborList()
+{
+  // for neighbor indices
+  for (unsigned int i = 0; i < numAtoms_; i++) {
+    neighborList.push_back(vector<int>(0));
+  }
+
   double r2;
   Vector reducedCoordinates;
-  double cut_sq = cutoffDistance * cutoffDistance;
-  for (unsigned int i = 0; i < numAtoms - 1; i++) {
-    for (unsigned int j = i + 1; j < numAtoms; j++) {
+  double cut_sq = cutoffDistance_ * cutoffDistance_;
+  for (unsigned int i = 0; i < numAtoms_ - 1; i++) {
+    for (unsigned int j = i + 1; j < numAtoms_; j++) {
       if (i != j) {
         // the vector distance between atom i and j
-        reducedCoordinates = px[i] - px[j];
+        reducedCoordinates = atomList[i] - atomList[j];
 
         // this is required for periodic boundary conditions
-        reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+        reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
 
         // eliminate atoms outside of cutoff radius, add those within as neighbors
-        if ((fabs(reducedCoordinates[0]) < cutoffDistance) && (fabs(reducedCoordinates[1]) < cutoffDistance)
-            && (fabs(reducedCoordinates[2]) < cutoffDistance)) {
-          r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
+        if ((fabs(reducedCoordinates[0]) < cutoffDistance_) && (fabs(reducedCoordinates[1]) < cutoffDistance_)
+            && (fabs(reducedCoordinates[2]) < cutoffDistance_)) {
+          r2 = sqrt(
+              pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
             neighborList[i].push_back(j);
@@ -209,58 +244,48 @@ void LJPotentialTest::initialize(const ProcessorGroup*,
                                  DataWarehouse* /*old_dw*/,
                                  DataWarehouse* new_dw)
 {
+  // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
+
+    // get bounds of current patch to correctly initialize particles (atoms)
+    IntVector low = patch->getExtraCellLowIndex();
+    IntVector high = patch->getExtraCellHighIndex();
+
+    // do this for each material; for this example, there is only a single material, material "0"
     unsigned int numMatls = matls->size();
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
-
-      // do the file I/O to get number of atoms and box size
-      ifstream inputFile;
-      string filePath = "ljpotential_input.medium";
-      inputFile.open(filePath.c_str());
-      if (!inputFile.is_open()) {
-        string message = "\tCannot open input file: ";
-        message += filePath;
-        throw ProblemSetupException(message, __FILE__, __LINE__);
-      }
-      string line;
-      unsigned int numRead;
-      getline(inputFile, line);
-      numRead = sscanf(line.c_str(), "%d", &numAtoms);
-      getline(inputFile, line);
-      numRead = sscanf(line.c_str(), "%lf %lf %lf", &box[0], &box[1], &box[2]);
 
       ParticleVariable<Point> px;
       ParticleVariable<double> penergy;
       ParticleVariable<Vector> pforce;
       ParticleVariable<long64> pids;
 
-      ParticleSubset* subset = new_dw->createParticleSubset(numAtoms, matl, patch);
-      new_dw->allocateAndPut(px, pXLabel, subset);
-      new_dw->allocateAndPut(penergy, pEnergyLabel, subset);
-      new_dw->allocateAndPut(pforce, pForceLabel, subset);
-      new_dw->allocateAndPut(pids, pParticleIDLabel, subset);
+      // eventually we'll need to use PFS for this
+      vector<Point> localAtoms;
+      for (unsigned int i = 0; i < numAtoms_; i++) {
+        if (containsAtom(low, high, atomList[i])) {
+          localAtoms.push_back(atomList[i]);
+        }
+      }
 
-      // initialize requisite ParticleVariables
-      for (unsigned int i = 0; i < numAtoms; i++) {
-        // get the atom coordinates
-        getline(inputFile, line);
-        double x, y, z;
-        numRead = sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
-        px[i] = Point(x, y, z);
+      ParticleSubset* pset = new_dw->createParticleSubset(localAtoms.size(), matl, patch);
+      new_dw->allocateAndPut(px, pXLabel, pset);
+      new_dw->allocateAndPut(penergy, pEnergyLabel, pset);
+      new_dw->allocateAndPut(pforce, pForceLabel, pset);
+      new_dw->allocateAndPut(pids, pParticleIDLabel, pset);
+
+      int numParticles = pset->numParticles();
+      for (int i = 0; i < numParticles; i++) {
+        Point pos = localAtoms[i];
+        px[i] = pos;
         pforce[i] = Vector(0.0, 0.0, 0.0);
         penergy[i] = 0.0;
-        pids[i] = patch->getID() * numAtoms + i;
+        pids[i] = patch->getID() * numAtoms_ + i;
       }
-      inputFile.close();
     }
-  }
-
-  // for neighbor indices
-  for (unsigned int i = 0; i < numAtoms; i++) {
-    neighborList.push_back(vector<int>(0));
   }
 }
 
@@ -270,13 +295,16 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  double vdwEnergy;
+  // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
+
+    // do this for each material; for this example, there is only a single material, material "0"
     unsigned int numMatls = matls->size();
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
+
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
 
@@ -306,10 +334,8 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
         penergynew[i] = penergy[i];
       }
 
-      // create neighbor list for each atom in the system
-      generateNeighborList(px);
-
       // loop over all atoms in system, calculate the forces
+      double vdwEnergy;
       double r2, ir2, ir6, ir12, T6, T12;
       double forceTerm;
       Vector totalForce, atomForce;
@@ -328,14 +354,14 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
           reducedCoordinates = px[i] - px[idx];
 
           // this is required for periodic boundary conditions
-          reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+          reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
 
           r2 = pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0);
           ir2 = 1.0 / r2;  // 1/r^2
           ir6 = pow(ir2, 3.0);  // 1/r^6
           ir12 = pow(ir6, 2.0);  // 1/r^12
-          T12 = R12 * ir12;
-          T6 = R6 * ir6;
+          T12 = R12_ * ir12;
+          T6 = R6_ * ir6;
           penergynew[idx] = T12 - T6;  // energy
           vdwEnergy += penergynew[idx];  // count the energy
           forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
@@ -357,9 +383,9 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
         // keep same ID
         pidsnew[i] = pids[i];
 
-        if (0) {
-          cout << " Patch " << patch->getID() << ": Particle_ID " << pidsnew[i] << ", pos " << pxnew[i] << ", energy "
-               << penergynew[i] << ", forces " << pforcenew[i] << endl;
+        if (doOutput_) {
+          cout << " Patch " << patch->getID() << ": Particle_ID " << pidsnew[i] << ", pos " << pxnew[i]
+               << ", energy " << penergynew[i] << ", forces " << pforcenew[i] << endl;
         }
       }  // end atom loop
 

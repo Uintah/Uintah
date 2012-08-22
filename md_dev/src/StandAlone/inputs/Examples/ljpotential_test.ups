@@ -34,6 +34,9 @@
    <LJPotentialTest>
       <doOutput>1</doOutput>
       <doGhostCells>0</doGhostCells>
+      <coordinateFile>ljpotential_input.medium</coordinateFile>
+      <numAtoms>4096</numAtoms>
+      <boxSize>[45.04,45.04,45.04]</boxSize>
       <cutoffDistance>10.0</cutoffDistance>
       <R12>1.0E5</R12>
       <R6>1.0E3</R6>
@@ -43,7 +46,7 @@
        <Level>
            <Box label = "1">
               <lower>[0,0,0]</lower>
-              <upper>[50.0,50.0,50.0]</upper>
+              <upper>[50,50,50]</upper>
               <resolution>[50,50,50]</resolution>
               <patches>[1,1,1]</patches>
            </Box>
