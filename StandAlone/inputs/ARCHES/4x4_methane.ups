@@ -251,6 +251,7 @@
         <Eqn label="mixture_fraction" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <is_mixture_fraction/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="constant">
@@ -264,6 +265,7 @@
         <Eqn label="enthalpy" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <use_density_guess/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>true</addSources>
           <initialization type="constant">
