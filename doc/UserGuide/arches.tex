@@ -642,7 +642,7 @@ as a child of the \verb=<Uintah_Specification>= section.
 
 Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI.
 
-\subsection{Boundary Conditions} 
+\subsection{Boundary Conditions}\label{sec:boundaryconditions}
 Boundary conditions for Arches are specified using the Uintah boundary condition mechanism.  As such, all boundary conditions for domain faces are specified in the \verb=<Grid>=$\rightarrow$\verb=<BoundaryConditions>= section of the input file.  Generic details of the UCF boundary condition mechanism may be found in \ref{sec:ucf_bc}.  
 
 Generally, boundary conditions are required for every transport equation except at periodic boundaries.  Specifically, every equation specified in the \verb=<TransportEqn>= section of the input file requires domain boundary specification on every domain face.  
@@ -899,6 +899,56 @@ This option is often helpful in helping with stability if your simulation is exp
 \subsubsection{Implicit Time Integrator}
 %
 Currently the implicit time integrator is not supported. 
+
+\subsection{Scalar Transport Equations}\label{Sec:Scalar_transport}
+A set of user defined scalars can be defined through the input file.  The scalar can be passive (it doesn't feed back to the CFD) or active (plays a role in the CFD solution).  An example of an active scalar would be a mixture fraction variable that is used for the chemistry table look-up. 
+
+The basic form of the scalar transport is
+%
+\begin{equation}
+\frac{\partial \rho \phi}{\partial t} + F_{conv} = F_{diff} + \sum_{i=1}^{N} S_i, 
+\end{equation}
+% 
+where $\phi$ is the scalar, $F_{conv}$ is the total convection term, $F_{diff}$ is the total diffusion term, and $S_i$ is the set of $N$ source terms associated with this scalar.  If $N=0$, then the scalar is a conserved scalar.
+
+Scalar equations are defined in the $<$TransportEqn$>$ node of the input file.  The generic specification looks like
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<TransportEqns>
+  <Eqn label="my_great_scalar" type="CCscalar">
+  	...equation options...
+  </Eqn>
+  <Eqn label="another_great_scalar" type="CCscalar">
+  	...equation options...
+  </Eqn>
+</TransportEqns>
+\end{Verbatim}
+%
+In the above example, two scalar equations were defined with a set of solver options. The $label$ specification is used as the equation identifier, and must be unique for every equation.  Currently, only one type of scalar is supported ($CCscalar$). Beside the actual definition of the scalar and its respective options, the only other requirement for each scalar is that boundary conditions are defined for all boundary condition specification (see Section \ref{sec:boundaryconditions}). 
+
+\subsubsection{Options for Scalar Transport Equations} 
+%
+Options for an individual scalar equation ($<$Eqn$>$) includes:   
+\begin{enumerate}
+%
+\item {\bf Turbulent Schmidt/Prandtl Number}: $<$turbulentPrandtlNumber$>$ \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: 0.4 \\
+{\bf Description}: The total diffusion coefficient is computed as 
+\[
+D_T = \rho D_{molecular} + \frac{\mu_t}{Sc_t}
+\]
+where $D_{molecular}$ is the molecular diffusion coefficient, $mu_t$ is the turbulent viscosity (from the turbulence model) and $Sc_t$ is the turbulent Schmidt number.  
+\item {\bf Constant Molecular Diffusion Coefficient}: $<$D\_mol\_constant value=``DOUBLE''$>$ \\
+{\bf Input type}: {\it Optional, double} \\
+{\bf Default}: {\it NA} \\
+{\bf Description}: Sets a constant molecular diffusivity for the scalar.  The {\it value} attribute specifies the constant.  Note that if {\it D\_mol\_constant} or {\it D_mol} is not specified, then the molecular diffusion is assumed zero. 
+\item {\bf Variable Molecular Diffusion Coefficient}: $<$D\_mol label=``STRING''$>$ \\
+{\bf Input type}: {\it Optional, string} \\
+{\bf Default}: {\it NA} \\
+{\bf Description}: Points the equation to the correct label for the molecular diffusion coefficient.  The label must be defined elsewhere in a property model, table, etc.  If the molecular diffusivity is a table lookup variable, the label must be saved in the uda (as specified in the $<$DataArchiver$>$ section) for the variable to exist (a bit hackish but should suffice for now.) Note that if {\it D\_mol\_constant} or {\it D_mol} is not specified, then the molecular diffusion is assumed zero.
+%
+\end{enumerate}
 
 \subsection{Transport Equation Options}\label{Sec:Eqns_options}
 In the current configuration of Arches, transport equations are activated by specifying the option for each equation in a equation-specific node under the {\it ExplicitSolver} node.  Currently, all equation nodes are required except for the enthalpy solver node.  

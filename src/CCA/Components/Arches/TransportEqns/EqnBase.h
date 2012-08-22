@@ -179,6 +179,7 @@ protected:
   const VarLabel* d_FdiffLabel;           ///< Label for diffusion term of this equation object
   const VarLabel* d_FconvLabel;           ///< Label for convection term of this equation object
   const VarLabel* d_RHSLabel;             ///< Label for RHS of this equation object
+  const VarLabel* d_mol_D_label;          ///< Molecular diffusivity label (computed elsewhere)
 
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
@@ -188,6 +189,7 @@ protected:
   std::string d_eqnName;                  ///< Human-readable label for this equation
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
   std::string d_initFunction;             ///< A functional form for initial value.
+  std::string d_mol_D_label_name;         ///< Name of the molecular diffusivity label. 
 
   // Clipping:
   bool d_doClipping;                ///< Boolean: are values clipped?
@@ -232,6 +234,7 @@ protected:
                                     ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
   vector<std::string> d_sources;    ///< List of source terms for this eqn
   double d_mol_diff;                ///< Molecular Diffusivity
+  bool d_use_constant_D;            ///< Switch for using constant D or not. 
 
 private:
 

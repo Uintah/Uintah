@@ -163,6 +163,8 @@ namespace Uintah{
         iter = patch->getSFCYIterator(); 
       else if ( typeid(pT) == typeid(SFCZVariable<double>) )
         iter = patch->getSFCZIterator(); 
+      else if ( typeid(pT) == typeid(CCVariable<double>) )
+        iter = patch->getCellIterator(); 
       else {
         // Bulletproofing
         proc0cout << " While attempting to compute: ConstProperty.h " << endl;
