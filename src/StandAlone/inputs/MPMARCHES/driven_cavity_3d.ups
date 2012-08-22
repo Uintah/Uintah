@@ -183,6 +183,7 @@
 <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
+          <is_mixture_fraction/>
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
