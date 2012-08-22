@@ -205,7 +205,6 @@ evaluate()
     resultsIterators.push_back(thisResultsIterator);
   }
 
-  const double epsilon = 1.0e-10;
   // now loop over the interior points, construct the matrix, and solve for the weights & abscissae
   while (sampleIterator!=sampleField->interior_end()) {
 
