@@ -229,7 +229,7 @@
       <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
-      <ellipsoid              spec="MULTIPLE" />
+      vi               spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -849,6 +849,9 @@
   <LJPotentialTest            spec="OPTIONAL NO_DATA" >
     <doOutput                 spec="OPTIONAL INTEGER" />
     <doGhostCells             spec="OPTIONAL INTEGER" />
+    <coordinateFile           spec="REQUIRED STRING" />
+    <numAtoms                 spec="REQUIRED INTEGER"/>
+    <boxSize                  spec="REQUIRED VECTOR" />
     <cutoffDistance           spec="REQUIRED DOUBLE" />
     <R12                      spec="REQUIRED DOUBLE" />
     <R6                       spec="REQUIRED DOUBLE" />

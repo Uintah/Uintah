@@ -93,7 +93,18 @@ namespace Uintah {
                                        SchedulerP&);
 
     private:
-      void generateNeighborList(constParticleVariable<Point> px);
+
+      inline bool containsAtom(const IntVector &l,
+                               const IntVector &h,
+                               const Point &p)
+      {
+        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y())
+                && (p.z() >= l.z() && p.z() < h.z()));
+      }
+
+      void generateNeighborList();
+
+      void extractCoordinates();
 
       void initialize(const ProcessorGroup*,
                       const PatchSubset* patches,
@@ -134,15 +145,16 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
 
       // fields specific to non-bonded interaction (LJ Potential)
-      unsigned int numAtoms;
-      double cutoffDistance;  // the short ranged cut off distances (in Angstroms)
-      Vector box;  // the size of simulation
-      double R12;  // this is the v.d.w. repulsive parameter
-      double R6;  // this is the v.d.w. attractive parameter
+      string coordinateFile_;
+      unsigned int numAtoms_;
+      double cutoffDistance_;  // the short ranged cut off distances (in Angstroms)
+      Vector box_;  // the size of simulation
+      double R12_;  // this is the v.d.w. repulsive parameter
+      double R6_;  // this is the v.d.w. attractive parameter
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
+      vector<Point> atomList;
       vector<vector<int> > neighborList;
-
   };
 }
 
