@@ -67,7 +67,7 @@ namespace Uintah {
       double R1;
       double R2;
       double omega;
-      double rho0;
+      //double rho0;
 
       // These parameters are needed for the reaction model
       double G;        // rate coefficient, JWL++

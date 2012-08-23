@@ -74,7 +74,7 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("jwl_R1",   d_cm.R1);
   ps->require("jwl_R2",   d_cm.R2);
   ps->require("jwl_om",   d_cm.omega);
-  ps->require("jwl_rho0", d_cm.rho0);
+  //ps->require("jwl_rho0", d_cm.rho0);  // Get from matl->getInitialDensity()
 
   // These parameters are needed for the reaction model
   ps->require("reaction_G",    d_cm.G); // Rate coefficient
@@ -139,7 +139,7 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
   d_cm.R1 = cm->d_cm.R1;
   d_cm.R2 = cm->d_cm.R2;
   d_cm.omega = cm->d_cm.omega;
-  d_cm.rho0 = cm->d_cm.rho0;
+  // d_cm.rho0 = cm->d_cm.rho0;
 
   d_cm.G    = cm->d_cm.G;
   d_cm.b    = cm->d_cm.b;
@@ -208,7 +208,7 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("jwl_R1",   d_cm.R1);
   cm_ps->appendElement("jwl_R2",   d_cm.R2);
   cm_ps->appendElement("jwl_om",   d_cm.omega);
-  cm_ps->appendElement("jwl_rho0", d_cm.rho0);
+  // cm_ps->appendElement("jwl_rho0", d_cm.rho0);
 
   cm_ps->appendElement("reaction_b",             d_cm.b);
   cm_ps->appendElement("reaction_G",             d_cm.G);
@@ -369,7 +369,8 @@ void JWLppMPM::computeStableTimestep(const Patch* patch,
 
   double K    = d_cm.K;
   double n    = d_cm.n;
-  double rho0 = d_cm.rho0;
+  //double rho0 = d_cm.rho0;
+  double rho0 = matl->getInitialDensity();
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
@@ -398,7 +399,8 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
   // Material parameters
   double d_K = d_cm.K;
   double d_n = d_cm.n;
-  double d_rho0 = d_cm.rho0; // matl->getInitialDensity();
+  //double d_rho0 = d_cm.rho0; // matl->getInitialDensity();
+  double d_rho0 =  matl->getInitialDensity();
 
   // Loop through patches
   for(int pp=0; pp<patches->size(); pp++){
@@ -604,6 +606,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         cerr << "idx = " << idx << " J = " << J << " matl = " << matl << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
+        cerr << "VelGrad_old = " << pVelGrad[idx] << endl;
         cerr << "VelGrad = " << pVelGrad_new[idx] << endl;
         cerr << "**Particle is being removed from the computation**" << endl;
         //throw InvalidValue("**ERROR**: Error in deformation gradient", __FILE__, __LINE__);
@@ -769,7 +772,8 @@ double JWLppMPM::computeRhoMicroCM(double pressure,
 {
     cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR JWLppMPM"
        << endl;
-    double rho_orig = d_cm.rho0; //matl->getInitialDensity();
+    //double rho_orig = d_cm.rho0; //matl->getInitialDensity();
+    double rho_orig = matl->getInitialDensity();
 
     return rho_orig;
 }
@@ -785,7 +789,8 @@ void JWLppMPM::computePressEOSCM(const double rhoM,double& pressure,
   double R1 = d_cm.R1;
   double R2 = d_cm.R2;
   double omega = d_cm.omega;
-  double rho0 = d_cm.rho0;
+  //double rho0 = d_cm.rho0;
+  double rho0 = matl->getInitialDensity();
   double cv = matl->getSpecificHeat();
   double V = rho0/rhoM;
   double P1 = A*exp(-R1*V);
@@ -985,7 +990,7 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
     cerr << "**JWLppMPM** Newton iterations failed to converge." << endl;
     cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
-           << " p_old = " << p_old << " f_old = " << f_old << endl;
+           << " p_old = " << p_old << " f_old = " << f_old << " J = " << J << endl;
     cerr << " pM = " << pM << " pJWL = " << pJWL 
            << " G = [" << G[0] << "," << G[1] << "]"
            << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
@@ -997,7 +1002,7 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
   if (isnan(p_new) || isnan(f_new)) {
     cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
-           << " p_old = " << p_old << " f_old = " << f_old << endl;
+           << " p_old = " << p_old << " f_old = " << f_old << " J = " << J << endl;
     cerr << " pM = " << pM << " pJWL = " << pJWL 
            << " G = [" << G[0] << "," << G[1] << "]"
            << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
