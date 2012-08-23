@@ -164,7 +164,7 @@ BoundaryCondition::~BoundaryCondition()
     VarLabel::destroy( bc_iter->second.total_area_label ); 
     
     if (bc_iter->second.type ==  TURBULENT_INLET ){
-      bc_iter->second.TurbIn->~DigitalFilterInlet() ;
+      delete bc_iter->second.TurbIn;
     }
   }
 
