@@ -3,7 +3,7 @@
 <Uintah_specification>
 
   <Meta>
-      <title>Bar_under_self_weight</title>
+      <title>Uniaxial compression with rotation</title>
   </Meta>
 
   <SimulationComponent type="mpm" />
@@ -11,13 +11,13 @@
   <Time>
       <maxTime>1.0</maxTime>
       <initTime>0.0</initTime>
-      <delt_min>0.001</delt_min>
-      <delt_max>0.001</delt_max>
+      <delt_min>0.01</delt_min>
+      <delt_max>0.01</delt_max>
       <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
   <DataArchiver>
-      <filebase>verifAreniscaBBTest2.uda</filebase>
+      <filebase>verifyArenaTest9.uda</filebase>
       <outputInterval>0.001</outputInterval>
       <save label = "p.x"/>
       <save label = "p.color"/>
@@ -31,7 +31,7 @@
       <save label = "p.plasticStrain"/>
       <save label = "p.plasticStrainVol"/>
       <save label = "p.elasticStrainVol"/>
-      <save label = "p.arenisca_kappa"/>
+      <save label = "p.arena_kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
 
@@ -50,7 +50,7 @@
     <UseMomentumForm>             false   </UseMomentumForm>
     <withColor>                   true    </withColor>
     <UsePrescribedDeformation>    true    </UsePrescribedDeformation>
-    <PrescribedDeformationFile>   verifAreniscaTest2_PrescribedDeformation.inp </PrescribedDeformationFile>
+    <PrescribedDeformationFile>   verifAreniscaTest9_PrescribedDeformation.inp </PrescribedDeformationFile>
     <erosion algorithm = "none"/>
   </MPM>
 
@@ -67,7 +67,7 @@
         <thermal_conductivity>174.0e-7</thermal_conductivity>
         <specific_heat>134.0e-8</specific_heat>
 
-        <constitutive_model type="arenisca">
+        <constitutive_model type="arena">
 
             <B0>10000</B0>
             <G0>15000</G0>
@@ -82,17 +82,17 @@
             <p4_fluid_effect> 0.0 </p4_fluid_effect>
             <fluid_B0> 0.0 </fluid_B0>
             <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
-            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
             <subcycling_characteristic_number> 100 </subcycling_characteristic_number>
-            <internal_variable_model type="arenisca_kappa">
-              <arenisca_fSlope> 0.057735026919 </arenisca_fSlope>
-              <arenisca_peakI1> 6.123724356953976e2 </arenisca_peakI1>
-              <arenisca_Cr> 14.8 </arenisca_Cr>
-              <arenisca_B0> 0.0 </arenisca_B0>
-              <arenisca_p0> -1837.0724  </arenisca_p0>
-              <arenisca_p1> 6.6666666666666666e-4  </arenisca_p1>
-              <arenisca_p3> 0.5 </arenisca_p3>
-              <arenisca_p4> 0.0 </arenisca_p4>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+            <internal_variable_model type="arena_kappa">
+              <arena_fSlope> 0.057735026919 </arena_fSlope>
+              <arena_peakI1> 6.123724356953976e2 </arena_peakI1>
+              <arena_Cr> 14.8 </arena_Cr>
+              <arena_B0> 0.0 </arena_B0>
+              <arena_p0> -1837.0724  </arena_p0>
+              <arena_p1> 6.6666666666666666e-4  </arena_p1>
+              <arena_p3> 0.5 </arena_p3>
+              <arena_p4> 0.0 </arena_p4>
             </internal_variable_model>
         </constitutive_model>
 
