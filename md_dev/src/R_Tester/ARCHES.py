@@ -67,7 +67,8 @@ NIGHTLYTESTS = [
    ("zplus_scalar_test"      , "ScalarTests/zplus_scalar_test.ups"       , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("xminus_scalar_test"     , "ScalarTests/xminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"     , "ScalarTests/yminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
-   ("zminus_scalar_test"     , "ScalarTests/zminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"])
+   ("zminus_scalar_test"     , "ScalarTests/zminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
+   ("turbulent_inlet_test"   , "DigitalFilter/TurbulentInletChannel.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
@@ -95,6 +96,7 @@ LOCALTESTS = [
    ("xminus_scalar_test"     , "ScalarTests/xminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"     , "ScalarTests/yminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"     , "ScalarTests/zminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("turbulent_inlet_test"   , "DigitalFilter/TurbulentInletChannel.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
 #__________________________________

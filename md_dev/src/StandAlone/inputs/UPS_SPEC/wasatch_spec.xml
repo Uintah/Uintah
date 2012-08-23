@@ -12,7 +12,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField,ExponentialVortex)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
@@ -35,7 +35,7 @@
       <SineTime    spec="OPTIONAL NO_DATA">
       </SineTime>
 
-      <!-- Step Function with transition point, lowValue and HighValue !-->
+      <!-- Step Function with transition point, lowValue (value when x <= transition point), and HighValue (value when x > transition point) !-->
       <StepFunction       spec="OPTIONAL NO_DATA"
                             attribute1="transitionPoint REQUIRED DOUBLE"
                             attribute2="lowValue REQUIRED DOUBLE"
@@ -124,6 +124,24 @@
                        attribute2="high REQUIRED DOUBLE"
                        attribute3="seed REQUIRED DOUBLE">
       </RandomField>
+      
+      <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
+      <ExponentialVortex       spec="OPTIONAL NO_DATA"
+                           attribute1="x0 REQUIRED DOUBLE"
+                           attribute2="y0 REQUIRED DOUBLE"
+                           attribute3="G REQUIRED DOUBLE"
+                           attribute4="R REQUIRED DOUBLE"
+                           attribute5="U REQUIRED DOUBLE"
+                           attribute6="V REQUIRED DOUBLE"                           
+                           attribute7="velocityComponent REQUIRED STRING 'X1, X2'">
+        <Coordinate1      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate1>
+        <Coordinate2      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Coordinate2>
+      </ExponentialVortex>
+      
       
       
     </BasicExpression>
@@ -649,10 +667,6 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
       
-      <SupersaturationExpression spec = "OPTIONAL NO_DATA">
-        <NameTag spec="REQUIRED" />
-      </SupersaturationExpression>
-      
       <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
@@ -708,7 +722,7 @@
       <!-- Aggregation Expression -->
       <AggregationExpression spec = "MULTIPLE NO_DATA">
         <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
-        <EfficiencyCoefficient spec = "OPTIONAL NO_DATA" />
+        <EfficiencyCoefficient spec = "OPTIONAL DOUBLE" />
         
         <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>

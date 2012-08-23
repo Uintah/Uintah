@@ -130,9 +130,9 @@ public:
              const Expr::Tag& turbDiffTag = Expr::Tag() )
       : ExpressionBuilder(result),
         isConstCoef_( true        ),
-        turbDifft_  ( turbDiffTag ),
         phit_       ( phiTag      ),
         coeft_      ( Expr::Tag() ),
+        turbDifft_  ( turbDiffTag ),
         coef_       ( coef        )
     {}
     ~Builder(){}

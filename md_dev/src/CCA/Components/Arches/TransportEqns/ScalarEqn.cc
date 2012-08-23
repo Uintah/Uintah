@@ -82,17 +82,26 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   }
  
   // Discretization information
+  // new_dw->get(new_den, d_fieldLabels->density>d_densityCPLabel, matlIndex, patch, gn, 0); 
+  // new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
-  db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 
   
   // algorithmic knobs
-  //Keep USE_DENSITY_GUESS set to true until the algorithmic details are settled. - Jeremy 
-  d_use_density_guess = true; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
-  //if (db->findBlock("use_density_guess"))
-  //  d_use_density_guess = true; 
+  d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
+  if (db->findBlock("use_density_guess")) {
+
+     d_use_density_guess = true; 
+
+  }
+  if ( db->findBlock("determines_properties") ){ 
+
+    d_use_density_guess = true; 
+
+  } 
+
 
   // Source terms:
   if (db->findBlock("src")){
@@ -187,6 +196,25 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
     } 
   }
+
+  // Molecular diffusivity: 
+  d_use_constant_D = false; 
+  if ( db->findBlock( "D_mol" ) ){ 
+    db->findBlock("D_mol")->getAttribute("label", d_mol_D_label_name); 
+  } else if ( db->findBlock( "D_mol_constant" ) ){ 
+    db->findBlock("D_mol_constant")->getAttribute("value", d_mol_diff ); 
+    d_use_constant_D = true; 
+  } else { 
+    d_use_constant_D = true; 
+    d_mol_diff = 0.0; 
+    proc0cout << "NOTICE: For equation " << d_eqnName << " no molecular diffusivity was specified.  Assuming D=0.0. \n";
+  } 
+
+  if ( db->findBlock( "D_mol" ) && db->findBlock( "D_mol_constant" ) ){ 
+    string err_msg = "ERROR: For transport equation: "+d_eqnName+" \n Molecular diffusivity is over specified. \n";
+    throw ProblemSetupException(err_msg, __FILE__, __LINE__); 
+  } 
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
@@ -249,6 +277,10 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   string taskname = "ScalarEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
+
+  if (!d_use_constant_D){ 
+    d_mol_D_label = VarLabel::find( d_mol_D_label_name ); 
+  }
 
   //New
   tsk->computes(d_transportVarLabel);
@@ -363,7 +395,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
-  tsk->requires(Task::NewDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_fieldLabels->d_tauSGSLabel, Ghost::AroundCells, 1); 
   tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
   tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
@@ -391,6 +423,15 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
+
+  //---- time substep dependent ---
+  if ( !d_use_constant_D ){ 
+    if ( timeSubStep == 0 ){ 
+      tsk->requires( Task::OldDW, d_mol_D_label, Ghost::AroundCells, 1 ); 
+    } else { 
+      tsk->requires( Task::NewDW, d_mol_D_label, Ghost::AroundCells, 1 ); 
+    } 
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -421,6 +462,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constCCVariable<double> oldPhi;
     constCCVariable<double> den;
     constCCVariable<double> mu_t;
+    constCCVariable<double> D_mol; 
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
@@ -433,10 +475,18 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
-    new_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(mu_t, d_fieldLabels->d_tauSGSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel, d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
+
+    if ( !d_use_constant_D ){  
+      if ( timeSubStep == 0 ){ 
+        old_dw->get(D_mol, d_mol_D_label, matlIndex, patch, gac, 1); 
+      } else { 
+        new_dw->get(D_mol, d_mol_D_label, matlIndex, patch, gac, 1); 
+      } 
+    }
 
     double vol = Dx.x();
 #ifdef YDIM
@@ -475,9 +525,14 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
   
     //----DIFFUSION
-    if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo, matlIndex, d_eqnName );
- 
+    if ( d_use_constant_D ) { 
+      if (d_doDiff)
+        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo, matlIndex, d_eqnName ); 
+    } else { 
+      if (d_doDiff)
+        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, D_mol, den, areaFraction, prNo, matlIndex, d_eqnName );
+    }
+
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
@@ -506,7 +561,12 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   //New
   tsk->modifies(d_transportVarLabel);
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
+
+  if ( d_use_density_guess ){ 
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
+  } else { 
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
+  } 
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
@@ -548,8 +608,13 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
-    new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
-    new_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    if ( d_use_density_guess ){ 
+      new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
+      new_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    } else { 
+      new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
+      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
+    } 
 
     // ----FE UPDATE
     //     to get phi^{(j+1)}

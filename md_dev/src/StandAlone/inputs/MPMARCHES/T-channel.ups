@@ -149,6 +149,8 @@
 
       <TransportEqns>
         <Eqn label="f" type="CCscalar">
+          <determines_properties/>
+          <D_mol_constant value="0.0"/>
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>

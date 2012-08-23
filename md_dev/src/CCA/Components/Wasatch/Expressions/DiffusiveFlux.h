@@ -109,8 +109,8 @@ public:
         isConstCoef_( false ),
         phit_     ( phiTag      ),
         coeft_    ( coefTag     ),
-        turbDifft_( turbDiffTag ),
         rhot_     ( rhoTag      ),
+        turbDifft_( turbDiffTag ),
         coef_     ( 0.0         )
     {}
 
@@ -134,9 +134,10 @@ public:
              const Expr::Tag rhoTag = Expr::Tag() )
       : ExpressionBuilder(result),
         isConstCoef_( true        ),
-        turbDifft_  ( turbDiffTag ),
         phit_       ( phiTag      ),
+        coeft_      (             ),
         rhot_       ( rhoTag      ),
+        turbDifft_  ( turbDiffTag ),
         coef_       ( coef        )
     {}
 
@@ -235,8 +236,8 @@ public:
     : ExpressionBuilder(result),
       phit_     ( phiTag      ),
       coeft_    ( coefTag     ),
-      turbDifft_( turbDiffTag ),
-      rhot_     ( rhoTag      )
+      rhot_     ( rhoTag      ),
+      turbDifft_( turbDiffTag )
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const{ return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, turbDifft_, phit_, coeft_ ); }

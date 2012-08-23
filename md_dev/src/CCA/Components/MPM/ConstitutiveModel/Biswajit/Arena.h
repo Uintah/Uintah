@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __ARENISCA_BB_H__
-#define __ARENISCA_BB_H__
+#ifndef __ARENA_H__
+#define __ARENA_H__
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -46,12 +46,12 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
-    \class Arenisca (BB version)
+    \class Arena 
     \brief Nonlinear Drucker-Prager model with cap
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class Arenisca_BB : public ConstitutiveModel {
+  class Arena : public ConstitutiveModel {
 
   public:
 
@@ -107,23 +107,23 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
 
-    Arenisca_BB& operator=(const Arenisca_BB &cm);
+    Arena& operator=(const Arena &cm);
 
     void initializeLocalMPMLabels();
 
   public:
     // constructor
-    Arenisca_BB(ProblemSpecP& ps, MPMFlags* flag);
-    Arenisca_BB(const Arenisca_BB* cm);
+    Arena(ProblemSpecP& ps, MPMFlags* flag);
+    Arena(const Arena* cm);
 
     // destructor
-    virtual ~Arenisca_BB();
+    virtual ~Arena();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
 
-    Arenisca_BB* clone();
+    Arena* clone();
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -226,7 +226,7 @@ namespace Uintah {
 } // End namespace Uintah
 
 
-#endif  // __ARENISCA_BB_H__
+#endif  // __ARENA_H__
 
 
 

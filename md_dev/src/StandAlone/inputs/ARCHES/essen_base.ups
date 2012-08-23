@@ -135,11 +135,12 @@
             <!-- EXTRA SCALARS -->
             <TransportEqns>
               <Eqn label="MixtureFraction" type = "CCscalar">
-                <!-- diffusive scalar -->
                 <doDiff>true</doDiff>
                 <doConv>true</doConv>
-                <addSources>true</addSources>
+                <determines_properties/>
+                <addSources>false</addSources>
                 <conv_scheme>super_bee</conv_scheme>
+                <D_mol_constant value=".0001"/> <!-- VALUE may need to be adjusted --> 
                 <Clipping>
                   <low>0.0</low>
                   <high>1.0</high>
@@ -150,11 +151,6 @@
                 <use_laminar_pr label="pr_no"/>
               </Eqn>
             </TransportEqns>
-
-            <!--Turbulence model="compdynamicprocedure">
-              <variance_coefficient>0.1</variance_coefficient>
-              <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-            </Turbulence-->
 
             <!-- turn off turbulence model by setting the coefficient to zero (cf=0)-->
             <Turbulence model="smagorinsky">

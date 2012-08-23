@@ -117,6 +117,7 @@ INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
 SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/CoalModels         \
            $(SRCDIR)/CoalModels/fortran \
+           $(SRCDIR)/DigitalFilter      \
            $(SRCDIR)/PropertyModels     \
            $(SRCDIR)/Radiation          \
            $(SRCDIR)/Radiation/fortran  \
@@ -175,3 +176,10 @@ $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/scalsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/wvelsrc_fort.h
+
+##############################################
+# DigitalFilterGenerator
+
+# See build specification in .../src/StandAlone/sub.mk
+
+##############################################

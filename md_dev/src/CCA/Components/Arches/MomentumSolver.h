@@ -492,6 +492,130 @@ private:
 
   };  
   
+  
+  // ExponentialVortex initialization ------------------------
+  // Tony Saad (just in case you need to blame someone)
+  class ExponentialVortex : public VelocityInitBase { 
+    
+  public: 
+    
+    ExponentialVortex(){};
+    ~ExponentialVortex(){}; 
+    
+    void problemSetup( ProblemSpecP db ){ 
+      
+      db->getWithDefault( "x0", x0_, 0.0 ); 
+      db->getWithDefault( "y0", y0_, 0.0 ); 
+      db->getWithDefault( "z0", z0_, 0.0 ); 
+      db->getWithDefault( "G",  G_,  0.01 ); 
+      db->getWithDefault( "R",  R_,  0.1 );       
+      db->getWithDefault( "U",  U_,  1.0 );             
+      db->getWithDefault( "V",  V_,  0.0 );
+      db->getWithDefault( "plane", plane_, "x-y"); 
+      //valid options are x-y, y-z, z-x      
+      GR_ = G_/(R_*R_);
+    }; 
+    
+    void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      
+      double x,y,z,r;
+      Vector Dx = patch->dCell(); 
+      const double dx_2 = Dx.x()/2.0;
+      
+      for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){          
+        
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x() - dx_2; 
+        y = position.y();
+        z = position.z();
+        
+        if (plane_ == "x-y") {
+          r = (x - x0_)*(x - x0_) + (y - y0_)*(y - y0_);
+          uvel[c] = U_ - GR_*(y-y0_)*exp(-r/(2.0*R_*R_));          
+        } 
+        
+        else if (plane_ == "z-x") {
+          r = (x - x0_)*(x - x0_) + (z - z0_)*(z - z0_);
+          uvel[c] = V_ + GR_*(z-z0_)*exp(-r/(2.0*R_*R_));
+        } 
+        
+        else {
+          uvel[c] = 0.0;                             
+        }
+      }
+      
+    };
+    
+    
+    void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      
+      double x,y,z,r;
+      Vector Dx = patch->dCell(); 
+      const double dy_2 = Dx.y()/2.0;
+      
+      for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){      
+        
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x(); 
+        y = position.y() - dy_2;
+        z = position.z();
+
+        if (plane_ == "x-y") {
+          r = (x - x0_)*(x - x0_) + (y - y0_)*(y - y0_);
+          vvel[c] =  V_ + GR_*(x-x0_)*exp(-r/(2.0*R_*R_));
+        } 
+        
+        else if (plane_ == "y-z") {
+          r = (y - y0_)*(y - y0_) + (z - z0_)*(z - z0_);
+          vvel[c] =  U_ - GR_*(z-z0_)*exp(-r/(2.0*R_*R_));
+        } 
+        
+        else {
+          vvel[c] = 0.0;                             
+        }        
+        
+      }
+    }; 
+    
+    void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){     
+      
+      double x,y,z, r;
+      Vector Dx = patch->dCell(); 
+      const double dz_2 = Dx.z()/2.0;
+      
+      for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){      
+        
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x();
+        y = position.y(); 
+        z = position.z() - dz_2;
+        
+        if (plane_ == "z-x") {
+          r = (x - x0_)*(x - x0_) + (z - z0_)*(z - z0_);
+          wvel[c] =  U_ - GR_*(x-x0_)*exp(-r/(2.0*R_*R_));
+        } 
+        
+        else if (plane_ == "y-z") {
+          r = (y - y0_)*(y - y0_) + (z - z0_)*(z - z0_);
+          wvel[c] =  V_ + GR_*(y-y0_)*exp(-r/(2.0*R_*R_));
+        } 
+        
+        else {
+          wvel[c] = 0.0;                             
+        }        
+        
+      }
+    }; 
+    
+  private: 
+    double x0_, y0_, z0_, G_, R_, U_, V_, GR_;
+    std::string plane_;
+  };  
+  
+  
 
 }; // End class MomentumSolver
 } // End namespace Uintah

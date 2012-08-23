@@ -67,7 +67,7 @@ namespace Uintah {
       double R1;
       double R2;
       double omega;
-      double rho0;
+      //double rho0;
 
       // These parameters are needed for the reaction model
       double G;        // rate coefficient, JWL++
@@ -191,7 +191,8 @@ namespace Uintah {
     //------------------------------------------------------------------
     // Do Newton iterations or two step Backward Euler
     //------------------------------------------------------------------
-    void computeUpdatedFractionAndPressure(const double& J,
+    void computeUpdatedFractionAndPressure(const double& J_old,
+                                           const double& J,
                                            const double& f_old,
                                            const double& p_old,
                                            const double& delT,

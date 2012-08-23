@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 using namespace Uintah;
@@ -73,7 +74,7 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("jwl_R1",   d_cm.R1);
   ps->require("jwl_R2",   d_cm.R2);
   ps->require("jwl_om",   d_cm.omega);
-  ps->require("jwl_rho0", d_cm.rho0);
+  //ps->require("jwl_rho0", d_cm.rho0);  // Get from matl->getInitialDensity()
 
   // These parameters are needed for the reaction model
   ps->require("reaction_G",    d_cm.G); // Rate coefficient
@@ -138,7 +139,7 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
   d_cm.R1 = cm->d_cm.R1;
   d_cm.R2 = cm->d_cm.R2;
   d_cm.omega = cm->d_cm.omega;
-  d_cm.rho0 = cm->d_cm.rho0;
+  // d_cm.rho0 = cm->d_cm.rho0;
 
   d_cm.G    = cm->d_cm.G;
   d_cm.b    = cm->d_cm.b;
@@ -207,7 +208,7 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("jwl_R1",   d_cm.R1);
   cm_ps->appendElement("jwl_R2",   d_cm.R2);
   cm_ps->appendElement("jwl_om",   d_cm.omega);
-  cm_ps->appendElement("jwl_rho0", d_cm.rho0);
+  // cm_ps->appendElement("jwl_rho0", d_cm.rho0);
 
   cm_ps->appendElement("reaction_b",             d_cm.b);
   cm_ps->appendElement("reaction_G",             d_cm.G);
@@ -368,7 +369,8 @@ void JWLppMPM::computeStableTimestep(const Patch* patch,
 
   double K    = d_cm.K;
   double n    = d_cm.n;
-  double rho0 = d_cm.rho0;
+  //double rho0 = d_cm.rho0;
+  double rho0 = matl->getInitialDensity();
   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
@@ -397,7 +399,8 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
   // Material parameters
   double d_K = d_cm.K;
   double d_n = d_cm.n;
-  double d_rho0 = d_cm.rho0; // matl->getInitialDensity();
+  //double d_rho0 = d_cm.rho0; // matl->getInitialDensity();
+  double d_rho0 =  matl->getInitialDensity();
 
   // Loop through patches
   for(int pp=0; pp<patches->size(); pp++){
@@ -603,6 +606,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         cerr << "idx = " << idx << " J = " << J << " matl = " << matl << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
+        cerr << "VelGrad_old = " << pVelGrad[idx] << endl;
         cerr << "VelGrad = " << pVelGrad_new[idx] << endl;
         cerr << "**Particle is being removed from the computation**" << endl;
         //throw InvalidValue("**ERROR**: Error in deformation gradient", __FILE__, __LINE__);
@@ -636,11 +640,12 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       pvolume[idx] = pmass[idx]/rho_cur;
 
       // Update the burn fraction and pressure
+      double J_old = pDefGrad[idx].Determinant();
       double p_old = -(1.0/3.0)*pstress[idx].Trace();
       double f_old = pProgressF[idx];
       double f_new = f_old;
       double p_new = p_old;
-      computeUpdatedFractionAndPressure(J, f_old, p_old, delT, f_new, p_new);
+      computeUpdatedFractionAndPressure(J_old, J, f_old, p_old, delT, f_new, p_new);
 
       // Update the volume fraction and the stress in the data warehouse
       pProgressdelF_new[idx] = f_new - f_old;
@@ -767,7 +772,8 @@ double JWLppMPM::computeRhoMicroCM(double pressure,
 {
     cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR JWLppMPM"
        << endl;
-    double rho_orig = d_cm.rho0; //matl->getInitialDensity();
+    //double rho_orig = d_cm.rho0; //matl->getInitialDensity();
+    double rho_orig = matl->getInitialDensity();
 
     return rho_orig;
 }
@@ -783,7 +789,8 @@ void JWLppMPM::computePressEOSCM(const double rhoM,double& pressure,
   double R1 = d_cm.R1;
   double R2 = d_cm.R2;
   double omega = d_cm.omega;
-  double rho0 = d_cm.rho0;
+  //double rho0 = d_cm.rho0;
+  double rho0 = matl->getInitialDensity();
   double cv = matl->getSpecificHeat();
   double V = rho0/rhoM;
   double P1 = A*exp(-R1*V);
@@ -815,44 +822,70 @@ double JWLppMPM::getCompressibility()
 //         k4 = G*(1-f_n-k3)*p_n^b*delT
 // (ignition_pressure in previous versions hardcoded to 2.0e8 Pa)
 void
-JWLppMPM::computeUpdatedFractionAndPressure(const double& J,
+JWLppMPM::computeUpdatedFractionAndPressure(const double& J_old,
+                                            const double& J,
                                             const double& f_old_orig,
                                             const double& p_old_orig,
                                             const double& delT,
                                             double& f_new,
                                             double& p_new) const
 {
-  // Compute Murnaghan and JWL pressures
-  double pM = computePressureMurnaghan(J);
-  double pJWL = computePressureJWL(J);
+  if ((p_old_orig > d_cm.ignition_pressure) && (f_old_orig < d_cm.max_burned_frac))  {
 
-  if (p_old_orig > d_cm.ignition_pressure && f_old_orig < d_cm.max_burned_frac )  {
-
-    // cerr << " p_old = " << p_old << " ignition = " << d_cm.ignition_pressure << endl;
+    //cerr << setprecision(10) << scientific
+    //     << " p_old = " << p_old_orig << " ignition = " << d_cm.ignition_pressure 
+    //     << " f_old = " << f_old_orig << " max_burn = " << d_cm.max_burned_frac 
+    //     << " f_old - max_f = " << f_old_orig - d_cm.max_burned_frac << endl;
     int numCycles = max(1, (int) ceil(delT/d_cm.max_burn_timestep));  
     double delTinc = delT/((double)numCycles);
+    double delJ = J/J_old;
+    double delJinc = pow(delJ, 1.0/((double)numCycles));
     double p_old = p_old_orig;
     double f_old = f_old_orig;
+    double J_new = J_old;
     f_new = f_old_orig;
     p_new = p_old_orig;
+   
     if (d_fastCompute) {
+      //cerr << "Using Fast" << endl;
       for (int ii = 0; ii < numCycles; ++ii) {
 
-        computeWithTwoStageBackwardEuler(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        // Compute Murnaghan and JWL pressures
+        J_new *= delJinc;
+        double pM = computePressureMurnaghan(J_new);
+        double pJWL = computePressureJWL(J_new);
+
+        computeWithTwoStageBackwardEuler(J_new, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
         f_old = f_new;
         p_old = p_new;
 
       }
     } else {
+      //cerr << "Using Newton" << endl;
       for (int ii = 0; ii < numCycles; ++ii) {
 
-        computeWithNewtonIterations(J, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
+        // Compute Murnaghan and JWL pressures
+        J_new *= delJinc;
+        double pM = computePressureMurnaghan(J_new);
+        double pJWL = computePressureJWL(J_new);
+
+        computeWithNewtonIterations(J_new, f_old, p_old, delTinc, pM, pJWL, f_new, p_new);
         f_old = f_new;
         p_old = p_new;
 
       }
     }
+    if (f_new > d_cm.max_burned_frac) {
+      f_new = d_cm.max_burned_frac;
+      double pM = computePressureMurnaghan(J);
+      double pJWL = computePressureJWL(J);
+      p_new = pM*(1.0 - f_new) + pJWL*f_new;
+    } 
   } else {
+    // Compute Murnaghan and JWL pressures
+    double pM = computePressureMurnaghan(J);
+    double pJWL = computePressureJWL(J);
+
     //  The following computes a pressure for partially burned particles
     //  as a mixture of Murnaghan and JWL pressures, based on pProgressF
     //  This is as described in Eq. 5 of "JWL++: ..." by Souers, et al.
@@ -957,7 +990,7 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
     cerr << "**JWLppMPM** Newton iterations failed to converge." << endl;
     cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
-           << " p_old = " << p_old << " f_old = " << f_old << endl;
+           << " p_old = " << p_old << " f_old = " << f_old << " J = " << J << endl;
     cerr << " pM = " << pM << " pJWL = " << pJWL 
            << " G = [" << G[0] << "," << G[1] << "]"
            << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
@@ -969,7 +1002,7 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
   if (isnan(p_new) || isnan(f_new)) {
     cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
-           << " p_old = " << p_old << " f_old = " << f_old << endl;
+           << " p_old = " << p_old << " f_old = " << f_old << " J = " << J << endl;
     cerr << " pM = " << pM << " pJWL = " << pJWL 
            << " G = [" << G[0] << "," << G[1] << "]"
            << " JacobianG = [[" << JacobianG(0,0) << "," << JacobianG(0,1) << "],["
