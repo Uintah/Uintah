@@ -34,7 +34,7 @@ SRCDIR := CCA/Components/MPM/ConstitutiveModel/Biswajit
 
 SRCS   += \
         $(SRCDIR)/CamClay.cc                \
-        $(SRCDIR)/Arenisca_BB.cc            \
+        $(SRCDIR)/Arena.cc                  \
         $(SRCDIR)/HyperelasticPlastic.cc    \
         $(SRCDIR)/SmallStrainPlastic.cc     \
 
