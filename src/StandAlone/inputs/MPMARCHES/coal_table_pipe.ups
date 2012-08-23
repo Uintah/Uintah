@@ -227,6 +227,7 @@
 <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="coal_gas_mix_frac" type="CCscalar">
+          <determines_properties/>
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
@@ -244,6 +245,7 @@
         </Eqn>
 
         <Eqn label="mixture_fraction_2" type="CCscalar">
+          <determines_properties/>
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>

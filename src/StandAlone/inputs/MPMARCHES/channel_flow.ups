@@ -147,6 +147,8 @@
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <determines_properties/>
+          <D_mol_constant value="0.001"/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="constant">

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 /*
 
-This source code is for a simplified constitutive model, named ``Arenisca_BB'',
+This source code is for a simplified constitutive model, named ``Arena'',
 which has some of the basic features needed for modeling geomaterials.
 To better explain the source code, the comments in this file frequently refer
 to the equations in the following three references:
@@ -42,7 +42,7 @@ to the equations in the following three references:
    Computational Algorithms, and Topics in Shock Physics", Shock Wave Science
    and Technology Reference Library: Solids I, Springer 2: pp. 189-274, 2007.
 
-As shown in "fig:Arenisca_BBYieldSurface" of the Arenisca manual, Arenisca_BB is
+As shown in "fig:ArenaYieldSurface" of the Arenisca manual, Arena is
 a two-surface plasticity model combining a linear Drucker-Prager
 pressure-dependent strength (to model influence of friction at microscale
 sliding surfaces) and a cap yield function (to model influence of microscale
@@ -51,7 +51,7 @@ porosity).
 */
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
-#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arenisca_BB.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/InternalVariableModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ModelState.h>
@@ -84,8 +84,7 @@ using namespace Uintah;
 using namespace std;
 
 // Requires the necessary input parameters
-Arenisca_BB::Arenisca_BB(ProblemSpecP& ps, MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag)
+Arena::Arena(ProblemSpecP& ps, MPMFlags* Mflag) : ConstitutiveModel(Mflag)
 {
   ps->require("FSLOPE",d_cm.fSlope);
   ps->require("FSLOPE_p",d_cm.fSlope_p);
@@ -113,15 +112,14 @@ Arenisca_BB::Arenisca_BB(ProblemSpecP& ps, MPMFlags* Mflag)
   d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
   if(!d_intvar){
     ostringstream desc;
-    desc << "**ERROR** Internal error while creating Arenisca_BB->InternalVariableModelFactory." << endl;
+    desc << "**ERROR** Internal error while creating Arena->InternalVariableModelFactory." << endl;
     throw InternalError(desc.str(), __FILE__, __LINE__);
   }
 
   initializeLocalMPMLabels();
 }
 
-Arenisca_BB::Arenisca_BB(const Arenisca_BB* cm)
-  : ConstitutiveModel(cm)
+Arena::Arena(const Arena* cm) : ConstitutiveModel(cm)
 {
   d_cm.fSlope = cm->d_cm.fSlope;
   d_cm.fSlope_p = cm->d_cm.fSlope_p;
@@ -148,7 +146,7 @@ Arenisca_BB::Arenisca_BB(const Arenisca_BB* cm)
   initializeLocalMPMLabels();
 }
 
-Arenisca_BB::~Arenisca_BB()
+Arena::~Arena()
 {
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
@@ -170,12 +168,12 @@ Arenisca_BB::~Arenisca_BB()
   delete d_intvar;
 }
 
-void Arenisca_BB::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void Arena::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","arenisca");
+    cm_ps->setAttribute("type","arena");
   }
   cm_ps->appendElement("FSLOPE",d_cm.fSlope);
   cm_ps->appendElement("FSLOPE_p",d_cm.fSlope_p);
@@ -201,12 +199,12 @@ void Arenisca_BB::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   d_intvar->outputProblemSpec(cm_ps);
 }
 
-Arenisca_BB* Arenisca_BB::clone()
+Arena* Arena::clone()
 {
-  return scinew Arenisca_BB(*this);
+  return scinew Arena(*this);
 }
 
-void Arenisca_BB::initializeCMData(const Patch* patch,
+void Arena::initializeCMData(const Patch* patch,
                                    const MPMMaterial* matl,
                                    DataWarehouse* new_dw)
 {
@@ -249,7 +247,7 @@ void Arenisca_BB::initializeCMData(const Patch* patch,
   d_intvar->initializeInternalVariable(pset, new_dw);
 }
 
-void Arenisca_BB::allocateCMDataAddRequires(Task* task,
+void Arena::allocateCMDataAddRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patches ,
                                             MPMLabel* lb) const
@@ -264,7 +262,7 @@ void Arenisca_BB::allocateCMDataAddRequires(Task* task,
   d_intvar->allocateCMDataAddRequires(task, matl, patches, lb);
 }
 
-void Arenisca_BB::allocateCMDataAdd(DataWarehouse* new_dw,
+void Arena::allocateCMDataAdd(DataWarehouse* new_dw,
                                     ParticleSubset* addset,
                                     map<const VarLabel*, ParticleVariableBase*>* newState,
                                     ParticleSubset* delset,
@@ -276,7 +274,7 @@ void Arenisca_BB::allocateCMDataAdd(DataWarehouse* new_dw,
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
-void Arenisca_BB::computeStableTimestep(const Patch* patch,
+void Arena::computeStableTimestep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
@@ -323,13 +321,13 @@ void Arenisca_BB::computeStableTimestep(const Patch* patch,
 
 /*
 
-Arenisca_BB::computeStressTensor is the core of the Arenisca_BB model which computes
+Arena::computeStressTensor is the core of the Arena model which computes
 the updated stress at the end of the current timestep along with all other
 required data such plastic strain, elastic strain, cap position, etc.
 
 */
 
-void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
+void Arena::computeStressTensor(const PatchSubset* patches,
                                       const MPMMaterial* matl,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
@@ -347,7 +345,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
   // Get the initial density
   double rho_orig = matl->getInitialDensity();
 
-  // Get the Arenisca_BB model parameters
+  // Get the Arena model parameters
   const double fSlope = d_cm.fSlope;
   const double fSlope_p = d_cm.fSlope_p;
   const double hardening_modulus = d_cm.hardening_modulus;
@@ -536,7 +534,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
         cout<<"L= "<<velGrad<<endl;
         cout<<"num_scs= "<<num_scs<<endl;
         pLocalized_new[idx] = -999;
-        cout<<"DELETING Arenisca_BB particle " << endl;
+        cout<<"DELETING Arena particle " << endl;
         J=1;
         pDefGrad_new[idx] = Identity;
         //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
@@ -573,7 +571,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // A parameter to consider the thermal effects of the plastic work which
-      // is not coded in the current source code. Further development of Arenisca_BB
+      // is not coded in the current source code. Further development of Arena
       // may ativate this feature.
       pdTdt[idx] = 0.0;
 
@@ -689,13 +687,13 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
       }else{
 
         // An elasto-plasic/fully plastic step: the plasticity return algrithm should be used.
-        // The nested return algorithm is used (Brannon & Leelavanichkul 2010) in Arenisca_BB.
+        // The nested return algorithm is used (Brannon & Leelavanichkul 2010) in Arena.
 
         // Determine a characteristic length of the yield surface.
-        // If Arenisca_BB is used as the Drucker-Prager model, which is determined by very small
+        // If Arena is used as the Drucker-Prager model, which is determined by very small
         // \kappa value (pKappa1<-1.0e80), the characteristic length is two times the vaue of
         // sqrt(J2) at I1=0, and if it lead to a small value the chracteristic length equals
-        // two times peakI1. If two-surface Arenisca_BB is used, the minumum of the following two
+        // two times peakI1. If two-surface Arena is used, the minumum of the following two
         // values is considered as the characteristic length: "peakI1-X" and "2*(fSlope*X-peakI1)" 
         double char_length_yield_surface;
         double PI1_h_over_fSlope = peakI1_hardening/fSlope;
@@ -875,7 +873,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                                    (pPlasticStrainVol_new[idx]);
 
             // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect" in the
-            // Arenisca manual. (Also, see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+            // Arenisca manual. (Also, see "fig:ArenaYieldSurface" in the Arenisca manual)
 
             // Compute the var1 which relates dX/de to d(kappa)/de: d(kappa)/de=dX/de * (1/var1)
             // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
@@ -1038,7 +1036,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
               if (I1_iteration>PI1_h_over_fSlope){
 
-                // Fast return algorithm in the case of I1>peakI1 (see "fig:Arenisca_BBYieldSurface"
+                // Fast return algorithm in the case of I1>peakI1 (see "fig:ArenaYieldSurface"
                 // in the Arenisca manual). In this case, the fast returned position is the vertex.
                 stress_iteration = Identity*(PI1_h_over_fSlope)/3.0;
 
@@ -1202,7 +1200,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
               }else if (I1_iteration<kappa_loop){
 
-                // Fast return algorithm in the case of I1<\kappa (see "fig:Arenisca_BBYieldSurface"
+                // Fast return algorithm in the case of I1<\kappa (see "fig:ArenaYieldSurface"
                 // in the Arenisca manual). In this case, the radial fast returning is used.
                 beta_cap = sqrt( 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                          ( (cap_radius)*(cap_radius) ) );
@@ -1212,7 +1210,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
               }else{
 
-                // Fast return algorithm in other cases (see "fig:Arenisca_BBYieldSurface"
+                // Fast return algorithm in other cases (see "fig:ArenaYieldSurface"
                 // in the Arenisca manual). In this case, the radial fast returning is used.
 	        stress_iteration = stress_iteration + S_iteration*
                                     ((peakI1_hardening-fSlope*I1_iteration)/
@@ -1227,7 +1225,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
-                // of I1>=\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
+                // of I1>=\kappa (see "fig:ArenaYieldSurface" in the Arenisca manual).
                 // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
                 G = Identity*(-2.0)*fSlope*(fSlope*I1_iteration-peakI1_hardening) + S_iteration;
                 M = Identity*(-2.0)*fSlope_p*(fSlope*I1_iteration-peakI1_hardening) + S_iteration;
@@ -1237,7 +1235,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                 // Compute the gradient of the yield surface and the unit tensor in the
                 // direction of the plastic strain at the fast returned stress for the case
-                // of I1<\kappa (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
+                // of I1<\kappa (see "fig:ArenaYieldSurface" in the Arenisca manual).
                 // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
                 beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
                            ( (cap_radius)*(cap_radius) );
@@ -1332,14 +1330,14 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
                 if (I1_iteration>=kappa_loop){
 
                   // Compute the hardening ensemble for the case of I1>=\kappa 
-                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
+                  // (see "fig:ArenaYieldSurface" in the Arenisca manual).
                   // Also, see Eq. 6.53 in 'Brannon 2007'.
                   hardeningEns = -2.0*hardening_modulus*FS_I1_i_PI1_h/G.Norm();
 
                 }else{
 
                   // Compute the hardening ensemble for the case of I1<\kappa 
-                  // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual).
+                  // (see "fig:ArenaYieldSurface" in the Arenisca manual).
 
                   // Declare and initialize some auxiliaryvariables
                   beta_cap = 1.0 - (kappa_loop-I1_iteration)*(kappa_loop-I1_iteration)/
@@ -1386,13 +1384,13 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 
                   if (kappa_loop-cap_radius-p0_crush_curve<0 || hardeningEnsCond>0) {
 
-                    // In the case of X<p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual),
+                    // In the case of X<p_0 (see "fig:ArenaYieldSurface" in the Arenisca manual),
                     // consider the hardening ensemble.
                     hardeningEns = hardeningEnsCond;
 
                   } else {
 
-                    // In the case of X>p_0 (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual),
+                    // In the case of X>p_0 (see "fig:ArenaYieldSurface" in the Arenisca manual),
                     // do not consider the full hardening ensemble. Consider only the Drucker-Prager
                     // hardening ensemble. This may slow down the convergence of the plasticity return
                     // algorithm but, it increases its robustness.
@@ -1608,7 +1606,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
         // If not, an error message should be sent to the host code.
         if (sqrt(abs(f_new))<1.0e-1*char_length_yield_surface) {}
         else {
-        cerr<<"ERROR!  did not return to yield surface (Arenisca_BB.cc)"<<endl;
+        cerr<<"ERROR!  did not return to yield surface (Arena.cc)"<<endl;
         cerr<<"J2_new= "<<J2_new<<endl;
         cerr<<"I1_new= "<<I1_new<<endl;
         cerr<<"pKappa_new[idx]= "<<kappa_new<<endl;
@@ -1710,7 +1708,7 @@ void Arenisca_BB::computeStressTensor(const PatchSubset* patches,
 }
 
 
-void Arenisca_BB::computeInvariants(Matrix3& stress, Matrix3& S,  double& I1, double& J2){
+void Arena::computeInvariants(Matrix3& stress, Matrix3& S,  double& I1, double& J2){
 
   // Compute the invariants of a second-order tensor
 
@@ -1729,7 +1727,7 @@ void Arenisca_BB::computeInvariants(Matrix3& stress, Matrix3& S,  double& I1, do
 }
 
 
-void Arenisca_BB::computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2){
+void Arena::computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2){
 
   // Compute the invariants of a second-order tensor
 
@@ -1748,11 +1746,11 @@ void Arenisca_BB::computeInvariants(const Matrix3& stress, Matrix3& S,  double& 
 }
 
 
-double Arenisca_BB::YieldFunction(const Matrix3& stress, const double& fSlope, const double& kappa,
+double Arena::YieldFunction(const Matrix3& stress, const double& fSlope, const double& kappa,
                                const double& cap_radius, const double&peakI1){
 
   // Compute the yield function.
-  // See "fig:Arenisca_BBYieldSurface" in the Arenisca manual.
+  // See "fig:ArenaYieldSurface" in the Arenisca manual.
 
   Matrix3 S;
   double I1,J2,b,var1,var2;
@@ -1789,11 +1787,11 @@ double Arenisca_BB::YieldFunction(const Matrix3& stress, const double& fSlope, c
 }
 
 
-double Arenisca_BB::YieldFunction(Matrix3& stress, const double& fSlope, const double& kappa,
+double Arena::YieldFunction(Matrix3& stress, const double& fSlope, const double& kappa,
                                 const double& cap_radius, const double&peakI1){
 
   // Compute the yield function.
-  // See "fig:Arenisca_BBYieldSurface" in the Arenisca manual.
+  // See "fig:ArenaYieldSurface" in the Arenisca manual.
 
   Matrix3 S;
   double I1,J2,b,var1,var2;
@@ -1830,7 +1828,7 @@ double Arenisca_BB::YieldFunction(Matrix3& stress, const double& fSlope, const d
 }
 
 
-void Arenisca_BB::addRequiresDamageParameter(Task* task,
+void Arena::addRequiresDamageParameter(Task* task,
                                      const MPMMaterial* matl,
                                      const PatchSet* ) const
 {
@@ -1841,7 +1839,7 @@ void Arenisca_BB::addRequiresDamageParameter(Task* task,
 }
 
 
-void Arenisca_BB::getDamageParameter(const Patch* patch,
+void Arena::getDamageParameter(const Patch* patch,
                              ParticleVariable<int>& damage,
                              int dwi,
                              DataWarehouse* old_dw,
@@ -1861,7 +1859,7 @@ void Arenisca_BB::getDamageParameter(const Patch* patch,
 }
 
 
-void Arenisca_BB::carryForward(const PatchSubset* patches,
+void Arena::carryForward(const PatchSubset* patches,
                                     const MPMMaterial* matl,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
@@ -1895,11 +1893,11 @@ void Arenisca_BB::carryForward(const PatchSubset* patches,
 }
 
 
-void Arenisca_BB::addParticleState(std::vector<const VarLabel*>& from,
+void Arena::addParticleState(std::vector<const VarLabel*>& from,
                                         std::vector<const VarLabel*>& to)
 {
 
-  // Push back all the particle variables associated with Arenisca_BB.
+  // Push back all the particle variables associated with Arena.
   from.push_back(pPlasticStrainLabel);
   from.push_back(pPlasticStrainVolLabel);
   from.push_back(pElasticStrainVolLabel);
@@ -1922,7 +1920,7 @@ void Arenisca_BB::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 
-void Arenisca_BB::addInitialComputesAndRequires(Task* task,
+void Arena::addInitialComputesAndRequires(Task* task,
                                                 const MPMMaterial* matl,
                                                 const PatchSet* patch) const
 {
@@ -1946,7 +1944,7 @@ void Arenisca_BB::addInitialComputesAndRequires(Task* task,
   d_intvar->addInitialComputesAndRequires(task, matl, patch);
 }
 
-void Arenisca_BB::addComputesAndRequires(Task* task,
+void Arena::addComputesAndRequires(Task* task,
                                               const MPMMaterial* matl,
                                               const PatchSet* patches ) const
 {
@@ -1978,7 +1976,7 @@ void Arenisca_BB::addComputesAndRequires(Task* task,
   d_intvar->addComputesAndRequires(task, matl, patches);
 }
 
-void Arenisca_BB::addComputesAndRequires(Task* ,
+void Arena::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet* ,
                                    const bool ) const
@@ -1986,7 +1984,7 @@ void Arenisca_BB::addComputesAndRequires(Task* ,
 }
 
 
-double Arenisca_BB::computeRhoMicroCM(double pressure,
+double Arena::computeRhoMicroCM(double pressure,
                                       const double p_ref,
                                            const MPMMaterial* matl,
                                            double temperature,
@@ -2002,13 +2000,13 @@ double Arenisca_BB::computeRhoMicroCM(double pressure,
   return rho_cur;
 
 #if 1
-//  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR Arenisca_BB"<<endl;
+//  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR Arena"<<endl;
 #endif
 
 }
 
 
-void Arenisca_BB::computePressEOSCM(double rho_cur,double& pressure,
+void Arena::computePressEOSCM(double rho_cur,double& pressure,
                                          double p_ref,
                                          double& dp_drho, double& tmp,
                                          const MPMMaterial* matl,
@@ -2026,18 +2024,18 @@ void Arenisca_BB::computePressEOSCM(double rho_cur,double& pressure,
 
 
 #if 1
-// cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arenisca_BB"
+// cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arena"
 //      << endl;
 #endif
 }
 
 
-double Arenisca_BB::getCompressibility()
+double Arena::getCompressibility()
 {
   double bulk = d_cm.B0;
 
 #if 1
-// cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arenisca_BB"
+// cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arena"
 //      << endl;
 #endif
 
@@ -2045,10 +2043,10 @@ double Arenisca_BB::getCompressibility()
 }
 
 
-void Arenisca_BB::initializeLocalMPMLabels()
+void Arena::initializeLocalMPMLabels()
 {
 
-  // Initialize all labels of the particle variables associated with Arenisca_BB.
+  // Initialize all labels of the particle variables associated with Arena.
   pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
@@ -2088,7 +2086,7 @@ void Arenisca_BB::initializeLocalMPMLabels()
 // Compute effective bulk and lame modulus using the volumetric strain
 // (sum of elastic and plastic volume strain)
 void 
-Arenisca_BB::computeEffectiveModuli(const double& eps_v,
+Arena::computeEffectiveModuli(const double& eps_v,
                                     double& bulk_modulus,
                                     double& lame_modulus) const
 {

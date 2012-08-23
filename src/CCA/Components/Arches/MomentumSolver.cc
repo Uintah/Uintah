@@ -131,7 +131,11 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
       _init_function = scinew AlmgrenVel(); 
 
-    } else { 
+    } else if ( _init_type == "exponentialvortex" ){ 
+    
+     _init_function = scinew ExponentialVortex(); 
+    
+  } else { 
 
       throw InvalidValue("Initialization type not recognized: " + _init_type, __FILE__, __LINE__);
 

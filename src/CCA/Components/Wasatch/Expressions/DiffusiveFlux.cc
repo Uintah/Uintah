@@ -39,8 +39,8 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     phiTag_     ( phiTag      ),
     coefTag_    ( coefTag     ),
-    turbDiffTag_( turbDiffTag ),
     rhoTag_     ( rhoTag      ),
+    turbDiffTag_( turbDiffTag ),
     coefVal_    ( 0.0         )
 {}
 
@@ -54,10 +54,10 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
   : Expr::Expression<FluxT>(),
     isConstCoef_( true        ),
     isTurbulent_( turbDiffTag != Expr::Tag()    ),
-    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
     phiTag_     ( phiTag      ),
-    turbDiffTag_( turbDiffTag ),
+    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
     rhoTag_     ( rhoTag      ),
+    turbDiffTag_( turbDiffTag ),
     coefVal_    ( coef        )
 {}
 
@@ -151,8 +151,8 @@ DiffusiveFlux2( const Expr::Tag& rhoTag,
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     phiTag_     ( phiTag      ),
     coefTag_    ( coefTag     ),
-    turbDiffTag_( turbDiffTag ),
-    rhoTag_     ( rhoTag      )
+    rhoTag_     ( rhoTag      ),
+    turbDiffTag_( turbDiffTag )
 {}
 
 //--------------------------------------------------------------------

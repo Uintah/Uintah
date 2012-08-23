@@ -856,4 +856,196 @@ RandomField<ValT>::Builder::build() const
 
 //--------------------------------------------------------------------
 
+/**
+ *  \class ExponentialVortex
+ *  \author Tony Saad
+ *  \date July, 2012
+ *  \brief Implements an exponential vortex with the streamfunction given
+           by \f$ \psi = C_0 \text{Exp}\left( - \frac{r^2}{2 R_0^2} \right) + U_0 y  \f$.
+    here, \f$ C_0 \f$ is the vortex strength, \f$ r = \sqrt{(x-x_0)^2 + (y-y0)^2} \f$
+    with \f$ x_0 \f$ and \f$ y_0 \f$ corresponding to the vortex center, \f$ R_0 \f$
+    is the vortex radius, and \f$ U_0 \f$ is the free stream velocity. NOTE: when the vortex
+    strength is larger than 0.001, you will observe skewness in the streamlines because as the
+    vortex strength corresponds to a rotation of the vortex (rotating cylinder).
+ */
+template< typename FieldT >
+class ExponentialVortex : public Expr::Expression<FieldT>
+{
+public:
+  enum VelocityComponent{
+    X1,
+    X2
+  };
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param xCenter Vortex center.
+     * @param yCenter Vortex center.
+     * @param vortexStrength Vortex strength.
+     * @param vortexRadius Vortex radius.
+     * @param freeStreamVelocity  Free stream velocity.
+     * @param velocityComponent	Velocity component to return in a right-handed Cartesian 
+              coordinate system. - use Stokes' streamfunction definition to 
+              figure out which component you want.
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const double xCenter,
+            const double yCenter,
+            const double vortexStrength,
+            const double vortexRadius,
+            const double U,
+            const double V,
+            const VelocityComponent velocityComponent);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag xTag_, yTag_;
+    const double xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_;
+    const VelocityComponent velocityComponent_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  ExponentialVortex( const Expr::Tag& xTag,
+                    const Expr::Tag& yTag,
+                    const double xCenter,
+                    const double yCenter,                    
+                    const double vortexStrength,
+                    const double vortexRadius,
+                    const double U,
+                    const double V,
+                    const VelocityComponent velocityComponent);
+  const Expr::Tag xTag_, yTag_;
+  const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, U_, V_;
+  const VelocityComponent velocityComponent_;
+  const FieldT *x_, *y_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+ExponentialVortex<FieldT>::
+ExponentialVortex( const Expr::Tag& xTag,
+                  const Expr::Tag& yTag,
+                  const double xCenter,
+                  const double yCenter,                  
+                  const double vortexStrength,
+                  const double vortexRadius,
+                  const double U,
+                  const double V,
+                  const VelocityComponent velocityComponent)
+: Expr::Expression<FieldT>(),
+xTag_     ( xTag      ), 
+yTag_     ( yTag      ), 
+xCenter_  ( xCenter   ),
+yCenter_  ( yCenter   ),
+vortexStrength_   ( vortexStrength    ), 
+vortexRadius_ ( vortexRadius ),
+U_ ( U ),
+V_ ( V ),
+velocityComponent_  ( velocityComponent )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ExponentialVortex<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ExponentialVortex<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ExponentialVortex<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= 0.0;
+  const double denom = 2.0*vortexRadius_*vortexRadius_;
+  const double expFactor = 2.0 * vortexStrength_/denom;
+  SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
+  *tmp <<= 0.0;
+  *tmp <<= (*x_ - xCenter_)*(*x_ - xCenter_) + (*y_ - yCenter_)*(*y_- yCenter_);
+  result <<= expFactor * exp(- *tmp/denom );
+
+  switch (velocityComponent_) {
+    case X1:
+      result <<=U_ - (*y_ - yCenter_)*result;
+      break;
+    case X2:
+      result <<=V_ + (*x_ - xCenter_)*result;
+      break;
+    default:
+      break;
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ExponentialVortex<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const Expr::Tag& yTag,
+        const double xCenter,
+        const double yCenter,                  
+        const double vortexStrength,
+        const double vortexRadius,
+        const double U,
+        const double V,
+        const VelocityComponent velocityComponent)
+: ExpressionBuilder(result),
+xTag_     ( xTag      ), 
+yTag_     ( yTag      ), 
+xCenter_  ( xCenter   ),
+yCenter_  ( yCenter   ),
+vortexStrength_   ( vortexStrength    ), 
+vortexRadius_ ( vortexRadius ),
+U_( U ),
+V_( V ),
+velocityComponent_  ( velocityComponent )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+ExponentialVortex<FieldT>::Builder::
+build() const
+{
+  return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_, velocityComponent_);
+}
+
+//--------------------------------------------------------------------
+
+
 #endif // Wasatch_MMS_Functions

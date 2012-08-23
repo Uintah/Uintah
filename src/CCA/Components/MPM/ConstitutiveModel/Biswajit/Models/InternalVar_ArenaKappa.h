@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __ARENISCA_KAPPA_INT_VAR_MODEL_H__
-#define __ARENISCA_KAPPA_INT_VAR_MODEL_H__
+#ifndef __ARENA_KAPPA_INT_VAR_MODEL_H__
+#define __ARENA_KAPPA_INT_VAR_MODEL_H__
 
 
 #include "InternalVariableModel.h"    
@@ -39,7 +39,7 @@ namespace UintahBB {
 
   ////////////////////////////////////////////////////////////////////////////
   /*! 
-    \class InternalVar_AreniscaKappa
+    \class InternalVar_ArenaKappa
     \brief The evolution of the kappa hardening internal variable in the
            Arenisca model
 
@@ -69,7 +69,7 @@ namespace UintahBB {
   */
   ////////////////////////////////////////////////////////////////////////////
 
-  class InternalVar_AreniscaKappa : public InternalVariableModel {
+  class InternalVar_ArenaKappa : public InternalVariableModel {
 
   public:
 
@@ -91,16 +91,16 @@ namespace UintahBB {
          
     // Prevent copying of this class
     // copy constructor
-    //InternalVar_AreniscaKappa(const InternalVar_AreniscaKappa &cm);
-    InternalVar_AreniscaKappa& operator=(const InternalVar_AreniscaKappa &cm);
+    //InternalVar_ArenaKappa(const InternalVar_ArenaKappa &cm);
+    InternalVar_ArenaKappa& operator=(const InternalVar_ArenaKappa &cm);
 
   public:
     // constructors
-    InternalVar_AreniscaKappa(Uintah::ProblemSpecP& ps);
-    InternalVar_AreniscaKappa(const InternalVar_AreniscaKappa* cm);
+    InternalVar_ArenaKappa(Uintah::ProblemSpecP& ps);
+    InternalVar_ArenaKappa(const InternalVar_ArenaKappa* cm);
          
     // destructor 
-    virtual ~InternalVar_AreniscaKappa();
+    virtual ~InternalVar_ArenaKappa();
 
     virtual void outputProblemSpec(Uintah::ProblemSpecP& ps);
          
@@ -298,4 +298,4 @@ namespace UintahBB {
 
 } // End namespace Uintah
 
-#endif  // __ARENISCA_KAPPA_INT_VAR_MODEL_H__ 
+#endif  // __ARENA_KAPPA_INT_VAR_MODEL_H__ 

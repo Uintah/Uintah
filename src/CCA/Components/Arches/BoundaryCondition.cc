@@ -162,7 +162,10 @@ BoundaryCondition::~BoundaryCondition()
         bc_iter != d_bc_information.end(); bc_iter++){
 
     VarLabel::destroy( bc_iter->second.total_area_label ); 
-
+    
+    if (bc_iter->second.type ==  TURBULENT_INLET ){
+      delete bc_iter->second.TurbIn;
+    }
   }
 
   if (_using_new_intrusion) { 
@@ -1700,6 +1703,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
     sub_types.push_back( SWIRL );
+    sub_types.push_back( TURBULENT_INLET ) ;
     sign = 1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
@@ -2716,7 +2720,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           Iterator bound_ptr;
           bool foundIterator = false;
 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else { 
@@ -2731,7 +2735,11 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
             if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
 
               setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+ 
+            } else if (bc_iter->second.type == TURBULENT_INLET) {
 
+              setTurbInlet( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.TurbIn );
+            
             } else if ( bc_iter->second.type == SWIRL ) { 
 
               if ( face == Patch::xminus || face == Patch::xplus ) { 
@@ -5320,6 +5328,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   int bc_type_index = 0; 
 
   //Map types to strings:
+  d_bc_type_to_string.insert( std::make_pair( TURBULENT_INLET, "TurbulentInlet" ) );                            
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET , "VelocityInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET , "MassFlowInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
@@ -5355,7 +5364,21 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
-
+          
+        } else if ( type == "TurbulentInlet" ) {
+          
+          my_info.type = TURBULENT_INLET;
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+          db_BCType->require("inputfile", my_info.filename);
+          db_BCType->require("value", my_info.velocity);
+          found_bc = true; 
+         
+          my_info.TurbIn = scinew DigitalFilterInlet( );
+          my_info.TurbIn->problemSetup( db_BCType );
+   
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true;
+        
         } else if ( type == "MassFlowInlet" ){
 
           my_info.type = MASSFLOW_INLET;
@@ -5500,7 +5523,7 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else { 
@@ -5592,7 +5615,7 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else { 
@@ -5738,7 +5761,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else { 
@@ -5765,6 +5788,9 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             switch ( bc_iter->second.type ) {
 
               case ( VELOCITY_INLET ): 
+                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                break;
+              case (TURBULENT_INLET):
                 bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
                 break;
               case ( MASSFLOW_INLET ): 
@@ -5902,7 +5928,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
-          if ( bc_iter->second.type == VELOCITY_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else { 
@@ -5915,8 +5941,18 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
             bound_ptr.reset(); 
 
             if ( bc_iter->second.type != VELOCITY_FILE ) { 
+              
+              if ( bc_iter->second.type != TURBULENT_INLET ) {
               //---- set velocities
-              setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+                setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+              } else {
+#if 1
+                bc_iter->second.TurbIn->findOffsetVector(  patch, face, bound_ptr );
+                //testign which int vector is returned for each inlet patch
+#endif
+                setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn );
+              }
+              
               //---- set the enthalpy
               if ( d_enthalpySolve ) 
                 setEnthalpy__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
@@ -6043,6 +6079,140 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
 
  }
 }
+
+void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType& face, 
+                                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                                    constCCVariable<double>& density, 
+                                    Iterator bound_ptr, DigitalFilterInlet * TurbInlet )
+{
+  IntVector insideCellDir = patch->faceDirection(face);
+    
+  int j, k;
+  int ts = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  double elapTime = d_lab->d_sharedState->getElapsedTime();
+  int t = TurbInlet->getTimeIndex( ts , elapTime);
+
+  IntVector	shiftVec;
+  shiftVec = TurbInlet->getOffsetVector( );
+  
+  switch ( face ) {
+    case Patch::xminus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr - insideCellDir;
+        
+        vector<double> velVal (3);
+        j = c.y() - shiftVec.y();
+        k = c.z() - shiftVec.z();
+        
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[c]  = velVal[0];
+        uVel[cp] = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        wVel[c]  = velVal[2];
+      }
+      break;
+    case Patch::xplus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr + insideCellDir;  
+        
+        vector<double> velVal (3);
+        j = c.y() - shiftVec.y();
+        k = c.z() - shiftVec.z();
+        
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[cp] = velVal[0];
+        uVel[c]  = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        wVel[c]  = velVal[2]; 
+      }
+      break;
+    case Patch::yminus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr - insideCellDir;  
+        
+        vector<double> velVal (3);
+        j = c.x() - shiftVec.x();
+        k = c.z() - shiftVec.z();
+        
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[c]  = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        vVel[cp] = velVal[1];
+        wVel[c]  = velVal[2]; 
+      }
+      
+      break;
+    case Patch::yplus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr + insideCellDir;  
+        
+        vector<double> velVal (3);
+        j = c.x() - shiftVec.x();
+        k = c.z() - shiftVec.z();
+
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[c]  = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        vVel[cp] = velVal[1];
+        wVel[c]  = velVal[2]; 
+      }
+      break;
+    case Patch::zminus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr - insideCellDir;  
+        
+        vector<double> velVal (3);
+        j = c.x() - shiftVec.x();
+        k = c.y() - shiftVec.y();
+
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[c]  = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        wVel[c]  = velVal[2];
+        wVel[cp] = velVal[2]; 
+      }
+      break;
+    case Patch::zplus:
+      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+        IntVector c  = *bound_ptr; 
+        IntVector cp = *bound_ptr + insideCellDir;  
+        
+        vector<double> velVal (3);
+        j = c.x() - shiftVec.x();
+        k = c.y() - shiftVec.y();
+
+        velVal = TurbInlet->getVelocityVector(t , j, k);
+        
+        uVel[c]  = velVal[0]; 
+        vVel[c]  = velVal[1]; 
+        wVel[c]  = velVal[2];
+        wVel[cp] = velVal[2]; 
+      }
+      break;
+    default:
+      break;
+      
+  }
+  
+//  cout << "Inlet Timestep is " << t << endl;
+}
+
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,

@@ -1076,12 +1076,12 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   // note: this counter will only get incremented each
   // time the taskgraph is recompiled
 
-  //  if (nofTimeSteps < 2 && !d_restart) {
-  if (time < 1.0E-10) {
-    d_recompile = true;
-  }
-  else
-    d_recompile = false;
+//  //  if (nofTimeSteps < 2 && !d_restart) {
+//  if (time < 1.0E-10) {
+//    d_recompile = true;
+//  }
+//  else
+//    d_recompile = false;
 
   d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
@@ -1585,8 +1585,8 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
   t->requires(Task::OldDW, d_MAlb->solid_fraction_CCLabel,   
       mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
 
-  if (time < 1.0E-10)
-    d_recompile = true;
+//  if (time < 1.0E-10)
+//    d_recompile = true;
 
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_MPM_CCLabel, arches_matls->getUnion());
@@ -1954,8 +1954,8 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
   int zeroGhostCells = 0;
 
   double time = d_sharedState->getElapsedTime();
-  if (time < 1.0E-10)
-    d_recompile = true;
+//  if (time < 1.0E-10)
+//    d_recompile = true;
 
   if (d_useCutCell)
     t->requires(Task::NewDW, d_MAlb->void_frac_CutCell_CCLabel, 

@@ -431,13 +431,6 @@ namespace Wasatch{
                                          Expr::TagList& abscissaeTags,
                                          Expr::TagList& weightsTags )
   {
-    // check for supersaturation
-    Expr::Tag superSaturationTag = Expr::Tag();
-    Uintah::ProblemSpecP superSaturationParams = momentEqsParams->findBlock("SupersaturationExpression");
-    if (superSaturationParams) {
-      superSaturationTag = parse_nametag( superSaturationParams->findBlock("NameTag") );
-    }
-    //
     std::string populationName;
     momentEqsParams->get( "PopulationName", populationName );
     int nEnv = 1;
@@ -471,7 +464,7 @@ namespace Wasatch{
     //
     // register the qmom expression
     //
-    factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags,superSaturationTag) );
+    factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags) );
   }
 
   //==================================================================

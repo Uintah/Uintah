@@ -49,6 +49,8 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include   <vector>
 
+#include <CCA/Components/Arches/DigitalFilter/DigitalFilterInlet.h>
+
 /**************************************
   CLASS
   BoundaryCondition
@@ -105,7 +107,7 @@ namespace Uintah {
     public:
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
       enum DIRECTION { CENTER, EAST, WEST, NORTH, SOUTH, TOP, BOTTOM }; 
 
       // GROUP: Constructors:
@@ -240,6 +242,11 @@ namespace Uintah {
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
+    
+      void setTurbInlet( const Patch* patch, const Patch::FaceType& face, 
+                         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
+                         constCCVariable<double>& density, 
+                         Iterator bound_iter, DigitalFilterInlet * TurbIn );
 
       template<class d0T, class d1T, class d2T>
       void setSwirl( const Patch* patch, const Patch::FaceType& face, 
@@ -817,6 +824,8 @@ namespace Uintah {
 
         // Varlabels: 
         const VarLabel* total_area_label; 
+        
+        DigitalFilterInlet * TurbIn;
 
       };
 
@@ -1318,7 +1327,7 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
            Iterator bound_ptr;
            bool foundIterator = false; 
 
-           if ( bc_iter->second.type == VELOCITY_INLET ){ 
+           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
            } else { 
@@ -1376,7 +1385,7 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
            Iterator bound_ptr;
            bool foundIterator = false; 
 
-           if ( bc_iter->second.type == VELOCITY_INLET ){ 
+           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
            } else { 

@@ -57,6 +57,6 @@ SRCS   += \
 	$(SRCDIR)/KinematicHardening_Armstrong.cc \
 	$(SRCDIR)/InternalVariableModel.cc \
 	$(SRCDIR)/InternalVariableModelFactory.cc \
-	$(SRCDIR)/InternalVar_AreniscaKappa.cc \
+	$(SRCDIR)/InternalVar_ArenaKappa.cc \
 	$(SRCDIR)/InternalVar_BorjaPressure.cc \
 

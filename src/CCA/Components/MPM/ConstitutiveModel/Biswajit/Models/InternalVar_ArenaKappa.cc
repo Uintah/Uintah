@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include "InternalVar_AreniscaKappa.h"
+#include "InternalVar_ArenaKappa.h"
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -42,26 +42,26 @@ using namespace Uintah;
 using namespace std;
 
 
-InternalVar_AreniscaKappa::InternalVar_AreniscaKappa(ProblemSpecP& ps)
+InternalVar_ArenaKappa::InternalVar_ArenaKappa(ProblemSpecP& ps)
 {
-  ps->require("arenisca_p0",d_p0);
-  ps->require("arenisca_p1",d_p1);
-  ps->require("arenisca_p3",d_p3);
-  ps->require("arenisca_p4",d_p4);
-  ps->require("arenisca_B0",d_B0);
-  ps->require("arenisca_Cr",d_Cr);
-  ps->require("arenisca_fSlope",d_fSlope);
-  ps->require("arenisca_peakI1",d_peakI1);
+  ps->require("arena_p0",d_p0);
+  ps->require("arena_p1",d_p1);
+  ps->require("arena_p3",d_p3);
+  ps->require("arena_p4",d_p4);
+  ps->require("arena_B0",d_B0);
+  ps->require("arena_Cr",d_Cr);
+  ps->require("arena_fSlope",d_fSlope);
+  ps->require("arena_peakI1",d_peakI1);
 
   // Initialize internal variable labels for evolution
-  pKappaLabel = VarLabel::create("p.arenisca_kappa",
+  pKappaLabel = VarLabel::create("p.arena_kappa",
         ParticleVariable<double>::getTypeDescription());
-  pKappaLabel_preReloc = VarLabel::create("p.arenisca_kappa+",
+  pKappaLabel_preReloc = VarLabel::create("p.arena_kappa+",
         ParticleVariable<double>::getTypeDescription());
 
 }
          
-InternalVar_AreniscaKappa::InternalVar_AreniscaKappa(const InternalVar_AreniscaKappa* cm)
+InternalVar_ArenaKappa::InternalVar_ArenaKappa(const InternalVar_ArenaKappa* cm)
 {
   d_p0 = cm->d_p0;
   d_p1 = cm->d_p1;
@@ -73,38 +73,38 @@ InternalVar_AreniscaKappa::InternalVar_AreniscaKappa(const InternalVar_AreniscaK
   d_peakI1 = cm->d_peakI1;
 
   // Initialize internal variable labels for evolution
-  pKappaLabel = VarLabel::create("p.arenisca_kappa",
+  pKappaLabel = VarLabel::create("p.arena_kappa",
         ParticleVariable<double>::getTypeDescription());
-  pKappaLabel_preReloc = VarLabel::create("p.arenisca_kappa+",
+  pKappaLabel_preReloc = VarLabel::create("p.arena_kappa+",
         ParticleVariable<double>::getTypeDescription());
 
 }
          
-InternalVar_AreniscaKappa::~InternalVar_AreniscaKappa()
+InternalVar_ArenaKappa::~InternalVar_ArenaKappa()
 {
   VarLabel::destroy(pKappaLabel);
   VarLabel::destroy(pKappaLabel_preReloc);
 }
 
 
-void InternalVar_AreniscaKappa::outputProblemSpec(ProblemSpecP& ps)
+void InternalVar_ArenaKappa::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP int_var_ps = ps->appendChild("internal_variable_model");
-  int_var_ps->setAttribute("type","arenisca_kappa");
+  int_var_ps->setAttribute("type","arena_kappa");
 
-  int_var_ps->appendElement("arenisca_p0",d_p0);
-  int_var_ps->appendElement("arenisca_p1",d_p1);
-  int_var_ps->appendElement("arenisca_p3",d_p3);
-  int_var_ps->appendElement("arenisca_p4",d_p4);
-  int_var_ps->appendElement("arenisca_B0",d_B0);
-  int_var_ps->appendElement("arenisca_Cr",d_Cr);
-  int_var_ps->appendElement("arenisca_fSlope",d_fSlope);
-  int_var_ps->appendElement("arenisca_peakI1",d_peakI1);
+  int_var_ps->appendElement("arena_p0",d_p0);
+  int_var_ps->appendElement("arena_p1",d_p1);
+  int_var_ps->appendElement("arena_p3",d_p3);
+  int_var_ps->appendElement("arena_p4",d_p4);
+  int_var_ps->appendElement("arena_B0",d_B0);
+  int_var_ps->appendElement("arena_Cr",d_Cr);
+  int_var_ps->appendElement("arena_fSlope",d_fSlope);
+  int_var_ps->appendElement("arena_peakI1",d_peakI1);
 }
 
          
 void 
-InternalVar_AreniscaKappa::addInitialComputesAndRequires(Task* task,
+InternalVar_ArenaKappa::addInitialComputesAndRequires(Task* task,
                                                          const MPMMaterial* matl ,
                                                          const PatchSet*)
 {
@@ -113,7 +113,7 @@ InternalVar_AreniscaKappa::addInitialComputesAndRequires(Task* task,
 }
 
 void 
-InternalVar_AreniscaKappa::addComputesAndRequires(Task* task,
+InternalVar_ArenaKappa::addComputesAndRequires(Task* task,
                                                   const MPMMaterial* matl ,
                                                   const PatchSet*)
 {
@@ -123,7 +123,7 @@ InternalVar_AreniscaKappa::addComputesAndRequires(Task* task,
 }
 
 void 
-InternalVar_AreniscaKappa::addParticleState(std::vector<const VarLabel*>& from,
+InternalVar_ArenaKappa::addParticleState(std::vector<const VarLabel*>& from,
                                             std::vector<const VarLabel*>& to)
 {
   from.push_back(pKappaLabel);
@@ -131,7 +131,7 @@ InternalVar_AreniscaKappa::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
-InternalVar_AreniscaKappa::allocateCMDataAddRequires(Task* task,
+InternalVar_ArenaKappa::allocateCMDataAddRequires(Task* task,
                                                      const MPMMaterial* matl ,
                                                      const PatchSet* ,
                                                      MPMLabel* )
@@ -141,7 +141,7 @@ InternalVar_AreniscaKappa::allocateCMDataAddRequires(Task* task,
 }
 
 void 
-InternalVar_AreniscaKappa::allocateCMDataAdd(DataWarehouse* old_dw,
+InternalVar_ArenaKappa::allocateCMDataAdd(DataWarehouse* old_dw,
                                              ParticleSubset* addset,
                                              map<const VarLabel*, 
                                                ParticleVariableBase*>* newState,
@@ -165,7 +165,7 @@ InternalVar_AreniscaKappa::allocateCMDataAdd(DataWarehouse* old_dw,
 }
 
 void 
-InternalVar_AreniscaKappa::initializeInternalVariable(ParticleSubset* pset,
+InternalVar_ArenaKappa::initializeInternalVariable(ParticleSubset* pset,
                                                       DataWarehouse* new_dw)
 {
   Uintah::ParticleVariable<double> pKappa;
@@ -177,7 +177,7 @@ InternalVar_AreniscaKappa::initializeInternalVariable(ParticleSubset* pset,
 }
 
 void 
-InternalVar_AreniscaKappa::getInternalVariable(ParticleSubset* pset ,
+InternalVar_ArenaKappa::getInternalVariable(ParticleSubset* pset ,
                                                DataWarehouse* old_dw,
                                                constParticleVariableBase& pKappa) 
 {
@@ -185,7 +185,7 @@ InternalVar_AreniscaKappa::getInternalVariable(ParticleSubset* pset ,
 }
 
 void 
-InternalVar_AreniscaKappa::allocateAndPutInternalVariable(ParticleSubset* pset,
+InternalVar_ArenaKappa::allocateAndPutInternalVariable(ParticleSubset* pset,
                                                           DataWarehouse* new_dw,
                                                           ParticleVariableBase& pKappa_new) 
 {
@@ -193,7 +193,7 @@ InternalVar_AreniscaKappa::allocateAndPutInternalVariable(ParticleSubset* pset,
 }
 
 void
-InternalVar_AreniscaKappa::allocateAndPutRigid(ParticleSubset* pset,
+InternalVar_ArenaKappa::allocateAndPutRigid(ParticleSubset* pset,
                                                DataWarehouse* new_dw,
                                                constParticleVariableBase& pKappa)
 {
@@ -209,7 +209,7 @@ InternalVar_AreniscaKappa::allocateAndPutRigid(ParticleSubset* pset,
 // Compute kappa_new using Newton's method
 //--------------------------------------------------------------------------------------
 double 
-InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) const
+InternalVar_ArenaKappa::computeInternalVariable(const ModelState* state) const
 {
   // Get the local variables needed
   double kappa_old = state->local_var[0];        // old value of kappa may have
@@ -233,7 +233,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
 
   if (kappa_old - d_p0 < 0.0) {
     // Update \kappa in the cae of X < p0
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+    // (see "fig:Arenisca_YieldSurface" in the Arenisca manual)
     // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
     kappa_new = computeKappaFromX1(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
@@ -246,7 +246,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
     }
   } else if (kappa_old < max_kappa) {
     // Update \kappa in the cae of p0 <= X < max_X
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+    // (see "fig:Arenisca_YieldSurface" in the Arenisca manual)
     // (see "eq:evolutionOfKappaFluidEffect1" in the Arenisca manual)
     // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     kappa_new = computeKappaFromX2(kappa_old, eps_v, delta_eps_v,
@@ -260,7 +260,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
     }
   } else {
     // Update \kappa in the cae of X >= max_X
-    // (see "fig:Arenisca_BBYieldSurface" in the Arenisca manual)
+    // (see "fig:Arenisca_YieldSurface" in the Arenisca manual)
     // In this case it is assumed that X=max_X
     // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     // pKappaState is a particle variable variable which defines if the particle
@@ -284,7 +284,7 @@ InternalVar_AreniscaKappa::computeInternalVariable(const ModelState* state) cons
 // ** NOTE** (should be replaced with function pointers)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeKappaFromX1(const double& kappa_old, 
+InternalVar_ArenaKappa::computeKappaFromX1(const double& kappa_old, 
                                               const double& epsv,
                                               const double& deltaEpsv,
                                               const double& tolerance,
@@ -335,7 +335,7 @@ InternalVar_AreniscaKappa::computeKappaFromX1(const double& kappa_old,
 // ** NOTE** (should be replaced with function pointers)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeKappaFromX2(const double& kappa_old, 
+InternalVar_ArenaKappa::computeKappaFromX2(const double& kappa_old, 
                                               const double& epsv,
                                               const double& deltaEpsv,
                                               const double& tolerance,
@@ -375,7 +375,7 @@ InternalVar_AreniscaKappa::computeKappaFromX2(const double& kappa_old,
 //       X1(kappa_{n+1}) = kappa_{n+1} - kappa_n - F1(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeX1(const double& kappa_old,
+InternalVar_ArenaKappa::computeX1(const double& kappa_old,
                                      const double& kappa_new,
                                      const double& G,
                                      const double& H,
@@ -392,7 +392,7 @@ InternalVar_AreniscaKappa::computeX1(const double& kappa_old,
 //       X1(kappa_{n+1}) = kappa_{n+1} - kappa_n - F1(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeDerivX1dkappa(const double& kappa_old,
+InternalVar_ArenaKappa::computeDerivX1dkappa(const double& kappa_old,
                                                 const double& kappa_new,
                                                 const double& delEpsv) const
 {
@@ -407,7 +407,7 @@ InternalVar_AreniscaKappa::computeDerivX1dkappa(const double& kappa_old,
 //       X1(kappa_{n+1}) = kappa_{n+1} - kappa_n - F1(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
 //--------------------------------------------------------------------------------------
 double 
-InternalVar_AreniscaKappa::computeKappaAtX1Min(const double& delEpsv) const
+InternalVar_ArenaKappa::computeKappaAtX1Min(const double& delEpsv) const
 {
   double kappa = d_p0 - 1.0/d_p1*log(-d_p3/delEpsv);
   return kappa;
@@ -419,7 +419,7 @@ InternalVar_AreniscaKappa::computeKappaAtX1Min(const double& delEpsv) const
 //       X2(kappa_{n+1}) = kappa_{n+1} - kappa_n - F2(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeX2(const double& kappa_old,
+InternalVar_ArenaKappa::computeX2(const double& kappa_old,
                                      const double& kappa_new,
                                      const double& G,
                                      const double& H,
@@ -436,7 +436,7 @@ InternalVar_AreniscaKappa::computeX2(const double& kappa_old,
 //       X2(kappa_{n+1}) = kappa_{n+1} - kappa_n - F2(kappa_{n+1},epsv_{n+1}) Delta epsv = 0
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeDerivX2dkappa(const double& kappa_old,
+InternalVar_ArenaKappa::computeDerivX2dkappa(const double& kappa_old,
                                                 const double& kappa_new,
                                                 const double& delEpsv) const
 {
@@ -451,7 +451,7 @@ InternalVar_AreniscaKappa::computeDerivX2dkappa(const double& kappa_old,
 //        B = 3 B0 [exp(p3+p4) - 1]
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeB() const
+InternalVar_ArenaKappa::computeB() const
 {
   double B = 3.0*d_B0*(exp(d_p3 + d_p4) - 1.0);
   return B;
@@ -465,7 +465,7 @@ InternalVar_AreniscaKappa::computeB() const
 //        g34 = exp(p3+p4+epsv)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeG(const double& epsv,
+InternalVar_ArenaKappa::computeG(const double& epsv,
                                     const double& B) const
 {
   double g34 = exp(d_p3 + d_p4 + epsv);
@@ -481,7 +481,7 @@ InternalVar_AreniscaKappa::computeG(const double& epsv,
 //        h3 = exp(p3+epsv)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeH(const double& epsv,
+InternalVar_ArenaKappa::computeH(const double& epsv,
                                     const double& B) const
 {
   double h3 = exp(d_p3 + epsv);
@@ -499,7 +499,7 @@ InternalVar_AreniscaKappa::computeH(const double& epsv,
 //        h3 = exp(p3+epsv)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeF1(const double& kappa,
+InternalVar_ArenaKappa::computeF1(const double& kappa,
                                      const double& G,
                                      const double& H) const
 {
@@ -512,7 +512,7 @@ InternalVar_AreniscaKappa::computeF1(const double& kappa,
 //  where f1(kappa) = 1/(p1 p3) exp(-p1 kappa - p0)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeDerivF1dkappa(const double& kappa) const
+InternalVar_ArenaKappa::computeDerivF1dkappa(const double& kappa) const
 {
   double df1dkappa = -1.0/d_p3*exp(-d_p1*(kappa - d_p0));
   return df1dkappa;
@@ -528,7 +528,7 @@ InternalVar_AreniscaKappa::computeDerivF1dkappa(const double& kappa) const
 //        h3 = exp(p3+epsv)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeF2(const double& kappa,
+InternalVar_ArenaKappa::computeF2(const double& kappa,
                                      const double& G,
                                      const double& H) const
 {
@@ -561,7 +561,7 @@ InternalVar_AreniscaKappa::computeF2(const double& kappa,
 //  where f2(kappa) = 1/(p1 p3) [kappa/p0]^(1-p0p1p3)
 //--------------------------------------------------------------------------------------
 double
-InternalVar_AreniscaKappa::computeDerivF2dkappa(const double& kappa) const
+InternalVar_ArenaKappa::computeDerivF2dkappa(const double& kappa) const
 {
   double p0p1p3 = d_p0*d_p1*d_p3;
   double df2dkappa = (1.0/p0p1p3 - 1.0)*pow((kappa/d_p0),(-p0p1p3));

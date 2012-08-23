@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_specification>
+  <Meta>
+   </Meta>
+
+  <SimulationComponent type="mpmarches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <max_Timesteps> 25 </max_Timesteps>
+    <maxTime>         1.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.0001     </delt_min>
+    <delt_max>        0.0001        </delt_max>
+    <timestep_multiplier> 0.7     </timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <outputInitTimestep/>
+    <filebase> ChannelDigitalFilter.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="scalarSP"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="cellType"/>
+    <save label="uVelocitySPBC" />
+    <save label="vVelocitySPBC" />
+    <save label="wVelocitySPBC" />
+
+ <!--save label="mixture_fraction"/-->    
+<checkpoint cycle="2" interval="0.01"/>
+  </DataArchiver>
+
+  <Grid>
+
+      <BoundaryConditions>
+<Face side="x-">
+  <BCType id="all" label="mixture_fraction" var="Dirichlet">
+    <value> 1.0 </value>
+  </BCType>
+</Face>
+
+
+      <!--Face side="x-"-->
+<Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
+        <!--BCType id = "all" label = "inletx" var = "VelocityInlet">
+          <value> [1,0,0] </value>
+        </BCType-->
+        <BCType id="all" label="Turb_In" var = "TurbulentInlet">
+          <inputfile> inputs/ARCHES/DigitalFilter/DFGChannel.txt.gz </inputfile>
+          <!--period> 34 </period-->
+          <period> 5 </period> <!-- smaller than norm so it changes in short RT -->
+          <value> [1,0,0] </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side="x+">
+        <BCType id = "all" label = "outletx" var = "OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+        <Face side="y-">
+        <BCType id = "all" label = "ymwall" var = "WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side="y+">
+        <BCType id = "all" label = "ypwall" var = "WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side="z-">
+        <BCType id = "all" label = "zmwall" var = "WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side="z+">
+        <BCType id = "all" label = "zpwall" var = "WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>    
+
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [.6,.1,.1]   </upper>
+        <resolution>  [150,25,25]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+        <patches>     [1,1,1]   </patches>
+      </Box>
+<!--periodic> [0,1,0] </periodic-->
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>         [-9.8,0,0]    </gravity>
+    <reference_point>       [-1,-1,-1]    </reference_point>
+    <viscosity>       0.001      </viscosity>
+  </PhysicalConstants>
+   
+  <CFD>
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+      <Turbulence model="compdynamicprocedure">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+      </Turbulence>
+
+      <!--Properties>
+      
+        <ColdFlowMixingModel>
+          <Stream>
+            <density>       1.05       </density>
+            <temperature>   298         </temperature>
+          </Stream>
+          <Stream>
+            <density>       1.05    </density>
+            <temperature>   298         </temperature>
+          </Stream>
+        </ColdFlowMixingModel>
+      </Properties-->
+      <Properties>
+        <ColdFlow>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <Stream_1>
+            <density>1.18</density>
+            <temperature>298</temperature>
+          </Stream_1>
+          <Stream_2>
+            <density>1.18</density>
+            <temperature>298</temperature>
+          </Stream_2>
+        </ColdFlow>
+      </Properties>
+
+<BoundaryConditions>
+  <use_new_bcs/>
+</BoundaryConditions>
+
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+<!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <variable_dt>true</variable_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-10  </tolerance>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  75      </maxiterations>
+            <skip>           1       </skip>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+ <MPM>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>linear</interpolator>
+  </MPM>
+
+  <MaterialProperties>
+    <MPM>
+      <material name="Nothingness">
+        <density>   2489.0   </density>
+        <constitutive_model type="comp_mooney_rivlin">
+          <he_constant_1>5.0</he_constant_1>
+          <he_constant_2>1.0</he_constant_2>
+          <he_PR>.49</he_PR>
+        </constitutive_model>
+        <thermal_conductivity>  0.4494           </thermal_conductivity>
+        <specific_heat>         940.36           </specific_heat>
+      
+      </material>
+      <contact>
+        <type>null</type>
+        <vel_fields>              [0,0,0]         </vel_fields>
+        <mu> 0.0 </mu>
+      </contact>
+    </MPM>
+  </MaterialProperties>
+
+  <Multimaterial>
+    <fluidThermalConductivity>0.03</fluidThermalConductivity>
+    <heatExchange>false</heatExchange>
+    <turbulentPrandtNo>0.7</turbulentPrandtNo>
+    <fluidHeatCapacity>1007.</fluidHeatCapacity>
+    <IfCutCell>false</IfCutCell>
+    <StationarySolid>true</StationarySolid>
+    <inviscid>false</inviscid>
+    <restart>true</restart>
+    <fixedCellType>true</fixedCellType>
+    <fixedTemp>true</fixedTemp>
+    <TestCutCells>true</TestCutCells>
+    <stairstep>true</stairstep>
+  </Multimaterial>
+
+</Uintah_specification>
