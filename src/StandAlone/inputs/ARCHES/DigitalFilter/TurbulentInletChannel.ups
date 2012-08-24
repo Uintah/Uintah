@@ -31,7 +31,7 @@
     <save label="wVelocitySPBC" />
 
  <!--save label="mixture_fraction"/-->    
-<checkpoint cycle="2" interval="0.01"/>
+    <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>
 
   <Grid>
