@@ -114,7 +114,8 @@ public:
   // GROUP: Problem Setup :
   ///////////////////////////////////////////////////////////////////////
   // Set up the problem specification database
-  virtual void problemSetup(const ProblemSpecP& input_db);
+  virtual void problemSetup(const ProblemSpecP& input_db,
+                            SimulationStateP& state);
 
   // GROUP: Schedule Action :
   ///////////////////////////////////////////////////////////////////////

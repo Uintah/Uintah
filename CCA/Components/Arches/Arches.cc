@@ -661,7 +661,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setMMS(d_doMMS);
-  d_nlSolver->problemSetup(db);
+  d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
 
   //__________________

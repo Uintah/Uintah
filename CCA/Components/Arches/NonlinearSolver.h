@@ -95,7 +95,7 @@ public:
   // GROUP: Problem Setup :
   ///////////////////////////////////////////////////////////////////////
   // Interface for Set up of the problem specification database
-  virtual void problemSetup(const ProblemSpecP& db) = 0;
+  virtual void problemSetup(const ProblemSpecP& db,SimulationStateP&) = 0;
 
   // GROUP: Access Functions:
 

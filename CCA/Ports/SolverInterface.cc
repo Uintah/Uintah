@@ -41,6 +41,19 @@ SolverInterface::~SolverInterface()
 {
 }
 
+void SolverInterface::scheduleInitialize(const LevelP& level,SchedulerP& sched,
+                                         const MaterialSet* matls)
+{
+}
+
+#if 0
+void SolverInterface::scheduleTransferData(const LevelP& level, 
+                                           SchedulerP& sched,
+                                           const MaterialSet* matls)
+{
+}
+#endif
+
 SolverParameters::~SolverParameters()
 {
   useStencil4                 = false;

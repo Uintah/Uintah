@@ -88,33 +88,23 @@ WARNING
     inline operator T () const {
       return value;
     }
-    virtual SoleVariableBase* clone() const;
-    virtual void copyPointer(Variable&);
-    virtual void print(std::ostream& out)
-    { out << value; }
-    virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
-                            const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
-    { out.write((char*)&value, sizeof(double)); }
-    virtual void readNormal(std::istream& in, bool swapBytes)
-    {
-      in.read((char*)&value, sizeof(double));
-      if (swapBytes) swapbytes(value);
+    inline T& get() {
+      return value;
     }
-     
-    virtual void allocate(const Patch*,const IntVector& boundary)
-    {
-      SCI_THROW(SCIRun::InternalError("Should not call SoleVariable<T>"
-                          "::allocate(const Patch*)", __FILE__, __LINE__)); 
+    inline const T& get() const {
+      return value;
     }
 
-    virtual const TypeDescription* virtualGetTypeDescription() const;
-    virtual void getMPIInfo(int& count, MPI_Datatype& datatype);
-    virtual void getMPIData(std::vector<char>& buf, int& index);
-    virtual void putMPIData(std::vector<char>& buf, int& index);
+    void setData(const T&);
+
+    virtual SoleVariableBase* clone() const;
+    virtual void copyPointer(Variable&);
+
     virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                              void*& ptr) const {
       elems="1";
       totsize = sizeof(T);
+      ptr=(void*)&value;
     }
 
   private:
@@ -122,29 +112,23 @@ WARNING
     static Variable* maker();
     T value;
   };
-   
+
   template<class T>  const TypeDescription* 
     SoleVariable<T>::getTypeDescription()
   {
     static TypeDescription* td;
     if(!td){
-      T* junk=0;
       td = scinew TypeDescription(TypeDescription::SoleVariable,
                                   "SoleVariable", &maker,
-                                  fun_getTypeDescription(junk));
+                                  fun_getTypeDescription((int*)0));
     }
     return td;
   }
 
   template<class T> Variable*  SoleVariable<T>::maker()
   {
-    return scinew SoleVariable<T>();
-  }
-   
-  template<class T> const TypeDescription*
-    SoleVariable<T>::virtualGetTypeDescription() const
-  {
-    return getTypeDescription();
+    //    return scinew SoleVariable<T>();
+    return 0;
   }
    
   template<class T> SoleVariable<T>::~SoleVariable()
@@ -171,7 +155,13 @@ WARNING
     value = copy.value;
     return *this;
   }
-  
+
+  template<class T>
+    void
+    SoleVariable<T>::setData(const T& val)
+    {
+      value = val;
+    }  
 } // End namespace Uintah
 
 #endif

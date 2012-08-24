@@ -222,7 +222,8 @@ namespace Wasatch{
   
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
                               GraphCategories& gc,
-                              Uintah::SolverInterface& linSolver) {
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP sharedState) {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     Expr::TagList poissontags;
@@ -244,7 +245,8 @@ namespace Wasatch{
     bool use3DLaplacian = true;
     poissonEqParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
         
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "",
+                                                                  sharedState );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );
@@ -272,7 +274,7 @@ namespace Wasatch{
                                                                  TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver )
+                                                                 Uintah::SolverInterface& linSolver, Uintah::SimulationStateP sharedState )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -330,7 +332,7 @@ namespace Wasatch{
                                       params,
                                       turbParams,
                                       rhsID,
-                                      linSolver );
+                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
@@ -349,7 +351,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      rhsID,
-                                     linSolver );
+                                       linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
@@ -368,7 +370,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      rhsID,
-                                     linSolver );
+                                     linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );

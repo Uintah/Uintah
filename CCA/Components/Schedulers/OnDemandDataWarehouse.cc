@@ -278,8 +278,7 @@ OnDemandDataWarehouse::get(SoleVariableBase& var,
 //______________________________________________________________________
 //
 bool
-OnDemandDataWarehouse::exists(const VarLabel* label, 
-                              int matlIndex,
+OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
                               const Patch* patch) const
 {
   d_lock.readLock();
@@ -305,6 +304,23 @@ OnDemandDataWarehouse::exists(const VarLabel* label,
   d_pvlock.readUnlock();
 
   return false;
+}
+
+//______________________________________________________________________
+//
+bool
+OnDemandDataWarehouse::exists(const VarLabel* label) const
+{
+  d_lock.readLock();
+  
+  // level-independent reduction vars can be stored with a null level
+   if(d_levelDB.exists(label, -1, 0) ) {
+     d_lock.readUnlock();
+     return true;
+   } else {
+     d_lock.readUnlock();
+     return false;
+   }
 }
 //______________________________________________________________________
 //
@@ -2256,6 +2272,7 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var,
     d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
+    SCI_THROW(InternalError("decrementScrubCount called for sole variable: "+var->getName(), __FILE__, __LINE__));
   case TypeDescription::ReductionVariable:
     SCI_THROW(InternalError("decrementScrubCount called for reduction variable: "+var->getName(), __FILE__, __LINE__));
   default:
@@ -2297,6 +2314,7 @@ OnDemandDataWarehouse::setScrubCount(const VarLabel* var,
     d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
+    SCI_THROW(InternalError("setScrubCount called for sole variable: "+var->getName(), __FILE__, __LINE__));
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("setScrubCount called for reduction variable: "+var->getName(), __FILE__, __LINE__));
@@ -2328,6 +2346,7 @@ OnDemandDataWarehouse::scrub(const VarLabel* var,
     d_pvlock.readUnlock();
     break;
   case TypeDescription::SoleVariable:
+    SCI_THROW(InternalError("scrub called for sole variable: "+var->getName(), __FILE__, __LINE__));
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("scrub called for reduction variable: "+var->getName(), __FILE__, __LINE__));

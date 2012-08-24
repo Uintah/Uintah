@@ -82,11 +82,11 @@ template<class Types>
 class DirectStencil7 : public RefCounted {
 public:
   DirectStencil7(const Level* level,
-		   const MaterialSet* matlset,
-	          const VarLabel* A, Task::WhichDW which_A_dw,
-	          const VarLabel* x, bool modifies_x,
-	          const VarLabel* b, Task::WhichDW which_b_dw,
-		   const DirectSolveParams* params)
+                 const MaterialSet* matlset,
+                 const VarLabel* A, Task::WhichDW which_A_dw,
+                 const VarLabel* x, bool modifies_x,
+                 const VarLabel* b, Task::WhichDW which_b_dw,
+                 const DirectSolveParams* params)
     : level(level), matlset(matlset),
       A_label(A), which_A_dw(which_A_dw),
       X_label(x), 
@@ -265,20 +265,33 @@ private:
   const DirectSolveParams* params;
 };
 
-SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, const string& varname)
+SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, 
+                                              const string& varname,
+                                              SimulationStateP& state)
+{
+  DirectSolveParams* p = scinew DirectSolveParams();
+  return p;
+}
+
+
+SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, 
+                                              const string& varname)
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;
 }
 
 void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
-			           const MaterialSet* matls,
-                                const VarLabel* A,    Task::WhichDW which_A_dw,  
+                                const MaterialSet* matls,
+                                const VarLabel* A,    
+                                Task::WhichDW which_A_dw,  
                                 const VarLabel* x,
-			           bool modifies_x,
-                                const VarLabel* b,    Task::WhichDW which_b_dw,  
+                                bool modifies_x,
+                                const VarLabel* b,    
+                                Task::WhichDW which_b_dw,  
                                 const VarLabel* guess,Task::WhichDW guess_dw,
-			           const SolverParameters* params)
+                                const SolverParameters* params,
+                                bool modifies_hypre)
 {
   if(level->numPatches() != 1)
     throw InternalError("DirectSolve only works with 1 patch", __FILE__, __LINE__);
