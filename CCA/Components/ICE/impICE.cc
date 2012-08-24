@@ -341,9 +341,11 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // from implicitPressure solve
   // OldDW = ParentOldDW
   // NewDW = ParentNewDW
-
-  t->requires(Task::OldDW,hypre_solver_label);
-  t->computes(hypre_solver_label);
+  
+  if (d_solver->getName() == "hypre") {
+    t->requires(Task::OldDW,hypre_solver_label);
+    t->computes(hypre_solver_label);
+  }
   //__________________________________
   // common Variables
   t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
@@ -1021,10 +1023,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
 
   SoleVariable<hypre_solver_structP> hypre_solverP_;
-  if (ParentOldDW->exists(hypre_solver_label)) {
-    ParentOldDW->get(hypre_solverP_,hypre_solver_label);
-    subNewDW->put(hypre_solverP_, hypre_solver_label);
-  } 
+  if (d_solver->getName() == "hypre") {
+    if (ParentOldDW->exists(hypre_solver_label)) {
+      ParentOldDW->get(hypre_solverP_,hypre_solver_label);
+      subNewDW->put(hypre_solverP_, hypre_solver_label);
+    } 
+  }
 
   subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patch_sub, d_press_matl);
   subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patch_sub, one_matl);
@@ -1072,7 +1076,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                               lb->imp_delPLabel, modifies_X,
                               lb->rhsLabel,      Task::OldDW,
                               whichInitialGuess, Task::OldDW,
-                              d_solver_parameters);
+                              d_solver_parameters,false);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 
@@ -1176,10 +1180,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subNewDW  = d_subsched->get_dw(3);
   bool replace = true;
 
-  if (subNewDW->exists(hypre_solver_label)) {
-    subNewDW->get(hypre_solverP_,hypre_solver_label);
-    ParentNewDW->put(hypre_solverP_, hypre_solver_label);
-  } 
+  if (d_solver->getName() == "hypre") {
+    if (subNewDW->exists(hypre_solver_label)) {
+      subNewDW->get(hypre_solverP_,hypre_solver_label);
+      ParentNewDW->put(hypre_solverP_, hypre_solver_label);
+    } 
+  }
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);
