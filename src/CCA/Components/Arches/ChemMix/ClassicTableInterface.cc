@@ -498,6 +498,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           if ( i->first == "density" ){ 
             table_value = 1.0 / temp_table_value; 
+          } else { 
+            table_value = temp_table_value; 
           } 
 
         }
@@ -642,6 +644,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
               if ( i->first == "density" ){ 
                 table_value = 1.0 / temp_table_value; 
+              } else { 
+                table_value = temp_table_value; 
               } 
             } 
 
