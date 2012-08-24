@@ -74,7 +74,9 @@ namespace Wasatch{
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const Expr::ExpressionID rhsID,
-                               Uintah::SolverInterface& linSolver);
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP sharedState);
+
 
     ~MomentumTransportEquation();
 

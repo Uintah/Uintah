@@ -72,17 +72,20 @@ WARNING
    public:
       
       virtual ~SoleVariableBase();
+
       
       virtual void copyPointer(Variable&) = 0;
-      virtual SoleVariableBase* clone() const = 0;
-      virtual void print(std::ostream&) = 0;
-      virtual void getMPIInfo(int& count, MPI_Datatype& datatype) = 0;
-      virtual void getMPIData(std::vector<char>& buf, int& index) = 0;
-      virtual void putMPIData(std::vector<char>& buf, int& index) = 0;
-      virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+      virtual SoleVariableBase* clone() const = 0; 
+      virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems,unsigned long& totsize,
                                void*& ptr) const = 0;
+      virtual void emitNormal(std::ostream& out, const IntVector& l,
+                              const IntVector& h, ProblemSpecP varnode, 
+                              bool outputDoubleAsFloat );
+      virtual void readNormal(std::istream& in, bool swapbytes);      
+      virtual void allocate(const Patch* patch, const IntVector& boundary);
+
    protected:
       SoleVariableBase(const SoleVariableBase&);
       SoleVariableBase();

@@ -34,9 +34,13 @@
       </Level>
     </Grid>
 
+    <Solver type="hypre" />
+
     <SolverTest>
       <delt>.01</delt>
       <X_Laplacian/>
+      <Y_Laplacian/>
+      <Z_Laplacian/>
       <Parameters variable="implicitPressure">
 
        <!-- CGSolver options -->
@@ -52,6 +56,7 @@
        <npost>          1       </npost>
        <skip>           0       </skip>
        <jump>           0       </jump>
+       <setupFrequency> 3       </setupFrequency>
       </Parameters>
    </SolverTest>        
 

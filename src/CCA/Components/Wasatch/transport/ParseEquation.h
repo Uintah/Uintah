@@ -124,10 +124,12 @@ namespace Wasatch{
                                                                  TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver);
+                                                                 Uintah::SolverInterface& linSolver,
+                                                                 Uintah::SimulationStateP sharedState);
   void parse_poisson_equation( Uintah::ProblemSpecP params,
-                              GraphCategories& gc,
-                              Uintah::SolverInterface& linSolver);
+                               GraphCategories& gc,
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP sharedState);
   
   /**
    *  \brief Build moment transport equations specified by "params"

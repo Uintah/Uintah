@@ -341,6 +341,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // from implicitPressure solve
   // OldDW = ParentOldDW
   // NewDW = ParentNewDW
+
+  t->requires(Task::OldDW,hypre_solver_label);
+  t->computes(hypre_solver_label);
   //__________________________________
   // common Variables
   t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
@@ -1016,7 +1019,13 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
-  
+
+  SoleVariable<hypre_solver_structP> hypre_solverP_;
+  if (ParentOldDW->exists(hypre_solver_label)) {
+    ParentOldDW->get(hypre_solverP_,hypre_solver_label);
+    subNewDW->put(hypre_solverP_, hypre_solver_label);
+  } 
+
   subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patch_sub, d_press_matl);
   subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patch_sub, one_matl);
   
@@ -1043,6 +1052,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
   d_solver_parameters->setResidualNormalizationFactor(vol);
+
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
   //__________________________________
@@ -1054,13 +1064,15 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
                               all_matls);
+
+
       
       d_solver->scheduleSolve(level, d_subsched, d_press_matlSet,
-                            lb->matrixLabel,   Task::NewDW,
-                            lb->imp_delPLabel, modifies_X,
-                            lb->rhsLabel,      Task::OldDW,
-                            whichInitialGuess, Task::OldDW,
-                            d_solver_parameters);
+                              lb->matrixLabel,   Task::NewDW,
+                              lb->imp_delPLabel, modifies_X,
+                              lb->rhsLabel,      Task::OldDW,
+                              whichInitialGuess, Task::OldDW,
+                              d_solver_parameters);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 
@@ -1163,6 +1175,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   // Move products of iteration (only) from sub_new_dw -> parent_new_dw
   subNewDW  = d_subsched->get_dw(3);
   bool replace = true;
+
+  if (subNewDW->exists(hypre_solver_label)) {
+    subNewDW->get(hypre_solverP_,hypre_solver_label);
+    ParentNewDW->put(hypre_solverP_, hypre_solver_label);
+  } 
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);

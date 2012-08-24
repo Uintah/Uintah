@@ -1,3 +1,4 @@
+
 /*
 
 The MIT License
@@ -31,8 +32,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 
+#define HYPRE_TIMING
+
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Handle.h>
+#include <HYPRE_struct_ls.h>
+#include <HYPRE_krylov.h>
 /**
  *  @class  HypreSolver2
  *  @author Steve Parker
@@ -47,14 +54,105 @@ DEALINGS IN THE SOFTWARE.
  */
 
 namespace Uintah {
+
+  
+
+  enum SolverType {
+    smg,
+    pfmg,
+    sparsemsg,
+    pcg,
+    hybrid,
+    gmres,
+    jacobi,
+    diagonal
+    };
+
+
+  struct hypre_solver_struct : public RefCounted {
+    SolverType solver_type;
+    SolverType precond_solver_type;
+    HYPRE_StructSolver solver;
+    HYPRE_StructSolver precond_solver;
+    HYPRE_StructMatrix* HA;
+    HYPRE_StructVector* HB;
+    HYPRE_StructVector* HX;
+    
+    virtual ~hypre_solver_struct() {
+      HYPRE_StructMatrixDestroy(*HA);
+      HYPRE_StructVectorDestroy(*HB);
+      HYPRE_StructVectorDestroy(*HX);
+      
+      switch (solver_type) {
+      case smg:
+        HYPRE_StructSMGDestroy(solver);
+        break;
+      case pfmg:
+        HYPRE_StructPFMGDestroy(solver);
+        break;
+      case sparsemsg:
+        HYPRE_StructSparseMSGDestroy(solver);
+        break;
+      case pcg:
+        HYPRE_StructPCGDestroy(solver);
+        break;
+      case gmres:
+        HYPRE_StructGMRESDestroy(solver);
+        break;
+      case jacobi:
+        HYPRE_StructJacobiDestroy(solver);
+        break;
+      default:
+        throw InternalError("HypreSolver given a bad solver type!", 
+                            __FILE__, __LINE__);
+      }
+
+
+      switch (precond_solver_type) {
+      case smg:
+        HYPRE_StructSMGDestroy(precond_solver);
+        break;
+      case pfmg:
+        HYPRE_StructPFMGDestroy(precond_solver);
+        break;
+      case sparsemsg:
+        HYPRE_StructSparseMSGDestroy(precond_solver);
+        break;
+      case pcg:
+        HYPRE_StructPCGDestroy(precond_solver);
+        break;
+      case gmres:
+        HYPRE_StructGMRESDestroy(precond_solver);
+        break;
+      case jacobi:
+        HYPRE_StructJacobiDestroy(precond_solver);
+        break;
+      default:
+        throw InternalError("HypreSolver given a bad solver type!", 
+                            __FILE__, __LINE__);
+      }
+      #if 0
+      HYPRE_StructPCGDestroy(solver);
+      HYPRE_StructPFMGDestroy(precond_solver);
+      #endif
+
+      delete HA;  
+      delete HB;  
+      delete HX;  
+    };
+  };
+
+  typedef Handle<hypre_solver_struct> hypre_solver_structP;
+
   class HypreSolver2 : public SolverInterface, public UintahParallelComponent {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
-                                             const std::string& name);
-    
+                                             const std::string& name,
+                                             SimulationStateP& state);
+
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
      *
@@ -63,7 +161,7 @@ namespace Uintah {
      *  @param matls A pointer to the MaterialSet.
      *  @param A Varlabel of the coefficient matrix \[\mathbf{A}\]
      *  @param which_A_dw The datawarehouse in which the coefficient matrix lives.
-     *  @param x The varlabel of the solution vector.
+     *  @param x The varlabel of the solutio1n vector.
      *  @param modifies_x A boolean that specifies the behaviour of the task 
                           associated with the ScheduleSolve. If set to true,
                           then the task will only modify x. Otherwise, it will
@@ -86,10 +184,22 @@ namespace Uintah {
                                Task::WhichDW which_b_dw,  
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
-                               const SolverParameters* params);
+                               const SolverParameters* params,
+                               bool modifies_hypre = false);
 
-  virtual string getName();
+    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched,
+                                    const MaterialSet* matls);
+
+    virtual string getName();
+
+    void allocateHypreMatrices(DataWarehouse* new_dw);
+
   private:
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset* patches, const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    const VarLabel* hypre_solver_label;
   };
 }
 
