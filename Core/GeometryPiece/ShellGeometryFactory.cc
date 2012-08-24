@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/PlaneShellPiece.h>
 #include <Core/GeometryPiece/SphereShellPiece.h>
 #include <Core/GeometryPiece/CylinderShellPiece.h>
-#include <Core/GeometryPiece/GUVSphereShellPiece.h>
+//#include <Core/GeometryPiece/GUVSphereShellPiece.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -59,8 +59,8 @@ ShellGeometryFactory::create( ProblemSpecP & ps )
   else if (go_type == CylinderShellPiece::TYPE_NAME ) {
     return scinew CylinderShellPiece(ps);
   }
-  else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
-    return scinew GUVSphereShellPiece(ps);
-  }
+//  else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
+//    return scinew GUVSphereShellPiece(ps);
+//  }
   return NULL;
 }
