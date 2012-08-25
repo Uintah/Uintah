@@ -333,7 +333,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     d_subsched->mapDataWarehouse(Task::OldDW, 2);
     d_subsched->mapDataWarehouse(Task::NewDW, 3);
 
-
+    d_subsched->overrideVariableBehavior(hypre_solver_label->getName(),false,
+                                         false,false,true,true);
   
     d_recompileSubsched = true;
 
@@ -966,6 +967,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                           
   if(d_impICE) {        //  I M P L I C I T
   
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
+                                    false,true,true);
+
     scheduleSetupRHS(                     sched, patches,  one_matl, 
                                                            all_matls,
                                                            false,

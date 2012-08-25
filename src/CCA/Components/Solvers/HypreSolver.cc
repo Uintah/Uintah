@@ -1347,7 +1347,6 @@ namespace Uintah {
     }  else {
       task->requires(Task::OldDW,hypre_solver_label);
       task->computes(hypre_solver_label);
-      cout << "Scheduling computes" << endl;
     }
 
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
