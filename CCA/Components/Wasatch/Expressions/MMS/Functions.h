@@ -39,6 +39,8 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/math/special_functions/bessel.hpp>
+
 
 /**
  *  \class SineTime
@@ -1044,6 +1046,220 @@ ExponentialVortex<FieldT>::Builder::
 build() const
 {
   return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_, velocityComponent_);
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \class LambsDipole
+ *  \author Tony Saad
+ *  \date August, 2012
+ *  \brief Implements a Lamb's dipole vortex.
+ */
+template< typename FieldT >
+class LambsDipole : public Expr::Expression<FieldT>
+{
+public:
+  enum VelocityComponent{
+    X1,
+    X2
+  };
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param xCenter Vortex center.
+     * @param yCenter Vortex center.
+     * @param vortexStrength Vortex strength.
+     * @param vortexRadius Vortex radius.
+     * @param freeStreamVelocity  Free stream velocity.
+     * @param velocityComponent	Velocity component to return in a right-handed Cartesian 
+     coordinate system. - use Stokes' streamfunction definition to 
+     figure out which component you want.
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const double xCenter,
+            const double yCenter,
+            const double vortexStrength,            
+            const double vortexRadius,
+            const double U,
+            const VelocityComponent velocityComponent);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag xTag_, yTag_;
+    const double x0_, y0_, G_, R_, U_;
+    const VelocityComponent velocityComponent_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  LambsDipole( const Expr::Tag& xTag,
+                    const Expr::Tag& yTag,
+                    const double xCenter,
+                    const double yCenter,     
+                    const double vortexStrength,              
+                    const double vortexRadius,
+                    const double U,
+                    const VelocityComponent velocityComponent);
+  const Expr::Tag xTag_, yTag_;
+  const double x0_, y0_, G_, R_, U_;
+  const VelocityComponent velocityComponent_;
+  const FieldT *x_, *y_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+LambsDipole<FieldT>::
+LambsDipole( const Expr::Tag& xTag,
+                  const Expr::Tag& yTag,
+                  const double x0,
+                  const double y0,    
+                  const double G,
+                  const double R,
+                  const double U,
+                  const VelocityComponent velocityComponent)
+: Expr::Expression<FieldT>(),
+xTag_( xTag ), 
+yTag_( yTag ), 
+x0_  ( x0 ),
+y0_  ( y0 ),
+G_   ( G  ),
+R_   ( R  ),
+U_   ( U  ),
+velocityComponent_  ( velocityComponent )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+LambsDipole<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+LambsDipole<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+LambsDipole<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= 0.0;
+  
+  const double kR = 3.831705970207515;
+  const double k = kR/R_;
+  const double denom = boost::math::cyl_bessel_j(0, kR);
+
+  SpatFldPtr<FieldT> xx0 = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> yy0 = SpatialFieldStore::get<FieldT>( result );
+
+  *xx0 <<= *x_ - x0_;
+  *yy0 <<= *y_ - y0_;
+  
+  SpatFldPtr<FieldT> r = SpatialFieldStore::get<FieldT>( result );
+  *r <<= sqrt(*xx0 * *xx0 + *yy0 * *yy0);
+  
+  SpatFldPtr<FieldT> tmp0 = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> tmp1 = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> tmp2 = SpatialFieldStore::get<FieldT>( result );
+  
+  typename FieldT::iterator riter = r->begin();
+  typename FieldT::iterator tmp0iter = tmp0->begin();
+  typename FieldT::iterator tmp1iter = tmp1->begin();
+  typename FieldT::iterator tmp2iter = tmp2->begin();  
+  double kr;
+  std::cout << "got here \n";
+  while (riter != r->end()) {
+    kr = k * *riter;
+    
+    *tmp0iter = boost::math::cyl_bessel_j(0, kr);
+    *tmp1iter = boost::math::cyl_bessel_j(1, kr);
+    *tmp2iter = boost::math::cyl_bessel_j(2, kr);    
+    
+    ++riter;
+    ++tmp0iter;
+    ++tmp1iter;
+    ++tmp2iter;
+  }
+  std::cout << "got here 2 \n";  
+  switch (velocityComponent_) {
+      
+    case X1:
+      result <<= U_ + cond ( *r <= R_, 
+                       G_/(k*denom) * ( k * *yy0 * *yy0 * (*tmp0 - *tmp2)/(*r * *r) +2.0 * *xx0 * *xx0 * *tmp1/(*r * *r * *r) ) )
+                      ( G_/(*r * *r * *r * *r) * ( R_*R_*(-*xx0* *xx0 + *yy0* *yy0) + *r * *r * *r * *r) );
+      break;
+    case X2:
+      result <<= cond ( *r <= R_, 
+                        -G_* *xx0 * *yy0/(k*denom * *r * *r * *r) * ( k * *r * (*tmp0 - *tmp2) - 2.0 * *tmp1 ) )
+                      ( - 2.0*R_*R_*G_* *xx0 * *yy0/(*r * *r * *r * *r) );      
+      break;
+    default:
+      break;
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+LambsDipole<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const Expr::Tag& yTag,
+        const double xCenter,
+        const double yCenter,     
+        const double vortexStrength,
+        const double vortexRadius,
+        const double U,
+        const VelocityComponent velocityComponent)
+: ExpressionBuilder(result),
+xTag_     ( xTag      ), 
+yTag_     ( yTag      ), 
+x0_  ( xCenter   ),
+y0_  ( yCenter   ),
+G_ ( vortexStrength),
+R_ ( vortexRadius ),
+U_( U ),
+velocityComponent_  ( velocityComponent )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+LambsDipole<FieldT>::Builder::
+build() const
+{
+  return new LambsDipole<FieldT>( xTag_, yTag_, x0_, y0_, G_, R_, U_, velocityComponent_);
 }
 
 //--------------------------------------------------------------------
