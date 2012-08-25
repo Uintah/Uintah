@@ -263,6 +263,35 @@ namespace Wasatch{
       builder = scinew typename ExpVortex::Builder( tag, xTag, yTag, x0, y0, G, R, U, V, velComponent );
     }    
     
+    else if ( params->findBlock("LambsDipole") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("LambsDipole");
+      double x0, y0, G, R, U;
+      std::string velocityComponent;
+      
+      valParams->getAttribute("x0",x0);
+      valParams->getAttribute("y0",y0);
+      valParams->getAttribute("G",G);
+      valParams->getAttribute("R",R);
+      valParams->getAttribute("U",U);
+      valParams->getAttribute("velocityComponent",velocityComponent);
+      
+      typedef LambsDipole<FieldT> Dipole;
+      typename Dipole::VelocityComponent velComponent;            
+      if      (velocityComponent == "X1") velComponent = Dipole::X1;
+      else if (velocityComponent == "X2") velComponent = Dipole::X2;
+      else {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: The velocity component " << velocityComponent
+        << " is not supported in the ExponentialVortex expression." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }      
+      
+      const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
+      const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
+      builder = scinew typename Dipole::Builder( tag, xTag, yTag, x0, y0, G, R, U, velComponent );
+    }        
+    
     else if( params->findBlock("RandomField") ){
       Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
       double low, high, seed;
