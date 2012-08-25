@@ -1066,6 +1066,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       //__________________________________
       // schedule the tasks
       
+      d_subsched->overrideVariableBehavior(hypre_solver_label->getName(),false,
+                                           false,false,true,true);
+
+
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
                               all_matls);
 
