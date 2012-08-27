@@ -551,9 +551,9 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <D_mol                        spec="OPTIONAL NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/> <!-- label pointing the molecular diffusivity --> 
+                                        attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity --> 
           <D_mol_constant               spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"/> <!-- for constant diffusivity --> 
+                                        attribute1="value REQUIRED DOUBLE"/> <!-- [m^2/s] --> <!-- for constant diffusivity --> 
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian'">
             <!-- constant value initialization -->
