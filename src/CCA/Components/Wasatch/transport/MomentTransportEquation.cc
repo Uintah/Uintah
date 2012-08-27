@@ -88,7 +88,7 @@ namespace Wasatch {
         // register a moment closure expression
         const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder));
+        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);

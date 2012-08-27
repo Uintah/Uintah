@@ -181,7 +181,7 @@ evaluate()
         result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(*rStar_ + stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
+                                                pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
         typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
         typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
@@ -215,7 +215,7 @@ evaluate()
         result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(constRStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+                                                pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
         std::vector <double> x;
         double dx;
@@ -242,7 +242,7 @@ evaluate()
         result <<= constCoef_ * pow(*rStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                   pow(*rStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+                                   pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
         typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
         typename FieldT::interior_iterator resultsIter = result.interior_begin();
@@ -274,7 +274,7 @@ evaluate()
         result <<= constCoef_ * pow(constRStar_, momentOrder_);
       } else if (birthModel_ == "UNIFORM" ) {
         result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                  pow(constRStar_ + stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+                                  pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
         std::vector <double> x;
         double dx;
