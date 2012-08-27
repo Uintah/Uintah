@@ -148,6 +148,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
       var_values.clear(); 
       bool found_vars = false; 
 
+      proc0cout << "For inert: " << phi << ", adding species: " << std::endl;
       for ( ProblemSpecP db_var = db_st->findBlock("var"); db_var != 0; db_var = db_var->findNextBlock("var") ){ 
 
         std::string label; 
@@ -159,17 +160,19 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
         doubleMap::iterator iter = var_values.find( label ); 
         if ( iter == var_values.end() ){ 
           var_values.insert( std::make_pair( label, value ) );
+          proc0cout << " ---> " << label << ", " << value << std::endl;
           found_vars = true; 
         }
 
       } 
+      proc0cout << "\n";
 
       if ( found_vars ){ 
 
         d_does_post_mixing = true; 
         InertMasterMap::iterator iter = d_inertMap.find( phi ); 
         if ( iter == d_inertMap.end() ){ 
-          d_inertMap.insert( std::make_pair( phi, var_values ) );  
+          d_inertMap.insert( std::make_pair( phi, var_values ) );   
         } 
 
       } else { 

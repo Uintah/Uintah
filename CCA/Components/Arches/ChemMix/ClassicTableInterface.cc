@@ -809,6 +809,12 @@ ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& s
   if ( calcEnthalpy )
     tsk->requires( Task::NewDW, d_enthalpy_label, gn, 0 ); 
 
+  // for inert mixing 
+  for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, gn, 0 ); 
+  } 
+
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
@@ -844,6 +850,20 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
       new_dw->get(enthalpy, d_enthalpy_label, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
+
+    // for inert mixing 
+    StringToCCVar inert_mixture_fractions; 
+    inert_mixture_fractions.clear(); 
+    for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+      const VarLabel* label = VarLabel::find( iter->first ); 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, label, matlIndex, patch, gn, 0 ); 
+      ConstVarContainer container; 
+      container.var = variable; 
+
+      inert_mixture_fractions.insert( std::make_pair( iter->first, container) ); 
+
+    } 
 
     // exceptions for cold flow or adiabatic cases
     bool compute_heatloss = true; 
@@ -893,10 +913,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
        // double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
 				double sensible_enthalpy    = ND_interp->find_val( iv, i_index->second );
-				
-				
-				
-				
+
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
 
         double adiabatic_enthalpy = 0.0;
@@ -910,6 +927,19 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
           // requires that you have _H_fuel defined in the table
           adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
         }
+
+        // for post look-up mixing
+        for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+            inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+          double inert_f = inert_iter->second.var[c];
+          doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
+
+          strict_post_mixing( sensible_enthalpy, inert_f, "sensibleenthalpy", inert_species_map_list ); 
+          strict_post_mixing( adiabatic_enthalpy, inert_f, "adiabaticenthalpy", inert_species_map_list ); 
+
+        }
+				
         double current_heat_loss  = 0.0;
         double small = 1.0; 
         if ( calcEnthalpy ) {
@@ -975,6 +1005,12 @@ ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, Schedule
       tsk->requires( Task::NewDW, the_label, gn, 0 ); 
   }
 
+  // for inert mixing 
+  for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, gn, 0 ); 
+  } 
+
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 
 }
@@ -1001,6 +1037,20 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
     CCVariable<double> enthalpy; 
     new_dw->getModifiable( enthalpy, d_enthalpy_label, matlIndex, patch ); 
+
+    // for inert mixing 
+    StringToCCVar inert_mixture_fractions; 
+    inert_mixture_fractions.clear(); 
+    for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
+      const VarLabel* label = VarLabel::find( iter->first ); 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, label, matlIndex, patch, gn, 0 ); 
+      ConstVarContainer container; 
+      container.var = variable; 
+
+      inert_mixture_fractions.insert( std::make_pair( iter->first, container) ); 
+
+    } 
 
     std::vector<constCCVariable<double> > the_variables; 
 
@@ -1061,6 +1111,18 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
         //WARNING: Development only
         adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
       } 
+
+      // for post look-up mixing
+      for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+          inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+        double inert_f = inert_iter->second.var[c];
+        doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
+
+        strict_post_mixing( adiabatic_enthalpy, inert_f, "adiabaticenthalpy", inert_species_map_list ); 
+        strict_post_mixing( sensible_enthalpy, inert_f, "sensibleenthalpy", inert_species_map_list ); 
+
+      }
 
       enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
 

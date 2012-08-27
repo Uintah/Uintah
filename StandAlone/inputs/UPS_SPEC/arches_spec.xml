@@ -210,6 +210,8 @@
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
               2) If specifying density, specify the INVERSE value 
+              3) If specifying mixture molecular weight, specify the INVERSE value 
+              4) Dont forget to set thermodynamic properties if you are computing heat loss. 
             --> 
             <stream                     spec="OPTIONAL NO_DATA"
                                         attribute1="transport_label REQUIRED STRING">
@@ -543,8 +545,8 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
-          <use_laminar_pr               spec="OPTIONAL NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
+          <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/-->
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
           <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
