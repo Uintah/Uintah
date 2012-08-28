@@ -1197,7 +1197,6 @@ evaluate()
   typename FieldT::iterator tmp1iter = tmp1->begin();
   typename FieldT::iterator tmp2iter = tmp2->begin();  
   double kr;
-  std::cout << "got here \n";
   while (riter != r->end()) {
     kr = k * *riter;
     
@@ -1210,17 +1209,19 @@ evaluate()
     ++tmp1iter;
     ++tmp2iter;
   }
-  std::cout << "got here 2 \n";  
+
   switch (velocityComponent_) {
+      
+      
       
     case X1:
       result <<= U_ + cond ( *r <= R_, 
-                       G_/(k*denom) * ( k * *yy0 * *yy0 * (*tmp0 - *tmp2)/(*r * *r) +2.0 * *xx0 * *xx0 * *tmp1/(*r * *r * *r) ) )
-                      ( G_/(*r * *r * *r * *r) * ( R_*R_*(-*xx0* *xx0 + *yy0* *yy0) + *r * *r * *r * *r) );
+                       2.0*G_/(k*denom) * ( k * *yy0 * *yy0 * *tmp0 / (*r * *r) + (*xx0 * *xx0 - *yy0 * *yy0) * *tmp1/(*r * *r * *r) ) )
+                      ( G_ + G_*R_*R_/(*r * *r) - 2.0*G_*R_*R_* (*xx0 * *xx0)/(*r * *r * *r * *r) );
       break;
     case X2:
       result <<= cond ( *r <= R_, 
-                        -G_* *xx0 * *yy0/(k*denom * *r * *r * *r) * ( k * *r * (*tmp0 - *tmp2) - 2.0 * *tmp1 ) )
+                        2.0*G_/denom * *xx0 * *yy0 * *tmp2 /(*r * *r) )
                       ( - 2.0*R_*R_*G_* *xx0 * *yy0/(*r * *r * *r * *r) );      
       break;
     default:
