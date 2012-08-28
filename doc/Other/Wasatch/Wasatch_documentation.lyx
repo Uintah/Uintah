@@ -6570,7 +6570,811 @@ Momentum field resulting from ExponentialVortex initialization.
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+LambsDipole
+\end_layout
+
+\begin_layout Standard
+Lamb's dipole is a steady-state solution to the Euler equations using a
+ vorticity-streamfunction approach.
+ In this approach, one specifies an explicit relation between the vorticity
+ and the streamfunction.
+ Lamb's dipole solution assumes that the azimuthal vorticity has a linear
+ dependence on the streamfunction such that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\omega_{z}=k^{2}\psi
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The solution to the Euler equations in this case, in an infinite mass of
+ fluid, results in the following
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\psi_{\text{dipole}}(r,\theta)=\begin{cases}
+\frac{2U_{0}}{kJ_{0}(kR)}J_{1}(kr)\sin\theta & r\leq R\\
+U_{0}(r-\frac{R^{2}}{r})\sin\theta & r>R
+\end{cases}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $U_{0}$
+\end_inset
+
+ is the propagation velocity of the dipole, 
+\begin_inset Formula $k$
+\end_inset
+
+ is the proportionality constant relating the vorticity to the streamfunction
+ and may be determined from 
+\begin_inset Formula $J_{1}(kR)=0$
+\end_inset
+
+ or 
+\begin_inset Formula $kR\approx3.8317$
+\end_inset
+
+, 
+\begin_inset Formula $R$
+\end_inset
+
+ is the radius of the dipole, and 
+\begin_inset Formula $J_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $J_{1}$
+\end_inset
+
+ are the zeroth- and first-order Bessel functions of the first kind, respectivel
+y.
+ The dipole is finall be superimposed on a uniform stream.
+\end_layout
+
+\begin_layout Standard
+To make this solution accessible to code implementation, it must be transformed
+ to cartesian coordinates.
+ We also wish to place the dipole at any location in the flow field.
+ We first calculate the radial and tangenial velocities of 
+\begin_inset Formula $\psi_{\text{dipole}}$
+\end_inset
+
+.
+ These are given by the polar streamfunction relations
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{r}=\frac{1}{r}\frac{\partial\psi}{\partial\theta};\quad u_{\theta}=-\frac{\partial\psi}{\partial r}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+These calculations return
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{r,\text{dipole}}=\begin{cases}
+\frac{2U_{0}}{kJ_{0}(kR)}J_{1}(kr)\cos\theta & r\leq R\\
+U_{0}(1-\frac{R^{2}}{r^{2}})\cos\theta & r>R
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{\theta,\text{dipole}}=\begin{cases}
+-U_{0}\sin\theta+\frac{U_{0}}{J_{0}(kR)}J_{2}(kr)\sin\theta & r\leq R\\
+-U_{0}(1+\frac{R^{2}}{r^{2}})\cos\theta & r>R
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+Finally, the axial and transverse velocities are constructed by setting
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{x,\text{dipole}}=u_{r,\text{dipole}}\cos\theta-u_{\theta,\text{dipole}}\sin\theta
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+and
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{y,\text{dipole}}=u_{r,\text{dipole}}\sin\theta+u_{\theta,\text{dipole}}\cos\theta
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By subsituting 
+\begin_inset Formula $\theta=\tan^{-1}(\frac{y}{x})$
+\end_inset
+
+ or using 
+\begin_inset Formula $\cos\theta=\frac{x}{r}$
+\end_inset
+
+ and 
+\begin_inset Formula $\sin\theta=\frac{y}{r}$
+\end_inset
+
+, we recover
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{x,\text{dipole}}=\begin{cases}
+\frac{2U_{0}}{kJ_{0}(kR)r^{3}}[kry^{2}J_{0}(kr)+(x^{2}-y^{2})J_{1}(kr)] & r\leq R\\
+U_{0}+\frac{U_{0}R^{2}}{r^{4}}(r^{2}-2x^{2}) & r>R
+\end{cases};\quad r=\sqrt{x^{2}+y^{2}}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+and
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{y,\text{dipole}}=\begin{cases}
+\frac{2U_{0}}{J_{0}(kR)r^{2}}J_{2}(kr) & r\leq R\\
+-\frac{2U_{0}R^{2}}{r^{4}}xy & r>R
+\end{cases};\quad r=\sqrt{x^{2}+y^{2}}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+Finally, the total flowfield with a uniform flow given by 
+\begin_inset Formula $U$
+\end_inset
+
+ in the 
+\begin_inset Formula $x$
+\end_inset
+
+-direction is computed as
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{x}=U+u_{x,\text{dipole}}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+and
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+u_{y}=u_{y,\text{dipole}}
+\end{equation}
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+To place the dipole at a random point 
+\begin_inset Formula $(x_{0},y_{0})$
+\end_inset
+
+, we simply perform the following substitutions in the above equations
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+x\to x-x_{0};\quad y\to y-y_{0};\quad r\to\sqrt{(x-x_{0})^{2}+(y-y_{0})^{2}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+What follows is an example for initializating the axial and transverse momentum
+ components with a Lamb-dipole vortex, centered at 
+\begin_inset Formula $[0.0,0.0]$
+\end_inset
+
+ with a propagation velocity of 
+\begin_inset Formula $U_{0}=0.9$
+\end_inset
+
+, a radius of 
+\begin_inset Formula $R_{0}=0.1$
+\end_inset
+
+, and a free stream velocity 
+\begin_inset Formula $U=0.1$
+\end_inset
+
+.
+ Note that you must specify both velocity or momentum components to recover
+ physically relevant initial conditions.
+ You can find the 
+\begin_inset Quotes eld
+\end_inset
+
+ups
+\begin_inset Quotes erd
+\end_inset
+
+ file in the Wasatch inputs directory under the name 
+\begin_inset Quotes eld
+\end_inset
+
+dipole-vortex-example.ups
+\begin_inset Quotes erd
+\end_inset
+
+.
+\begin_inset ERT
+status open
+
 \begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of an exponential vortex as initial condition
+ for axial momentum.,label=lst:wasatch-exponentialvortex-ymom} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="XVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="x-mom" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <LambsDipole x0="0.0" y0="0.0" G="0.9" R="0.25" U="0.1" velocityComponent="X1">
+  		  
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate1> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XXVOL" state="STATE_NONE"/> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate1> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate2> 				
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="YXVOL" state="STATE_NONE"/> 		  
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate2>		          
+\end_layout
+
+\begin_layout Plain Layout
+
+  </LambsDipole>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of an exponential vortex as initial condition
+ for transverse momentum.,label=lst:wasatch-exponentialvortex-ymom} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="YVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="y-mom" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <LambsDipole x0="0.0" y0="0.0" G="0.9" R="0.25" U="0.1" velocityComponent="X2">
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate1> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XYVOL" state="STATE_NONE"/> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate1> 		   
+\end_layout
+
+\begin_layout Plain Layout
+
+    <Coordinate2> 				
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="YYVOL" state="STATE_NONE"/> 		  
+\end_layout
+
+\begin_layout Plain Layout
+
+    </Coordinate2>		          
+\end_layout
+
+\begin_layout Plain Layout
+
+  </ExponentialVortex>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The resulting flow field generated by this initialization is shown below.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-lambs-dipole-xmom.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+-momentum
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+-momentum
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-lambs-dipole-ymom.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-lambs-dipole-vorticity-with-vectors.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+vorticity field wih vectors
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+vorticity field with streamlines
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-lambs-dipole-vorticity-streamlines.png
+	width 2in
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Momentum and vorticity fields resulting from LambsDipole initialization.
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
