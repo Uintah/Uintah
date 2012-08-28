@@ -1037,6 +1037,7 @@ Arches::restartInitialize()
   d_doingRestart = true;
 # ifdef WASATCH_IN_ARCHES
   d_wasatch->restartInitialize();
+  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());  
 # endif // WASATCH_IN_ARCHES
 }
 
