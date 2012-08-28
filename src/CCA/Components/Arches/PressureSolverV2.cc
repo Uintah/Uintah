@@ -90,6 +90,7 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   delete d_source;
+  delete d_hypreSolver_parameters;
 }
 
 //______________________________________________________________________
