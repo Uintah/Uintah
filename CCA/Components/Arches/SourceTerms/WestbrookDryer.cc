@@ -64,7 +64,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("equil_fraction_label", d_ceq_label);                           // The name of the secondary mixture fraciton label
   db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
-  db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // Turns off the rate below this T.
+  db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
 
   // add for table lookup
   _field_labels->add_species( d_mw_label ); 
