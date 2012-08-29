@@ -36,8 +36,6 @@
 #include <cstdio>
 #include <cstring>
 
-using std::vector;
-
 namespace Uintah {
 
   class SimpleMaterial;
@@ -98,32 +96,30 @@ namespace Uintah {
                                const IntVector &h,
                                const Point &p)
       {
-        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y())
-                && (p.z() >= l.z() && p.z() < h.z()));
+        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
       }
 
       void generateNeighborList();
 
       void extractCoordinates();
 
-      void initialize(const ProcessorGroup*,
+      void initialize(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
 
-      void computeStableTimestep(const ProcessorGroup*,
+      void computeStableTimestep(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      void timeAdvance(const ProcessorGroup*,
+      void timeAdvance(const ProcessorGroup* pg,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
-
       SimulationStateP sharedState_;
       SimpleMaterial* mymat_;
       LJPotentialTest(const LJPotentialTest&);
@@ -131,8 +127,8 @@ namespace Uintah {
       double delt_;
       int doOutput_;
 
-      vector<vector<const VarLabel*> > d_particleState;
-      vector<vector<const VarLabel*> > d_particleState_preReloc;
+      std::vector<std::vector<const VarLabel*> > d_particleState;
+      std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
 
       const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
@@ -153,8 +149,8 @@ namespace Uintah {
       double R6_;  // this is the v.d.w. attractive parameter
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      vector<Point> atomList;
-      vector<vector<int> > neighborList;
+      std::vector<Point> atomList;
+      std::vector<vector<int> > neighborList;
   };
 }
 
