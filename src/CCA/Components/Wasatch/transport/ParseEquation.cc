@@ -499,11 +499,13 @@ namespace Wasatch{
     std::vector< double> initialMoments;
     double val;
     initialMoments = std::vector< double >(nEqs);
+    
     //loop over all basic exprs to find initialized moments 
     for( int i=0; i<nEqs; i++) { 
       std::stringstream ss;
       ss << i;
       std::string thisPhiName = basePhiName + "_" + ss.str();
+      std::string thisBasePhiName = basePhiName + "_" + ss.str() + "base";
       
       for( Uintah::ProblemSpecP expressionParams=wasatchParams->findBlock("BasicExpression");
           expressionParams != 0;
@@ -511,11 +513,18 @@ namespace Wasatch{
 
         std::string exprName;
         expressionParams->findBlock("NameTag")->getAttribute("name",exprName);
-        
+       
+        if (exprName == thisBasePhiName ){
+          expressionParams->get("Constant",val);
+          initialMoments[i] = val;
+          proc0cout << "getting initial moment base value [" << i << "] = " << val <<std::endl; 
+          break;
+        }
+
         if (exprName == thisPhiName ){
           expressionParams->get("Constant",val);
           initialMoments[i] = val;
-          std::cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
+          proc0cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
         }
       }
     }

@@ -707,6 +707,9 @@
           <Temperature      spec="REQUIRED DOUBLE" />
           <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
           <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
+          <SupersaturationExpression spec="REQUIRED NO_DATA">
+            <NameTag           spec="REQUIRED"/>
+          </SupersaturationExpression>  
         </OstwaldRipening>
 
       </GrowthExpression>

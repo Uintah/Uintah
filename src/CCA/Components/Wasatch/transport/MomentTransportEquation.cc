@@ -140,9 +140,13 @@ namespace Wasatch {
       if (ostwaldParams->findBlock("RCutoff") )
         ostwaldParams->get("RCutoff",RCutoff);
       expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature * CFCoef;
+      
+      Expr::Tag superSatTag;
+      Uintah::ProblemSpecP nameTagParam = ostwaldParams->findBlock("SupersaturationExpression")->findBlock("NameTag");
+      superSatTag = parse_nametag( nameTagParam );
 
       typedef typename OstwaldRipening<FieldT>::Builder ostwald;
-      builder2 = scinew ostwald(ostwaldTag, growthCoefTag, weightsTagList, abscissaeTagList, momentOrder, expCoef, RCutoff, constCoef, nPts);
+      builder2 = scinew ostwald(ostwaldTag, growthCoefTag, superSatTag, weightsTagList, abscissaeTagList, momentOrder, expCoef, RCutoff, constCoef, nPts);
       growthTags.push_back(ostwaldTag);
       factory.register_expression( builder2 );
     }
