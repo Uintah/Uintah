@@ -172,10 +172,12 @@ void LJPotentialTest::computeStableTimestep(const ProcessorGroup* pg,
                                             DataWarehouse*,
                                             DataWarehouse* new_dw)
 {
-  if (pg->myrank() == 0) {
+  if (doOutput_ && pg->myrank() == 0) {
     sum_vartype vdwEnergy;
     new_dw->get(vdwEnergy, vdwEnergyLabel);
+    std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << "Total Energy = " << std::setprecision(16) << vdwEnergy << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl << std::endl;
   }
   new_dw->put(delt_vartype(1), sharedState_->get_delt_label(), getLevel(patches));
 }
@@ -240,7 +242,7 @@ void LJPotentialTest::generateNeighborList()
   }
 }
 
-void LJPotentialTest::initialize(const ProcessorGroup*,
+void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* /*old_dw*/,
@@ -284,7 +286,7 @@ void LJPotentialTest::initialize(const ProcessorGroup*,
         Point pos = localAtoms[i];
         px[i] = pos;
         pforce[i] = Vector(0.0, 0.0, 0.0);
-        penergy[i] = 0.0;
+        penergy[i] = 0.5;
         pids[i] = patch->getID() * numAtoms_ + i;
       }
     }
@@ -309,31 +311,43 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
 
-      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
+      ParticleSubset* gpset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, SHRT_MAX, pXLabel);
+      ParticleSubset* lpset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
 
-      // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
+      constParticleVariable<Point> pxlocal;
       ParticleVariable<Point> pxnew;
       constParticleVariable<double> penergy;
+      ParticleVariable<double> penergytmp;
       ParticleVariable<double> penergynew;
       constParticleVariable<Vector> pforce;
+      ParticleVariable<Vector> pforcetmp;
       ParticleVariable<Vector> pforcenew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pidsnew;
 
-      old_dw->get(px, pXLabel, pset);
-      old_dw->get(penergy, pEnergyLabel, pset);
-      old_dw->get(pforce, pForceLabel, pset);
-      old_dw->get(pids, pParticleIDLabel, pset);
+      // previous values (with ghost cells... global particle subset)
+      old_dw->get(px, pXLabel, gpset);
+      old_dw->get(pxlocal, pXLabel, lpset);
+      old_dw->get(penergy, pEnergyLabel, gpset);
+      old_dw->get(pforce, pForceLabel, gpset);
+      old_dw->get(pids, pParticleIDLabel, gpset);
 
-      new_dw->allocateAndPut(pxnew, pXLabel_preReloc, pset);
-      new_dw->allocateAndPut(penergynew, pEnergyLabel_preReloc, pset);
-      new_dw->allocateAndPut(pforcenew, pForceLabel_preReloc, pset);
-      new_dw->allocateAndPut(pidsnew, pParticleIDLabel_preReloc, pset);
+      // new values (local particle subset)
+      new_dw->allocateAndPut(pxnew, pXLabel_preReloc, lpset);
+      new_dw->allocateAndPut(penergynew, pEnergyLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pforcenew, pForceLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pidsnew, pParticleIDLabel_preReloc, lpset);
 
-      unsigned int numParticles = pset->numParticles();
-      for (unsigned int i = 0; i < numParticles; i++) {
+      // scratch variables
+      new_dw->allocateTemporary(penergytmp, gpset);
+      new_dw->allocateTemporary(pforcetmp, gpset);
+
+      unsigned int localNumParticles = lpset->numParticles();
+      unsigned int globalNumParticles = gpset->numParticles();
+
+      for (unsigned int i = 0; i < localNumParticles; i++) {
         pforcenew[i] = pforce[i];
         penergynew[i] = penergy[i];
       }
@@ -343,12 +357,13 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
       double forceTerm;
       Vector totalForce, atomForce;
       Vector reducedCoordinates;
-      unsigned int totalAtoms = pset->numParticles();
-      for (unsigned int i = 0; i < totalAtoms; i++) {
+
+      // loop over the local atoms
+      for (unsigned int i = 0; i < localNumParticles; i++) {
         atomForce = Vector(0.0, 0.0, 0.0);
 
-        // loop over the neighbors of atom "i"
-        register unsigned idx;
+        // loop over the neighbors of local atom "i"
+        unsigned int idx;
         unsigned int numNeighbors = neighborList[i].size();
         for (unsigned int j = 0; j < numNeighbors; j++) {
           idx = neighborList[i][j];
@@ -365,13 +380,13 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
           ir12 = pow(ir6, 2.0);  // 1/r^12
           T12 = R12_ * ir12;
           T6 = R6_ * ir6;
-          penergynew[idx] = T12 - T6;  // energy
-          vdwEnergy += penergynew[idx];  // count the energy
+          penergytmp[idx] = T12 - T6;  // energy
+          vdwEnergy += penergytmp[idx];  // count the energy
           forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
           totalForce = forceTerm * reducedCoordinates;
 
           // the force on atom neighborList[i][j]
-          pforcenew[idx] -= totalForce;
+          pforcetmp[idx] -= totalForce;
 
           // the contribution of force on atom i
           atomForce += totalForce;
@@ -381,7 +396,7 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
         pforcenew[i] += atomForce;
 
         // carry same position over until we get integrator implemented
-        pxnew[i] = px[i];
+        pxnew[i] = pxlocal[i];
 
         // keep same ID
         pidsnew[i] = pids[i];
@@ -394,11 +409,11 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
 
       if (doOutput_) {
         Vector forces(0.0, 0.0, 0.0);
-        for (unsigned int i = 0; i < totalAtoms; i++) {
+        for (unsigned int i = 0; i < localNumParticles; i++) {
           forces += pforcenew[i];
         }
-        printf("Total Energy: %E\n", vdwEnergy);
-        printf("Forces: [%E\t%E\t%E]\n\n", forces.x(), forces.y(), forces.z());
+        printf("Total Local Energy: %4.16lf\n", vdwEnergy);
+        printf("Local Forces: [%E\t%E\t%E]\n\n", forces.x(), forces.y(), forces.z());
       }
 
       new_dw->deleteParticles(delset);
