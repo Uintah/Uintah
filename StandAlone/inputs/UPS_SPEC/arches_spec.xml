@@ -702,6 +702,7 @@
             <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
             <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
             <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <T_clip                     spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
             <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
