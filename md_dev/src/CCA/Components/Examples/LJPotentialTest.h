@@ -130,7 +130,6 @@ namespace Uintah {
       LJPotentialTest& operator=(const LJPotentialTest&);
       double delt_;
       int doOutput_;
-      int doGhostCells_;
 
       vector<vector<const VarLabel*> > d_particleState;
       vector<vector<const VarLabel*> > d_particleState_preReloc;
@@ -143,6 +142,7 @@ namespace Uintah {
       const VarLabel* pForceLabel_preReloc;
       const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
+      const VarLabel* vdwEnergyLabel;
 
       // fields specific to non-bonded interaction (LJ Potential)
       string coordinateFile_;

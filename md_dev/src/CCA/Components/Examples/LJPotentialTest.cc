@@ -40,9 +40,9 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
-using namespace std;
 using namespace Uintah;
 
 LJPotentialTest::LJPotentialTest(const ProcessorGroup* myworld) :
@@ -61,6 +61,8 @@ LJPotentialTest::LJPotentialTest(const ProcessorGroup* myworld) :
 
   pParticleIDLabel = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
+
+  vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
 }
 
 LJPotentialTest::~LJPotentialTest()
@@ -73,6 +75,7 @@ LJPotentialTest::~LJPotentialTest()
   VarLabel::destroy(pForceLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
+  VarLabel::destroy(vdwEnergyLabel);
 }
 
 void LJPotentialTest::problemSetup(const ProblemSpecP& params,
@@ -85,7 +88,6 @@ void LJPotentialTest::problemSetup(const ProblemSpecP& params,
   ProblemSpecP ps = params->findBlock("LJPotentialTest");
 
   ps->getWithDefault("doOutput", doOutput_, 0);
-  ps->getWithDefault("doGhostCells", doGhostCells_, 0);
   ps->get("coordinateFile", coordinateFile_);
   ps->get("numAtoms", numAtoms_);
   ps->get("boxSize", box_);
@@ -111,6 +113,7 @@ void LJPotentialTest::scheduleInitialize(const LevelP& level,
   task->computes(pEnergyLabel);
   task->computes(pForceLabel);
   task->computes(pParticleIDLabel);
+  task->computes(vdwEnergyLabel);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -118,6 +121,7 @@ void LJPotentialTest::scheduleComputeStableTimestep(const LevelP& level,
                                                     SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep", this, &LJPotentialTest::computeStableTimestep);
+  task->requires(Task::NewDW, vdwEnergyLabel);
   task->computes(sharedState_->get_delt_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -128,22 +132,16 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   const MaterialSet* matls = sharedState_->allMaterials();
   Task* task = scinew Task("timeAdvance", this, &LJPotentialTest::timeAdvance);
 
-  if (doGhostCells_ == 1) {
-    task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, SHRT_MAX);
-    task->requires(Task::OldDW, pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
-    task->requires(Task::OldDW, pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-    task->requires(Task::OldDW, pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  } else {
-    task->requires(Task::OldDW, pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pEnergyLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pForceLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, pParticleIDLabel, Ghost::None, 0);
-  }
+  task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
 
   task->computes(pXLabel_preReloc);
   task->computes(pEnergyLabel_preReloc);
   task->computes(pForceLabel_preReloc);
   task->computes(pParticleIDLabel_preReloc);
+  task->computes(vdwEnergyLabel);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   d_particleState.clear();
@@ -164,22 +162,27 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
     d_particleState_preReloc.push_back(vars_preReloc);
   }
 
-  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState,
-                                    pParticleIDLabel, matls);
+  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState, pParticleIDLabel,
+                                    matls);
 }
 
-void LJPotentialTest::computeStableTimestep(const ProcessorGroup* /*pg*/,
+void LJPotentialTest::computeStableTimestep(const ProcessorGroup* pg,
                                             const PatchSubset* patches,
                                             const MaterialSubset* /*matls*/,
                                             DataWarehouse*,
                                             DataWarehouse* new_dw)
 {
+  if (pg->myrank() == 0) {
+    sum_vartype vdwEnergy;
+    new_dw->get(vdwEnergy, vdwEnergyLabel);
+    std::cout << "Total Energy = " << std::setprecision(16) << vdwEnergy << std::endl;
+  }
   new_dw->put(delt_vartype(1), sharedState_->get_delt_label(), getLevel(patches));
 }
 
 void LJPotentialTest::extractCoordinates()
 {
-  ifstream inputFile;
+  std::ifstream inputFile;
   inputFile.open(coordinateFile_.c_str());
   if (!inputFile.is_open()) {
     string message = "\tCannot open input file: " + coordinateFile_;
@@ -226,8 +229,7 @@ void LJPotentialTest::generateNeighborList()
         // eliminate atoms outside of cutoff radius, add those within as neighbors
         if ((fabs(reducedCoordinates[0]) < cutoffDistance_) && (fabs(reducedCoordinates[1]) < cutoffDistance_)
             && (fabs(reducedCoordinates[2]) < cutoffDistance_)) {
-          r2 = sqrt(
-              pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
+          r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
             neighborList[i].push_back(j);
@@ -286,10 +288,11 @@ void LJPotentialTest::initialize(const ProcessorGroup*,
         pids[i] = patch->getID() * numAtoms_ + i;
       }
     }
+    new_dw->put(sum_vartype(0), vdwEnergyLabel);
   }
 }
 
-void LJPotentialTest::timeAdvance(const ProcessorGroup*,
+void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
@@ -302,6 +305,7 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
 
     // do this for each material; for this example, there is only a single material, material "0"
     unsigned int numMatls = matls->size();
+    double vdwEnergy = 0;
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
 
@@ -335,7 +339,6 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
       }
 
       // loop over all atoms in system, calculate the forces
-      double vdwEnergy;
       double r2, ir2, ir6, ir12, T6, T12;
       double forceTerm;
       Vector totalForce, atomForce;
@@ -384,8 +387,8 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
         pidsnew[i] = pids[i];
 
         if (doOutput_) {
-          cout << " Patch " << patch->getID() << ": Particle_ID " << pidsnew[i] << ", pos " << pxnew[i]
-               << ", energy " << penergynew[i] << ", forces " << pforcenew[i] << endl;
+          std::cout << " Patch " << patch->getID() << ": Particle_ID " << pidsnew[i] << ", pos " << pxnew[i] << ", energy "
+                    << penergynew[i] << ", forces " << pforcenew[i] << std::endl;
         }
       }  // end atom loop
 
@@ -401,6 +404,10 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup*,
       new_dw->deleteParticles(delset);
 
     }  // end materials loop
+
+    // global reduction on
+    new_dw->put(sum_vartype(vdwEnergy), vdwEnergyLabel);
+
   }  // end patch loop
 
 }
