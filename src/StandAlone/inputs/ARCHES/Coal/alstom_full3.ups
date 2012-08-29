@@ -10091,6 +10091,9 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <use_density_guess/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -10102,6 +10105,9 @@
         <Eqn label="mixture_fraction_2" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <use_density_guess/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type = "constant">
             <constant>0.170</constant>
@@ -10115,6 +10121,9 @@
         <Eqn label="coal_gas_mix_frac" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <use_density_guess/>
+          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+          <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
           <initialization type = "constant">
             <constant>0.12</constant>
@@ -10168,7 +10177,7 @@
         <ClassicTable>
         <enthalpy_label>enthalpy</enthalpy_label>
         <!--NOT_ADIABATIC/-->
-        <inputfile>simon5hi.mix</inputfile>
+        <inputfile>../ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
         <hl_scalar_init>0.87</hl_scalar_init>
         <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
         </ClassicTable>
