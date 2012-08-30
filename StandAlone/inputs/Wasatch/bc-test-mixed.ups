@@ -68,32 +68,32 @@
       <BoundaryConditions>
       
       <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
-      <Face side="x-">
+      <Face side="x-" name="left-wall">
         <BCType id="all" var="Dirichlet" label="phi-scalar">
           <value> 10.0 </value>
         </BCType>
       </Face>
-      <Face side="x+">
+      <Face side="x+" name="right-wall">
         <BCType id="all" var="Dirichlet" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side="y-">
+      <Face side="y-" name="bottom-wall">
         <BCType id="all" var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side="y+">
+      <Face side="y+" name="top-wall">
         <BCType id="all" var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side="z-">
+      <Face side="z-" name="zminus-wall">
         <BCType id="all" var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side="z+">
+      <Face side="z+" name="zplus-wall">
         <BCType id="all" var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
