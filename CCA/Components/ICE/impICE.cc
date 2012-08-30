@@ -342,10 +342,13 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // OldDW = ParentOldDW
   // NewDW = ParentNewDW
   
+#ifdef HAVE_HYPRE
   if (d_solver->getName() == "hypre") {
     t->requires(Task::OldDW,hypre_solver_label);
     t->computes(hypre_solver_label);
   }
+#endif
+
   //__________________________________
   // common Variables
   t->requires( Task::OldDW, lb->delTLabel,level.get_rep());
@@ -1022,6 +1025,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
 
+#ifdef HAVE_HYPRE
   SoleVariable<hypre_solver_structP> hypre_solverP_;
   if (d_solver->getName() == "hypre") {
     if (ParentOldDW->exists(hypre_solver_label)) {
@@ -1029,6 +1033,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       subNewDW->put(hypre_solverP_, hypre_solver_label);
     } 
   }
+#endif
 
   subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patch_sub, d_press_matl);
   subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patch_sub, one_matl);
@@ -1066,8 +1071,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       //__________________________________
       // schedule the tasks
       
+#ifdef HAVE_HYPRE
       d_subsched->overrideVariableBehavior(hypre_solver_label->getName(),false,
                                            false,false,true,true);
+#endif
 
 
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
@@ -1184,12 +1191,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subNewDW  = d_subsched->get_dw(3);
   bool replace = true;
 
+#ifdef HAVE_HYPRE
   if (d_solver->getName() == "hypre") {
     if (subNewDW->exists(hypre_solver_label)) {
       subNewDW->get(hypre_solverP_,hypre_solver_label);
       ParentNewDW->put(hypre_solverP_, hypre_solver_label);
     } 
   }
+#endif
 
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patch_sub,  d_press_matl, replace);
