@@ -178,6 +178,7 @@ private:
   // * but stored in the new_Dw
 
   std::string d_cstar_label; 
+  std::string d_cstar_strip_label; 
   std::string d_ceq_label; 
   std::string d_mw_label; 
   std::string d_rho_label; 
@@ -191,6 +192,7 @@ private:
   const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _CEqMassFracLabel; 
   const VarLabel* _O2MassFracLabel; 
+  const VarLabel* _CstarStripLabel; 
 
   std::vector<GeometryPieceP> _geom_hot_spot;    ///< Geometric locations of pilot light
   double _T_hot_spot;                            ///< Temperature of the pilot light
