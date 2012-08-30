@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 
 #define HYPRE_TIMING
+#undef HYPRE_TIMING
 
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
