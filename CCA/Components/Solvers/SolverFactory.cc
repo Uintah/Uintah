@@ -32,7 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
+
+#ifdef HAVE_HYPRE
 #include <CCA/Components/Solvers/HypreSolver.h>
+#endif
+
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/ProblemSetupException.h>
