@@ -409,6 +409,11 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
     Patch::FaceType face_side;
     BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
+
+    std::string face_label = "none";
+    face_ps->getAttribute("name",face_label);
+    std::cout << "Face Label = " << face_label << std::endl;
+    
     BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
       << typeid(*bcGeom).name() << " " << bcGeom << endl;
 
@@ -418,7 +423,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
         child = child->findNextBlock("BCType")) {
       int mat_id;
       BoundCondBase* bc;
-      BoundCondFactory::create(child,bc,mat_id);
+      BoundCondFactory::create(child,bc,mat_id, face_label);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
               <<  bc->getBCVariable() << " bctype = " 
               <<  bc->getBCType__NEW() 

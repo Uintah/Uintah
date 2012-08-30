@@ -377,14 +377,15 @@ namespace Wasatch {
    *
    */
   template <typename T>
-  bool get_iter_bcval_bckind( const Uintah::Patch* patch,
+  bool get_iter_bcval_bckind_bcname( const Uintah::Patch* patch,
                              const Uintah::Patch::FaceType face,
                              const int child,
                              const std::string& desc,
                              const int mat_id,
                              T& bc_value,
                              SCIRun::Iterator& bound_ptr,
-                             std::string& bc_kind )
+                             std::string& bc_kind,
+                             std::string& bc_face_name)
   {
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
@@ -395,6 +396,7 @@ namespace Wasatch {
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
       bc_kind =  new_bcs->getBCType__NEW();
+      bc_face_name = new_bcs->getBCFaceName();
     }
 
     delete bc;
@@ -818,6 +820,7 @@ namespace Wasatch {
 
               double bc_value = -9;
               std::string bc_kind = "NotSet";
+              std::string bc_name = "none";
               SCIRun::Iterator bound_ptr;
               //
               // TSAAD NOTE TO SELF:
@@ -827,9 +830,10 @@ namespace Wasatch {
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
               //
-              bool foundIterator = get_iter_bcval_bckind( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind);
+              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name);
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
+                std::cout << "Wasatch bc name = " << bc_name << std::endl;                
                 process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind);
               }
             } // child loop
@@ -892,8 +896,9 @@ namespace Wasatch {
 
         double bc_value = -9;
         std::string bc_kind = "NotSet";
+        std::string bc_name = "none";        
         SCIRun::Iterator bound_ptr;
-        const bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind);
+        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name);
 
         if (foundIterator) {
 
@@ -1008,7 +1013,8 @@ namespace Wasatch {
         //patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
         double bc_value;
         std::string bc_kind;
-        get_iter_bcval_bckind( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind);
+        std::string bc_name;
+        get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name);
         
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
@@ -1185,8 +1191,9 @@ namespace Wasatch {
         
         double bc_value = -9;
         std::string bc_kind = "NotSet";
+        std::string bc_name = "none";        
         SCIRun::Iterator bound_ptr;
-        const bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind);
+        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind, bc_name);
         
         if (foundIterator) {
           

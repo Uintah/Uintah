@@ -79,11 +79,12 @@ WARNING
  public:
    BoundCond() {};
 
-   BoundCond(string var_name, string type, T value) 
+   BoundCond(string var_name, string type, T value, const std::string face_label) 
      {
        d_variable = var_name;
        d_type__NEW = type;
        d_value = value;
+       d_face_label = face_label;
      };
    virtual ~BoundCond() {};
    virtual BoundCond* clone()
@@ -110,6 +111,7 @@ WARNING
        d_variable = var_name;
        d_type__NEW = type;
        d_value = NoValue();
+       d_face_label = "none";
      };
 
    BoundCond(string var_name)
@@ -117,6 +119,7 @@ WARNING
        d_variable = var_name;
        d_type__NEW = "";
        d_value = NoValue();
+       d_face_label = "none";       
      };
 
    virtual BoundCond* clone()
