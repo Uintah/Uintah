@@ -288,9 +288,16 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
         pforce[i] = Vector(0.0, 0.0, 0.0);
         penergy[i] = 0.5;
         pids[i] = patch->getID() * numAtoms_ + i;
+
+        if (doOutput_) {
+          std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
+          std::cout.setf(std::ios_base::left);  // pad after the value
+          std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
+          std::cout << "Patch: " << patch->getID() << " Particle_ID: " << pids[i] << " Point: " << pos << std::endl;
+        }
       }
     }
-    new_dw->put(sum_vartype(0), vdwEnergyLabel);
+    new_dw->put(sum_vartype(0.0), vdwEnergyLabel);
   }
 }
 
@@ -402,8 +409,19 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
         pidsnew[i] = pids[i];
 
         if (doOutput_) {
-          std::cout << " Patch " << patch->getID() << ": Particle_ID " << pidsnew[i] << ", pos " << pxnew[i] << ", energy "
-                    << penergynew[i] << ", forces " << pforcenew[i] << std::endl;
+          std::cout << "Patch: " << std::setw(4) << patch->getID() << std::setw(6);
+          std::cout << "Particle_ID: " << std::setw(4) << pidsnew[i] << std::setw(6);
+          std::cout << "Position: [";
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].x();
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].y();
+          std::cout << std::setprecision(6) << pxnew[i].z() << std::setw(4) << "]";
+          std::cout << "Energy: ";
+          std::cout << std::setw(10) << std::setprecision(6) << penergynew[i];
+          std::cout << "Force: [";
+          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].x();
+          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
+          std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
+          std::cout << std::endl;
         }
       }  // end atom loop
 
@@ -412,8 +430,14 @@ void LJPotentialTest::timeAdvance(const ProcessorGroup* pg,
         for (unsigned int i = 0; i < localNumParticles; i++) {
           forces += pforcenew[i];
         }
-        printf("Total Local Energy: %4.16lf\n", vdwEnergy);
-        printf("Local Forces: [%E\t%E\t%E]\n\n", forces.x(), forces.y(), forces.z());
+        std::cout.setf(std::ios_base::scientific);
+        std::cout << "Total Local Energy: " << std::setprecision(16) << vdwEnergy << std::endl;
+        std::cout << "Local Force: [";
+        std::cout << std::setw(16) << std::setprecision(8) << forces.x();
+        std::cout << std::setw(16) << std::setprecision(8) << forces.y();
+        std::cout << std::setprecision(8) << forces.z() << std::setw(4) << "]";
+        std::cout << std::endl;
+        std::cout.unsetf(std::ios_base::scientific);
       }
 
       new_dw->deleteParticles(delset);
