@@ -513,6 +513,8 @@ namespace Uintah {
     
     mutable CrowdMonitor  readyQueueLock_;
     mutable CrowdMonitor  mpiCompletedQueueLock_;
+    mutable CrowdMonitor  gpuReadyQueueLock_;
+    mutable CrowdMonitor  gpuCompletedQueueLock_;
     //Semaphore readyQueueSemaphore_;
 
     ScrubCountTable scrubCountTable_;
