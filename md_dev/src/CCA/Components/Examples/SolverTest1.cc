@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -60,6 +61,7 @@ SolverTest1::SolverTest1(const ProcessorGroup* myworld)
 SolverTest1::~SolverTest1()
 {
   delete lb_;
+  delete solver_parameters;
 }
 //__________________________________
 //
@@ -73,7 +75,8 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   }
   
   ProblemSpecP st_ps = prob_spec->findBlock("SolverTest");
-  solver_parameters = solver->readParameters(st_ps, "implicitPressure");
+  solver_parameters = solver->readParameters(st_ps, "implicitPressure",
+                                             sharedState);
   solver_parameters->setSolveOnExtraCells(false);
     
   sharedState_ = sharedState;
@@ -104,14 +107,15 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
 void SolverTest1::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
+  solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
 }
 //__________________________________
 // 
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
 					  SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
-			   this, &SolverTest1::computeStableTimestep);
+  Task* task = scinew Task("computeStableTimestep",this, 
+                           &SolverTest1::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -125,10 +129,13 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 			   level, sched.get_rep());
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
+
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
-  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), lb_->pressure_matrix, 
-    Task::NewDW, lb_->pressure, false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, solver_parameters);
+  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
+                        lb_->pressure_matrix, Task::NewDW, lb_->pressure, 
+                        false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, 
+                        solver_parameters,false);
 
 }
 //__________________________________

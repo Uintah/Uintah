@@ -35,9 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/SimulationState.h>
 #include <string>
 
 
@@ -108,20 +110,29 @@ namespace Uintah {
     virtual ~SolverInterface();
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
-					     const std::string& name) = 0;
+					     const std::string& name,
+                                             SimulationStateP& state) = 0;
+
+    virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched,
+                                    const MaterialSet* matls);
                             
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
-			          const MaterialSet* matls,
+                               const MaterialSet* matls,
                                const VarLabel* A,    
                                Task::WhichDW which_A_dw,  
                                const VarLabel* x,
-			          bool modifies_x,
+                               bool modifies_x,
                                const VarLabel* b,    
                                Task::WhichDW which_b_dw,  
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
-			          const SolverParameters* params) = 0;
-                               
+                               const SolverParameters* params,
+                               bool modifies_hypre = false) = 0;
+#if 0
+    virtual void scheduleTransferData(const LevelP& level, SchedulerP& sched,
+                                      const MaterialSet* matls);
+#endif
+
     virtual string getName()=0;
   
   private: 

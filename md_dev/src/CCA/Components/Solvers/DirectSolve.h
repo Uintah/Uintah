@@ -41,6 +41,10 @@ namespace Uintah {
     virtual ~DirectSolve();
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
+                                             const std::string& name,
+                                             SimulationStateP& state);
+
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
@@ -53,7 +57,8 @@ namespace Uintah {
                                Task::WhichDW which_b_dw,  
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
-                               const SolverParameters* params);
+                               const SolverParameters* params,
+                               bool modifies_hypre = false);
                                
   virtual string getName();
   private:

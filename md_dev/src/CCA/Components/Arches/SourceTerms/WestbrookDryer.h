@@ -112,7 +112,7 @@ public:
 
     double rate = 0.0; 
 
-    if ( O2 > 0.0 && CxHy > 0.0 ) { 
+    if ( O2 > 0.0 && CxHy > 0.0 && T > d_T_clip ) { 
 
       double small = 1e-16; 
 
@@ -166,6 +166,7 @@ private:
   double d_MF_O2_f0; ///< Mass fraction of O2 with f=0
   double d_R;        ///< Universal gas constant ( R [=] J/mol/K )
   double d_Press;    ///< Atmospheric pressure (set to atmospheric P for now ( 101,325 Pa )
+  double d_T_clip;   ///< Temperature limit on the rate. Below this value, the rate turns off. 
 
   int d_X;           ///< C_xH_Y
   int d_Y;           ///< C_xH_y
@@ -177,6 +178,7 @@ private:
   // * but stored in the new_Dw
 
   std::string d_cstar_label; 
+  std::string d_cstar_strip_label; 
   std::string d_ceq_label; 
   std::string d_mw_label; 
   std::string d_rho_label; 
@@ -190,6 +192,7 @@ private:
   const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _CEqMassFracLabel; 
   const VarLabel* _O2MassFracLabel; 
+  const VarLabel* _CstarStripLabel; 
 
   std::vector<GeometryPieceP> _geom_hot_spot;    ///< Geometric locations of pilot light
   double _T_hot_spot;                            ///< Temperature of the pilot light

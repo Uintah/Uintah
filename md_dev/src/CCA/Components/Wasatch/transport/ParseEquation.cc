@@ -222,7 +222,8 @@ namespace Wasatch{
   
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
                               GraphCategories& gc,
-                              Uintah::SolverInterface& linSolver) {
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP sharedState) {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     Expr::TagList poissontags;
@@ -244,7 +245,8 @@ namespace Wasatch{
     bool use3DLaplacian = true;
     poissonEqParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
         
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "" );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "",
+                                                                  sharedState );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );
@@ -272,7 +274,7 @@ namespace Wasatch{
                                                                  TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver )
+                                                                 Uintah::SolverInterface& linSolver, Uintah::SimulationStateP sharedState )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -330,7 +332,7 @@ namespace Wasatch{
                                       params,
                                       turbParams,
                                       rhsID,
-                                      linSolver );
+                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
@@ -349,7 +351,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      rhsID,
-                                     linSolver );
+                                       linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
@@ -368,7 +370,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      rhsID,
-                                     linSolver );
+                                     linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
@@ -497,11 +499,13 @@ namespace Wasatch{
     std::vector< double> initialMoments;
     double val;
     initialMoments = std::vector< double >(nEqs);
+    
     //loop over all basic exprs to find initialized moments 
     for( int i=0; i<nEqs; i++) { 
       std::stringstream ss;
       ss << i;
       std::string thisPhiName = basePhiName + "_" + ss.str();
+      std::string thisBasePhiName = basePhiName + "_" + ss.str() + "base";
       
       for( Uintah::ProblemSpecP expressionParams=wasatchParams->findBlock("BasicExpression");
           expressionParams != 0;
@@ -509,11 +513,18 @@ namespace Wasatch{
 
         std::string exprName;
         expressionParams->findBlock("NameTag")->getAttribute("name",exprName);
-        
+       
+        if (exprName == thisBasePhiName ){
+          expressionParams->get("Constant",val);
+          initialMoments[i] = val;
+          proc0cout << "getting initial moment base value [" << i << "] = " << val <<std::endl; 
+          break;
+        }
+
         if (exprName == thisPhiName ){
           expressionParams->get("Constant",val);
           initialMoments[i] = val;
-          std::cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
+          proc0cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
         }
       }
     }

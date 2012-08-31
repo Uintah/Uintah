@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/Utils.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
@@ -64,6 +65,10 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <string>
 
+#ifdef HAVE_HYPRE
+#include <HYPRE_struct_ls.h>
+#include <HYPRE_krylov.h>
+#endif
 
 #define MAX_MATLS 16
 
@@ -92,6 +97,18 @@ namespace Uintah {
       double delPress;
       vector<EqPress_dbgMatl> matl;
     };
+
+#ifdef HAVE_HYPRE
+    struct hypre_solver_struct : public RefCounted {
+      HYPRE_StructSolver solver;
+      HYPRE_StructSolver precond_solver;
+      HYPRE_StructMatrix* HA;
+      HYPRE_StructVector* HB;
+      HYPRE_StructVector* HX;
+    };
+
+    typedef Handle<hypre_solver_struct> hypre_solver_structP;
+#endif
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
@@ -914,6 +931,9 @@ namespace Uintah {
     MaterialSet*    d_press_matlSet;
 
     private:
+#ifdef HAVE_HYPRE
+      const VarLabel* hypre_solver_label;
+#endif
       friend class MPMICE;
       friend class AMRICE;
       friend class impAMRICE;

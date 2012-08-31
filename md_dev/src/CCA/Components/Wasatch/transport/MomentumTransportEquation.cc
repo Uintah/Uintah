@@ -284,7 +284,8 @@ namespace Wasatch{
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const Expr::ExpressionID rhsID,
-                             Uintah::SolverInterface& linSolver)
+                             Uintah::SolverInterface& linSolver,
+                             Uintah::SimulationStateP sharedState)
     : Wasatch::TransportEquation( momName,
                                   rhsID,
                                   get_staggered_location<FieldT>() ),
@@ -455,7 +456,8 @@ namespace Wasatch{
     bool use3DLaplacian = true;
     pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
 
-    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "",
+                                                                  sharedState );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );

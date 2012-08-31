@@ -210,6 +210,8 @@
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
               2) If specifying density, specify the INVERSE value 
+              3) If specifying mixture molecular weight, specify the INVERSE value 
+              4) Dont forget to set thermodynamic properties if you are computing heat loss. 
             --> 
             <stream                     spec="OPTIONAL NO_DATA"
                                         attribute1="transport_label REQUIRED STRING">
@@ -514,6 +516,7 @@
           <preconditioner               spec="OPTIONAL STRING 'none, pfmg, smg jacobi'" />                            
           <outputEquations              spec="OPTIONAL BOOLEAN" />                                        
           <skip                         spec="OPTIONAL INTEGER" />                                        
+          <setupFrequency               spec="OPTIONAL INTEGER" />                                        
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />                         
           <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
           <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
@@ -542,17 +545,17 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
-          <use_laminar_pr               spec="OPTIONAL NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
+          <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/-->
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
           <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <D_mol                        spec="OPTIONAL NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/> <!-- label pointing the molecular diffusivity --> 
+                                        attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity --> 
           <D_mol_constant               spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"/> <!-- for constant diffusivity --> 
+                                        attribute1="value REQUIRED DOUBLE"/> <!-- [m^2/s] --> <!-- for constant diffusivity --> 
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian'">
             <!-- constant value initialization -->
@@ -698,7 +701,9 @@
             <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
             <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
             <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
+            <cstar_for_strip_label      spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label used for the calc of the stripping factor. --> 
             <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <temperature_clip           spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
             <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 

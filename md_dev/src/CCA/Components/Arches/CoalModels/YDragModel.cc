@@ -263,7 +263,7 @@ YDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   d_timeSubStep = timeSubStep; 
 
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if (d_timeSubStep == 0 ){ // && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;

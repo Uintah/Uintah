@@ -300,9 +300,9 @@ Task::requires(WhichDW dw,
 //__________________________________
 void
 Task::requires(WhichDW dw, 
-              const VarLabel* var,
-		const PatchSubset* patches,
-		const MaterialSubset * matls)
+               const VarLabel* var,
+               const PatchSubset* patches,
+               const MaterialSubset * matls)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if (vartype == TypeDescription::SoleVariable)
@@ -315,9 +315,9 @@ Task::requires(WhichDW dw,
 //__________________________________
 void
 Task::requires(WhichDW dw, 
-              const VarLabel * var,
-		const MaterialSubset * matls,
-		bool oldTG)
+               const VarLabel * var,
+               const MaterialSubset * matls,
+               bool oldTG)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if(!(vartype == TypeDescription::PerPatch
@@ -325,9 +325,10 @@ Task::requires(WhichDW dw,
        || vartype == TypeDescription::SoleVariable))
     SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
     
-  if(vartype == TypeDescription::ReductionVariable 
-     || vartype == TypeDescription::SoleVariable)
+  if(vartype == TypeDescription::ReductionVariable)
     requires(dw, var, (const Level*)0, matls, NormalDomain, oldTG);
+  else if(vartype == TypeDescription::SoleVariable)
+    requires(dw, var, (const Level*)0, matls);
   else
     requires(dw, var, 0, ThisLevel, matls, NormalDomain, Ghost::None, 0, oldTG);
 }

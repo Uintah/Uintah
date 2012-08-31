@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/SolverInterface.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -75,7 +76,7 @@ public:
 
   //______________________________________________________________________
   // Set up the problem specification database
-  void problemSetup(ProblemSpecP& params);
+  void problemSetup(ProblemSpecP& params,SimulationStateP& state);
 
 
   //______________________________________________________________________

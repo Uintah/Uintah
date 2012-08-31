@@ -129,6 +129,7 @@ public:
 		      const Level* level, int matlIndex = -1);
 
    // Sole Variables
+   virtual bool exists(const VarLabel*) const;
    virtual void get(SoleVariableBase&, const VarLabel*,
 		    const Level* level = 0, int matIndex = -1);
    virtual void put(const SoleVariableBase&, const VarLabel*,

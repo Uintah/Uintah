@@ -221,7 +221,7 @@ YamamotoDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
 
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
-  if (d_timeSubStep == 0 && !d_labelSchedInit) {
+  if (d_timeSubStep == 0 ){ //&& !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;

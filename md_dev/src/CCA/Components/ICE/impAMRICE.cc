@@ -440,11 +440,11 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       const VarLabel* whichInitialGuess = NULL; 
       
       d_solver->scheduleSolve(grid->getLevel(0), d_subsched, d_press_matlSet,
-                            lb->matrixLabel,   Task::NewDW,
-                            lb->imp_delPLabel, modifies_X,
-                            lb->rhsLabel,      Task::OldDW,
-                            whichInitialGuess, Task::NewDW,
-                            d_solver_parameters);
+                              lb->matrixLabel,   Task::NewDW,
+                              lb->imp_delPLabel, modifies_X,
+                              lb->rhsLabel,      Task::OldDW,
+                              whichInitialGuess, Task::NewDW,
+                              d_solver_parameters,false);
       
 #else
       const PatchSet* perProcPatches = 

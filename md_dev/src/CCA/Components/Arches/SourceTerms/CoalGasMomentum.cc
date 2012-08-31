@@ -53,7 +53,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   std::string taskname = "CoalGasMomentum::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !_label_sched_init) {
+  if (timeSubStep == 0 ) { //&& !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     _label_sched_init = true;

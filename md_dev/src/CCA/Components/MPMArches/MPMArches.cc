@@ -249,6 +249,7 @@ void
 MPMArches::restartInitialize()
 {
   d_doingRestart = true;
+  d_arches->restartInitialize();
 }
 
 

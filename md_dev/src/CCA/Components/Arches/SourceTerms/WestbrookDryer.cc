@@ -62,8 +62,10 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
   db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
   db->require("equil_fraction_label", d_ceq_label);                           // The name of the secondary mixture fraciton label
+  db->require("cstar_for_strip_label", d_cstar_strip_label);                  // The name of the C* mixture fraction used for the stripping calc. 
   db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
+  db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
 
   // add for table lookup
   _field_labels->add_species( d_mw_label ); 
@@ -122,6 +124,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   _mixMWLabel         = VarLabel::find( d_mw_label );
   _denLabel           = VarLabel::find( d_rho_label );
   _CstarMassFracLabel = VarLabel::find( d_cstar_label );
+  _CstarStripLabel    = VarLabel::find( d_cstar_strip_label ); 
   _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
   _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
 
@@ -129,6 +132,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _CstarStripLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
@@ -189,6 +193,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> den;    // mixture density
     constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
     constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
+    constCCVariable<double> CstarStrip;  // mass fraction of the hydrocarbon for the stripping factor
     constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
     constCCVariable<double> O2;     // O2 mass fraction
 
@@ -196,6 +201,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
 
@@ -208,7 +214,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      double f = Ceq[c] + Cstar[c];
+      double f = Ceq[c] + CstarStrip[c];
       
       // Step 1: Compute stripping fraction and extent 
       double tiny = 1.0e-16;
@@ -216,7 +222,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       double hc_wo_rxn = f * d_MF_HC_f1;
 
       if ( Cstar[c] > tiny ) 
-        S[c] = Cstar[c] / hc_wo_rxn; 
+        S[c] = CstarStrip[c] / hc_wo_rxn; 
 
       E[c] = 1.0 - S[c]; 
 
