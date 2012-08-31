@@ -49,6 +49,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MiscMath.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/Parallel.h>
+#include <sci_defs/hypre_defs.h>
+#ifdef HAVE_HYPRE
+#include <CCA/Components/Solvers/HypreSolver.h>
+#endif
+
 #include <cmath>
 
 using namespace Uintah;
