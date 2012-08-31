@@ -19,6 +19,7 @@
  *  \f$ OR = - g_0 * k * \int \exp( r_0 /r ) r^{k-2} N(r) dr \f$
  *  with the qudarature approximation used so that
  *  \f$ \int \exp( r_0 /r ) r^{k-2} N(r) dr \approx \sum_i exp( r0 / r_i ) r_i^{k-2} \f$
+ *  going to reuse an already calculated expression with S in it so have to divide it out
  *
  *  when \f$ r < r_{cutoff} \f$
  *  swap to using \f$ r^2 \f$ correlation
@@ -30,6 +31,7 @@ class OstwaldRipening
 : public Expr::Expression<FieldT>
 {
   const Expr::Tag growthCoefTag_;        //same g0 used for growth expr
+  const Expr::Tag superSatTag_;          //S for this polymorph
   const Expr::TagList weightsTagList_;   // these are the tags of all the known moments
   const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
   const double momentOrder_;             // order of this moment
@@ -42,8 +44,10 @@ class OstwaldRipening
   FieldVec weights_;
   FieldVec abscissae_;
   const FieldT* growthCoef_;
+  const FieldT* superSat_;
 
   OstwaldRipening( const Expr::Tag growthCoefTag,
+                  const Expr::Tag superSatTag,
                    const Expr::TagList weightsTagList_,
                    const Expr::TagList abscissaeTagList_,
                    const double momentOrder,
@@ -58,6 +62,7 @@ public:
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& growthCoefTag,
+            const Expr::Tag& superSatTag,
              const Expr::TagList& weightsTagList,
              const Expr::TagList& abscissaeTagList,
              const double momentOrder,
@@ -67,6 +72,7 @@ public:
              const int nPts)
     : ExpressionBuilder(result),
     growthcoeft_     (growthCoefTag),
+    supersatt_       (superSatTag),
     weightstaglist_  (weightsTagList),
     abscissaetaglist_(abscissaeTagList),
     momentorder_     (momentOrder),
@@ -78,11 +84,12 @@ public:
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new OstwaldRipening<FieldT>( growthcoeft_, weightstaglist_,abscissaetaglist_, momentorder_, expcoef_, rcutoff_, constcoef_, npts_ );
+      return new OstwaldRipening<FieldT>( growthcoeft_, supersatt_, weightstaglist_,abscissaetaglist_, momentorder_, expcoef_, rcutoff_, constcoef_, npts_ );
     }
 
   private:
     const Expr::Tag growthcoeft_;          //growth coefficient g0 expr
+    const Expr::Tag supersatt_;
     const Expr::TagList weightstaglist_;   // these are the tags of all the known moments
     const Expr::TagList abscissaetaglist_; // these are the tags of all the known moments
     const double momentorder_;
@@ -110,6 +117,7 @@ public:
 template< typename FieldT >
 OstwaldRipening<FieldT>::
 OstwaldRipening( const Expr::Tag growthCoefTag,
+                const Expr::Tag superSatTag,
                  const Expr::TagList weightsTagList,
                  const Expr::TagList abscissaeTagList,
                  const double momentOrder,
@@ -119,6 +127,7 @@ OstwaldRipening( const Expr::Tag growthCoefTag,
                  const int nPts)
   : Expr::Expression<FieldT>(),
   growthCoefTag_   (growthCoefTag),
+  superSatTag_     (superSatTag),
   weightsTagList_  (weightsTagList),
   abscissaeTagList_(abscissaeTagList),
   momentOrder_     (momentOrder),
@@ -143,6 +152,7 @@ OstwaldRipening<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( growthCoefTag_ );
+  exprDeps.requires_expression( superSatTag_ );
   exprDeps.requires_expression( weightsTagList_ );
   exprDeps.requires_expression( abscissaeTagList_ );
 }
@@ -165,6 +175,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   }
 
   growthCoef_ = &fml.template field_manager<FieldT>().field_ref( growthCoefTag_ );
+  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -185,6 +196,7 @@ evaluate()
   FieldT& result = this->value();
 
   typename FieldT::const_interior_iterator growthCoefIter = growthCoef_->interior_begin();
+  typename FieldT::const_interior_iterator superSatIter = superSat_->interior_begin();
   typename FieldT::interior_iterator resultsIterator = result.interior_begin();
 
   std::vector<typename FieldT::const_interior_iterator> weightsIterators;
@@ -199,15 +211,21 @@ evaluate()
 
   double SumVal;
   while (growthCoefIter!=growthCoef_->interior_end() ) {
-    SumVal = 0.0;
-    for (int i = 0; i < nPts_; i++) {
-      if (*abscissaeIterators[0] > rCutOff_ ) {
-        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ - 2 ) * exp(expCoef_ / *abscissaeIterators[i] );
-      } else {
-        SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ + 1 ) * exp(expCoef_ / *abscissaeIterators[i] );
+    if (*superSatIter != 0.0 ) {
+      SumVal = 0.0;
+      for (int i = 0; i < nPts_; i++) {
+        if (*abscissaeIterators[0] > rCutOff_ ) {
+          SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ - 2 ) 
+                   * exp(expCoef_ / *abscissaeIterators[i] ) / *superSatIter;
+        } else {
+          SumVal += constCoef_ * momentOrder_ * *growthCoefIter * *weightsIterators[i] * pow(*abscissaeIterators[i], momentOrder_ + 1 ) 
+                   * exp(expCoef_ / *abscissaeIterators[i] ) / *superSatIter;
+        }
       }
+      *resultsIterator = -( SumVal ); //this term is negative when appearing on RHS
+    } else {
+      *resultsIterator = 0.0;
     }
-    *resultsIterator = -( SumVal ); //this term is negative when appearing on RHS
 
     for (int i = 0; i < nPts_; i++) {
       ++weightsIterators[i];
@@ -215,6 +233,7 @@ evaluate()
     }
     ++resultsIterator;
     ++growthCoefIter;
+    ++superSatIter;
   }
 }
 

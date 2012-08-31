@@ -50,4 +50,28 @@ SoleVariableBase::getRefCounted()
 {
   SCI_THROW(InternalError("getRefCounted not implemented for SoleVariable", __FILE__, __LINE__));
 }
+
+const Uintah::TypeDescription* SoleVariableBase::virtualGetTypeDescription() const
+{
+  SCI_THROW(InternalError("virtualGetTypeDescription not implemented for SoleVariable", __FILE__, __LINE__));
+}
+
+
+void SoleVariableBase::emitNormal(std::ostream&, const IntVector&,
+                              const IntVector&, ProblemSpecP, bool)
+{
+  SCI_THROW(InternalError("emitNormal not implemented for SoleVariable", __FILE__, __LINE__));
+
+}
+void SoleVariableBase::readNormal(std::istream&, bool)
+{
+  SCI_THROW(InternalError("readNormal not implemented for SoleVariable", __FILE__, __LINE__));
+
+}
+
+void SoleVariableBase::allocate(const Patch*, const IntVector&)
+{
+  SCI_THROW(InternalError("Should not call allocate for SoleVariable", __FILE__, __LINE__));
+}
+
     

@@ -279,6 +279,14 @@ namespace Wasatch{
         throw std::runtime_error( msg.str() );
       }
     }
+    
+    Uintah::ProblemSpecP pressureParams = wasatchParams->findBlock("Pressure");
+    Uintah::SolverParameters* sparams = 
+      linSolver_->readParameters(pressureParams, "", sharedState_ );
+#if 0
+    linSolver_->readParameters(pressureParams,"ImplicitPressure",sharedState_);
+#endif
+    sparams->setSolveOnExtraCells( false );
 
     //
     std::string timeIntegrator;
@@ -376,7 +384,7 @@ namespace Wasatch{
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams, densityTag, graphCategories_, *linSolver_);
+          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams, densityTag, graphCategories_, *linSolver_,sharedState);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -416,7 +424,8 @@ namespace Wasatch{
         poissonEqnParams != 0;
         poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") ){
       try{
-        parse_poisson_equation(poissonEqnParams, graphCategories_, *linSolver_);
+        parse_poisson_equation(poissonEqnParams, graphCategories_, *linSolver_,
+                               sharedState);
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -461,6 +470,11 @@ namespace Wasatch{
     setup_patchinfo_map( level, sched );
 
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+
+    if( linSolver_ ){
+      linSolver_->scheduleInitialize( level, sched, 
+                                      sharedState_->allMaterials() );
+    }
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 

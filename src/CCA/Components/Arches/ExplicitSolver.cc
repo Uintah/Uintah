@@ -149,7 +149,7 @@ ExplicitSolver::~ExplicitSolver()
 // Problem Setup
 // ****************************************************************************
 void
-ExplicitSolver::problemSetup(const ProblemSpecP& params)
+ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
@@ -157,7 +157,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld,
                                           d_hypreSolver);
-  d_pressSolver->problemSetup(db);
+  d_pressSolver->problemSetup(db,state);
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,

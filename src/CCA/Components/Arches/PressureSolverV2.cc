@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -89,13 +90,14 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   delete d_source;
+  delete d_hypreSolver_parameters;
 }
 
 //______________________________________________________________________
 // Problem Setup
 //______________________________________________________________________
 void 
-PressureSolver::problemSetup(ProblemSpecP& params)
+PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
@@ -112,7 +114,8 @@ PressureSolver::problemSetup(ProblemSpecP& params)
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
   
-  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
+  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure",
+                                                           state);
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
 
   //__________________________________
@@ -196,6 +199,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   //  build pressure equation coefficients and source
   string taskname =  "PressureSolver::buildLinearMatrix_" +
                      timelabels->integrator_step_name;
+
   if (extraProjection){
     taskname += "_extraProjection";
   }
@@ -528,7 +532,10 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
   //  gross logic to determine what the
   //  solution label is and if it is a modified variable
   bool modifies_x = false;
+  bool modifies_hypre = false;
   const VarLabel* pressLabel;
+  if (timelabels->integrator_step_number > 0)
+    modifies_hypre = true;
 
   if ( extraProjection ){
 
@@ -536,11 +543,14 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       modifies_x = false;
+      modifies_hypre = false;
     }else{
       modifies_x = true;
+      modifies_hypre = true;
     }
   } else {
     pressLabel = timelabels->pressure_out;
+    //    modifies_hypre = false;
     modifies_x = false;
   }    
 
@@ -555,7 +565,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                x,      modifies_x,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
-                               d_hypreSolver_parameters);
+                               d_hypreSolver_parameters,modifies_hypre);
 }
 
 

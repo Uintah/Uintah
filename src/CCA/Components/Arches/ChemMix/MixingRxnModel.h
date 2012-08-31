@@ -352,6 +352,29 @@ namespace Uintah {
 
       }; 
 
+      /** @brief Performs post mixing on table look up value based 
+       * on a set of inert streams set from the input file.  Fails if 
+       * the variable isn't found */ 
+      void strict_post_mixing( double& mixvalue, double f, std::string label, doubleMap& the_map ){ 
+
+        // mixvalue is coming in with the post table-lookup value. 
+
+        doubleMap::iterator I = the_map.find( label ); 
+        double i_value = I->second; 
+
+        if ( I != the_map.end() ){
+
+          mixvalue = i_value * f + mixvalue * ( 1.0 - f ); 
+
+        } else {
+
+          // can't find it in the list.  Throw an error: 
+          throw InvalidValue("Error: Attempting to post-mix in "+label+" but variable is not found in this inert list.  Check your input file.",__FILE__,__LINE__); 
+
+        } 
+
+      }; 
+
 
       VarMap d_dvVarMap;         ///< Dependent variable map
       VarMap d_ivVarMap;         ///< Independent variable map

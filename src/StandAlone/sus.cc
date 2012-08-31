@@ -55,7 +55,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
+
+#ifdef HAVE_HYPRE
 #include <CCA/Components/Solvers/HypreSolver.h>
+#endif
+
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>

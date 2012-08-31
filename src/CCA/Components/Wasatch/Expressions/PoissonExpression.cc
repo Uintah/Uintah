@@ -109,7 +109,7 @@ namespace Wasatch {
                            phiLabel_, true,
                            phirhsLabel_, Uintah::Task::NewDW,
                            isDoingInitialization ? 0 : phiLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                           &solverParams_ );
+                           &solverParams_,RKStage == 1 ? false:true );
   }
 
   //--------------------------------------------------------------------

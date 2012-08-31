@@ -132,7 +132,7 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                          pressureLabel_, true,
                          prhsLabel_, Uintah::Task::NewDW,
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                         &solverParams_ );
+                         &solverParams_, RKStage == 1 ? false:true);
 }
 
 //--------------------------------------------------------------------

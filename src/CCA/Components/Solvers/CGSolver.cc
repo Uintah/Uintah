@@ -1,3 +1,4 @@
+
 /*
 
 The MIT License
@@ -952,7 +953,54 @@ private:
 };
 //______________________________________________________________________
 //
-SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
+SolverParameters* CGSolver::readParameters(ProblemSpecP& params, 
+                                           const string& varname,
+                                           SimulationStateP& state)
+{
+
+  CGSolverParams* p = new CGSolverParams();
+  if(params){
+    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
+        param = param->findNextBlock("Parameters")) {
+      string variable;
+      if(param->getAttribute("variable", variable) && variable != varname)
+        continue;
+      param->get("initial_tolerance", p->initial_tolerance);
+      param->get("tolerance", p->tolerance);
+      string norm;
+      if(param->get("norm", norm)){
+        if(norm == "L1" || norm == "l1") {
+          p->norm = CGSolverParams::L1;
+        } else if(norm == "L2" || norm == "l2") {
+          p->norm = CGSolverParams::L2;
+        } else if(norm == "LInfinity" || norm == "linfinity") {
+          p->norm = CGSolverParams::LInfinity;
+        } else {
+          throw ProblemSetupException("Unknown norm type: "+norm, __FILE__, __LINE__);
+        }
+      }
+      string criteria;
+      if(param->get("criteria", criteria)){
+        if(criteria == "Absolute" || criteria == "absolute") {
+          p->criteria = CGSolverParams::Absolute;
+        } else if(criteria == "Relative" || criteria == "relative") {
+          p->criteria = CGSolverParams::Relative;
+        } else {
+          throw ProblemSetupException("Unknown criteria: "+criteria, __FILE__, __LINE__);
+        }
+      }
+    }
+  }
+  
+  if(p->norm == CGSolverParams::L2)
+    p->tolerance *= p->tolerance;
+  return p;
+}
+
+
+SolverParameters* CGSolver::readParameters(ProblemSpecP& params, 
+                                           const string& varname)
+ 
 {
 
   CGSolverParams* p = new CGSolverParams();
@@ -1005,7 +1053,8 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                              bool modifies_x,
                              const VarLabel* b,    Task::WhichDW which_b_dw,  
                              const VarLabel* guess,Task::WhichDW which_guess_dw,
-                             const SolverParameters* params)
+                             const SolverParameters* params,
+                             bool modifies_hypre)
 {
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed

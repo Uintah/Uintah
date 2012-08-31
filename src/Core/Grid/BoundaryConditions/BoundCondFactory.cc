@@ -45,7 +45,7 @@ using std::string;
 using std::map;
 
 void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc, 
-                              int& mat_id)
+                              int& mat_id, const std::string face_label)
 
 {
   map<string,string> bc_attr;
@@ -75,12 +75,12 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   if( valuePS != 0) { // Found <value> tag.    
     try {
       child->get( "value", d_value );
-      bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value );
+      bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label );
     }
     catch( ... ) {
       // If there was an exception, then the 'value' was not a double... try to get a vector...
       child->get( "value", v_value );
-      bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value );
+      bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label );
     }
   }
   else {
