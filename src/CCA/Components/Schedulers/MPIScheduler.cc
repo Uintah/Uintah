@@ -183,7 +183,8 @@ void
 MPIScheduler::wait_till_all_done()
 {
   if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "MPIScheduler::wait_till_all_done()\n";
+    cerrLock.lock();
+    mixedDebug << "MPIScheduler::wait_till_all_done()\n";
     cerrLock.unlock();
   }
   return;

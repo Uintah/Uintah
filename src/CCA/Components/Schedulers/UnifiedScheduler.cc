@@ -422,11 +422,13 @@ UnifiedScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   /*control loop for all tasks of task graph*/
   runTasks(0);
+
    // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
   
 // wait for all tasks to finish 
   wait_till_all_done();
+
   //if any thread is busy, conditional wait here
   d_nextmutex.lock();
   while ( getAviableThreadNum() < numThreads_) {

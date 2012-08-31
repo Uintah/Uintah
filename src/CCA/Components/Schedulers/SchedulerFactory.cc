@@ -93,7 +93,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "ThreadedMPI")
                                               &&  (scheduler != "ThreadedMPI2"
                                               &&  (scheduler != "GPUThreadedMPI")
-                                              &&  (scheduler != "UnifiedScheduler")))) {
+                                              &&  (scheduler != "Unified")))) {
     throw ProblemSetupException("Threaded or GPU Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
