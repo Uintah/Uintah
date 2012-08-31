@@ -78,7 +78,9 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   currentDependencyGeneration_(1),
   extraCommunication_(0),
   readyQueueLock_("DetailedTasks Ready Queue"),
-  mpiCompletedQueueLock_("DetailedTasks MPI compelted Queue")
+  mpiCompletedQueueLock_("DetailedTasks MPI completed Queue"),
+  gpuReadyQueueLock_("DetailedTasks GPU Ready Queue"),
+  gpuCompletedQueueLock_("DetailedTasks GPU Completed Queue")
   //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
@@ -1333,40 +1335,60 @@ DetailedTasks::numExternalReadyTasks()
 #ifdef HAVE_CUDA
 DetailedTask* DetailedTasks::getNextInitiallyReadyGPUTask()
 {
-  DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
-  initiallyReadyGPUTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << initiallyReadyGPUTasks_.size() << endl;
+  DetailedTask* nextTask = NULL;
+  gpuReadyQueueLock_.writeLock();
+  if (!initiallyReadyGPUTasks_.empty()) {
+    nextTask = initiallyReadyGPUTasks_.top();
+    initiallyReadyGPUTasks_.pop();
+  }
+  gpuReadyQueueLock_.writeUnlock();
+
   return nextTask;
 }
 
 DetailedTask* DetailedTasks::getNextCompletionPendingGPUTask()
 {
-  DetailedTask* nextTask = completionPendingGPUTasks_.top();
-  completionPendingGPUTasks_.pop();
-//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << completionPendingGPUTasks_.size() << endl;
+  DetailedTask* nextTask = NULL;
+  gpuCompletedQueueLock_.writeLock();
+  if(!completionPendingGPUTasks_.empty()) {
+    nextTask = completionPendingGPUTasks_.top();
+    completionPendingGPUTasks_.pop();
+  }
+  gpuCompletedQueueLock_.writeUnlock();
+
   return nextTask;
 }
 
 DetailedTask* DetailedTasks::peekNextInitiallyReadyGPUTask()
 {
+  gpuReadyQueueLock_.readLock();
   DetailedTask* dtask = initiallyReadyGPUTasks_.top();
+  gpuReadyQueueLock_.readUnlock();
+
   return dtask;
 }
 
 DetailedTask* DetailedTasks::peekNextCompletionPendingGPUTask()
 {
+  gpuCompletedQueueLock_.readLock();
   DetailedTask* dtask = completionPendingGPUTasks_.top();
+  gpuCompletedQueueLock_.readUnlock();
+
   return dtask;
 }
 
 void DetailedTasks::addInitiallyReadyGPUTask(DetailedTask* dtask)
 {
+  gpuReadyQueueLock_.writeLock();
   initiallyReadyGPUTasks_.push(dtask);
+  gpuReadyQueueLock_.writeUnlock();
 }
 
 void DetailedTasks::addCompletionPendingGPUTask(DetailedTask* dtask)
 {
+  gpuCompletedQueueLock_.writeLock();
   completionPendingGPUTasks_.push(dtask);
+  gpuCompletedQueueLock_.writeUnlock();
 }
 #endif
 
