@@ -412,7 +412,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
     std::string face_label = "none";
     face_ps->getAttribute("name",face_label);
-    std::cout << "Face Label = " << face_label << std::endl;
+    BCR_dbg << "Face Label = " << face_label << std::endl;
     
     BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
       << typeid(*bcGeom).name() << " " << bcGeom << endl;
