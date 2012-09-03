@@ -586,8 +586,13 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     computeBCs( patch, d_eqnName, phi );
 
     //----CONVECTION
-    if (d_doConv)
+    if (d_doConv){
       d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, areaFraction, d_convScheme ); 
+      // look for and add contribution from intrusions.
+      if ( _using_new_intrusion ) { 
+        _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS ); 
+      }
+    }
   
     //----DIFFUSION
     if (d_doDiff)
