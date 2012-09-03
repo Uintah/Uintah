@@ -142,6 +142,12 @@ namespace Uintah{
                          CCVariable<double>& RHS,
                          constCCVariable<double>& density ); 
 
+      /** @brief Adds flux contribution to the RHS, no density**/ 
+      void addScalarRHS( const Patch* p, 
+                         Vector Dx, 
+                         const std::string scalar_name, 
+                         CCVariable<double>& RHS );
+
       /** @brief Sets the density in the intrusion for inlets */
       void setDensity( const Patch* patch, 
                        CCVariable<double>& density );
