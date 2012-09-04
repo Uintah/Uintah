@@ -225,12 +225,16 @@ WARNING
     map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all page-locked host pointers
     vector<queue<cudaStream_t*> >  idleStreams;
     vector<queue<cudaEvent_t*> >   idleEvents;
-    set<double*> pinnedHostPtrs;
+    set<double*>  pinnedHostPtrs;
     int           numGPUs_;
     int           currentGPU_;
 
+//    mutable CrowdMonitor
+
 #endif
   };
+
+
 
 class UnifiedSchedulerWorker : public Runnable {
 
