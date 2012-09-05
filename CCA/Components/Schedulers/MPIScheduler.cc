@@ -166,7 +166,7 @@ MPIScheduler::verifyChecksum()
   if(checksum != result_checksum){
     cerr << "Failed task checksum comparison!\n";
     cerr << "Processor: " << d_myworld->myrank() << " of "
-	 << d_myworld->size() << ": has sum " << checksum
+	 << d_myworld->size() - 1 << ": has sum " << checksum
 	 << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
   }
