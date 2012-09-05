@@ -211,7 +211,7 @@ in conjunction with the continuity equation
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\rho}{\partial t}+\nabla\cdot\rho\mathbf{u}=0
+\frac{\partial\rho}{\partial t}+\nabla\cdot\rho\mathbf{u}=0.
 \end{equation}
 
 \end_inset
@@ -242,7 +242,7 @@ Here,
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}=-2\mu S_{ij}+\frac{2}{3}\mu\delta_{ij}S_{kk};\quad S_{ij}=\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right)
+\boldsymbol{\tau}_{ij}=-2\mu S_{ij}+\frac{2}{3}\mu\delta_{ij}S_{kk};\quad S_{ij}=\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right).
 \end{equation}
 
 \end_inset
@@ -268,7 +268,7 @@ tion of the convective flux.
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\nabla^{2}p=\frac{\partial^{2}\rho}{\partial t^{2}}+\nabla\cdot\nabla\cdot\rho\mathbf{u}\mathbf{u}-\nabla\cdot\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla\cdot\rho\mathbf{g}\label{eq:wasatch-pressure-poisson-eq}
+\nabla^{2}p=\frac{\partial^{2}\rho}{\partial t^{2}}+\nabla\cdot\nabla\cdot\rho\mathbf{u}\mathbf{u}+\nabla\cdot\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla\cdot\rho\mathbf{g}.\label{eq:wasatch-pressure-poisson-eq}
 \end{equation}
 
 \end_inset
@@ -370,13 +370,17 @@ Constant Density
 \end_layout
 
 \begin_layout Standard
-For a constant density flow, the Pressure-Poisson-Equation reduces to
-\end_layout
+For a constant density flow, the Pressure-Poisson-Equation 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:wasatch-pressure-poisson-eq"
 
-\begin_layout Standard
+\end_inset
+
+ reduces to
 \begin_inset Formula 
 \begin{equation}
-\nabla^{2}p=\nabla\cdot\nabla\cdot\rho\mathbf{u}\mathbf{u}-\nabla\cdot\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla\cdot\rho\mathbf{g}\label{eq:wasatch-pressure-poisson-eq-1}
+\nabla^{2}p=\nabla\cdot\nabla\cdot\rho\mathbf{u}\mathbf{u}+\nabla\cdot\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla\cdot\rho\mathbf{g}.\label{eq:wasatch-pressure-poisson-eq-1}
 \end{equation}
 
 \end_inset
@@ -393,12 +397,9 @@ Wasatch uses Favre filtering as the basis for its LES approach.
  Favre filtering is defined as a density-weighted filtering operation to
  accomodate variable density.
  It is given by the following operation
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\overline{\rho\phi}=\overline{\rho}\widetilde{\phi}
+\overline{\rho\phi}=\overline{\rho}\widetilde{\phi},
 \end{equation}
 
 \end_inset
@@ -408,12 +409,9 @@ where the overbar denotes a traditional filtering operation.
  variable (i.e.
  a variable that one wishes to filter) with a filter.
  This is written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\overline{\phi}=\int_{\Omega}G(\mathbf{r})\phi(\mathbf{x}-\mathbf{r})\,\mathrm{d}\mathbf{r}
+\overline{\phi}=\int_{\Omega}G(\mathbf{r})\phi(\mathbf{x}-\mathbf{r})\,\mathrm{d}\mathbf{r}.
 \end{equation}
 
 \end_inset
@@ -429,12 +427,9 @@ Filtered Momentum Equations
 To make further headway, we apply the traditional filter to the governing
  fluid transport equations.
  Starting with continuity, we have
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho\mathbf{u}}=0
+\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho\mathbf{u}}=0.
 \end{equation}
 
 \end_inset
@@ -445,12 +440,9 @@ Then, one makes use of the Favre filtering operation by setting
 
 .
  At the outset, the Favre-filtered continuity equation is given by
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}=0
+\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}=0.
 \end{equation}
 
 \end_inset
@@ -460,12 +452,9 @@ Then, one makes use of the Favre filtering operation by setting
 
 \begin_layout Standard
 Moving on to the momentum equation, the filtering operation yields
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}+\overline{\rho\mathbf{g}}
+\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}+\overline{\rho\mathbf{g}}.
 \end{equation}
 
 \end_inset
@@ -550,12 +539,9 @@ where
  are subgrid-scale stress tensors (SGS) that result from applying filtering
  to the convective and diffusive terms in the momentum equations, respectively.
  At the outset, the filtered momentum equations may be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}\label{eq:wasatch-filtered-momentum-eq}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq}
 \end{equation}
 
 \end_inset
@@ -597,12 +583,9 @@ key "geurts_les_1993,vreman_subgrid-modelling_1995"
 
 .
  Hence, the resulting filtered momentum equations take the form
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}\label{eq:wasatch-filtered-momentum-eq-2}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq-2}
 \end{equation}
 
 \end_inset
@@ -727,12 +710,9 @@ key "smagorinsky_general_1963"
 \end_inset
 
 , these have the general form
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}^{R}=\underbrace{\overbrace{\boldsymbol{\tau}_{ij}^{R}-\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{deviatoric}}^{\boldsymbol{\tau}_{ij}^{\mathrm{d}}}+\underbrace{\overbrace{\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{isotropic}}^{\boldsymbol{\tau}_{ij}^{\mathrm{s}}}\label{eq:wasatch-sgs-tensor-decomposition}
+\boldsymbol{\tau}_{ij}^{R}=\underbrace{\overbrace{\boldsymbol{\tau}_{ij}^{R}-\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{deviatoric}}^{\boldsymbol{\tau}_{ij}^{\mathrm{d}}}+\underbrace{\overbrace{\tfrac{1}{3}\delta_{ij}\boldsymbol{\tau}_{kk}^{R}}}_{\text{isotropic}}^{\boldsymbol{\tau}_{ij}^{\mathrm{s}}}.\label{eq:wasatch-sgs-tensor-decomposition}
 \end{equation}
 
 \end_inset
@@ -742,12 +722,9 @@ The deviatoric subgrid-stress tensor
 \end_inset
 
  is modeled as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\mu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right)
+\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\mu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right),
 \end{equation}
 
 \end_inset
@@ -791,12 +768,9 @@ key "garnier_les_compressible_2009"
 \end_inset
 
  may be written in terms of the subgrid Mach number as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{kk}=\gamma M_{\text{sgs}}^{2}\overline{p}
+\boldsymbol{\tau}_{kk}=\gamma M_{\text{sgs}}^{2}\overline{p}.
 \end{equation}
 
 \end_inset
@@ -829,12 +803,9 @@ reference "eq:wasatch-filtered-momentum-eq"
 \end_inset
 
  one recovers
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}\label{eq:wasatch-filtered-momentum-eq-1}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}.\label{eq:wasatch-filtered-momentum-eq-1}
 \end{equation}
 
 \end_inset
@@ -866,12 +837,9 @@ key "smagorinsky_general_1963"
 
 .
  This form may be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \[
-\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|
+\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|,
 \]
 
 \end_inset
@@ -931,12 +899,9 @@ Ability to recover constant smagorinsky model when desirable.
 
 \begin_layout Standard
 These features may be accomplished by setting
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-L_{s}=C_{s}\Delta\left(1-\frac{\Delta}{\eta}\right)\label{eq:wasatch-modified-smagorinsky-model}
+L_{s}=C_{s}\Delta\left(1-\frac{\Delta}{\eta}\right).\label{eq:wasatch-modified-smagorinsky-model}
 \end{equation}
 
 \end_inset
@@ -960,12 +925,9 @@ not
 
  may be taken as the Kolmogorov scale.
  It may be evalulated from the following scaling law
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{L}{\eta}\sim\text{Re}^{3/4}
+\frac{L}{\eta}\sim\text{Re}^{3/4},
 \end{equation}
 
 \end_inset
@@ -1087,7 +1049,7 @@ The most important difference between filtered and non-filtered momentum
  According to the Smagorinsky eddy viscosity model it can be modeled as
 \begin_inset Formula 
 \begin{equation}
-\tau_{kl}-\frac{1}{3}q^{2}\delta_{kl}=-2C\bar{\rho}\Delta^{2}|\tilde{S}|(\tilde{S}_{kl}-\frac{1}{3}\tilde{S}_{mm}\delta_{kl})\label{eq:wasatch-smagorinsky}
+\tau_{kl}-\frac{1}{3}q^{2}\delta_{kl}=-2C\bar{\rho}\Delta^{2}|\tilde{S}|(\tilde{S}_{kl}-\frac{1}{3}\tilde{S}_{mm}\delta_{kl}),\label{eq:wasatch-smagorinsky}
 \end{equation}
 
 \end_inset
@@ -1112,12 +1074,12 @@ where
  is also parameterized using Yoshizawa's model to obtain
 \begin_inset Formula 
 \begin{equation}
-q^{2}=2C_{I}\bar{\rho}\Delta^{2}|\tilde{S}|^{2}
+q^{2}=2C_{I}\bar{\rho}\Delta^{2}|\tilde{S}|^{2},
 \end{equation}
 
 \end_inset
 
-Where 
+where 
 \begin_inset Formula $\Delta$
 \end_inset
 
@@ -1137,25 +1099,21 @@ Where
  By using dynamic models and applying test-filters these constants are parameter
 ized as
 \begin_inset Formula 
-\begin{equation}
-C_{I}=\frac{<\widehat{\bar{\rho}\tilde{v}_{k}\tilde{v}_{k}}-(1/\hat{\bar{\rho}})(\widehat{\bar{\rho}\tilde{v}_{k})}(\widehat{\bar{\rho}\tilde{v}_{k}})>}{<2\hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|^{2}-2\Delta^{2}\widehat{\bar{\rho}|\tilde{S}|^{2}}>}
-\end{equation}
+\begin{eqnarray}
+C_{I} & = & \frac{<\widehat{\bar{\rho}\tilde{v}_{k}\tilde{v}_{k}}-(1/\hat{\bar{\rho}})(\widehat{\bar{\rho}\tilde{v}_{k})}(\widehat{\bar{\rho}\tilde{v}_{k}})>}{<2\hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|^{2}-2\Delta^{2}\widehat{\bar{\rho}|\tilde{S}|^{2}}>},\\
+C & = & \frac{\left\langle [\widehat{\bar{\rho}\tilde{v}_{k}\tilde{v}_{l}}-(1/\hat{\bar{\rho}})(\widehat{\bar{\rho}\tilde{v}_{k}}\widehat{\bar{\rho}\tilde{v}_{l}})]\tilde{S}_{kl}-\frac{1}{3}\tilde{S}_{mm}({\cal T}_{jj}-\hat{\tau}_{jj})\right\rangle }{\left\langle -2\hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|(\hat{\tilde{S}}_{kl}\tilde{S}_{kl}-\frac{1}{3}\hat{\tilde{S}}_{mm}\tilde{S}_{jj})+2\Delta^{2}(\widehat{\bar{\rho}|\tilde{S}|\tilde{S}_{kl}}\tilde{S}_{kl}-\frac{1}{3}\widehat{\bar{\rho}|\tilde{S}|\tilde{S}_{mm}}\tilde{S}_{jj})\right\rangle },
+\end{eqnarray}
 
 \end_inset
 
 
 \begin_inset Formula 
 \begin{equation}
-C=\frac{\left\langle [\widehat{\bar{\rho}\tilde{v}_{k}\tilde{v}_{l}}-(1/\hat{\bar{\rho}})(\widehat{\bar{\rho}\tilde{v}_{k}}\widehat{\bar{\rho}\tilde{v}_{l}})]\tilde{S}_{kl}-\frac{1}{3}\tilde{S}_{mm}({\cal T}_{jj}-\hat{\tau}_{jj})\right\rangle }{\left\langle -2\hat{\bar{\rho}}\hat{\Delta}^{2}|\hat{\tilde{S}}|(\hat{\tilde{S}}_{kl}\tilde{S}_{kl}-\frac{1}{3}\hat{\tilde{S}}_{mm}\tilde{S}_{jj})+2\Delta^{2}(\widehat{\bar{\rho}|\tilde{S}|\tilde{S}_{kl}}\tilde{S}_{kl}-\frac{1}{3}\widehat{\bar{\rho}|\tilde{S}|\tilde{S}_{mm}}\tilde{S}_{jj})\right\rangle }
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Where 
+ where 
 \begin_inset Formula $<>$
 \end_inset
 
@@ -1179,12 +1137,9 @@ key "geurts_les_1993"
 \end_inset
 
 , the eddy-viscosity is modeled as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mu_{t}=\rho\left(C_{\mathrm{w}}\Delta\right)^{2}\frac{(S_{ij}^{d}S_{ij}^{d})^{3/2}}{(\widetilde{S}_{ij}\widetilde{S}_{ij})^{5/2}+(S_{ij}^{d}S_{ij}^{d})^{5/4}}
+\mu_{t}=\rho\left(C_{\mathrm{w}}\Delta\right)^{2}\frac{(S_{ij}^{d}S_{ij}^{d})^{3/2}}{(\widetilde{S}_{ij}\widetilde{S}_{ij})^{5/2}+(S_{ij}^{d}S_{ij}^{d})^{5/4}}.
 \end{equation}
 
 \end_inset
@@ -1215,7 +1170,7 @@ key "nicoud_subgrid-scale_1999"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-S_{ij}^{d}=\tfrac{1}{2}\left(g_{ij}^{2}+g_{ji}^{2}\right)-\tfrac{1}{3}\delta_{ij}g_{kk}^{2};\quad g_{ij}^{2}=g_{ik}g_{kj};\quad g_{ij}=\frac{\partial u_{i}}{\partial x_{j}}
+S_{ij}^{d}=\tfrac{1}{2}\left(g_{ij}^{2}+g_{ji}^{2}\right)-\tfrac{1}{3}\delta_{ij}g_{kk}^{2};\quad g_{ij}^{2}=g_{ik}g_{kj};\quad g_{ij}=\frac{\partial u_{i}}{\partial x_{j}}.
 \end{equation}
 
 \end_inset
@@ -1244,12 +1199,9 @@ POORLY WRITTEN.
 
 \begin_layout Standard
 Wasatch can solve any scalar transport equation of the general form
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\rho\phi}{\partial t}=-\nabla\cdot\rho\phi\mathbf{u}+\nabla\cdot\rho\Gamma_{\phi}\nabla\phi+S_{\phi}\label{eq:wasatch-transport-eq-strong-var-dens}
+\frac{\partial\rho\phi}{\partial t}=-\nabla\cdot\rho\phi\mathbf{u}+\nabla\cdot\rho\Gamma_{\phi}\nabla\phi+S_{\phi}.\label{eq:wasatch-transport-eq-strong-var-dens}
 \end{equation}
 
 \end_inset
@@ -1276,11 +1228,11 @@ reference "eq:wasatch-transport-eq-strong-var-dens"
  Those forms are:
 \end_layout
 
-\begin_layout Standard
-Strong form with constant density
+\begin_layout Itemize
+Strong form with constant density,
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\phi}{\partial t}=-\nabla\cdot\phi\mathbf{u}+\nabla\cdot\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}\label{eq:wasatch-transport-eq-strong-const-dens}
+\frac{\partial\phi}{\partial t}=-\nabla\cdot\phi\mathbf{u}+\nabla\cdot\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}.\label{eq:wasatch-transport-eq-strong-const-dens}
 \end{equation}
 
 \end_inset
@@ -1288,11 +1240,11 @@ Strong form with constant density
 
 \end_layout
 
-\begin_layout Standard
-Weak form with variable density
+\begin_layout Itemize
+Weak form with variable density,
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\phi}{\partial t}=-\mathbf{u}\cdot\nabla\phi+\frac{1}{\rho}\nabla\cdot\rho\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}\label{eq:wasatch-transport-eq-weak-var-dens}
+\frac{\partial\phi}{\partial t}=-\mathbf{u}\cdot\nabla\phi+\frac{1}{\rho}\nabla\cdot\rho\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}.\label{eq:wasatch-transport-eq-weak-var-dens}
 \end{equation}
 
 \end_inset
@@ -1300,11 +1252,11 @@ Weak form with variable density
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
 Weak from with constant density
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\phi}{\partial t}=-\mathbf{u}\cdot\nabla\phi+\nabla\cdot\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}\label{eq:wasatch-transport-eq-weak-const-dens}
+\frac{\partial\phi}{\partial t}=-\mathbf{u}\cdot\nabla\phi+\nabla\cdot\Gamma_{\phi}\nabla\phi+\frac{S_{\phi}}{\rho}.\label{eq:wasatch-transport-eq-weak-const-dens}
 \end{equation}
 
 \end_inset
@@ -1342,7 +1294,7 @@ The main reason that wasatch keeps both strong and weak form is to compare
  apply limiters on this term this equation is used
 \begin_inset Formula 
 \begin{equation}
-\mathbf{u}\cdot\nabla\phi=\nabla\cdot\phi\mathbf{u}-\phi\nabla\cdot\mathbf{u}
+\mathbf{u}\cdot\nabla\phi=\nabla\cdot\phi\mathbf{u}-\phi\nabla\cdot\mathbf{u}.
 \end{equation}
 
 \end_inset
@@ -1369,12 +1321,9 @@ Filtered Scalar Transport Equation
 By applying the traditional filter on the strong form of the scalar transport
  equation with variable density for capturing the most general form of the
  equation, the filtered scalar equation will be:
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho\phi}}{\partial t}=-\nabla\cdot\overline{\rho\phi\mathbf{u}}+\nabla\cdot\overline{\rho\Gamma_{\phi}\nabla\phi}+\overline{S_{\phi}}
+\frac{\partial\overline{\rho\phi}}{\partial t}=-\nabla\cdot\overline{\rho\phi\mathbf{u}}+\nabla\cdot\overline{\rho\Gamma_{\phi}\nabla\phi}+\overline{S_{\phi}}.
 \end{equation}
 
 \end_inset
@@ -1464,12 +1413,9 @@ where
  to the convective and diffusive terms in the scalar transport equations,
  respectively.
  At the outset, the filtered scalar equations may be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\underset{neglect}{\underbrace{\nabla.J_{t}^{L}}}+\overline{S_{\phi}}\label{eq:wasatch-filtered-scalar-eq}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\underset{neglect}{\underbrace{\nabla.J_{t}^{L}}}+\overline{S_{\phi}}.\label{eq:wasatch-filtered-scalar-eq}
 \end{equation}
 
 \end_inset
@@ -1529,12 +1475,9 @@ reference "eq:wasatch-filtered-scalar-eq"
  just to be consistent with the same approximation that we made in momentum
  equation in LES mode.
  Hence, the resulting filtered momentum equations take the form
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\overline{S_{\phi}}\label{eq:wasatch-filtered-scalar-eq-2}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}\overline{\Gamma_{\phi}}\nabla\widetilde{\phi})+\nabla\cdot J_{t}^{R}+\overline{S_{\phi}}.\label{eq:wasatch-filtered-scalar-eq-2}
 \end{equation}
 
 \end_inset
@@ -1572,34 +1515,23 @@ Subgird Scalar Closure
 
 \begin_layout Standard
 We model our subgrid diffusive flux term(s) as some diffusive form terms
- in Wasatch.
- 
-\end_layout
-
-\begin_layout Standard
+ in Wasatch,
 \begin_inset Formula 
 \begin{equation}
-J_{t}^{R}=\Gamma_{\phi_{T}}\nabla\widetilde{\phi}
+J_{t}^{R}=\Gamma_{\phi_{T}}\nabla\widetilde{\phi},
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Where 
+where 
 \begin_inset Formula $\Gamma_{\phi_{T}}$
 \end_inset
 
  is turbulent diffusivity and in order to obtain this constant we utilize
- the turbulent Schmidt number which is defined as:
-\end_layout
-
-\begin_layout Standard
+ the turbulent Schmidt number which is defined as
 \begin_inset Formula 
 \begin{equation}
-Sc_{t}=\frac{\mu_{t}}{\rho\Gamma_{\phi_{t}}}=\frac{\nu_{t}}{\Gamma_{\phi_{t}}}
+Sc_{t}=\frac{\mu_{t}}{\rho\Gamma_{\phi_{t}}}=\frac{\nu_{t}}{\Gamma_{\phi_{t}}}.
 \end{equation}
 
 \end_inset
@@ -1615,12 +1547,9 @@ With this definition if we just define the Schmidt number of our problem,
 
 , from one of our closure models for momentum equation, we can obtain turbulent
  diffusivity as 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\Gamma_{\phi_{t}}=\frac{\rho Sc_{t}}{\mu_{t}}
+\Gamma_{\phi_{t}}=\frac{\rho Sc_{t}}{\mu_{t}}.
 \end{equation}
 
 \end_inset
@@ -1629,13 +1558,13 @@ With this definition if we just define the Schmidt number of our problem,
 \end_layout
 
 \begin_layout Standard
-Finally, our filtered scalar transport equation will be like this:
+Finally, our filtered scalar transport equation is
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}(\overline{\Gamma_{\phi}}+\overline{\Gamma_{\phi_{t}}})\nabla\widetilde{\phi})+\overline{S_{\phi}}
+\frac{\partial\overline{\rho}\widetilde{\phi}}{\partial t}=\nabla\cdot\overline{\rho}\widetilde{\phi}\widetilde{\mathbf{u}}+\nabla.(\overline{\rho}(\overline{\Gamma_{\phi}}+\overline{\Gamma_{\phi_{t}}})\nabla\widetilde{\phi})+\overline{S_{\phi}}.
 \end{equation}
 
 \end_inset
@@ -1651,12 +1580,9 @@ Population Balances
 Wasatch currently supports a basic population balance equation with a single
  internal coordinate.
  The targeted equation is written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial N}{\partial t}=-\nabla\cdot\mathbf{u}N+\frac{\partial gN}{\partial r}+b;\quad N\equiv N(\mathbf{x},r,t)\label{eq:wasatch-pbe}
+\frac{\partial N}{\partial t}=-\nabla\cdot\mathbf{u}N+\frac{\partial gN}{\partial r}+b;\quad N\equiv N(\mathbf{x},r,t),\label{eq:wasatch-pbe}
 \end{equation}
 
 \end_inset
@@ -1690,12 +1616,9 @@ where
 \end_inset
 
  moment is defined as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-m_{k}\equiv\int_{-\infty}^{+\infty}r^{k}N(\mathbf{x},r,t)\,\mathrm{d}r\label{eq:wasatch-moment-transform}
+m_{k}\equiv\int_{-\infty}^{+\infty}r^{k}N(\mathbf{x},r,t)\,\mathrm{d}r.\label{eq:wasatch-moment-transform}
 \end{equation}
 
 \end_inset
@@ -1712,12 +1635,9 @@ reference "eq:wasatch-pbe"
 \end_inset
 
 , we recover the moment transport equation
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial m_{k}}{\partial t}=-\nabla\cdot\mathbf{u}m_{k}-k\int_{-\infty}^{+\infty}r^{k-1}gN\,\mathrm{d}r+\int_{-\infty}^{+\infty}r^{k}b\,\mathrm{d}r\equiv F(m_{k+i});\quad i\in\mathbb{Q}\label{eq:wasatch-moment-transport-eq}
+\frac{\partial m_{k}}{\partial t}=-\nabla\cdot\mathbf{u}m_{k}-k\int_{-\infty}^{+\infty}r^{k-1}gN\,\mathrm{d}r+\int_{-\infty}^{+\infty}r^{k}b\,\mathrm{d}r\equiv F(m_{k+i});\quad i\in\mathbb{Q}.\label{eq:wasatch-moment-transport-eq}
 \end{equation}
 
 \end_inset
@@ -1840,12 +1760,9 @@ key "oberkampf_verification_2010"
  The total error refers to the accumulation of truncation and round off
  errors throughout the spatial and temporal domains.
  It can be generally defined as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-E=\left|\phi_{\mathrm{exact}}-\phi_{\mathrm{numerical}}\right|
+E=\left|\phi_{\mathrm{exact}}-\phi_{\mathrm{numerical}}\right|,
 \end{equation}
 
 \end_inset
@@ -1887,12 +1804,9 @@ To illustrate how the truncation error is estimated, we make use of Taylor
 \end_inset
 
  is written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\phi_{i+1}=\phi_{i}+\frac{\mathrm{d}\phi_{i}}{\mathrm{d}x}\Delta x+\frac{\mathrm{d}^{2}\phi_{i}}{\mathrm{d}x^{2}}\frac{\Delta x^{2}}{2!}+\frac{\mathrm{d}^{3}\phi_{i}}{\mathrm{d}x^{3}}\frac{\Delta x^{3}}{3!}+\ldots
+\phi_{i+1}=\phi_{i}+\frac{\mathrm{d}\phi_{i}}{\mathrm{d}x}\Delta x+\frac{\mathrm{d}^{2}\phi_{i}}{\mathrm{d}x^{2}}\frac{\Delta x^{2}}{2!}+\frac{\mathrm{d}^{3}\phi_{i}}{\mathrm{d}x^{3}}\frac{\Delta x^{3}}{3!}+\ldots.
 \end{equation}
 
 \end_inset
@@ -1902,12 +1816,9 @@ One can then approximate the first derivative at grid point
 \end_inset
 
  via
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\mathrm{d}\phi_{i}}{\mathrm{d}x}=\frac{\phi_{i+1}-\phi_{i}}{\Delta x}+\underbrace{\frac{\mathrm{d}^{2}\phi_{i}}{\mathrm{d}x^{2}}\frac{\Delta x}{2!}+\frac{\mathrm{d}^{3}\phi_{i}}{\mathrm{d}x^{3}}\frac{\Delta x^{2}}{3!}+\ldots}_{\text{truncation error}}
+\frac{\mathrm{d}\phi_{i}}{\mathrm{d}x}=\frac{\phi_{i+1}-\phi_{i}}{\Delta x}+\underbrace{\frac{\mathrm{d}^{2}\phi_{i}}{\mathrm{d}x^{2}}\frac{\Delta x}{2!}+\frac{\mathrm{d}^{3}\phi_{i}}{\mathrm{d}x^{3}}\frac{\Delta x^{2}}{3!}+\ldots}_{\text{truncation error}}.
 \end{equation}
 
 \end_inset
@@ -1933,12 +1844,9 @@ The truncation error is usually lumped into a single term and assigned the
 \end_inset
 
  terminology
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-T.E.=\underset{\Delta x\to0}{\mathcal{O}\left(\Delta x^{m}\right)},\quad m\in\mathbb{R}^{+}
+T.E.=\underset{\Delta x\to0}{\mathcal{O}\left(\Delta x^{m}\right)},\quad m\in\mathbb{R}^{+}.
 \end{equation}
 
 \end_inset
@@ -1957,12 +1865,9 @@ This definition has a precise meaning: as
 
 .
  Alternatively, one can write
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\lim_{\Delta x\to0}\frac{T.E.}{\Delta x^{m}}=M
+\lim_{\Delta x\to0}\frac{T.E.}{\Delta x^{m}}=M,
 \end{equation}
 
 \end_inset
@@ -1973,12 +1878,9 @@ where
 
  is a constant.
  Then, the truncation error can be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-T.E.=M\Delta x^{m}
+T.E.=M\Delta x^{m}.
 \end{equation}
 
 \end_inset
@@ -1990,12 +1892,9 @@ Subsequently, and by neglecting round-off errors, the total error consists
  a discretization method at a single point.
  We will discuss how the truncation error accumulates shortly, but for the
  moment, the total error can be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-E=\alpha\Delta x^{p}\label{eq:total-error-one-d}
+E=\alpha\Delta x^{p},\label{eq:total-error-one-d}
 \end{equation}
 
 \end_inset
@@ -2048,15 +1947,12 @@ reference "eq:total-error-one-d"
 .
  Then, one calculates the errors associated with these two grids.
  These are given by
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
 E_{1}= & \alpha\Delta x_{1}^{p}\\
 E_{2}= & \alpha\Delta x_{2}^{p}
-\end{cases}
+\end{cases}.
 \end{equation}
 
 \end_inset
@@ -2064,9 +1960,6 @@ E_{2}= & \alpha\Delta x_{2}^{p}
 These equations can be easily solved by taking the difference of their logarithm
 s.
  One recovers
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \ln E_{1}-\ln E_{2}=p\ln\Delta x_{1}-p\ln\Delta x_{2}
@@ -2075,9 +1968,6 @@ s.
 \end_inset
 
 or
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \ln\frac{E_{1}}{E_{2}}=p\ln\frac{\Delta x_{1}}{\Delta x_{2}}=p\ln r_{x}
@@ -2086,18 +1976,25 @@ or
 \end_inset
 
 finally, the observed order of accuracy is at hand
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-p=\frac{\ln\frac{E_{1}}{E_{2}}}{\ln r_{x}}
+p=\frac{\ln\frac{E_{1}}{E_{2}}}{\ln r_{x}}.
 \end{equation}
 
 \end_inset
 
 A word of caution must be said about temporal order of accuracy analysis.
- Many people think that by taking
+ Many people think that by taking 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+??? 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2112,12 +2009,9 @@ Combined Spatio-Temporal Order-of-Accuracy Analysis
 
 \begin_layout Standard
 Without loss of generality, the truncation error may be represented as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-E=u_{\mathrm{exact}}-u_{\mathrm{numerical}}=\alpha\Delta t^{p}+\beta\Delta x^{q}+\gamma\Delta y^{r}+\delta\Delta z^{s}
+E=u_{\mathrm{exact}}-u_{\mathrm{numerical}}=\alpha\Delta t^{p}+\beta\Delta x^{q}+\gamma\Delta y^{r}+\delta\Delta z^{s}.
 \end{equation}
 
 \end_inset
@@ -2150,12 +2044,9 @@ Wasatch currently entertains both forward Euler (FE) and 3rd order Rungue-Kutta
 
 .
  This solves the following ODE
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\mathrm{d}\phi}{\mathrm{d}t}=L(\phi)
+\frac{\mathrm{d}\phi}{\mathrm{d}t}=L(\phi).
 \end{equation}
 
 \end_inset
@@ -2164,7 +2055,7 @@ Wasatch currently entertains both forward Euler (FE) and 3rd order Rungue-Kutta
 \end_layout
 
 \begin_layout Standard
-written in discretized form, this leads to
+Written in discretized form, this leads to
 \begin_inset Note Note
 status open
 
@@ -2183,12 +2074,9 @@ Time-Dependent Source Term
 
 \begin_layout Standard
 Our choice falls upon
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\mathrm{d}\phi}{\mathrm{d}t}=\sin t;\quad\phi(0)=-1
+\frac{\mathrm{d}\phi}{\mathrm{d}t}=\sin t;\quad\phi(0)=-1.
 \end{equation}
 
 \end_inset
@@ -2199,7 +2087,7 @@ The analytical solution for this case is
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\phi_{\mathrm{exact}}=-\cos t
+\phi_{\mathrm{exact}}=-\cos t.
 \end{equation}
 
 \end_inset
@@ -2716,12 +2604,9 @@ Implicit Source Term
 
 \begin_layout Standard
 In this verification test, we solve the following ODE
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\mathrm{d}\phi}{\mathrm{d}t}=\phi;\quad\phi(0)=1
+\frac{\mathrm{d}\phi}{\mathrm{d}t}=\phi;\quad\phi(0)=1.
 \end{equation}
 
 \end_inset
@@ -3310,17 +3195,10 @@ In order to check the spatial order of accuracy we looked at the four different
 \begin_layout Standard
 Taylor-Vortex problem is a 2D problem where the exact solutions are:
 \begin_inset Formula 
-\begin{equation}
-u(x,y,t)=1-A\cos(x-t)\sin(y-t)\exp(-2\nu t)
-\end{equation}
-
-\end_inset
-
-
-\begin_inset Formula 
-\begin{equation}
-v(x,y,t)=1+A\sin(x-t)\cos(y-t)\exp(-2\nu t)
-\end{equation}
+\begin{eqnarray}
+u(x,y,t) & = & 1-A\cos(x-t)\sin(y-t)\exp(-2\nu t),\\
+v(x,y,t) & = & 1+A\sin(x-t)\cos(y-t)\exp(-2\nu t).
+\end{eqnarray}
 
 \end_inset
 
@@ -3340,7 +3218,7 @@ In order to calculate the error the norm over the whole area is taken to
  obtain
 \begin_inset Formula 
 \begin{equation}
-E=norm(u_{exact}-u_{numerical})
+E=\left\Vert u_{exact}-u_{numerical}\right\Vert .
 \end{equation}
 
 \end_inset
@@ -3862,12 +3740,9 @@ Mathematically, this may be written as follows.
 \end_inset
 
  may then be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\phi_{\text{ghost}}=\alpha\phi_{\text{interior}}+\beta\Phi_{\text{{BC}}}
+\phi_{\text{ghost}}=\alpha\phi_{\text{interior}}+\beta\Phi_{\text{{BC}}},
 \end{equation}
 
 \end_inset
@@ -4106,13 +3981,10 @@ name "fig:boundary-condition-pressure-specification-1"
 \begin_layout Standard
 Inlets and walls, whether moving or stationary, share the same boundary
  condition specification.
- The user only specifies the momentum at those boundaries.
-\end_layout
-
-\begin_layout Standard
+ The user only specifies the momentum at those boundaries,
 \begin_inset Formula 
 \begin{equation}
-\rho\mathbf{u}=\rho(U,V,W)\label{eq:wasatch-bc-ppe-1d-1}
+\rho\mathbf{u}=\rho(U,V,W).\label{eq:wasatch-bc-ppe-1d-1}
 \end{equation}
 
 \end_inset
@@ -4124,21 +3996,22 @@ Inlets and walls, whether moving or stationary, share the same boundary
 Treatment of the pressure is derived from the pressure Poisson equation
  as follows.
  For simplicity, we illustrate this in one-dimension at a boundary cell
- on the x-minus side of the computational domain as shown in 
+ on the 
+\begin_inset Formula $x$
+\end_inset
+
+-minus side of the computational domain as shown in 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "fig:wasatch-boundary-condition-pressure-specification-1"
+reference "fig:boundary-condition-pressure-specification-1"
 
 \end_inset
 
 .
  In this case, the pressure poisson equation is written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial^{2}p}{\partial x^{2}}=\frac{\partial F}{\partial x}\label{eq:wasatch-bc-ppe-1d}
+\frac{\partial^{2}p}{\partial x^{2}}=\frac{\partial F}{\partial x}.\label{eq:wasatch-bc-ppe-1d}
 \end{equation}
 
 \end_inset
@@ -4151,12 +4024,9 @@ reference "eq:wasatch-bc-ppe-1d"
 \end_inset
 
  may be written as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{p_{-1}-2p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-bc-ppe-1d-discrete}
+\frac{p_{-1}-2p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}.\label{eq:wasatch-bc-ppe-1d-discrete}
 \end{equation}
 
 \end_inset
@@ -4196,15 +4066,12 @@ Here, both
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}=-\left(\frac{\partial p}{\partial x}\right)_{-\tfrac{1}{2}}-F_{-\tfrac{1}{2}}
+\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}=-\left(\frac{\partial p}{\partial x}\right)_{-\tfrac{1}{2}}-F_{-\tfrac{1}{2}}.
 \end{equation}
 
 \end_inset
 
 Again, using central finite differencing, one recovers
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}=-\frac{p_{0}-p_{-1}}{\Delta x}-F_{i-\tfrac{1}{2}}
@@ -4215,7 +4082,7 @@ Again, using central finite differencing, one recovers
 or
 \begin_inset Formula 
 \begin{equation}
-\frac{p_{-1}-p_{0}}{\Delta x}=\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}+F_{-\tfrac{1}{2}}\label{eq:wasatch-xmom-1d}
+\frac{p_{-1}-p_{0}}{\Delta x}=\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}+F_{-\tfrac{1}{2}}.\label{eq:wasatch-xmom-1d}
 \end{equation}
 
 \end_inset
@@ -4246,24 +4113,18 @@ reference "eq:wasatch-bc-ppe-1d-discrete"
 
 .
  This operation returns the following Poisson equation at the boundary
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}+\frac{F_{-\tfrac{1}{2}}}{\Delta x}+\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:}
+\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}+\frac{F_{-\tfrac{1}{2}}}{\Delta x}+\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}.
 \end{equation}
 
 \end_inset
 
 Notice how the diffusive and convective fluxes cancel out and one is left
  with
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}}{\Delta x}-\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final}
+\frac{-p_{0}+p_{1}}{\Delta x^{2}}=\frac{F_{\tfrac{1}{2}}}{\Delta x}-\frac{\left(\frac{\partial\rho u}{\partial t}\right)_{-\tfrac{1}{2}}}{\Delta x}.\label{eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final}
 \end{equation}
 
 \end_inset
@@ -4334,9 +4195,6 @@ Treatment of the pressure follows the same guidelines exposed in the previous
  on the boundary face.
  Given that the pressure lives on scalar cell centers, using second order
  approximation, we have
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 P_{-\tfrac{1}{2}}=\frac{p_{-1}+p_{0}}{2}
@@ -4345,23 +4203,17 @@ P_{-\tfrac{1}{2}}=\frac{p_{-1}+p_{0}}{2}
 \end_inset
 
 or
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-p_{-1}=2P_{-\tfrac{1}{2}}-p_{0}
+p_{-1}=2P_{-\tfrac{1}{2}}-p_{0}.
 \end{equation}
 
 \end_inset
 
-then, the pressure poisson equation (evaluated at the boundary) returns
-\end_layout
-
-\begin_layout Standard
+Then, the pressure poisson equation (evaluated at the boundary) returns
 \begin_inset Formula 
 \begin{equation}
-\frac{-3p_{0}+p_{1}}{\Delta x^{2}}=-2P_{-\tfrac{1}{2}}+\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}\label{eq:wasatch-bc-ppe-1d-discrete-1}
+\frac{-3p_{0}+p_{1}}{\Delta x^{2}}=-2P_{-\tfrac{1}{2}}+\frac{F_{\tfrac{1}{2}}-F_{-\tfrac{1}{2}}}{\Delta x}.\label{eq:wasatch-bc-ppe-1d-discrete-1}
 \end{equation}
 
 \end_inset
@@ -4372,15 +4224,12 @@ then, the pressure poisson equation (evaluated at the boundary) returns
 \begin_layout Standard
 The momentum partial right-hand-side remains unknown in the previous equation.
  One can choose either of the following conditions
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
 F_{-\tfrac{1}{2}}=0\\
 \frac{\partial F}{\partial x}=0
-\end{cases}
+\end{cases}.
 \end{equation}
 
 \end_inset
@@ -4422,12 +4271,9 @@ Governing Equations
 \begin_layout Standard
 The precipitation model utilized in Wasatch uses the implemented moment
  transport equations.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial m_{k}}{\partial t}=-\nabla\cdot\mathbf{u}m_{k}-k\int_{-\infty}^{+\infty}r^{k-1}gN\,\mathrm{d}r+\int_{-\infty}^{+\infty}r^{k}b\,\mathrm{d}r\equiv F(m_{k+i});\quad i\in\mathbb{Q}\label{eq:wasatch-moment-transport-eq-1}
+\frac{\partial m_{k}}{\partial t}=-\nabla\cdot\mathbf{u}m_{k}-k\int_{-\infty}^{+\infty}r^{k-1}gN\,\mathrm{d}r+\int_{-\infty}^{+\infty}r^{k}b\,\mathrm{d}r\equiv F(m_{k+i});\quad i\in\mathbb{Q},\label{eq:wasatch-moment-transport-eq-1}
 \end{equation}
 
 \end_inset
@@ -4440,12 +4286,9 @@ with QMOM used as closure for the moments.
  of reaction and the mixture fraction.
  The main term required is the supersaturation value of the liquid.
  The source term for the reaction progress is
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-S_{\xi}=\frac{1}{\iota}\sum_{\alpha=1}^{n}\nu_{\alpha}S_{3,\alpha}
+S_{\xi}=\frac{1}{\iota}\sum_{\alpha=1}^{n}\nu_{\alpha}S_{3,\alpha},
 \end{equation}
 
 \end_inset
@@ -4488,12 +4331,9 @@ Nucleation terms in Wasatch can be specifed as one of three distributions,
  deviation for the distribution.
  The coefficient used for the birth term can either be set as constant or
  using the classical nucleation definition
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-B_{0}=\text{Exp}[\tfrac{16\pi}{3}(\tfrac{\gamma}{K_{B}T})^{3}\frac{\nu}{N_{\text{A}}\log(S)^{2}}]
+B_{0}=\exp\left[\tfrac{16\pi}{3}(\tfrac{\gamma}{K_{B}T})^{3}\frac{\nu}{N_{\text{A}}\log(S)^{2}}\right],
 \end{equation}
 
 \end_inset
@@ -4573,9 +4413,6 @@ Currently Wasatch has three growth models implemented; constant growth,
 
 .
  The bulk diffusion model uses the appropriate coefficient as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 g_{0}=\nu DC_{eq}(S-\bar{S})
@@ -4596,9 +4433,6 @@ with
 \end_inset
 
  can either be set as one, or set as needed for Ostwald Ripening as 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 \bar{S}=\exp(2\nu\gamma/RTr)
@@ -4614,9 +4448,6 @@ For Ostwald ripening, the
  into a moment of the problem, therefore the quadrature weights and abscissae
  are used to evaluate the Ostwald ripening term.
  For monosurface nucleation the growth coefficient is 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
 g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T)
@@ -4627,7 +4458,7 @@ g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T)
 with 
 \begin_inset Formula 
 \begin{equation}
-\Delta G=\frac{\beta_{L}\gamma^{2}d^{2}}{4\beta_{A}K_{B}T\log(S)}
+\Delta G=\frac{\beta_{L}\gamma^{2}d^{2}}{4\beta_{A}K_{B}T\log(S)},
 \end{equation}
 
 \end_inset
@@ -4664,10 +4495,7 @@ Aggregation Models
 To account for aggregation in particulate systems, two terms must be considered
  the death kernel from two particles combining alogn with the birth kernel
  from the new particle.
- The general form for each of these is in volume formulation
-\end_layout
-
-\begin_layout Standard
+ The general form for each of these is in volume formulation 
 \begin_inset Formula 
 \begin{equation}
 \frac{1}{2}\int_{0}^{v}\beta(v-\epsilon,\epsilon)n'(v-\epsilon;t)n'(\epsilon;t)d\epsilon
@@ -4691,10 +4519,7 @@ To account for aggregation in particulate systems, two terms must be considered
 
 \begin_layout Standard
 Converting the population balance into a radius formulation, and applying
- a moment transform, using quadrature on the integrals yields
-\end_layout
-
-\begin_layout Standard
+ a moment transform, using quadrature on the integrals yields 
 \begin_inset Formula 
 \begin{equation}
 \frac{1}{2}\sum_{i}w_{i}\sum_{j}w_{j}(r_{i}^{3}+r_{j}^{3})^{k/3}\beta_{ij}
@@ -4713,10 +4538,6 @@ Converting the population balance into a radius formulation, and applying
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\beta_{ij}$
 \end_inset
@@ -4734,20 +4555,13 @@ where
  frequncy and the fluid property frequency.
  The fluid property frequency can then be factored outside of the summation.
  For aggregation due to Brownian motion
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\beta_{ij}=\frac{2k_{B}T}{3\rho}\times\frac{(r_{i}+r_{j})^{2}}{r_{i}r_{j}}
+\beta_{ij}=\frac{2k_{B}T}{3\rho}\times\frac{(r_{i}+r_{j})^{2}}{r_{i}r_{j}},
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $k_{B}$
 \end_inset
@@ -4762,20 +4576,13 @@ where
 
  is the fluid density.
  For aggregation due to turbulent shear forces the frequency kernel is
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\beta_{ij}=\frac{4}{3}\left(\frac{3\pi}{10}\right)^{1/2}\left(\frac{\epsilon}{\nu}\right)^{1/2}\times(r_{i}+r_{j}^{3})
+\beta_{ij}=\frac{4}{3}\left(\frac{3\pi}{10}\right)^{1/2}\left(\frac{\epsilon}{\nu}\right)^{1/2}\times\left(r_{i}+r_{j}^{3}\right),
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\epsilon$
 \end_inset
@@ -4821,42 +4628,15 @@ Wasatch has a subgrid scale model for mixing for the precipitation flows.
 Wasatch requires the averaged mixture fraction and the scalar variance to
  be solved on the grid.
  Then the weights of the three delta functions are calculated as 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
-\begin{equation}
-w_{1}=\frac{\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle }
-\end{equation}
+\begin{eqnarray}
+w_{1} & = & \frac{\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle },\\
+w_{2} & = & \frac{\left\langle z'^{2}\right\rangle -\left\langle z\right\rangle +\left\langle z\right\rangle ^{2}}{\left\langle z\right\rangle ^{2}-\left\langle z\right\rangle },\\
+w_{3} & = & \frac{-\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle -1},
+\end{eqnarray}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-w_{2}=\frac{\left\langle z'^{2}\right\rangle -\left\langle z\right\rangle +\left\langle z\right\rangle ^{2}}{\left\langle z\right\rangle ^{2}-\left\langle z\right\rangle }
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-w_{3}=\frac{-\left\langle z'^{2}\right\rangle }{\left\langle z\right\rangle -1}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\left\langle z\right\rangle $
 \end_inset
@@ -4887,22 +4667,15 @@ When the Multi Environment Model is enabled, the moment equations are only
  The averaged moments are then post-processed based on the values of the
  environment weights.
  In addition the transport of the second environment requires a new source
- term to account for the change in the moments due to mixing.
-\end_layout
-
-\begin_layout Standard
+ term to account for the change in the moments due to mixing
 \begin_inset Formula 
 \begin{equation}
-S_{\phi_{\alpha,2},\; mix}=-\frac{dw_{1}/dt}{w_{2}}\left(\phi_{\alpha,1}-\phi_{\alpha,2}\right)-\frac{dw_{3}/dt}{w_{2}}\left(\phi_{\alpha,3}-\phi_{\alpha,2}\right)
+S_{\phi_{\alpha,2},\; mix}=-\frac{dw_{1}/dt}{w_{2}}\left(\phi_{\alpha,1}-\phi_{\alpha,2}\right)-\frac{dw_{3}/dt}{w_{2}}\left(\phi_{\alpha,3}-\phi_{\alpha,2}\right),
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Where 
+where 
 \begin_inset Formula $\phi_{\alpha,i}$
 \end_inset
 
@@ -4917,31 +4690,14 @@ th precipitate moment located in the
 th mixing environment.
  With the time derivatives of the weights of the mixing environments calculated
  as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
-\begin{equation}
-\frac{dw_{1}}{dt}=\frac{-\left\langle \epsilon_{\phi}\right\rangle }{\left\langle z\right\rangle }
-\end{equation}
+\begin{eqnarray}
+\frac{dw_{1}}{dt} & = & \frac{-\left\langle \epsilon_{\phi}\right\rangle }{\left\langle z\right\rangle },\\
+\frac{dw_{3}}{dt} & = & \frac{-\left\langle \epsilon_{\phi}\right\rangle }{1-\left\langle z\right\rangle },
+\end{eqnarray}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-\frac{dw_{3}}{dt}=\frac{-\left\langle \epsilon_{\phi}\right\rangle }{1-\left\langle z\right\rangle }
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $\left\langle \epsilon_{\phi}\right\rangle $
 \end_inset
@@ -4959,20 +4715,13 @@ Wasatch has one model to account for the viscosity change of the fluid as
  The two parameters dictating the viscosity are the volume fraction of particles
  and the strain tensor magnitude.
  The volume fraction is calculated as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\phi=\sum_{i}^{n}\frac{4\pi}{3}\left(\frac{m_{1,i}}{m_{0,i}}\right)^{3}m_{0,i}
+\phi=\sum_{i}^{n}\frac{4\pi}{3}\left(\frac{m_{1,i}}{m_{0,i}}\right)^{3}m_{0,i},
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
 \begin_inset Formula $m_{1,i}$
 \end_inset
@@ -4988,45 +4737,31 @@ where
 th polymorph phase.
  In flows with low volume fractions of particles the relative viscosity
  can be solved for using kinetic theory with ideal assumptions as
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mu_{r}=\frac{\mu}{\mu_{0}}=1+2.5\lambda\phi
+\mu_{r}=\frac{\mu}{\mu_{0}}=1+2.5\lambda\phi,
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 with 
 \begin_inset Formula $\lambda$
 \end_inset
 
  as a correction factor for non-idealities.
- In some case particle flows will have a shear thining phenomena in which
+ In some case particle flows will have a shear thinning phenomena in which
  case the viscosity can be expressed as a power law with relation to the
  strain rate.
  The model used by Wasatch combines this with the linear fit of the kinetic
  theory assumptions so that
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mu_{r}=(1+2.5\lambda\phi)\left|S\right|^{n}
+\mu_{r}=(1+2.5\lambda\phi)\left|S\right|^{n},
 \end{equation}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Where 
+where 
 \begin_inset Formula $\left|S\right|$
 \end_inset
 
@@ -5040,7 +4775,7 @@ Where
 \end_inset
 
  should then be fit to experimental data.
- If no shear thining is expected, 
+ If no shear thinning is expected, 
 \begin_inset Formula $n$
 \end_inset
 
@@ -5967,13 +5702,10 @@ LinearFunction
 \end_inset
 
  expression applies a linear transformation to any field of your choice
- according to the following formula
-\end_layout
-
-\begin_layout Standard
+ according to 
 \begin_inset Formula 
 \begin{equation}
-\psi=a\phi+b
+\psi=a\phi+b,
 \end{equation}
 
 \end_inset
@@ -6098,12 +5830,9 @@ ParabolicFunction
 \end_inset
 
  expression generates a field of the form
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\phi=ax^{2}+bx+c
+\phi=ax^{2}+bx+c.
 \end{equation}
 
 \end_inset
@@ -6208,12 +5937,9 @@ ExponentialVortex
 This expression implements a rotating vortex in a uniform stream.
  The corresponding streamfunction is given by the superposition of an exponentia
 l vortex and a uniform flow and is given by
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\psi=\Gamma\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)-Vx+Uy
+\psi=\Gamma\exp\left(-\frac{r^{2}}{2R^{2}}\right)-Vx+Uy,
 \end{equation}
 
 \end_inset
@@ -6241,23 +5967,17 @@ where
  are the the transverse and axial free stream velocities, respectively.
  The resulting velocity field is then calculated using the Stokes' streamfunctio
 n
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u=\frac{\partial\psi}{\partial y}=U-\frac{\Gamma}{R^{2}}(y-y_{0})\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)
+u=\frac{\partial\psi}{\partial y}=U-\frac{\Gamma}{R^{2}}(y-y_{0})\exp\left(-\frac{r^{2}}{2R^{2}}\right)
 \end{equation}
 
 \end_inset
 
 and
-\end_layout
-
-\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-v=-\frac{\partial\psi}{\partial x}=V+\frac{\Gamma}{R^{2}}(x-x_{0})\text{Exp}\left(-\frac{r^{2}}{2R^{2}}\right)
+v=-\frac{\partial\psi}{\partial x}=V+\frac{\Gamma}{R^{2}}(x-x_{0})\exp\left(-\frac{r^{2}}{2R^{2}}\right).
 \end{equation}
 
 \end_inset
