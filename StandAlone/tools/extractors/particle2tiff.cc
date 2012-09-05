@@ -1029,7 +1029,7 @@ int main(int argc, char** argv)
     } else if ( s == "-m" || s == "--material") {
       
       string me = string(argv[++i]);
-      
+      matls.clear();
       if( me == "a" || me == "all" ){        // all matls
         matls.push_back(999);
       } else{
@@ -1120,6 +1120,11 @@ int main(int argc, char** argv)
     usage("", argv[0]);
   }
   
+  // remove any duplicate matls
+  sort(matls.begin(), matls.end());
+  vector<int>::iterator it;
+  it = unique(matls.begin(), matls.end());
+  matls.erase(it, matls.end()); 
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -1221,7 +1226,7 @@ int main(int argc, char** argv)
       
       //__________________________________
       //  find the number of matls at this timestep
-      if(matls[0] == 999){       // all matls
+      if(matls.back() == 999){       // all matls
 
         matls.clear();
         const Patch* patch = *(level->patchesBegin());
