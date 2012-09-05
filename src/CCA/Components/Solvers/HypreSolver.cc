@@ -146,6 +146,7 @@ namespace Uintah {
     }
 
     virtual ~HypreStencil7() {
+      VarLabel::destroy(hypre_solver_label);
     }
 
 
