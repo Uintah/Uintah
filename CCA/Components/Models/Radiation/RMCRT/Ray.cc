@@ -141,6 +141,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
   rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // scattering coefficient
+  rmcrt_ps->getWithDefault( "shouldSetBCs" ,    _onOff_SetBCs,     true);             // ignore applying boundary conditions
 
 
   //__________________________________
@@ -688,7 +689,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       IntVector pLow;
       IntVector pHigh;
       level->findInteriorCellIndexRange(pLow, pHigh);
-      int Nx = pHigh[0] - pLow[0];
+      //int Nx = pHigh[0] - pLow[0];
 
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
@@ -1658,6 +1659,9 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
                             const bool backoutTemp )               
 {
 
+  if ( _onOff_SetBCs == false )
+    return;
+
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
@@ -1736,7 +1740,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
            const Patch* patch,
            const int mat_id)
 {
-  if(patch->hasBoundaryFaces() == false){
+  if(patch->hasBoundaryFaces() == false || _onOff_SetBCs == false){
     return;
   }
 
