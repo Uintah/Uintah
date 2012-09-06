@@ -2401,9 +2401,9 @@ condition.
   original to include a reference temperature $T_0$ and an athermal stress, 
   $\sigma_g$, which is a constant.  The other terms are specified via
   \begin{equation}
-    B=B_{pa}(1+B_{pb}p)^{B_{pn}};\quad
-    B_0=B_{0pa}(1+B_{0pb}p)^{B_{0pn}};\quad
-    \omega=\omega_a+\omega_b\ln(\Epdot{})+\omega_p p
+    B=B_{pa}(1+B_{pb}\sqrt{p})^{B_{pn}};\quad
+    B_0=B_{0pa}(1+B_{0pb}\sqrt{p})^{B_{0pn}};\quad
+    \omega=\omega_a+\omega_b\ln(\Epdot{})+\omega_p \sqrt{p}
   \end{equation}
   where $B_{pa}$, $B_{pb}$, $B_{pn}$, $B_{0pa}$, $B_{0pb}$, $B_{0pn}$, $\omega_a$, $\omega_b$, 
   and $\omega_p$ are material parameters.  The functional forms of the exponents
@@ -2412,7 +2412,8 @@ condition.
     \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
     \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
   \end{equation}
-  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters.
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters.  Note that the
+  pressure is taken to be min(p,0), eliminating pressure dependence in tension.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]

@@ -231,14 +231,22 @@ void HypoViscoElasticDevStress::computeDeviatoricStressInc( const particleIndex 
 
   dbg << " hypoViscoElastic:computeDevStessInc " << endl;
 
-  double mu = plaState->shearModulus;  // WARNING THIS MAY NOT BE SUM(d_mu_MW) 
-                                       // other routines modify this.
-   
-  
-  Matrix3 sigmadot = 2.0 * mu * defState->tensorEta;
+  Matrix3 sigmadot = 0.0;
+
+  // A solution instability was found for constant strain rate, uniaxial compression.
+  // For this case, the stress should saturate (sigmadot = 0.0).  It did for a while,
+  // then began to grow.  It's not clear what drives this, apparently numerical noise?
+  // Explicitly setting sigmadot to zero when it is small relative to the elastic
+  // stress increment solved the problem for a range of strain rates investigated.
 
   for( unsigned int j = 0; j< d_MaxwellElements; j++){
-    sigmadot -= ( *d_sigmaDev[j] )[idx] * d_inv_tau_MW[j];
+
+    Matrix3 sigmadot_elastic = 2.0 * d_mu_MW[j] * defState->tensorEta;
+    Matrix3 sigmadot_trial = sigmadot_elastic - ( *d_sigmaDev[j] )[idx] * d_inv_tau_MW[j];
+
+    if( sigmadot_trial.Norm() > 1.e-4 * sigmadot_elastic.Norm()){
+      sigmadot += sigmadot_trial;
+    }
   }
 
   //sigma_dev_trial = sigma_dev_n + sigmadot*delT;    (original Equation.)
