@@ -530,8 +530,8 @@
       </ExplicitSolver>
 
       <!-- This is new stuff -->
-      <TimeIntegrator                   spec="OPTIONAL NO_DATA" >
-        <ExplicitIntegrator             spec="OPTIONAL NO_DATA"
+      <TimeIntegrator                   spec="REQUIRED NO_DATA" >
+        <ExplicitIntegrator             spec="REQUIRED NO_DATA"
                                         attribute1="order REQUIRED STRING 'first, second, third'"/>
       </TimeIntegrator>  
 
