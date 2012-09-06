@@ -74,7 +74,7 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
                              const TaskGraph* taskgraph,
                              const set<int>& neighborhood_processors,
                              bool mustConsiderInternalDependencies /*= false*/) :
-    sc_(sc),
+      sc_(sc),
       d_myworld(pg),
       first(first),
       taskgraph_(taskgraph),
@@ -82,9 +82,11 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
       currentDependencyGeneration_(1),
       extraCommunication_(0),
       readyQueueLock_("DetailedTasks Ready Queue"),
-      mpiCompletedQueueLock_("DetailedTasks MPI completed Queue"),
-      gpuReadyQueueLock_("DetailedTasks GPU Ready Queue"),
+      mpiCompletedQueueLock_("DetailedTasks MPI completed Queue")
+#ifdef HAVE_CUDA
+      ,gpuReadyQueueLock_("DetailedTasks GPU Ready Queue"),
       gpuCompletedQueueLock_("DetailedTasks GPU Completed Queue")
+#endif
 //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
