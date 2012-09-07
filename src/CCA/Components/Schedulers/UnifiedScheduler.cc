@@ -438,6 +438,14 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   runTasks(0);
 #endif
 
+  // Free up all the pointer maps for device and pinned host pointers
+  if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
+    freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
+    freeDeviceComputesMem();         // call cudaFree on all device memory for task->computes
+    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
+    clearMaps();
+  }
+
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
 
@@ -1395,8 +1403,9 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName() << "\" to device ("
-              << device << "), " << nbytes << " bytes" << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying Requires variable \"" << label->getName()
+              << "\" host to device (" << device << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
+              << endl;
     cerrLock.unlock();
   }
 
@@ -1452,8 +1461,8 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName() << "\" to device ("
-              << device << "), " << nbytes << " bytes" << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName() << "\" host to device ("
+              << device << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes" << endl;
     cerrLock.unlock();
   }
 
@@ -1667,6 +1676,13 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
   double* h_compData = hostComputesPtrs.find(var)->second.ptr;
   IntVector size = hostComputesPtrs.find(var)->second.size;
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
+
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName()
+              << "\" device to host: " << nbytes << " bytes, " << d_compData << " --> " << h_compData << endl;
+    cerrLock.unlock();
+  }
 
   // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
   CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDeviceToHost, *stream));
