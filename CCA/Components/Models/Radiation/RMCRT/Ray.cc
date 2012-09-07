@@ -76,6 +76,7 @@ void Ray::constructor(){
   d_gac           = Ghost::AroundCells;
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
+  _onOff_SetBCs   = true;
 }
 
 
@@ -141,7 +142,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
   rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "shouldSetBCs" ,    _onOff_SetBCs,     true);             // ignore applying boundary conditions
+  rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                      // ignore applying boundary conditions
 
 
   //__________________________________
