@@ -2097,7 +2097,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
           for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){
 
-            densityGuess[currCell] += (*viter)[currCell];
+            densityGuess[currCell] += delta_t*((*viter)[currCell]);
 
           }
 

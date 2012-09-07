@@ -30,7 +30,6 @@
 # 
 #
 # Makefile fragment for this subdirectory
-# $Id$
 #
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 

@@ -99,6 +99,7 @@
   </DataArchiver>
   
   <!-- initialize abskg and temperature using a previously run uda -->
+  <!-- This is designed to restart inputs/ARCHES/methane8patch.ups-->
   <initalizeUsingUda>
     <uda_name> methaneplumeexplicit.uda.000 </uda_name>
     <timestep>                 25       </timestep>
@@ -114,5 +115,6 @@
     <NoOfRays>          25         </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <shouldSetBCs>      true       </shouldSetBCs>
   </RMCRT>
 </Uintah_specification>

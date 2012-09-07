@@ -212,7 +212,7 @@ namespace Uintah{
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _CCRays;
-      bool _shouldSetBC;
+      bool _onOff_SetBCs;                // switch for setting boundary conditions                    
       bool _isDbgOn;
       
       enum ROI_algo{fixed, dynamic, patch_based};

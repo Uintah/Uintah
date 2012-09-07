@@ -75,7 +75,11 @@ DEALINGS IN THE SOFTWARE.
 #include   <iostream>
 
 #include <cfloat>
+#include <sci_defs/hypre_defs.h>
 
+#ifdef HAVE_HYPRE
+#include <CCA/Components/Solvers/HypreSolver.h>
+#endif
 
 #define SET_CFI_BC 0
 

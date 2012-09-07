@@ -352,7 +352,7 @@
                 </BCType>
       </Face>      
       
-      <Face rectangle="z+" lower="11.03 0 2.90" upper="13.23 3.35 2.90">
+      <Face rectangle="z+" lower="11.0 0 3.00" upper="13 3.5 3.00">
         	<BCType id="1" label="the outlet" var="OutletBC">
          	  <value>0.0</value>
         	</BCType>
@@ -902,7 +902,7 @@
                     <value>0.0</value>
                 </BCType>
       </Face>
-      <Face rectangle="y-" lower="3.821 0 0" upper="3.885 0 0.064">
+      <Face rectangle="y-" lower="3.82 0 0" upper="3.9 0 0.064">
         	<BCType id="1" label="y-burner1" var="VelocityInlet">
         	  <value>[0,13.236,9.617]</value>
         	</BCType>
@@ -1014,7 +1014,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="3.821 3.35 2.836" upper="3.885 3.35 2.90">
+      <Face rectangle="y+" lower="3.82 3.5 2.92" upper="3.9 3.5 3.00">
         	<BCType id="1" label="y+burner1" var="VelocityInlet">
         	  <value>[0,-13.236,-9.617]</value>
         	</BCType>
@@ -1127,7 +1127,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="3.821 3.286 0" upper="3.885 3.35 0">
+      <Face rectangle="z-" lower="3.82 3.42 0" upper="3.9 3.5 0">
         	<BCType id="1" label="z-burner1" var="VelocityInlet">
         	  <value>[0,-13.236,13.236]</value>
         	</BCType>
@@ -1238,7 +1238,7 @@
                     <value>-9.2349</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="3.821 0 2.90" upper="3.885 0.064 2.90">
+      <Face rectangle="z+" lower="3.82 0 3.00" upper="3.9 0.064 3.00">
         	<BCType id="1" label="z+burner1" var="VelocityInlet">
         	  <value>[0,13.236,-13.236]</value>
         	</BCType>
@@ -1354,7 +1354,7 @@
       
       
       
-      <Face rectangle="y-" lower="4.391 0 0" upper="4.455 0 0.064">
+      <Face rectangle="y-" lower="4.4 0 0" upper="4.46 0 0.064">
         	<BCType id="1" label="y-burner2" var="VelocityInlet">
         	  <value>[0,13.236,9.617]</value>
         	</BCType>
@@ -1466,7 +1466,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.391 3.35 2.836" upper="4.455 3.35 2.90">
+      <Face rectangle="y+" lower="4.4 3.5 2.92" upper="4.46 3.5 3.00">
         	<BCType id="1" label="y+burner2" var="VelocityInlet">
         	  <value>[0,-13.236,-9.617]</value>
         	</BCType>
@@ -1579,7 +1579,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.391 3.286 0" upper="4.455 3.35 0">
+      <Face rectangle="z-" lower="4.4 3.42 0" upper="4.46 3.5 0">
         	<BCType id="1" label="z-burner2" var="VelocityInlet">
         	  <value>[0,-13.236,13.236]</value>
         	</BCType>
@@ -1690,7 +1690,7 @@
                     <value>-9.2349</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.391 0 2.90" upper="4.455 0.064 2.90">
+      <Face rectangle="z+" lower="4.4 0 3.00" upper="4.46 0.064 3.00">
         	<BCType id="1" label="z+burner2" var="VelocityInlet">
         	  <value>[0,13.236,-13.236]</value>
         	</BCType>
@@ -1812,7 +1812,7 @@
       
       
       
-       <Face rectangle="y-" lower="4.964 0 0" upper="5.028 0 0.064">
+       <Face rectangle="y-" lower="5.00 0 0" upper="5.07 0 0.064">
         	<BCType id="1" label="y-burner3" var="VelocityInlet">
         	  <value>[0,13.236,9.617]</value>
         	</BCType>
@@ -1924,7 +1924,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.964 3.35 2.836" upper="5.028 3.35 2.90">
+      <Face rectangle="y+" lower="5.00 3.5 2.92" upper="5.07 3.5 3.00">
         	<BCType id="1" label="y+burner3" var="VelocityInlet">
         	  <value>[0,-13.236,-9.617]</value>
         	</BCType>
@@ -2037,7 +2037,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.964 3.286 0" upper="5.028 3.35 0">
+      <Face rectangle="z-" lower="5.00 3.42 0" upper="5.07 3.5 0">
         	<BCType id="1" label="z-burner3" var="VelocityInlet">
         	  <value>[0,-13.236,13.236]</value>
         	</BCType>
@@ -2148,7 +2148,7 @@
                     <value>-9.2349</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.964 0 2.90" upper="5.028 0.064 2.90">
+      <Face rectangle="z+" lower="5.00 0 3.00" upper="5.07 0.064 3.00">
         	<BCType id="1" label="z+burner3" var="VelocityInlet">
         	  <value>[0,13.236,-13.236]</value>
         	</BCType>
@@ -2272,11 +2272,7 @@
 
 
 
-
-
-
-
-      <Face rectangle="y-" lower="3.407 0 0" upper="3.454 0 0.047">
+      <Face rectangle="y-" lower="3.41 0 0" upper="3.46 0 0.047">
         	<BCType id="1" label="y-windbox1" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -2388,7 +2384,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="3.407 3.35 2.853" upper="3.454 3.35 2.90">
+      <Face rectangle="y+" lower="3.41 3.5 2.93" upper="3.46 3.5 3.00">
         	<BCType id="1" label="y+windbox1" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -2501,7 +2497,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="3.407 3.303 0" upper="3.454 3.35 0">
+      <Face rectangle="z-" lower="3.41 3.43 0" upper="3.46 3.5 0">
         	<BCType id="1" label="z-windbox1" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -2612,7 +2608,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="3.407 0 2.90" upper="3.454 0.047 2.90">
+      <Face rectangle="z+" lower="3.41 0 3.00" upper="3.46 0.047 3.00">
         	<BCType id="1" label="z+windbox1" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -2740,7 +2736,7 @@
 	    
 	    
 	    
-      <Face rectangle="y-" lower="3.537 0 0" upper="3.584 0 0.047">
+      <Face rectangle="y-" lower="3.54 0 0" upper="3.59 0 0.047">
         	<BCType id="1" label="y-windbox2" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -2852,7 +2848,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="3.537 3.35 2.853" upper="3.584 3.35 2.90">
+      <Face rectangle="y+" lower="3.54 3.5 2.93" upper="3.59 3.5 3.00">
         	<BCType id="1" label="y+windbox2" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -2965,7 +2961,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="3.537 3.303 0" upper="3.584 3.35 0">
+      <Face rectangle="z-" lower="3.54 3.41 0" upper="3.59 3.5 0">
         	<BCType id="1" label="z-windbox2" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -3076,7 +3072,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="3.537 0 2.90" upper="3.584 0.047 2.90">
+      <Face rectangle="z+" lower="3.54 0 3.00" upper="3.59 0.047 3.00">
         	<BCType id="1" label="z+windbox2" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -3199,7 +3195,7 @@
 
 
 
-      <Face rectangle="y-" lower="3.667 0 0" upper="3.714 0 0.047">
+      <Face rectangle="y-" lower="3.670 0 0" upper="3.72 0 0.047">
         	<BCType id="1" label="y-windbox3" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -3311,7 +3307,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="3.667 3.35 2.853" upper="3.714 3.35 2.90">
+      <Face rectangle="y+" lower="3.670 3.5 2.93" upper="3.72 3.5 3.00">
         	<BCType id="1" label="y+windbox3" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -3424,7 +3420,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="3.667 3.303 0" upper="3.714 3.35 0">
+      <Face rectangle="z-" lower="3.670 3.41 0" upper="3.72 3.5 0">
         	<BCType id="1" label="z-windbox3" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -3535,7 +3531,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="3.667 0 2.90" upper="3.714 0.047 2.90">
+      <Face rectangle="z+" lower="3.670 0 3.00" upper="3.72 0.047 3.00">
         	<BCType id="1" label="z+windbox3" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -3651,7 +3647,7 @@
       
  
  
-       <Face rectangle="y-" lower="3.988 0 0" upper="4.035 0 0.047">
+       <Face rectangle="y-" lower="4.00 0 0" upper="4.04 0 0.047">
         	<BCType id="1" label="y-windbox4" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -3763,7 +3759,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="3.988 3.35 2.853" upper="4.035 3.35 2.90">
+      <Face rectangle="y+" lower="4.00 3.5 2.92" upper="4.04 3.5 3.00">
         	<BCType id="1" label="y+windbox4" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -3876,7 +3872,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="3.988 3.303 0" upper="4.035 3.35 0">
+      <Face rectangle="z-" lower="4.00 3.42 0" upper="4.04 3.5 0">
         	<BCType id="1" label="z-windbox4" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -3987,7 +3983,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="3.988 0 2.90" upper="4.035 0.047 2.90">
+      <Face rectangle="z+" lower="4.00 0 3.00" upper="4.04 0.047 3.00">
         	<BCType id="1" label="z+windbox4" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -4106,7 +4102,7 @@
 
 
 
-      <Face rectangle="y-" lower="4.114 0 0" upper="4.161 0 0.047">
+      <Face rectangle="y-" lower="4.11 0 0" upper="4.16 0 0.047">
         	<BCType id="1" label="y-windbox5" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -4218,7 +4214,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.114 3.35 2.853" upper="4.161 3.35 2.90">
+      <Face rectangle="y+" lower="4.11 3.5 2.92" upper="4.16 3.5 3.00">
         	<BCType id="1" label="y+windbox5" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -4331,7 +4327,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.114 3.303 0" upper="4.161 3.35 0">
+      <Face rectangle="z-" lower="4.11 3.42 0" upper="4.16 3.5 0">
         	<BCType id="1" label="z-windbox5" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -4442,7 +4438,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.114 0 2.90" upper="4.161 0.047 2.90">
+      <Face rectangle="z+" lower="4.11 0 3.00" upper="4.16 0.047 3.00">
         	<BCType id="1" label="z+windbox5" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -4564,7 +4560,7 @@
 
 
 
-      <Face rectangle="y-" lower="4.241 0 0" upper="4.288 0 0.047">
+      <Face rectangle="y-" lower="4.24 0 0" upper="4.29 0 0.047">
         	<BCType id="1" label="y-windbox6" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -4676,7 +4672,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.241 3.35 2.853" upper="4.288 3.35 2.90">
+      <Face rectangle="y+" lower="4.24 3.5 2.92" upper="4.29 3.5 3.00">
         	<BCType id="1" label="y+windbox6" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -4789,7 +4785,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.241 3.303 0" upper="4.288 3.35 0">
+      <Face rectangle="z-" lower="4.24 3.42 0" upper="4.29 3.5 0">
         	<BCType id="1" label="z-windbox6" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -4900,7 +4896,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.241 0 2.90" upper="4.288 0.047 2.90">
+      <Face rectangle="z+" lower="4.24 0 3.00" upper="4.29 0.047 3.00">
         	<BCType id="1" label="z+windbox6" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -5018,7 +5014,7 @@
 
 
 
-      <Face rectangle="y-" lower="4.558 0 0" upper="4.605 0 0.047">
+      <Face rectangle="y-" lower="4.56 0 0" upper="4.61 0 0.047">
         	<BCType id="1" label="y-windbox7" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -5130,7 +5126,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.558 3.35 2.853" upper="4.605 3.35 2.90">
+      <Face rectangle="y+" lower="4.56 3.5 2.92" upper="4.61 3.5 3.00">
         	<BCType id="1" label="y+windbox7" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -5243,7 +5239,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.558 3.303 0" upper="4.605 3.35 0">
+      <Face rectangle="z-" lower="4.56 3.42 0" upper="4.61 3.5 0">
         	<BCType id="1" label="z-windbox7" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -5354,7 +5350,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.558 0 2.90" upper="4.605 0.047 2.90">
+      <Face rectangle="z+" lower="4.56 0 3.00" upper="4.61 0.047 3.00">
         	<BCType id="1" label="z+windbox7" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -5476,7 +5472,7 @@
 
 
 
-      <Face rectangle="y-" lower="4.686 0 0" upper="4.733 0 0.047">
+      <Face rectangle="y-" lower="4.69 0 0" upper="4.74 0 0.047">
         	<BCType id="1" label="y-windbox8" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -5588,7 +5584,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.686 3.35 2.853" upper="4.733 3.35 2.90">
+      <Face rectangle="y+" lower="4.69 3.5 2.92" upper="4.74 3.5 3.00">
         	<BCType id="1" label="y+windbox8" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -5701,7 +5697,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.686 3.303 0" upper="4.733 3.35 0">
+      <Face rectangle="z-" lower="4.69 3.42 0" upper="4.74 3.5 0">
         	<BCType id="1" label="z-windbox8" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -5812,7 +5808,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.686 0 2.90" upper="4.733 0.047 2.90">
+      <Face rectangle="z+" lower="4.69 0 3.00" upper="4.74 0.047 3.00">
         	<BCType id="1" label="z+windbox8" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -5937,7 +5933,7 @@
 
 
 
-      <Face rectangle="y-" lower="4.813 0 0" upper="4.860 0 0.047">
+      <Face rectangle="y-" lower="4.81 0 0" upper="4.87 0 0.047">
         	<BCType id="1" label="y-windbox9" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -6049,7 +6045,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="4.813 3.35 2.853" upper="4.860 3.35 2.90">
+      <Face rectangle="y+" lower="4.81 3.5 2.92" upper="4.87 3.5 3.00">
         	<BCType id="1" label="y+windbox9" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -6162,7 +6158,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="4.813 3.303 0" upper="4.860 3.35 0">
+      <Face rectangle="z-" lower="4.81 3.42 0" upper="4.87 3.5 0">
         	<BCType id="1" label="z-windbox9" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -6273,7 +6269,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="4.813 0 2.90" upper="4.860 0.047 2.90">
+      <Face rectangle="z+" lower="4.81 0 3.00" upper="4.87 0.047 3.00">
         	<BCType id="1" label="z+windbox9" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -6395,7 +6391,7 @@
 
 
 
-      <Face rectangle="y-" lower="5.126 0 0" upper="5.173 0 0.047">
+      <Face rectangle="y-" lower="5.13 0 0" upper="5.18 0 0.047">
         	<BCType id="1" label="y-windbox10" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -6507,7 +6503,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="5.126 3.35 2.853" upper="5.173 3.35 2.90">
+      <Face rectangle="y+" lower="5.13 3.5 2.92" upper="5.18 3.5 3.00">
         	<BCType id="1" label="y+windbox10" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -6620,7 +6616,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="5.126 3.303 0" upper="5.173 3.35 0">
+      <Face rectangle="z-" lower="5.13 3.42 0" upper="5.18 3.5 0">
         	<BCType id="1" label="z-windbox10" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -6731,7 +6727,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="5.126 0 2.90" upper="5.173 0.047 2.90">
+      <Face rectangle="z+" lower="5.13 0 3.00" upper="5.18 0.047 3.00">
         	<BCType id="1" label="z+windbox10" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -6852,7 +6848,7 @@
 
 
 
-      <Face rectangle="y-" lower="5.249 0 0" upper="5.296 0 0.047">
+      <Face rectangle="y-" lower="5.25 0 0" upper="5.31 0 0.047">
         	<BCType id="1" label="y-windbox11" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -6964,7 +6960,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="5.249 3.35 2.853" upper="5.296 3.35 2.90">
+      <Face rectangle="y+" lower="5.25 3.5 2.92" upper="5.31 3.5 3.00">
         	<BCType id="1" label="y+windbox11" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -7077,7 +7073,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="5.249 3.303 0" upper="5.296 3.35 0">
+      <Face rectangle="z-" lower="5.25 3.42 0" upper="5.31 3.5 0">
         	<BCType id="1" label="z-windbox11" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -7188,7 +7184,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="5.249 0 2.90" upper="5.296 0.047 2.90">
+      <Face rectangle="z+" lower="5.25 0 3.00" upper="5.31 0.047 3.00">
         	<BCType id="1" label="z+windbox11" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -7305,7 +7301,7 @@
 
 
 
-      <Face rectangle="y-" lower="5.371 0 0" upper="5.418 0 0.047">
+      <Face rectangle="y-" lower="5.38 0 0" upper="5.43 0 0.047">
         	<BCType id="1" label="y-windbox12" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -7417,7 +7413,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="5.371 3.35 2.853" upper="5.418 3.35 2.90">
+      <Face rectangle="y+" lower="5.38 3.5 2.92" upper="5.43 3.5 3.00">
         	<BCType id="1" label="y+windbox12" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -7530,7 +7526,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="5.371 3.303 0" upper="5.418 3.35 0">
+      <Face rectangle="z-" lower="5.38 3.42 0" upper="5.43 3.5 0">
         	<BCType id="1" label="z-windbox12" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -7641,7 +7637,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="5.371 0 2.90" upper="5.418 0.047 2.90">
+      <Face rectangle="z+" lower="5.38 0 3.00" upper="5.43 0.047 3.00">
         	<BCType id="1" label="z+windbox12" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -7759,7 +7755,7 @@
 
 
 
-      <Face rectangle="y-" lower="5.493 0 0" upper="5.540 0 0.047">
+      <Face rectangle="y-" lower="5.50 0 0" upper="5.55 0 0.047">
         	<BCType id="1" label="y-windbox13" var="VelocityInlet">
         	  <value>[0,21.488,15.612]</value>
         	</BCType>
@@ -7871,7 +7867,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="5.493 3.35 2.853" upper="5.540 3.35 2.90">
+      <Face rectangle="y+" lower="5.50 3.5 2.92" upper="5.55 3.5 3.00">
         	<BCType id="1" label="y+windbox13" var="VelocityInlet">
         	  <value>[0,-21.488,-15.612]</value>
         	</BCType>
@@ -7984,7 +7980,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="5.493 3.303 0" upper="5.540 3.35 0">
+      <Face rectangle="z-" lower="5.50 3.42 0" upper="5.55 3.5 0">
         	<BCType id="1" label="z-windbox13" var="VelocityInlet">
         	  <value>[0,-21.488,21.488]</value>
         	</BCType>
@@ -8095,7 +8091,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="5.493 0 2.90" upper="5.540 0.047 2.90">
+      <Face rectangle="z+" lower="5.50 0 3.00" upper="5.55 0.047 3.00">
         	<BCType id="1" label="z+windbox13" var="VelocityInlet">
         	  <value>[0,21.488,-21.488]</value>
         	</BCType>
@@ -8219,7 +8215,7 @@
 
 
 
-      <Face rectangle="y-" lower="6.669 0 0" upper="6.755 0 0.086">
+      <Face rectangle="y-" lower="6.67 0 0" upper="6.76 0 0.086">
         	<BCType id="1" label="y-sofa1" var="VelocityInlet">
         	  <value>[0,11.313,8.219]</value>
         	</BCType>
@@ -8331,7 +8327,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="6.669 3.35 2.814" upper="6.755 3.35 2.90">
+      <Face rectangle="y+" lower="6.67 3.5 2.91" upper="6.76 3.5 3.00">
         	<BCType id="1" label="y+sofa1" var="VelocityInlet">
         	  <value>[0,-11.313,-8.219]</value>
         	</BCType>
@@ -8444,7 +8440,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="6.669 3.264 0" upper="6.755 3.35 0">
+      <Face rectangle="z-" lower="6.67 3.40 0" upper="6.76 3.5 0">
         	<BCType id="1" label="z-sofa1" var="VelocityInlet">
         	  <value>[0,-11.313,11.313]</value>
         	</BCType>
@@ -8555,7 +8551,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="6.669 0 2.90" upper="6.755 0.086 2.90">
+      <Face rectangle="z+" lower="6.67 0 3.00" upper="6.76 0.086 3.00">
         	<BCType id="1" label="z+sofa1" var="VelocityInlet">
         	  <value>[0,11.313,-11.313]</value>
         	</BCType>
@@ -8674,7 +8670,7 @@
 
 
 
-      <Face rectangle="y-" lower="6.821 0 0" upper="6.907 0 0.086">
+      <Face rectangle="y-" lower="6.82 0 0" upper="6.91 0 0.086">
         	<BCType id="1" label="y-sofa2" var="VelocityInlet">
         	  <value>[0,11.313,8.219]</value>
         	</BCType>
@@ -8786,7 +8782,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="6.821 3.35 2.814" upper="6.907 3.35 2.90">
+      <Face rectangle="y+" lower="6.82 3.5 2.91" upper="6.91 3.5 3.00">
         	<BCType id="1" label="y+sofa2" var="VelocityInlet">
         	  <value>[0,-11.313,-8.219]</value>
         	</BCType>
@@ -8899,7 +8895,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="6.821 3.264 0" upper="6.907 3.35 0">
+      <Face rectangle="z-" lower="6.82 3.40 0" upper="6.91 3.5 0">
         	<BCType id="1" label="z-sofa2" var="VelocityInlet">
         	  <value>[0,-11.313,11.313]</value>
         	</BCType>
@@ -9010,7 +9006,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="6.821 0 2.90" upper="6.907 0.086 2.90">
+      <Face rectangle="z+" lower="6.82 0 3.00" upper="6.91 0.086 3.00">
         	<BCType id="1" label="z+sofa2" var="VelocityInlet">
         	  <value>[0,11.313,-11.313]</value>
         	</BCType>
@@ -9128,8 +9124,7 @@
 
 
 
-
-      <Face rectangle="y-" lower="7.889 0 0" upper="7.975 0 0.086">
+      <Face rectangle="y-" lower="7.89 0 0" upper="7.98 0 0.086">
         	<BCType id="1" label="y-sofa3" var="VelocityInlet">
         	  <value>[0,11.313,8.219]</value>
         	</BCType>
@@ -9241,7 +9236,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="7.889 3.35 2.814" upper="7.975 3.35 2.90">
+      <Face rectangle="y+" lower="7.89 3.5 2.91" upper="7.98 3.5 3.00">
         	<BCType id="1" label="y+sofa3" var="VelocityInlet">
         	  <value>[0,-11.313,-8.219]</value>
         	</BCType>
@@ -9354,7 +9349,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="7.889 3.264 0" upper="7.975 3.35 0">
+      <Face rectangle="z-" lower="7.89 3.40 0" upper="7.98 3.5 0">
         	<BCType id="1" label="z-sofa3" var="VelocityInlet">
         	  <value>[0,-11.313,11.313]</value>
         	</BCType>
@@ -9465,7 +9460,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="7.889 0 2.90" upper="7.975 0.086 2.90">
+      <Face rectangle="z+" lower="7.89 0 3.00" upper="7.98 0.086 3.00">
         	<BCType id="1" label="z+sofa3" var="VelocityInlet">
         	  <value>[0,11.313,-11.313]</value>
         	</BCType>
@@ -9586,7 +9581,7 @@
 
 
 
-      <Face rectangle="y-" lower="8.040 0 0" upper="8.126 0 0.086">
+      <Face rectangle="y-" lower="8.040 0 0" upper="8.13 0 0.086">
         	<BCType id="1" label="y-sofa4" var="VelocityInlet">
         	  <value>[0,11.313,8.219]</value>
         	</BCType>
@@ -9698,7 +9693,7 @@
                 </BCType>
 	
       </Face>
-      <Face rectangle="y+" lower="8.040 3.35 2.814" upper="8.126 3.35 2.90">
+      <Face rectangle="y+" lower="8.040 3.5 2.91" upper="8.13 3.5 3.00">
         	<BCType id="1" label="y+sofa4" var="VelocityInlet">
         	  <value>[0,-11.313,-8.219]</value>
         	</BCType>
@@ -9811,7 +9806,7 @@
                 </BCType>
       </Face>
       
-      <Face rectangle="z-" lower="8.040 3.264 0" upper="8.126 3.35 0">
+      <Face rectangle="z-" lower="8.040 3.40 0" upper="8.13 3.5 0">
         	<BCType id="1" label="z-sofa4" var="VelocityInlet">
         	  <value>[0,-11.313,11.313]</value>
         	</BCType>
@@ -9922,7 +9917,7 @@
                     <value>-8.5504e-4</value>
                 </BCType>
       </Face>
-      <Face rectangle="z+" lower="8.040 0 2.90" upper="8.126 0.086 2.90">
+      <Face rectangle="z+" lower="8.040 0 3.00" upper="8.13 0.086 3.00">
         	<BCType id="1" label="z+sofa4" var="VelocityInlet">
         	  <value>[0,11.313,-11.313]</value>
         	</BCType>
@@ -10043,7 +10038,7 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[13.23,3.35,2.90]</upper>
+        <upper>[13.0,3.5,3.00]</upper>
         <resolution>[662,168,145]</resolution>
         <!--resolution>[1323,335,290]</resolution-->
         <extraCells>[1,1,1]</extraCells>
@@ -10484,35 +10479,35 @@
             <geom_object>
               <box label="bottombox1">
                 <min>[0.0,0.0,0.0]</min>
-                <max>[1.45,3.35,0.97]</max>
+                <max>[1.45,3.5,1.00]</max>
               </box>
               <box label="bottombox2">
-                <min>[0.0,0.0,1.93]</min>
-                <max>[1.45,3.35,2.90]</max>
+                <min>[0.0,0.0,2.00]</min>
+                <max>[1.45,3.5,3.00]</max>
               </box>
               <parallelepiped label="bottompara1">
-                <p1>[1.45,0.0,0.97]</p1>
-                <p2>[1.45,3.35,0.97]</p2>
+                <p1>[1.45,0.0,1.00]</p1>
+                <p2>[1.45,3.5,1.00]</p2>
                 <p3>[2.80,0.0,0.0]</p3>
                 <p4>[1.45,0.0,0.0]</p4>
               </parallelepiped>
               <parallelepiped label="bottompara2">
-                <p1>[1.45,0.0,1.93]</p1>
-                <p2>[1.45,0.0,2.90]</p2>
-                <p3>[2.80,0.0,2.90]</p3>
-                <p4>[1.45,3.35,1.93]</p4>
+                <p1>[1.45,0.0,2.00]</p1>
+                <p2>[1.45,0.0,3.00]</p2>
+                <p3>[2.80,0.0,3.00]</p3>
+                <p4>[1.45,3.5,2.00]</p4>
               </parallelepiped>
               <parallelepiped label="toppara1">
-                <p1>[8.89,0.0,2.90]</p1>
+                <p1>[8.89,0.0,3.00]</p1>
                 <p2>[8.89,0.0,3.75]</p2>
                 <p3>[9.96,0.0,2.05]</p3>
-                <p4>[8.89,3.35,2.90]</p4>
+                <p4>[8.89,3.5,3.00]</p4>
               </parallelepiped>
               <parallelepiped label="toppara2">
                 <p1>[9.96,0.0,2.05]</p1>
-                <p2>[9.96,0.0,2.90]</p2>
-                <p3>[11.03,0.0,2.90]</p3>
-                <p4>[9.96,3.35,2.05]</p4>
+                <p2>[9.96,0.0,3.00]</p2>
+                <p3>[11.0,0.0,3.00]</p3>
+                <p4>[9.96,3.5,2.05]</p4>
               </parallelepiped>
 
             </geom_object>

@@ -363,6 +363,7 @@ namespace Uintah {
                   const TaskGraph* taskgraph,
                   const std::set<int> &neighborhood_processors,
                   bool mustConsiderInternalDependencies = false);
+
     ~DetailedTasks();
 
     void add(DetailedTask* task);
@@ -523,6 +524,9 @@ namespace Uintah {
 #ifdef HAVE_CUDA
     TaskPQueue initiallyReadyGPUTasks_;     // intially ready, h2d copies pending
     TaskPQueue completionPendingGPUTasks_;  // execution and d2h copies pending
+
+    mutable CrowdMonitor  gpuReadyQueueLock_;
+    mutable CrowdMonitor  gpuCompletedQueueLock_;
 #endif
 
   }; // end class DetailedTasks

@@ -110,10 +110,11 @@ ZAPolymerFlow::computeFlowStress(const PlasticityState* state,
   double epdot = state->plasticStrainRate;
   double ep    = state->plasticStrain;
   double T     = state->temperature;
-  double P     = state->pressure;
+  double P     = -state->pressure;
   
   // Clamps & bulletproofing
-  epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
+  epdot = (epdot == 0.0) ? 1.0e-10 : epdot;
+  P = (P <= 0.0) ? 0.0 : P;
   
   if( ep < 0.0 || T < 0.0){
     throw InternalError("ZAPolymerFlow::computeFlowStress a negative temperature "
@@ -125,10 +126,10 @@ ZAPolymerFlow::computeFlowStress(const PlasticityState* state,
   double alpha   = d_CM.alpha_0 - d_CM.alpha_1 * ln_epdot;
   double beta    = d_CM.beta_0  - d_CM.beta_1  * ln_epdot;
   
-  double B       = d_CM.B_pa  * pow( ( 1.0 + d_CM.B_pb  * P), d_CM.B_pn ); 
-  double B_0     = d_CM.B_0pa * pow( ( 1.0 + d_CM.B_0pb * P), d_CM.B_0pn );
+  double B       = d_CM.B_pa  * pow( ( 1.0 + d_CM.B_pb  * sqrt(P) ), d_CM.B_pn ); 
+  double B_0     = d_CM.B_0pa * pow( ( 1.0 + d_CM.B_0pb * sqrt(P) ), d_CM.B_0pn );
+  double omega   = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * sqrt(P);
   
-  double omega   = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * P;
   double T_T0    = T - d_CM.T_0;
  
  
@@ -139,7 +140,7 @@ ZAPolymerFlow::computeFlowStress(const PlasticityState* state,
   if (isnan(sigma_y)) {
     cout << "WARNING::ZAPolymerFlow::computeFlowStress:: idx = " << idx << " epdot = " << epdot
          << " ep = " << ep << " T = " << T << endl;
-    cout << " idx = " << idx << " d_CM.sigma_g = " << d_CM.sigma_g
+    cout << " P = " << P << " d_CM.sigma_g = " << d_CM.sigma_g
           << " alpha = " << alpha << " beta = " << beta
           << " B = " << B << " B_0 " << B_0 << " omega " << omega 
           << " sigma_y = " << sigma_y << endl;
@@ -158,26 +159,30 @@ ZAPolymerFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double ep    = state->plasticStrain;
   double epdot = state->plasticStrainRate;
   double T     = state->temperature;
-  double P     = state->pressure;
+  double P     = -state->pressure;
   
   // Clamps & bulletproofing
-  epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
+  epdot = (epdot == 0.0) ? 1.0e-10 : epdot;
+  ep = (ep == 0.0) ? 1.0e-8 : ep;
+  P = (P <= 0.0) ? 0.0 : P;
   
   if( ep < 0.0 || T < 0.0){
     throw InternalError("ZAPolymerFlow::evalDerivativeWRTPlasticStrain a negative temperature "
                         "or equivalent plastic strain has been detected",__FILE__,__LINE__);
   }
   
-
   double ln_epdot = log(epdot);
   double alpha = d_CM.alpha_0 - d_CM.alpha_1 * ln_epdot;
-  double omega = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * P;
-  double B_0   = d_CM.B_0pa * pow(  ( 1.0 + d_CM.B_0pb * P), d_CM.B_0pn );
+  double omega = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * sqrt(P);
+  double B_0   = d_CM.B_0pa * pow(  ( 1.0 + d_CM.B_0pb * sqrt(P) ), d_CM.B_0pn );
   
   double T_T0  = T - d_CM.T_0;  
 
-  double deriv = 0.5 * B_0 * omega * exp(-alpha * T_T0)/sqrt(omega * ep); 
-  
+  double deriv = 0.0;
+
+  if( omega > 0.0){
+    deriv = 0.5 * B_0 * omega * exp(-alpha * T_T0)/sqrt(omega * ep); 
+  }
   return deriv;
 }
 
@@ -200,10 +205,12 @@ ZAPolymerFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double ep    = state->plasticStrain;
   double epdot = state->plasticStrainRate;
   double T     = state->temperature;
-  double P     = state->pressure;
+  double P     = -state->pressure;
   
   // Clamps & bulletproofing
-  epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
+  epdot = (epdot == 0.0) ? 1.0e-10 : epdot;
+  ep = (ep == 0.0) ? 1.0e-8 : ep;
+  P = (P <= 0.0) ? 0.0 : P;
   
   if( ep < 0.0 || T < 0.0){
     throw InternalError("ZAPolymerFlow::evalDerivativeWRTStrainRate a negative temperature "
@@ -213,10 +220,10 @@ ZAPolymerFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double ln_epdot = log(epdot);
   double alpha = d_CM.alpha_0 - d_CM.alpha_1 * ln_epdot;
   double beta  = d_CM.beta_0  - d_CM.beta_1  * ln_epdot;
-  double omega = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * P;
+  double omega = d_CM.omega_a + d_CM.omega_b * ln_epdot + d_CM.omega_p * sqrt(P);
     
-  double B     = d_CM.B_pa  * pow(  ( 1.0 + d_CM.B_pb  * P), d_CM.B_pn );
-  double B_0   = d_CM.B_0pa * pow(  ( 1.0 + d_CM.B_0pb * P), d_CM.B_0pn );
+  double B     = d_CM.B_pa  * pow(  ( 1.0 + d_CM.B_pb  * sqrt(P) ), d_CM.B_pn );
+  double B_0   = d_CM.B_0pa * pow(  ( 1.0 + d_CM.B_0pb * sqrt(P) ), d_CM.B_0pn );
   double T_T0  = T - d_CM.T_0;
   
   double term1 = B   * d_CM.beta_1 *  exp(-beta * T_T0);

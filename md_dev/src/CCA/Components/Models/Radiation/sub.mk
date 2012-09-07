@@ -30,7 +30,6 @@
 # 
 #
 # Makefile fragment for this subdirectory
-# $Id: sub.mk,v 1.12 2005/03/02 20:19:24 worthen Exp $
 #
 
 SRCDIR   := CCA/Components/Models/Radiation

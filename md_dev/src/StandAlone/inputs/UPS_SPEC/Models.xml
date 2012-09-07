@@ -25,6 +25,7 @@
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
       <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>
+      <shouldSetBCs           spec="OPTIONAL BOOLEAN"/>
            
       <algorithm                spec="OPTIONAL NO_DATA" 
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
