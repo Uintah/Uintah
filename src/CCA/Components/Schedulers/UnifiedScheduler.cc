@@ -427,11 +427,15 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   /*control loop for all tasks of task graph*/
+#ifdef HAVE_CUDA  
   if (Uintah::Parallel::usingGPU()) {
     runTasksGPU(0);
   } else {
     runTasks(0);
   }
+#else
+  runTasks(0);
+#endif
 
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
@@ -1927,11 +1931,15 @@ void UnifiedSchedulerWorker::run()
       cerrLock.unlock();
     }
 
+#ifdef HAVE_CUDA    
     if (Uintah::Parallel::usingGPU()) {
       d_scheduler->runTasksGPU(d_id + 1);
     } else {
       d_scheduler->runTasks(d_id + 1);
     }
+#else
+    d_scheduler->runTasks(d_id + 1);
+#endif    
 
     if (taskdbg.active()) {
       cerrLock.lock();
