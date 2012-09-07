@@ -641,6 +641,11 @@ compute_ave( vector<int>                         & matls,
   ave.allocate(lo,hi);
   ave.initialize(0.0);
   
+  double initValue = 0.0;           // set the minimum value to the clamp value if it exists
+  if(clamp->minVal != -DBL_MAX){
+    initValue = clamp->minVal;
+  }
+  
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
@@ -663,16 +668,19 @@ compute_ave( vector<int>                         & matls,
       }
     }
   }
-
+  
+  // apply clamps to data only in cells where there are particles
+  // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    ave[c] = ave[c]/(count[c] + 1e-100);
     
-    // apply clamps to data only in cells where there are particles
     if(count[c] > 0.0){
+      ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
       ave[c] = max(ave[c], clamp->minVal);
-    } 
+    } else {
+      ave[c] = initValue;
+    }
   }
 }
 
@@ -691,6 +699,11 @@ void compute_ave( vector<int>                         & matls,
   ave.allocate(lo,hi);
   ave.initialize(0.0);
   
+  double initValue = 0.0;           // set the minimum value to the clamp value if it exists
+  if(clamp->minVal != -DBL_MAX){
+    initValue = clamp->minVal;
+  }
+  
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
@@ -700,7 +713,6 @@ void compute_ave( vector<int>                         & matls,
     int m = *iter;
   
     ParticleSubset* pset = var[m]->getParticleSubset();
-    
     
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
@@ -714,15 +726,18 @@ void compute_ave( vector<int>                         & matls,
     }
   }
   
+  // apply clamps to data only in cells where there are particles
+  // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    ave[c] = ave[c]/(count[c] + 1e-100);
     
-    // apply clamps to data only in cells where there are particles
     if(count[c] > 0.0){
+      ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
       ave[c] = max(ave[c], clamp->minVal);
-    } 
+    } else {
+      ave[c] = initValue;
+    }
   }
 }
 
@@ -740,7 +755,12 @@ void compute_ave( vector<int>                          & matls,
   
   ave.allocate(lo,hi);
   ave.initialize(0.0);
-  
+
+  double initValue = 0.0;           // set the minimum value to the clamp value if it exists
+  if(clamp->minVal != -DBL_MAX){
+    initValue = clamp->minVal;
+  }
+    
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
@@ -763,15 +783,18 @@ void compute_ave( vector<int>                          & matls,
     }
   }
 
+  // apply clamps to data only in cells where there are particles
+  // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    ave[c] = ave[c]/(count[c] + 1e-100);
     
-    // apply clamps to data only in cells where there are particles
     if(count[c] > 0.0){
+      ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
       ave[c] = max(ave[c], clamp->minVal);
-    } 
+    } else {
+      ave[c] = initValue;
+    }
   }
 }
 
@@ -790,7 +813,6 @@ void scaleImage( const int nBits,
     double maxVal = -DBL_MAX;
     double minVal = DBL_MAX;
     double scale = pow( 2.0, nBits ) - 1.0;
-
 
     for (CellIterator iter(lo, hi ); !iter.done(); iter++) {
       IntVector c = *iter;
@@ -1029,7 +1051,7 @@ int main(int argc, char** argv)
     } else if ( s == "-m" || s == "--material") {
       
       string me = string(argv[++i]);
-      
+      matls.clear();
       if( me == "a" || me == "all" ){        // all matls
         matls.push_back(999);
       } else{
@@ -1120,6 +1142,11 @@ int main(int argc, char** argv)
     usage("", argv[0]);
   }
   
+  // remove any duplicate matls
+  sort(matls.begin(), matls.end());
+  vector<int>::iterator it;
+  it = unique(matls.begin(), matls.end());
+  matls.erase(it, matls.end()); 
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -1221,7 +1248,7 @@ int main(int argc, char** argv)
       
       //__________________________________
       //  find the number of matls at this timestep
-      if(matls[0] == 999){       // all matls
+      if(matls.back() == 999){       // all matls
 
         matls.clear();
         const Patch* patch = *(level->patchesBegin());

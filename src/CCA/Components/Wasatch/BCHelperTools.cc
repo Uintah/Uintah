@@ -833,7 +833,6 @@ namespace Wasatch {
               bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name);
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
-                std::cout << "Wasatch bc name = " << bc_name << std::endl;                
                 process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind);
               }
             } // child loop

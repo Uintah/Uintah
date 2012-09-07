@@ -122,7 +122,7 @@ WARNING
 
 #ifdef HAVE_CUDA
 
-    void runGPUTask(DetailedTask* task, int iteration, int t_id = 0);
+    void runTasksGPU(int t_id);
 
     double* getDeviceRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
@@ -159,9 +159,8 @@ WARNING
     vector<int>           phaseTasksDone;
     vector<DetailedTask*> phaseSyncTask;
     vector<int>           histogram;
-    set<DetailedTask*>    pending_tasks;
     DetailedTasks*        dts;
-    int   curriteration;
+    int   currentIteration;
     int   numTasksDone;
     int   ntasks;
     int   currphase;
@@ -185,9 +184,9 @@ WARNING
 
     void gpuInitialize();
 
-    void initiateH2DRequiresCopies(DetailedTask* dtask, int iteration);
+    void initiateH2DRequiresCopies(DetailedTask* dtask);
 
-    void initiateH2DComputesCopies(DetailedTask* dtask, int iteration);
+    void initiateH2DComputesCopies(DetailedTask* dtask);
 
     void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_reqData);
 
@@ -219,18 +218,30 @@ WARNING
       }
     };
 
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs; // simply uses cudaFree on the specified device allocation
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs; // simply uses cudaFree on the specified device allocation
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;   // unregister all page-locked host pointers
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all page-locked host pointers
+    map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs;
+    map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs;
+    map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;
+    map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;
     vector<queue<cudaStream_t*> >  idleStreams;
     vector<queue<cudaEvent_t*> >   idleEvents;
-    set<double*> pinnedHostPtrs;
+    set<double*>  pinnedHostPtrs;
     int           numGPUs_;
     int           currentGPU_;
 
+    mutable CrowdMonitor requiresPtrsPairLock_;
+    mutable CrowdMonitor computesPtrsPairLock_;
+    mutable CrowdMonitor deviceComputesLock_;
+    mutable CrowdMonitor hostComputesLock_;
+    mutable CrowdMonitor deviceRequiresLock_;
+    mutable CrowdMonitor hostRequiresLock_;
+    mutable CrowdMonitor idleStreamsLock_;
+    mutable CrowdMonitor idleEventsLock_;
+    mutable CrowdMonitor pinnedPtrsLock_;
+
 #endif
   };
+
+
 
 class UnifiedSchedulerWorker : public Runnable {
 

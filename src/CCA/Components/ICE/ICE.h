@@ -64,11 +64,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <vector>
 #include <string>
-
-#ifdef HAVE_HYPRE
-#include <HYPRE_struct_ls.h>
-#include <HYPRE_krylov.h>
-#endif
+#include <sci_defs/hypre_defs.h>
 
 #define MAX_MATLS 16
 
@@ -98,17 +94,6 @@ namespace Uintah {
       vector<EqPress_dbgMatl> matl;
     };
 
-#ifdef HAVE_HYPRE
-    struct hypre_solver_struct : public RefCounted {
-      HYPRE_StructSolver solver;
-      HYPRE_StructSolver precond_solver;
-      HYPRE_StructMatrix* HA;
-      HYPRE_StructVector* HB;
-      HYPRE_StructVector* HX;
-    };
-
-    typedef Handle<hypre_solver_struct> hypre_solver_structP;
-#endif
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:

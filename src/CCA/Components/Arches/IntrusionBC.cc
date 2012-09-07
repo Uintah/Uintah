@@ -757,6 +757,68 @@ void
 IntrusionBC::addScalarRHS( const Patch* patch, 
                            Vector Dx, 
                            const std::string scalar_name, 
+                           CCVariable<double>& RHS
+                           )
+{ 
+
+  const int p = patch->getID(); 
+  std::vector<double> area; 
+  area.push_back(Dx.y()*Dx.z()); 
+  area.push_back(Dx.y()*Dx.z()); 
+  area.push_back(Dx.x()*Dx.z()); 
+  area.push_back(Dx.x()*Dx.z()); 
+  area.push_back(Dx.y()*Dx.x()); 
+  area.push_back(Dx.y()*Dx.x()); 
+
+  if ( _intrusion_on ) { 
+
+    // adds \rho*u*\phi to the RHS of the cell NEXT to the boundary 
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+
+      if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){ 
+
+        //std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
+        std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( scalar_name ); 
+
+        //if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
+        if ( scalar_iter == iIntrusion->second.scalar_map.end() ){ 
+          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion: "+scalar_name, __FILE__, __LINE__); 
+        } 
+
+        if ( !iIntrusion->second.interior_cell_iterator.empty() ) {
+
+          BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
+
+          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+
+            IntVector c = *i;
+
+            for ( int idir = 0; idir < 6; idir++ ){ 
+
+              if ( iIntrusion->second.directions[idir] != 0 ){ 
+
+                double face_den = 1.0;
+
+                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c); 
+
+                double face_vel = V[_iHelp[idir]];
+
+                scalar_iter->second->set_scalar_rhs( idir, c, RHS, face_den, face_vel, area ); 
+
+              } 
+            }
+          }
+        }
+      }
+    }
+  }
+} 
+
+//_________________________________________
+void 
+IntrusionBC::addScalarRHS( const Patch* patch, 
+                           Vector Dx, 
+                           const std::string scalar_name, 
                            CCVariable<double>& RHS,
                            constCCVariable<double>& density )
 { 

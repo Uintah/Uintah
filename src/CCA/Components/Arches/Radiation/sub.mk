@@ -30,7 +30,6 @@
 # 
 #
 # Makefile fragment for this subdirectory
-# $Id$
 #
 
 SRCDIR := CCA/Components/Arches/Radiation

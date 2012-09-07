@@ -126,7 +126,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<=  coefVal_ / *density_ ;
+  result <<= cond( *density_ > 0.0, coefVal_ / *density_ )
+                 (0.0);
 }
 
 //--------------------------------------------------------------------
