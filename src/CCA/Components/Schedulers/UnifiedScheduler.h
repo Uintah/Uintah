@@ -228,15 +228,14 @@ WARNING
     int           numGPUs_;
     int           currentGPU_;
 
-    mutable CrowdMonitor requiresPtrsPairLock_;
-    mutable CrowdMonitor computesPtrsPairLock_;
     mutable CrowdMonitor deviceComputesLock_;
     mutable CrowdMonitor hostComputesLock_;
     mutable CrowdMonitor deviceRequiresLock_;
     mutable CrowdMonitor hostRequiresLock_;
     mutable CrowdMonitor idleStreamsLock_;
     mutable CrowdMonitor idleEventsLock_;
-    mutable CrowdMonitor pinnedPtrsLock_;
+    mutable CrowdMonitor h2dComputesLock_;
+    mutable CrowdMonitor h2dRequiresLock_;
 
 #endif
   };
