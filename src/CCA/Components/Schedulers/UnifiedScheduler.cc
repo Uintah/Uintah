@@ -326,10 +326,10 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   if (d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
-  }MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
-  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);
+  }
 
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
+  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
+  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER); TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -392,7 +392,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[UnifiedScheduler::execute() loop] ", TAU_USER);TAU_PROFILE_START(doittimer);
+  TAU_PROFILE_TIMER(doittimer, "Task execution", "[UnifiedScheduler::execute() loop] ", TAU_USER); TAU_PROFILE_START(doittimer);
 
   currentIteration = iteration;
   currphase = 0;
@@ -418,15 +418,15 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
   taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  " << phaseTasks[currphase] << endl;
   for (int i = 0; i < numThreads_; i++) {
-    t_worker[i]->resetWaittime(Time::currentSeconds());  //reset wait time counter
-    /*sending signal to threads to wake them up*/
+    t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
+    // sending signal to threads to wake them up
     t_worker[i]->d_runmutex.lock();
     t_worker[i]->d_idle = false;
     t_worker[i]->d_runsignal.conditionSignal();
     t_worker[i]->d_runmutex.unlock();
   }
 
-  /*control loop for all tasks of task graph*/
+  // control loop for all tasks of task graph*/
 #ifdef HAVE_CUDA  
   if (Uintah::Parallel::usingGPU()) {
     runTasksGPU(0);
@@ -440,10 +440,10 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
 
-// wait for all tasks to finish 
+  // wait for all tasks to finish
   wait_till_all_done();
 
-  //if any thread is busy, conditional wait here
+  // if any thread is busy, conditional wait here
   d_nextmutex.lock();
   while (getAviableThreadNum() < numThreads_) {
     d_nextsignal.wait(d_nextmutex);
@@ -1770,17 +1770,19 @@ void UnifiedScheduler::runTasksGPU(int t_id)
         readyTask = dts->getNextExternalReadyTask();
         if (readyTask != NULL) {
           havework = true;
-          numTasksDone++;
-          phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-            currphase++;
-          }
           if (readyTask->getTask()->usesGPU()) {
             // assign devices round robin fashion for now
             readyTask->assignDevice(currentGPU_);
             currentGPU_++;
             currentGPU_ %= this->numGPUs_;
             dts->addInitiallyReadyGPUTask(readyTask);
+            gpuInitReady = true;
+          } else {
+            numTasksDone++;
+            phaseTasksDone[readyTask->getTask()->d_phase]++;
+            while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+              currphase++;
+            }
           }
           break;
         }
@@ -1814,14 +1816,17 @@ void UnifiedScheduler::runTasksGPU(int t_id)
           readyTask = dts->getNextInitiallyReadyGPUTask();
           dts->addCompletionPendingGPUTask(readyTask);
           gpuRunReady = true;
-          numTasksDone++;
+          havework = true;
+          break;
         }
       } else if (dts->numCompletionPendingGPUTasks() > 0) {
         readyTask = dts->peekNextCompletionPendingGPUTask();
         cudaError_t retVal = readyTask->checkD2HCopyDependencies();
         if (retVal == cudaSuccess) {
           readyTask = dts->getNextCompletionPendingGPUTask();
+          havework = true;
           gpuPending = true;
+          break;
         }
       } else {
         pendingMPIMsgs = pendingMPIRecvs();
@@ -1833,7 +1838,6 @@ void UnifiedScheduler::runTasksGPU(int t_id)
       if (numTasksDone == ntasks) {
         break;
       }
-
     }
     schedulerLock.unlock();
 
@@ -1870,9 +1874,16 @@ void UnifiedScheduler::runTasksGPU(int t_id)
         reclaimEvents(readyTask, H2D);
         runTask(readyTask, currentIteration, t_id);
       } else if (gpuPending) {
-        postMPISends(readyTask, currentIteration, t_id);
         reclaimStreams(readyTask, D2H);
         reclaimEvents(readyTask, D2H);
+        postMPISends(readyTask, currentIteration, t_id);
+
+        numTasksDone++;
+        phaseTasksDone[readyTask->getTask()->d_phase]++;
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          currphase++;
+        }
+
         readyTask->done(dws);
       } else {
         runTask(readyTask, currentIteration, t_id);
