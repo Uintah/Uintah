@@ -86,15 +86,15 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       recvLock("MPI receive Lock")
 #ifdef HAVE_CUDA
                ,
-    requiresPtrsPairLock_("GPU-DB requires-pair lock"),
-      computesPtrsPairLock_("GPU-DB computes-pair lock"),
-      deviceComputesLock_("GPU_DB Device computes ptrs lock"),
+    deviceComputesLock_("GPU_DB Device computes ptrs lock"),
       hostComputesLock_("GPU-DB host computes ptrs lock"),
       deviceRequiresLock_("GPU-DB device requires ptrs lock"),
       hostRequiresLock_("GPU-DB host requires ptrs lock"),
       idleStreamsLock_("CUDA streams lock"),
       idleEventsLock_("CUDA events lock"),
-      pinnedPtrsLock_("CUDA Pinned ptrs lock")
+      h2dComputesLock_("GPU-DB computes copy lock"),
+      h2dRequiresLock_("GPU-DB requires copy lock")
+
 #endif
 {
 #ifdef HAVE_CUDA
@@ -329,7 +329,8 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
-  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER); TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
+  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);
+  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -392,7 +393,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[UnifiedScheduler::execute() loop] ", TAU_USER); TAU_PROFILE_START(doittimer);
+  TAU_PROFILE_TIMER(doittimer, "Task execution", "[UnifiedScheduler::execute() loop] ", TAU_USER);TAU_PROFILE_START(doittimer);
 
   currentIteration = iteration;
   currphase = 0;
@@ -1254,7 +1255,9 @@ void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
           }
 
           // copy the requires variable data to the device
+          h2dRequiresLock_.writeLock();
           h2dRequiresCopy(dtask, req->var, matls->get(j), patches->get(i), size, h_reqData);
+          h2dRequiresLock_.writeUnlock();
         }
       }
     }
@@ -1333,7 +1336,9 @@ void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
           }
 
           // copy the computes  data to the device
+          h2dComputesLock_.writeLock();
           h2dComputesCopy(dtask, comp->var, matls->get(j), patches->get(i), size, h_compData);
+          h2dComputesLock_.writeUnlock();
         }
       }
     }
@@ -1356,32 +1361,26 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-  pinnedPtrsLock_.readLock();
   const bool pinned = (*(pinnedHostPtrs.find(h_reqData)) == h_reqData);
-  pinnedPtrsLock_.readUnlock();
-
   if (!pinned) {
     // pin/page-lock host memory for asynchronous host-to-device copy
     // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
     retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
     if (retVal == cudaSuccess) {
-      pinnedPtrsLock_.writeLock();
       pinnedHostPtrs.insert(h_reqData);
-      pinnedPtrsLock_.writeUnlock();
     }
   }
 
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes));
+  hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
+  deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
+
   if (gpu_stats.active()) {
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for "
               << label->getName() << endl;
     cerrLock.unlock();
   }
-  requiresPtrsPairLock_.writeLock();
-  hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
-  deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
-  requiresPtrsPairLock_.writeUnlock();
 
   // get a stream and an event from the appropriate queues
   cudaStream_t* stream = getCudaStream(device);
@@ -1392,13 +1391,14 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyHostToDevice, *stream));
+  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
+
   if (gpu_stats.active()) {
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName() << "\" to device ("
               << device << "), " << nbytes << " bytes" << endl;
     cerrLock.unlock();
   }
-  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
 
   dtask->incrementH2DCopyCount();
 }
@@ -1430,14 +1430,15 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   }
 
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes));
+  hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
+  deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
+
   if (gpu_stats.active()) {
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for "
               << label->getName() << endl;
     cerrLock.unlock();
   }
-  hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
-  deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
 
   // get a stream and an event from the appropriate queues
   cudaStream_t* stream = getCudaStream(device);
@@ -1447,13 +1448,14 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyHostToDevice, *stream));
+  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
+
   if (gpu_stats.active()) {
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName() << "\" to device ("
               << device << "), " << nbytes << " bytes" << endl;
     cerrLock.unlock();
   }
-  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
 
   dtask->incrementH2DCopyCount();
 }
@@ -1463,12 +1465,14 @@ void UnifiedScheduler::createCudaStreams(int numStreams,
 {
   cudaError_t retVal;
 
+  idleStreamsLock_.writeLock();
   for (int j = 0; j < numStreams; j++) {
     CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
     cudaStream_t* stream = (cudaStream_t*)malloc(sizeof(cudaStream_t));
     CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
     idleStreams[device].push(stream);
   }
+  idleStreamsLock_.writeUnlock();
 }
 
 void UnifiedScheduler::createCudaEvents(int numEvents,
@@ -1476,12 +1480,14 @@ void UnifiedScheduler::createCudaEvents(int numEvents,
 {
   cudaError_t retVal;
 
+  idleEventsLock_.writeLock();
   for (int j = 0; j < numEvents; j++) {
     CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
     cudaEvent_t* event = (cudaEvent_t*)malloc(sizeof(cudaEvent_t));
     CUDA_RT_SAFE_CALL( retVal = cudaEventCreate(&(*event)));
     idleEvents[device].push(event);
   }
+  idleEventsLock_.writeLock();
 }
 
 void UnifiedScheduler::clearCudaStreams()
@@ -1521,16 +1527,17 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
   cudaError_t retVal;
   cudaStream_t* stream;
 
+  idleStreamsLock_.writeLock();
   if (idleStreams[device].size() > 0) {
-    idleStreamsLock_.writeLock();
     stream = idleStreams[device].front();
     idleStreams[device].pop();
-    idleStreamsLock_.writeUnlock();
   } else {  // shouldn't need any more than the queue capacity, but in case
     CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
     // this will get put into idle stream queue and properly disposed of later
     stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
   }
+  idleStreamsLock_.writeUnlock();
+
   return stream;
 }
 
@@ -1539,6 +1546,7 @@ cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
   cudaError_t retVal;
   cudaEvent_t* event;
 
+  idleEventsLock_.writeLock();
   if (idleEvents[device].size() > 0) {
     event = idleEvents[device].front();
     idleEvents[device].pop();
@@ -1547,19 +1555,25 @@ cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
     // this will get put into idle event queue and properly disposed of later
     event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
   }
+  idleEventsLock_.writeUnlock();
+
   return event;
 }
 
 void UnifiedScheduler::addCudaStream(cudaStream_t* stream,
                                      int device)
 {
+  idleStreamsLock_.writeLock();
   idleStreams[device].push(stream);
+  idleStreamsLock_.writeUnlock();
 }
 
 void UnifiedScheduler::addCudaEvent(cudaEvent_t* event,
                                     int device)
 {
+  idleEventsLock_.writeLock();
   idleEvents[device].push(event);
+  idleEventsLock_.writeUnlock();
 }
 
 double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
@@ -1567,7 +1581,10 @@ double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
                                                const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
+  deviceRequiresLock_.readLock();
   double* d_reqPtr = deviceRequiresPtrs.find(var)->second.ptr;
+  deviceRequiresLock_.readUnlock();
+
   return d_reqPtr;
 }
 
@@ -1576,9 +1593,9 @@ double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
                                                const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
-  deviceRequiresLock_.readLock();
+  deviceComputesLock_.readLock();
   double* d_compPtr = deviceComputesPtrs.find(var)->second.ptr;
-  deviceRequiresLock_.readUnlock();
+  deviceComputesLock_.readUnlock();
 
   return d_compPtr;
 }
@@ -1600,7 +1617,10 @@ double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
                                              const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
+  hostComputesLock_.readLock();
   double* h_compPtr = hostComputesPtrs.find(var)->second.ptr;
+  hostComputesLock_.readUnlock();
+
   return h_compPtr;
 }
 
@@ -1609,7 +1629,10 @@ IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
                                                   const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
+  hostRequiresLock_.readLock();
   IntVector size = deviceRequiresPtrs.find(var)->second.size;
+  hostRequiresLock_.readUnlock();
+
   return size;
 }
 
@@ -1618,7 +1641,10 @@ IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
                                                   const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
+  deviceComputesLock_.readLock();
   IntVector size = deviceComputesPtrs.find(var)->second.size;
+  deviceComputesLock_.readUnlock();
+
   return size;
 }
 
@@ -1775,7 +1801,6 @@ void UnifiedScheduler::runTasksGPU(int t_id)
             readyTask->assignDevice(currentGPU_);
             currentGPU_++;
             currentGPU_ %= this->numGPUs_;
-            dts->addInitiallyReadyGPUTask(readyTask);
             gpuInitReady = true;
           } else {
             numTasksDone++;
@@ -1814,7 +1839,6 @@ void UnifiedScheduler::runTasksGPU(int t_id)
           // All of this task's h2d copies is complete, so add it to the completion
           // pending GPU task queue and prepare to run.
           readyTask = dts->getNextInitiallyReadyGPUTask();
-          dts->addCompletionPendingGPUTask(readyTask);
           gpuRunReady = true;
           havework = true;
           break;
@@ -1863,16 +1887,18 @@ void UnifiedScheduler::runTasksGPU(int t_id)
         initiateReduction(readyTask);
       } else if (gpuInitReady) {
         // initiate all async H2D mem copies for this task's computes and requires
-        int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-        if (timeStep > 0) {
-          initiateH2DRequiresCopies(readyTask);
-          initiateH2DComputesCopies(readyTask);
-        }
+//        int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+//        if (timeStep > 0) {
+        initiateH2DRequiresCopies(readyTask);
+        initiateH2DComputesCopies(readyTask);
+        dts->addInitiallyReadyGPUTask(readyTask);
+//        }
       } else if (gpuRunReady) {
         // recycle this task's H2D copies streams and events
         reclaimStreams(readyTask, H2D);
         reclaimEvents(readyTask, H2D);
         runTask(readyTask, currentIteration, t_id);
+        dts->addCompletionPendingGPUTask(readyTask);
       } else if (gpuPending) {
         reclaimStreams(readyTask, D2H);
         reclaimEvents(readyTask, D2H);
@@ -1892,14 +1918,16 @@ void UnifiedScheduler::runTasksGPU(int t_id)
       processMPIRecvs(TEST);
     } else {
       //This can only happen when all tasks have finished
-      ASSERT( numTasksDone == ntasks);
+      ASSERT(numTasksDone == ntasks);
     }
   }  //end while tasks
 }
 
 #endif
 
-/** UnifiedSchedulerWorker Thread Methods***/
+//------------------------------------------
+// UnifiedSchedulerWorker Thread Methods
+//------------------------------------------
 UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
                                                int id) :
     d_id(id),
