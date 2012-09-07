@@ -98,18 +98,20 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 #endif
 {
 #ifdef HAVE_CUDA
-  gpuInitialize();
+  if (Uintah::Parallel::usingGPU()) {
+    gpuInitialize();
 
-  // we need one of these for each GPU, as each device will have it's own CUDA context
-  for (int i = 0; i < numGPUs_; i++) {
-    idleStreams.push_back(std::queue<cudaStream_t*>());
-    idleEvents.push_back(std::queue<cudaEvent_t*>());
+    // we need one of these for each GPU, as each device will have it's own CUDA context
+    for (int i = 0; i < numGPUs_; i++) {
+      idleStreams.push_back(std::queue<cudaStream_t*>());
+      idleEvents.push_back(std::queue<cudaEvent_t*>());
+    }
+
+    // disable memory windowing on variables.  This will ensure that
+    // each variable is allocated its own memory on each patch,
+    // precluding memory blocks being defined across multiple patches.
+    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
   }
-
-  // disable memory windowing on variables.  This will ensure that
-  // each variable is allocated its own memory on each patch,
-  // precluding memory blocks being defined across multiple patches.
-  Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 #endif
 }
 
@@ -425,7 +427,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   /*control loop for all tasks of task graph*/
-  runTasks(0);
+  if (Uintah::Parallel::usingGPU()) {
+    runTasksGPU(0);
+  } else {
+    runTasks(0);
+  }
 
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
@@ -1002,6 +1008,7 @@ void UnifiedScheduler::processMPIRecvs(int how_much)
         }
       }
       mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
+      break;
   }
   recvLock.writeUnlock();
   mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
@@ -1920,7 +1927,11 @@ void UnifiedSchedulerWorker::run()
       cerrLock.unlock();
     }
 
-    d_scheduler->runTasks(d_id + 1);
+    if (Uintah::Parallel::usingGPU()) {
+      d_scheduler->runTasksGPU(d_id + 1);
+    } else {
+      d_scheduler->runTasks(d_id + 1);
+    }
 
     if (taskdbg.active()) {
       cerrLock.lock();
