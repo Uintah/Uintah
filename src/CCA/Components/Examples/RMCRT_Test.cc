@@ -361,7 +361,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     bool modifies_divQ       = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
     
-    schedulePseudoCFD(  sched, finestPatches, matls );
+//    schedulePseudoCFD(  sched, finestPatches, matls );
   }
   
   //______________________________________________________________________
@@ -404,7 +404,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     }
 
     // only schedule CFD on the finest level
-    schedulePseudoCFD( sched, finestPatches, matls );
+//    schedulePseudoCFD( sched, finestPatches, matls );
   }
 }
 //______________________________________________________________________
