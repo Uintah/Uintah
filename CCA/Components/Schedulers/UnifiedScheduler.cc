@@ -1402,7 +1402,7 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying Requires variable \"" << label->getName()
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName()
               << "\" host to device (" << device << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
               << endl;
     cerrLock.unlock();
@@ -1678,7 +1678,7 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName()
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying RESULT variable \"" << label->getName()
               << "\" device to host: " << nbytes << " bytes, " << d_compData << " --> " << h_compData << endl;
     cerrLock.unlock();
   }
@@ -1747,13 +1747,16 @@ void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
   std::vector<cudaStream_t*>* dtaskStreams;
   std::vector<cudaStream_t*>::iterator iter;
   int device = dtask->getDeviceNum();
-  dtaskStreams = ((type == H2D) ? dtask->getH2DStreams() : dtask->getD2HStreams());
 
+  idleStreamsLock_.writeLock();
+  dtaskStreams = ((type == H2D) ? dtask->getH2DStreams() : dtask->getD2HStreams());
   // reclaim DetailedTask streams
   for (iter = dtaskStreams->begin(); iter != dtaskStreams->end(); iter++) {
     cudaStream_t* stream = *iter;
     this->idleStreams[device].push(stream);
   }
+  idleStreamsLock_.writeUnlock();
+
   dtaskStreams->clear();
 }
 
@@ -1763,13 +1766,16 @@ void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
   std::vector<cudaEvent_t*>* dtaskEvents;
   std::vector<cudaEvent_t*>::iterator iter;
   int device = dtask->getDeviceNum();
-  dtaskEvents = ((type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents());
 
+  idleEventsLock_.writeLock();
+  dtaskEvents = ((type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents());
   // reclaim DetailedTask events
   for (iter = dtaskEvents->begin(); iter != dtaskEvents->end(); iter++) {
     cudaEvent_t* event = *iter;
     this->idleEvents[device].push(event);
   }
+  idleEventsLock_.writeUnlock();
+
   dtaskEvents->clear();
 }
 
