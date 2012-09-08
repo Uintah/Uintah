@@ -434,17 +434,16 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   } else {
     runTasks(0);
   }
-#else
-  runTasks(0);
-#endif
-
   // Free up all the pointer maps for device and pinned host pointers
   if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
     freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
     freeDeviceComputesMem();         // call cudaFree on all device memory for task->computes
     unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
-    clearMaps();
+    clearGpuDBMaps();
   }
+#else
+  runTasks(0);
+#endif
 
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
@@ -1774,7 +1773,7 @@ void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
   dtaskEvents->clear();
 }
 
-void UnifiedScheduler::clearMaps()
+void UnifiedScheduler::clearGpuDBMaps()
 {
   deviceRequiresPtrs.clear();
   deviceComputesPtrs.clear();

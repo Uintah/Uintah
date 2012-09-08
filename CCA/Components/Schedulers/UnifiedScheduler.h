@@ -206,7 +206,7 @@ WARNING
 
     void clearCudaEvents();
 
-    void clearMaps();
+    void clearGpuDBMaps();
 
     struct GPUGridVariable {
       DetailedTask* dtask;
