@@ -456,11 +456,11 @@ namespace Wasatch{
     bool use3DLaplacian = true;
     pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
 
-    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "",
+    solverParams_ = linSolver.readParameters( pressureParams, "",
                                                                   sharedState );
-    sparams->setSolveOnExtraCells( false );
-    sparams->setUseStencil4( true );
-    sparams->setOutputFileName( "WASATCH" );
+    solverParams_->setSolveOnExtraCells( false );
+    solverParams_->setUseStencil4( true );
+    solverParams_->setOutputFileName( "WASATCH" );
 
     if( !factory.have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
@@ -477,7 +477,7 @@ namespace Wasatch{
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
       const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
                                                                                        d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
-                                                                                       *sparams, linSolver);
+                                                                                       *solverParams_, linSolver);
       proc0cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;
       pressureID_ = factory.register_expression( pbuilder );
@@ -500,7 +500,9 @@ namespace Wasatch{
   template< typename FieldT >
   MomentumTransportEquation<FieldT>::
   ~MomentumTransportEquation()
-  {}
+  {
+    delete solverParams_;
+  }
 
   //------------------------------------------------------------------
 
