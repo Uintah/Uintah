@@ -62,6 +62,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/cuda_defs.h>
 
 #ifdef HAVE_CUDA
+#include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #include <CCA/Components/Examples/GPUSchedulerTest.h>
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
@@ -195,6 +196,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
   if (sim_comp == "gpuschedulertest" || sim_comp == "GPUSCHEDULERTEST") {
     return scinew GPUSchedulerTest(world);
+  }
+  if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
+    return scinew UnifiedSchedulerTest(world);
   }
 #endif
 

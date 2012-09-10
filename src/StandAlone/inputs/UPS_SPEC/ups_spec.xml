@@ -353,7 +353,7 @@
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
-                                                                      advectslabs, advectslabsgpu, gpuschedulertest, poissongpu1,
+                                                                      advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -843,6 +843,11 @@
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </GPUSchedulerTest>  
+  
+  <UnifiedSchedulerTest       spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+  </UnifiedSchedulerTest>  
 
   <!--  Particle Test Component -->
   <ParticleTest1              spec="OPTIONAL NO_DATA" >
