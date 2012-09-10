@@ -133,6 +133,10 @@ UnifiedScheduler::~UnifiedScheduler()
       maxStats.close();
     }
   }
+#ifdef HAVE_CUDA
+  freeCudaStreams();
+  freeCudaEvents();
+#endif
 }
 
 void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
@@ -329,8 +333,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
-  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
+  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -1384,7 +1387,7 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for "
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for REQUIRES variable "
               << label->getName() << endl;
     cerrLock.unlock();
   }
@@ -1403,7 +1406,7 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   if (gpu_stats.active()) {
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName()
-              << "\" host to device (" << device << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
+              << "\" host to device (dev-" << device << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
               << endl;
     cerrLock.unlock();
   }
@@ -1443,15 +1446,16 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for "
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for Computes variable "
               << label->getName() << endl;
     cerrLock.unlock();
   }
 
   // get a stream and an event from the appropriate queues
   cudaStream_t* stream = getCudaStream(device);
-  cudaEvent_t* event = getCudaEvent(device);
   dtask->addH2DStream(stream);
+
+  cudaEvent_t* event = getCudaEvent(device);
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
@@ -1460,8 +1464,9 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName() << "\" host to device ("
-              << device << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes" << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName()
+              << "\" host to device (dev-" << device << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes"
+              << endl;
     cerrLock.unlock();
   }
 
@@ -1498,7 +1503,7 @@ void UnifiedScheduler::createCudaEvents(int numEvents,
   idleEventsLock_.writeLock();
 }
 
-void UnifiedScheduler::clearCudaStreams()
+void UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
   int numQueues = idleStreams.size();
@@ -1510,11 +1515,10 @@ void UnifiedScheduler::clearCudaStreams()
       idleStreams[i].pop();
       CUDA_RT_SAFE_CALL( retVal = cudaStreamDestroy(*stream));
     }
-    idleStreams.clear();
   }
 }
 
-void UnifiedScheduler::clearCudaEvents()
+void UnifiedScheduler::freeCudaEvents()
 {
   cudaError_t retVal;
   int numQueues = idleEvents.size();
@@ -1526,7 +1530,6 @@ void UnifiedScheduler::clearCudaEvents()
       idleEvents[i].pop();
       CUDA_RT_SAFE_CALL( retVal = cudaEventDestroy(*event));
     }
-    idleEvents.clear();
   }
 }
 
@@ -1678,8 +1681,9 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying RESULT variable \"" << label->getName()
-              << "\" device to host: " << nbytes << " bytes, " << d_compData << " --> " << h_compData << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying RESULT   variable \"" << label->getName()
+              << "\" device to host (dev-" << device << "), [" << d_compData << " --> " << h_compData << "], " << nbytes << " bytes"
+              << endl;
     cerrLock.unlock();
   }
 

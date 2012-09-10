@@ -521,7 +521,7 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_;     // intially ready, h2d copies pending
+    TaskPQueue initiallyReadyGPUTasks_;     // initially ready, h2d copies pending
     TaskPQueue completionPendingGPUTasks_;  // execution and d2h copies pending
 
     mutable CrowdMonitor  gpuReadyQueueLock_;
