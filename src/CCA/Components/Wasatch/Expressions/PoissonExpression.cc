@@ -105,6 +105,8 @@ namespace Wasatch {
                                       const Uintah::MaterialSet* const materials,
                                       const int RKStage, const bool isDoingInitialization )
   {
+    sched->overrideVariableBehavior("hypre_solver_label",false,false,
+                                    false,true,true);
     solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
                            phiLabel_, true,
                            phirhsLabel_, Uintah::Task::NewDW,
