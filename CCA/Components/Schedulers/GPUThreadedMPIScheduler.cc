@@ -708,6 +708,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
 
   // wait for all tasks to finish
   wait_till_all_done();
+
   //if any thread is busy, conditional wait here
   d_nextmutex.lock();
   while (getAviableThreadNum() < numThreads_) {
@@ -1136,9 +1137,12 @@ void GPUThreadedMPIScheduler::initiateH2DRequiresCopies(DetailedTask* dtask,
       int numEvents = numStreams;
       int device = dtask->getDeviceNum();
 
-      // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
-      createCudaStreams(numStreams, device);
-      createCudaEvents(numEvents, device);
+      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+      if (timeStep > 0) {
+        // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
+        createCudaStreams(numStreams, device);
+        createCudaEvents(numEvents, device);
+      }
 
       int dwIndex = req->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1224,9 +1228,12 @@ void GPUThreadedMPIScheduler::initiateH2DComputesCopies(DetailedTask* dtask,
       int numEvents = numPatches * numMatls;
       int device = dtask->getDeviceNum();
 
-      // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
-      createCudaStreams(numStreams, device);
-      createCudaEvents(numEvents, device);
+      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+      if (timeStep > 0) {
+        // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
+        createCudaStreams(numStreams, device);
+        createCudaEvents(numEvents, device);
+      }
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1432,7 +1439,6 @@ void GPUThreadedMPIScheduler::clearCudaStreams()
       idleStreams[i].pop();
       CUDA_RT_SAFE_CALL( retVal = cudaStreamDestroy(*stream));
     }
-    idleStreams.clear();
   }
 }
 
@@ -1448,7 +1454,6 @@ void GPUThreadedMPIScheduler::clearCudaEvents()
       idleEvents[i].pop();
       CUDA_RT_SAFE_CALL( retVal = cudaEventDestroy(*event));
     }
-    idleEvents.clear();
   }
 }
 
