@@ -202,9 +202,9 @@ WARNING
 
     cudaError_t unregisterPageLockedHostMem();
 
-    void clearCudaStreams();
+    void freeCudaStreams();
 
-    void clearCudaEvents();
+    void freeCudaEvents();
 
     void clearGpuDBMaps();
 

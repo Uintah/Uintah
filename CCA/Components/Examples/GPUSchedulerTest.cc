@@ -29,7 +29,7 @@
 
 
 #include <CCA/Components/Examples/GPUSchedulerTest.h>
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -370,7 +370,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
   // get a handle on the GPU scheduler to query for device and host pointers, etc
-  GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
+  UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
 
   // Do time steps
   int NGC = 1;
