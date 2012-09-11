@@ -180,13 +180,13 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     cout << "   Using \"" << taskQueueAlg << "\" Algorithm" << endl;
   }
 
-  numThreads_ = Uintah::Parallel::getNumThreads() - 1;
-  if (numThreads_ < 1) {
+  numThreads_ = Uintah::Parallel::getNumThreads();
+  if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingGPU())) {
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
-      throw ProblemSetupException("This scheduler requires number of threads > 1, use  -nthreads <num>,\n"
-                                  "                        and -gpu if using GPUs",
-                                  __FILE__, __LINE__);
+      throw ProblemSetupException(
+          "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
+          __FILE__, __LINE__);
     }
   } else if (numThreads_ > MAX_THREADS) {
     if (d_myworld->myrank() == 0) {
@@ -229,6 +229,36 @@ SchedulerP UnifiedScheduler::createSubScheduler()
   newsched->attachPort("load balancer", lbp);
   newsched->d_sharedState = d_sharedState;
   return newsched;
+}
+
+void UnifiedScheduler::verifyChecksum()
+{
+#if SCI_ASSERTION_LEVEL >= 3
+  if (Uintah::Parallel::usingMPI()) {
+    TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
+
+    // Compute a simple checksum to make sure that all processes
+    // are trying to execute the same graph.  We should do two
+    // things in the future:
+    //  - make a flag to turn this off
+    //  - make the checksum more sophisticated
+    int checksum = 0;
+    for (unsigned i = 0; i < graphs.size(); i++)
+    checksum += graphs[i]->getTasks().size();
+    mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
+    int result_checksum;
+    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
+        d_myworld->getComm());
+    if(checksum != result_checksum) {
+      cerr << "Failed task checksum comparison!\n";
+      cerr << "Processor: " << d_myworld->myrank() << " of "
+      << d_myworld->size() - 1 << ": has sum " << checksum
+      << " and global is " << result_checksum << '\n';
+      MPI_Abort(d_myworld->getComm(), 1);
+    }
+    mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
+  }
+#endif
 }
 
 void UnifiedScheduler::initiateTask(DetailedTask * task,
@@ -300,13 +330,17 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   // For GPU tasks, we will call postMPISends() and done() from execute().
   // This will be after we know a particular task has all D2H copies have completed.
   if (!task->getTask()->usesGPU()) {
-    postMPISends(task, iteration, t_id);
+    if (task->getTask()->usesMPI()) {
+      postMPISends(task, iteration, t_id);
+    }
     task->done(dws);  // should this be timed with taskstart? - BJW
   }
   double teststart = Time::currentSeconds();
 
   // sendsLock.lock(); // Dd... could do better?
-  sends_[t_id].testsome(d_myworld);
+  if (task->getTask()->usesMPI()) {
+    sends_[t_id].testsome(d_myworld);
+  }
   // sendsLock.unlock(); // Dd... could do better?
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
@@ -359,10 +393,10 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   //ASSERT(pg_ == 0);
   //pg_ = pg;
 
-  ntasks = dts->numLocalTasks();
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
+  ntasks = dts->numLocalTasks();
   for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
   }
@@ -371,6 +405,16 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
+  }
+
+  // Do the work of the SingleProcessorScheduler and bail if not using MPI or GPU
+  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingGPU()) {
+    for (int i = 0; i < ntasks; i++) {
+      DetailedTask* dtask = dts->getTask(i);
+      runTask(dtask, iteration, -1);
+    }
+    finalizeTimestep();
+    return;
   }
 
   int me = d_myworld->myrank();

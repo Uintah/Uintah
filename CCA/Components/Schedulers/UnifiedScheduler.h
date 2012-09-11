@@ -166,6 +166,10 @@ WARNING
     bool  abort;
     int   abort_point;
 
+  protected:
+
+    virtual void verifyChecksum();
+
   private:
     
     int getAviableThreadNum();
