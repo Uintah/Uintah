@@ -401,11 +401,6 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // Wall boundary ID
       inline int wallCellType() const { 
-        int wall_celltypeval = -10;
-        if (d_wallBoundary){ 
-          wall_celltypeval = WALL; //d_wallBdry->d_cellTypeID; 
-        }
-
         if ( d_use_new_bcs ) { 
           return WALL; 
         } else { 
@@ -416,8 +411,6 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // Pressure boundary ID
       inline int pressureCellType() const {
-        int pressure_celltypeval = -10;
-        if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
         if ( d_use_new_bcs ) { 
           return PRESSURE; 
         } else { 
@@ -428,8 +421,6 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // Outlet boundary ID
       inline int outletCellType() const { 
-        int outlet_celltypeval = -10;
-        if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
         if ( d_use_new_bcs ) { 
           return OUTLET; 
         } else { 

@@ -1654,6 +1654,13 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
+  
+#ifdef WASATCH_IN_ARCHES
+  // disable Wasatch's time integrator because Arches is handling it.
+  d_wasatch->disable_timestepper_creation();
+  d_wasatch->scheduleTimeAdvance( level, sched );
+#endif // WASATCH_IN_ARCHES
+  
 
   if ( d_MAlab && d_do_dummy_solve ) {
 #ifndef ExactMPMArchesInitialize
@@ -1717,11 +1724,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
   }
 
-#ifdef WASATCH_IN_ARCHES
-  // disable Wasatch's time integrator because Arches is handling it.
-  d_wasatch->disable_timestepper_creation();
-  d_wasatch->scheduleTimeAdvance( level, sched );
-#endif // WASATCH_IN_ARCHES
 
 }
 
