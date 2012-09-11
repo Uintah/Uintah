@@ -330,7 +330,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   // For GPU tasks, we will call postMPISends() and done() from execute().
   // This will be after we know a particular task has all D2H copies have completed.
   if (!task->getTask()->usesGPU()) {
-    if (task->getTask()->usesMPI()) {
+    if (Uintah::Parallel::usingMPI()) {
       postMPISends(task, iteration, t_id);
     }
     task->done(dws);  // should this be timed with taskstart? - BJW
@@ -338,7 +338,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   double teststart = Time::currentSeconds();
 
   // sendsLock.lock(); // Dd... could do better?
-  if (task->getTask()->usesMPI()) {
+  if (Uintah::Parallel::usingMPI()) {
     sends_[t_id].testsome(d_myworld);
   }
   // sendsLock.unlock(); // Dd... could do better?
