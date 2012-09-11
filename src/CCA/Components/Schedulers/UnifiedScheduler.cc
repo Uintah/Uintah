@@ -196,15 +196,15 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    cout << "\tWARNING: Multi-threaded " << (Uintah::Parallel::usingGPU() ? "CPU " : "CPU-GPU ") << "scheduler is EXPERIMENTAL,"
-         << "not all tasks are thread safe yet." << endl << "\tCreating " << numThreads_
-         << " more threads for scheduling and task execution." << endl;
+    cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL," << "not all tasks are thread safe yet." << endl
+         << "\tCreating " << numThreads_ << " more threads for task execution." << endl;
   }
 
 //  d_nextsignal = scinew ConditionVariable("NextCondition");
 //  d_nextmutex = scinew Mutex("NextMutex");
   char name[1024];
 
+  // Create the UnifiedWorkerThreads here
   for (int i = 0; i < numThreads_; i++) {
     UnifiedSchedulerWorker * worker = scinew UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
@@ -263,8 +263,9 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   }
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++)
+  for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
+  }
   //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
 
   task->doit(d_myworld, dws, plain_old_dws);
@@ -310,8 +311,8 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
-  if (parentScheduler)  //add my timings to the parent scheduler
-  {
+  // add my timings to the parent scheduler
+  if (parentScheduler) {
     //  if(d_myworld->myrank()==0)
     //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
     parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
@@ -431,12 +432,9 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   // control loop for all tasks of task graph*/
+  runTasks(0);
+
 #ifdef HAVE_CUDA  
-  if (Uintah::Parallel::usingGPU()) {
-    runTasksGPU(0);
-  } else {
-    runTasks(0);
-  }
   // Free up all the pointer maps for device and pinned host pointers
   if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
     freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
@@ -444,8 +442,6 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
     clearGpuDBMaps();
   }
-#else
-  runTasks(0);
 #endif
 
   // end while( numTasksDone < ntasks )
@@ -686,13 +682,29 @@ void UnifiedScheduler::runTasks(int t_id)
   while (numTasksDone < ntasks) {
     DetailedTask* readyTask = NULL;
     DetailedTask* initTask = NULL;
-    int processMPIs = 0;
+
+    int pendingMPIMsgs = 0;
     bool havework = false;
 
-    //Part 1. Check if anything this thread can do concurrently
-    //        If can update the scheduler counters.
+#ifdef HAVE_CUDA
+    bool gpuInitReady = false;
+    bool gpuRunReady = false;
+    bool gpuPending = false;
+#endif
+
+    // ----------------------------------------------------------------------------------
+    // Part 1:
+    //    Check if anything this thread can do concurrently.
+    //    If so, then update the various scheduler counters.
+    // ----------------------------------------------------------------------------------
     schedulerLock.lock();
     while (!havework) {
+      /*
+       * (1.1)
+       *
+       * If it is time to setup for a reduction task, then do so.
+       *
+       */
       if ((phaseSyncTask[currphase] != NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
         readyTask = phaseSyncTask[currphase];
         havework = true;
@@ -702,18 +714,60 @@ void UnifiedScheduler::runTasks(int t_id)
           currphase++;
         }
         break;
-      } else if (dts->numExternalReadyTasks() > 0) {
+      }
+
+      /*
+       * (1.2)
+       *
+       * Run a CPU task that has its MPI communication complete. These tasks get in the external
+       * ready queue automatically when their receive count hits 0 in DependencyBatch::received,
+       * which is called when a MPI message is delivered.
+       *
+       * NOTE: This is also where a GPU-enabled task gets into the GPU initially-ready queue
+       *
+       */
+      else if (dts->numExternalReadyTasks() > 0) {
         readyTask = dts->getNextExternalReadyTask();
         if (readyTask != NULL) {
           havework = true;
-          numTasksDone++;
-          phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-            currphase++;
+#ifdef HAVE_CUDA
+          /*
+           * (1.2.1)
+           *
+           * If it's a GPU-enabled task, assign it to a device (round robin fashion for now)
+           * and initiate its H2D computes and requires data copies. This is where the
+           * execution cycle begins for each GPU-enabled Task.
+           *
+           * gpuInitReady = true
+           */
+          if (readyTask->getTask()->usesGPU()) {
+            readyTask->assignDevice(currentGPU_);
+            currentGPU_++;
+            currentGPU_ %= this->numGPUs_;
+            gpuInitReady = true;
+          } else {
+#endif
+            numTasksDone++;
+            phaseTasksDone[readyTask->getTask()->d_phase]++;
+            while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+              currphase++;
+            }
+#ifdef HAVE_CUDA
           }
+#endif
           break;
         }
-      } else if (dts->numInternalReadyTasks() > 0) {
+      }
+
+      /*
+       * (1.3)
+       *
+       * If we have an internally-ready CPU task, initiate its MPI receives, preparing it for
+       * CPU external ready queue. The task is moved to the CPU external-ready queue in the
+       * call to task->checkExternalDepCount().
+       *
+       */
+      else if (dts->numInternalReadyTasks() > 0) {
         initTask = dts->getNextInternalReadyTask();
         if (initTask != NULL) {
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
@@ -725,18 +779,67 @@ void UnifiedScheduler::runTasks(int t_id)
             phaseSyncTask[initTask->getTask()->d_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
             initTask = NULL;
-          } else if (initTask->getRequires().size() == 0) {  //if no ext deps,skip MPI sends
+          } else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
             initTask->markInitiated();
-            initTask->checkExternalDepCount();
+            initTask->checkExternalDepCount();  // where tasks get added to external ready queue
             initTask = NULL;
           } else {
             havework = true;
             break;
           }
         }
-      } else {
-        processMPIs = pendingMPIRecvs();
-        if (processMPIs > 0) {
+      }
+#ifdef HAVE_CUDA
+      /*
+       * (1.4)
+       *
+       * Check if highest priority GPU task's asynchronous H2D copies are completed. If so,
+       * then reclaim the streams and events it used for these operations, execute the task and
+       * then put it into the GPU completion-pending queue.
+       *
+       * gpuRunReady = true
+       */
+      else if (dts->numInitiallyReadyGPUTasks() > 0) {
+        readyTask = dts->peekNextInitiallyReadyGPUTask();
+        cudaError_t retVal = readyTask->checkH2DCopyDependencies();
+        if (retVal == cudaSuccess) {
+          // All of this task's h2d copies is complete, so add it to the completion
+          // pending GPU task queue and prepare to run.
+          readyTask = dts->getNextInitiallyReadyGPUTask();
+          gpuRunReady = true;
+          havework = true;
+          break;
+        }
+      }
+
+      /*
+       * (1.5)
+       *
+       * Check to see if any GPU tasks have their D2H copies completed. This means the kernel(s)
+       * have executed and all the results are back on the host in the DataWarehouse. This task's
+       * MPI sends can then be posted and done() can be called.
+       *
+       * gpuPending = true
+       */
+      else if (dts->numCompletionPendingGPUTasks() > 0) {
+        readyTask = dts->peekNextCompletionPendingGPUTask();
+        cudaError_t retVal = readyTask->checkD2HCopyDependencies();
+        if (retVal == cudaSuccess) {
+          readyTask = dts->getNextCompletionPendingGPUTask();
+          havework = true;
+          gpuPending = true;
+          break;
+        }
+      }
+#endif
+      /*
+       * (1.6)
+       *
+       * Otherwise there's nothing to do but process MPI recvs.
+       */
+      else {
+        pendingMPIMsgs = pendingMPIRecvs();
+        if (pendingMPIMsgs > 0) {
           havework = true;
           break;
         }
@@ -744,11 +847,14 @@ void UnifiedScheduler::runTasks(int t_id)
       if (numTasksDone == ntasks) {
         break;
       }
-
     }
     schedulerLock.unlock();
 
-    //Part 2. Concurrent Part
+    // ----------------------------------------------------------------------------------
+    // Part 2
+    //    Concurrent Part:
+    //      Each thread does its own thing here... modify this code with caution
+    // ----------------------------------------------------------------------------------
 
     if (initTask != NULL) {
       initiateTask(initTask, abort, abort_point, currentIteration);
@@ -768,14 +874,40 @@ void UnifiedScheduler::runTasks(int t_id)
       }
       if (readyTask->getTask()->getType() == Task::Reduction) {
         initiateReduction(readyTask);
-      } else {
+      }
+#ifdef HAVE_CUDA
+      else if (gpuInitReady) {
+        // initiate all asynchronous H2D memory copies for this task's computes and requires
+        initiateH2DRequiresCopies(readyTask);
+        initiateH2DComputesCopies(readyTask);
+        dts->addInitiallyReadyGPUTask(readyTask);
+      } else if (gpuRunReady) {
+        // recycle this task's H2D copies streams and events
+        reclaimStreams(readyTask, H2D);
+        reclaimEvents(readyTask, H2D);
+        runTask(readyTask, currentIteration, t_id);
+        dts->addCompletionPendingGPUTask(readyTask);
+      } else if (gpuPending) {
+        // recycle this task's D2H copies streams and events
+        reclaimStreams(readyTask, D2H);
+        reclaimEvents(readyTask, D2H);
+        postMPISends(readyTask, currentIteration, t_id);
+        numTasksDone++;
+        phaseTasksDone[readyTask->getTask()->d_phase]++;
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          currphase++;
+        }
+        readyTask->done(dws);
+      }
+#endif
+      else {
         runTask(readyTask, currentIteration, t_id);
       }
-    } else if (processMPIs > 0) {
+    } else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);
     } else {
       //This can only happen when all tasks have finished
-      ASSERT( numTasksDone == ntasks);
+      ASSERT(numTasksDone == ntasks);
     }
   }  //end while tasks
 }
@@ -1155,6 +1287,7 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
 
       //sendsLock.lock(); // Dd: ??
       sends_[t_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+
       //sendsLock.unlock(); // Dd: ??
       mpi_info_.totalsendmpi += Time::currentSeconds() - start;
       //}
@@ -1181,7 +1314,7 @@ int UnifiedScheduler::getAviableThreadNum()
 void UnifiedScheduler::gpuInitialize()
 {
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL( retVal = cudaGetDeviceCount(&numGPUs_));
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numGPUs_));
   currentGPU_ = 0;
 }
 
@@ -1210,9 +1343,12 @@ void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
       int numEvents = numStreams;
       int device = dtask->getDeviceNum();
 
-      // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
-      createCudaStreams(numStreams, device);
-      createCudaEvents(numEvents, device);
+      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+      if (timeStep > 0) {
+        // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
+        createCudaStreams(numStreams, device);
+        createCudaEvents(numEvents, device);
+      }
 
       int dwIndex = req->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1300,8 +1436,11 @@ void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
       int device = dtask->getDeviceNum();
 
       // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
-      createCudaStreams(numStreams, device);
-      createCudaEvents(numEvents, device);
+      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+      if (timeStep > 0) {
+        createCudaStreams(numStreams, device);
+        createCudaEvents(numEvents, device);
+      }
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1365,7 +1504,7 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
 
   double* d_reqData;
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
@@ -1381,14 +1520,14 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
     }
   }
 
-  CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_reqData, nbytes));
+  CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&d_reqData, nbytes));
   hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
   deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for REQUIRES variable "
-              << label->getName() << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
+              << ") for REQUIRES variable " << label->getName() << endl;
     cerrLock.unlock();
   }
 
@@ -1400,8 +1539,8 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyHostToDevice, *stream));
-  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyHostToDevice, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
 
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -1424,7 +1563,7 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
 
   double* d_compData;
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
@@ -1440,14 +1579,14 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
     }
   }
 
-  CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&d_compData, nbytes));
+  CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&d_compData, nbytes));
   hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
   deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
 
   if (gpu_stats.active()) {
     cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device << ") for Computes variable "
-              << label->getName() << endl;
+    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
+              << ") for Computes variable " << label->getName() << endl;
     cerrLock.unlock();
   }
 
@@ -1459,8 +1598,8 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyHostToDevice, *stream));
-  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyHostToDevice, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
 
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -1480,9 +1619,9 @@ void UnifiedScheduler::createCudaStreams(int numStreams,
 
   idleStreamsLock_.writeLock();
   for (int j = 0; j < numStreams; j++) {
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     cudaStream_t* stream = (cudaStream_t*)malloc(sizeof(cudaStream_t));
-    CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
+    CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
     idleStreams[device].push(stream);
   }
   idleStreamsLock_.writeUnlock();
@@ -1495,9 +1634,9 @@ void UnifiedScheduler::createCudaEvents(int numEvents,
 
   idleEventsLock_.writeLock();
   for (int j = 0; j < numEvents; j++) {
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     cudaEvent_t* event = (cudaEvent_t*)malloc(sizeof(cudaEvent_t));
-    CUDA_RT_SAFE_CALL( retVal = cudaEventCreate(&(*event)));
+    CUDA_RT_SAFE_CALL(retVal = cudaEventCreate(&(*event)));
     idleEvents[device].push(event);
   }
   idleEventsLock_.writeLock();
@@ -1509,11 +1648,11 @@ void UnifiedScheduler::freeCudaStreams()
   int numQueues = idleStreams.size();
 
   for (int i = 0; i < numQueues; i++) {
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(i));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
     while (!idleStreams[i].empty()) {
       cudaStream_t* stream = idleStreams[i].front();
       idleStreams[i].pop();
-      CUDA_RT_SAFE_CALL( retVal = cudaStreamDestroy(*stream));
+      CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
     }
   }
 }
@@ -1524,11 +1663,11 @@ void UnifiedScheduler::freeCudaEvents()
   int numQueues = idleEvents.size();
 
   for (int i = 0; i < numQueues; i++) {
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(i));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
     while (!idleEvents[i].empty()) {
       cudaEvent_t* event = idleEvents[i].front();
       idleEvents[i].pop();
-      CUDA_RT_SAFE_CALL( retVal = cudaEventDestroy(*event));
+      CUDA_RT_SAFE_CALL(retVal = cudaEventDestroy(*event));
     }
   }
 }
@@ -1543,7 +1682,7 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     stream = idleStreams[device].front();
     idleStreams[device].pop();
   } else {  // shouldn't need any more than the queue capacity, but in case
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     // this will get put into idle stream queue and properly disposed of later
     stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
   }
@@ -1562,7 +1701,7 @@ cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
     event = idleEvents[device].front();
     idleEvents[device].pop();
   } else {  // shouldn't need any more than the queue capacity, but in case
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     // this will get put into idle event queue and properly disposed of later
     event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
   }
@@ -1671,7 +1810,7 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
   // set the CUDA context
   DetailedTask* dtask = hostComputesPtrs.find(var)->second.dtask;
   int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
 
   // collect arguments and setup the async d2h copy
   double* d_compData = deviceComputesPtrs.find(var)->second.ptr;
@@ -1688,8 +1827,8 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
   }
 
   // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
-  CUDA_RT_SAFE_CALL( retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDeviceToHost, *stream));
-  CUDA_RT_SAFE_CALL( retVal = cudaEventRecord(*event, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDeviceToHost, *stream));
+  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
 
   dtask->incrementD2HCopyCount();
 }
@@ -1703,12 +1842,12 @@ cudaError_t UnifiedScheduler::freeDeviceRequiresMem()
 
     // set the device & CUDA context
     int device = iter->second.device;
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     // set the CUDA context so the free() works
 
     // free the device requires memory
     double* d_reqPtr = iter->second.ptr;
-    CUDA_RT_SAFE_CALL( retVal = cudaFree(d_reqPtr));
+    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_reqPtr));
   }
   return retVal;
 }
@@ -1722,11 +1861,11 @@ cudaError_t UnifiedScheduler::freeDeviceComputesMem()
 
     // set the device & CUDA context
     int device = iter->second.device;
-    CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
 
     // free the device computes memory
     double* d_compPtr = iter->second.ptr;
-    CUDA_RT_SAFE_CALL( retVal = cudaFree(d_compPtr));
+    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_compPtr));
   }
   return retVal;
 }
@@ -1740,7 +1879,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 
     // unregister the page-locked host requires memory
     double* ptr = *iter;
-    CUDA_RT_SAFE_CALL( retVal = cudaHostUnregister(ptr));
+    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(ptr));
   }
   return retVal;
 }
@@ -1792,162 +1931,6 @@ void UnifiedScheduler::clearGpuDBMaps()
   pinnedHostPtrs.clear();
 }
 
-void UnifiedScheduler::runTasksGPU(int t_id)
-{
-  while (numTasksDone < ntasks) {
-    DetailedTask* readyTask = NULL;
-    DetailedTask* initTask = NULL;
-
-    int pendingMPIMsgs = 0;
-    bool havework = false;
-    bool gpuInitReady = false;
-    bool gpuRunReady = false;
-    bool gpuPending = false;
-
-    // Part 1. Check if anything this thread can do concurrently
-    //        If so, then update the various scheduler counters.
-    schedulerLock.lock();
-    while (!havework) {
-      if ((phaseSyncTask[currphase] != NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
-        readyTask = phaseSyncTask[currphase];
-        havework = true;
-        numTasksDone++;
-        phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-          currphase++;
-        }
-        break;
-      } else if (dts->numExternalReadyTasks() > 0) {
-        readyTask = dts->getNextExternalReadyTask();
-        if (readyTask != NULL) {
-          havework = true;
-          if (readyTask->getTask()->usesGPU()) {
-            // assign devices round robin fashion for now
-            readyTask->assignDevice(currentGPU_);
-            currentGPU_++;
-            currentGPU_ %= this->numGPUs_;
-            gpuInitReady = true;
-          } else {
-            numTasksDone++;
-            phaseTasksDone[readyTask->getTask()->d_phase]++;
-            while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-              currphase++;
-            }
-          }
-          break;
-        }
-      } else if (dts->numInternalReadyTasks() > 0) {
-        initTask = dts->getNextInternalReadyTask();
-        if (initTask != NULL) {
-          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-            if (taskdbg.active()) {
-              cerrLock.lock();
-              taskdbg << d_myworld->myrank() << " Task internal ready 1 " << *initTask << endl;
-              cerrLock.unlock();
-            }
-            phaseSyncTask[initTask->getTask()->d_phase] = initTask;
-            ASSERT(initTask->getRequires().size() == 0)
-            initTask = NULL;
-          } else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
-            initTask->markInitiated();
-            initTask->checkExternalDepCount();  // where tasks get added to external ready queue
-            initTask = NULL;
-          } else {
-            havework = true;
-            break;
-          }
-        }
-      } else if (dts->numInitiallyReadyGPUTasks() > 0) {
-        readyTask = dts->peekNextInitiallyReadyGPUTask();
-        cudaError_t retVal = readyTask->checkH2DCopyDependencies();
-        if (retVal == cudaSuccess) {
-          // All of this task's h2d copies is complete, so add it to the completion
-          // pending GPU task queue and prepare to run.
-          readyTask = dts->getNextInitiallyReadyGPUTask();
-          gpuRunReady = true;
-          havework = true;
-          break;
-        }
-      } else if (dts->numCompletionPendingGPUTasks() > 0) {
-        readyTask = dts->peekNextCompletionPendingGPUTask();
-        cudaError_t retVal = readyTask->checkD2HCopyDependencies();
-        if (retVal == cudaSuccess) {
-          readyTask = dts->getNextCompletionPendingGPUTask();
-          havework = true;
-          gpuPending = true;
-          break;
-        }
-      } else {
-        pendingMPIMsgs = pendingMPIRecvs();
-        if (pendingMPIMsgs > 0) {
-          havework = true;
-          break;
-        }
-      }
-      if (numTasksDone == ntasks) {
-        break;
-      }
-    }
-    schedulerLock.unlock();
-
-    // Part 2. Concurrent Part
-
-    if (initTask != NULL) {
-      initiateTask(initTask, abort, abort_point, currentIteration);
-      if (taskdbg.active()) {
-        cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task internal ready 2 " << *initTask << " deps needed: "
-                << initTask->getExternalDepCount() << endl;
-        cerrLock.unlock();
-      }
-      initTask->markInitiated();
-      initTask->checkExternalDepCount();
-    } else if (readyTask != NULL) {
-      if (taskdbg.active()) {
-        cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task external ready " << *readyTask << endl;
-        cerrLock.unlock();
-      }
-      if (readyTask->getTask()->getType() == Task::Reduction) {
-        initiateReduction(readyTask);
-      } else if (gpuInitReady) {
-        // initiate all async H2D mem copies for this task's computes and requires
-//        int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-//        if (timeStep > 0) {
-        initiateH2DRequiresCopies(readyTask);
-        initiateH2DComputesCopies(readyTask);
-        dts->addInitiallyReadyGPUTask(readyTask);
-//        }
-      } else if (gpuRunReady) {
-        // recycle this task's H2D copies streams and events
-        reclaimStreams(readyTask, H2D);
-        reclaimEvents(readyTask, H2D);
-        runTask(readyTask, currentIteration, t_id);
-        dts->addCompletionPendingGPUTask(readyTask);
-      } else if (gpuPending) {
-        reclaimStreams(readyTask, D2H);
-        reclaimEvents(readyTask, D2H);
-        postMPISends(readyTask, currentIteration, t_id);
-
-        numTasksDone++;
-        phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-          currphase++;
-        }
-
-        readyTask->done(dws);
-      } else {
-        runTask(readyTask, currentIteration, t_id);
-      }
-    } else if (pendingMPIMsgs > 0) {
-      processMPIRecvs(TEST);
-    } else {
-      //This can only happen when all tasks have finished
-      ASSERT(numTasksDone == ntasks);
-    }
-  }  //end while tasks
-}
-
 #endif
 
 //------------------------------------------
@@ -1995,15 +1978,7 @@ void UnifiedSchedulerWorker::run()
       cerrLock.unlock();
     }
 
-#ifdef HAVE_CUDA    
-    if (Uintah::Parallel::usingGPU()) {
-      d_scheduler->runTasksGPU(d_id + 1);
-    } else {
-      d_scheduler->runTasks(d_id + 1);
-    }
-#else
     d_scheduler->runTasks(d_id + 1);
-#endif    
 
     if (taskdbg.active()) {
       cerrLock.lock();
