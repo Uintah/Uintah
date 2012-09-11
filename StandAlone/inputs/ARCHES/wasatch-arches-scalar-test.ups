@@ -16,7 +16,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>helium_RT_new.uda</filebase>
+    <filebase>wasatch-arches-scalar-test.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
