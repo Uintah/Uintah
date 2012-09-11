@@ -12,6 +12,7 @@
     <delt_min>        0.00001     </delt_min>
     <delt_max>        0.0001        </delt_max>
     <timestep_multiplier>0.35     </timestep_multiplier>
+    <max_Timesteps> 5 </max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -25,19 +26,68 @@
     <save label="viscosityCTS"/>
     <save label="cellType"/>
         <save label = "wasatch_scalar"/>
+
     <checkpoint cycle="2" interval="0.01"/>
   </DataArchiver>
 
   <Grid>
 
-      <BoundaryConditions>      <!-- BOUNDARY CONDITIONS -->      <Face side="x-">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 0 </value>           </BCType>      </Face>        <Face circle = "x-" origin = "0 1.5 1.5" radius = ".5">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 10 </value>           </BCType>         </Face>      <Face side="x+">           <BCType id = "all" label = "wasatch_scalar" var = "Neumann">                <value> 0.0 </value>           </BCType>      </Face>      <!-- BOUNDARY CONDITIONS -->      <Face side="y-">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 10.0 </value>           </BCType>      </Face>      <Face side="y+">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 10.0 </value>           </BCType>      </Face>      <!-- BOUNDARY CONDITIONS -->      <Face side="z-">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 0.0 </value>           </BCType>      </Face>      <Face side="z+">           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">                <value> 0.0 </value>           </BCType>      </Face>    </BoundaryConditions>
+      <BoundaryConditions>
+
+      <!-- BOUNDARY CONDITIONS -->
+
+      <Face side="x-">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 0 </value>
+           </BCType>
+      </Face>
+
+        <Face circle = "x-" origin = "0 1.5 1.5" radius = ".5">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 10 </value>
+           </BCType>
+         </Face>
+
+
+      <Face side="x+">
+           <BCType id = "all" label = "wasatch_scalar" var = "Neumann">
+                <value> 0.0 </value>
+           </BCType>
+      </Face>
+
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 10.0 </value>
+           </BCType>
+      </Face>
+      <Face side="y+">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 10.0 </value>
+           </BCType>
+      </Face>
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="z-">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 0.0 </value>
+           </BCType>
+      </Face>
+      <Face side="z+">
+           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+                <value> 0.0 </value>
+           </BCType>
+      </Face>
+
+
+    </BoundaryConditions>
+
     <Level>
       <Box label="1">
         <lower>       [0,0,0]   </lower>
         <upper>       [3,3,3]   </upper>
         <resolution>  [30,30,30]</resolution>
         <extraCells>  [1,1,1]   </extraCells>
-        <patches>     [1,1,1]   </patches>
+        <patches>     [2,2,2]   </patches>
       </Box>
     </Level>
   </Grid>
@@ -47,7 +97,68 @@
     <reference_point>       [-1,-1,-1]    </reference_point>
     <viscosity>       0.000020      </viscosity>
   </PhysicalConstants>
-     <Wasatch>    <Density>      <IsConstant>true</IsConstant>    </Density>    <!-- Set the initial condition for non-staggered scalar -->    <BasicExpression type="SVOL">      <TaskList>initialization</TaskList>      <NameTag name="wasatch_scalar" state="STATE_N" />    <Constant>0.0</Constant>    </BasicExpression>    <!-- Build a non-staggered scalar transport equation -->    <TransportEquation equation="generic">      <SolutionVariable> wasatch_scalar </SolutionVariable>      <StrongForm>true</StrongForm>      <ConvectiveFluxExpression>        <Method>UPWIND</Method>         <Direction>X</Direction>        <AdvectiveVelocity>            <NameTag name="uVelocitySPBC" state="STATE_N"/>        </AdvectiveVelocity>      </ConvectiveFluxExpression>      <ConvectiveFluxExpression>        <Method>UPWIND</Method>        <Direction>Y</Direction>        <AdvectiveVelocity>            <NameTag name="vVelocitySPBC" state="STATE_N"/>        </AdvectiveVelocity>      </ConvectiveFluxExpression>      <ConvectiveFluxExpression>        <Method>UPWIND</Method>        <Direction>Z</Direction>        <AdvectiveVelocity>            <NameTag name="wVelocitySPBC" state="STATE_N"/>        </AdvectiveVelocity>      </ConvectiveFluxExpression>      <DiffusiveFluxExpression>        <Direction>X</Direction>        <ConstantDiffusivity>0.2</ConstantDiffusivity>      </DiffusiveFluxExpression>      <DiffusiveFluxExpression>        <Direction>Y</Direction>        <ConstantDiffusivity>0.2</ConstantDiffusivity>      </DiffusiveFluxExpression>      <DiffusiveFluxExpression>        <Direction>Z</Direction>        <ConstantDiffusivity>0.2</ConstantDiffusivity>      </DiffusiveFluxExpression>    </TransportEquation>    </Wasatch>
+     <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="wasatch_scalar" state="STATE_N" />
+    <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable> wasatch_scalar </SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="uVelocitySPBC" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="vVelocitySPBC" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="wVelocitySPBC" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+    </Wasatch>
+
   <CFD>
     <ARCHES>
 
