@@ -23,7 +23,7 @@
   
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>gputest.uda</filebase>
+  <filebase>unifiedtest.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>
       <save label = "residual"/>
@@ -32,10 +32,10 @@
   
   
   <!--__________________________________-->
-  <GPUSchedulerTest>
+  <UnifiedSchedulerTest>
     <delt>.01</delt>
     <maxresidual>.01</maxresidual>
-  </GPUSchedulerTest>
+  </UnifiedSchedulerTest>
   
   
   <!--__________________________________-->

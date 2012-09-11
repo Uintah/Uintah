@@ -122,8 +122,6 @@ WARNING
 
 #ifdef HAVE_CUDA
 
-    void runTasksGPU(int t_id);
-
     double* getDeviceRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
     double* getDeviceComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
