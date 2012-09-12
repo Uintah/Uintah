@@ -1018,15 +1018,6 @@ void DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
 }
 
 #ifdef HAVE_CUDA
-// TODO - not using this right now
-bool DetailedTask::addGridVariableCUDAStream(const VarLabel* label,
-                                             cudaStream_t* stream)
-{
-  pair<map<const VarLabel*, cudaStream_t*>::iterator, bool> ret;
-  ret = gridVariableStreams.insert(pair<const VarLabel*, cudaStream_t*>(label, stream));
-  return ret.second ? true : false;
-}
-
 bool DetailedTask::addH2DCopyEvent(cudaEvent_t* event)
 {
   h2dCopyEvents.push_back(event);

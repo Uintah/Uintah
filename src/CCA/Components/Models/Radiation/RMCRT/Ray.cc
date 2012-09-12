@@ -244,11 +244,22 @@ cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
 
   //__________________________________
   // BC bulletproofing  
+  bool ignore_BC_bulletproofing  = false;
+  rmcrt_ps->get( "ignore_BC_bulletproofing",  ignore_BC_bulletproofing );
+  
   ProblemSpecP root_ps = rmcrt_ps->getRootNode();
   const MaterialSubset* mss = d_matlSet->getUnion();
-  is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
-  is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
-
+  
+  if( ignore_BC_bulletproofing == true || _onOff_SetBCs == false) {
+    proc0cout << "\n\n______________________________________________________________________" << endl;
+    proc0cout << "  WARNING: bulletproofing of the boundary conditions specs is off!";
+    proc0cout << "   You're free to set any BC you'd like " << endl;
+    proc0cout << "______________________________________________________________________\n\n" << endl;
+  
+  } else {  
+    is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
+    is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
+  }
 }
 
 //______________________________________________________________________

@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
-
+#include <CCA/Ports/SolverInterface.h>
 
 namespace Wasatch{
 
@@ -119,6 +119,7 @@ namespace Wasatch{
 
   private:
 
+    Uintah::SolverParameters* solverParams_;
     const bool isviscous_;
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;

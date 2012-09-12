@@ -125,11 +125,11 @@ namespace Wasatch{
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver,
-                                                                 Uintah::SimulationStateP sharedState);
+                                                                 Uintah::SimulationStateP& sharedState);
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState);
+                               Uintah::SimulationStateP& sharedState);
   
   /**
    *  \brief Build moment transport equations specified by "params"

@@ -265,7 +265,6 @@ namespace Uintah {
     int getDeviceNum () {
       return deviceNum_;
     }
-    bool addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream);
     bool addH2DCopyEvent(cudaEvent_t* event);
     bool addD2HCopyEvent(cudaEvent_t* event);
     bool addH2DStream(cudaStream_t* stream);
@@ -522,7 +521,7 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_;     // intially ready, h2d copies pending
+    TaskPQueue initiallyReadyGPUTasks_;     // initially ready, h2d copies pending
     TaskPQueue completionPendingGPUTasks_;  // execution and d2h copies pending
 
     mutable CrowdMonitor  gpuReadyQueueLock_;
