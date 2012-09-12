@@ -113,7 +113,6 @@ public:
       BoundaryCondition*  _bc; 
       const ProcessorGroup* _my_world; 
       vector<std::string> _required_label_names;
-      
 
   }; // class Builder 
   //______________________________________________________________________
@@ -142,8 +141,9 @@ private:
 
   bool _all_rk; 
   bool _using_prop_calculator;
-  bool _CoarseLevelRMCRTMethod;
-  bool _multiLevelRMCRTMethod;
+  
+  int  _whichAlgo;
+  enum Algorithm{ dataOnion, coarseLevel};
   
   double _initAbskg; 
 

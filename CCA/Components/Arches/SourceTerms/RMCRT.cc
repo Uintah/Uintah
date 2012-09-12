@@ -49,9 +49,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   _gac = Ghost::AroundCells;
   _gn  = Ghost::None; 
-  
-  _CoarseLevelRMCRTMethod = true;
-  _multiLevelRMCRTMethod  = false;
+  _whichAlgo = coarseLevel;
   
   //__________________________________
   //  define the materialSet
@@ -104,37 +102,34 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
   }  
 
   //__________________________________
-  //
-  _prop_calculator = scinew RadPropertyCalculator(); 
-  _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps );                           
+  //  Read in the algorithm
+  ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
+  if (alg_ps){
+
+    string type="NULL";
+    alg_ps->getAttribute("type", type);
+
+    if (type == "dataOnion" ) {
+      _whichAlgo = dataOnion;
+
+      //__________________________________
+      //  bulletproofing
+      if(!_sharedState->isLockstepAMR()){
+        ostringstream msg;
+        msg << "\n ERROR: You must add \n"
+            << " <useLockStep> true </useLockStep> \n"
+            << " inside of the <AMR> section. \n"; 
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    } else if ( type == "RMCRT_coarseLevel" ) {
+      _whichAlgo = coarseLevel;
+    }
+  }
 
   //__________________________________
-  //  Read in the AMR section
-  ProblemSpecP prob_spec = _ps->getRootNode();
-  
-  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-  if (amr_ps){
-    ProblemSpecP rmcrt_ps = amr_ps->findBlock("RMCRT");
-
-    if(!rmcrt_ps){
-      string warn;
-      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
-      throw ProblemSetupException(warn, __FILE__, __LINE__);
-    }
-
-    rmcrt_ps->require("CoarseLevelRMCRTMethod", _CoarseLevelRMCRTMethod);
-    rmcrt_ps->require("multiLevelRMCRTMethod",  _multiLevelRMCRTMethod);
-
-    //__________________________________
-    //  bulletproofing
-    if(!_sharedState->isLockstepAMR()){
-      ostringstream msg;
-      msg << "\n ERROR: You must add \n"
-          << " <useLockStep> true </useLockStep> \n"
-          << " inside of the <AMR> section. \n"; 
-      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-    }
-  } 
+  //
+  _prop_calculator = scinew RadPropertyCalculator(); 
+  _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps ); 
 }
 
 //______________________________________________________________________
@@ -202,7 +197,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //   2 - L E V E L   A P P R O A C H
   //  If the RMCRT is performed on only the coarse level
   // and the results are interpolated to the fine level
-  if(_CoarseLevelRMCRTMethod){
+  if( _whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
     const PatchSet* finestPatches = fineLevel->eachPatch();
    
