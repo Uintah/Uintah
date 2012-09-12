@@ -1071,7 +1071,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
-  double time = d_Alab->d_sharedState->getElapsedTime();
+  //double time = d_Alab->d_sharedState->getElapsedTime();
 
   nofTimeSteps++ ;
   // note: this counter will only get incremented each
@@ -1575,9 +1575,9 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-  double time = d_sharedState->getElapsedTime();
-  bool recalculateVoidFrac = false;
-  if (time < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
+//  double time = d_sharedState->getElapsedTime();
+//  bool recalculateVoidFrac = false;
+//  if (time < 1.0e-10 || !d_stationarySolid) recalculateVoidFrac = true;
 
   t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
       mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
@@ -1954,7 +1954,7 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-  double time = d_sharedState->getElapsedTime();
+//  double time = d_sharedState->getElapsedTime();
 //  if (time < 1.0E-10)
 //    d_recompile = true;
 

@@ -1332,7 +1332,7 @@ BoundaryCondition::setFlatProfV( const Patch* patch,
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  Vector Dx = patch->dCell(); 
+  //Vector Dx = patch->dCell(); 
 
   double ave_normal_vel = 0; 
   double tiny = 1.0e-16; 
@@ -1471,7 +1471,7 @@ BoundaryCondition::setFlatProfS( const Patch* patch,
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  Vector Dx = patch->dCell(); 
+  //Vector Dx = patch->dCell(); 
 
   for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
     Patch::FaceType face = *fiter;
@@ -5730,7 +5730,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     vector<Patch::FaceType>::const_iterator bf_iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    Vector Dx = patch->dCell(); 
+//    Vector Dx = patch->dCell(); 
     constCCVariable<double> density; 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 

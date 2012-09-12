@@ -291,9 +291,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
 
   }
 
-  bool check_calculator; 
+  //bool check_calculator; 
   d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab ); 
-  check_calculator = d_eff_calculator->problemSetup( db ); 
+  //check_calculator = d_eff_calculator->problemSetup( db ); 
 
 }
 
@@ -2732,7 +2732,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       int colY = c.y();
 
       double mmsvalue = 0.0;
-      double mmsconvvalue = 0.0;
+//      double mmsconvvalue = 0.0;
       double testvalue = 0.0;
 
       if (d_mms == "constantMMS"){
@@ -2743,7 +2743,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
         mmsvalue = 1 - amp * cos(2.0*pi*(cellinfo->xu[colX] - time))
           * sin(2.0*pi*(cellinfo->yy[colY] - time))*exp(-2.0*d_viscosity*time);
 
-        mmsconvvalue = 2*(1-amp*cos(2*pi*(cellinfo->xu[colX]-time))*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time))*amp*sin(2*pi*(cellinfo->xu[colX]-time))*pi*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time)-2*amp*cos(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*pi*exp(-2*d_viscosity*time)*(1+amp*sin(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time));
+//        mmsconvvalue = 2*(1-amp*cos(2*pi*(cellinfo->xu[colX]-time))*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time))*amp*sin(2*pi*(cellinfo->xu[colX]-time))*pi*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time)-2*amp*cos(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*pi*exp(-2*d_viscosity*time)*(1+amp*sin(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time));
 
       }
 
