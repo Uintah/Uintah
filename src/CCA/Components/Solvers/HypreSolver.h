@@ -73,35 +73,42 @@ namespace Uintah {
   struct hypre_solver_struct : public RefCounted {
     SolverType solver_type;
     SolverType precond_solver_type;
-    HYPRE_StructSolver solver;
-    HYPRE_StructSolver precond_solver;
+    HYPRE_StructSolver* solver;
+    HYPRE_StructSolver* precond_solver;
     HYPRE_StructMatrix* HA;
     HYPRE_StructVector* HB;
     HYPRE_StructVector* HX;
     
+    hypre_solver_struct() {
+      solver=0;
+      precond_solver=0;
+      HA=0;
+      HB=0;
+      HX=0;
+    };
     virtual ~hypre_solver_struct() {
       HYPRE_StructMatrixDestroy(*HA);
       HYPRE_StructVectorDestroy(*HB);
       HYPRE_StructVectorDestroy(*HX);
-      
+
       switch (solver_type) {
       case smg:
-        HYPRE_StructSMGDestroy(solver);
+        HYPRE_StructSMGDestroy(*solver);
         break;
       case pfmg:
-        HYPRE_StructPFMGDestroy(solver);
+        HYPRE_StructPFMGDestroy(*solver);
         break;
       case sparsemsg:
-        HYPRE_StructSparseMSGDestroy(solver);
+        HYPRE_StructSparseMSGDestroy(*solver);
         break;
       case pcg:
-        HYPRE_StructPCGDestroy(solver);
+        HYPRE_StructPCGDestroy(*solver);
         break;
       case gmres:
-        HYPRE_StructGMRESDestroy(solver);
+        HYPRE_StructGMRESDestroy(*solver);
         break;
       case jacobi:
-        HYPRE_StructJacobiDestroy(solver);
+        HYPRE_StructJacobiDestroy(*solver);
         break;
       default:
         throw InternalError("HypreSolver given a bad solver type!", 
@@ -111,35 +118,34 @@ namespace Uintah {
 
       switch (precond_solver_type) {
       case smg:
-        HYPRE_StructSMGDestroy(precond_solver);
+        HYPRE_StructSMGDestroy(*precond_solver);
         break;
       case pfmg:
-        HYPRE_StructPFMGDestroy(precond_solver);
+        HYPRE_StructPFMGDestroy(*precond_solver);
         break;
       case sparsemsg:
-        HYPRE_StructSparseMSGDestroy(precond_solver);
+        HYPRE_StructSparseMSGDestroy(*precond_solver);
         break;
       case pcg:
-        HYPRE_StructPCGDestroy(precond_solver);
+        HYPRE_StructPCGDestroy(*precond_solver);
         break;
       case gmres:
-        HYPRE_StructGMRESDestroy(precond_solver);
+        HYPRE_StructGMRESDestroy(*precond_solver);
         break;
       case jacobi:
-        HYPRE_StructJacobiDestroy(precond_solver);
+        HYPRE_StructJacobiDestroy(*precond_solver);
         break;
       default:
         throw InternalError("HypreSolver given a bad solver type!", 
                             __FILE__, __LINE__);
       }
-      #if 0
-      HYPRE_StructPCGDestroy(solver);
-      HYPRE_StructPFMGDestroy(precond_solver);
-      #endif
 
       delete HA;  
       delete HB;  
       delete HX;  
+      delete solver;
+      delete precond_solver;
+
     };
   };
 
