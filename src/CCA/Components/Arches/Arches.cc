@@ -551,7 +551,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
     if (d_props->getMixingModelType() == "ClassicTable" ) {
       StringVec DepVarsString = d_mixingTable->getAllDepVars();
-      for (int i=0; i<DepVarsString.size(); i++) {
+      for (size_t i=0; i<DepVarsString.size(); i++) {
         proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
         const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
         if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
@@ -1386,7 +1386,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       //somewhat ugly...
       InletStream ffState;
       Stream calculatedStream;
-      double init_enthalpy  = 0.0;
+      //double init_enthalpy  = 0.0;
       ffState.d_initEnthalpy = true;
       ffState.d_scalarDisp   = 0.0;
       ffState.d_mixVarVariance.push_back(0.0);
@@ -1395,7 +1395,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       string bc_type = "scalar_init";
       d_props->computeInletProperties( ffState, calculatedStream, bc_type );
 
-      init_enthalpy = calculatedStream.getEnthalpy();
+      //init_enthalpy = calculatedStream.getEnthalpy();
 
       for (CellIterator iter=patch->getCellIterator();
            !iter.done(); iter++){

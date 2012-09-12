@@ -1295,7 +1295,7 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
   vector<Patch::FaceType>::const_iterator bf_iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  Vector Dx = patch->dCell(); 
+  //Vector Dx = patch->dCell(); 
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
         bc_iter != d_bc_information.end(); bc_iter++){
@@ -1353,7 +1353,7 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
   vector<Patch::FaceType>::const_iterator bf_iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  Vector Dx = patch->dCell(); 
+//  Vector Dx = patch->dCell(); 
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
         bc_iter != d_bc_information.end(); bc_iter++){
