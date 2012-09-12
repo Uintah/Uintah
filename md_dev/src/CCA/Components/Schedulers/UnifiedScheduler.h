@@ -122,8 +122,6 @@ WARNING
 
 #ifdef HAVE_CUDA
 
-    void runTasksGPU(int t_id);
-
     double* getDeviceRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
     double* getDeviceComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
@@ -168,6 +166,10 @@ WARNING
     bool  abort;
     int   abort_point;
 
+  protected:
+
+    virtual void verifyChecksum();
+
   private:
     
     int getAviableThreadNum();
@@ -202,11 +204,11 @@ WARNING
 
     cudaError_t unregisterPageLockedHostMem();
 
-    void clearCudaStreams();
+    void freeCudaStreams();
 
-    void clearCudaEvents();
+    void freeCudaEvents();
 
-    void clearMaps();
+    void clearGpuDBMaps();
 
     struct GPUGridVariable {
       DetailedTask* dtask;
@@ -228,15 +230,14 @@ WARNING
     int           numGPUs_;
     int           currentGPU_;
 
-    mutable CrowdMonitor requiresPtrsPairLock_;
-    mutable CrowdMonitor computesPtrsPairLock_;
     mutable CrowdMonitor deviceComputesLock_;
     mutable CrowdMonitor hostComputesLock_;
     mutable CrowdMonitor deviceRequiresLock_;
     mutable CrowdMonitor hostRequiresLock_;
     mutable CrowdMonitor idleStreamsLock_;
     mutable CrowdMonitor idleEventsLock_;
-    mutable CrowdMonitor pinnedPtrsLock_;
+    mutable CrowdMonitor h2dComputesLock_;
+    mutable CrowdMonitor h2dRequiresLock_;
 
 #endif
   };

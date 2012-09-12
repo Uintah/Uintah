@@ -288,6 +288,8 @@ namespace Wasatch{
 #endif
     sparams->setSolveOnExtraCells( false );
 
+    delete sparams;
+
     //
     std::string timeIntegrator;
     wasatchParams->get("TimeIntegrator",timeIntegrator);
@@ -474,6 +476,9 @@ namespace Wasatch{
     if( linSolver_ ){
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
+
+      sched->overrideVariableBehavior("hypre_solver_label",false,false,
+                                      false,true,true);
     }
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
@@ -490,7 +495,35 @@ namespace Wasatch{
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
-
+      
+      // -----------------------------------------------------------------------
+      // INITIAL BOUNDARY CONDITIONS TREATMENT
+      // -----------------------------------------------------------------------
+      const Uintah::PatchSet* const localPatches2 = get_patchset( USE_FOR_OPERATORS, level, sched );
+      const GraphHelper* icGraphHelper2 = graphCategories_[ INITIALIZATION ];
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+      
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        EqnTimestepAdaptorBase* const adaptor = *ia;
+        TransportEquation* transEq = adaptor->equation();
+        std::string eqnLabel = transEq->solution_variable_name();
+        //______________________________________________________
+        // set up initial boundary conditions on this transport equation
+        try{
+          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion());
+        }
+        catch( std::runtime_error& e ){
+          std::ostringstream msg;
+          msg << e.what()
+          << std::endl
+          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
+          << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      // -----------------------------------------------------------------------          
+            
       TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                         "initialization",
                                                         *icGraphHelper->exprFactory,
@@ -510,33 +543,6 @@ namespace Wasatch{
       // within the TaskInterface object.
       task->schedule( icCoordHelper_->field_tags(), 1 );
       taskInterfaceList_.push_back( task );
-
-      // -----------------------------------------------------------------------
-      // INITIAL BOUNDARY CONDITIONS TREATMENT
-      // -----------------------------------------------------------------------
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-      const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
-      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-
-      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-        EqnTimestepAdaptorBase* const adaptor = *ia;
-        TransportEquation* transEq = adaptor->equation();
-        std::string eqnLabel = transEq->solution_variable_name();
-        //______________________________________________________
-        // set up initial boundary conditions on this transport equation
-        try{
-          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
-        }
-        catch( std::runtime_error& e ){
-          std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-      }
 
     }
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
@@ -645,15 +651,6 @@ namespace Wasatch{
 
     for (int iStage=1; iStage<=nRKStages_; iStage++) {
       // jcs why do we need this instead of getting the level?
-      const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-
-      if( buildTimeIntegrator_ ){
-        create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
-      }
-
-      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
-
       // jcs notes:
       //
       //   eachPatch() returns a PatchSet that will result in the task
@@ -666,14 +663,16 @@ namespace Wasatch{
       //       any global MPI syncronizations occurr (e.g. in a linear
       //       solve)
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
-
+      
+      const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-
+      
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         TransportEquation* transEq = adaptor->equation();
@@ -693,6 +692,12 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
+      
+      if( buildTimeIntegrator_ ){
+        create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
+      }
+
+      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
       //
       // process clipping on fields

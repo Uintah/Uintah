@@ -540,18 +540,18 @@
         <Eqn                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type  REQUIRED STRING 'CCscalar'">
-          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
-          <doDiff                       spec="OPTIONAL BOOLEAN"/>
-          <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <addSources                   spec="OPTIONAL BOOLEAN"/>
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)) -->    
+          <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
+          <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
+          <addSources                   spec="OPTIONAL BOOLEAN"/> <!-- Add sources on/off --> 
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
-          <scaling_const                spec="OPTIONAL DOUBLE"/>                              
+          <scaling_const                spec="OPTIONAL DOUBLE"/>  <!-- Not used at the moment -->                               
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
           <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
           <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/>
+                                        attribute1="label REQUIRED STRING"/> <!-- Pointer to sources defined elsewhere --> 
           <D_mol                        spec="OPTIONAL NO_DATA" 
                                         attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity --> 
           <D_mol_constant               spec="OPTIONAL NO_DATA"

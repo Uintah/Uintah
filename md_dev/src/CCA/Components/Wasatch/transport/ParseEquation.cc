@@ -223,7 +223,7 @@ namespace Wasatch{
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
                               GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState) {
+                               Uintah::SimulationStateP& sharedState) {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     Expr::TagList poissontags;
@@ -274,7 +274,7 @@ namespace Wasatch{
                                                                  TurbulenceParameters turbParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver, Uintah::SimulationStateP sharedState )
+                                                                 Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;

@@ -297,6 +297,7 @@ namespace Wasatch{
       normalConvFluxID_( Expr::ExpressionID::null_id()        ),
       pressureID_      ( Expr::ExpressionID::null_id()        )
   {
+    solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
 
     const Expr::Tag thisMomTag = mom_tag( momName );
@@ -419,8 +420,13 @@ namespace Wasatch{
       const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags_[2], factory );
       if( stagLoc_ == ZDIR )  normalConvFluxID_ = id;
     }
+    // convective fluxes require ghost updates after they are calculated
+    // jcs note that we need to set BCs on these quantities as well.
+    factory.cleave_from_children( normalConvFluxID_ );
+    factory.cleave_from_parents ( normalConvFluxID_ );    
 
     //_________________________________________________________
+    // partial rhs:
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
@@ -434,6 +440,7 @@ namespace Wasatch{
     // Here we should register an expression to get \nabla.(\rho*v)
     // I.C for \nabla.(\rho*v)???...
 
+    //__________________
     // density time derivative
     const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
 
@@ -441,28 +448,28 @@ namespace Wasatch{
 
     //__________________
     // pressure
-    Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
-
-    bool usePressureRefPoint = false;
-    double refPressureValue = 0.0;
-    SCIRun::IntVector refPressureLocation(0,0,0);
-    if (pressureParams->findBlock("ReferencePressure")) {
-      usePressureRefPoint = true;
-      Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");
-      refPressureParams->getAttribute("value", refPressureValue);
-      refPressureParams->get("ReferenceCell", refPressureLocation);
-    }
-
-    bool use3DLaplacian = true;
-    pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
-
-    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "",
-                                                                  sharedState );
-    sparams->setSolveOnExtraCells( false );
-    sparams->setUseStencil4( true );
-    sparams->setOutputFileName( "WASATCH" );
-
     if( !factory.have_entry( pressure_tag() ) ){
+      Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
+      
+      bool usePressureRefPoint = false;
+      double refPressureValue = 0.0;
+      SCIRun::IntVector refPressureLocation(0,0,0);
+      if (pressureParams->findBlock("ReferencePressure")) {
+        usePressureRefPoint = true;
+        Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");
+        refPressureParams->getAttribute("value", refPressureValue);
+        refPressureParams->get("ReferenceCell", refPressureLocation);
+      }
+      
+      bool use3DLaplacian = true;
+      pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
+      
+      solverParams_ = linSolver.readParameters( pressureParams, "",
+                                               sharedState );
+      solverParams_->setSolveOnExtraCells( false );
+      solverParams_->setUseStencil4( true );
+      solverParams_->setOutputFileName( "WASATCH" );      
+      
       // if pressure expression has not be registered, then register it
       Expr::Tag fxt, fyt, fzt;
       if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
@@ -477,22 +484,16 @@ namespace Wasatch{
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
       const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
                                                                                        d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
-                                                                                       *sparams, linSolver);
+                                                                                       *solverParams_, linSolver);
       proc0cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;
       pressureID_ = factory.register_expression( pbuilder );
       //factory.cleave_from_children( pressureID_ );
       factory.cleave_from_parents ( pressureID_ );
     }
-    else{
+    else {
       pressureID_ = factory.get_id( pressure_tag() );
     }
-
-    //________________________________________________________________
-    // Several expressions require ghost updates after they are calculated
-    // jcs note that we need to set BCs on these quantities as well.
-    factory.cleave_from_children( normalConvFluxID_ );
-    factory.cleave_from_parents ( normalConvFluxID_ );
   }
 
   //------------------------------------------------------------------
@@ -500,7 +501,9 @@ namespace Wasatch{
   template< typename FieldT >
   MomentumTransportEquation<FieldT>::
   ~MomentumTransportEquation()
-  {}
+  {
+    delete solverParams_;
+  }
 
   //------------------------------------------------------------------
 
@@ -550,15 +553,10 @@ namespace Wasatch{
 //                                           materials );
     }
     // set bcs for pressure
-    if (factory.have_entry(pressure_tag())) {
-//      process_boundary_conditions<SVolField>( pressure_tag(),
-//                                              "pressure",
-//                                              NODIR,
-//                                              graphHelper,
-//                                              localPatches,
-//                                              patchInfoMap,
-//                                              materials );
-    }
+    // We cannot set pressure BCs here using Wasatch's BC techniques because
+    // we need to set the BCs AFTER the pressure solve. We had to create
+    // a uintah task for that. See Pressure.cc
+    
     // set bcs for partial rhs
     if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
       process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
