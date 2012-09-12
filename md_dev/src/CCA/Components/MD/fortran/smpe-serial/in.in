@@ -1,0 +1,5 @@
+2 ! i_type_EWALD_CTRL  1=smpe 2=slow
+64 64 64 ! nfftx,nffty,nfftz; must be 2^n for smpe; k vectors for smpe
+6  6  6  ! order splines along xx yy zz directions  for smpe
+20 20 20 ! k_max_x,k_max_y,k_max_z ; k vectors for slow Ewald 
+
