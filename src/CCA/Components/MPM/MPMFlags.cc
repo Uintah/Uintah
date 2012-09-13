@@ -91,6 +91,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doTransientImplicitHeatConduction = true;
   d_prescribeDeformation = false;
   d_prescribedDeformationFile = "time_defgrad_rotation";
+  d_exactDeformation = false;
   d_insertParticles = false;
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
@@ -192,6 +193,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
+  mpm_flag_ps->get("exactDeformation",d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones", d_useCohesiveZones);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
@@ -377,6 +379,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
   ps->appendElement("use_load_curves", d_useLoadCurves);
+  ps->appendElement("exactDeformation",d_exactDeformation);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
   ps->appendElement("manual_new_material", d_addNewMaterial);

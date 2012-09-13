@@ -3044,6 +3044,29 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       //calculate thetadot:
       double thetadot = PrescribedTheta*(degtorad)/(t2-t1);
 
+
+      if (flags->d_exactDeformation)//Exact Deformation Update
+      {
+         double t3 = d_prescribedTimes[s+2];    
+         double t4 = d_prescribedTimes[s+3];  
+         if (time == 0 && t4 != 0)
+         {
+	    new_dw->put(delt_vartype(t3 - t2), d_sharedState->get_delt_label(), getLevel(patches));
+         } 
+         else
+         {
+            F_high = d_prescribedF[s + 2]; //next prescribed deformation gradient
+      	    F_low  = d_prescribedF[s + 1]; //last prescribed deformation gradient
+       	    t3 = d_prescribedTimes[s+2];
+            t4 = d_prescribedTimes[s+3];
+	    double tst = t4 - t3; 
+            Ft = F_low*(t2-time)/(t2-t1) + F_high*(time-t1)/(t2-t1);
+            Fdot = (F_high - F_low)/(t3-t2);
+            thetadot = PrescribedTheta*(degtorad)/(t3-t2);
+            new_dw->put(delt_vartype(tst), d_sharedState->get_delt_label(), getLevel(patches));
+          }
+       }
+
       //construct Rdot:
       Matrix3 Qdot(0.0);
       Qdot = (Ident-aa)*(-sinthetat*thetadot) + A*costhetat*thetadot;
@@ -3084,8 +3107,14 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
 
         Vector NodePosition = patch->getNodePosition(n).asVector();
 
-        gvelocity_star[n] = Fdotstar*Ft.Inverse()*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition;
-
+        if (flags->d_exactDeformation)//Exact Deformation Update
+        {
+           gvelocity_star[n] = (F_high*F_low.Inverse() - Ident)*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition/delT;
+        }
+        else           
+        {
+           gvelocity_star[n] = Fdotstar*Ft.Inverse()*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition;
+        }
 
       } // Node Iterator
       if(!flags->d_doGridReset){
