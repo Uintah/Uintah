@@ -167,7 +167,7 @@ main(int argc, char** argv)
   /*
    * Default values
    */
-  bool do_binary=false;
+  //bool do_binary=false;
   bool findCellIndex=false;
 
   unsigned long time_step_lower = 0;
@@ -239,8 +239,8 @@ main(int argc, char** argv)
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
-    } else if(s == "-binary") {
-      do_binary=true;
+//    } else if(s == "-binary") {
+//      do_binary=true;
     } else if(s == "-noxml" || s == "--xml-cache-off") {
       storeXML = false;
     } else {
