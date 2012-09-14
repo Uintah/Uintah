@@ -59,6 +59,21 @@ Filter::Filter(const ArchesLabel* label,
   d_perproc_patches= 0;
   d_matrixInitialize = false;
   d_matrix_vectors_created = false;
+
+  int filter_width = 3; //hard coded for now
+  for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+    for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+      for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+        int offset = abs(i) + abs(j) + abs(k); 
+        double my_value = offset+3; 
+        filter_array[i+1][j+1][k+1] = 1.0 / (pow(2.0,my_value)); 
+
+
+      }
+    }
+  }
+
 }
 
 // ****************************************************************************
@@ -279,19 +294,24 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
                  }
                  col[count] = l2g[filterCell];  //ab
 #if 1
-                 // on the boundary
                  if (cellType[currCell] != flowID){
+                  //  IJK cell on a boundary
                    if (filterCell == currCell) {
                      totalVol = vol;
                      value[count] = vol;
+                     //Thus you get u = u in this case.
                    }else{
                      value[count] = 0;
+                     //and set all the off diagonals to zero. 
                    }
+
                  }else if ((col[count] != -1234) && (cellType[filterCell] == flowID)) {
+                   // IJK cell not on a boundary AND off-diagonal cell is NOT a boundary 
                    totalVol += vol;
                    value[count] = vol;
                  }
                  else{
+                   // IJK cell not on a boundary AND off-diagonal IS on a boundary 
                    value[count] = 0;
                  }
 #else           
