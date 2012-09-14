@@ -7,6 +7,11 @@
 #include <expression/Expression.h>
 
 /**
+ *  \brief obtain the tag for the turbulent viscosity
+ */
+Expr::Tag turbulent_viscosity_tag();
+
+/**
  *  \class TurbulentViscosity
  *  \author Tony Saad, Amir Biglari
  *  \date   June, 2012. (Originally created: Jan, 2012).

@@ -448,6 +448,7 @@
       <StrongForm         spec="REQUIRED BOOLEAN"/>
       <PrimitiveVariable  spec="OPTIONAL STRING" />
 
+      <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression spec="MULTIPLE NO_DATA">
@@ -541,6 +542,7 @@
     </Turbulence>
         
     <MomentumEquations  spec="OPTIONAL NO_DATA">
+      <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
       <Z-Velocity             spec="OPTIONAL STRING" />

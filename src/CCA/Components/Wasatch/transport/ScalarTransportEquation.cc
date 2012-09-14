@@ -27,6 +27,7 @@
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -63,7 +64,7 @@ namespace Wasatch{
       densityTag_( densityTag )
   {
 
-    // defining the primary variable ans solutioan variable tags regarding to the type of
+    // defining the primary variable ans solution variable tags regarding to the type of
     // the equations that we are solving and throwing appropriate error messages regarding
     // to the input file arguments.
     params->get("StrongForm",isStrong_);
@@ -267,9 +268,10 @@ namespace Wasatch{
     
     Expr::Tag turbDiffTag = Expr::Tag();
     // TURBULENCE
-    if (turbulenceParams.turbulenceModelName != NONE ) { 
-      Expr::Tag turbViscTag = Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
-      turbDiffTag = Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
+    bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
+    if (turbulenceParams.turbulenceModelName != NONE && enableTurbulenceModel ) { 
+      Expr::Tag turbViscTag = turbulent_viscosity_tag();//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+      turbDiffTag = turbulent_diffusivity_tag();//Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
       
       if( !factory.have_entry( turbDiffTag ) ){
         typedef typename TurbulentDiffusivity::Builder TurbDiffT;

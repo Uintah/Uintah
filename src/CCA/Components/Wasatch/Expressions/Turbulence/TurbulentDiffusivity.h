@@ -29,6 +29,11 @@
 #include <expression/Expression.h>
 
 /**
+ *  \brief obtain the tag for the turbulent diffusivity
+ */
+Expr::Tag turbulent_diffusivity_tag();
+
+/**
  *  \class TurbulentViscosity
  *  \author Amir Biglari
  *  \date   July, 2012. (Originally created: Jan, 2012).
