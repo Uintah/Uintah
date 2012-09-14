@@ -24,6 +24,12 @@
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+Expr::Tag straintensormagnitude_tag() {
+  return Expr::Tag( "StrainTensorMagnitude", Expr::STATE_NONE );
+}
+Expr::Tag square_straintensormagnitude_tag() {
+  return Expr::Tag( "SquareStrainTensorMagnitude", Expr::STATE_NONE );
+}
 
 StrainTensorMagnitude::
 StrainTensorMagnitude( const Expr::Tag& vel1tag,

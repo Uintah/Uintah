@@ -30,6 +30,13 @@
 
 //====================================================================
 
+Expr::Tag turbulent_viscosity_tag()
+{
+  return Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+}
+
+//====================================================================
+
 TurbulentViscosity::
 TurbulentViscosity( const Expr::Tag rhoTag,
                     const Expr::Tag strTsrMagTag,
