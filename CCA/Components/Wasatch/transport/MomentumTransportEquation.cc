@@ -60,8 +60,8 @@ namespace Wasatch{
     const Expr::Tag strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
     if( !factory.have_entry( strTsrMagTag ) ){
       std::cout << "Registering:" << strTsrMagTag << std::endl;      
-      typedef typename StrainTensorMagnitude::Builder StrTsrMagT;
-      factory.register_expression( new StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+      typedef StrainTensorMagnitude::Builder StrTsrMagT;
+      factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
     }
     
     switch (turbParams.turbulenceModelName) {
@@ -70,8 +70,8 @@ namespace Wasatch{
         sqStrTsrMagTag = square_straintensormagnitude_tag();
         if( !factory.have_entry( sqStrTsrMagTag ) ){
           std::cout << "Registering:" << sqStrTsrMagTag << std::endl;                
-          typedef typename SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
-          factory.register_expression( new SqStrTsrMagT(sqStrTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+          typedef SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
+          factory.register_expression( scinew SqStrTsrMagT(sqStrTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
         }
       }
         break;
@@ -91,7 +91,7 @@ namespace Wasatch{
 
     if( !factory.have_entry( turbViscTag ) ){
       std::cout << "Registering:" << turbViscTag << std::endl;                      
-      typedef typename TurbulentViscosity::Builder TurbViscT;
+      typedef TurbulentViscosity::Builder TurbViscT;
       factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, turbParams ) );
     }
   }
