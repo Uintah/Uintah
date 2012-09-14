@@ -49,6 +49,8 @@
 #include "Expressions/BoundaryConditions/BasicBoundaryCondition.h"
 #include "Expressions/BoundaryConditions/ParabolicBC.h"
 
+//#define WASATCH_BC_DIAGNOSTICS
+
 namespace Wasatch {
 
   // This function returns true if the boundary condition is applied in the same direction
@@ -422,7 +424,9 @@ namespace Wasatch {
     typedef SS::ConstValEval BCEvalT; // basic functor for constant functions.
     SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+#ifdef WASATCH_BC_DIAGNOSTICS    
     std::cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << " ON PATCH " << patch->getID() << std::endl;
+#endif
     
     std::vector<SS::IntVec> bcPointsIJK;
     std::vector<SS::IntVec> ghostPointsIJK;
