@@ -390,13 +390,8 @@ namespace Wasatch{
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     const Expr::Tag turbViscTag = turbulent_viscosity_tag();
     if ( isTurbulent_ && isviscous_ && enableTurbulenceModel ) {
-      std::cout << "turbulence model enabled \n";
-      register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag);
-      
-//      if( !factory.have_entry( turbViscTag ) ){
-        std::cout << "attaching " << turbViscTag << " to " << viscTag << std::endl;
-        factory.attach_dependency_to_expression(turbViscTag, viscTag);
-//      }
+      register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag);      
+      factory.attach_dependency_to_expression(turbViscTag, viscTag);
     }
     // END TURBULENCE
     //--------------------------------------
