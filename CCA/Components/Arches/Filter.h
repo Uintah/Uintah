@@ -338,6 +338,25 @@ bool applyFilter(const ProcessorGroup* ,
   return true;
 }
 //______________________________________________________________________
+//
+template<class T>
+bool applyFilter_noPetsc(const ProcessorGroup* ,
+                         const Patch* patch,               
+                         T& var,                           
+                         Array3<double>& filterVar)        
+{
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    //1) compute the total filter volume and store it in a grid variable
+    //2) compute the filtered value as: 
+    //          u_til = sum( vol(cell)*filter_array(cell) )/total_volume_of_filter
+    //
+
+  }
+  return true;
+}
+//______________________________________________________________________
 protected:
 
 private:
@@ -355,6 +374,10 @@ private:
   Vec d_x, d_b;
   int d_nz, o_nz; // number of non zero values in a row
 #endif
+
+  double filter_array[3][3][3];
+
+
 }; // End class Filter.h
 
 } // End namespace Uintah

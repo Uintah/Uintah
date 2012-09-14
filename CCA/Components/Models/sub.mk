@@ -46,11 +46,11 @@ endif
 SUBDIRS := $(SRCDIR)/FluidsBased \
            $(RADIATION)
 
-PSELIBS :=              \
-        Core/Exceptions \
-        Core/Geometry   \
-        Core/Thread     \
-        Core/Util       \
+PSELIBS :=                 \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/Thread        \
+        Core/Util          \
         CCA/Ports          \
         Core/Disclosure    \
         Core/Exceptions    \
@@ -61,7 +61,7 @@ PSELIBS :=              \
         Core/Labels        \
         Core/Parallel      \
         Core/ProblemSpec   \
-	 Core/Math
+        Core/Math
 
 ifneq ($(BUILD_ICE),no)
   PSELIBS += CCA/Components/ICE
@@ -87,7 +87,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 ######################################################
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 ifneq ($(HAVE_PETSC),)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
