@@ -103,15 +103,18 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MiscMath.h>
 
 #ifdef WASATCH_IN_ARCHES
+#include <expression/ExprLib.h>
+#include <expression/PlaceHolderExpr.h>
+#include <expression/ExpressionFactory.h>
+//
 #include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
-#include <expression/ExprLib.h>
-#include <expression/PlaceHolderExpr.h>
-#include <expression/ExpressionFactory.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #endif // WASATCH_IN_ARCHES
 
 #include <iostream>
@@ -422,7 +425,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   //____________________________________________________________________________
   // Register dependent (tabular sense) variables
   //
-  std::string densityName = "density"; //***HACK***
+  std::string densityName = "densityCP"; //***HACK***
   typedef Expr::PlaceHolder<SVolField>  DensityT;
   const Expr::Tag densityTag( densityName, Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( densityTag )) ) {
@@ -435,7 +438,27 @@ Arches::problemSetup(const ProblemSpecP& params,
     initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
   
-
+  //____________________________________________________________________________
+  // Register turbulence related expressions  
+  //
+  // first read the turbulence model parameters from the wasatch block
+  Uintah::ProblemSpecP turbulenceModelSpec = params->findBlock("Wasatch")->findBlock("Turbulence");
+  // if turbulence is turned on
+  if (turbulenceModelSpec) {
+    struct Wasatch::TurbulenceParameters turbParams = {1.0,0.1,0.1,Wasatch::NONE};    
+    // parse the turbulence parameters
+    Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);  
+    //std::cout << "Turbulence Model: " << turbParams.turbulenceModelName << std::endl;    
+    // register relevant expressions
+    Expr::TagList velTags;
+    velTags.push_back(xVelTagN);
+    velTags.push_back(yVelTagN);
+    velTags.push_back(zVelTagN);    
+    Wasatch::register_turbulence_expressions(turbParams,*solngh->exprFactory,velTags,densityTag);
+    Expr::TagList turbulenceExpressions;
+    turbulenceExpressions.push_back(turbulent_viscosity_tag());
+    force_expressions_on_graph(turbulenceExpressions, solngh);
+  }  
 
   //____________________________________________________________________________
   // Register the Wasatch transported variables as placeholder expressions.
