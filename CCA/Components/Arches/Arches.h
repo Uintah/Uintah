@@ -107,6 +107,7 @@ WARNING
 // Filtering of drhodt is now an input parameter for Properties
 
 # ifdef WASATCH_IN_ARCHES
+  #include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
   namespace Wasatch{
     class Wasatch;
   }
