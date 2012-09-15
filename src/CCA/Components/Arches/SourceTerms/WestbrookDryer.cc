@@ -5,6 +5,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 //===========================================================================
 
@@ -30,6 +31,8 @@ WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
   _extra_local_labels[1] = d_WDextentLabel; 
 
   _source_grid_type = CC_SRC; 
+  _use_T_clip = false;
+  _use_flam_limits = false; 
 }
 
 WestbrookDryer::~WestbrookDryer()
@@ -65,7 +68,27 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("cstar_for_strip_label", d_cstar_strip_label);                  // The name of the C* mixture fraction used for the stripping calc. 
   db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
-  db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
+
+  if ( db->findBlock("temperature_clip") ){ 
+    db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
+    _use_T_clip = true;
+  }
+  if ( db->findBlock("flammability_limit") ){ 
+    _use_flam_limits = true; 
+    db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("label",_diluent_label_name); 
+    db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("mw",_diluent_mw); 
+    db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("slope", _flam_low_m);
+    db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("intercept",_flam_low_b);
+    db->findBlock("flammability_limit")->findBlock("upper")->getAttribute("slope", _flam_up_m);
+    db->findBlock("flammability_limit")->findBlock("upper")->getAttribute("intercept",_flam_up_b);
+  } 
+
+  //Bullet proofing: 
+  if ( _use_T_clip && _use_flam_limits ){ 
+    throw ProblemSetupException( "Error: Cannot use temperature clip and flammability limits for the same westbrook/dryer source term.", __FILE__, __LINE__);
+  } else if ( !_use_flam_limits && !_use_T_clip ){ 
+    throw ProblemSetupException( "Error: Must use temperature clip OR flammability limit for the westbrook/dryer source term.", __FILE__, __LINE__);
+  } 
 
   // add for table lookup
   _field_labels->add_species( d_mw_label ); 
@@ -106,6 +129,19 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   std::string taskname = "WestbrookDryer::eval";
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
 
+  _temperatureLabel   = VarLabel::find( d_T_label );
+  _mixMWLabel         = VarLabel::find( d_mw_label );
+  _denLabel           = VarLabel::find( d_rho_label );
+  _CstarMassFracLabel = VarLabel::find( d_cstar_label );
+  _CstarStripLabel    = VarLabel::find( d_cstar_strip_label ); 
+  _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
+  _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
+  if ( _use_flam_limits ){ 
+    _diluentLabel       = VarLabel::find( _diluent_label_name ); 
+  }
+
+
+
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -114,28 +150,37 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->computes(_src_label);
     tsk->computes(d_WDstrippingLabel); 
     tsk->computes(d_WDextentLabel); 
+
+    tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _CstarStripLabel,  Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
+    if ( _use_flam_limits ){ 
+      tsk->requires( Task::OldDW, _diluentLabel, Ghost::None, 0 ); 
+    } 
+
   } else {
+
     tsk->modifies(_src_label); 
     tsk->modifies(d_WDstrippingLabel); 
     tsk->modifies(d_WDextentLabel);   
+
+    tsk->requires( Task::NewDW, _temperatureLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _mixMWLabel,       Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _CstarStripLabel,  Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _CEqMassFracLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 ); 
+    if ( _use_flam_limits ){ 
+      tsk->requires( Task::NewDW, _diluentLabel, Ghost::None, 0 ); 
+    } 
+
   }
 
-  _temperatureLabel   = VarLabel::find( d_T_label );
-  _mixMWLabel         = VarLabel::find( d_mw_label );
-  _denLabel           = VarLabel::find( d_rho_label );
-  _CstarMassFracLabel = VarLabel::find( d_cstar_label );
-  _CstarStripLabel    = VarLabel::find( d_cstar_strip_label ); 
-  _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
-  _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
-
-
-  tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _CstarStripLabel,  Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _field_labels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -171,6 +216,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> CxHyRate; // rate source term  
     CCVariable<double> S; // stripping fraction 
     CCVariable<double> E; // extent of reaction 
+    constCCVariable<double> T;      // temperature 
+    constCCVariable<double> den;    // mixture density
+    constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
+    constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
+    constCCVariable<double> CstarStrip;  // mass fraction of the hydrocarbon for the stripping factor
+    constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
+    constCCVariable<double> O2;     // O2 mass fraction
+    constCCVariable<double> diluent; // Diluent mass fraction
     
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( CxHyRate , _src_label         , matlIndex , patch );
@@ -179,6 +232,18 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       CxHyRate.initialize(0.0);
       S.initialize(0.0);
       E.initialize(0.0); 
+      
+      new_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
+      if ( _use_flam_limits ){ 
+        new_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
+      } 
+
     } else {
       new_dw->allocateAndPut( CxHyRate , _src_label         , matlIndex , patch );
       new_dw->allocateAndPut( S        , d_WDstrippingLabel , matlIndex , patch );
@@ -187,23 +252,19 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       CxHyRate.initialize(0.0);
       S.initialize(0.0); 
       E.initialize(0.0); 
+
+      old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
+      if ( _use_flam_limits ){ 
+        old_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
+      } 
+
     } 
-
-    constCCVariable<double> T;      // temperature 
-    constCCVariable<double> den;    // mixture density
-    constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
-    constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
-    constCCVariable<double> CstarStrip;  // mass fraction of the hydrocarbon for the stripping factor
-    constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
-    constCCVariable<double> O2;     // O2 mass fraction
-
-    old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
 
     delt_vartype DT; 
     old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
@@ -227,7 +288,13 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       E[c] = 1.0 - S[c]; 
 
       // Step 2: Compute rate
-      double rate = getRate( T[c], Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
+      double rate = 0.0;
+      if ( _use_T_clip ){ 
+        double fake_diluent = 0.0; 
+        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, mixMW[c], den[c], dt, vol ); 
+      } else { 
+        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], mixMW[c], den[c], dt, vol ); 
+      } 
 
       // Overwrite with hot spot if specified -- like a pilot light
       if ( _hot_spot ) { 
@@ -245,7 +312,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
             
             if ( g_piece->inside(P) && total_time < _max_time_hot_spot ){ 
 
-              rate = getRate( _T_hot_spot, Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
+              if ( _use_T_clip ){ 
+                double fake_diluent = 0.0; 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, mixMW[c], den[c], dt, vol ); 
+              } else { 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], mixMW[c], den[c], dt, vol ); 
+              } 
 
             }
           }

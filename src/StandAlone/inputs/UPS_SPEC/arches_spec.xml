@@ -266,6 +266,8 @@
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
               2) If specifying density, specify the INVERSE value 
+              3) If specifying mixture molecular weight, specify the INVERSE value 
+              4) Dont forget to set thermodynamic properties if you are computing heat loss. 
             --> 
             <stream                     spec="OPTIONAL NO_DATA"
                                         attribute1="transport_label REQUIRED STRING">
@@ -704,6 +706,20 @@
             <cstar_for_strip_label      spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label used for the calc of the stripping factor. --> 
             <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
             <temperature_clip           spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
+            <flammability_limit         spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- Use "nose" plot to turn on/off source term. Noses are specified immediately below --> 
+              <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
+              <!-- slopes and intercepts should be computed from volume % nose plots --> 
+              <diluent                  spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="mw REQUIRED DOUBLE"/> <!-- label pointing to the diluent mass fraction --> 
+              <lower                    spec="REQUIRED NO_DATA"                    
+                                        attribute1="slope REQUIRED DOUBLE"
+                                        attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the lower flammability limit --> 
+              <upper                    spec="REQUIRED NO_DATA" 
+                                        attribute1="slope REQUIRED DOUBLE"
+                                        attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit --> 
+
+            </flammability_limit>
             <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
