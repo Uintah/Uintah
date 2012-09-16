@@ -1332,7 +1332,6 @@ BoundaryCondition::setFlatProfV( const Patch* patch,
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  //Vector Dx = patch->dCell(); 
 
   double ave_normal_vel = 0; 
   double tiny = 1.0e-16; 
@@ -1471,7 +1470,6 @@ BoundaryCondition::setFlatProfS( const Patch* patch,
   vector<Patch::FaceType>::const_iterator fiter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  //Vector Dx = patch->dCell(); 
 
   for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
     Patch::FaceType face = *fiter;
