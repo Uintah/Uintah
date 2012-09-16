@@ -1419,6 +1419,9 @@ Arches::paramInit(const ProcessorGroup* pg,
       d_props->computeInletProperties( ffState, calculatedStream, bc_type );
 
       init_enthalpy = calculatedStream.getEnthalpy();
+      if ( d_calcEnthalpy ){ 
+        enthalpy.initialize(init_enthalpy); 
+      }
 
       for (CellIterator iter=patch->getCellIterator();
            !iter.done(); iter++){
