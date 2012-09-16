@@ -1409,7 +1409,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       //somewhat ugly...
       InletStream ffState;
       Stream calculatedStream;
-      //double init_enthalpy  = 0.0;
+      double init_enthalpy  = 0.0;
       ffState.d_initEnthalpy = true;
       ffState.d_scalarDisp   = 0.0;
       ffState.d_mixVarVariance.push_back(0.0);
@@ -1418,7 +1418,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       string bc_type = "scalar_init";
       d_props->computeInletProperties( ffState, calculatedStream, bc_type );
 
-      //init_enthalpy = calculatedStream.getEnthalpy();
+      init_enthalpy = calculatedStream.getEnthalpy();
 
       for (CellIterator iter=patch->getCellIterator();
            !iter.done(); iter++){

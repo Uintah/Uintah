@@ -79,12 +79,16 @@ namespace Uintah {
             std::string name; 
             calc_db->getAttribute("type",type); 
             calc_db->getAttribute("label",name); 
-            //bool check;
+            bool check;
 
             if ( type == "combustion_efficiency" ){ 
 
               Calculator* calculator = scinew CombustionEfficiency( name,  _bcs, _a_labs ); 
-              //check = calculator->problemSetup( calc_db ); 
+              check = calculator->problemSetup( calc_db ); 
+
+              if ( !check ){ 
+                throw InvalidValue("Error: Trouble setting up efficiency calculator.",__FILE__, __LINE__); 
+              } 
 
               _my_calculators.insert(make_pair(name,calculator)); 
 
