@@ -296,10 +296,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   check_calculator = d_eff_calculator->problemSetup( db ); 
 
   if ( !check_calculator ){ 
-    throw ProblemSetupException("Error: Problem setting up the efficiency calculator.",
-                                __FILE__, __LINE__);
+    proc0cout << "Notice: No efficiency calculators found." << endl;
   } 
-
 }
 
 // ****************************************************************************
