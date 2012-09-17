@@ -78,11 +78,26 @@ namespace Uintah {
 
    //__________________________________
    //  Needed for AMRMPM
-                                    
-    virtual void findCellAndWeights(const Point& pos,
-                                    vector<IntVector>& ni,
+    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni,
                                     vector<double>& S,
-                                    constNCVariable<Stencil7>& zoi) {};
+                                    constNCVariable<Stencil7>& zoi,
+                                    constNCVariable<Stencil7>& zoi_fine,
+                                    const bool& getFiner,
+                                    int& num_cur,int& num_fine,int& num_coarse,                                     
+                                    const Vector& size, bool coarse_part,
+                                    const Patch* patch) {};
+                                    
+    virtual void findCellAndWeights_CFI(const Point& pos,
+                                        vector<IntVector>& ni,
+                                        vector<double>& S,
+                                        constNCVariable<Stencil7>& zoi) {};
+                                    
+    virtual void findCellAndWeightsAndShapeDerivatives_CFI(
+                                            const Point& pos,
+                                            vector<IntVector>& CFI_ni,
+                                            vector<double>& S,
+                                            vector<Vector>& d_S,
+                                            constNCVariable<Stencil7>& zoi) {};
     virtual int size() = 0;
   };
 }
