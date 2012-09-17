@@ -172,6 +172,12 @@ protected:
                             DataWarehouse* new_dw,
                             const coarsenFlag flag);
                             
+  void coarsenNodalData_CFI2(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
+                            
   void Nodal_velocity_temperature(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -195,7 +201,13 @@ protected:
                                     const PatchSubset* patches,  
                                     const MaterialSubset* matls, 
                                     DataWarehouse* old_dw,       
-                                    DataWarehouse* new_dw);      
+                                    DataWarehouse* new_dw); 
+                                    
+  void computeInternalForce_CFI(const ProcessorGroup*,
+                                const PatchSubset* patches,  
+                                const MaterialSubset* matls, 
+                                DataWarehouse* old_dw,       
+                                DataWarehouse* new_dw);     
 
 
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -273,6 +285,10 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*,
                                     const coarsenFlag flag);
+
+  void scheduleCoarsenNodalData_CFI2(SchedulerP&, 
+                                     const PatchSet*,
+                                     const MaterialSet*);
                                     
   void scheduleNodal_velocity_temperature(SchedulerP&, 
                                           const PatchSet*,
@@ -289,6 +305,10 @@ protected:
   virtual void scheduleComputeInternalForce(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSet*);
+                                            
+  void scheduleComputeInternalForce_CFI(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls);
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
@@ -330,10 +350,7 @@ protected:
                  const PatchSubset* patches,                            
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
-                 DataWarehouse* new_dw);    
-                            
-
-  
+                 DataWarehouse* new_dw); 
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
@@ -345,6 +362,12 @@ protected:
   int      NGN;      // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
+                                   
+  Vector   d_acc_ans;               // debugging code used to check the answers (acceleration)
+  Vector   d_vel_ans;               // debugging code used to check the answers (velocity) 
+
+  const VarLabel* pDbgLabel;         // debugging labels
+  const VarLabel* gSumSLabel;                   
                                    
   vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
