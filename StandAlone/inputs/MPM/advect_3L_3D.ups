@@ -63,6 +63,7 @@
      <time_integrator>explicit</time_integrator>
      <interpolator>       linear    </interpolator>
      <withColor>          true      </withColor>
+     <minimum_mass_for_acc>  1.0e-15  </minimum_mass_for_acc>
    </MPM>
 
    <PhysicalConstants>
