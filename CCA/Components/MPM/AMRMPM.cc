@@ -1357,7 +1357,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
           vector<IntVector> ni;
           vector<double> S;
 
-          interpolator->findCellAndWeights(pX_coarse[idx],ni,S,zoi_fine);
+          interpolator->findCellAndWeights_CFI(pX_coarse[idx],ni,S,zoi_fine);
 
           Vector pmom = pVelocity_coarse[idx]*pMass_coarse[idx];
 
@@ -2338,7 +2338,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             vector<IntVector> ni;
             vector<double> S;
             
-            interpolator->findCellAndWeights(pxold_coarse[idx],ni,S,zoi_fine);
+            interpolator->findCellAndWeights_CFI(pxold_coarse[idx],ni,S,zoi_fine);
 
             Vector acc(0.0, 0.0, 0.0); 
             Vector vel(0.0, 0.0, 0.0);
@@ -2674,7 +2674,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
               pColor[idx] = 0;
               vector<IntVector> ni;
               vector<double> S;
-              interpolatorFine->findCellAndWeights(px[idx],ni,S,zoi); 
+              interpolatorFine->findCellAndWeights_CFI(px[idx],ni,S,zoi); 
               for(int k = 0; k < (int)ni.size(); k++) {
                 pColor[idx] += S[k];
               }
