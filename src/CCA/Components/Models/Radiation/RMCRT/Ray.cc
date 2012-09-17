@@ -93,9 +93,9 @@ Ray::Ray()
 // Method: Constructor for GPU Version.
 //---------------------------------------------------------------------------
 #ifdef HAVE_CUDA
-Ray::Ray(GPUThreadedMPIScheduler* gpuScheduler)
+Ray::Ray(UnifiedScheduler* scheduler)
 {
-  _gpuScheduler = gpuScheduler;
+  _scheduler = scheduler;
   constructor();
 }
 #endif
