@@ -819,7 +819,6 @@ public:
       subsched->addTask(task, level->eachPatch(), matlset);
       subsched->compile();
       
-      
       //__________________________________
       //  Main iteration
       while(niter < params->maxiterations && !(e < tolerance)){
@@ -912,6 +911,8 @@ public:
       }else{
         if(params->getRestartTimestepOnFailure()){
            cout << "CGSolver not converging, requesting smaller timestep\n";
+           cout << "    niters:   " << niter << "\n"
+                << "    residual: " << e << endl;
           new_dw->abortTimestep();
           new_dw->restartTimestep();
         }else {
@@ -965,8 +966,11 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
       string variable;
       if(param->getAttribute("variable", variable) && variable != varname)
         continue;
+      
       param->get("initial_tolerance", p->initial_tolerance);
       param->get("tolerance", p->tolerance);
+      param->getWithDefault ("maxiterations",   p->maxiterations,  75);
+      
       string norm;
       if(param->get("norm", norm)){
         if(norm == "L1" || norm == "l1") {
@@ -997,53 +1001,6 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
   return p;
 }
 
-
-SolverParameters* CGSolver::readParameters(ProblemSpecP& params, 
-                                           const string& varname)
- 
-{
-
-  CGSolverParams* p = new CGSolverParams();
-  if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
-      string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
-        continue;
-        
-      param->get("initial_tolerance",           p->initial_tolerance);
-      param->get("tolerance",                   p->tolerance);
-      param->getWithDefault ("maxiterations",   p->maxiterations,  75);
-      
-      string norm;
-      if(param->get("norm", norm)){
-        if(norm == "L1" || norm == "l1") {
-          p->norm = CGSolverParams::L1;
-        } else if(norm == "L2" || norm == "l2") {
-          p->norm = CGSolverParams::L2;
-        } else if(norm == "LInfinity" || norm == "linfinity") {
-          p->norm = CGSolverParams::LInfinity;
-        } else {
-          throw ProblemSetupException("Unknown norm type: "+norm, __FILE__, __LINE__);
-        }
-      }
-      string criteria;
-      if(param->get("criteria", criteria)){
-        if(criteria == "Absolute" || criteria == "absolute") {
-          p->criteria = CGSolverParams::Absolute;
-        } else if(criteria == "Relative" || criteria == "relative") {
-          p->criteria = CGSolverParams::Relative;
-        } else {
-          throw ProblemSetupException("Unknown criteria: "+criteria, __FILE__, __LINE__);
-        }
-      }
-    }
-  }
-    
-  if(p->norm == CGSolverParams::L2)
-    p->tolerance *= p->tolerance;
-  return p;
-}
 //______________________________________________________________________
 //
 void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,

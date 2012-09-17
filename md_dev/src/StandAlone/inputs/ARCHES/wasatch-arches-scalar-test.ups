@@ -12,15 +12,16 @@
     <delt_min>        0.00001     </delt_min>
     <delt_max>        0.0001        </delt_max>
     <timestep_multiplier>0.35     </timestep_multiplier>
-    <max_Timesteps> 5 </max_Timesteps>
+    <max_Timesteps> 50 </max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>wasatch-arches-scalar-test.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
+    <save label="TurbulentViscosity"/>    
     <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
@@ -99,6 +100,12 @@
   </PhysicalConstants>
      <Wasatch>
 
+    <Turbulence>
+       <KolmogorovScale>1000000000000</KolmogorovScale>
+      <EddyViscosityConstant>0.2</EddyViscosityConstant>
+      <TurbulenceModel> WALE </TurbulenceModel>
+    </Turbulence>
+
     <Density>
       <IsConstant>true</IsConstant>
     </Density>
@@ -112,7 +119,7 @@
 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
+      <DisableTurbulenceModel/>
       <SolutionVariable> wasatch_scalar </SolutionVariable>
       <StrongForm>true</StrongForm>
 

@@ -209,14 +209,14 @@
     <initTime>0.0</initTime>
     <delt_min>0.0001</delt_min>
     <delt_max>0.0001</delt_max>
-    <!-- max_Timesteps> 4 </max_Timesteps -->
+    <max_Timesteps> 4 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>new-scalar-3D-driven_lid.uda</filebase>
-    <outputTimestepInterval>500</outputTimestepInterval>
+    <filebase>turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.0001"/>
     <compression>gzip</compression>

@@ -79,24 +79,24 @@ PSELIBS := \
 endif
 
 PSELIBS := \
-        $(PSELIBS) \
+        $(PSELIBS)                      \
         CCA/Components/Arches/fortran   \
         CCA/Components/Arches/Mixing    \
         CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
-        CCA/Ports          \
-        Core/Containers    \
-        Core/Datatypes     \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/Geometry      \
-        Core/GeometryPiece \
-        Core/IO            \
-        Core/Grid          \
-        Core/Math          \
-        Core/Parallel      \
-        Core/ProblemSpec   \
-        Core/Thread        \
+        CCA/Ports                       \
+        Core/Containers                 \
+        Core/Datatypes                  \
+        Core/Disclosure                 \
+        Core/Exceptions                 \
+        Core/Geometry                   \
+        Core/GeometryPiece              \
+        Core/IO                         \
+        Core/Grid                       \
+        Core/Math                       \
+        Core/Parallel                   \
+        Core/ProblemSpec                \
+        Core/Thread                     \
         Core/Util
 
 ifneq ($(HAVE_PETSC),)
@@ -109,7 +109,7 @@ endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) \
-        $(BOOST_LIBRARY)
+        $(BOOST_LIBRARY) $(Z_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
 

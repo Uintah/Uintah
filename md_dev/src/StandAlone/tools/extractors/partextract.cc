@@ -101,7 +101,7 @@ int main(int argc, char** argv)
    */
   int mat = -1;
   bool do_partvar=false;
-  bool do_partid=false;
+//  bool do_partid=false;
   bool do_part_stress = false;
   bool do_part_strain = false;
   bool do_av_part_stress = false;
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
   unsigned long time_step_inc = 1;
   bool tslow_set = false;
   bool tsup_set = false;
-  bool tsinc_set = false;
+//  bool tsinc_set = false;
   string filebase;
   string particleVariable;
   long64 particleID = 0;
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
       if (particleVariable[0] == '-') 
         usage("-partvar <particle variable name>", argv[0]);
     } else if(s == "-partid"){
-      do_partid=true;
+//      do_partid=true;
       string id = argv[++i];
       if (id[0] == '-') 
         usage("-partid <particle id>", argv[0]);
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
       tsup_set = true;
     } else if (s == "-timestepinc") {
       time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-      tsinc_set = true;
+//      tsinc_set = true;
     } 
   }
   filebase = argv[argc-1];

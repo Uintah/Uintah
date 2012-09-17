@@ -2,6 +2,7 @@
 import os
 import shutil
 import platform
+import socket
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -20,7 +21,7 @@ if os.sys.version_info <= (2,5):
 
 import subprocess
 
-from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards
+from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards, userFlags
 
 ####################################################################################
 
@@ -29,6 +30,10 @@ inputs        = ""   # full path to src/Standalone/inputs/
 OS            = platform.system()
 debug_build   = ""
 no_sci_malloc = ""
+                      # HACK 
+                      # 1 for GPU RT machine (kaibab), 0 otherwise.
+                      #   need to make this generic, perhaps pycuda?
+has_gpu       = 1 if socket.gethostname() == "kaibab" else 0
 
 ####################################################################################
 
@@ -140,7 +145,7 @@ def validateArgs( options, args ) :
 
 def generateGS() :
 
-    global sus, inputs, debug_build, no_sci_malloc
+    global sus, inputs, debug_build, no_sci_malloc, has_gpu
     try :
         (options, leftover_args ) = parser.parse_args()
     except :
@@ -297,6 +302,31 @@ def generateGS() :
         for test in tests :
             if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
                 continue
+             
+            #  Defaults
+            sus_options     = ""
+            do_gpu          = 0    # run test if gpu is supported 
+            
+            #__________________________________
+            # parse user flags for the gpu and sus_options
+            # override defaults if the flags have been specified
+            if len(test) == 5:
+              flags = userFlags(test)
+              print "User Flags:"
+
+              #  parse the user flags
+              for i in range(len(flags)):
+                if flags[i] == "gpu":
+                  do_gpu = 1 
+
+                tmp = flags[i].rsplit('=')
+                if tmp[0] == "sus_options":
+                  sus_options = tmp[1]
+                  print "\n sus_option: %s \n"%(sus_options)
+    
+            if do_gpu == 1 and has_gpu == 0:
+              print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+              continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
             print "About to run test: " + nameoftest( test )
@@ -333,9 +363,9 @@ def generateGS() :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
             else :
-                command = sus + SVN_FLAGS + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
 
             print "Running command: " + command
 

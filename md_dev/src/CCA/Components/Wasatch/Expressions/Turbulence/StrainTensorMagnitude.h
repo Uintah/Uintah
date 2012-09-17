@@ -28,6 +28,12 @@
 #include <expression/Expression.h>
 
 /**
+ *  \brief obtain the tag for the strain tensor magnitude
+ */
+Expr::Tag straintensormagnitude_tag();
+Expr::Tag square_straintensormagnitude_tag();
+
+/**
  *  \class StrainTensorMagnitude
  *  \authors Amir Biglari, Tony Saad
  *  \date   Jan, 2012. (Originally created: June, 2012).

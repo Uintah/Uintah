@@ -19,7 +19,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include "MomentumTransportEquation.h"
 
 // -- Uintah includes --//
@@ -46,6 +45,57 @@ using std::string;
 
 namespace Wasatch{
 
+  //==================================================================
+  
+  void register_turbulence_expressions (const TurbulenceParameters& turbParams,
+                                        Expr::ExpressionFactory& factory,
+                                        const Expr::TagList& velTags,
+                                        const Expr::Tag densTag) {
+
+    Expr::Tag sqStrTsrMagTag  = Expr::Tag();
+    Expr::Tag dynSmagConstTag = Expr::Tag();
+    const Expr::Tag turbViscTag = turbulent_viscosity_tag();
+    
+    // we got turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
+    const Expr::Tag strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+    if( !factory.have_entry( strTsrMagTag ) ){
+      std::cout << "Registering:" << strTsrMagTag << std::endl;      
+      typedef StrainTensorMagnitude::Builder StrTsrMagT;
+      factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+    }
+    
+    switch (turbParams.turbulenceModelName) {
+      case WALE: {
+        // if WALE model is turned on, then create an expression for the square velocity gradient tensor
+        sqStrTsrMagTag = square_straintensormagnitude_tag();
+        if( !factory.have_entry( sqStrTsrMagTag ) ){
+          std::cout << "Registering:" << sqStrTsrMagTag << std::endl;                
+          typedef SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
+          factory.register_expression( scinew SqStrTsrMagT(sqStrTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+        }
+      }
+        break;
+      case DYNAMIC: {
+        // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
+        dynSmagConstTag = Expr::Tag("DynamicSmagorinskyConstant", Expr::STATE_NONE);
+        if( !factory.have_entry( dynSmagConstTag ) ){
+        }
+        
+      }
+        break;
+      default:
+        break;
+    }   
+    
+    std::cout << "turbulent viscosity tag:" << turbViscTag << std::endl;                      
+
+    if( !factory.have_entry( turbViscTag ) ){
+      std::cout << "Registering:" << turbViscTag << std::endl;                      
+      typedef TurbulentViscosity::Builder TurbViscT;
+      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, turbParams ) );
+    }
+  }
+  
   //==================================================================
 
   // note that the ordering of Vel1T and Vel2T are very important, and
@@ -337,47 +387,11 @@ namespace Wasatch{
     //--------------------------------------
     // TURBULENCE
     // check if we have a turbulence model turned on
-    Expr::Tag turbViscTag = Expr::Tag();
-    if ( isTurbulent_ && isviscous_ ) {
-
-      Expr::Tag sqStrTsrMagTag  = Expr::Tag();
-      Expr::Tag dynSmagConstTag = Expr::Tag();
-      turbViscTag = Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
-
-      // we got turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
-      const Expr::Tag strTsrMagTag( "StrainTensorMagnitude", Expr::STATE_NONE );
-      if( !factory.have_entry( strTsrMagTag ) ){
-        typedef typename StrainTensorMagnitude::Builder StrTsrMagT;
-        factory.register_expression( new StrTsrMagT(strTsrMagTag, velTags_[0], velTags_[1], velTags_[2]) );
-      }
-
-      switch (turbulenceParams.turbulenceModelName) {
-        case WALE: {
-          // if WALE model is turned on, then create an expression for the square velocity gradient tensor
-          sqStrTsrMagTag = Expr::Tag("SquareStrainTensorMagnitude", Expr::STATE_NONE);
-          if( !factory.have_entry( sqStrTsrMagTag ) ){
-            typedef typename SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
-            factory.register_expression( new SqStrTsrMagT(sqStrTsrMagTag, velTags_[0], velTags_[1], velTags_[2] ) );
-          }
-        }
-          break;
-        case DYNAMIC: {
-          // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
-          dynSmagConstTag = Expr::Tag("DynamicSmagorinskyConstant", Expr::STATE_NONE);
-          if( !factory.have_entry( dynSmagConstTag ) ){
-          }
-
-        }
-          break;
-        default:
-          break;
-      }
-
-      if( !factory.have_entry( turbViscTag ) ){
-        typedef typename TurbulentViscosity::Builder TurbViscT;
-        factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, turbulenceParams ) );
-        factory.attach_dependency_to_expression(turbViscTag, viscTag);
-      }
+    bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
+    const Expr::Tag turbViscTag = turbulent_viscosity_tag();
+    if ( isTurbulent_ && isviscous_ && enableTurbulenceModel ) {
+      register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag);      
+      factory.attach_dependency_to_expression(turbViscTag, viscTag);
     }
     // END TURBULENCE
     //--------------------------------------

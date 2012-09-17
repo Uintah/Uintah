@@ -468,7 +468,6 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p); 
     Box patch_box = patch->getBox(); 
-    //Vector Dx = patch->dCell(); 
 
     //NOTE!  This only works for constant mass flow rates; 
 
@@ -532,7 +531,6 @@ IntrusionBC::setCellType( const ProcessorGroup*,
     int archIndex = 0; 
     int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
     Box patch_box = patch->getBox(); 
-    //Vector Dx = patch->dCell(); 
 
     CCVariable<int> cell_type; 
     CCVariable<Vector> area_fraction; 
