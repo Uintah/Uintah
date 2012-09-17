@@ -355,7 +355,7 @@
                                                                       wasatch, reduce_uda,
                                                                       advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
-                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest ljpotentialtest'" >
+                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test, particletest, ljpotentialtest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"

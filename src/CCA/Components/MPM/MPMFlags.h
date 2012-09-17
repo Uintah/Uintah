@@ -108,6 +108,7 @@ namespace Uintah {
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
     bool        d_prescribeDeformation;  // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile; // File containing prescribed deformations
+    bool        d_exactDeformation; //Set steps exactly to match times in prescribed deformation file
     bool        d_insertParticles;  // Activate particles according to color
     std::string d_insertParticlesFile; // File containing activation plan
 

@@ -146,6 +146,19 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
+  
+  void force_expressions_on_graph( Expr::TagList& exprTagList,
+                                   GraphHelper* const graphHelper )
+  {    
+    Expr::Tag exprtag;
+    for( Expr::TagList::iterator exprtag=exprTagList.begin();
+        exprtag!=exprTagList.end();
+        ++exprtag ){
+      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(*exprtag) );      
+    }    
+  }
+  
+  //--------------------------------------------------------------------
 
   void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
                                    GraphCategories& gc,
@@ -303,7 +316,7 @@ namespace Wasatch{
     setup_property_evaluation( wasatchParams, graphCategories_ );
 
     //
-    // get the turbulence params, if any, and parse them
+    // get the turbulence params, if any, and parse them.
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchParams->findBlock("Turbulence");
     struct TurbulenceParameters turbParams = {1.0,0.1,0.1,NONE};

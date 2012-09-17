@@ -57,7 +57,7 @@ int DigitalFilterInlet::getTimeIndex( int timestep, double elapTime )
     while (elapTime >= NT*timePeriod) {
       elapTime -= NT*timePeriod;
     }
-    t_index = elapTime/timePeriod;
+    t_index = (int)(elapTime/timePeriod);
   }
     
   return t_index;

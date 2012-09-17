@@ -1,5 +1,4 @@
 # 
-# 
 # The MIT License
 # 
 # Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
@@ -24,13 +23,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 # DEALINGS IN THE SOFTWARE.
-# 
-# 
-# 
-# 
+#
 #
 # Makefile fragment for this subdirectory
 #
+
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/Arches/Mixing
@@ -48,15 +45,15 @@ PSELIBS := \
         Core/IO               \
         Core/Math             \
         Core/ProblemSpec      \
-  Core/Grid          \
+        Core/Grid             \
         Core/Util             \
         CCA/Components/Models \
-        Core/Exceptions \
-        Core/Thread     \
-        Core/Parallel \
+        Core/Exceptions       \
+        Core/Thread           \
+        Core/Parallel         \
         Core/Geometry   
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(Z_LIBRARY)
 
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 

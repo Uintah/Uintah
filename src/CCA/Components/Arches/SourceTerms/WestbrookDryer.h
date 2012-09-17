@@ -108,11 +108,35 @@ public:
 
   }; // Builder
 
-  inline double getRate( double T, double CxHy, double O2, double mix_mw, double den, double dt, double vol ) {
+  inline double getRate( double T, double CxHy, double O2, double diluent, double mix_mw, double den, double dt, double vol ) {
 
     double rate = 0.0; 
+    bool compute_rate = false; 
 
-    if ( O2 > 0.0 && CxHy > 0.0 && T > d_T_clip ) { 
+    if ( T > d_T_clip && _use_T_clip ) { 
+
+      // USING TEMPERATURE CLIP: 
+      compute_rate = true; 
+
+    } else if ( _use_flam_limits ){ 
+
+      // USING FLAMMABILITY LIMITS:
+      // vol percent:
+      double dil_vol = diluent * 1.0/mix_mw * 1.0/_diluent_mw * 100; 
+      double fuel_low  = _flam_low_m * dil_vol + _flam_low_b; 
+      double fuel_high = _flam_up_m  * dil_vol + _flam_up_b; 
+
+      // to mass fraction: 
+      fuel_low  *= mix_mw * d_MW_HC / 100.0;
+      fuel_high *= mix_mw * d_MW_HC / 100.0; 
+
+      if ( CxHy > fuel_low && CxHy < fuel_high ) { 
+        compute_rate = true; 
+      } 
+
+    } 
+
+    if ( O2 > 0.0 && CxHy > 0.0 && compute_rate ) { 
 
       double small = 1e-16; 
 
@@ -147,7 +171,6 @@ public:
       if ( rate != rate ){ 
         rate = 0.0; 
       } 
-
     }
 
     return rate; 
@@ -167,6 +190,14 @@ private:
   double d_R;        ///< Universal gas constant ( R [=] J/mol/K )
   double d_Press;    ///< Atmospheric pressure (set to atmospheric P for now ( 101,325 Pa )
   double d_T_clip;   ///< Temperature limit on the rate. Below this value, the rate turns off. 
+  bool   _use_T_clip;      ///< Use clip or not
+  bool   _use_flam_limits; ///< Use flamibility limits or not
+  double _flam_low_m; ///< Lower flammability slope as defined by y=mx+b; 
+  double _flam_low_b; ///< Lower flammability intercept
+  double _flam_up_m;  ///< Upper flammability slope
+  double _flam_up_b;  ///< Upper flammability intercept
+  double _diluent_mw; ///< molecular weight of the duluent
+
 
   int d_X;           ///< C_xH_Y
   int d_Y;           ///< C_xH_y
@@ -184,6 +215,7 @@ private:
   std::string d_rho_label; 
   std::string d_T_label; 
   std::string d_o2_label; 
+  std::string _diluent_label_name; 
 
   const VarLabel* _temperatureLabel; 
   const VarLabel* _fLabel;           
@@ -193,6 +225,7 @@ private:
   const VarLabel* _CEqMassFracLabel; 
   const VarLabel* _O2MassFracLabel; 
   const VarLabel* _CstarStripLabel; 
+  const VarLabel* _diluentLabel; 
 
   std::vector<GeometryPieceP> _geom_hot_spot;    ///< Geometric locations of pilot light
   double _T_hot_spot;                            ///< Temperature of the pilot light

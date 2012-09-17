@@ -86,16 +86,16 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     // pointers to device-side grid-variables
-    d_absk    = _gpuScheduler->getDeviceRequiresPtr(d_abskgLabel, matl, patch);
-    d_sigmaT4 = _gpuScheduler->getDeviceRequiresPtr(d_sigmaT4_label, matl, patch);
-    d_divQ    = _gpuScheduler->getDeviceComputesPtr(d_divQLabel, matl, patch);
+    d_absk    = _scheduler->getDeviceRequiresPtr(d_abskgLabel, matl, patch);
+    d_sigmaT4 = _scheduler->getDeviceRequiresPtr(d_sigmaT4_label, matl, patch);
+    d_divQ    = _scheduler->getDeviceComputesPtr(d_divQLabel, matl, patch);
 
     // Calculate the memory block size
     IntVector nec = patch->getExtraCells();
     IntVector l = patch->getCellLowIndex();
     IntVector h = patch->getCellHighIndex();
 
-    IntVector divQSize = _gpuScheduler->getDeviceComputesSize(d_divQLabel, matl, patch);
+    IntVector divQSize = _scheduler->getDeviceComputesSize(d_divQLabel, matl, patch);
     int xdim = divQSize.x();
     int ydim = divQSize.y();
     int zdim = divQSize.z();
@@ -132,15 +132,15 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     string ptxpath = string(PTX_DIR_PATH)+"/RayGPUKernel.ptx";
     CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
     CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&rayTraceKernel, cuModule, "rayTraceKernel") );
-    cudaStream_t* stream = _gpuScheduler->getCudaStream(device);
+    cudaStream_t* stream = _scheduler->getCudaStream(device);
 
     // launch the kernel
     cuErrVal = cuLaunchKernel(rayTraceKernel, dimGrid.x, dimGrid.y, dimGrid.z,
                               dimBlock.x, dimBlock.y, dimBlock.z, 0, *stream, kernelParms, 0);
 
     // get updated divQ back into host memory
-    cudaEvent_t* event = _gpuScheduler->getCudaEvent(device);
-    _gpuScheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
+    cudaEvent_t* event = _scheduler->getCudaEvent(device);
+    _scheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
 
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(globalDevStates) );

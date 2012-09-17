@@ -1,31 +1,31 @@
 /*
 
-The MIT License
+ The MIT License
 
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
-University of Utah.
+ Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
+ Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
+ University of Utah.
 
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+ License for the specific language governing rights and limitations under
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ DEALINGS IN THE SOFTWARE.
 
-*/
+ */
 
 
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
@@ -50,12 +50,12 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-
 using namespace std;
 using namespace Uintah;
 
-static DebugStream Threaded2("Threaded2",false);
-static DebugStream Unified("Unified",false);
+static DebugStream Threaded2("Threaded2", false);
+static DebugStream GPUScheduler("GPUScheduler", false);
+
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
                                           const ProcessorGroup* world,
@@ -63,7 +63,6 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
-  bool useGPU = Uintah::Parallel::usingGPU();
 
   ProblemSpecP sc_ps = ps->findBlock("Scheduler");
   if (sc_ps) {
@@ -71,23 +70,15 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
 
   // Default settings
-  if (Uintah::Parallel::usingMPI()) {
-    if (scheduler == "") {
-      if (Uintah::Parallel::getNumThreads() > 0) {
-        if (Threaded2.active()) {
-          scheduler = "ThreadedMPI2";
-        } else if (Unified.active()) {
-          scheduler = "Unified";
-        } else if ( (!Threaded2.active()) && (!Unified.active()) ) {
-          scheduler = (useGPU ? "GPUThreadedMPI" : "ThreadedMPI");
-        }
-      } else {
-        scheduler = "MPIScheduler";
-      }
-    }
-  } else {  // No MPI
-    if (scheduler == "") {
-      scheduler = "SingleProcessorScheduler";
+  if (scheduler == "") {
+    if (Uintah::Parallel::usingMPI() && !(Uintah::Parallel::getNumThreads() > 0)) {
+      scheduler = "MPIScheduler";
+    } else if (Threaded2.active()) {
+      scheduler = "ThreadedMPI2";
+    } else if (GPUScheduler.active()) {
+      scheduler = "GPUThreadedMPI";
+    } else {
+      scheduler = "Unified";
     }
   }
 
@@ -98,10 +89,12 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException("Threaded, GPU or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
+  // Output which scheduler will be used
   if (world->myrank() == 0) {
     cout << "Scheduler: \t\t" << scheduler << endl;
   }
 
+  // Check for specific scheduler request
   if (scheduler == "SingleProcessorScheduler") {
     sch = scinew SingleProcessorScheduler(world, output, NULL);
   } else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
@@ -110,9 +103,9 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     sch = scinew DynamicMPIScheduler(world, output, NULL);
   } else if (scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
-  } else if (scheduler == "ThreadedMPI2"){
+  } else if (scheduler == "ThreadedMPI2") {
     sch = scinew ThreadedMPIScheduler2(world, output);
-  } else if (scheduler == "Unified"){
+  } else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }
 #ifdef HAVE_CUDA

@@ -918,16 +918,30 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
     else {
       subCycleExecute(currentGrid, 0, totalFine, 0, true);
     }
+    
+    //__________________________________
+    //  If timestep has been restarted
     if(d_scheduler->get_dw(totalFine)->timestepRestarted()){
       ASSERT(restartable);
+      
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
-      if(d_myworld->myrank() == 0){
-        cout << "Restarting timestep at " << t << ", changing delt from "
-             << delt << " to " << new_delt << '\n';
+
+      proc0cout << "Restarting timestep at " << t << ", changing delt from "
+                << delt << " to " << new_delt << '\n';
+     
+      // bulletproofing
+      if(new_delt < d_timeinfo->delt_min || new_delt <= 0 ){
+        ostringstream warn;
+        warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min
+             << ") or equal to 0";
+        throw InternalError(warn.str(), __FILE__, __LINE__);
       }
+      
+      
       d_output->reEvaluateOutputTimestep(orig_delt, new_delt);
       delt = new_delt;
+      
       d_scheduler->get_dw(0)->override(delt_vartype(new_delt),
                                        d_sharedState->get_delt_label());
 
@@ -939,11 +953,13 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       int skip=totalFine;
       for(int i=0;i<currentGrid->numLevels();i++){
         const Level* level = currentGrid->getLevel(i).get_rep();
+        
         if(i != 0 && !d_sharedState->isLockstepAMR()){
           int trr = level->getRefinementRatioMaxDim();
           delt_fine /= trr;
           skip /= trr;
         }
+        
         for(int idw=0;idw<totalFine;idw+=skip){
           DataWarehouse* dw = d_scheduler->get_dw(idw);
           dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
