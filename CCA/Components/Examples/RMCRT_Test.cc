@@ -132,7 +132,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
 #ifdef HAVE_CUDA
-    d_RMCRT = scinew Ray(dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler")));
+    d_RMCRT = scinew Ray(dynamic_cast<UnifiedScheduler*>(getPort("scheduler")));
 #else
     d_RMCRT = scinew Ray();
 #endif

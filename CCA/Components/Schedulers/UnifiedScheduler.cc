@@ -117,13 +117,15 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 
 UnifiedScheduler::~UnifiedScheduler()
 {
-  for (int i = 0; i < numThreads_; i++) {
-    t_worker[i]->d_runmutex.lock();
-    t_worker[i]->quit();
-    t_worker[i]->d_runsignal.conditionSignal();
-    t_worker[i]->d_runmutex.unlock();
-    t_thread[i]->setCleanupFunction(NULL);
-    t_thread[i]->join();
+  if (Uintah::Parallel::usingMPI()) {
+    for (int i = 0; i < numThreads_; i++) {
+      t_worker[i]->d_runmutex.lock();
+      t_worker[i]->quit();
+      t_worker[i]->d_runsignal.conditionSignal();
+      t_worker[i]->d_runmutex.unlock();
+      t_thread[i]->setCleanupFunction(NULL);
+      t_thread[i]->join();
+    }
   }
 
   if (timeout.active()) {
@@ -362,7 +364,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 void UnifiedScheduler::execute(int tgnum /*=0*/,
                                int iteration /*=0*/)
 {
-  if (d_sharedState->isCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -1983,14 +1985,14 @@ void UnifiedScheduler::clearGpuDBMaps()
 UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
                                                int id) :
     d_id(id),
-      d_scheduler(scheduler),
-      d_idle(true),
-      d_runmutex("run mutex"),
-      d_runsignal("run condition"),
-      d_quit(false),
-      d_waittime(0.0),
-      d_waitstart(0.0),
-      d_rank(scheduler->getProcessorGroup()->myrank())
+    d_scheduler(scheduler),
+    d_idle(true),
+    d_runmutex("run mutex"),
+    d_runsignal("run condition"),
+    d_quit(false),
+    d_waittime(0.0),
+    d_waitstart(0.0),
+    d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }

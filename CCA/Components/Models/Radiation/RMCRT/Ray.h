@@ -41,7 +41,7 @@
 
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #endif
 
 #include <iostream>
@@ -69,7 +69,7 @@ namespace Uintah{
 
       Ray();
 #ifdef HAVE_CUDA
-      Ray(GPUThreadedMPIScheduler* scheduler);
+      Ray(UnifiedScheduler* scheduler);
 #endif
       ~Ray(); 
 
@@ -261,7 +261,7 @@ namespace Uintah{
 
 #ifdef HAVE_CUDA
 
-      GPUThreadedMPIScheduler* _gpuScheduler;
+      UnifiedScheduler* _scheduler;
 
       //______________________________________________________________________
       //
