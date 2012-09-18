@@ -384,29 +384,8 @@ void avtudaReaderMTMDFileFormat::AddExpressionsToMetadata(avtDatabaseMetaData *m
 // ****************************************************************************
 void getBounds(int low[3], int high[3], const string meshName, const LevelInfo &levelInfo,int patch_id=-1)
 {
-  if (patch_id==-1)
-  {
-    //query limits of all patches
-    low[0]=low[1]=low[2]   =INT_MAX;
-    high[0]=high[1]=high[2]=INT_MIN;
-    int ltmp[3],htmp[3];
-    for (int i=0; i<(int)levelInfo.patchInfo.size(); i++) 
-    {
-      levelInfo.patchInfo[i].getBounds(ltmp,htmp,meshName);
-      for (int j=0; j<3; j++) 
-      {
-        low[j]  = min(low[j],ltmp[j]);
-        high[j] = max(high[j],htmp[j]);
-      }
-    }    
-  }
-  else
-  {
-    //query limits of one patch
-    const PatchInfo &patchInfo=levelInfo.patchInfo[patch_id];
-    patchInfo.getBounds(low,high,meshName);
-  }
-
+  levelInfo.getBounds(low,high,meshName,patch_id);
+  
   //debug5<<"getBounds("<<meshName<<",id="<<patch_id<<")=["<<low[0]<<","<<low[1]<<","<<low[2]<<"] to ["<<high[0]<<","<<high[1]<<","<<high[2]<<"]\n";
 }
 
@@ -447,8 +426,9 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   // compute the bounding box of the mesh from the grid indices of level 0
   LevelInfo &levelInfo = stepInfo->levelInfo[0];
 
-  // don't add proc id unless CC_Mesh exists (some only have SFCk_MESH)
+  // don't add proc id unless CC_Mesh or NC_Mesh exists (some only have SFCk_MESH)
   bool addProcId=false;
+  string mesh_for_procid("NC_Mesh");
 
   // grid meshes are shared between materials, and particle meshes are
   // shared between variables - keep track of what has been added so they're only added once
@@ -491,8 +471,9 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
       }  
       else if (vartype.find("CC") != string::npos) {  
         cent = AVT_ZONECENT;
-        mesh_for_this_var.assign("CC_Mesh"); 
+        mesh_for_this_var.assign("CC_Mesh");
         addProcId=true;
+        mesh_for_procid=mesh_for_this_var;
       }
       else if (vartype.find("SFC") != string::npos) { 
         cent = AVT_ZONECENT;
@@ -522,7 +503,7 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
         mesh->groupTitle = "levels";
         mesh->groupPieceName = "level";
         mesh->blockNames = pieceNames;
-        mesh->containsExteriorBoundaryGhosts = true;
+        mesh->containsExteriorBoundaryGhosts = false;
 
         mesh->hasSpatialExtents = true; 
         mesh->minSpatialExtents[0] = box_min[0];
@@ -563,27 +544,13 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
     }   
   }
 
-  // add a proc id enum variable for CC_Mesh
+  // add a proc id enum variable
   if (addProcId)
   {
-    int max_proc = 0;
-    for (int l=0; l<numLevels; l++) {
-      for (int p=0; p<(int)stepInfo->levelInfo[l].patchInfo.size(); p++) {
-        max_proc = std::max(max_proc, stepInfo->levelInfo[l].patchInfo[p].getProcId());
-      }
-    }
-
     avtScalarMetaData *scalar = new avtScalarMetaData();
 
-    scalar->SetEnumerationType(avtScalarMetaData::ByValue);
-    for (int p=0; p<=max_proc; p++) {
-      char tmp[100];
-      sprintf(tmp, "%d", p);
-      scalar->AddEnumNameValue(tmp,p);
-    }
-
     scalar->name = "proc_id";
-    scalar->meshName = "CC_Mesh";
+    scalar->meshName = mesh_for_procid;
     scalar->centering = AVT_ZONECENT;
     scalar->hasDataExtents = false;
     scalar->treatAsASCII = false;
@@ -798,8 +765,8 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
     // Now set up the data structure for patch boundaries.  The data 
     // does all the work ... it just needs to know the extents of each patch.
     //
-    avtRectilinearDomainBoundaries *rdb 
-      = new avtRectilinearDomainBoundaries(true);
+    avtRectilinearDomainBoundaries *rdb = new avtRectilinearDomainBoundaries(true);
+    //debug5<<"Calculating avtRectilinearDomainBoundaries for "<<meshname<<" mesh ("<<rdb<<").\n";
     rdb->SetNumDomains(totalPatches);
 
     for (int patch = 0 ; patch < totalPatches ; patch++) {
@@ -814,18 +781,19 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
       int e[6] = { low[0], high[0],
                    low[1], high[1],
                    low[2], high[2] };
+      //debug5<<"\trdb->SetIndicesForAMRPatch("<<patch<<","<<my_level<<", <"<<e[0]<<","<<e[2]<<","<<e[4]<<"> to <"<<e[1]<<","<<e[3]<<","<<e[5]<<">)\n";
       rdb->SetIndicesForAMRPatch(patch, my_level, e);
     }
 
     rdb->CalculateBoundaries();
 
-    this->mesh_boundaries[meshname]=void_ref_ptr(rdb,
-                                                 avtStructuredDomainBoundaries::Destruct);
+    this->mesh_boundaries[meshname]=void_ref_ptr(rdb,avtStructuredDomainBoundaries::Destruct);
     
     //
     // Domain Nesting
     //
     avtStructuredDomainNesting *dn = new avtStructuredDomainNesting(totalPatches, num_levels);
+    //debug5<<"Calculating avtStructuredDomainNesting for "<<meshname<<" mesh ("<<dn<<").\n";
     dn->SetNumDimensions(3);
 
     //
@@ -837,6 +805,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
       for (int i=0; i<3; i++)
         rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
 
+      //debug5<<"\tdn->SetLevelRefinementRatios("<<level<<", <"<<rr[0]<<","<<rr[1]<<","<<rr[2]<<">)\n";
       dn->SetLevelRefinementRatios(level, rr);
     }
 
@@ -897,6 +866,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
         e[i+0] = low[i];
         e[i+3] = high[i]-1;
       }
+      //debug5<<"\tdn->SetNestingForDomain("<<p<<","<<my_level<<", <>, <"<<e[0]<<","<<e[1]<<","<<e[2]<<"> to <"<<e[3]<<","<<e[4]<<","<<e[5]<<">)\n";
       dn->SetNestingForDomain(p, my_level, childPatches[p], e);
     }
 
@@ -916,16 +886,16 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
 
   //VERIFY we got the mesh boundary and domain in there
   void_ref_ptr vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
-                                         AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-                                         timestate, -1);
-  if (*vrTmp == NULL || *vrTmp != *this->mesh_domains[meshname])
-    throw InvalidFilesException("uda domain mesh not registered");
-
-  vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
                             AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
                             timestate, -1);
   if (*vrTmp == NULL || *vrTmp != *this->mesh_boundaries[meshname])
     throw InvalidFilesException("uda boundary mesh not registered");
+
+  vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+                            AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+                            timestate, -1);
+  if (*vrTmp == NULL || *vrTmp != *this->mesh_domains[meshname])
+    throw InvalidFilesException("uda domain mesh not registered");
 }
 
 
@@ -995,8 +965,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       vtkFloatArray *coords = vtkFloatArray::New(); 
       coords->SetNumberOfTuples(dims[c]); 
       float *array = (float *)coords->GetVoidPointer(0); 
-      for (int i=0; i<dims[c]; i++) {
-
+      for (int i=0; i<dims[c]; i++)
+      {
         // Face centered data gets shifted towards -inf by half a cell.
         // Boundary patches are special shifted to preserve global domain.
         // Internal patches are always just shifted.
@@ -1005,7 +975,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
         {
           if (i==0)
             if (low[c]==glow[c]) // patch is on low boundary
-              face_offset = 0;
+              face_offset = 0.0;
             else
               face_offset = -0.5;       // patch boundary is internal to the domain
           else if (i==dims[c]-1)
