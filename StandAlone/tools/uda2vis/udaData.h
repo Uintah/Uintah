@@ -33,6 +33,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 
 class PatchInfo {
@@ -254,6 +255,47 @@ public:
   double spacing[3];
   double anchor[3];
   int periodic[3];
+
+  //extents are the same for all meshes
+  void getExtents(double box_min[3], double box_max[3]) const
+  {
+    int low[3], high[3];
+    getBounds(low,high,"CC_Mesh");
+    box_min[0] = anchor[0] + low[0] * spacing[0];
+    box_min[0] = anchor[1] + low[1] * spacing[1];
+    box_min[0] = anchor[2] + low[2] * spacing[2];
+    box_max[0] = anchor[0] + high[0] * spacing[0];
+    box_max[0] = anchor[1] + high[1] * spacing[1];
+    box_max[0] = anchor[2] + high[2] * spacing[2];
+  }
+
+  //Get bounds for a specific patch of a given mesh. Use patch_id=-1 to query all patches.
+  void getBounds(int low[3], int high[3], const std::string meshName, int patch_id=-1) const
+  {
+    if (patch_id==-1)
+    {
+      //query limits of all patches
+      low[0]=low[1]=low[2]   =INT_MAX;
+      high[0]=high[1]=high[2]=INT_MIN;
+      int ltmp[3],htmp[3];
+      for (int i=0; i<(int)patchInfo.size(); i++) 
+      {
+        patchInfo[i].getBounds(ltmp,htmp,meshName);
+        for (int j=0; j<3; j++) 
+        {
+          low[j]  = std::min(low[j],ltmp[j]);
+          high[j] = std::max(high[j],htmp[j]);
+        }
+      }    
+    }
+    else
+    {
+      //query limits of one patch
+      const PatchInfo &patch=patchInfo[patch_id];
+      patch.getBounds(low,high,meshName);
+    }
+  }
+
 };
 
 
