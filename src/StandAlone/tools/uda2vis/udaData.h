@@ -28,13 +28,14 @@
  */
 
 
-#pragma once
+#ifndef UINTAH_UDADATA_H
+#define UINTAH_UDADATA_H
 
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iostream>
-
+#include <climits>
 
 class PatchInfo {
 public:
@@ -337,3 +338,4 @@ public:
   double *data;
 };
 
+#endif //UINTAH_UDADATA_H
