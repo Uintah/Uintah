@@ -294,9 +294,8 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched )
 {
 
   if(_benchmark != 0){
-    std::string taskname = "Ray::schedule_initProperties"; 
-    Task* tsk = scinew Task( taskname, this, &Ray::initProperties); 
-    printSchedule(level,dbg,taskname);
+    Task* tsk = scinew Task( "Ray::initProperties", this, &Ray::initProperties); 
+    printSchedule(level,dbg,"Ray::initProperties");
 
     tsk->modifies( d_temperatureLabel );
     tsk->modifies( d_abskgLabel );
@@ -399,7 +398,7 @@ Ray::sched_sigmaT4( const LevelP& level,
                     Task::WhichDW temp_dw,
                     const bool includeEC )
 {
-  std::string taskname = "Ray::sched_sigmaT4";
+  std::string taskname = "Ray::sigmaT4";
   Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw, includeEC );
 
   printSchedule(level,dbg,taskname);
@@ -461,9 +460,9 @@ Ray::sched_rayTrace( const LevelP& level,
                      Task::WhichDW celltype_dw,
                      bool modifies_divQ )
 {
-  std::string taskname = "Ray::sched_rayTrace";
+  std::string taskname = "Ray::rayTrace";
 #ifdef HAVE_CUDA
-  std::string gputaskname = "Ray::sched_rayTraceGPU";
+  std::string gputaskname = "Ray::rayTraceGPU";
   Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
                            &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #else
@@ -1023,7 +1022,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if(L_indx != maxLevels){     // only schedule on the finest level
     return;
   }
-  std::string taskname = "Ray::sched_rayTrace_dataOnion";
+  std::string taskname = "Ray::rayTrace_dataOnion";
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
                           modifies_divQ, abskg_dw, sigma_dw );
                           
@@ -1646,7 +1645,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
                                   const bool backoutTemp )
 {
 
-  std::string taskname = "Ray::sched_setBoundaryConditions";
+  std::string taskname = "Ray::setBoundaryConditions";
   Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, temp_dw, backoutTemp );
 
   printSchedule(level,dbg,taskname);
