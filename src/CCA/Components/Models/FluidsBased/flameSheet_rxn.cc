@@ -161,8 +161,12 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);
   react_ps->getWithDefault("smear_initialDistribution_knob",       
                             d_smear_initialDistribution_knob,       0);   
-  if( d_f_stoic == -9        ||  d_del_h_comb == -9 ||    // bulletproofing
-      d_T_oxidizer_inf == -9 ||  d_T_fuel_init == -9 ) {
+                            
+  cout << " round " << Round(-9 - DBL_EPSILON) << endl;
+  cout << " round " << Round(-9 + DBL_EPSILON) << endl;
+                            
+  if( Floor(d_f_stoic) == -9        ||  Floor(d_del_h_comb) == -9 ||    // bulletproofing
+      Floor(d_T_oxidizer_inf) == -9 ||  Floor(d_T_fuel_init) == -9 ) {
     ostringstream warn;
     warn << " ERROR FlameSheet_rxn: Input variable(s) not specified \n" 
          << "\n f_stoichometric        "<< d_f_stoic
