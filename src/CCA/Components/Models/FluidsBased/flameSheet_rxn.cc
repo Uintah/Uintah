@@ -160,10 +160,7 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);    
   react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);
   react_ps->getWithDefault("smear_initialDistribution_knob",       
-                            d_smear_initialDistribution_knob,       0);   
-                            
-  cout << " round " << Round(-9 - DBL_EPSILON) << endl;
-  cout << " round " << Round(-9 + DBL_EPSILON) << endl;
+                            d_smear_initialDistribution_knob,       0);
                             
   if( Floor(d_f_stoic) == -9        ||  Floor(d_del_h_comb) == -9 ||    // bulletproofing
       Floor(d_T_oxidizer_inf) == -9 ||  Floor(d_T_fuel_init) == -9 ) {
