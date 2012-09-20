@@ -612,7 +612,7 @@ namespace Wasatch{
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
-    std::cout << "Scheduling compute stable timestep\n";
+    proc0cout << "Scheduling compute stable timestep" << std::endl;
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
