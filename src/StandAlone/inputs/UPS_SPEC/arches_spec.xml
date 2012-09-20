@@ -7,6 +7,8 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
+      <set_initial_vel_condition             spec="OPTIONAL NO_DATA"
+                                        attribute1="inputfile REQUIRED STRING"/>
           
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>

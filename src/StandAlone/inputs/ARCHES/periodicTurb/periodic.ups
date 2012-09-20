@@ -8,21 +8,25 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>     120.0   </maxTime>
+    <maxTime>     0.67   </maxTime>
     <initTime>    0.0     </initTime>
-    <delt_min>    0.00001 </delt_min>
-    <delt_max>      5     </delt_max>
-    <max_Timesteps> 25    </max_Timesteps>
+    <delt_min>    1e-3 </delt_min>
+    <delt_max>    1e-3     </delt_max>
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>periodic_box.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <filebase>arches_decaying_isotropic_turbulence.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>    
+    <save label="vVelocitySPBC"/>    
+    <save label="wVelocitySPBC"/>            
     <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
@@ -39,7 +43,7 @@
         <lower>       [0,0,0]         </lower>
         <upper>       [0.56548668,0.56548668,0.56548668]</upper>
         <resolution>  [32,32,32]      </resolution>
-        <patches>     [1,1,1]         </patches>
+        <patches>     [2,2,2]         </patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
@@ -48,7 +52,7 @@
   <PhysicalConstants>
     <gravity>   [0,0,0]   </gravity>
     <reference_point> [0,0,0]   </reference_point>
-    <viscosity> 0.000020  </viscosity>
+    <viscosity> 1.184344e-5  </viscosity>
   </PhysicalConstants>
 
 <!--__________________________________-->
@@ -60,7 +64,7 @@
       </TimeIntegrator>
 
 
-      <set_initial_condition inputfile="inputs/ARCHES/periodicTurb/iso_ini_32.dat"/>
+      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
       <Turbulence model="compdynamicprocedure">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
@@ -69,7 +73,7 @@
         <use_mixing_model>false</use_mixing_model>
         <ColdFlowMixingModel>
           <Stream>
-            <density>     0.133   </density>
+            <density>     1.184344   </density>
             <temperature> 298     </temperature>
           </Stream>
           <Stream>
