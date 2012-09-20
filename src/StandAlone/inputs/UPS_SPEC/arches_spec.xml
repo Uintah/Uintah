@@ -710,8 +710,7 @@
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
               <!-- slopes and intercepts should be computed from volume % nose plots --> 
               <diluent                  spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="mw REQUIRED DOUBLE"/> <!-- label pointing to the diluent mass fraction --> 
+                                        attribute1="label REQUIRED STRING"/><!-- label pointing to the diluent mass fraction -->
               <lower                    spec="REQUIRED NO_DATA"                    
                                         attribute1="slope REQUIRED DOUBLE"
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the lower flammability limit --> 

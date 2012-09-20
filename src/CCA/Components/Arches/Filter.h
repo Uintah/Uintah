@@ -343,15 +343,36 @@ template<class T>
 bool applyFilter_noPetsc(const ProcessorGroup* ,
                          const Patch* patch,               
                          T& var,                           
+                         constCCVariable<double>& filterVol, 
+                         constCCVariable<int>& cellType, 
                          Array3<double>& filterVar)        
 {
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-    //1) compute the total filter volume and store it in a grid variable
-    //2) compute the filtered value as: 
-    //          u_til = sum( vol(cell)*filter_array(cell) )/total_volume_of_filter
-    //
+    IntVector c = *iter; 
+    int filter_width = 3; //hard coded for now
+    int shift = (filter_width-1)/2;
+
+    for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+      for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+        for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+
+          double w = 0.0;
+          if ( cellType[c] == -1 ){ 
+            w = 1.0; 
+          } 
+
+          w *= filter_array[i+shift][j+shift][k+shift] / filterVol[c]; 
+          if ( filterVol[c] > 0.0 ){ 
+            filterVar[c] += w * var[c + IntVector(i,j,k)];
+          } 
+            
+
+        }
+      }
+    }
 
   }
   return true;
@@ -375,7 +396,9 @@ private:
   int d_nz, o_nz; // number of non zero values in a row
 #endif
 
-  double filter_array[3][3][3];
+  // hard code the filter width for now
+  int _filter_width; 
+  double filter_array[3][3][3]; //WASH ME! clean this up later.
 
 
 }; // End class Filter.h

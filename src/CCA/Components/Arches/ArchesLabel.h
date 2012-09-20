@@ -460,6 +460,7 @@ namespace Uintah {
       const VarLabel* d_reactScalarGradientCompLabel;
       const VarLabel* d_filterReactScalarGradientCompLabel;
       const VarLabel* d_filterStrainTensorCompLabel;
+      const VarLabel* d_filterVolumeLabel; 
       const VarLabel* d_scalarNumeratorLabel; 
       const VarLabel* d_scalarDenominatorLabel; 
       const VarLabel* d_enthalpyNumeratorLabel; 

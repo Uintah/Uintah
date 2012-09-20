@@ -5257,6 +5257,7 @@ void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched,
   tsk->modifies(d_lab->d_areaFractionFZLabel); 
 #endif
   tsk->modifies(d_lab->d_volFractionLabel); 
+  tsk->computes(d_lab->d_filterVolumeLabel); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, patches, matls);
@@ -5281,6 +5282,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 #endif
     CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
+    CCVariable<double>   filterVolume; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
     new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
@@ -5290,6 +5292,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
 #endif 
     new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
+    new_dw->allocateAndPut( filterVolume, d_lab->d_filterVolumeLabel, indx, patch ); 
 
     int flowType = -1; 
     if (d_MAlab)
