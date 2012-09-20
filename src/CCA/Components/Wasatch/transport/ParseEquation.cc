@@ -437,6 +437,11 @@ namespace Wasatch{
     momentEqsParams->get( "PopulationName", populationName );
     int nEnv = 1;
     momentEqsParams->get( "NumberOfEnvironments", nEnv );
+    
+    bool momentReduction = false;
+    if ( momentEqsParams->findBlock("UseMomentReduction") ) 
+      momentReduction = true;
+    
     Expr::TagList weightsAndAbscissaeTags;
     //
     // fill in the weights and abscissae tags
@@ -466,7 +471,7 @@ namespace Wasatch{
     //
     // register the qmom expression
     //
-    factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags) );
+    factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags, momentReduction) );
   }
 
   //==================================================================

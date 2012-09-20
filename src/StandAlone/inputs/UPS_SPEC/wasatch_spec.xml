@@ -689,6 +689,8 @@
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
       
+      <UseMomentReduction spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
+      
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
       <!-- of the form G = alpha * g0 * g(r)-->
