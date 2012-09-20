@@ -262,6 +262,10 @@
           <slowfastchem                 spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <inertmixing                  spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="inert_label REQUIRED STRING"/> <!-- Attributes must match the transported IV's and the transported IV --> 
           <post_mix                     spec="OPTIONAL NO_DATA">
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)

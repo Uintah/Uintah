@@ -187,8 +187,10 @@ namespace Uintah {
         protected: 
           int _index_1;
           int _index_2;
+          int _index_3; 
           std::string _index_1_name; 
-          std::string _index_2_name; 
+          std::string _index_2_name;
+          std::string _index_3_name; 
 
       };
 
@@ -276,6 +278,73 @@ namespace Uintah {
         private: 
 
           double d_constant; 
+      };
+
+      class InertMixing : public TransformBase {
+
+        public: 
+          InertMixing(); 
+          ~InertMixing(); 
+
+          bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+            bool transform_on = false; 
+            ProblemSpecP p = ps; 
+            bool doit = false; 
+            if ( p->findBlock("inertmixing") ){
+
+              p->findBlock("inertmixing")->getAttribute("eta_label",     _index_1_name );
+              p->findBlock("inertmixing")->getAttribute("fp_label",         _index_2_name );
+              p->findBlock("inertmixing")->getAttribute("inert_label",     _inert_mf ); 
+              doit = true; 
+
+            } 
+
+            if ( doit ) { 
+
+              _index_1 = -1; 
+              _index_2 = -1; 
+
+              int index = 0; 
+              for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+                if ( *i == _index_1_name ) 
+                  _index_1 = index; 
+                if ( *i == _index_2_name )
+                  _index_2 = index; 
+                index++; 
+
+              }
+              transform_on = true; 
+              if ( _index_1 == -1 ) {
+                proc0cout << "Warning: Could not match f_cstar mixture fraction label to table variables!" << endl;
+                transform_on = false; 
+              }
+              if ( _index_2 == -1 ) {
+                proc0cout << "Warning: Could not match f_c mixture fraction label to table variables!" << endl;
+                transform_on = false; 
+              }
+            } 
+            return transform_on; 
+          };  
+
+          void inline transform( std::vector<double>& iv ){
+            throw InvalidValue("Error: You have chosen to use post mixing but there is something wrong with your tranform.  Check your input file.",__FILE__,__LINE__); 
+          }; 
+
+          void inline transform( std::vector<double>& iv, double inert ){
+
+            double fc = iv[_index_2];
+            double fcstar = iv[_index_1]; 
+
+            iv[_index_1] = fcstar / ( 1.0 - inert ); 
+            double fp = ( fcstar + fc ) / ( 1.0 - inert );
+            iv[_index_2] = (1.0 - fp)/iv[_index_1];  
+
+          };
+
+        private:
+          std::string _inert_mf;
+
       };
 
       class SlowFastTransform : public TransformBase {
