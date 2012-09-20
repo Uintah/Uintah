@@ -108,7 +108,7 @@ public:
 
   }; // Builder
 
-  inline double getRate( double T, double CxHy, double O2, double diluent, double mix_mw, double den, double dt, double vol ) {
+  inline double getRate( double T, double CxHy, double O2, double diluent, double f_tot_fuel, double mix_mw, double den, double dt, double vol ) {
 
     double rate = 0.0; 
     bool compute_rate = false; 
@@ -122,15 +122,11 @@ public:
 
       // USING FLAMMABILITY LIMITS:
       // vol percent:
-      double dil_vol = diluent * 1.0/mix_mw * 1.0/_diluent_mw * 100; 
-      double fuel_low  = _flam_low_m * dil_vol + _flam_low_b; 
-      double fuel_high = _flam_up_m  * dil_vol + _flam_up_b; 
+      //double dil_vol = diluent * 1.0/mix_mw * 1.0/_diluent_mw * 100; 
+      double fuel_low  = _flam_low_m * diluent + _flam_low_b; 
+      double fuel_high = _flam_up_m  * diluent + _flam_up_b; 
 
-      // to mass fraction: 
-      fuel_low  *= mix_mw * d_MW_HC / 100.0;
-      fuel_high *= mix_mw * d_MW_HC / 100.0; 
-
-      if ( CxHy > fuel_low && CxHy < fuel_high ) { 
+      if ( f_tot_fuel > fuel_low && f_tot_fuel < fuel_high ) { 
         compute_rate = true; 
       } 
 
