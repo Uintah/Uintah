@@ -63,6 +63,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
+#include <Core/IO/UintahZlibUtil.h>
+
 #if HAVE_TABPROPS
 #  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif
@@ -239,6 +241,11 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_set_initial_condition = true;
     db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
   }
+  
+  if (db->findBlock("set_initial_vel_condition")) {
+    d_set_init_vel_condition = true;
+    db->findBlock("set_initial_vel_condition")->getAttribute("inputfile",d_init_vel_inputfile);
+  }  
 
   if (d_calcScalar) {
     if (d_calcReactingScalar) {
@@ -890,8 +897,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //mms initial condition
   if (d_doMMS) {
-          sched_mmsInitialCondition(level, sched);
+    sched_mmsInitialCondition(level, sched);
   }
+  
+  //mms initial condition
+  if (d_set_init_vel_condition) {
+    sched_readUVWInitialCondition(level, sched);
+  }  
 
   // schedule init of cell type
   // require : NONE
@@ -1774,6 +1786,99 @@ bool Arches::needRecompile(double time, double dt,
   else
     return d_lab->recompile_taskgraph;
 }
+
+// ****************************************************************************
+// schedule reading of initial condition for velocity and pressure
+// ****************************************************************************
+void
+Arches::sched_readUVWInitialCondition(const LevelP& level,
+                                     SchedulerP& sched)
+{
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::readUVWInitialCondition",
+                          this, &Arches::readUVWInitialCondition);
+  
+  printSchedule(level,dbg,"Arches::readUVWInitialCondition");
+  
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+  
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());  
+}
+
+// ****************************************************************************
+// Actual read
+// ****************************************************************************
+void
+Arches::readUVWInitialCondition(const ProcessorGroup* ,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* ,
+                            DataWarehouse* new_dw)
+{
+  
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+
+    gzFile file = gzopen( d_init_vel_inputfile.c_str(), "r" );
+
+    if ( file == NULL ) { 
+      proc0cout << "Error opening file: " << d_init_vel_inputfile << " for velocity initialization." << endl;
+      throw ProblemSetupException("Unable to open the given input file: " + d_init_vel_inputfile, __FILE__, __LINE__);
+    }
+        
+    int nx,ny,nz;
+    nx = getInt(file); 
+    ny = getInt(file); 
+    nz = getInt(file); 
+    
+    const Level* level = patch->getLevel();
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    IntVector range = high-low;
+    
+    if (!(range == IntVector(nx,ny,nz))) {
+      ostringstream warn;
+      warn << "ERROR Arches::periodicTurbInitialCondition: \n Wrong grid size in input file " << range;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    int size = 0;
+    double uvel,vvel,wvel,pres;
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
+    for (int colZ = 1; colZ <= nz; colZ ++) {
+      for (int colY = 1; colY <= ny; colY ++) {
+        for (int colX = 1; colX <= nx; colX ++) {
+          IntVector currCell(colX-1, colY-1, colZ-1);          
+          uvel = getDouble(file);
+          vvel = getDouble(file);
+          wvel = getDouble(file);          
+          if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+              (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
+            uVelocity[currCell] = uvel;
+            vVelocity[currCell] = vvel;
+            wVelocity[currCell] = wvel;
+            size++;
+          }
+        }
+      }
+    }
+    gzclose( file );     
+  }
+}
+
+
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure
 // ****************************************************************************
