@@ -71,7 +71,9 @@ u(1,:,:) = u(n+1,:,:);
 v(:,1,:) = v(:,n+1,:);
 w(:,:,1) = w(:,:,n+1);
 
-fileName = strcat(uvwFileName,'_arches.txt');
+[fPath,fName,fExt] = fileparts(uvwFileName);
+
+fileName = strcat(fName,'_arches');
 fileID = fopen(fileName,'w');
 fprintf( fileID,'%i %i %i\n',n, n, n );
 for k=1:n
@@ -82,3 +84,5 @@ for k=1:n
     end
 end
 fclose(fileID);
+gzip(fileName);
+delete(fileName);
