@@ -17,7 +17,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="phi-scalar" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/read-from-file-test-init.dat</FileName>
+        <FileName>inputs/Wasatch/read-from-file-test-init.dat.gz</FileName>
       </ReadFromFile>
     </BasicExpression>
 

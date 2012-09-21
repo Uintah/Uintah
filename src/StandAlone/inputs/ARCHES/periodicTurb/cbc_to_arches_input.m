@@ -81,3 +81,4 @@ for k=1:n
         end
     end
 end
+fclose(fileID);
