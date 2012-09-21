@@ -23,6 +23,16 @@ OnDemandDataWarehouse           outputs when a variable is retrieved or put into
 VarLabel                        List when a VarLabel is created and deleted
 
 
+Schedulers:                     NOTE: These will override the default "Unified Scheduler"
+__________________________________
+SingleeProcessor  SCI_DEBUG     Use SingleProcessorScheduler
+MPI               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
+DynamicMPI        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
+ThreadedMPI       SCI_DEBUG     Use ThreadedMPIScheduler - Multi-threaded with centralized control thread
+ThreadedMPI2      SCI_DEBUG     Use ThreadedMPI2Scheduler - Multi-threaded with no control thread
+GPU               SCI_DEBUG     Multi-threaded with GPU support, centralized control thread
+
+
 ICE:
 __________________________________
 ICE_DOING_COUT    SCI_DEBUG     Outputs the name of each task as it's being     
