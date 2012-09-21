@@ -1854,7 +1854,7 @@ Arches::readUVWInitialCondition(const ProcessorGroup* ,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     int size = 0;
-    double uvel,vvel,wvel
+    double uvel,vvel,wvel;
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
     for (int colZ = 1; colZ <= nz; colZ ++) {
