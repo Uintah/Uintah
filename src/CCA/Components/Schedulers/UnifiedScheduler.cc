@@ -187,7 +187,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
-          "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
+          "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
   } else if (numThreads_ > MAX_THREADS) {
@@ -199,7 +199,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
   if (d_myworld->myrank() == 0) {
     cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL," << "not all tasks are thread safe yet." << endl
-         << "\tCreating " << numThreads_ << " more threads for task execution." << endl;
+         << "\tCreating " << numThreads_ << " threads for task execution." << endl;
   }
 
 //  d_nextsignal = scinew ConditionVariable("NextCondition");
