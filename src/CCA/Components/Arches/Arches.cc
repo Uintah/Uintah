@@ -162,6 +162,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   nofTimeSteps                     =  0;
   init_timelabel_allocated         =  false;
   d_set_initial_condition          =  false;
+  d_set_init_vel_condition         =  false; 
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM                        =  false;
@@ -900,7 +901,6 @@ Arches::scheduleInitialize(const LevelP& level,
     sched_mmsInitialCondition(level, sched);
   }
   
-  //mms initial condition
   if (d_set_init_vel_condition) {
     sched_readUVWInitialCondition(level, sched);
   }  
