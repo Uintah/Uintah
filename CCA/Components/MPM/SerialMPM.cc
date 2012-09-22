@@ -4519,7 +4519,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       constParticleVariable<Matrix3> psize;
-      ParticleVariable<Vector> pScaleFactor;
+      ParticleVariable<Matrix3> pScaleFactor;
       old_dw->get(psize,                   lb->pSizeLabel,         pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel,  pset);
 
@@ -4528,8 +4528,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = 
-                  Vector(psize[idx](0,0),psize[idx](1,1),psize[idx](2,2))*dx;
+          pScaleFactor[idx] = psize[idx]*Matrix3(dx[1],0,0,0,dx[2],0,0,0,dx[3]);
         } // for particles
       } // isOutputTimestep
     } // matls
