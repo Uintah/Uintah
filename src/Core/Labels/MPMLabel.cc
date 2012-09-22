@@ -66,7 +66,7 @@ MPMLabel::MPMLabel()
   
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
-			ParticleVariable<Vector>::getTypeDescription());
+			ParticleVariable<Matrix3>::getTypeDescription());
   
   // for thermal stress
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
