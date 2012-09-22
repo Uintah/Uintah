@@ -430,9 +430,9 @@ evaluate()
     x   = Uintah::getDouble(inputFile);
     y   = Uintah::getDouble(inputFile);
     z   = Uintah::getDouble(inputFile);
-    val = Uintah::getDouble(inputFile);    
+    val = Uintah::getDouble(inputFile);  
     const bool contains_value = x >= (xMin - eps) && x <= (xMax + eps) && y >= (yMin - eps) && y <= (yMax + eps) && z >= (zMin - eps) && z <= (zMax + eps);
-    if (contains_value) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...
+    if (contains_value && phiiter != phi.interior_end()) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...      
       *phiiter = val;
       ++phiiter;
 //      size++;
