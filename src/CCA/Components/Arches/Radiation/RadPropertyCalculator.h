@@ -12,7 +12,10 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
-
+#ifdef HAVE_RADPROPS
+#include <radprops/AbsCoeffGas.h>
+#include <radprops/RadiativeSpecies.h>
+#endif
 namespace Uintah { 
 
   class RadPropertyCalculator{ 
@@ -40,6 +43,12 @@ namespace Uintah {
             _calculator = scinew ConstantProperties(); 
           } else if ( calculator_type == "burns_christon" ){ 
             _calculator = scinew BurnsChriston(); 
+          } else if ( calculator_type == "radprops" ){
+#ifdef HAVE_RADPROPS
+            _calculator = scinew RadPropsInterface(); 
+#else
+            throw InvalidValue("Error: You haven't configured with RADPROPS!.",__FILE__,__LINE__);
+#endif
           } else { 
             throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
           } 
@@ -72,7 +81,74 @@ namespace Uintah {
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
           virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
       };
+#ifdef HAVE_RADPROPS
+      //______________________________________________________________________
+      //
+      class RadPropsInterface : public PropertyCalculatorBase  { 
 
+        public: 
+          RadPropsInterface() {}
+          ~RadPropsInterface() {}
+          
+          //__________________________________
+          //
+          bool problemSetup( const ProblemSpecP& db ) {
+
+            if ( db->findBlock( "grey_gas" ) ){
+
+              ProblemSpecP db_gg = db->findBlock( "grey_gas" ); 
+              std::vector<RadiativeSpecies> species; 
+
+              //look for all the participating species: 
+              for ( ProblemSpecP db_sp = db_gg->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){ 
+                std::string current_sp; 
+                db_sp->getAttribute("label",current_sp); 
+                RadiativeSpecies radprop_sp = species_enum( current_sp );
+                species.push_back( radprop_sp );  
+              }  
+
+              //allocate gray gas object: 
+              _gg_radprops = scinew GreyGas( species ); 
+
+            } else { 
+
+              throw InvalidValue( "Error: Only grey gas properties are available at this time.",__FILE__,__LINE__);
+
+            }
+              
+            
+          };
+          
+          //__________________________________
+          //
+          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+
+            // below is just a placeholder.  
+            // here we need to:  
+            // 1) pass into this method the participating species
+            // (the rest of this should be in a grid loop )
+            // 2) convert them to mol fractions
+            // 3) package them into the molFrac vector
+            // 4) call the mixture_coeffs function to get back the abskg
+            // 5) assign abskg[c] to the value out of the lookup 
+
+            double plankCff = 0.0;
+            double rossCff  = 0.0; 
+            double effCff   = 0.0; 
+            std::vector<double> molFrac; 
+            double T        = 298; 
+
+            _gg_radprops->mixture_coeffs( planckCff, rossCff, effCff, mixMoleFrac, TMix );
+
+            
+
+          }; 
+
+        private: 
+
+          AbsCoeffGas::GreyGas* _gg_radprops; 
+      }; 
+#endif
       //______________________________________________________________________
       //
       class ConstantProperties : public PropertyCalculatorBase  { 
