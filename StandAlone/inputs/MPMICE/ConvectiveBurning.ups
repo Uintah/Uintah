@@ -214,7 +214,7 @@
 	      <randomize_parameters>          false </randomize_parameters>
              <use_time_temperature_equation> false </use_time_temperature_equation>
              <useObjectiveRate>              false </useObjectiveRate>
-             <useModifiedEOS>               false </useModifiedEOS>
+             <useModifiedEOS>              true </useModifiedEOS>
            </constitutive_model>
            
            <geom_object>
