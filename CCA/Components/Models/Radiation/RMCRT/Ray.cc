@@ -141,8 +141,11 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // scattering coefficient
-  rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                      // ignore applying boundary conditions
+  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
+  rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                       // ignore applying boundary conditions
+  rmcrt_ps->getWithDefault( "allowReflect"   ,  _allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
+  rmcrt_ps->getWithDefault( "solveDivQ"      ,  _solveDivQ,        true );             // Allow for solving of divQ for flow cells.
+
 
 
   //__________________________________
@@ -930,7 +933,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
-   
+  if( _solveDivQ){
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
       IntVector origin = *iter; 
       int i = origin.x();
@@ -990,7 +993,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //cout << divQ[origin] << endl;
       //} // end quick debug testing
     }  // end cell iterator
-
+  } // end of if(_solveDivQ)
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
     if (patch->getGridIndex() == 0) {
@@ -2353,6 +2356,10 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
      intensity = intensity * (1-abskg[cur]);
 
+     // for DOM comparisons, we don't allow for reflections, so 
+     // when a ray reaches the end of the domain, we force it to terminate. 
+     if(!_allowReflect) intensity = 0; //9-21
+                                            
      //__________________________________
      //  Reflections
      if (intensity > _Threshold){
