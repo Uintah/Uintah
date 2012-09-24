@@ -224,33 +224,33 @@ SquareStrainTensorMagnitude::
 evaluate()
 {
   using namespace SpatialOps;
-  SVolField& StrTsrMag = this->value();
-  StrTsrMag <<= 0.0;
+  SVolField& SqStrTsrMag = this->value();
+  SqStrTsrMag <<= 0.0;
 
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( StrTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( StrTsrMag );
+  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( SqStrTsrMag );
+  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( SqStrTsrMag );
   *xyfield <<= 0.0;
   *yxfield <<= 0.0;
 
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( StrTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( StrTsrMag );
+  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( SqStrTsrMag );
+  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( SqStrTsrMag );
   *xzfield <<= 0.0;
   *zxfield <<= 0.0;
 
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( StrTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( StrTsrMag );
+  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( SqStrTsrMag );
+  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( SqStrTsrMag );
   *zyfield <<= 0.0;
   *yzfield <<= 0.0;
 
-  SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g13 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g21 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g22 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g23 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g31 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g32 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> g33 = SpatialFieldStore::get<SVolField>( StrTsrMag );
+  SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g13 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g21 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g22 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g23 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g31 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g32 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> g33 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
 
 
   //  if (!doX_) {
@@ -307,15 +307,15 @@ evaluate()
     zyInterpOp_->apply_to_field( *zyfield, *g32);
   }
 
-  SpatFldPtr<SVolField> gd11 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd12 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd13 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd21 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd22 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd23 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd31 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd32 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> gd33 = SpatialFieldStore::get<SVolField>( StrTsrMag );
+  SpatFldPtr<SVolField> gd11 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd12 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd13 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd21 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd22 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd23 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd31 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd32 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> gd33 = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
 
   //  if (!doX_) {
   *gd11 <<= 0.0;
@@ -353,8 +353,8 @@ evaluate()
   *gd32 <<= *g31 * *g12 + *g32 * *g22 + *g33 * *g32;
   *gd33 <<= *g31 * *g13 + *g32 * *g23 + *g33 * *g33;
 
-  SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> dilsq = SpatialFieldStore::get<SVolField>( StrTsrMag );
+  SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
+  SpatFldPtr<SVolField> dilsq = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
   *tmp<<=0.0;
   *dilsq<<=0.0;
 
@@ -387,7 +387,7 @@ evaluate()
 //  *tmp <<= *gd33 - *dilsq;                       // Sd_33
 //  StrTsrMag <<= StrTsrMag + *tmp * *tmp;         // + Sd_33*Sd_33
 
-  StrTsrMag <<=  (0.5*(*gd11 + *gd11) - *dilsq) * (0.5*(*gd11 + *gd11) - *dilsq)
+  SqStrTsrMag <<=  (0.5*(*gd11 + *gd11) - *dilsq) * (0.5*(*gd11 + *gd11) - *dilsq)
                 + 0.5 * (*gd12 + *gd21) * (*gd12 + *gd21)                                // Sd_12*Sd_12 + Sd_21*Sd_21 = 2.0 Sd_12*Sd_12
                 + 0.5 * (*gd13 + *gd31) * (*gd13 + *gd31)                                // Sd_13*Sd_13 + Sd_31*Sd_31 = 2.0 Sd_13*Sd_13
                 + (0.5*(*gd22 + *gd22) - *dilsq) * (0.5*(*gd22 + *gd22) - *dilsq)
