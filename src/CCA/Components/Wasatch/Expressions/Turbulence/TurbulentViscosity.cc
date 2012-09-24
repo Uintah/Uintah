@@ -119,7 +119,7 @@ evaluate()
 
   switch ( turbulenceParameters_.turbulenceModelName ) {
     case Wasatch::SMAGORINSKY:
-      result <<= 2.0 * *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * delta^2 * |S|
+      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|
       break;
     case Wasatch::DYNAMIC:
       std::cout << "WARNING: Dynamic smagorinsky model not implemented yet.\n";
@@ -127,7 +127,7 @@ evaluate()
       result <<= 0.0;
       break;
     case Wasatch::WALE:
-      result <<= *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
+      result <<= mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
       break;
     default:
       break;
