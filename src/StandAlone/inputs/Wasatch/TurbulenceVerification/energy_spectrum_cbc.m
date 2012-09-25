@@ -12,8 +12,9 @@
 % The data in cbc_spectrum.txt is from table 3 on page 298 of that paper.
 %
 function energy_spectrum_cbc()
-exp = load('cbc_spectrum.txt');
-loglog(exp(:,1)*100,exp(:,2)*1e-6); hold on;
-loglog(exp(:,1)*100,exp(:,3)*1e-6);
-loglog(exp(:,1)*100,exp(:,4)*1e-6);
-axis([10 1e3 1e-6 1e-3])
+  exp = load('cbc_spectrum.txt');
+  loglog(exp(:,1)*100,exp(:,2)*1e-6,'k-'); hold on;
+  loglog(exp(:,1)*100,exp(:,3)*1e-6,'k-');
+  loglog(exp(:,1)*100,exp(:,4)*1e-6,'k-');
+  axis([10 1e3 1e-6 1e-3])
+end
