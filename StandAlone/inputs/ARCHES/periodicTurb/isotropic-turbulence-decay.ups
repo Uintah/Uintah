@@ -12,13 +12,14 @@
     <initTime>    0.0     </initTime>
     <delt_min>    1e-3 </delt_min>
     <delt_max>    1e-3     </delt_max>
+    <max_Timesteps> 5 </max_Timesteps>
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arches_decaying_isotropic_turbulence.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <filebase>isotropic-turbulence-decay.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     
     <save label="totalKineticEnergy"/>
@@ -32,7 +33,7 @@
     <save label="viscosityCTS"/>
     <save label="continuityResidual"/>
     <save label="cellType"/>
-    <checkpoint cycle="2" timestepInterval="10"/>
+    <checkpoint cycle="2" timestepInterval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
 
