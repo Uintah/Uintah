@@ -1,5 +1,9 @@
 This file contains the name of environmental variables that can be set
 
+Set these like this:
+ -> tcsh: setenv SCI_DEBUG ExecTimes:+
+ -> bash: export SCI_DEBUG=ExecTimes:+
+
 Name              type               Description
 ______________________________________________________________________
 
