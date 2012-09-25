@@ -37,7 +37,7 @@
  *
  *  \brief Calculates the coefficent used for brownian diffusion
  *  \f$ 2 k_B T / 3 \rho \f$
- *  K_B boltzmann const, T temeprature, \rho density
+ *  \f$k_B\f$ boltzmann const, \f$T\f$ temeprature, \f$\rho\f$ density
  */
 
 template< typename FieldT >
