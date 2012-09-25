@@ -389,78 +389,109 @@ evaluate()
 
     } else  {  //run the QMOM algorithm with 2 less moments _m2
       // this creates its own variables so that the regular matricies do not have to be resized every iteration
-      //NOTE: This is a quick fix to get converegence in the simulations, clean this up in future
-      double **pmatrix_m2;
+      //NOTE: This is a quick fix to get convergence in the simulations, clean this up in future
       
-      pmatrix_m2 = new double *[nMoments_-2];
-      for (int i = 0; i<nMoments_-2; i++)
-        pmatrix_m2[i] = new double [nMoments_-1];
-        
+      int nReducedMoments = nMoments_;
+      bool negativeWeights = true;
       std::vector<double> a_m2, b_m2, alpha_m2, jMatrix_m2, eigenValues_m2, weights_m2, work_m2;
+      std::vector< std::vector <double> > pmatrix_m2;
+      int abSize_m2;
       
-      // initialize the p matrix
-      for (int i=0; i<nMoments_ - 2; ++i) {
-        for (int j=0; j<nMoments_ - 1; ++j) {
-          pmatrix_m2[i][j]=0.0;
-        }
-      }
-      pmatrix_m2[0][0] = 1.0;
-      
-      int abSize_m2 = (nMoments_ - 2)/2;
-      alpha_m2.resize(nMoments_ - 2);
-      a_m2.resize( abSize_m2 );
-      b_m2.resize( abSize_m2 );
-      jMatrix_m2.resize( abSize_m2*abSize_m2 );
-      eigenValues_m2.resize( abSize_m2 );
-      weights_m2.resize(abSize_m2);
-      
-      //create p matrix (all loops subtract 2 off nmoments)
-      for (int iRow=0; iRow<=nMoments_-2 - 2; iRow += 2) {
-        // get the the iRow moment for this point
-        pmatrix_m2[iRow][1] = *knownMomentsIterators[iRow];
-        // get the the (iRow+1) moment for all points
-        pmatrix_m2[iRow+1][1] = -*knownMomentsIterators[iRow+1];
-      }
-      // keep filling the p matrix
-      for (int jCol=2; jCol<=nMoments_ - 2; ++jCol) {
-        for (int iRow=0; iRow <= nMoments_ - jCol - 2; ++iRow) {
-          pmatrix_m2[iRow][jCol] = pmatrix_m2[0][jCol-1]*pmatrix_m2[iRow+1][jCol-2]
-          - pmatrix_m2[0][jCol-2]*pmatrix_m2[iRow+1][jCol-1];
-        }
-      }
-      
-      //make alpha
-      alpha_m2[0]=0.0;
-      for (int jCol=1; jCol<nMoments_ - 2; ++jCol)
-        alpha_m2[jCol] = pmatrix_m2[0][jCol+1]/(pmatrix_m2[0][jCol]*pmatrix_m2[0][jCol-1]);
-
-      //_________________________
-      // construct a and b arrays
-      for (int jCol=0; jCol < abSize_m2-1; ++jCol) {
-        const int twojcol = 2*jCol;
-        a_m2[jCol] = alpha_m2[twojcol+1] + alpha_m2[twojcol];
-        const double rhsB = alpha_m2[twojcol+1]*alpha_m2[twojcol+2];
-        //
-        if (rhsB < 0) {
-          std::ostringstream errorMsg;
-          errorMsg << endl
-          << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
-          << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
-
-          std::cout << "New b matrix is also negative" << endl;
-          std::cout << knownMomentsTagList_ << std::endl; //if there is an error display which set of equations failed (in case there are multiple polymorphs)
-          for (int i = 0; i<nMoments_; i++) {
-            printf("M[%i] = %.15f \n", i, *knownMomentsIterators[i]);
+      while ( negativeWeights ) { //this will decrease the moment order until either a positive matrix is found, or reduced moments = 2
+        
+        nReducedMoments = nReducedMoments - 2; //reduce moment order
+        std::cout << "using reduced moment # " << nReducedMoments << std::endl;
+        
+        pmatrix_m2.resize(nReducedMoments);
+        for (int i = 0; i< nReducedMoments; ++i) 
+          pmatrix_m2[i].resize(nReducedMoments+1);
+        
+        // initialize the p matrix
+        for (int i=0; i<nReducedMoments; ++i) {
+          for (int j=0; j<nReducedMoments+1; ++j) {
+            pmatrix_m2[i][j]=0.0;
           }
-          throw std::runtime_error( errorMsg.str() );
         }
-        b_m2[jCol] = -std::sqrt(rhsB);
+        pmatrix_m2[0][0] = 1.0;
+        
+        //resize vectors for new moment order
+        
+        abSize_m2 = nReducedMoments/2;
+        alpha_m2.resize(nReducedMoments);
+        a_m2.resize( abSize_m2 );
+        b_m2.resize( abSize_m2 );
+        jMatrix_m2.resize( abSize_m2*abSize_m2 );
+        eigenValues_m2.resize( abSize_m2 );
+        weights_m2.resize(abSize_m2);
+      
+        //fill in p-matrix
+        for (int iRow=0; iRow<=nReducedMoments-2; iRow += 2) {
+          // get the the iRow moment for this point
+          pmatrix_m2[iRow][1] = *knownMomentsIterators[iRow];
+          // get the the (iRow+1) moment for all points
+          pmatrix_m2[iRow+1][1] = -*knownMomentsIterators[iRow+1];
+        }
+        for (int jCol=2; jCol<=nReducedMoments; ++jCol) {
+          for (int iRow=0; iRow <= nReducedMoments - jCol; ++iRow) {
+            pmatrix_m2[iRow][jCol] = pmatrix_m2[0][jCol-1]*pmatrix_m2[iRow+1][jCol-2]
+            - pmatrix_m2[0][jCol-2]*pmatrix_m2[iRow+1][jCol-1];
+          }
+        }
+
+        //alpha
+        alpha_m2[0]=0.0;
+        for (int jCol=1; jCol<nReducedMoments; ++jCol)
+          alpha_m2[jCol] = pmatrix_m2[0][jCol+1]/(pmatrix_m2[0][jCol]*pmatrix_m2[0][jCol-1]);
+        
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+        for (int iRow=0; iRow<nReducedMoments; iRow++) {
+          for (int jCol=0; jCol<nReducedMoments +1; jCol++) {
+            printf("p[%i][%i] = %f \t \t",iRow,jCol,pmatrix_m2[iRow][jCol]);
+          }
+          printf("\n");
+        }
+
+        for (int iRow=0; iRow<nReducedMoments; iRow++) {
+          printf("alpha[%i] = %f \t \t",iRow,alpha_m2[iRow]);
+        }
+        printf("\n");
+#endif
+        
+        if (nReducedMoments == 2) {
+          negativeWeights = false;
+          std::cout << "WARNING: Using delta function approximation at this point" << std::endl;
+        }
+        
+        //_________________________
+        // construct a and b arrays
+        for (int jCol=0; jCol < abSize_m2-1; ++jCol) {
+          const int twojcol = 2*jCol;
+          a_m2[jCol] = alpha_m2[twojcol+1] + alpha_m2[twojcol];
+          const double rhsB = alpha_m2[twojcol+1]*alpha_m2[twojcol+2];
+          //
+          if (rhsB < 0) {
+
+            std::cout << "WARNING: Negative number detected in NEW B matrix, decreasing number of moments by 2 again and recalculating" << std::endl;
+            std::cout << knownMomentsTagList_ << std::endl; 
+            negativeWeights = true;
+            for (int i = 0; i<nMoments_; i++) {
+              printf("M[%i] = %.15f \n", i, *knownMomentsIterators[i]);
+            }
+            break;
+
+          } else {
+            b_m2[jCol] = -std::sqrt(rhsB);
+            negativeWeights = false;
+          }
+        }    
+        
       }
       
-      //fill last a vector
+      //now that b is all > 0 finish eigensolve  
+      // fill in the last entry for a
       a_m2[abSize_m2-1] = alpha_m2[2*(abSize_m2-1) + 1] + alpha_m2[2*(abSize_m2-1)];
-      
-      //need to initialize JMAtrix to zero at each point
+          
+      //need to initialize JMatrix to zero at each point
       for (int i = 0; i<abSize_m2*abSize_m2; i++) {
         jMatrix_m2[i] = 0.0;
       }
@@ -473,7 +504,7 @@ evaluate()
         jMatrix_m2[iRow + 1 + iRow*abSize_m2] = b_m2[iRow];
       }
       jMatrix_m2[abSize_m2*abSize_m2-1] = a_m2[abSize_m2 - 1];
-      
+          
       //__________
       // Eigenvalue solve
       /* Query and allocate the optimal workspace */
@@ -485,10 +516,9 @@ evaluate()
       dsyev_( &jobz, &matType, &n, &jMatrix_m2[0], &lda, &eigenValues_m2[0], &wkopt, &lwork, &info );
       lwork = (int)wkopt;
       work_m2.resize(lwork);
-      
       // Solve eigenproblem. eigenvectors are stored in the jMatrix, columnwise
       dsyev_( &jobz, &matType, &n, &jMatrix_m2[0], &lda, &eigenValues_m2[0], &work_m2[0], &lwork, &info );
-      
+
       //__________
       // save the weights and abscissae
       m0 = *knownMomentsIterators[0];
@@ -502,11 +532,13 @@ evaluate()
         *resultsIterators[matLoc + 1] = eigenValues_m2[i];
       }
       
-      int ii = abSize - 1;
-      *resultsIterators[2*ii] = 0.0; // weights_m2[ii];
-      *resultsIterators[2*ii + 1] = 1.0; // eigenValues_m2[ii];
+      //fill in other weights with 0, and abscissae with 1
+      for ( int i = abSize_m2; i<abSize; ++ i ) {
+        const int matLoc = 2*i;
+        *resultsIterators[matLoc] = 0.0;
+        *resultsIterators[matLoc + 1] = 1.0;  
+      }
       
-      delete pmatrix_m2;
     } 
       
     //__________
