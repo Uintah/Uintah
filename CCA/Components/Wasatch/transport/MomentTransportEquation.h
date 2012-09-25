@@ -65,7 +65,7 @@ namespace Wasatch{
    *  \par Notes & Restrictions
    *
    *  - The source term of momentum equation is \f$\nabla P \f$ and
-   *    the diffusive Flux is \f$\nabla . \tau \f$. Right now in the
+   *    the diffusive Flux is \f$\nabla \cdot \tau \f$. Right now in the
    *    momentumTransportEqu we do not require density when it is
    *    constant. So, you should be careful about these 2 terms in
    *    constant density cases. You need to use kinematic viscosity

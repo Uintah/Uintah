@@ -33,7 +33,7 @@
  *  \author Alex Abboud
  *  \date June 2012
  *  \brief Calculates the averaged moment at each grid point
- *  \f$ <\phi_\alpha> = \sum_i^3 w_i \phi_{\alpha,i}  \f$
+ *  \f$ \left<\phi_\alpha\right> = \sum_i^3 w_i \phi_{\alpha,i} \f$
  *  requires the initial moment value set s the moments of 1st and 3rd envrinment
  *  requires new moment (state_none) to keep average up to date
  *  and the tag list of weights and derivatives of weights

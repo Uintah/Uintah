@@ -59,8 +59,8 @@ public:
   public:
     /**
      *  \brief Construct a turbulent viscosity given expressions for
-     *         \f$\rho\f$, \f$u_1\f$, \f$\u_2\f$ and a constant value for 
-     *         Smagorinske Constant, \f$C\f$.
+     *         \f$\rho\f$, \f$u_1\f$, \f$u_2\f$ and a constant value for
+     *         Smagorinsky Constant, \f$C\f$.
      *
      *  \param rhoTag the Expr::Tag for the density.
      *

@@ -876,7 +876,7 @@ RandomField<ValT>::Builder::build() const
  *  \author Tony Saad
  *  \date July, 2012
  *  \brief Implements an exponential vortex with the streamfunction given
-           by \f$ \psi = C_0 \text{Exp}\left( - \frac{r^2}{2 R_0^2} \right) + U_0 y  \f$.
+           by \f$ \psi = C_0 \exp \left( - \frac{r^2}{2 R_0^2} \right) + U_0 y  \f$.
     here, \f$ C_0 \f$ is the vortex strength, \f$ r = \sqrt{(x-x_0)^2 + (y-y0)^2} \f$
     with \f$ x_0 \f$ and \f$ y_0 \f$ corresponding to the vortex center, \f$ R_0 \f$
     is the vortex radius, and \f$ U_0 \f$ is the free stream velocity. NOTE: when the vortex

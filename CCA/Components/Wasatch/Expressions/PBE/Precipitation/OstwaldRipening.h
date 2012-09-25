@@ -36,9 +36,9 @@
  *  \tparam FieldT the type of field.
  *
  *  \brief calculates the source term associated with Oswalt Ripening
- *  where \f$ G = g_0 * ( S- \bar{S} )/r \f$ this is the second term
+ *  where \f$ G = g_0 ( S- \bar{S} )/r \f$ this is the second term
  *  \f$ \bar{S} = \exp ( 2 \nu \gamma /R T r) \f$
- *  \f$ OR = - g_0 * k * \int \exp( r_0 /r ) r^{k-2} N(r) dr \f$
+ *  \f$ OR = - g_0 k \int \exp( r_0 /r ) r^{k-2} N(r) dr \f$
  *  with the qudarature approximation used so that
  *  \f$ \int \exp( r_0 /r ) r^{k-2} N(r) dr \approx \sum_i exp( r0 / r_i ) r_i^{k-2} \f$
  *  going to reuse an already calculated expression with S in it so have to divide it out
