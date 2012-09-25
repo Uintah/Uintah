@@ -688,7 +688,10 @@
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
               <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
-              
+              <allowReflect              spec="OPTIONAL BOOLEAN"/>
+              <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
+             
+ 
               <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
