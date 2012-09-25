@@ -353,46 +353,16 @@ evaluate()
   *gd32 <<= *g31 * *g12 + *g32 * *g22 + *g33 * *g32;
   *gd33 <<= *g31 * *g13 + *g32 * *g23 + *g33 * *g33;
 
-  SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
   SpatFldPtr<SVolField> dilsq = SpatialFieldStore::get<SVolField>( SqStrTsrMag );
-  *tmp<<=0.0;
   *dilsq<<=0.0;
-
   *dilsq<<= (1.0/3.0)*(*gd11 + *gd22 + *gd33);
 
-//  *tmp <<= *gd11 - *dilsq;                       // Sd_11
-//  StrTsrMag <<= StrTsrMag + *tmp * *tmp;         // Sd_11*Sd_11
-//
-//  *tmp <<= 0.5*(*gd12 + *gd21);                  // Sd_12
-//  StrTsrMag <<= StrTsrMag + 2.0 * *tmp * *tmp;   // + Sd_12*Sd_12 + Sd_21*Sd_21
-//
-//  *tmp <<= 0.5*(*gd13 + *gd31);                  // Sd_13
-//  StrTsrMag <<= StrTsrMag + 2.0 * *tmp * *tmp;   // + Sd_13*Sd_13 + Sd_31*Sd_31
-//
-////  *tmp <<= 0.5*(*gd21 + *gd12);            // Sd_21
-////  StrTsrMag <<= StrTsrMag + *tmp * *tmp;   // + Sd_21*Sd_21
-//
-//  *tmp <<= *gd22  - *dilsq;                      // Sd_22
-//  StrTsrMag <<= StrTsrMag + *tmp * *tmp;         // + Sd_22*Sd_22
-//
-//  *tmp <<= 0.5*(*gd23 + *gd32);                  // Sd_23
-//  StrTsrMag <<= StrTsrMag + 2.0 * *tmp * *tmp;   // + Sd_23*Sd_23 + Sd_32*Sd_32
-//
-////  *tmp <<= 0.5*(*gd31 + *gd13);            // Sd_31
-////  StrTsrMag <<= StrTsrMag + *tmp * *tmp;   // + Sd_31*Sd_31
-//
-////  *tmp <<= 0.5*(*gd32 + *gd23);            // Sd_32
-////  StrTsrMag <<= StrTsrMag + *tmp * *tmp;   // + Sd_32*Sd_32
-//
-//  *tmp <<= *gd33 - *dilsq;                       // Sd_33
-//  StrTsrMag <<= StrTsrMag + *tmp * *tmp;         // + Sd_33*Sd_33
-
-  SqStrTsrMag <<=  (0.5*(*gd11 + *gd11) - *dilsq) * (0.5*(*gd11 + *gd11) - *dilsq)
-                + 0.5 * (*gd12 + *gd21) * (*gd12 + *gd21)                                // Sd_12*Sd_12 + Sd_21*Sd_21 = 2.0 Sd_12*Sd_12
-                + 0.5 * (*gd13 + *gd31) * (*gd13 + *gd31)                                // Sd_13*Sd_13 + Sd_31*Sd_31 = 2.0 Sd_13*Sd_13
-                + (0.5*(*gd22 + *gd22) - *dilsq) * (0.5*(*gd22 + *gd22) - *dilsq)
-                + 0.5 * (*gd23 + *gd32) * (*gd23 + *gd32)                                // Sd_23*Sd_23 + Sd_32*Sd_32 = 2.0 Sd_23*Sd_23
-                + (0.5*(*gd33 + *gd33) - *dilsq) * (0.5*(*gd33 + *gd33) - *dilsq);
+  SqStrTsrMag <<=  (*gd11 - *dilsq) * (*gd11 - *dilsq)       // Sd_11 * Sd_11
+                 + 0.5 * (*gd12 + *gd21) * (*gd12 + *gd21)                                // Sd_12*Sd_12 + Sd_21*Sd_21 = 2.0 Sd_12*Sd_12
+                 + 0.5 * (*gd13 + *gd31) * (*gd13 + *gd31)                                // Sd_13*Sd_13 + Sd_31*Sd_31 = 2.0 Sd_13*Sd_13
+                 + (*gd22 - *dilsq) * (*gd22 - *dilsq)
+                 + 0.5 * (*gd23 + *gd32) * (*gd23 + *gd32)                                // Sd_23*Sd_23 + Sd_32*Sd_32 = 2.0 Sd_23*Sd_23
+                 + (*gd33 - *dilsq) * (*gd33 - *dilsq);
 }
 
 //--------------------------------------------------------------------
