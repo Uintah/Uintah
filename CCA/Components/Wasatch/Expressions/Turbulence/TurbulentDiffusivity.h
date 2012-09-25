@@ -38,7 +38,9 @@ Expr::Tag turbulent_diffusivity_tag();
  *  \author Amir Biglari
  *  \date   July, 2012. (Originally created: Jan, 2012).
  *  \ingroup Expressions
- *  \brief given turbulent schmidt number, \f$Sc_{turb}\f$, and turbulent viscosity, \f$\mu_{turb}\f$, and filtered density, \f$\bar{\rho}\f$, this calculates turbulent diffusivity, \f$\D_{turb} = \frac{\mu_{turb}}{\bar{\rho} Sc_turb}\f$.
+ *  \brief given turbulent schmidt number, \f$Sc_{turb}\f$, and turbulent viscosity,
+ *   \f$\mu_{turb}\f$, and filtered density, \f$\bar{\rho}\f$, this calculates
+ *   turbulent diffusivity, \f$D_{turb} = \frac{\mu_{turb}}{\bar{\rho} Sc_{turb}}\f$.
  *
  *   Note: It is currently assumed that turbulent diffusivity viscosity is a "SVolField" type.  
  *         Therefore, variables should be interpolated into "SVolField" at the end. 
