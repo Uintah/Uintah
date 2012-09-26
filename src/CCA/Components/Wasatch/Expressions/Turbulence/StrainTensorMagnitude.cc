@@ -27,8 +27,13 @@
 Expr::Tag straintensormagnitude_tag() {
   return Expr::Tag( "StrainTensorMagnitude", Expr::STATE_NONE );
 }
+
 Expr::Tag square_straintensormagnitude_tag() {
   return Expr::Tag( "SquareStrainTensorMagnitude", Expr::STATE_NONE );
+}
+
+Expr::Tag vreman_tensormagnitude_tag() {
+  return Expr::Tag( "VremanTensorMagnitude", Expr::STATE_NONE );
 }
 
 StrainTensorMagnitude::
@@ -384,6 +389,193 @@ Expr::ExpressionBase*
 SquareStrainTensorMagnitude::Builder::build() const
 {
   return new SquareStrainTensorMagnitude( v1t_, v2t_, v3t_ );
+}
+
+//--------------------------------------------------------------------
+//====================================================================
+//--------------------------------------------------------------------
+
+VremanTensorMagnitude::
+VremanTensorMagnitude( const Expr::Tag& vel1tag,
+                            const Expr::Tag& vel2tag,
+                            const Expr::Tag& vel3tag )
+: StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
+{}
+
+//--------------------------------------------------------------------
+
+VremanTensorMagnitude::
+~VremanTensorMagnitude()
+{}
+
+//--------------------------------------------------------------------
+
+void
+VremanTensorMagnitude::
+evaluate()
+{
+  using namespace SpatialOps;
+  SVolField& VremanTsrMag = this->value();
+  VremanTsrMag <<= 0.0;
+  
+  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( VremanTsrMag );
+  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( VremanTsrMag );
+  *xyfield <<= 0.0;
+  *yxfield <<= 0.0;
+  
+  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( VremanTsrMag );
+  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( VremanTsrMag );
+  *xzfield <<= 0.0;
+  *zxfield <<= 0.0;
+  
+  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( VremanTsrMag );
+  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( VremanTsrMag );
+  *zyfield <<= 0.0;
+  *yzfield <<= 0.0;
+  
+  SpatFldPtr<SVolField> a11 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a12 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a13 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a21 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a22 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a23 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a31 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a32 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> a33 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  
+  
+  //  if (!doX_) {
+  *a11 <<= 0.0;
+  *a12 <<= 0.0;
+  *a13 <<= 0.0;
+  *a21 <<= 0.0;
+  *a31 <<= 0.0;
+  //  }
+  
+  //  if (!doY_) {
+  *a21 <<= 0.0;
+  *a22 <<= 0.0;
+  *a23 <<= 0.0;
+  *a12 <<= 0.0;
+  *a32 <<= 0.0;
+  //  }
+  
+  //  if (!doZ_) {
+  *a31 <<= 0.0;
+  *a32 <<= 0.0;
+  *a33 <<= 0.0;
+  *a23 <<= 0.0;
+  *a13 <<= 0.0;
+  //  }
+  
+  
+  // du fields
+  if (doX_) dudxOp_->apply_to_field( *vel1_, *a11 ); // dudx
+  if (doY_) dvdyOp_->apply_to_field( *vel2_, *a22 ); // dvdy
+  if (doZ_) dwdzOp_->apply_to_field( *vel3_, *a33 ); // dwdz
+  
+  //if (doX_ && doY_) {
+    dudyOp_->apply_to_field( *vel1_, *xyfield );   // du/dy
+    xyInterpOp_->apply_to_field( *xyfield, *a21);  // interpolate to scalar cells
+    
+    dvdxOp_->apply_to_field( *vel2_, *yxfield );   // dv/dx
+    yxInterpOp_->apply_to_field( *yxfield, *a12);  // interpolate to scalar cells
+  //}
+  
+  //if (doX_ && doZ_) {
+    dudzOp_->apply_to_field( *vel1_, *xzfield );   // du/dz
+    xzInterpOp_->apply_to_field( *xzfield, *a31);  // interpolate to scalar cells
+    
+    dwdxOp_->apply_to_field( *vel3_, *zxfield );   // dw/dx
+    zxInterpOp_->apply_to_field( *zxfield, *a13);  // interpolate to scalar cells
+  //}
+  
+  //if (doY_ && doZ_) {
+    dvdzOp_->apply_to_field( *vel2_, *yzfield );   // dv/dz
+    yzInterpOp_->apply_to_field( *yzfield, *a32);  // interpolate to scalar cells
+    
+    dwdyOp_->apply_to_field( *vel3_, *zyfield );   // dw/dy
+    zyInterpOp_->apply_to_field( *zyfield, *a23);  // interpolate to scalar cells
+  //}
+  
+  SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b12 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b13 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b21 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b22 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b23 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b31 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b32 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  SpatFldPtr<SVolField> b33 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  
+  //  if (!doX_) {
+  *b11 <<= 0.0;
+  *b12 <<= 0.0;
+  *b13 <<= 0.0;
+  *b21 <<= 0.0;
+  *b31 <<= 0.0;
+  //  }
+  
+  //  if (!doY_) {
+  *b21 <<= 0.0;
+  *b22 <<= 0.0;
+  *b23 <<= 0.0;
+  *b12 <<= 0.0;
+  *b32 <<= 0.0;
+  //  }
+  
+  //  if (!doZ_) {
+  *b31 <<= 0.0;
+  *b32 <<= 0.0;
+  *b33 <<= 0.0;
+  *b23 <<= 0.0;
+  *b13 <<= 0.0;
+  //  }
+  
+  *b11 <<= *a11 * *a11 + *a21 * *a21 + *a31 * *a31;
+  *b12 <<= *a11 * *a12 + *a21 * *a22 + *a31 * *a32;
+  *b13 <<= *a11 * *a13 + *a21 * *a23 + *a31 * *a33;
+  
+  *b21 <<= *a12 * *a11 + *a22 * *a21 + *a32 * *a31;
+  *b22 <<= *a12 * *a12 + *a22 * *a22 + *a32 * *a32;
+  *b23 <<= *a12 * *a13 + *a22 * *a23 + *a32 * *a33;
+  
+  *b31 <<= *a13 * *a11 + *a23 * *a21 + *a33 * *a31;
+  *b32 <<= *a13 * *a12 + *a23 * *a22 + *a33 * *a32;
+  *b33 <<= *a13 * *a13 + *a23 * *a23 + *a33 * *a33;
+
+  SpatFldPtr<SVolField> abeta = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  *abeta<<=0.0; // abeta = aij * aij
+  *abeta <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
+            + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
+            + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
+
+  SpatFldPtr<SVolField> bbeta = SpatialFieldStore::get<SVolField>( VremanTsrMag );
+  *bbeta<<=0.0;
+  *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
+
+  VremanTsrMag <<= sqrt(*bbeta / *abeta);
+}
+
+//--------------------------------------------------------------------
+
+VremanTensorMagnitude::
+Builder::Builder( const Expr::Tag& result,
+                 const Expr::Tag& vel1tag,
+                 const Expr::Tag& vel2tag,
+                 const Expr::Tag& vel3tag )
+: ExpressionBuilder(result),
+v1t_( vel1tag ),
+v2t_( vel2tag ),
+v3t_( vel3tag )
+{}
+
+//--------------------------------------------------------------------
+
+Expr::ExpressionBase*
+VremanTensorMagnitude::Builder::build() const
+{
+  return new VremanTensorMagnitude( v1t_, v2t_, v3t_ );
 }
 
 //--------------------------------------------------------------------

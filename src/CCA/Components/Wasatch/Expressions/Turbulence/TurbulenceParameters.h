@@ -38,6 +38,7 @@ namespace Wasatch{
     SMAGORINSKY,
     DYNAMIC,
     WALE,
+    VREMAN,
     NONE
   };
   
