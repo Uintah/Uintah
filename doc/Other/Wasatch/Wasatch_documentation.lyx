@@ -1182,6 +1182,68 @@ Care must be taken in evaluating the components of
 .
 \end_layout
 
+\begin_layout Paragraph
+Vreman Model
+\end_layout
+
+\begin_layout Standard
+The Vreman model 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "vreman2004eddy"
+
+\end_inset
+
+ is supposed to compete with the dynamic model by performing analytical
+ filtering thus avoiding the computationally-intensive dynamic filtering
+ of the dynamic model.
+ The model is relatively simple to implement and is given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mu_{t}=\rho C_{\mathrm{v}}\Delta^{2}\sqrt{\frac{B_{\beta}}{\alpha_{ij}\alpha_{ij}}},
+\end{equation}
+
+\end_inset
+
+where
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\mathrm{v}}\approx2.5C_{\mathrm{s}}^{2},
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\alpha_{ij}=\frac{\partial\widetilde{u_{j}}}{x_{i}},
+\end{equation}
+
+\end_inset
+
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+B_{\beta}=\beta_{11}\beta_{22}\text{−}\beta_{12}^{2}+\beta_{11}\beta_{33}\text{−}\beta_{13}^{2}+\beta_{22}\beta_{33}\text{−}\beta_{23}^{2};\quad\beta_{ij}=\alpha_{mi}\alpha_{mj}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Generic Scalar Transport 
 \begin_inset Note Note
