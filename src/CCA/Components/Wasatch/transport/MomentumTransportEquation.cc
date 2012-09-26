@@ -400,8 +400,7 @@ namespace Wasatch{
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];
     //
-    const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
-
+    const Expr::Tag viscTag = (isviscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
     //--------------------------------------
     // TURBULENCE
     // check if we have a turbulence model turned on
