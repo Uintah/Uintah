@@ -318,15 +318,12 @@ void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
   IntVector c_hi_patch = coarsePatch->getExtraNodeHighIndex();
 
   IntVector l = Max(c_lo_face, c_lo_patch);             // intersection
-  IntVector h = Min(c_hi_face, c_hi_patch);
-
-  l = Max(l, coarsePatch->getExtraNodeLowIndex());
-  h = Min(h, coarsePatch->getExtraNodeHighIndex());
+  IntVector h = Min(c_hi_face, c_hi_patch);  
   
-  iter=NodeIterator(l,h);
   isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l) ){
+  if ( coarsePatch->containsNode(l) && coarsePatch->containsNode(h - IntVector(1,1,1))){
     isRight_CP_FP_pair = true;
+    iter=NodeIterator(l,h);
   }
 }
 
@@ -391,12 +388,8 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
 
   if ( coarsePatch->containsCell(c_l) && coarsePatch->containsCell(c_h) ){
     isRight_CP_FP_pair = true;
-  }
-  
-  if (isRight_CP_FP_pair){
     iter=f_iter;
   }
-
   
 #if 0
   // debugging
