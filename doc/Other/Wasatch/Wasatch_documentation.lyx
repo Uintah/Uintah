@@ -5742,6 +5742,363 @@ The Taylor flow in a channel describes the steady inviscid state of a fluid
  This is a great case for testing inlet and outflow boundary conditions.
 \end_layout
 
+\begin_layout Section
+Decay of Isotropic Turbulence
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-decay_isotropic_turbulence_csmag_64-t0s.png
+	width 3.13in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $t=0$
+\end_inset
+
+ s
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/raster/wasatch-decay_isotropic_turbulence_csmag_64-t0.67s.png
+	width 3.13in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset Formula $t=0.67$
+\end_inset
+
+ s
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Contours of velocity magnitude for the decay of isotropic turbulence in
+ a periodic box.
+ Results are shown using the Smagorinsky-Lilly model at (a) 
+\begin_inset Formula $t=0$
+\end_inset
+
+ s and (b) 
+\begin_inset Formula $t=0.67$
+\end_inset
+
+ s.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_csmag_32_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_csmag_64_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Turbulent kinetic energy spectrum for the constant Smagorinsky model with
+ 
+\begin_inset Formula $C_{\mathrm{s}}=0.2$
+\end_inset
+
+ and for grid sizes (a) 32x32x32, and (b) 64x64x64.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_wale_32_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_wale_64_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Turbulent kinetic energy spectrum for the WALE model with 
+\begin_inset Formula $C_{\mathrm{w}}=0.7$
+\end_inset
+
+ and for grid sizes (a) 32x32x32, and (b) 64x64x64.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_vreman_32_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_vreman_64_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Turbulent kinetic energy spectrum for the constant Vreman model with 
+\begin_inset Formula $C_{\mathrm{s}}=0.2$
+\end_inset
+
+ (or 
+\begin_inset Formula $C_{\mathrm{v}}=2.5C_{\mathrm{s}}^{2}=0.1$
+\end_inset
+
+) and for grid sizes (a) 32x32x32, and (b) 64x64x64.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Summary of Supported Expressions
 \end_layout
