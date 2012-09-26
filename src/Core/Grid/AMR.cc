@@ -288,7 +288,7 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
   
   iter=CellIterator(l,h);
   isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l) ){
+  if ( coarsePatch->containsCell(l) && coarsePatch->containsNode(h - IntVector(1,1,1) ) ){
     isRight_CP_FP_pair = true;
   }
 }
