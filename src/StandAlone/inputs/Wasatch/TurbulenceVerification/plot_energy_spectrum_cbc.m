@@ -1,4 +1,4 @@
-% function: energy_spectrum_cbc
+% function: plot_energy_spectrum_cbc
 % author:   Tony Saad
 % date:     September, 2012
 %
@@ -11,7 +11,8 @@
 %
 % The data in cbc_spectrum.txt is from table 3 on page 298 of that paper.
 %
-function energy_spectrum_cbc()
+        
+function plot_energy_spectrum_cbc()
   exp = load('cbc_spectrum.txt');
   loglog(exp(:,1)*100,exp(:,2)*1e-6,'k-'); hold on;
   loglog(exp(:,1)*100,exp(:,3)*1e-6,'k-');
