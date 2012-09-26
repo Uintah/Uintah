@@ -51,7 +51,7 @@
 
     <Turbulence>
        <KolmogorovScale>100000000000000</KolmogorovScale>
-      <EddyViscosityConstant>0.65</EddyViscosityConstant>
+      <EddyViscosityConstant>0.7</EddyViscosityConstant>
       <TurbulenceModel> WALE </TurbulenceModel>
     </Turbulence>
   
@@ -139,16 +139,16 @@
     <initTime>0.0</initTime>
     <delt_min>1e-3</delt_min>
     <delt_max>1e-3</delt_max>
-    <max_Timesteps>5</max_Timesteps>
+<!--     <max_Timesteps>5</max_Timesteps> -->
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>decay-isotropic-turbulence-wale-64.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle = "2" interval = "1"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
