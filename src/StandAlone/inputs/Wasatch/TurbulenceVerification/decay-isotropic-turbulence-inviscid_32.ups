@@ -50,7 +50,7 @@
     </BasicExpression>
 
     <Turbulence>
-      <KolmogorovScale>100000000000000</KolmogorovScale>
+       <KolmogorovScale>100000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
       <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
     </Turbulence>
@@ -86,7 +86,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_NONE" />
-      <Constant>1e-5</Constant>
+      <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
@@ -97,6 +97,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
+      <DisableTurbulenceModel/>        
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -137,8 +138,8 @@
   <Time>
     <maxTime>0.67</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-3</delt_min>
-    <delt_max>1e-3</delt_max>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
 <!-- 
     <max_Timesteps>5</max_Timesteps>
  -->
@@ -147,8 +148,8 @@
 
 
   <DataArchiver>
-    <filebase>decay-isotropic-turbulence-csmag-32.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <filebase>decay-isotropic-turbulence-inviscid-32.uda</filebase>
+    <outputTimestepInterval>100</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "10"/>
     <compression>gzip</compression>
@@ -156,7 +157,6 @@
     <save label="y-mom"/>
     <save label="z-mom"/>    
     <save label="pressure"/>
-    <save label="TurbulentViscosity"/>    
     <save label="dilatation"/>
   </DataArchiver> 
 

@@ -150,7 +150,7 @@
     <filebase>decay-isotropic-turbulence-wale-32.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle = "2" interval = "1"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>

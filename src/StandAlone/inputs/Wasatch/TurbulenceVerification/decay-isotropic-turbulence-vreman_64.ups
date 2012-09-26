@@ -50,9 +50,9 @@
     </BasicExpression>
 
     <Turbulence>
-      <KolmogorovScale>100000000000000</KolmogorovScale>
+       <KolmogorovScale>100000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
+      <TurbulenceModel> VREMAN </TurbulenceModel>
     </Turbulence>
   
     <!-- Set the initial condition for x-mom -->
@@ -60,7 +60,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="x-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_u.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_u.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -69,7 +69,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="y-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_v.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_v.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -78,7 +78,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="z-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_w.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_w.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -121,7 +121,7 @@
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-12  </tolerance>
+            <tolerance>      1.e-10  </tolerance>
             <maxiterations>  1000    </maxiterations>
             <relax_type> 2 </relax_type>
             <jump>           0       </jump>
@@ -139,18 +139,16 @@
     <initTime>0.0</initTime>
     <delt_min>1e-3</delt_min>
     <delt_max>1e-3</delt_max>
-<!-- 
-    <max_Timesteps>5</max_Timesteps>
- -->
+<!--     <max_Timesteps>5</max_Timesteps> -->
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>decay-isotropic-turbulence-csmag-32.uda</filebase>
+    <filebase>decay-isotropic-turbulence-vreman-64.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "10"/>
+    <checkpoint cycle = "2" interval = "1"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -165,7 +163,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[0.565486677646163,0.565486677646163,0.565486677646163]</upper>
-        <resolution>[32,32,32]</resolution>
+        <resolution>[64,64,64]</resolution>
         <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

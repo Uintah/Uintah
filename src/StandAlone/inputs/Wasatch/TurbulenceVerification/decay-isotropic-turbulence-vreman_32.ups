@@ -52,7 +52,7 @@
     <Turbulence>
       <KolmogorovScale>100000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
+      <TurbulenceModel> VREMAN </TurbulenceModel>
     </Turbulence>
   
     <!-- Set the initial condition for x-mom -->
@@ -147,7 +147,7 @@
 
 
   <DataArchiver>
-    <filebase>decay-isotropic-turbulence-csmag-32.uda</filebase>
+    <filebase>decay-isotropic-turbulence-vreman-32.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "10"/>
