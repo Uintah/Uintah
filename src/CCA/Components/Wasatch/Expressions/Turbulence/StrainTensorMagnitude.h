@@ -31,7 +31,7 @@
  *  \brief obtain the tag for the strain tensor magnitude
  */
 Expr::Tag straintensormagnitude_tag();
-Expr::Tag square_straintensormagnitude_tag();
+Expr::Tag wale_tensormagnitude_tag();
 Expr::Tag vreman_tensormagnitude_tag();
 
 /**
@@ -132,7 +132,7 @@ public:
 };
 
 /**
- *  \class  SquareStrainTensorMagnitude
+ *  \class  WaleTensorMagnitude
  *  \author Tony Saad
  *  \date   June, 2012
  *  \ingroup Expressions
@@ -144,9 +144,9 @@ public:
            Square of the Velocity Gradient Tensor
  *
  */
-class SquareStrainTensorMagnitude : public StrainTensorMagnitude {
+class WaleTensorMagnitude : public StrainTensorMagnitude {
 
-  SquareStrainTensorMagnitude( const Expr::Tag& vel1tag,
+  WaleTensorMagnitude( const Expr::Tag& vel1tag,
                                const Expr::Tag& vel2tag,
                                const Expr::Tag& vel3tag);  
   public:
@@ -170,12 +170,12 @@ class SquareStrainTensorMagnitude : public StrainTensorMagnitude {
       const Expr::Tag v1t_, v2t_, v3t_;
     };
   
-  ~SquareStrainTensorMagnitude();
+  ~WaleTensorMagnitude();
   void evaluate();
 };
 
 /**
- *  \class  SquareStrainTensorMagnitude
+ *  \class  VremanTensorMagnitude
  *  \author Tony Saad
  *  \date   June, 2012
  *  \ingroup Expressions
