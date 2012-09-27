@@ -152,7 +152,7 @@ evaluate()
       break;
 
     case Wasatch::VREMAN:
-      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |S|
+      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|
       break;
       
     default:
