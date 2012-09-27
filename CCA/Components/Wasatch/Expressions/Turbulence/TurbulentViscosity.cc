@@ -148,7 +148,7 @@ evaluate()
       break;
 
     case Wasatch::WALE:
-      result <<= mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
+      result <<= *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
       break;
 
     case Wasatch::VREMAN:

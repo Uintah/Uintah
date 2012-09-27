@@ -53,7 +53,7 @@ namespace Wasatch{
                                         const Expr::Tag densTag) {
 
     Expr::Tag strTsrMagTag  = Expr::Tag();
-    Expr::Tag sqStrTsrMagTag  = Expr::Tag();
+    Expr::Tag waleTsrMagTag  = Expr::Tag();
     Expr::Tag dynSmagConstTag = Expr::Tag();
     Expr::Tag vremanTsrMagTag  = Expr::Tag();    
     const Expr::Tag turbViscTag = turbulent_viscosity_tag();
@@ -89,10 +89,10 @@ namespace Wasatch{
         }
         
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
-        sqStrTsrMagTag = square_straintensormagnitude_tag();
-        if( !factory.have_entry( sqStrTsrMagTag ) ){
-          typedef SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
-          factory.register_expression( scinew SqStrTsrMagT(sqStrTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+        waleTsrMagTag = wale_tensormagnitude_tag();
+        if( !factory.have_entry( waleTsrMagTag ) ){
+          typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
+          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
         }
       }
         break;
@@ -110,7 +110,7 @@ namespace Wasatch{
 
     if( !factory.have_entry( turbViscTag ) ){
       typedef TurbulentViscosity::Builder TurbViscT;
-      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, vremanTsrMagTag, turbParams ) );
+      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, turbParams ) );
     }
   }
   

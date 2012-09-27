@@ -28,8 +28,8 @@ Expr::Tag straintensormagnitude_tag() {
   return Expr::Tag( "StrainTensorMagnitude", Expr::STATE_NONE );
 }
 
-Expr::Tag square_straintensormagnitude_tag() {
-  return Expr::Tag( "SquareStrainTensorMagnitude", Expr::STATE_NONE );
+Expr::Tag wale_tensormagnitude_tag() {
+  return Expr::Tag( "WaleTensorMagnitude", Expr::STATE_NONE );
 }
 
 Expr::Tag vreman_tensormagnitude_tag() {
@@ -209,8 +209,8 @@ StrainTensorMagnitude::Builder::build() const
 //====================================================================
 //--------------------------------------------------------------------
 
-SquareStrainTensorMagnitude::
-SquareStrainTensorMagnitude( const Expr::Tag& vel1tag,
+WaleTensorMagnitude::
+WaleTensorMagnitude( const Expr::Tag& vel1tag,
                       const Expr::Tag& vel2tag,
                       const Expr::Tag& vel3tag )
 : StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
@@ -218,14 +218,14 @@ SquareStrainTensorMagnitude( const Expr::Tag& vel1tag,
 
 //--------------------------------------------------------------------
 
-SquareStrainTensorMagnitude::
-~SquareStrainTensorMagnitude()
+WaleTensorMagnitude::
+~WaleTensorMagnitude()
 {}
 
 //--------------------------------------------------------------------
 
 void
-SquareStrainTensorMagnitude::
+WaleTensorMagnitude::
 evaluate()
 {
   using namespace SpatialOps;
@@ -363,16 +363,16 @@ evaluate()
   *dilsq<<= (1.0/3.0)*(*gd11 + *gd22 + *gd33);
 
   SqStrTsrMag <<=  (*gd11 - *dilsq) * (*gd11 - *dilsq)       // Sd_11 * Sd_11
-                 + 0.5 * (*gd12 + *gd21) * (*gd12 + *gd21)                                // Sd_12*Sd_12 + Sd_21*Sd_21 = 2.0 Sd_12*Sd_12
-                 + 0.5 * (*gd13 + *gd31) * (*gd13 + *gd31)                                // Sd_13*Sd_13 + Sd_31*Sd_31 = 2.0 Sd_13*Sd_13
-                 + (*gd22 - *dilsq) * (*gd22 - *dilsq)
-                 + 0.5 * (*gd23 + *gd32) * (*gd23 + *gd32)                                // Sd_23*Sd_23 + Sd_32*Sd_32 = 2.0 Sd_23*Sd_23
-                 + (*gd33 - *dilsq) * (*gd33 - *dilsq);
+                 + 0.5 * (*gd12 + *gd21) * (*gd12 + *gd21)   // Sd_12*Sd_12 + Sd_21*Sd_21 = 2.0 Sd_12*Sd_12
+                 + 0.5 * (*gd13 + *gd31) * (*gd13 + *gd31)   // Sd_13*Sd_13 + Sd_31*Sd_31 = 2.0 Sd_13*Sd_13
+                 + (*gd22 - *dilsq) * (*gd22 - *dilsq)       // Sd_22 * Sd_22
+                 + 0.5 * (*gd23 + *gd32) * (*gd23 + *gd32)   // Sd_23*Sd_23 + Sd_32*Sd_32 = 2.0 Sd_23*Sd_23
+                 + (*gd33 - *dilsq) * (*gd33 - *dilsq);      // Sd_33 * Sd_33
 }
 
 //--------------------------------------------------------------------
 
-SquareStrainTensorMagnitude::
+WaleTensorMagnitude::
 Builder::Builder( const Expr::Tag& result,
                  const Expr::Tag& vel1tag,
                  const Expr::Tag& vel2tag,
@@ -386,9 +386,9 @@ v3t_( vel3tag )
 //--------------------------------------------------------------------
 
 Expr::ExpressionBase*
-SquareStrainTensorMagnitude::Builder::build() const
+WaleTensorMagnitude::Builder::build() const
 {
-  return new SquareStrainTensorMagnitude( v1t_, v2t_, v3t_ );
+  return new WaleTensorMagnitude( v1t_, v2t_, v3t_ );
 }
 
 //--------------------------------------------------------------------
