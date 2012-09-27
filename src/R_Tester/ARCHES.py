@@ -44,9 +44,9 @@ UNUSED_TESTS = []
 NIGHTLYTESTS = [
    ("constantMMS"                 , "mms/constantMMS.ups"                         , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("almgrenMMS"                  , "mms/almgrenMMS.ups"                          , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("helium_RT"                   , "helium_RT.ups"                               , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Darwin" , ["doesTestRun"       , "no_dbg"]) , 
+   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Darwin" , ["doesTestRun"       , "no_dbg", "no_restart"]) , 
    ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Darwin" , ["doesTestRun"])     , 
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
@@ -75,7 +75,7 @@ NIGHTLYTESTS = [
 LOCALTESTS = [
    ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
    ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) , 
    ("helium_RT"                  , "helium_RT.ups"                               , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_explicit_table"     , "methane_explicit_table.ups"                  , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane8patch"              , "methane8patch.ups"                           , 8   , "All"   , ["exactComparison"]) , 
