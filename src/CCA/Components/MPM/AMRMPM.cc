@@ -75,7 +75,7 @@ using namespace std;
 static DebugStream cout_doing("AMRMPM", false);
 static DebugStream amr_doing("AMRMPM", false);
 
-#define USE_DEBUG_TASK
+//#define USE_DEBUG_TASK
 //#define DEBUG_VEL
 #define DEBUG_ACC
 
@@ -1498,7 +1498,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   
   for(int p=0;p<coarseCFI_Patches.size();p++){
-    const Patch* coarsePatch = coarsePatches->get(p);
+    const Patch* coarsePatch = coarseCFI_Patches[p];
 
     string txt = "(zero)";
     if (flag == coarsenData){
@@ -1580,7 +1580,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
               //cout << UintahParallelComponent::d_myworld->myrank() << "    fine patch face " << finePatch->getFaceName(patchFace)
-              //<< "    CoarseLevel CFI iterator: " << n_iter << endl;
+              //     << "    CoarseLevel CFI iterator: " << n_iter << endl;
 
               for(; !n_iter.done(); n_iter++) {
                 IntVector c_node = *n_iter;
@@ -1593,8 +1593,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                     // only overwrite coarse data if there is non-zero fine data
                     if( gMass_fine[f_node] > 2 * d_SMALL_NUM_MPM ){
 
-                    //  cout << "    coarsen:  c_node: " << c_node << " f_node: "<< f_node << " gmass_coarse: " 
-                    //       << gMass_coarse[c_node] << " gmass_fine: " << gMass_fine[f_node] << endl;
+                      //cout << "    coarsen:  c_node: " << c_node << " f_node: "<< f_node << " gmass_coarse: " 
+                      //     << gMass_coarse[c_node] << " gmass_fine: " << gMass_fine[f_node] << endl;
 
                       gMass_coarse[c_node]           = gMass_fine[f_node];
                       gVolume_coarse[c_node]         = gVolume_fine[f_node];
@@ -1604,8 +1604,10 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                     }
                    break;
                   case zeroData:
+                  
                     // cout << "    zero:  c_node: " << c_node << " f_node: "<< f_node << " gmass_coarse: " 
                     //       << gMass_coarse[c_node] << endl;
+                  
                     gMass_coarse[c_node]          = 0;
                     gVolume_coarse[c_node]        = 0;
                     gVelocity_coarse[c_node]      = Vector(0,0,0);
@@ -1643,7 +1645,7 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   
   for(int p=0;p<coarseCFI_Patches.size();p++){
-    const Patch* coarsePatch = coarsePatches->get(p);
+    const Patch* coarsePatch = coarseCFI_Patches[p];
 
     printTask(coarsePatch,cout_doing,"Doing AMRMPM::coarsenNodalData_CFI2");
     
@@ -2150,9 +2152,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
           Vector acc = (internalforce[n] + externalforce[n])/gmass[n];
           gacceleration[n]  = acc +  gravity;
           gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
-  /*`==========TESTING==========*/
-  #if 1
-          //if( abs(internalforce[n].length() > 1e-10) ) {
+/*`==========TESTING==========*/
+#ifdef DEBUG_ACC
           if( abs(gacceleration[n].length() - d_acc_ans.length()) > 1e-8 ) {
             Vector diff = gacceleration[n] - d_acc_ans;
             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
@@ -2161,8 +2162,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                  << " gmass: " << gmass[n] 
                  << " gravity: " << gravity << endl;
           }
-  #endif 
-  /*===========TESTING==========`*/
+#endif 
+/*===========TESTING==========`*/
         }
       }
     }  // matls
@@ -2256,9 +2257,6 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   
   ASSERT(level->hasCoarserLevel() );
   
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
-  Vector coarse_dx = coarseLevel->dCell();
-  
   //__________________________________
   //  Initialize the interior nodes
   for(int p=0;p<patches->size();p++){
@@ -2282,8 +2280,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   }
   
   //__________________________________
-  // set the ZOI coarse
-  // look up at the finer level patches
+  // Set the ZOI on the current level.
+  // Look up at the finer level patches
+  // for coarse-fine interfaces
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
@@ -2311,14 +2310,13 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           for (iter  = cf.begin(); iter != cf.end(); ++iter){
             Patch::FaceType patchFace = *iter;
 
-            //cout << " working on face " << finePatch->getFaceName(patchFace)<<  endl;
-
             // determine the iterator on the coarse level.
             NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
             bool isRight_CP_FP_pair;
             
             coarseLevel_CFI_NodeIterator( patchFace,patch, finePatch, fineLevel,
                                           n_iter ,isRight_CP_FP_pair);
+
             // The ZOI element is opposite
             // of the patch face
             int element = patchFace;
@@ -2332,26 +2330,23 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                patchFace == Patch::zplus){
               element -= 1;   // w, s, b
             }
-            IntVector dir = patch->getFaceAxes(patchFace);        // face axes
+            IntVector dir = patch->getFaceAxes(patchFace);         // face axes
             int p_dir = dir[0];                                    // normal direction 
             
             // eject if this is not the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
+              
+//              cout << "  A) Setting ZOI  " 
+//                   << " \t On L-" << level->getIndex() << " patch  " << patch->getID()
+//                   << ", beneath patch " << finePatch->getID() << ", face: "  << finePatch->getFaceName(patchFace) 
+//                   << ", isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;
+              
               for(; !n_iter.done(); n_iter++) {
                 IntVector c = *n_iter;
-                //cout << " coarseLevels CFI Cells L-" << level->getIndex() << " " << c << endl;
                 zoi[c][element]=fine_dx[p_dir];
               }
-            } else{
-              ostringstream warn;
-              warn << "\n ERROR: computeZoneOfInfluence:CoarseLevel: Did not find node iterator! "
-                   << "\n coarse: L-" << coarseLevel->getIndex() 
-                   << "\n coarse patch: " << *patch
-                   << "\n fine patch:   " << *finePatch
-                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);
-              
-              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
             }
+                         
           }  // patch face loop
         }  // hasCoarseFaces
       }  // finePatches loop
@@ -2364,8 +2359,8 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   // look down for coarse level patches 
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
-    NCVariable<Stencil7> zoi;
-    new_dw->getModifiable(zoi, lb->gZOILabel, 0,finePatch);
+    NCVariable<Stencil7> zoi_fine;
+    new_dw->getModifiable(zoi_fine, lb->gZOILabel, 0,finePatch);
       
     // underlying coarse level
     if( level->hasCoarserLevel() ) {
@@ -2397,19 +2392,22 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
             int element = patchFace;
             
             IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
-            int p_dir = dir[0];                                    // normal direction 
+            int p_dir = dir[0];                                       // normal direction 
             
-            cout << " working on face " << finePatch->getFaceName(patchFace)
-                 <<  " isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;
+
             
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
-              setFace = true;
+              setFace = true; 
+                   
+//              cout << "  B) Setting ZOI  " 
+//                   << " \t On L-" << level->getIndex() << " patch  " << finePatch->getID()
+//                   << "   CFI face: "  << finePatch->getFaceName(patchFace) 
+//                   << " isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;             
               
               for(; !n_iter.done(); n_iter++) {
                 IntVector c = *n_iter;
-                //cout << " fineLevel CFI Cells L-" << level->getIndex() << " " << c << endl;
-                zoi[c][element]=coarse_dx[p_dir];
+                zoi_fine[c][element]=coarse_dx[p_dir];
               }
             }
 
@@ -2419,7 +2417,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           if( !setFace ){                                                               
               ostringstream warn;                                                      
               warn << "\n ERROR: computeZoneOfInfluence:Fine Level: Did not find node   iterator! "
-                   << "\n coarse: L-" << coarseLevel->getIndex()                       
+                   << "\n coarse: L-" << level->getIndex()                       
                    << "\n coarePatches size: " << coarsePatches.size()                              
                    << "\n fine patch:   " << *finePatch                                
                    << "\n fine patch face: " << finePatch->getFaceName(patchFace);     
@@ -2597,19 +2595,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           acc      += gacceleration[node]   * S[k];
         }
         
-/*`==========TESTING==========*/
-#ifdef DEBUG_ACC           
-  #if 0
-          if( abs(acc.length() - d_acc_ans.length() ) > 1e-8 ) {
-            cout << "    L-"  << getLevel(patches)->getIndex() << " particle: "<< idx 
-                 <<  " cell: " << getLevel(patches)->getCellIndex(px[idx])
-                 <<  " acc: " << acc 
-                 <<  " diff: " << acc.length() - d_acc_ans.length() << endl;
-          }
-  #endif                                                                                                                              
-#endif
-/*===========TESTING==========`*/
-        
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]         + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx]      + vel*delT;
@@ -2630,6 +2615,16 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                          << " diff " << diff << endl;
        }
 #endif 
+#ifdef DEBUG_ACC 
+  #if 0
+       if( abs(acc.length() - d_acc_ans.length() ) > 1e-8 ) {
+         cout << "    L-"  << getLevel(patches)->getIndex() << " particle: "<< idx 
+              <<  " cell: " << getLevel(patches)->getCellIndex(px[idx])
+              <<  " acc: " << acc 
+              <<  " diff: " << acc.length() - d_acc_ans.length() << endl;
+       }   
+  #endif                                                                                    
+#endif
 /*===========TESTING==========`*/ 
         
         totalmass      += pmass[idx];
