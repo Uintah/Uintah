@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Grid.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <vector>
 
 
@@ -41,7 +42,7 @@ namespace Uintah {
   class MPMPhysicalBCFactory
   {
   public:
-    static void create(const ProblemSpecP& ps, const GridP& grid);
+    static void create(const ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags);
     static void clean(); // delete all mpmPhysicalBCs
     static std::vector<MPMPhysicalBC*> mpmPhysicalBCs;
   };
