@@ -1,0 +1,369 @@
+#!/bin/bash
+
+# to differentiate among the build names & even directories
+COMPILE="yes"
+DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
+DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
+DO_DBG="1"
+DO_OPT="1"
+LOCAL_OR_NIGHTLY_TEST="nightly"
+WHICH_TESTS="nightly"
+MAIL_REMAKE_LOG_TO=""
+MONTHLYBACKUP="no"
+NOTESTS="0"
+OS=`uname -s`
+PARALLELISM=0
+REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+
+SEND_MAIL_TO=""
+USE_DEFAULT_BUILD="yes"
+USE_DEFAULT_TEST_DATA="yes"
+USE_PREVTREE="no"
+USE_TREE="new"
+VERBOSE="no"
+COMMON_GROUP=""
+CHECKPOINTS=""
+
+#__________________________________
+# Machine specific variables
+
+MACHINE=`hostname`
+
+if [ "$MACHINE" == "rt" ]; then
+  COMMON_GROUP="uintah"
+  BUILD_DIR=/home/csafe-tester/"$OS"
+  TEST_DATA=/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/home/csafe-tester/scripts
+  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+fi
+
+if test "$MACHINE" = "blaze"; then
+  COMMON_GROUP="sci"
+  BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
+  TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+  CHECKPOINTS=/usr/local/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
+fi
+
+if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
+  DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
+  REPLY_TO="ahumphrey@sci.utah.edu"
+  COMMON_GROUP="uintah"
+  BUILD_DIR=/home/csafe-tester/"$OS"
+  TEST_DATA=/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/home/csafe-tester/scripts
+  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+fi
+
+
+#______________________________________________________________________
+
+
+# test OS
+if [ "$OS" != "Linux" ]; then
+  echo "Linux OS is the only OS that is currently configured to work. Abort"
+  exit -1
+fi
+
+export OS
+unset SHELL
+umask 002
+
+show_help=0
+if [ $# -eq 0 ]; then
+    show_help=1
+fi
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -sendmail)
+        SEND_MAIL_TO="$DEFAULT_MAIL_TO"
+        MAIL_REMAKE_LOG_TO="$DEFAULT_REMAKE_LOG_TO"
+        ;;
+    -sendmailto)
+        if [ "$#" -gt 1 ]; then
+            shift
+            SEND_MAIL_TO="$1"
+            REPLY_TO=""
+        fi
+        ;;
+    -verbose)
+        VERBOSE="yes"
+        ;;
+    -use_prevtree)
+        USE_PREVTREE="yes"
+        ;;
+    -use_tree)
+        if [ "$#" -gt 1 ]; then
+            shift
+            USE_TREE="$1"
+        fi
+        USE_DEFAULT_BUILD="no"
+        ;;
+    -build_dir)
+        if [ "$#" -gt 1 ]; then
+            shift
+            BUILD_DIR="$1"
+        fi
+        USE_DEFAULT_BUILD="no"
+        ;;
+    -test_data)
+        if [ "$#" -gt 1 ]; then
+            shift
+            TEST_DATA="$1"
+        fi
+        USE_DEFAULT_TEST_DATA="no"
+        ;;
+    -j)
+        if [ "$#" -gt 1 ]; then
+            shift
+            PARALLELISM="$1"
+        fi
+        ;;
+    -build_only)
+        NOTESTS="1"
+        ;;
+    -dbg_only)
+        DO_DBG="1"
+        DO_OPT="0"
+        ;;
+    -opt_only)
+        DO_DBG="0"
+        DO_OPT="1"
+        ;;
+    -monthlybackup)
+        MONTHLYBACKUP="1"
+        ;;
+    -no_compile)
+        COMPILE="no"
+        ;;
+    -help)
+        show_help=1
+        ;;
+     *)
+        echo "$1: Unknown option, -help for help"
+        exit 1
+        ;;
+     esac
+     shift
+done
+
+# usage string - exit
+if [ $show_help != "0" ]; then
+    cat <<EOF
+    Usage: startTester should only be run by at(1) or cron(1)
+        To run immediately, use "at now" with the path to this script as stdin.
+        Options:
+            -sendmail:              Send error messages to the default people
+            -sendmailto "emails":   Send error messages to these people
+            -j #:                   Use # number of processors maximum
+            -use_tree "tree":       Use the given tree instead of checking one out
+            -use_prevtree:          Use the previous (last_ran.lock) checkout and/or build
+            -build_only:            Test the compilation only.  Don\'t run the tests.
+            -dbg_only:              Only run debug tests.
+            -opt_only:              Only run optimized tests.
+            -no_compile:            Run the tests only; assume the build is already done.
+            -verbose:               Display verbose output
+            -build_dir:             Change the directory where SCIRun is downloaded to.
+            -test_data:             Change the GoldStandard directory.
+            -help:                  Display this option summary
+EOF
+    exit 0
+fi
+
+
+PATH="$PATH":"$SCRIPT_DIR":.
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
+
+# set number of processors to use when building
+if [ $PARALLELISM -eq 0 ]; then
+  MAKE_PARALLELISM=1
+else
+  MAKE_PARALLELISM="$PARALLELISM"
+fi
+
+# use /usr/var/tmp on machines that have it, with the assumption that it will
+# have more space than /tmp (true for burn at least)
+if [ -d /usr/var/tmp ]; then
+  TMPDIR=/usr/var/tmp
+  export TMPDIR
+fi
+
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO REPLY_TO
+
+if [ $VERBOSE = "yes" ]; then
+  echo "TIME STAMP: Regression Tester Starting at:"
+  date
+fi
+
+# find the ID to append to SCIRun based on time of run - i.e., SCIRun.080102
+ID=`date +%m%d%y`
+
+if [ $USE_TREE != "new" ]; then
+  # use the SCIRun specified on the command line
+  cd "$USE_TREE"
+  BUILDROOT=`pwd`
+  cd ..
+  echo "Using tree at " > "$BUILDROOT"/log
+  echo "$BUILDROOT" >> "$BUILDROOT"/log
+  ID="$ID"-old
+elif [ $USE_PREVTREE = "yes" ]; then
+  # use the previous build of SCIRun
+  if [ ! -d "${BUILD_DIR}/last_ran.lock" ]; then
+      echo "No previous build found"
+      echo "${BUILD_DIR}/last_ran.lock does not exist"
+      exit -1
+  fi
+  cd "${BUILD_DIR}/last_ran.lock"
+  BUILDROOT=`pwd`
+  cd ..
+  echo "Using previous tree at " > "$BUILDROOT"/log
+  echo "$BUILDROOT" >> "$BUILDROOT"/log
+  ID="$ID"-old
+else
+  #check out the current version
+  if [ $VERBOSE = "yes" ]; then
+    echo "cd $BUILD_DIR"
+  fi
+  cd "$BUILD_DIR"
+
+  BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+  if [ -d "$BUILDROOT" ]; then
+    
+    # don\t just set the ID directly, we have two different possibilities for ID
+    NID=`date +_%H`
+    ID="${ID}${NID}"
+    BUILDROOT="${BUILDROOT}${NID}"
+    if [ -d "$BUILDROOT" ]; then
+      NID=`date +%M`
+      ID="${ID}${NID}"
+      BUILDROOT="${BUILDROOT}${NID}"
+      if [ -d "$BUILDROOT" ]; then
+        echo "SCIRun.${ID} dir already exists"
+        exit -1
+      fi
+    fi
+  fi
+
+
+  if [ $VERBOSE = "yes" ]; then
+    echo "mkdir $BUILDROOT"
+  fi
+
+  umask 002
+
+  mkdir "$BUILDROOT"
+
+  if [ -L "${BUILD_DIR}/last_ran.lock" ]; then
+    rm -f "${BUILD_DIR}/last_ran.lock" 
+  fi
+  ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
+
+  if [ $VERBOSE = "yes" ]; then
+    echo "Checking out latest version of Uintah at `date`" 
+  fi
+  echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
+  echo "$BUILDROOT" >> "$BUILDROOT"/log
+
+  if [ $VERBOSE = "yes" ]; then
+    echo "TIME STAMP: SVN CHECKOUT STARTING AT:"
+    date
+  fi
+  cd "$BUILDROOT"
+
+
+  echo $PATH
+  svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+  retval=$?
+
+  if [ $VERBOSE = "yes" ]; then
+    cat "$BUILDROOT"/svn_co.log
+  fi
+
+  if [ $retval -ne 0 ]; then
+    echo "SVN checkout failed with code $retval"
+    echo "Look at ${BUILDROOT}/svn_co.log for more information"
+    exit 1
+  fi
+
+  # link directly from the build root to the Uintah code
+  # ln -s src/Packages/Uintah Uintah
+
+  cd "$BUILD_DIR"
+
+  if [ $VERBOSE = "yes" ]; then
+      echo "TIME STAMP: SVN CHECKOUT DONE AT:"
+      date
+  fi
+fi
+
+# set a lock once a month for six months
+if [ "$USE_TREE" = "new" -a "$USE_PREVTREE" = "no" -a `date +%d` = "01" -a "$MONTHLYBACKUP" = "1" ]; then
+  if [ -L "5_month.lock" ]; then
+    mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
+  fi
+  if [ -L "4_month.lock" ]; then
+    mv -f "${BUILD_DIR}/4_month.lock" "${BUILD_DIR}/5_month.lock"
+  fi
+  if [ -L "3_month.lock" ]; then
+    mv -f "${BUILD_DIR}/3_month.lock" "${BUILD_DIR}/4_month.lock"
+  fi
+  if [ -L "2_month.lock" ]; then
+    mv -f "${BUILD_DIR}/2_month.lock" "${BUILD_DIR}/3_month.lock"
+  fi
+  if [ -L "1_month.lock" ]; then
+    mv -f "${BUILD_DIR}/1_month.lock" "${BUILD_DIR}/2_month.lock"
+  fi
+  ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
+fi
+
+#__________________________________
+# create html web page
+rm -f $HTMLLOG
+TITLE=`date`
+echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
+echo "Regression Tester results from `hostname`" >> $HTMLLOG
+echo "Architecture: ${OS}" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "Using build: ${BUILDROOT}" >> $HTMLLOG
+echo "LOG: $HTMLLOG" >> $HTMLLOG
+
+
+#PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
+PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
+export PATH DO_DBG DO_OPT HTMLLOG WEBLOG VERBOSE
+
+if [ $VERBOSE = "yes" ]; then
+   echo "Running Tests"
+fi
+
+runTests
+retval=$?
+
+chgrp -R $COMMON_GROUP $BUILDROOT > /dev/null 2>&1
+chmod -R g+w $BUILDROOT > /dev/null 2>&1
+
+
+if [ $VERBOSE = "yes" ]; then
+  echo "TIME STAMP: REGRESSION TESTER DONE AT:"
+  date
+fi
+
+exit $retval

@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Uintah_specification>
+   <Meta>
+	    <title>Sandia 7.9m diameter JP-8 Pool Fire containing 1.2m Diameter Cylinder.</title>
+   </Meta>
+
+   <SimulationComponent type = "mpmarches"/>
+    <Solver type= "hypre" />
+
+   <Time>
+    	<maxTime>10.00</maxTime>
+    	<initTime>0.0</initTime>
+	    <delt_min>0.0000000001</delt_min>
+    	<delt_max>0.01</delt_max>
+    	<timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>fast_cook_off.uda</filebase>
+	    <outputInterval>0.01</outputInterval>
+        <outputInitTimestep/>
+    	<save label="mmgasVolFrac"/>
+    	<save label="p.particleID"/>
+	    <save label="p.x"/>
+	    <save label="p.temperature"/>
+	    <save label="uvwout"/>
+	    <save label="totalflowIN"/>
+	    <save label="totalflowOUT"/>
+	    <save label="denAccum"/>
+    	<save label="netflowOUTBC"/>
+    	<save label="totalKineticEnergy"/>
+    	<save label="oldDeltaT"/>
+        <save label="newCCVelocity"/>
+        <save label="sootFVIN"/>
+        <save label="co2IN"/>
+        <save label="h2oIN"/>
+    	<save label="densityCP"/>
+	    <save label="enthalpySP"/>
+    	<save label="pressurePS"/>
+        <save label="newCCUVelocity"/>	
+        <save label="newCCVVelocity"/>	
+        <save label="newCCWVelocity"/>
+        <save label="vorticity"/>	
+	    <save label="scalarSP"/>
+        <save label="normalizedScalarVar"/>
+	    <save label="cellType"/>
+	    <save label="tempIN"/>
+        <save label="kineticEnergy"/>
+        <save label="abskgIN"/> 
+        <save label="heatLoss"/>
+	    <save label="radiationFluxWIN"/>
+        <save label="radiationFluxEIN"/>
+        <save label="radiationFluxNIN"/>
+        <save label="radiationFluxSIN"/>
+        <save label="radiationFluxTIN"/>
+        <save label="radiationFluxBIN"/>
+	    <save label="htfluxRadX"/>
+	    <save label="htfluxRadY"/>
+	    <save label="htfluxRadZ"/>
+	    <save label="tempSolid_CC"/>
+	    <checkpoint cycle="2" interval="0.05"/>
+        <outputDoubleAsFloat/>
+	    <compression>gzip</compression>
+    </DataArchiver>
+
+    <MPM>
+	    <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+    </MPM>
+
+    <PhysicalConstants>
+        <gravity>[0.0,0.0,0.0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	    <MPM>
+            <material name="Composite Cylinder 1">
+                <density>   722.3   </density>
+	            <constitutive_model type="comp_mooney_rivlin"> 
+                    <he_constant_1>5.0</he_constant_1>
+                    <he_constant_2>1.0</he_constant_2>
+	                <he_PR>.49</he_PR>
+                </constitutive_model>
+                <thermal_conductivity>5.24</thermal_conductivity>
+                <specific_heat>489.1</specific_heat>
+	            <geom_object>
+                    <cylinder label="Mpmcylinder 1">
+         	            <bottom> [1.5, 12.0, 9.7] </bottom>
+	                    <top>    [1.5, 12.0, 14.3] </top>
+		                <radius> 0.61 </radius>
+                    </cylinder>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0.0]</velocity>
+                    <temperature>298</temperature>
+                </geom_object>
+            </material>
+
+            <contact>
+                <type>null</type>
+                <materials> [0] </materials>
+            </contact>
+	   </MPM>
+    </MaterialProperties>
+	
+    <Grid>
+	    <Level>
+	        <Box label="1">
+	            <lower>[0,0,0]</lower>
+	            <upper>[24.0,24.0,24.0]</upper>
+	            <resolution>[100,100,100]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		        <patches>[4,4,4]</patches>
+	        </Box>
+	    </Level>
+        
+	    <BoundaryConditions>
+            <Face side="x-">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+		            <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+				    <value>298.0</value>
+                </BCType>
+            </Face>
+
+            <Face side="x+">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+    		            <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+    				<value>298.0</value>
+                </BCType>
+            </Face>
+    
+            <Face side="y-">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+		            <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+		    		<value>298.0</value>
+                </BCType>
+            </Face>
+       
+            <Face side="y+">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+	    	        <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+	    			<value>298.0</value>
+                </BCType>
+            </Face>
+
+            <Face side="z-">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+    		        <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+	    			<value>298.0</value>
+                </BCType>
+            </Face>
+
+            <Face side="z+">
+                <BCType id="all" var="Dirichlet" label="Velocity">
+		            <value>[0.0,0.0,0.0]</value>
+                </BCType>
+                <BCType id="all" var="Dirichlet" label="Temperature">
+		    		<value>298.0</value>
+                </BCType>
+            </Face>
+    	</BoundaryConditions>
+    </Grid>
+
+    <CFD>
+	    <ARCHES>
+	        <initial_dt>0.01</initial_dt>
+	        <variable_dt>true</variable_dt>
+   	        <nonlinear_solver>explicit</nonlinear_solver>
+            <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
+            <scalarUnderflowCheck>true</scalarUnderflowCheck>
+
+            <Turbulence model = "compdynamicprocedure">
+	            <variance_coefficient>0.1</variance_coefficient>
+                <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber> 
+	            <dynamicScalarModel>false</dynamicScalarModel>
+                <filter_cs_squared>false</filter_cs_squared>
+                <filter_variance_limit_scalar>true</filter_variance_limit_scalar>
+            </Turbulence>
+
+	        <Properties>
+	            <empirical_soot>true</empirical_soot>
+                <soot_factor>1.0</soot_factor>
+	            <mixing_model>NewStaticMixingTable</mixing_model>
+	            <NewStaticMixingTable>
+                    <inputfile>sandia_jp8_flmlt_cg.mxn</inputfile>
+                    <co_output>false</co_output>
+                    <sulfur_chem>false</sulfur_chem>
+                    <soot_precursors>false</soot_precursors>
+                    <tabulated_soot>false</tabulated_soot></NewStaticMixingTable>
+	            <filter_drhodt>false</filter_drhodt>
+                <first_order_drhodt>true</first_order_drhodt>
+                <inverse_density_average>false</inverse_density_average>
+            </Properties>
+
+            <BoundaryConditions>
+		        <FlowInlet>
+	                <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
+	                <!-- Their flowrate was approx. 4.32 mm/min, so multiplying it
+                    by pi*3.95^2 and by the density of jp8 (800kg/m3) 
+                    to convert to our units, we get approx. 2.94 kg/s flowrate -->
+		            <Flow_rate>2.94</Flow_rate>
+		            <mixture_fraction>1.0</mixture_fraction>
+		            <geom_object>
+                        <cylinder label="fire_pool">
+                            <bottom>[-5,12.0,12.0]</bottom>
+                            <top>[0,12.0,12.0]</top>
+                            <radius> 3.95 </radius>
+                        </cylinder>
+		            </geom_object>
+		            <InletVelocity>0</InletVelocity>
+                    <SulfurMassFractionInFuel>0</SulfurMassFractionInFuel>
+                </FlowInlet>
+
+                <FlowInlet>
+                    <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
+                    <InletVelocity>0.0</InletVelocity>
+                    <mixture_fraction>0.0</mixture_fraction>
+                    <geom_object>
+                        <box label="zeroY_xzWall">
+                            <min>[-1,-1,-1]</min>
+                        <max>[25, 0, 25]</max>
+                        </box>       
+                    </geom_object>
+                    <Flow_rate>0</Flow_rate>
+                    <Prefill direction="Y">   
+                        <geom_object>
+			                <difference>
+                                <box label="prefillBox">
+                                    <min>[-1, -1, -1]</min>
+                                    <max>[25.0, 25.0, 25.0]</max>
+                                </box>
+                                <cylinder label="Mpmcylinder 1">
+	                            </cylinder>
+				            </difference>
+                        </geom_object>
+                    </Prefill>
+                    <SulfurMassFractionInFuel>0</SulfurMassFractionInFuel>
+                </FlowInlet>
+
+                <WallBC>
+		            <geom_object>
+		                <box label="botWall">
+			                <min>[-1.0,-1.0,-1.0]</min>
+			                <max>[ 0.0, 25, 25]</max>
+		                </box>
+    		        </geom_object>
+	    	    </WallBC>
+
+	            <OutletBC>
+                    <mixture_fraction>0.0</mixture_fraction>
+	    	        <geom_object>
+		                <box label="posZ_xyWall">
+			                <min>[-1, -1, 24]</min>
+			                <max>[ 25, 25, 25]</max>
+		                </box>
+                        <box label="zeroZ_xyWall">	
+    		             	<min>[-1, -1,   -1]</min>
+	    	             	<max>[ 25, 25,  0]</max>
+		                </box>
+		                <box label="posY_xzWall">
+            	    		<min>[-1, 24, -1]</min>
+	            	    	<max>[ 25, 25, 25]</max>
+    		            </box>
+	    	            <box label="topWall">
+		            	    <min>[ 24, -1,  -1]</min>
+		                	<max>[ 25, 25, 25]</max>
+		                </box>
+                   </geom_object>                
+                </OutletBC>
+
+              <intrusions>
+                    <geom_object>
+                        <cylinder label="Mpmcylinder 1">
+                        </cylinder>
+                    </geom_object>
+                </intrusions>
+
+                <carbon_balance>false</carbon_balance>
+                <sulfur_balance>false</sulfur_balance>
+                <carbon_balance_es>false</carbon_balance_es>
+                <sulfur_balance_es>false</sulfur_balance_es>
+            </BoundaryConditions>
+	    
+	        <PhysicalConstants>
+	    	    <gravity>[-9.8,0,0]</gravity>
+                   <ref_point>[-1,-1,-1]</ref_point>
+		        <viscosity>0.000020</viscosity>
+	        </PhysicalConstants>
+
+	        <ExplicitSolver>
+		        <timeIntegratorType>RK2SSP</timeIntegratorType>	
+                <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+                <kineticEnergy_fromFC>true</kineticEnergy_fromFC>
+
+		        <PressureSolver>
+		            <Parameters>
+		                <tolerance>1.0e-10</tolerance>
+                        <solver>cg</solver>
+			            <preconditioner>pfmg</preconditioner>
+			            <maxiterations>7500</maxiterations>
+		            </Parameters>
+                    <normalize_pressure>false</normalize_pressure>
+                    <do_only_last_projection>false</do_only_last_projection>
+                </PressureSolver>
+
+    		    <MomentumSolver>
+	    	        <convection_scheme>central</convection_scheme>
+                    <pressure_correction>false</pressure_correction>
+                    <filter_divergence_constraint>false</filter_divergence_constraint>
+                </MomentumSolver>
+		
+	    	    <MixtureFractionSolver>
+		            <convection_scheme>central-upwind</convection_scheme>
+                </MixtureFractionSolver>
+
+                <EnthalpySolver>
+                    <convection_scheme>central-upwind</convection_scheme> 
+                    <radiation>true</radiation>
+                    <discrete_ordinates>true</discrete_ordinates>
+                    <radiationCalcFreq>6</radiationCalcFreq>
+                    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
+                    <DORadiationModel>
+    	                <!-- Per NIST reccomendations, opl = 0.1 * 3.6 * 
+                        volume_of_the_domain/surface_area_of_the_domain 
+                        = 0.36 * 17280 / 4032 = 1.543 -->
+	                    <opl>1.543</opl>
+                        <ordinates>4</ordinates>
+	    	            <linear_solver>hypre</linear_solver>
+		                <LinearSolver>
+			    			<max_iter>7500</max_iter>
+				    		<res_tol>1.0e-09</res_tol>
+			                <ksptype>gmres</ksptype>
+    			        <pctype>jacobi</pctype>
+	    	            </LinearSolver>
+                        <property_model>radcoef</property_model>
+                        <spherical_harmonics>false</spherical_harmonics>
+                    </DORadiationModel>
+                    <radCalcForAllImplicitSteps>true</radCalcForAllImplicitSteps>
+                </EnthalpySolver>
+            
+                <turbModelCalcFreq>1</turbModelCalcFreq>
+                <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
+                <maxDensityLag>0</maxDensityLag>
+            </ExplicitSolver>
+
+            <turnonMixedModel>false</turnonMixedModel>
+            <recompileTaskgraph>false</recompileTaskgraph>
+            <extraProjection>false</extraProjection>
+            <EKTCorrection>false</EKTCorrection>
+        </ARCHES>
+    </CFD>
+
+    <Multimaterial>
+        <fluidThermalConductivity>0.03</fluidThermalConductivity>
+        <heatExchange>true</heatExchange>
+        <turbulentPrandtNo>0.7</turbulentPrandtNo>
+        <fluidHeatCapacity>1007.</fluidHeatCapacity>
+        <IfCutCell>false</IfCutCell>
+        <StationarySolid>true</StationarySolid>
+        <inviscid>false</inviscid>
+        <restart>true</restart>
+        <fixedCellType>true</fixedCellType>
+        <fixedTemp>false</fixedTemp>
+        <TestCutCells>true</TestCutCells>
+        <stairstep>true</stairstep>
+    </Multimaterial>
+
+</Uintah_specification>

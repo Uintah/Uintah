@@ -1,0 +1,21 @@
+#!/bin/csh
+#-------------------------------------------------
+# Simple script to extract  data and dump it to
+# a series of files
+#-------------------------------------------------
+set level    = 0
+set material = 0
+set uda      = "impHotBlobAMR.uda"
+set variable = "refineFlag"
+@ lastTimestep = 53
+
+@ count = 1
+while( $count != $lastTimestep )
+
+set file = "L-$level-$count.dat"
+echo "Extracting data for timestep $count"
+
+lineextract -v $variable -l $level -timestep $count -istart 0 0 0 -iend 100 100 0 -o $file -m $material  -uda $uda
+                                                # modify    ^^^^^       ^^^^^^^^^^
+@ count = $count + 1
+end

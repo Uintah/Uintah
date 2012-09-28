@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>test</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  <!--__________________________________-->
+  <Time>
+    <maxTime>       10.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 4        </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+  <!--__________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    
+    <Level>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
+      </Box>                                         
+    </Level>
+
+    <Level>
+      <Box label = "1">                              
+         <lower>      [ 0,0,0]      </lower>         
+         <upper>      [1, 1, 1]     </upper>         
+         <resolution> [164,164,164] </resolution>        
+         <patches>    [1,1,1]       </patches>   
+         <extraCells> [1,1,1]       </extraCells>         
+      </Box>                                         
+    </Level>
+
+  </Grid>
+  <!--__________________________________-->
+  <AMR>
+    <useLockStep> true </useLockStep>
+  </AMR>    
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>RMCRT_ML.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "color"   levels="-1"/>
+      <save label = "divQ"  />
+      <save label = "abskg" />
+      <save label = "sigmaT4" levels="1"/>
+      
+      <!--<save label = "refineFlag"/> -->
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+  </DataArchiver>
+  
+  
+  <!--__________________________________ --> 
+  <RMCRT>
+    <randomSeed>         false     </randomSeed>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <NoOfRays>          10         </NoOfRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark>         1          </benchmark>
+    <solveBoundaryFlux> false      </solveBoundaryFlux>
+    
+    <!-- compute rmcrt on coarse level -->
+    <algorithm type='RMCRT_coarseLevel'>
+      <orderOfInterpolation>  1    </orderOfInterpolation>
+    </algorithm>
+  </RMCRT>
+</Uintah_specification>
