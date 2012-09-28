@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/GeometryPiece/BoxGeometryPiece.h>
@@ -39,13 +40,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Math/Matrix3.h>
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
 
 // Store the geometry object and the load curve
-PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
+PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags)
 {
   // First read the geometry information
   // d_surface is the geometry object containing the surface to be loaded.
@@ -53,6 +55,9 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   // of the outward normal and -ve if applied in the direction of the
   // inward normal
   // **WARNING** Currently allows only for box, cylinder or sphere.
+  if (flags->d_useCBDI){
+    ps->require("outward_normal",d_outwardNormal);
+  }
   d_dxpp = Vector(1.,1.,1.);  // Only needed for axisymmetric end, see below
   ProblemSpecP adult = ps->findBlock("geom_object");
   ProblemSpecP child = adult->findBlock();
@@ -300,6 +305,97 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle,
     throw ParameterNotFound("ERROR: Unknown surface specified for pressure BC",
                             __FILE__, __LINE__);
   }
+  return force;
+}
+
+// Calculate the force vector to be applied to a particular
+// material point location
+Vector
+PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
+                              const Matrix3& pDeformationMeasure,
+                              double forcePerParticle,const double time,
+                              Point& pExternalForceCorner1,
+                              Point& pExternalForceCorner2,
+                              Point& pExternalForceCorner3,
+                              Point& pExternalForceCorner4,
+                              const Vector& dxCell) const
+{
+  Vector force(0.0,0.0,0.0);
+  Vector normal(0.0, 0.0, 0.0);
+  if (d_surfaceType == "box") {
+    BoxGeometryPiece* gp = dynamic_cast<BoxGeometryPiece*>(d_surface);
+    normal[gp->thicknessDirection()] = 1.0;
+    force = normal*forcePerParticle;
+  } else if (d_surfaceType == "cylinder") {
+    CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    normal = gp->radialDirection(px);
+    force = normal*forcePerParticle;
+    if(d_cylinder_end || d_axisymmetric_end){
+      normal = (gp->top()-gp->bottom())
+              /(gp->top()-gp->bottom()).length();
+      if(!d_axisymmetric_end){
+        force = normal*forcePerParticle;
+      }else{  // It IS on an axisymmetric end
+        double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
+        double press = pressure(time);
+        double fpP = pArea*press;
+        force = normal*fpP;
+      }
+    }
+  } else if (d_surfaceType == "sphere") {
+    SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
+    normal = gp->radialDirection(px);
+    force = normal*forcePerParticle;
+  } else {
+    throw ParameterNotFound("ERROR: Unknown surface specified for pressure BC",
+                            __FILE__, __LINE__);
+  }
+  // 25% of total particle force goes to each corner
+  force = force*0.25;
+  // modify the sign of force if outward normal is not correctly defined
+  if (!d_outwardNormal) {
+    force = force*(-1.0);
+  }
+  // determine four boundary-corners of the particle
+  int i1=0,i2=0;
+  Matrix3 dsize=pDeformationMeasure*psize;
+  Point px1;
+  for (int i = 0; i < 3; ++i) {
+   Vector dummy=Vector(dsize(0,i)*dxCell[0],dsize(1,i)*dxCell[1],
+                                            dsize(2,i)*dxCell[2])/2.0;
+   if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())-1.0)<0.1) {
+    px1=Point(px.x()+dummy[0],px.y()+dummy[1],px.z()+dummy[2]);
+    i1=(i+1)%3;
+    i2=(i+2)%3;
+   } else if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())+1.0)<0.1) {
+    Point px1(px.x()-dummy[0],px.y()-dummy[1],px.z()-dummy[2]);
+    i1=(i+1)%3;
+    i2=(i+2)%3;
+   }
+  }
+  // px1 is the position of the center of the boundary particle face that is on the physical boundary.
+  pExternalForceCorner1=Point(px1.x()-dsize(0,i1)*dxCell[0]/2.0-dsize(0,i2)*dxCell[0]/2.0,
+                              px1.y()-dsize(1,i1)*dxCell[1]/2.0-dsize(1,i2)*dxCell[1]/2.0,
+                              px1.z()-dsize(2,i1)*dxCell[2]/2.0-dsize(2,i2)*dxCell[2]/2.0);
+  pExternalForceCorner2=Point(px1.x()+dsize(0,i1)*dxCell[0]/2.0-dsize(0,i2)*dxCell[0]/2.0,
+                              px1.y()+dsize(1,i1)*dxCell[1]/2.0-dsize(1,i2)*dxCell[1]/2.0,
+                              px1.z()+dsize(2,i1)*dxCell[2]/2.0-dsize(2,i2)*dxCell[2]/2.0);
+  pExternalForceCorner3=Point(px1.x()-dsize(0,i1)*dxCell[0]/2.0+dsize(0,i2)*dxCell[0]/2.0,
+                              px1.y()-dsize(1,i1)*dxCell[1]/2.0+dsize(1,i2)*dxCell[1]/2.0,
+                              px1.z()-dsize(2,i1)*dxCell[2]/2.0+dsize(2,i2)*dxCell[2]/2.0);
+  pExternalForceCorner4=Point(px1.x()+dsize(0,i1)*dxCell[0]/2.0+dsize(0,i2)*dxCell[0]/2.0,
+                              px1.y()+dsize(1,i1)*dxCell[1]/2.0+dsize(1,i2)*dxCell[1]/2.0,
+                              px1.z()+dsize(2,i1)*dxCell[2]/2.0+dsize(2,i2)*dxCell[2]/2.0);
+  // Recalculate the force based on area changes (current vs. initial)
+  Vector iniVec1(psize(0,i1),psize(1,i1),psize(2,i1));
+  Vector iniVec2(psize(0,i2),psize(1,i2),psize(2,i2));
+  Vector curVec1(dsize(0,i1),dsize(1,i1),dsize(2,i1));
+  Vector curVec2(dsize(0,i2),dsize(1,i2),dsize(2,i2));
+  Vector iniA = Cross(iniVec1,iniVec2);
+  Vector curA = Cross(curVec1,curVec2);
+  double iniArea=iniA.length();
+  double curArea=curA.length();
+  force=force*(curArea/iniArea);
   return force;
 }
 
