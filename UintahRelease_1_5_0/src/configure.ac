@@ -1062,7 +1062,7 @@ if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
-  if test "$static" == "full"; then
+  if test "$static" = "full"; then
 
     # If we don't use the 'full' option, then some shared libs may be
     # linked in.  While we probably should make 'full' the default, this
@@ -1149,7 +1149,7 @@ int main()
   double b=.01;
 
   int c=a/b;
-  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+  return c != 100; // Shell return codes are backward in that 0 = success, thus the '!='.
 }
 EOF
 
@@ -2183,7 +2183,7 @@ if test "$with_libxml2"; then
    _sci_optional=specific
 fi
 
-if test "$with_libxml2" == "built-in"; then
+if test "$with_libxml2" = "built-in"; then
   XML2_LIB_FLAG="-lxml2"
   AC_MSG_RESULT( "Using built in libxml2... no explicit linking will be done." )
 else
@@ -3034,7 +3034,7 @@ if test "$with_mpi_extra_libs"; then
          AC_MSG_ERROR(Extra MPI lib '$lib' does not exist...)
       else
          the_dir=`dirname $lib`
-         if test "$the_dir" == "."; then
+         if test "$the_dir" = "."; then
             AC_MSG_ERROR(Extra MPI lib '$lib' must include an absolute path...)
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
@@ -3284,11 +3284,11 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
-if test "$with_petsc" == "no"; then # Handle --without option
+if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
 
-  if test "$with_petsc" == "built-in"; then
+  if test "$with_petsc" = "built-in"; then
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
@@ -3299,7 +3299,7 @@ else
       _sci_lib_dir=
 
       if test "$with_petsc"; then
-         if test "$with_petsc" == "yes"; then
+         if test "$with_petsc" = "yes"; then
             AC_MSG_ERROR(--with-petsc=DIR requires a DIRectory to be specified.)
          fi
          version_file=$with_petsc/include/petscversion.h
@@ -3316,7 +3316,7 @@ else
         petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
         petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
 
-        if test "$petsc_version_major" == "2"; then
+        if test "$petsc_version_major" = "2"; then
           if test -z "$PETSC_ARCH"; then
             AC_MSG_ERROR(For PETSC version 2x - please set PETSC_ARCH.)
           fi
@@ -3326,7 +3326,7 @@ else
             _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
           fi
         else
-          if test "$petsc_version_major" == "3"; then
+          if test "$petsc_version_major" = "3"; then
             if test -z "$_sci_lib_dir"; then
                _sci_lib_dir="$with_petsc/lib"
             fi
