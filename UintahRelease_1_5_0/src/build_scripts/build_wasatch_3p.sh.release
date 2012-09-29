@@ -19,10 +19,10 @@ fi
 ###########################################################################
 # GIT Hash Tags for the various libraries
 
-# SPATIAL_OPS_TAG=
-# EXPR_LIB_TAG=
-# TAB_PROPS_TAG=
-# RAD_PROPS_TAG=
+SPATIAL_OPS_TAG=e5ac564545b8f5463fd61c88a288399ac3cf5141
+EXPR_LIB_TAG=0a8719e991ce3d3a7acbb39ee9f41fa0b3be0948
+TAB_PROPS_TAG=0e0007af6300ae4b022c227647aebbe1c5f25fd0
+RAD_PROPS_TAG=9d05e580b5b663aa2933bf0d947ca4339a332b29 
 
 ############################################################################
 

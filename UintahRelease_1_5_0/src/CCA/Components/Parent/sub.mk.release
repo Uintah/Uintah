@@ -31,7 +31,7 @@ SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
 SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc 
+        $(SRCDIR)/ComponentFactory.cc
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
@@ -39,6 +39,7 @@ PSELIBS := \
         Core/Exceptions  \
         Core/Util        \
         Core/Geometry    \
+        Core/GeometryPiece  \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \
