@@ -12,30 +12,26 @@
 # gives unlimited permission to copy, distribute and modify it.
 #
 # ##
-
-#
-#  Copyright (c) 1997-2012 The University of Utah
-# 
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the \"Software\"), to
-#  deal in the Software without restriction, including without limitation the
-#  rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
-#  sell copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-# 
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
-# 
-#  THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-#  IN THE SOFTWARE.
-# 
-# 
-# 
+# ## Copyright (c) 1997-2012 The University of Utah
+# ##
+# ## Permission is hereby granted, free of charge, to any person obtaining a copy
+# ## of this software and associated documentation files (the \"Software\"), to
+# ## deal in the Software without restriction, including without limitation the
+# ## rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+# ## sell copies of the Software, and to permit persons to whom the Software is
+# ## furnished to do so, subject to the following conditions:
+# ##
+# ## The above copyright notice and this permission notice shall be included in
+# ## all copies or substantial portions of the Software.
+# ##
+# ## THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# ## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# ## IN THE SOFTWARE.
+# ##
 #
 ## -------------------- ##
 ## M4sh Initialization. ##
@@ -1816,29 +1812,27 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-#
-#  Copyright (c) 1997-2012 The University of Utah
-# 
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the \"Software\"), to
-#  deal in the Software without restriction, including without limitation the
-#  rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
-#  sell copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-# 
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
-# 
-#  THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-#  IN THE SOFTWARE.
-# 
-# 
-
+##
+## Copyright (c) 1997-2012 The University of Utah
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the \"Software\"), to
+## deal in the Software without restriction, including without limitation the
+## rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+## sell copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+## IN THE SOFTWARE.
+##
 
 _ACEOF
   exit
@@ -6745,7 +6739,7 @@ if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
 $as_echo "$as_me: WARNING: Building a statically linked version of Uintah! " >&2;}
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
-  if test "$static" == "full"; then
+  if test "$static" = "full"; then
 
     # If we don't use the 'full' option, then some shared libs may be
     # linked in.  While we probably should make 'full' the default, this
@@ -6834,7 +6828,7 @@ int main()
   double b=.01;
 
   int c=a/b;
-  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+  return c != 100; // Shell return codes are backward in that 0 = success, thus the '!='.
 }
 EOF
 
@@ -15273,7 +15267,7 @@ if test "$with_libxml2"; then
    _sci_optional=specific
 fi
 
-if test "$with_libxml2" == "built-in"; then
+if test "$with_libxml2" = "built-in"; then
   XML2_LIB_FLAG="-lxml2"
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"Using built in libxml2... no explicit linking will be done.\" " >&5
 $as_echo "\"Using built in libxml2... no explicit linking will be done.\" " >&6; }
@@ -34121,7 +34115,7 @@ if test "$with_mpi_extra_libs"; then
          as_fn_error $? "Extra MPI lib '$lib' does not exist..." "$LINENO" 5
       else
          the_dir=`dirname $lib`
-         if test "$the_dir" == "."; then
+         if test "$the_dir" = "."; then
             as_fn_error $? "Extra MPI lib '$lib' must include an absolute path..." "$LINENO" 5
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'`
@@ -38365,12 +38359,12 @@ fi #end sci_required_mpi
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
-if test "$with_petsc" == "no"; then # Handle --without option
+if test "$with_petsc" = "no"; then # Handle --without option
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"PETSc disabled.\" " >&5
 $as_echo "$as_me: WARNING: \"PETSc disabled.\" " >&2;}
 else
 
-  if test "$with_petsc" == "built-in"; then
+  if test "$with_petsc" = "built-in"; then
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
@@ -38381,7 +38375,7 @@ else
       _sci_lib_dir=
 
       if test "$with_petsc"; then
-         if test "$with_petsc" == "yes"; then
+         if test "$with_petsc" = "yes"; then
             as_fn_error $? "--with-petsc=DIR requires a DIRectory to be specified." "$LINENO" 5
          fi
          version_file=$with_petsc/include/petscversion.h
@@ -38434,7 +38428,7 @@ else
         petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
         petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
 
-        if test "$petsc_version_major" == "2"; then
+        if test "$petsc_version_major" = "2"; then
           if test -z "$PETSC_ARCH"; then
             as_fn_error $? "For PETSC version 2x - please set PETSC_ARCH." "$LINENO" 5
           fi
@@ -38445,7 +38439,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
             _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
           fi
         else
-          if test "$petsc_version_major" == "3"; then
+          if test "$petsc_version_major" = "3"; then
             if test -z "$_sci_lib_dir"; then
                _sci_lib_dir="$with_petsc/lib"
             fi
