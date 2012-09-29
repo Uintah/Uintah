@@ -545,7 +545,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials_ );
@@ -629,7 +629,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
