@@ -46,7 +46,7 @@
   Carson Brownlee,
   Tony Saad}
 
-\date{Version 1.4.1}
+\date{Version 1.5}
 
 \maketitle
 
@@ -134,11 +134,11 @@ Required libraries:
 
 Useful libraries:
 \begin{itemize}
-\item Hypre v2.7.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item PETSc v3.1 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item Hypre v2.8.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
+\item PETSc v3.2 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, we suggest using Hypre v2.7.0b and PETSc v3.1-p8.  (Sept, 2011)
+Note, we suggest using Hypre v2.8.0b and PETSc v3.2-p8.  (Sept, 2012)
 
 The Wasatch component requires the following:
 \begin{itemize}
@@ -162,56 +162,56 @@ required for \textbf{Uintah} are satisfied:
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
 libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
-libglui-dev libxmu-dev g++ gfortran
+libglui-dev libxmu-dev g++ gfortran libboost-all-dev git
 \end{verbatim}
 
-\noindent Optional: Additional libraries needed for the Wasatch component:
-\begin{verbatim}
-  aptitude install git
-\end{verbatim}  
- \hspace{0.125in} \textbf{Lenny}:
-\begin{verbatim}
-  aptitude install cmake > 2.8 (from squeeze)
-  download boost-1.46 from www.boost.org
-  bootstrap.sh --prefix=path/to/installation/prefix
-  bjam threading=single install
-\end{verbatim}
-\hspace{0.125in} \textbf{Squeeze}:
-\begin{verbatim}
-  aptitude install cmake > 2.8 (from squeeze)
+% \noindent Optional: Additional libraries needed for the Wasatch component:
+% \begin{verbatim}
+%   aptitude install git
+% \end{verbatim}  
+%  \hspace{0.125in} \textbf{Lenny}:
+% \begin{verbatim}
+%   aptitude install cmake > 2.8 (from squeeze)
+%   download boost-1.46 from www.boost.org
+%   bootstrap.sh --prefix=path/to/installation/prefix
+%   bjam threading=single install
+% \end{verbatim}
+% \hspace{0.125in} \textbf{Squeeze}:
+% \begin{verbatim}
+%   aptitude install cmake > 2.8 (from squeeze)
   
-  sudo aptitude install  libboost-date-time1.46-dev \
-  libboost-date-time1.46.0          \
-  libboost-iostreams1.46.0          \   
-  libboost-program-options1.46-dev  \
-  libboost-program-options1.46.0    \
-  libboost-serialization1.46-dev    \
-  libboost-serialization1.46.0      \
-  libboost-signals1.46-dev          \
-  libboost-signals1.46.0            \
-  libboost-thread1.46-dev           \
-  libboost-thread1.46.0             \
-  libboost1.46-dev
-\end{verbatim}
+%   sudo aptitude install  libboost-date-time1.46-dev \
+%   libboost-date-time1.46.0          \
+%   libboost-iostreams1.46.0          \   
+%   libboost-program-options1.46-dev  \
+%   libboost-program-options1.46.0    \
+%   libboost-serialization1.46-dev    \
+%   libboost-serialization1.46.0      \
+%   libboost-signals1.46-dev          \
+%   libboost-signals1.46.0            \
+%   libboost-thread1.46-dev           \
+%   libboost-thread1.46.0             \
+%   libboost1.46-dev
+% \end{verbatim}
 
-\noindent Once these libraries are installed, VisIt can be installed
-followed by installation of \textbf{Uintah}.
+% \noindent Once these libraries are installed, VisIt can be installed
+% followed by installation of \textbf{Uintah}.
 
-\noindent To install the latest \TT{Nvidia}video drivers:
-\begin{verbatim}
-  As root run the following commands:
-  aptitude install module-assistant module-init-tools
-  aptitude clean
-  aptitude update
-  uname -r
+% \noindent To install the latest \TT{Nvidia}video drivers:
+% \begin{verbatim}
+%   As root run the following commands:
+%   aptitude install module-assistant module-init-tools
+%   aptitude clean
+%   aptitude update
+%   uname -r
   
-  apt-get install nvidia-kernel-common
-  m-a auto-install nvidia-kernel${VERSION}-source
-  apt-get install nvidia-glx${VERSION}
-  apt-get install nvidia-xconfig
-  nvidia-xconfig
-\end{verbatim}
-See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
+%   apt-get install nvidia-kernel-common
+%   m-a auto-install nvidia-kernel${VERSION}-source
+%   apt-get install nvidia-glx${VERSION}
+%   apt-get install nvidia-xconfig
+%   nvidia-xconfig
+% \end{verbatim}
+% See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
 
 \subsection{Fedora Core  Dependencies}
 
