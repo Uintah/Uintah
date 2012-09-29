@@ -25,6 +25,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
+
 # include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR  := CCA/Components
