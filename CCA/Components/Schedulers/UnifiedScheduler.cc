@@ -1999,7 +1999,11 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
 
 void UnifiedSchedulerWorker::run()
 {
-  threaddbg << "Binding thread id " << d_id + 1 << " to cpu " << d_id + 1 << endl;
+  if (threaddbg.active()) {
+    cerrLock.lock();
+    threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << endl;
+    cerrLock.unlock();
+  }
   Thread::self()->set_myid(d_id + 1);
   if (affinity.active()) {
     Thread::self()->set_affinity(d_id + 1);
