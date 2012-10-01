@@ -1796,6 +1796,10 @@ There is currently a working version of a third order, strong stability
 Order of Accuracy Verification
 \end_layout
 
+\begin_layout Section
+Introduction
+\end_layout
+
 \begin_layout Standard
 Order-of-accuracy analysis is based on the concept that the error must be
  reduced as spatial and temporal resolutions are increased.
