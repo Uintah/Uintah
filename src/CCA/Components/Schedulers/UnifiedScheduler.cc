@@ -182,7 +182,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     cout << "   Using \"" << taskQueueAlg << "\" Algorithm" << endl;
   }
 
-  numThreads_ = Uintah::Parallel::getNumThreads();
+  numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingGPU())) {
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
