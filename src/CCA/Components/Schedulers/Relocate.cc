@@ -436,8 +436,8 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
                             int total_reloc[3])
 {
   // this level is the coarsest level involved in the relocation
-  const Level* coarsestLevel = patches->get(0)->getLevel();
-  GridP grid = coarsestLevel->getGrid();
+  const GridP grid(const_cast<Grid*>(new_dw->getGrid()));
+  LevelP coarsestLevel = grid->getLevel(0);
 
   int numMatls = (int)reloc_old_labels.size();
 
@@ -711,7 +711,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
                                  const bool hasCoarser,
                                  Patch::selectType& AllNeighborPatches)
 {
-  //cout << " findNeighboringPatch L-"<< level->getIndex() << " patch: " << patch->getID() << " hasFiner: " << hasFiner << " hasCoarser: " << hasCoarser << endl;
+//  cout << "relocate findNeighboringPatch L-"<< level->getIndex() << " patch: " << patch->getID() << " hasFiner: " << hasFiner << " hasCoarser: " << hasCoarser << endl;
   
   // put patch neighbors into a std::set this will automatically
   // delete any duplicate patch entries
@@ -793,7 +793,9 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   if (patches->size() != 0)
   {
     // this is the coarsest level involved in the relocation
-    const Level* coarsestLevel = patches->get(0)->getLevel();
+    const GridP grid(const_cast<Grid*>(new_dw->getGrid()));
+    LevelP coarsestLevel = grid->getLevel(0); 
+
   
     int me = pg->myrank();
 
@@ -813,6 +815,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       const Level* curLevel = patch->getLevel();
       bool hasFiner   = curLevel->hasFinerLevel();
       bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
+      
       Level* fineLevel=0;
       Level* coarseLevel=0;
       
@@ -940,6 +943,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           delete keep_pset;
           keep_pset=pset;
         }
+        
         keep_pset->addReference();
         keep_psets(p, m)=keep_pset;
       } // matls loop
