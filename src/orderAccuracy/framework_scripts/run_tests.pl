@@ -89,7 +89,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
 # Read in all of the replacement patterns 
 # and store them in arrays.
 #   There can be global replacement lines and individual test replacement lines
-my $nTest=0;
+my $nTest=-1;
 my $line;
 my $insideTest=0;
 my $insideAllTest=0;
@@ -114,6 +114,7 @@ while ($line=<tstFile>){
   }
   if($line=~ /\<Test\>/){
     $insideTest=1;
+    $nTest ++;
   }
   if($line=~ /\<\/Test\>/){
     $insideTest=0;
@@ -152,6 +153,7 @@ while ($line=<tstFile>){
   }
   
   # inside each <Test>
+  
   if($insideTest && !$insideComment && !$blankLine){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
@@ -160,8 +162,8 @@ while ($line=<tstFile>){
         chomp($line);
         $replaceLines[$nTest][$nLine]=$line;
         $nLine++;
+        #print "$nTest  $line\n"; 
       }
-      $nTest++;
     }
     
     if ($line=~ /\<replace_values\>/){       # find <replace_values>
@@ -170,9 +172,9 @@ while ($line=<tstFile>){
         chomp($line);
         $replaceValues[$nTest][$nLine]=$line;
         $nLine++;
+        #print "$nTest  $line\n";
       }
-      $nTest++;
-    }
+    } 
   }
 }
 close(tstFile);

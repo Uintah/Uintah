@@ -76,7 +76,6 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   if ( db->findBlock("flammability_limit") ){ 
     _use_flam_limits = true; 
     db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("label",_diluent_label_name); 
-    db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("mw",_diluent_mw); 
     db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("slope", _flam_low_m);
     db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("intercept",_flam_low_b);
     db->findBlock("flammability_limit")->findBlock("upper")->getAttribute("slope", _flam_up_m);
@@ -282,7 +281,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       S[c] = 0.0; 
       double hc_wo_rxn = f * d_MF_HC_f1;
 
-      if ( Cstar[c] > tiny ) 
+      if ( CstarStrip[c] > tiny ) 
         S[c] = CstarStrip[c] / hc_wo_rxn; 
 
       E[c] = 1.0 - S[c]; 
@@ -291,9 +290,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       double rate = 0.0;
       if ( _use_T_clip ){ 
         double fake_diluent = 0.0; 
-        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, mixMW[c], den[c], dt, vol ); 
+        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, f, mixMW[c], den[c], dt, vol ); 
       } else { 
-        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], mixMW[c], den[c], dt, vol ); 
+        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, mixMW[c], den[c], dt, vol ); 
       } 
 
       // Overwrite with hot spot if specified -- like a pilot light
@@ -314,9 +313,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
               if ( _use_T_clip ){ 
                 double fake_diluent = 0.0; 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, mixMW[c], den[c], dt, vol ); 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, mixMW[c], den[c], dt, vol ); 
               } else { 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], mixMW[c], den[c], dt, vol ); 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, mixMW[c], den[c], dt, vol ); 
               } 
 
             }

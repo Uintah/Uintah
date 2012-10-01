@@ -46,19 +46,18 @@ SRCS    +=                              \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc
 
 PSELIBS :=                        \
-	Core/Geometry             \
-	Core/Util                 \
-	Core/Exceptions           \
-	CCA/Ports                 \
 	CCA/Components/Schedulers \
-	Core/Grid                 \
-	Core/Util                 \
-	Core/ProblemSpec          \
-	Core/GeometryPiece        \
-	Core/Exceptions           \
+	CCA/Ports                 \
 	Core/Disclosure           \
+	Core/Exceptions           \
+	Core/IO                   \
+	Core/Geometry             \
+	Core/GeometryPiece        \
+	Core/Grid                 \
 	Core/Math                 \
-	Core/Parallel
+	Core/Parallel             \
+	Core/ProblemSpec          \
+	Core/Util                 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)        \
         $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)           \

@@ -31,7 +31,7 @@
  *  \class Dilatation
  *  \ingroup Expressions
  *
- *  \brief calculates \f$\nabla\cdot\mathbf{u}$\f
+ *  \brief calculates \f$ \nabla\cdot\mathbf{u} \f$
  *
  *  \tparam FieldT the field type for the dilatation (nominally the scalar volume field)
  *  \tparam Vel1T  the field type for the first velocity component

@@ -191,7 +191,7 @@ namespace Wasatch{
                                                             *(solnGraphHelper_->exprFactory),
                                                             level, sched, patches, materials,
                                                             patchInfoMap,
-                                                            true, 1, persistentFields );
+                                                            1, persistentFields );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time
@@ -214,7 +214,6 @@ namespace Wasatch{
                                                      *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
-                                                     true,
                                                      rkStage, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );

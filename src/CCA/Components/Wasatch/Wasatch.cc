@@ -545,7 +545,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials_ );
@@ -612,7 +612,7 @@ namespace Wasatch{
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
-    std::cout << "Scheduling compute stable timestep\n";
+    proc0cout << "Scheduling compute stable timestep" << std::endl;
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
@@ -629,7 +629,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }

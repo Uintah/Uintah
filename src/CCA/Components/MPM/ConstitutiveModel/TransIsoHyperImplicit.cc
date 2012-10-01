@@ -517,6 +517,11 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         //________________________________STIFFNESS
         //________________________________________________________vol. term
         double cvol[6][6];//failure already recorded into p
+        for(int i=0;i<6;i++){
+         for(int j=0;j<6;j++){
+          cvol[i][j]=0.0;
+         }
+        }
         double K = Bulk;
         cvol[0][0] = K*(1./J)-2*p;
         cvol[0][1] = K*(1./J);
@@ -524,46 +529,19 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
         cvol[1][1] = K*(1./J)-2*p;
         cvol[1][2] = K*(1./J);
         cvol[2][2] = K*(1./J)-2*p;
-        cvol[0][3] =  0.;
-        cvol[0][4] =  0.;
-        cvol[0][5] =  0.;
-        cvol[1][3] =  0.;
-        cvol[1][4] =  0.;
-        cvol[1][5] =  0.;
-        cvol[2][3] =  0.;
-        cvol[2][4] =  0.;
-        cvol[2][5] =  0.;
         cvol[3][3] = -p;
-        cvol[3][4] =  0.;
-        cvol[3][5] =  0.;
         cvol[4][4] = -p;
-        cvol[4][5] =  0.;
         cvol[5][5] = -p;
 
         //________________________________________________________Mooney-Rivlin term
         double cMR[6][6];
+        for(int i=0;i<6;i++){
+         for(int j=0;j<6;j++){
+          cMR[i][j]=0.0;
+         }
+        }
         if (fail[idx] == 1.0 || fail[idx] == 3.0) {
-         cMR[0][0] = 0;
-         cMR[0][1] = 0;
-         cMR[0][2] = 0;
-         cMR[1][1] = 0;
-         cMR[1][2] = 0;
-         cMR[2][2] = 0;
-         cMR[0][3] = 0;
-         cMR[0][4] = 0;
-         cMR[0][5] = 0;
-         cMR[1][3] = 0;
-         cMR[1][4] = 0;
-         cMR[1][5] = 0;
-         cMR[2][3] = 0;
-         cMR[2][4] = 0;
-         cMR[2][5] = 0;
-         cMR[3][3] = 0;
-         cMR[3][4] = 0;
-         cMR[3][5] = 0;
-         cMR[4][4] = 0;
-         cMR[4][5] = 0;
-         cMR[5][5] = 0;
+          // Do nothing, cMR already initialized to 0.0
         }
         else {
          cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)

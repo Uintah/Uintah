@@ -172,6 +172,12 @@ protected:
                             DataWarehouse* new_dw,
                             const coarsenFlag flag);
                             
+  void coarsenNodalData_CFI2(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
+                            
   void Nodal_velocity_temperature(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -195,7 +201,13 @@ protected:
                                     const PatchSubset* patches,  
                                     const MaterialSubset* matls, 
                                     DataWarehouse* old_dw,       
-                                    DataWarehouse* new_dw);      
+                                    DataWarehouse* new_dw); 
+                                    
+  void computeInternalForce_CFI(const ProcessorGroup*,
+                                const PatchSubset* patches,  
+                                const MaterialSubset* matls, 
+                                DataWarehouse* old_dw,       
+                                DataWarehouse* new_dw);     
 
 
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
@@ -273,6 +285,10 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*,
                                     const coarsenFlag flag);
+
+  void scheduleCoarsenNodalData_CFI2(SchedulerP&, 
+                                     const PatchSet*,
+                                     const MaterialSet*);
                                     
   void scheduleNodal_velocity_temperature(SchedulerP&, 
                                           const PatchSet*,
@@ -289,6 +305,10 @@ protected:
   virtual void scheduleComputeInternalForce(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSet*);
+                                            
+  void scheduleComputeInternalForce_CFI(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls);
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
@@ -330,10 +350,11 @@ protected:
                  const PatchSubset* patches,                            
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
-                 DataWarehouse* new_dw);    
-                            
-
-  
+                 DataWarehouse* new_dw); 
+  //
+  // returns does coarse patches have a CFI               
+  void coarseLevelCFI_Patches(const PatchSubset* patches,
+                               Level::selectType& CFI_patches );
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
@@ -341,18 +362,70 @@ protected:
   Output* dataArchiver;
 
   double   d_SMALL_NUM_MPM;
-  int      NGP;      // Number of ghost particles needed.
-  int      NGN;      // Number of ghost nodes  needed.
+  int      NGP;                     // Number of ghost particles needed.
+  int      NGN;                     // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
-                                   // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
+                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
+                                   
+  Vector   d_acc_ans;               // debugging code used to check the answers (acceleration)
+  Vector   d_vel_ans;               // debugging code used to check the answers (velocity) 
+
+  const VarLabel* pDbgLabel;        // debugging labels
+  const VarLabel* gSumSLabel;                   
                                    
   vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
 private:
+
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);
+         
+         
+  //______________________________________________________________________
+  // Bulletproofing machinery to keep track of 
+  // how many nodes on a CFI have been 'touched'
+  inline void clearFaceMarks(const int whichMap, const Patch* patch) {
+    faceMarks_map[whichMap].erase(patch);
+  }
+    
+  inline int getFaceMark(int whichMap, 
+                         const Patch* patch, 
+                         Patch::FaceType face)
+  {
+    ASSERT(whichMap>=0 && whichMap<2);
+    return faceMarks_map[whichMap][patch][face];
+  };
+
+  inline void setFaceMark(int whichMap, 
+                          const Patch* patch, 
+                          Patch::FaceType face, 
+                          int value) 
+  {
+    ASSERT(whichMap>=0 && whichMap<2);
+    faceMarks_map[whichMap][patch][face]=value;
+  };
+    
+  
+  struct faceMarks {
+    int marks[Patch::numFaces];
+    int& operator[](Patch::FaceType face)
+    {
+      return marks[static_cast<int>(face)];
+    }
+    faceMarks()
+    {
+      marks[0]=0;
+      marks[1]=0;
+      marks[2]=0;
+      marks[3]=0;
+      marks[4]=0;
+      marks[5]=0;
+    }
+  };
+  map<const Patch*,faceMarks> faceMarks_map[2];         
+         
          
 };
       

@@ -32,10 +32,9 @@
  *
  *  \brief Provides an expression to set basic Dirichlet and Neumann boundary
  *  conditions. Given a BCValue, we set the ghost value such that
- *  f[ghost] = \alpha f[interior] + \beta BCValue
+ *  \f$ f[ghost] = \alpha f[interior] + \beta BCValue \f$
  *
  *  \tparam FieldT - the type of field for the RHS.
- *
  */
 
 template< typename FieldT >

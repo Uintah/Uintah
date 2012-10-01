@@ -31,7 +31,8 @@
  *  \brief obtain the tag for the strain tensor magnitude
  */
 Expr::Tag straintensormagnitude_tag();
-Expr::Tag square_straintensormagnitude_tag();
+Expr::Tag wale_tensormagnitude_tag();
+Expr::Tag vreman_tensormagnitude_tag();
 
 /**
  *  \class StrainTensorMagnitude
@@ -131,7 +132,7 @@ public:
 };
 
 /**
- *  \class  SquareStrainTensorMagnitude
+ *  \class  WaleTensorMagnitude
  *  \author Tony Saad
  *  \date   June, 2012
  *  \ingroup Expressions
@@ -143,9 +144,9 @@ public:
            Square of the Velocity Gradient Tensor
  *
  */
-class SquareStrainTensorMagnitude : public StrainTensorMagnitude {
+class WaleTensorMagnitude : public StrainTensorMagnitude {
 
-  SquareStrainTensorMagnitude( const Expr::Tag& vel1tag,
+  WaleTensorMagnitude( const Expr::Tag& vel1tag,
                                const Expr::Tag& vel2tag,
                                const Expr::Tag& vel3tag);  
   public:
@@ -169,7 +170,50 @@ class SquareStrainTensorMagnitude : public StrainTensorMagnitude {
       const Expr::Tag v1t_, v2t_, v3t_;
     };
   
-  ~SquareStrainTensorMagnitude();
+  ~WaleTensorMagnitude();
+  void evaluate();
+};
+
+/**
+ *  \class  VremanTensorMagnitude
+ *  \author Tony Saad
+ *  \date   June, 2012
+ *  \ingroup Expressions
+ *
+ *  \brief This calculates the square velocity gradient tensor. 
+ This is used in the W.A.L.E. turbulent model. 
+ See:
+ Nicoud and Ducros, 1999, Subgrid-Scale Stress Modelling Based on the
+ Square of the Velocity Gradient Tensor
+ *
+ */
+class VremanTensorMagnitude : public StrainTensorMagnitude {
+  
+  VremanTensorMagnitude( const Expr::Tag& vel1tag,
+                              const Expr::Tag& vel2tag,
+                              const Expr::Tag& vel3tag);  
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    
+    /**
+     *  \param vel1tag the first component of the velocity 
+     *  \param vel2tag the second component of the velocity 
+     *  \param vel3tag the third component of the velocity 
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& vel1tag,
+            const Expr::Tag& vel2tag,
+            const Expr::Tag& vel3tag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+    
+  private:
+    const Expr::Tag v1t_, v2t_, v3t_;
+  };
+  
+  ~VremanTensorMagnitude();
   void evaluate();
 };
 #endif // StrainTensorMagnitude_Expr_h

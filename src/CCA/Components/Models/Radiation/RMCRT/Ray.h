@@ -211,6 +211,8 @@ namespace Uintah{
       int  _benchmark; 
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
+      bool _solveDivQ;          
+      bool _allowReflect;                // specify as false when doing DOM comparisons
       bool _CCRays;
       bool _onOff_SetBCs;                // switch for setting boundary conditions                    
       bool _isDbgOn;

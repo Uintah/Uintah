@@ -173,7 +173,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
      
-     system("echo $postProcessCmd_path> $testing_path/scriptPath");
+     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath");
      
           
      chdir($testing_path);

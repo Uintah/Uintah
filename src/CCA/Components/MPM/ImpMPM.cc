@@ -254,7 +254,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, 1);
 
-   MPMPhysicalBCFactory::create(restart_mat_ps, grid);
+   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
      if(flags->d_useLoadCurves){
        throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);

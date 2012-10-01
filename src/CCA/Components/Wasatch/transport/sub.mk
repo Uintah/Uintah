@@ -31,8 +31,8 @@
 SRCDIR   := CCA/Components/Wasatch/transport
 
 SRCS	+=                             		\
-	$(SRCDIR)/ScalarTransportEquation.cc		\
+  $(SRCDIR)/MomentTransportEquation.cc			\
 	$(SRCDIR)/MomentumTransportEquation.cc		\
+	$(SRCDIR)/ParseEquation.cc 								\
   $(SRCDIR)/ScalabilityTestTransportEquation.cc		\
-	$(SRCDIR)/ParseEquation.cc \
-  $(SRCDIR)/MomentTransportEquation.cc
+	$(SRCDIR)/ScalarTransportEquation.cc

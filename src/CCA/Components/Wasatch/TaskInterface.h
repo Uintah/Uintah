@@ -98,25 +98,15 @@ namespace Wasatch{
      *  \brief Create a TaskInterface from a list of root expressions
      *
      *  \param roots The root nodes of the tree to create
-     *
      *  \param taskName the name of this task
-     *
      *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
-     *
      *  \param sched The Scheduler that this task will be loaded on.
-     *
      *  \param patches the patches to associate this task with.
-     *
      *  \param materials the MaterialSet for the materials associated with this task
-     *
      *  \param info The PatchInfoMap object.
-     *
-     *  \param createUniqueTreePerPatch if true, then a tree will be
-     *         constructed for each patch.  If false, one tree will be
-     *         used across all patches.
-     *
-     *  \param fml [OPTIONAL] the FieldManagerList to associate with
-     *         this expression.  If not supplied, one will be created.
+     *  \param RKStage the stage of the RK integrator (use 1 otherwise)
+     *  \param ioFieldSet the fields that are required for output and should not
+     *         be managed "externally" so that their memory is not reclaimed.
      *
      *  This registers fields on the FieldManagerList (which is created if necessary).
      */
@@ -128,10 +118,8 @@ namespace Wasatch{
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
-                   const bool createUniqueTreePerPatch,
                    const int RKStage,
-                   const std::set<std::string>& ioFieldSet,
-                   Expr::FieldManagerList* fml = NULL );
+                   const std::set<std::string>& ioFieldSet );
 
     ~TaskInterface();
 
@@ -181,10 +169,6 @@ namespace Wasatch{
      *  expressions supplied to the TaskInterface.
      */
     ExecList execList_;
-
-    const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.
-    Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
-
   };
 
 } // namespace Wasatch

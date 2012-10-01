@@ -36,6 +36,7 @@
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
@@ -85,6 +86,7 @@
         </force>
         <pressure                 spec="MULTIPLE NO_DATA" >
           <geom_object />
+          <outward_normal         spec="OPTIONAL BOOLEAN" />
           <load_curve             spec="REQUIRED NO_DATA" >
             <id                   spec="REQUIRED INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >

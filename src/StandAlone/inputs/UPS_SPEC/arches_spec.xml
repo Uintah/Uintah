@@ -7,6 +7,8 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
+      <set_initial_vel_condition             spec="OPTIONAL NO_DATA"
+                                        attribute1="inputfile REQUIRED STRING"/>
           
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
@@ -262,6 +264,10 @@
           <slowfastchem                 spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <inertmixing                  spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="inert_label REQUIRED STRING"/> <!-- Attributes must match the transported IV's and the transported IV --> 
           <post_mix                     spec="OPTIONAL NO_DATA">
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
@@ -682,11 +688,15 @@
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
               <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
-              
-              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon'">
+              <allowReflect              spec="OPTIONAL BOOLEAN"/>
+              <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
+             
+ 
+              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />
+                <gray_gas                spec="OPTIONAL NO_DATA" need_applies_to="type radprops"/>
               </property_calculator> 
             </RMCRT>
 
@@ -710,8 +720,7 @@
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
               <!-- slopes and intercepts should be computed from volume % nose plots --> 
               <diluent                  spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="mw REQUIRED DOUBLE"/> <!-- label pointing to the diluent mass fraction --> 
+                                        attribute1="label REQUIRED STRING"/><!-- label pointing to the diluent mass fraction -->
               <lower                    spec="REQUIRED NO_DATA"                    
                                         attribute1="slope REQUIRED DOUBLE"
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the lower flammability limit --> 

@@ -29,17 +29,17 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 
 /**
- *  \class 	Interpolate Expression
- *  \author Tony Saad
- *  \date 	 February, 2012
- *  \ingroup	Expressions
+ *  \class   InterpolateExpression
+ *  \author  Tony Saad
+ *  \date    February, 2012
+ *  \ingroup Expressions
  *
  *  \brief An expression that interpolates between different field types.
            For example, this can be usedto calculate cell centered velocities.
            This expression is currently specialized for staggered-to-cell centered
            interpolation.
- *  \param SrcT: Source field type.
-    \param DestT: Destination field type.
+ *  \tparam SrcT: Source field type.
+    \tparam DestT: Destination field type.
  *
  */
 template< typename SrcT, typename DestT >

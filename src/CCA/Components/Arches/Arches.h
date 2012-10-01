@@ -202,6 +202,10 @@ public:
 
   virtual void sched_readCCInitialCondition(const LevelP& level,
                                             SchedulerP&);
+ 
+  virtual void sched_readUVWInitialCondition(const LevelP& level,
+                                            SchedulerP&);
+ 
   virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
                                                            SchedulerP&);
   virtual void sched_getCCVelocities(const LevelP& level,
@@ -289,6 +293,12 @@ private:
                               DataWarehouse* ,
                               DataWarehouse* new_dw);
 
+  void readUVWInitialCondition(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* ,
+                              DataWarehouse* new_dw);
+  
   void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset*,
@@ -391,6 +401,10 @@ private:
 
     bool d_set_initial_condition;
     std::string d_init_inputfile;
+
+    bool d_set_init_vel_condition;    
+    std::string d_init_vel_inputfile;
+
     TimeIntegratorLabel* init_timelabel;
     bool init_timelabel_allocated;
     bool d_dynScalarModel;

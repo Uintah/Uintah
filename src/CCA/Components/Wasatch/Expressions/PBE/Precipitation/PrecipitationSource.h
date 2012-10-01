@@ -51,7 +51,7 @@ class PrecipitationSource
   const Expr::Tag etaScaleTag_;            ///< this expression value can be read table header and takign inverse
   const Expr::Tag densityTag_;             ///< rho to multiply source term by, since scalar solution is for dphirho/dt
   const Expr::Tag envWeightTag_;           // weight tag for middle environment of multi mix model (optional)
-  const std::vector< double > molecVols_;  ///< \nu in the source evaluation
+  const std::vector< double > molecVols_;  ///< \f$\nu\f$ in the source evaluation
 
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec sources_;

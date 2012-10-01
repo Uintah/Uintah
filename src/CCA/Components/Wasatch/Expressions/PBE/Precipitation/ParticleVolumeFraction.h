@@ -36,9 +36,9 @@
  *  \author Alex Abboud	 
  *  \date June 2012
  *  \brief Calcualtes the particle volume fraction
- *  \f$ \phi = \sum \frac{4 \pi}{3} <r>^3 N/V \f$
- *  <r> = m_1/m_0
- *  \phi = \sum 4 \pi/3 (m_1 * CF)^3 / m_^2
+ *  \f$ \phi = \sum \frac{4 \pi}{3} <r>^3 N/V \f$, with
+ *  \f$<r> = \frac{m_1}{m_0}\f$ and
+ *  \f$\phi = \frac{4\pi}{3} \frac{(m_1  CF)^3}{m^2 }\f$
  */
 template< typename FieldT >
 class ParticleVolumeFraction

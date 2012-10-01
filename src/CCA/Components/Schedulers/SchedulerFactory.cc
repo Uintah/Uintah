@@ -44,6 +44,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #endif
@@ -53,9 +54,12 @@
 using namespace std;
 using namespace Uintah;
 
+static DebugStream SingleProcessor("SingleProcessor", false);
+static DebugStream MPI("MPI", false);
+static DebugStream DynamicMPI("DynamicMPI", false);
+static DebugStream Threaded("Threaded", false);
 static DebugStream Threaded2("Threaded2", false);
-static DebugStream GPUScheduler("GPUScheduler", false);
-
+static DebugStream GPU("GPU", false);
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
                                           const ProcessorGroup* world,
@@ -71,22 +75,45 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 
   // Default settings
   if (scheduler == "") {
-    if (Uintah::Parallel::usingMPI() && !(Uintah::Parallel::getNumThreads() > 0)) {
-      scheduler = "MPIScheduler";
-    } else if (Threaded2.active()) {
-      scheduler = "ThreadedMPI2";
-    } else if (GPUScheduler.active()) {
-      scheduler = "GPUThreadedMPI";
+    if (Uintah::Parallel::usingMPI()) {
+      if (!(Uintah::Parallel::getNumThreads() > 0)) {
+        if (SingleProcessor.active()) {
+          throw ProblemSetupException("Cannot use Single Processor Scheduler with MPI.", __FILE__, __LINE__);
+        } else if (Threaded.active() || Threaded2.active() || GPU.active()) {
+          throw ProblemSetupException("Cannot run Threaded Schedulers without -nthreads <num>.", __FILE__, __LINE__);
+        } else if (GPU.active() && !(Uintah::Parallel::usingGPU())) {
+          throw ProblemSetupException("Cannot use GPU Scheduler without configuring with --enable-cuda.", __FILE__, __LINE__);
+        } else if (DynamicMPI.active()) {
+          scheduler = "DynamicMPIScheduler";
+        } else {
+          scheduler = "MPIScheduler";
+        }
+      } else if (Threaded.active()) {
+        scheduler = "ThreadedMPIScheduler";
+      } else if (Threaded2.active()) {
+        scheduler = "ThreadedMPI2Scheduler";
+      }
+#ifdef HAVE_CUDA
+      else if (GPU.active()) {
+        scheduler = "GPUThreadedMPIScheduler";
+      }
+#endif
+      else {
+        scheduler = "UnifiedScheduler";
+      }
     } else {
-      scheduler = "Unified";
+      if (SingleProcessor.active()) {
+        scheduler = "SingleProcessorScheduler";
+      } else {
+        scheduler = "UnifiedScheduler";
+      }
     }
-  }
-
-  if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "ThreadedMPI")
-                                              &&  (scheduler != "ThreadedMPI2"
-                                              &&  (scheduler != "GPUThreadedMPI")
-                                              &&  (scheduler != "Unified")))) {
-    throw ProblemSetupException("Threaded, GPU or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
+    if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "ThreadedMPIScheduler")
+                                                && (scheduler != "ThreadedMPI2Scheduler")
+                                                && (scheduler != "GPUThreadedMPIScheduler")
+                                                && (scheduler != "UnifiedScheduler")) {
+      throw ProblemSetupException("Threaded, GPU or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
+    }
   }
 
   // Output which scheduler will be used
@@ -95,21 +122,21 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
 
   // Check for specific scheduler request
-  if (scheduler == "SingleProcessorScheduler") {
+  if (scheduler == "SingleProcessorScheduler" || scheduler == "SingleProcessor") {
     sch = scinew SingleProcessorScheduler(world, output, NULL);
   } else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
     sch = scinew MPIScheduler(world, output, NULL);
-  } else if (scheduler == "DynamicMPI") {
+  } else if (scheduler == "DynamicMPIScheduler" || scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, NULL);
-  } else if (scheduler == "ThreadedMPI") {
+  } else if (scheduler == "ThreadedMPIScheduler" || scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
-  } else if (scheduler == "ThreadedMPI2") {
+  } else if (scheduler == "ThreadedMPI2Scheduler" || scheduler == "ThreadedMPI2") {
     sch = scinew ThreadedMPIScheduler2(world, output);
-  } else if (scheduler == "Unified") {
+  } else if (scheduler == "UnifiedScheduler" || scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }
 #ifdef HAVE_CUDA
-  else if (scheduler == "GPUThreadedMPI") {
+  else if (scheduler == "GPUThreadedMPIScheduler" || scheduler == "GPUThreadedMPI") {
     sch = scinew GPUThreadedMPIScheduler(world, output, NULL);
   }
 #endif

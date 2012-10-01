@@ -63,10 +63,11 @@
      <time_integrator>explicit</time_integrator>
      <interpolator>       linear    </interpolator>
      <withColor>          true      </withColor>
+     <minimum_mass_for_acc>  1.0e-15  </minimum_mass_for_acc>
    </MPM>
 
    <PhysicalConstants>
-      <gravity>[0,0,0]</gravity>
+      <gravity>[100,100,100]</gravity>
    </PhysicalConstants>
 
    <!--__________________________________-->
@@ -134,6 +135,33 @@
       </Level>
       <!--__________________________________-->
       <BoundaryConditions>
+<!--For constant acceleration tests   -->
+      <Face side = "x-">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y+">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z+">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>  
+      
+<!--For constant Velocity tests       
        <Face side = "x-">
          <BCType id = "all" var = "Dirichlet" label = "Velocity">
                 <value> [100, 100, 100] </value>
@@ -163,7 +191,7 @@
          <BCType id = "all" var = "Dirichlet" label = "Velocity">
                 <value> [100, 100, 100] </value>
          </BCType>
-       </Face>
+       </Face>  -->
       </BoundaryConditions>
    </Grid>
    

@@ -52,26 +52,47 @@ namespace Wasatch{
                                         const Expr::TagList& velTags,
                                         const Expr::Tag densTag) {
 
-    Expr::Tag sqStrTsrMagTag  = Expr::Tag();
+    Expr::Tag strTsrMagTag  = Expr::Tag();
+    Expr::Tag waleTsrMagTag  = Expr::Tag();
     Expr::Tag dynSmagConstTag = Expr::Tag();
+    Expr::Tag vremanTsrMagTag  = Expr::Tag();    
     const Expr::Tag turbViscTag = turbulent_viscosity_tag();
     
     // we got turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
-    const Expr::Tag strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
-    if( !factory.have_entry( strTsrMagTag ) ){
-      std::cout << "Registering:" << strTsrMagTag << std::endl;      
-      typedef StrainTensorMagnitude::Builder StrTsrMagT;
-      factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
-    }
     
     switch (turbParams.turbulenceModelName) {
-      case WALE: {
+      case SMAGORINSKY: {
+        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+        if( !factory.have_entry( strTsrMagTag ) ){
+          typedef StrainTensorMagnitude::Builder StrTsrMagT;
+          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+        }
+      }
+        break;
+        
+      case VREMAN: {
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
-        sqStrTsrMagTag = square_straintensormagnitude_tag();
-        if( !factory.have_entry( sqStrTsrMagTag ) ){
-          std::cout << "Registering:" << sqStrTsrMagTag << std::endl;                
-          typedef SquareStrainTensorMagnitude::Builder SqStrTsrMagT;
-          factory.register_expression( scinew SqStrTsrMagT(sqStrTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+        vremanTsrMagTag = vreman_tensormagnitude_tag();
+        if( !factory.have_entry( vremanTsrMagTag ) ){
+          typedef VremanTensorMagnitude::Builder VremanTsrMagT;
+          factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+        }
+      }
+        break;
+        
+      case WALE: {
+        
+        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+        if( !factory.have_entry( strTsrMagTag ) ){
+          typedef StrainTensorMagnitude::Builder StrTsrMagT;
+          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+        }
+        
+        // if WALE model is turned on, then create an expression for the square velocity gradient tensor
+        waleTsrMagTag = wale_tensormagnitude_tag();
+        if( !factory.have_entry( waleTsrMagTag ) ){
+          typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
+          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
         }
       }
         break;
@@ -86,13 +107,10 @@ namespace Wasatch{
       default:
         break;
     }   
-    
-    std::cout << "turbulent viscosity tag:" << turbViscTag << std::endl;                      
 
     if( !factory.have_entry( turbViscTag ) ){
-      std::cout << "Registering:" << turbViscTag << std::endl;                      
       typedef TurbulentViscosity::Builder TurbViscT;
-      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, sqStrTsrMagTag, turbParams ) );
+      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, turbParams ) );
     }
   }
   
@@ -382,8 +400,7 @@ namespace Wasatch{
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];
     //
-    const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
-
+    const Expr::Tag viscTag = (isviscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
     //--------------------------------------
     // TURBULENCE
     // check if we have a turbulence model turned on

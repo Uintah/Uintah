@@ -458,6 +458,7 @@ ArchesLabel::ArchesLabel()
   d_reactScalarGradientCompLabel        =  VarLabel::create("reactScalarGradientComp",        CC_double);
   d_filterReactScalarGradientCompLabel  =  VarLabel::create("filterReactScalarGradientComp",  CC_double);
   d_filterStrainTensorCompLabel         =  VarLabel::create("filterStrainTensorComp",         CC_double);
+  d_filterVolumeLabel                   =  VarLabel::create("filterVolume",                   CC_double);
 
   d_scalarNumeratorLabel         =  VarLabel::create("scalarNumerator",         CC_double);
   d_scalarDenominatorLabel       =  VarLabel::create("scalarDenominator",       CC_double);
@@ -715,6 +716,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactScalarGradientCompLabel);
   VarLabel::destroy(d_filterReactScalarGradientCompLabel);
   VarLabel::destroy(d_filterStrainTensorCompLabel);
+  VarLabel::destroy(d_filterVolumeLabel); 
   VarLabel::destroy(d_scalarNumeratorLabel); 
   VarLabel::destroy(d_scalarDenominatorLabel); 
   VarLabel::destroy(d_enthalpyNumeratorLabel); 

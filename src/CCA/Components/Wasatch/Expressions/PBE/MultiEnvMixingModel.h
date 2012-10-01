@@ -34,8 +34,8 @@
  *  \date June 2012
  *  \tparam FieldT the type of field.
  *  \brief Implements a basic three absciassae multi environment mixing model
- *  fixes w_1 at mixfrac = 0 & w_3 at mixfrac = 1
- *  closure of this is that w_2 = <Z>
+ *  fixes \f$w_1\f$ at mixfrac = 0 & \f$w_3\f$ at mixfrac = 1
+ *  closure of this is that \f$w_2 = <Z>\f$
  *  for precipitation, reaction only occurs at w_2
  *  this returns a vector of weights
  *  with a vector of dw/dt base on scalr diss

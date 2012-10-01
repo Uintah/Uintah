@@ -35,7 +35,7 @@ class TurbulentViscosity
   
   const bool isConstSmag_;
   Wasatch::TurbulenceParameters turbulenceParameters_;
-  const Expr::Tag strTsrMagTag_, sqStrTsrMagTag_, smagTag_, rhoTag_;
+  const Expr::Tag strTsrMagTag_, sqStrTsrMagTag_, vremanTsrMagTag_, smagTag_, rhoTag_;
 
   // gradient operators are only here to extract spacing information out of them
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
@@ -46,11 +46,12 @@ class TurbulentViscosity
   const GradYT*  gradYOp_;            ///< y-component of the gradient operator  
   const GradZT*  gradZOp_;            ///< z-component of the gradient operator
 
-  const SVolField *smag_, *rho_, *strTsrMag_, *sqStrTsrMag_;
+  const SVolField *smag_, *rho_, *strTsrMag_, *sqStrTsrMag_, *vremanTsrMag_;
 
   TurbulentViscosity( const Expr::Tag rhoTag,
                       const Expr::Tag strTsrMagTag,
-                      const Expr::Tag sqStrTsrMagTag,                                          
+                      const Expr::Tag sqStrTsrMagTag,
+                      const Expr::Tag vremanTsrMagTag, 
                       const Wasatch::TurbulenceParameters turbParams);
   
 public:
@@ -59,8 +60,8 @@ public:
   public:
     /**
      *  \brief Construct a turbulent viscosity given expressions for
-     *         \f$\rho\f$, \f$u_1\f$, \f$\u_2\f$ and a constant value for 
-     *         Smagorinske Constant, \f$C\f$.
+     *         \f$\rho\f$, \f$u_1\f$, \f$u_2\f$ and a constant value for
+     *         Smagorinsky Constant, \f$C\f$.
      *
      *  \param rhoTag the Expr::Tag for the density.
      *
@@ -78,24 +79,26 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag rhoTag,
              const Expr::Tag strTsrMagTag,
-             const Expr::Tag sqStrTsrMagTag,                                                      
+             const Expr::Tag sqStrTsrMagTag,
+             const Expr::Tag vremanTsrMagTag,            
              const Wasatch::TurbulenceParameters turbParams )
       : ExpressionBuilder(result),
         isConstSmag_         ( true ),
         turbulenceParameters_( turbParams ),
         rhot_                ( rhoTag         ),
         strTsrMagt_          ( strTsrMagTag   ),
-        sqStrTsrMagt_        ( sqStrTsrMagTag )
+        sqStrTsrMagt_        ( sqStrTsrMagTag ),
+        vremanTsrMagt_       ( vremanTsrMagTag)
     {}
     
     Expr::ExpressionBase* build() const
     {
-      return new TurbulentViscosity( rhot_, strTsrMagt_, sqStrTsrMagt_, turbulenceParameters_ );      
+      return new TurbulentViscosity( rhot_, strTsrMagt_, sqStrTsrMagt_, vremanTsrMagt_, turbulenceParameters_ );      
     }    
   private:
     const bool isConstSmag_;
     const Wasatch::TurbulenceParameters turbulenceParameters_;
-    const Expr::Tag rhot_, strTsrMagt_, sqStrTsrMagt_, smagt_;
+    const Expr::Tag rhot_, strTsrMagt_, sqStrTsrMagt_, vremanTsrMagt_, smagt_;
   };
 
   ~TurbulentViscosity();

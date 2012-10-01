@@ -88,9 +88,9 @@
                <origin>           [ 0.0, 0.0, 0.0]   </origin>
                <radius>           1.0                </radius>
             </sphere>           
-
-            <res>         [1,1,1]       </res>
-            <velocity>    [100,100,0] </velocity>
+            
+            <res>         [2,2,1]       </res>
+            <velocity>    [100,100,0]   </velocity>
             <temperature>     12        </temperature>
             <color>            0        </color>
          </geom_object>              
@@ -106,35 +106,64 @@
       <!--       3D    -->
       <Level>
         <Box label = "0">
-          <lower>       [-2, -0.2, -0.012]    </lower>
-          <upper>       [ 2,  0.2,  0.012]    </upper>
-          <resolution>  [40, 40, 1]              </resolution>
-          <patches>     [3,3,1]                 </patches>
-          <extraCells>  [0,0,0]                 </extraCells>
+          <lower>       [-2, -2, -0.05]      </lower>
+          <upper>       [ 2,  2,  0.05]      </upper>
+          <resolution>  [40, 40, 1]           </resolution>
+          <patches>     [3,3,1]               </patches>
+          <extraCells>  [0,0,0]               </extraCells>
         </Box>
       </Level>
 
       <Level>
         <Box label = "1">
-          <lower>       [-0.5, -0.2, -0.012]   </lower>
-          <upper>       [ 0.5,  0.2,  0.012]   </upper>
-          <resolution>  [20, 20, 1]               </resolution>
-          <patches>     [2,2,1]                  </patches>
-          <extraCells>  [0,0,0]                  </extraCells>
+          <lower>       [-0.5, -0.5, -0.05]   </lower>
+          <upper>       [ 0.5,  0.5,  0.05]   </upper>
+          <resolution>  [20, 20, 1]            </resolution>
+          <patches>     [2,2,1]                </patches>
+          <extraCells>  [0,0,0]                </extraCells>
         </Box>
-      </Level>       
-
+      </Level>   
+          
       <Level>
         <Box label = "2">
            <lower>       [-0.2, -0.2, -0.012]   </lower>
            <upper>       [0.2,   0.2,  0.012]   </upper>
-           <resolution>  [32,32,1]                 </resolution>
-           <patches>     [1,1,1]                  </patches>
-           <extraCells>  [0,0,0]                  </extraCells>
+           <resolution>  [32,32,1]              </resolution>
+           <patches>     [1,1,1]                </patches>
+           <extraCells>  [0,0,0]                </extraCells>
         </Box>
       </Level>
       <!--__________________________________-->
       <BoundaryConditions>
+<!--For constant acceleration tests -->      
+      <Face side = "x-">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "x+">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y-">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y+">
+         <BCType id = "all"   label = "Velocity" var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "z-">
+          <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z+">
+          <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      
+<!-- For constant velocity tests   
        <Face side = "x-">
          <BCType id = "all" var = "Dirichlet" label = "Velocity">
                 <value> [100, 100, 0] </value>
@@ -165,6 +194,7 @@
                 <value> [100, 100, 0] </value>
          </BCType>
        </Face>
+-->
       </BoundaryConditions>
    </Grid>
    

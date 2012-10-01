@@ -66,7 +66,7 @@ MPMLabel::MPMLabel()
   
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
-			ParticleVariable<Vector>::getTypeDescription());
+			ParticleVariable<Matrix3>::getTypeDescription());
   
   // for thermal stress
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
@@ -114,6 +114,18 @@ MPMLabel::MPMLabel()
   
   pExternalForceLabel = VarLabel::create( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
+
+  pExternalForceCorner1Label = VarLabel::create( "p.externalforcecorner1",
+			ParticleVariable<Point>::getTypeDescription() );
+
+  pExternalForceCorner2Label = VarLabel::create( "p.externalforcecorner2",
+			ParticleVariable<Point>::getTypeDescription() );
+
+  pExternalForceCorner3Label = VarLabel::create( "p.externalforcecorner3",
+			ParticleVariable<Point>::getTypeDescription() );
+
+  pExternalForceCorner4Label = VarLabel::create( "p.externalforcecorner4",
+			ParticleVariable<Point>::getTypeDescription() );
   
   pXLabel = VarLabel::create("p.x",
 			     ParticleVariable<Point>::getTypeDescription(),
@@ -664,6 +676,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
   VarLabel::destroy(pExternalForceLabel);
+  VarLabel::destroy(pExternalForceCorner1Label);
+  VarLabel::destroy(pExternalForceCorner2Label);
+  VarLabel::destroy(pExternalForceCorner3Label);
+  VarLabel::destroy(pExternalForceCorner4Label);
   VarLabel::destroy(pExtForceLabel_preReloc);
   VarLabel::destroy(pXLabel);
   VarLabel::destroy(pXLabel_preReloc);

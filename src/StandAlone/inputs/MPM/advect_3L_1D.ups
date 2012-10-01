@@ -67,7 +67,7 @@
    </MPM>
 
    <PhysicalConstants>
-      <gravity>[0,0,0]</gravity>
+      <gravity>[100,0,0]</gravity>
    </PhysicalConstants>
 
    <!--__________________________________-->
@@ -133,8 +133,35 @@
            <extraCells>  [0,0,0]                  </extraCells>
         </Box>
       </Level>
+
       <!--__________________________________-->
       <BoundaryConditions>
+      
+<!--For constant acceleration tests -->      
+      <Face side = "x-">
+         <BCType id = "all"   label = "Velocity"  var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "x+">
+         <BCType id = "all"   label = "Velocity"  var = "Neumann">
+               <value> [0, 0, 0 ]</value>
+         </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      
+<!-- For constant velocity tests
        <Face side = "x-">
          <BCType id = "all" var = "Dirichlet" label = "Velocity">
                 <value> [100, 0, 0] </value>
@@ -165,6 +192,7 @@
                 <value> [100, 0, 0] </value>
          </BCType>
        </Face>
+-->
       </BoundaryConditions>
    </Grid>
    
