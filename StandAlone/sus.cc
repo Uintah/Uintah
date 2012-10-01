@@ -491,8 +491,6 @@ main( int argc, char *argv[], char *env[] )
 
 #ifndef _WIN32
   char * start_addr = (char*)sbrk(0);
-  mode_t mask_gor = 0022;
-  umask(mask_gor);
 #endif
 
 #if defined(__SGI__)
