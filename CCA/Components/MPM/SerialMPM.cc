@@ -2179,7 +2179,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch); 
-    ParticleInterpolator* linear_interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* linear_interpolator=scinew LinearInterpolator(patch);
 
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -2381,6 +2381,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelglobal[c] /= gmassglobal[c];
     }
     delete interpolator;
+    delete linear_interpolator;
   }  // End loop over patches
 }
 
