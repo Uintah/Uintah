@@ -55,7 +55,6 @@ namespace Wasatch {
 
   // This function returns true if the boundary condition is applied in the same direction
   // as the staggered field. For example, xminus/xplus on a XVOL field.
-
   bool is_staggered_bc( const Direction staggeredLocation,
                         const Uintah::Patch::FaceType face ){
     switch (staggeredLocation) {
@@ -75,8 +74,13 @@ namespace Wasatch {
     return false;
   }
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************    
+  /**
+   *
+   *  \brief helps with staggered fields.
+   *
+   */
+  //****************************************************************************      
   void get_face_offset( const Uintah::Patch::FaceType& face,
                         const bool hasExtraCells,
                         SpatialOps::structured::IntVec& faceOffset )
@@ -104,12 +108,15 @@ namespace Wasatch {
       }
     }
   }
+
+  //****************************************************************************    
   /**
    *  \ingroup WasatchCore
    *
    *  \brief This function determines the point(s) on which we want to set bcs.
    *
    */
+  //****************************************************************************    
   void get_bc_points_ijk( const Direction staggeredLocation,
                           const Uintah::Patch::FaceType face,
                           const SpatialOps::structured::BCSide bcSide,
@@ -196,7 +203,7 @@ namespace Wasatch {
     }
   }
 
-  //-----------------------------------------------------------------------------
+  //****************************************************************************    
   /**
    *  \ingroup WasatchCore
    *
@@ -204,6 +211,7 @@ namespace Wasatch {
    this gets called from set_bc_on_face.
    *
    */
+  //****************************************************************************    
   template < typename FieldT, typename BCOpT >
   void set_bc_on_points( const Uintah::Patch* const patch,
                         const GraphHelper& gh,
@@ -269,13 +277,14 @@ namespace Wasatch {
     factory.attach_modifier_expression( modTag, phiTag,patch->getID() );
   }
   
-  //-----------------------------------------------------------------------------
+  //****************************************************************************    
   /**
    *  @struct BCOpTypeSelectorBase
    *
    *  @brief This templated struct is used to simplify boundary
    *         condition operator selection.
    */
+  //****************************************************************************    
   template< typename FieldT, typename BCEvalT>
   struct BCOpTypeSelectorBase
   {
@@ -350,8 +359,7 @@ namespace Wasatch {
     typedef typename SpatialOps::structured::BoundaryConditionOp< typename SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type, BCEvalT> NeumannZ;
   };
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
   /**
    *  \ingroup WasatchCore
    *
@@ -359,6 +367,7 @@ namespace Wasatch {
              boundary condition set in the input file.
    *
    */
+  //****************************************************************************  
   template <typename T>
   bool get_iter_bcval_bckind_bcname( const Uintah::Patch* patch,
                              const Uintah::Patch::FaceType face,
@@ -395,8 +404,7 @@ namespace Wasatch {
     return( bc_kind.compare("NotSet") != 0 );
   }
 
-  //---------------------------------------------------------------------------
-
+  //****************************************************************************  
   /**
    *  \ingroup WasatchCore
    *
@@ -404,6 +412,7 @@ namespace Wasatch {
              given face.
    *
    */
+  //****************************************************************************    
   template < typename FieldT, typename BcT >
   void set_bcs_on_face (SCIRun::Iterator& bound_ptr,
                            const Uintah::Patch::FaceType& face,
@@ -450,7 +459,7 @@ namespace Wasatch {
     
   }
 
-  //-----------------------------------------------------------------------------
+  //****************************************************************************  
   /**
    *  \ingroup WasatchCore
    *
@@ -479,7 +488,7 @@ namespace Wasatch {
    *  \param opdb The operators databse
    *  \param bc_kind The type of bc: Dirichlet or Neumann
    */
-
+  //****************************************************************************  
   template < typename FieldT >
   void process_bcs_on_face( SCIRun::Iterator& bound_ptr,
                             const Uintah::Patch::FaceType& face,
@@ -552,8 +561,9 @@ namespace Wasatch {
 
   }
 
-  //-----------------------------------------------------------------------------
+  //****************************************************************************  
   // Specialization for normal stress and convective flux for xvol fields
+  //****************************************************************************    
   template<>
   void process_bcs_on_face<FaceTypes<XVolField>::XFace>( SCIRun::Iterator& bound_ptr,
                                                          const Uintah::Patch::FaceType& face,
@@ -612,8 +622,9 @@ namespace Wasatch {
 
   }
 
-  //-----------------------------------------------------------------------------
+  //****************************************************************************  
   // Specialization for normal stress and convective flux for yvol fields
+  //****************************************************************************    
   template<>
   void process_bcs_on_face<FaceTypes<YVolField>::YFace>( SCIRun::Iterator& bound_ptr,
                                                          const Uintah::Patch::FaceType& face,
@@ -671,8 +682,9 @@ namespace Wasatch {
     }
   }
 
-  //-----------------------------------------------------------------------------
+  //****************************************************************************  
   // Specialization for normal stress and convective flux for zvol fields
+  //****************************************************************************    
   template<>
   void process_bcs_on_face<FaceTypes<ZVolField>::ZFace>( SCIRun::Iterator& bound_ptr,
                                                          const Uintah::Patch::FaceType& face,
@@ -729,8 +741,33 @@ namespace Wasatch {
     }
   }
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief This is the function to be called to process boundary conditions 
+   *         from input
+   *
+   *  \param phiTag An Expr::Tag that has contains the tag of the expression
+   we're setting the bc on
+   *
+   *  \param fieldName A string containing the name of the field for which we
+   want to apply the bc. This is needed for expressions that compute
+   multiple fields such as the pressure.
+   *
+   *  \param staggeredLocation This is the staggered location of the field on
+   *         which the boundary condition is applied
+   *
+   *  \param graphHelper The graph which contains the expression associated with
+   the field we are setting the bc on
+   *
+   *  \param localPatches The set of local patches on which the BCs are applied
+   *
+   *  \param patchInfoMap The Wasatch patchInfoMap
+   *
+   *  \param materials The material subset on which BCs are to be applied
+   */
+  //****************************************************************************    
   template < typename FieldT >
   void process_boundary_conditions( const Expr::Tag& phiTag,
                                     const std::string& fieldName,
@@ -821,8 +858,14 @@ namespace Wasatch {
   }
 
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Updates the rhs of a poisson equation to account for BCs 
+   *
+   */
+  //****************************************************************************      
   void update_poisson_rhs( const Expr::Tag& poissonTag,
                             Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                             SVolField& poissonField,
@@ -945,8 +988,14 @@ namespace Wasatch {
     } // face loop
   }
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Updates the Poisson equation coefficient matrix to account for BCs 
+   *
+   */
+  //****************************************************************************      
   void update_poisson_matrix( const Expr::Tag& poissonTag,
                            Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                            const Uintah::Patch* patch,
@@ -1052,8 +1101,15 @@ namespace Wasatch {
     } // face loop
   }
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Updates the coefficient matrix of a poisson equation to account a 
+             reference value
+   *
+   */
+  //****************************************************************************      
   void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                               const Uintah::Patch* patch,
                               const SCIRun::IntVector refCell )
@@ -1083,8 +1139,14 @@ namespace Wasatch {
     }
   }
 
-  //-----------------------------------------------------------------------------
-
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Updates the rhs of a poisson equation to account for reference pressure 
+   *
+   */
+  //****************************************************************************      
   void set_ref_poisson_rhs( SVolField& poissonRHS,
                              const Uintah::Patch* patch,
                              const double refpoissonValue,
@@ -1130,8 +1192,14 @@ namespace Wasatch {
     }
   }
 
-  //-----------------------------------------------------------------------------
-  
+  //****************************************************************************  
+  /**
+   *  \ingroup WasatchCore
+   *
+   *  \brief Key function to prcess boundary conditions for poisson equation.
+   *
+   */
+  //****************************************************************************      
   void process_poisson_bcs( const Expr::Tag& poissonTag,
                             SVolField& poissonField,
                             const Uintah::Patch* patch,

@@ -89,7 +89,7 @@ namespace Uintah {
         S[6] = fx * fy * fz1;
         S[7] = fx * fy * fz;
       };
-//__________________________________
+    //__________________________________
 
     virtual void findCellAndWeights(const Point& p,
                                     vector<IntVector>& ni, 
@@ -97,13 +97,23 @@ namespace Uintah {
                                      const Matrix3& size, 
                                      const Matrix3& defgrad);
                                 
-                                    
-    virtual void findCellAndWeights(const Point& pos,
-                                    vector<IntVector>& ni,
-                                    vector<double>& S,
-                                    constNCVariable<Stencil7>& zoi);
-                                    
-                                    
+    
+    //__________________________________
+    //  AMRMPM                                
+    virtual void findCellAndWeights_CFI(const Point& pos,
+                                        vector<IntVector>& ni,
+                                        vector<double>& S,
+                                        constNCVariable<Stencil7>& zoi);
+                                        
+    virtual void findCellAndWeightsAndShapeDerivatives_CFI(
+                                            const Point& pos,
+                                            vector<IntVector>& CFI_ni,
+                                            vector<double>& S,
+                                            vector<Vector>& d_S,
+                                            constNCVariable<Stencil7>& zoi);
+    //__________________________________ 
+    
+    
     inline void findCellAndShapeDerivatives(const Point& pos,
                                             vector<IntVector>& ni,
                                             vector<Vector>& d_S)

@@ -537,7 +537,7 @@
       <TurbulentSchmidt        spec="OPTIONAL DOUBLE"/>                                   
       <KolmogorovScale         spec="OPTIONAL DOUBLE"/>                                   
       <EddyViscosityConstant   spec="OPTIONAL DOUBLE"/>                               
-      <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE'">
+      <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE,VREMAN'">
       </TurbulenceModel>
     </Turbulence>
         
@@ -688,6 +688,8 @@
       <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
+      
+      <UseMomentReduction spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
       
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->

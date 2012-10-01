@@ -33,7 +33,7 @@
  *  \author Alex Abboud
  *  \date June 2012
  *  \brief Calculates teh source term for each moment equation that is due to the subgrid scale environments
- *  \f$ S_\mix = -\frac{dw_1/dt}{w2} (\phi_1 - \phi_2 ) - \frac{dw_3/dt}{w_2} ( \phi_3 - \phi_2 )  \f$
+ *  \f$ S_{mix} = -\frac{dw_1/dt}{w2} (\phi_1 - \phi_2 ) - \frac{dw_3/dt}{w_2} ( \phi_3 - \phi_2 )  \f$
  *  requires the initial moment value
  *  and the tag list of weights and derivatives of weights
  */

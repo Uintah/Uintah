@@ -338,7 +338,7 @@ main( int argc, char *argv[], char *env[] )
               arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-      if ( numThreads< 2) {
+      if ( numThreads< 1) {
         usage("Number of threads is too small", arg, argv[0]);
       } else if (numThreads>MAX_THREADS ) {
         usage("Number of threads is out of range. Try to increase MAX_THREADS and recompile", arg, argv[0]);

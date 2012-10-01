@@ -350,9 +350,7 @@
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
-                                    attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
-                                                                      mpmf, mpmice, amrmpm,
-                                                                      wasatch, reduce_uda,
+                                    attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                                       advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test, particletest, ljpotentialtest'" >

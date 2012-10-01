@@ -23,11 +23,13 @@
 
 #ifndef Wasatch_MMS_Functions
 #define Wasatch_MMS_Functions
+#include <Core/IO/UintahZlibUtil.h>
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <spatialops/FieldReductions.h>
 
+#include <limits>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -401,10 +403,11 @@ evaluate()
   using namespace SpatialOps::structured;
   FieldT& phi = this->value();
   phi <<= 0.0;
+
+  // gzFile utilities as they can handle both gzip and ascii files.
+  gzFile inputFile = gzopen( filename_.c_str(), "r" );
   
-  std::ifstream fd(filename_.c_str(), std::ifstream::in);
-  
-  if(fd.fail()) {
+  if(inputFile == NULL) {
     std::ostringstream warn;
     warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -415,20 +418,29 @@ evaluate()
   const double yMax = field_max_interior(*y_);
   const double yMin = field_min_interior(*y_);
   const double zMax = field_max_interior(*z_);
-  const double zMin = field_min_interior(*z_);  
-  
+  const double zMin = field_min_interior(*z_);    
   typename FieldT::interior_iterator phiiter = phi.interior_begin();
+
   double x,y,z,val;
-  while (fd.good()) {
-    fd >> x >> y >> z >> val;
-    const bool contains_value = x >= xMin && x <= xMax && y >= yMin && y <= yMax && z >= zMin && z <= zMax;
-    if (contains_value) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...
+
+  // to take care of comparing doubles, use a tolerance value for min & max (see below)
+  const double eps = 2.0*std::numeric_limits<double>::epsilon();
+//  int size = 0;
+  while ( gzeof(inputFile) == 0 ) { // check for end of file
+    x   = Uintah::getDouble(inputFile);
+    y   = Uintah::getDouble(inputFile);
+    z   = Uintah::getDouble(inputFile);
+    val = Uintah::getDouble(inputFile);  
+    const bool contains_value = x >= (xMin - eps) && x <= (xMax + eps) && y >= (yMin - eps) && y <= (yMax + eps) && z >= (zMin - eps) && z <= (zMax + eps);
+    if (contains_value && phiiter != phi.interior_end()) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...      
       *phiiter = val;
       ++phiiter;
-    }    
-  }
-  
-  fd.close();
+//      size++;
+    }        
+  }  
+//  const int pid =  Uintah::Parallel::getMPIRank();
+//  std::cout << "Processor: " << pid << " collected total cells: "<< size << std::endl;
+  gzclose( inputFile );     
 }
 
 //--------------------------------------------------------------------
@@ -864,8 +876,8 @@ RandomField<ValT>::Builder::build() const
  *  \author Tony Saad
  *  \date July, 2012
  *  \brief Implements an exponential vortex with the streamfunction given
-           by \f$ \psi = C_0 \text{Exp}\left( - \frac{r^2}{2 R_0^2} \right) + U_0 y  \f$.
-    here, \f$ C_0 \f$ is the vortex strength, \f$ r = \sqrt{(x-x_0)^2 + (y-y0)^2} \f$
+           by \f$ \psi = C_0 \exp \left( - \frac{r^2}{2 R_0^2} \right) + U_0 y  \f$.
+    Here, \f$ C_0 \f$ is the vortex strength, \f$ r = \sqrt{(x-x_0)^2 + (y-y_0)^2} \f$
     with \f$ x_0 \f$ and \f$ y_0 \f$ corresponding to the vortex center, \f$ R_0 \f$
     is the vortex radius, and \f$ U_0 \f$ is the free stream velocity. NOTE: when the vortex
     strength is larger than 0.001, you will observe skewness in the streamlines because as the

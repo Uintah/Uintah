@@ -66,6 +66,11 @@ public:
     const int wallType, 
     const int flowType );
 
+  /** @brief Compute the volume weights for the filter cell **/
+  void computeFilterVolume( Patch* patch, 
+                            CCVariable<int>&    cellType, 
+                            CCVariable<double>& filterVolume ); 
+
   void sched_computeBCArea( SchedulerP& sched, 
                             const PatchSet* patches, 
                             const MaterialSet* matls );

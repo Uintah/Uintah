@@ -109,9 +109,9 @@ endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) \
-        $(BOOST_LIBRARY) $(Z_LIBRARY)
+        $(BOOST_LIBRARY) $(Z_LIBRARY) $(RADPROPS_LIBRARY)
 
-INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
+INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
 SUBDIRS := $(SRCDIR)/ChemMix            \

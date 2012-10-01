@@ -60,10 +60,16 @@ Filter::Filter(const ArchesLabel* label,
   d_matrixInitialize = false;
   d_matrix_vectors_created = false;
 
-  int filter_width = 3; //hard coded for now
-  for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
-    for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
-      for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+  // Reference for this filter from: 
+  // A general class of commutative filters for LES in complex geometries
+  // Vasilyev, Lund, and Moin
+  // JCP 146, 82-104, 1998
+  //
+  _filter_width = 3; 
+
+  for ( int i = -(_filter_width-1)/2; i <= (_filter_width-1)/2; i++ ){
+    for ( int j = -(_filter_width-1)/2; j <= (_filter_width-1)/2; j++ ){
+      for ( int k = -(_filter_width-1)/2; k <= (_filter_width-1)/2; k++ ){
 
         int offset = abs(i) + abs(j) + abs(k); 
         double my_value = offset+3; 

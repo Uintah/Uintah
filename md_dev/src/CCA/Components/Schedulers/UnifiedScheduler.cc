@@ -85,8 +85,8 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       schedulerLock("scheduler lock"),
       recvLock("MPI receive Lock")
 #ifdef HAVE_CUDA
-               ,
-    deviceComputesLock_("GPU_DB Device computes ptrs lock"),
+      ,
+      deviceComputesLock_("GPU_DB Device computes ptrs lock"),
       hostComputesLock_("GPU-DB host computes ptrs lock"),
       deviceRequiresLock_("GPU-DB device requires ptrs lock"),
       hostRequiresLock_("GPU-DB host requires ptrs lock"),
@@ -187,7 +187,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
-          "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
+          "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
   } else if (numThreads_ > MAX_THREADS) {
@@ -198,8 +198,8 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL," << "not all tasks are thread safe yet." << endl
-         << "\tCreating " << numThreads_ << " more threads for task execution." << endl;
+    cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
+         << "\tCreating " << numThreads_ << " threads for task execution." << endl;
   }
 
 //  d_nextsignal = scinew ConditionVariable("NextCondition");
@@ -503,19 +503,22 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
   d_nextmutex.unlock();
 
-  //if (me==0)
-  //  cout <<"AviableThreads : " << getAviableThreadNum()  << ", task worked: " << numTasksDone << endl;
-
-  //if (d_generation > 2)
-  //dws[dws.size()-2]->printParticleSubsets();
+//  // debug
+//  if (me == 0) {
+//    cout << "AviableThreads : " << getAviableThreadNum() << ", task worked: " << numTasksDone << endl;
+//  }
+//  if (d_generation > 2) {
+//    dws[dws.size() - 2]->printParticleSubsets();
+//  }
 
   if (queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;
     // if (me == 0) cout << d_myworld->myrank() << " queue length histogram: ";
     for (unsigned int i = 1; i < histogram.size(); i++) {
-      // if (me == 0)cout << histogram[i] << " ";
-      //cout << iter->first << ":" << iter->second << " ";
+//       if (me == 0) {
+//         cout << histogram[i] << " ";
+//       }
       lengthsum = lengthsum + i * histogram[i];
     }
     // if (me==0) cout << endl;
@@ -793,13 +796,13 @@ void UnifiedScheduler::runTasks(int t_id)
             gpuInitReady = true;
           } else {
 #endif
-            numTasksDone++;
-            phaseTasksDone[readyTask->getTask()->d_phase]++;
-            while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-              currphase++;
-            }
-#ifdef HAVE_CUDA
+          numTasksDone++;
+          phaseTasksDone[readyTask->getTask()->d_phase]++;
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+            currphase++;
           }
+#ifdef HAVE_CUDA
+        }
 #endif
           break;
         }
@@ -1571,9 +1574,11 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
 
   if (gpu_stats.active()) {
+    cudaDeviceProp deviceProp;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
-              << ") for REQUIRES variable " << label->getName() << endl;
+    << ", " << deviceProp.name << ") for REQUIRES variable " << label->getName() << endl;
     cerrLock.unlock();
   }
 
@@ -1589,10 +1594,12 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
   CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
 
   if (gpu_stats.active()) {
+    cudaDeviceProp deviceProp;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName()
-              << "\" host to device (dev-" << device << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
-              << endl;
+    << "\" host to device (dev-" << device << ", " << deviceProp.name << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
+    << endl;
     cerrLock.unlock();
   }
 
@@ -1600,11 +1607,11 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
-                                       const VarLabel* label,
-                                       int matlIndex,
-                                       const Patch* patch,
-                                       IntVector size,
-                                       double* h_compData)
+    const VarLabel* label,
+    int matlIndex,
+    const Patch* patch,
+    IntVector size,
+    double* h_compData)
 {
   // set the device and CUDA context
   cudaError_t retVal;
@@ -1630,9 +1637,11 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
 
   if (gpu_stats.active()) {
+    cudaDeviceProp deviceProp;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
-              << ") for Computes variable " << label->getName() << endl;
+    << ", " << deviceProp.name << ") for COMPUTES variable " << label->getName() << endl;
     cerrLock.unlock();
   }
 
@@ -1648,10 +1657,12 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
 
   if (gpu_stats.active()) {
+    cudaDeviceProp deviceProp;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName()
-              << "\" host to device (dev-" << device << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes"
-              << endl;
+    << "\" host to device (dev-" << device << ", " << deviceProp.name << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes"
+    << endl;
     cerrLock.unlock();
   }
 
@@ -1659,7 +1670,7 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::createCudaStreams(int numStreams,
-                                         int device)
+    int device)
 {
   cudaError_t retVal;
 
@@ -1674,7 +1685,7 @@ void UnifiedScheduler::createCudaStreams(int numStreams,
 }
 
 void UnifiedScheduler::createCudaEvents(int numEvents,
-                                        int device)
+    int device)
 {
   cudaError_t retVal;
 
@@ -1757,7 +1768,7 @@ cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
 }
 
 void UnifiedScheduler::addCudaStream(cudaStream_t* stream,
-                                     int device)
+    int device)
 {
   idleStreamsLock_.writeLock();
   idleStreams[device].push(stream);
@@ -1765,7 +1776,7 @@ void UnifiedScheduler::addCudaStream(cudaStream_t* stream,
 }
 
 void UnifiedScheduler::addCudaEvent(cudaEvent_t* event,
-                                    int device)
+    int device)
 {
   idleEventsLock_.writeLock();
   idleEvents[device].push(event);
@@ -1773,8 +1784,8 @@ void UnifiedScheduler::addCudaEvent(cudaEvent_t* event,
 }
 
 double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
-                                               int matlIndex,
-                                               const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceRequiresLock_.readLock();
@@ -1785,8 +1796,8 @@ double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
-                                               int matlIndex,
-                                               const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceComputesLock_.readLock();
@@ -1797,8 +1808,8 @@ double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getHostRequiresPtr(const VarLabel* label,
-                                             int matlIndex,
-                                             const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostRequiresLock_.readLock();
@@ -1809,8 +1820,8 @@ double* UnifiedScheduler::getHostRequiresPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
-                                             int matlIndex,
-                                             const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostComputesLock_.readLock();
@@ -1821,8 +1832,8 @@ double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
 }
 
 IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
-                                                  int matlIndex,
-                                                  const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostRequiresLock_.readLock();
@@ -1833,8 +1844,8 @@ IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
 }
 
 IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
-                                                  int matlIndex,
-                                                  const Patch* patch)
+    int matlIndex,
+    const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceComputesLock_.readLock();
@@ -1845,10 +1856,10 @@ IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
 }
 
 void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
-                                      int matlIndex,
-                                      const Patch* patch,
-                                      cudaStream_t* stream,
-                                      cudaEvent_t* event)
+    int matlIndex,
+    const Patch* patch,
+    cudaStream_t* stream,
+    cudaEvent_t* event)
 {
   cudaError_t retVal;
   VarLabelMatl<Patch> var(label, matlIndex, patch);
@@ -1865,10 +1876,12 @@ void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
   size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
   if (gpu_stats.active()) {
+    cudaDeviceProp deviceProp;
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
     cerrLock.lock();
     gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying RESULT   variable \"" << label->getName()
-              << "\" device to host (dev-" << device << "), [" << d_compData << " --> " << h_compData << "], " << nbytes << " bytes"
-              << endl;
+    << "\" device to host (dev-" << device << ", " << deviceProp.name << "), [" << d_compData << " --> " << h_compData << "], " << nbytes << " bytes"
+    << endl;
     cerrLock.unlock();
   }
 
@@ -1931,7 +1944,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 }
 
 void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
-                                      CopyType type)
+    CopyType type)
 {
   std::vector<cudaStream_t*>* dtaskStreams;
   std::vector<cudaStream_t*>::iterator iter;
@@ -1950,7 +1963,7 @@ void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
-                                     CopyType type)
+    CopyType type)
 {
   std::vector<cudaEvent_t*>* dtaskEvents;
   std::vector<cudaEvent_t*>::iterator iter;
@@ -1985,25 +1998,31 @@ void UnifiedScheduler::clearGpuDBMaps()
 UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
                                                int id) :
     d_id(id),
-    d_scheduler(scheduler),
-    d_idle(true),
-    d_runmutex("run mutex"),
-    d_runsignal("run condition"),
-    d_quit(false),
-    d_waittime(0.0),
-    d_waitstart(0.0),
-    d_rank(scheduler->getProcessorGroup()->myrank())
+      d_scheduler(scheduler),
+      d_idle(true),
+      d_runmutex("run mutex"),
+      d_runsignal("run condition"),
+      d_quit(false),
+      d_waittime(0.0),
+      d_waitstart(0.0),
+      d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }
 
 void UnifiedSchedulerWorker::run()
 {
-  threaddbg << "Binding thread id " << d_id + 1 << " to cpu " << d_id + 1 << endl;
+  if (threaddbg.active()) {
+    cerrLock.lock();
+    threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << endl;
+    cerrLock.unlock();
+  }
+
   Thread::self()->set_myid(d_id + 1);
   if (affinity.active()) {
     Thread::self()->set_affinity(d_id + 1);
   }
+
   while (true) {
     //wait for main thread signal
     d_runsignal.wait(d_runmutex);

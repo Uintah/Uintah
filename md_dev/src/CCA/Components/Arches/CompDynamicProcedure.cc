@@ -169,6 +169,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
 
     //__________________________________
     if (d_dynScalarModel) {
@@ -466,6 +467,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<double> scalar;
     constCCVariable<double> enthalpy;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -479,6 +481,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(density, d_lab->d_densityCPLabel,  indx, patch, gac, 2);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
 
     if (d_dynScalarModel) {
       if (d_calcScalar){
@@ -773,6 +776,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
         patch->getExtraCellHighIndex());
 #ifdef PetscFilter
     d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterRho);
+    //d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
+
     // making filterRho nonzero 
     sum_vartype den_ref_var;
     if (mmWallID > 0) {

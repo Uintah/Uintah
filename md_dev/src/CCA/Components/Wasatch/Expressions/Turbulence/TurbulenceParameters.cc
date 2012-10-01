@@ -38,6 +38,8 @@ namespace Wasatch {
       turbParams.turbulenceModelName = DYNAMIC;  
     } else if ( turbulenceModelName.compare("WALE")==0     ) {    
       turbParams.turbulenceModelName = WALE;
+    } else if ( turbulenceModelName.compare("VREMAN") == 0 ) {
+      turbParams.turbulenceModelName = VREMAN;
     } else {
       turbParams.turbulenceModelName = NONE;
     }

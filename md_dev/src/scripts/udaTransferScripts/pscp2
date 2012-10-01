@@ -196,12 +196,12 @@ if test "$test" != "password_access_works"; then
 fi
 echo "yes."
 
+MAKE=make
+
 if test `uname` == "Darwin"; then
   HOSTNANE=`hostname`
-  MAKE=make
 else
   HOSTNANE=`hostname`.`hostname -d`
-  MAKE=gmake
 fi
 
 echo -n "  Testing: Do we know about the remote operating system?... "
@@ -267,9 +267,9 @@ if test `uname` == "AIX"; then
 fi
 
 $FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transferred_files > $PSCP_FILES
+$FIND .             -maxdepth 1 -type d -exec basename {} \; | grep -v "t[0-9]\|checkpoints\|.transferred_files" >> $PSCP_FILES
 $FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PSCP_FILES
-$FIND ./checkpoints -maxdepth 1                                                                     >>$PSCP_FILES
-
+$FIND ./checkpoints -maxdepth 1                                                           >>$PSCP_FILES
 
 if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
   echo "Now starting an editor:  Remove the files you don't want transferred"

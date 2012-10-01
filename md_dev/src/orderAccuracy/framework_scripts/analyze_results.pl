@@ -66,6 +66,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   
   #__________________________________
   # bulletproofing
+  $postProc_cmd[$k]=~ s/^\s+//;                     # remove leading spaces from command
   my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
   my $foundCmd = system( "which $stripped_cmd[0] >&/dev/null");
 
@@ -73,7 +74,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
     my $mypath = $ENV{"PATH"};
     print "\n\n__________________________________\n";
     print "ERROR:analyze_results:\n";
-    print "The comparison utility: $stripped_cmd[0]";
+    print "The comparison utility: ($stripped_cmd[0])";
     print " doesn't exist in path \n $mypath \n Now exiting\n\n\n";
     die
   }

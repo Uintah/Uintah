@@ -199,7 +199,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   // and the results are interpolated to the fine level
   if( _whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* finestPatches = fineLevel->eachPatch();
+    //const PatchSet* finestPatches = fineLevel->eachPatch(); //commented because it is not use.
    
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );

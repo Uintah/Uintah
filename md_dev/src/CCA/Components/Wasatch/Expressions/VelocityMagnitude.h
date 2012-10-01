@@ -29,7 +29,7 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 
 /**
- *  \class 	Velocity Magnitude
+ *  \class 	VelocityMagnitude
  *  \author Tony Saad
  *  \date 	 February, 2012
  *  \ingroup	Expressions

@@ -132,7 +132,7 @@ vector< vector< double> > setAnnulusD ( int jSize, int kSize, string faceSide, d
                               ((minCell[2]+k+0.5)*Dx[2] +gridLoPts[2] - origin[2]) * ((minCell[2]+k+0.5)*Dx[2] +gridLoPts[2] - origin[2]) );
       }
       
-      distProf[j][k] = (distProf[j][k] - middle_radius)/charDim; //normalize distance
+      distProf[j][k] = abs(distProf[j][k] - middle_radius)/charDim; //normalize distance
     }
   }
   
@@ -355,20 +355,21 @@ vector<vector <vector <double > > > setPowerV( double magVelocity, int jSize, in
   vector< vector<vector <double> > > vProf (jSize, vector<vector<double> > (kSize, vector<double> (3) ) );
   for (int j = 0; j< jSize; j++) {
     for (int k = 0; k<kSize; k++) {
-      if (faceSide == "x-" ) {
-        vProf[j][k][0] = magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
-      } else if (faceSide == "x+") {
-        vProf[j][k][0] = -( magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
-      } else if (faceSide == "y-") {
-        vProf[j][k][1] =  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
-      } else if (faceSide == "y+") {
-        vProf[j][k][1] = -(  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
-      } else if (faceSide == "z-") {
-        vProf[j][k][2] =  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
-      } else if (faceSide == "z+") {
-        vProf[j][k][2] = -(  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
-      }
-      
+      if (distProf[j][k] < 1.0) {
+        if (faceSide == "x-" ) {
+          vProf[j][k][0] = magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
+        } else if (faceSide == "x+") {
+          vProf[j][k][0] = -( magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
+        } else if (faceSide == "y-") {
+          vProf[j][k][1] =  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
+        } else if (faceSide == "y+") {
+          vProf[j][k][1] = -(  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
+        } else if (faceSide == "z-") {
+          vProf[j][k][2] =  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 );
+        } else if (faceSide == "z+") {
+          vProf[j][k][2] = -(  magVelocity* pow( (1 - distProf[j][k]), 1.0/7.0 ) );
+        }
+      } 
     }
   }
   
