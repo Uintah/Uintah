@@ -29,7 +29,7 @@ VarLabel                        List when a VarLabel is created and deleted
 
 Schedulers:                     NOTE: These will override the default "Unified Scheduler"
 __________________________________
-SingleeProcessor  SCI_DEBUG     Use SingleProcessorScheduler
+SingleProcessor   SCI_DEBUG     Use SingleProcessorScheduler
 MPI               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
 DynamicMPI        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
 ThreadedMPI       SCI_DEBUG     Use ThreadedMPIScheduler - Multi-threaded with centralized control thread
