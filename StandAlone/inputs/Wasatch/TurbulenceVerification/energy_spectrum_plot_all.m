@@ -9,7 +9,7 @@
 % energy_spectrum_plot_all: plots all data for the energy spectrum
 % 
 % calculation
-% usage: energy_spectrum_plot_all('ke_wasatch_wale_32','wasatch','wale',32,'Wale model, C_w = 0.7')
+% usage: energy_spectrum_plot_all('ke_wasatch_wale_32','32_wasatch_wale','Wale model, C_w = 0.7')
 %
 % 1. Run your turbulent flow simulation
 % 2. Use lineextract to save your u, v, and w velocities at t = 0.28s and t
@@ -51,8 +51,8 @@ function [] = energy_spectrum_plot_all(output_filename,base_name, figure_title)
   set(gca,'FontName',Font_Name)
   set(gca,'FontSize',Key_Font_Size)
   axis([10 1000 1/1e6 1000/1e6])
-  ylabel('E(k), m^3/s^2','FontSize',Title_Font_Size)
-  xlabel('k, 1/m','FontSize',Title_Font_Size)
+  ylabel('{\it E}({\it k}), m^3/s^2','FontSize',Title_Font_Size)
+  xlabel('{\it k}, 1/m','FontSize',Title_Font_Size)
   title(figure_title);
 
   % plot initial condition spectrum - this is taken from the original cbc_uvw
