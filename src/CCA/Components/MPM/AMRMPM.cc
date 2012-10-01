@@ -77,7 +77,7 @@ static DebugStream amr_doing("AMRMPM", false);
 
 //#define USE_DEBUG_TASK
 //#define DEBUG_VEL
-#define DEBUG_ACC
+//#define DEBUG_ACC
 
 //__________________________________
 //   TODO:
@@ -111,8 +111,10 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
   dataArchiver = 0;
-  d_acc_ans = Vector(100,0,0);
-  d_vel_ans = Vector(100,0,0);
+  d_acc_ans = Vector(0,0,0);
+  d_acc_tol = 1e-7;
+  d_vel_ans = Vector(-100,0,0);
+  d_vel_tol = 1e-7;
   
   pDbgLabel = VarLabel::create("p.dbg",ParticleVariable<double>::getTypeDescription());
   gSumSLabel= VarLabel::create("g.sum_S",NCVariable<double>::getTypeDescription());
@@ -1381,6 +1383,10 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
     getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, 
                         nPaddingCells, nGhostCells,returnExclusiveRange);
+                        
+    cl_tmp -= finePatch->neighborsLow() * nLayers;  //  expand cl_tmp when a neighor patch exists.
+                                                    //  This patch owns the low nodes.  You need particles
+                                                    //  from the neighbor patch.
 
     // find the coarse patches under the fine patch.  You must add a single layer of padding cells.
     int padding = 1;
@@ -1467,8 +1473,8 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 #if 0
 //            if( fineNode.y() == 30 && fineNode.z() == 1 && (fineNode.x() > 37 && fineNode.x() < 43) ){
               cout << "    fineNode " << fineNode  << " S[k] " << S[k] << " \t gMass_fine " << gMass_fine[fineNode]
-                   << " gVelocity " << gVelocity_fine[fineNode]/gMass_fine[fineNode] << " \t zoi " << (zoi_fine[fineNode]) << endl; 
-//            }
+                   << " gVelocity " << gVelocity_fine[fineNode]/gMass_fine[fineNode] << " px: " << pX_coarse[idx] << " \t zoi " << (zoi_fine[fineNode]) << endl; 
+            }
 #endif
   /*===========TESTING==========`*/
           }
@@ -1709,12 +1715,17 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
                  internalForce_coarse[c_node] = internalForce_fine[f_node];
                  
 /*`==========TESTING==========*/
-                  if( internalForce_coarse[c_node].length()  >1e-10){
-                    cout << "Too Big: " << c_node << " f_node " << f_node 
-                     << "    L-"<< fineLevel->getIndex()
-                     <<" InternalForce_fine   " << internalForce_fine[f_node] 
-                     <<" InternalForce_coarse " << internalForce_coarse[c_node] << endl;
+#if 0
+                  if( internalForce_coarse[c_node].length()  >1e-8){
+                    ostringstream warn;
+                    warn << "Too Big: " << c_node << " f_node " << f_node 
+                         << "    L-"<< fineLevel->getIndex()
+                         <<" InternalForce_fine   " << internalForce_fine[f_node] 
+                         <<" InternalForce_coarse " << internalForce_coarse[c_node] << endl;
+                     
+                    throw InternalError(warn.str(), __FILE__, __LINE__);
                   } 
+#endif
 /*===========TESTING==========`*/
                   
                 }
@@ -1981,6 +1992,10 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
 
       getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, 
                           nPaddingCells, nGhostCells,returnExclusiveRange);
+                          
+      cl_tmp -= finePatch->neighborsLow() * nLayers;  //  expand cl_tmp when a neighor patch exists.
+                                                      //  This patch owns the low nodes.  You need particles
+                                                      //  from the neighbor patch.
 
       // find the coarse patches under the fine patch.  You must add a single layer of padding cells.
       int padding = 1;
@@ -2075,7 +2090,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
                         << " pvol " << pvol_coarse[idx] << endl;
                 }
 
-   #if 1             
+   #if 0             
                 if( internalforce[fineNode].length()  >1e-10){
                   cout << "CIF_CFI: " << fineNode
                        << "    L-"<< getLevel(finePatches)->getIndex()
@@ -2154,7 +2169,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
           gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
 /*`==========TESTING==========*/
 #ifdef DEBUG_ACC
-          if( abs(gacceleration[n].length() - d_acc_ans.length()) > 1e-8 ) {
+          if( abs(gacceleration[n].length() - d_acc_ans.length()) > d_acc_tol ) {
             Vector diff = gacceleration[n] - d_acc_ans;
             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
                  <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] 
@@ -2610,14 +2625,14 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 /*`==========TESTING==========*/
 #ifdef DEBUG_VEL
         Vector diff = ( pvelocitynew[idx] - d_vel_ans );
-       if( abs(diff.length() ) > 1e-10 ) {
+       if( abs(diff.length() ) > d_vel_tol ) {
          cout << "    L-"<< getLevel(patches)->getIndex() << " px: "<< pxnew[idx] << " pvelocitynew: " << pvelocitynew[idx] <<  " pvelocity " << pvelocity[idx]
                          << " diff " << diff << endl;
        }
 #endif 
 #ifdef DEBUG_ACC 
-  #if 0
-       if( abs(acc.length() - d_acc_ans.length() ) > 1e-8 ) {
+  #if 1
+       if( abs(acc.length() - d_acc_ans.length() ) > d_acc_tol ) {
          cout << "    L-"  << getLevel(patches)->getIndex() << " particle: "<< idx 
               <<  " cell: " << getLevel(patches)->getCellIndex(px[idx])
               <<  " acc: " << acc 
@@ -2757,7 +2772,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
 /*`==========TESTING==========*/
 #ifdef DEBUG_ACC 
               Vector diff = acc - d_acc_ans;
-              if( abs(acc.length() - d_acc_ans.length() > 1e-9 ) ) {
+              if( abs(acc.length() - d_acc_ans.length() > d_acc_tol ) ) {
                 const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
                 cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
                      << "  diff " << diff << endl;
@@ -3052,6 +3067,10 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
 
         getCoarseLevelRange(finePatch, level, cl_tmp, ch_tmp, fl, fh, 
                             nPaddingCells, nGhostCells,returnExclusiveRange);
+                            
+        cl_tmp -= finePatch->neighborsLow() * nLayers;  //  expand cl_tmp when a neighor patch exists.
+                                                        //  This patch owns the low nodes.  You need particles
+                                                        //  from the neighbor patch.
 
         // coarseLow and coarseHigh cannot lie outside of the coarse patch
         IntVector cl = Max(cl_tmp, patch->getCellLowIndex());
