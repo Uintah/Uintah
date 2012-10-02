@@ -550,6 +550,10 @@
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
                                                                      MassFlowInlet Swirl VelocityInlet, TurbulentInlet" />
+
+          <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
+          <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
+
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput, FromFile, TurbulentInlet" />
           
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
