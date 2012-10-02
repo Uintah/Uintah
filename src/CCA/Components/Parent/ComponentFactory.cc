@@ -27,7 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
@@ -224,9 +223,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "RMCRT_Test ";
 #endif
-  if (sim_comp == "angio") {
-    return scinew Angio(world);
-  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -243,7 +239,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew UdaReducer(world, uda);
   } 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark or -angio.\n"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }

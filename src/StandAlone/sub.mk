@@ -86,7 +86,6 @@ ifeq ($(IS_STATIC_BUILD),yes)
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
     CCA/Components/Examples             \
-    CCA/Components/Angio                \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \

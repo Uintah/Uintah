@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
-#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
@@ -161,9 +160,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
-  if (sim_comp == "angio") {
-    return scinew Angio(world);
-  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -180,6 +176,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew UdaReducer(world, uda);
   } 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2 or -poisson3"
                               "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }
