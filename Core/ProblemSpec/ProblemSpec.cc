@@ -511,6 +511,27 @@ ProblemSpec::get(const string& name, Vector &value)
   return ps;
 }
 
+ProblemSpec::InputType
+ProblemSpec::getInputType(const std::string& stringValue) {
+  std::string validChars(" +-.0123456789");
+  string::size_type  pos = stringValue.find_first_not_of(validChars);
+  if (pos != string::npos) {
+    // we either have a string or a vector
+    if ( stringValue.find_first_of("[") == 0 ) {
+      // this is most likely a vector vector
+      return ProblemSpec::VECTOR_TYPE;
+    } else {
+      // we have a string
+      return ProblemSpec::STRING_TYPE;
+    }
+  } else {
+    // otherwise we have a number
+    return ProblemSpec::NUMBER_TYPE;
+  }
+  return ProblemSpec::UNKNOWN_TYPE;
+}
+
+
 // value should probably be empty before calling this...
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<double>& value)
