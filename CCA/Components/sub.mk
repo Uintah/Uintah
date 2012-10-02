@@ -72,7 +72,6 @@ SUBDIRS := \
         $(ARCHES)         \
         $(MPMARCHES)      \
         $(WASATCH)        \
-        $(SRCDIR)/Angio   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

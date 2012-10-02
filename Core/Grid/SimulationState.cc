@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/Angio/AngioMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
 #include <Core/Containers/StringUtil.h>
@@ -76,7 +75,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   all_mpm_matls = 0;
   all_cz_matls = 0;
-  all_angio_matls = 0;
   all_ice_matls = 0;
   all_wasatch_matls = 0;  
   all_arches_matls = 0;
@@ -161,19 +159,6 @@ void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
-void SimulationState::registerAngioMaterial(AngioMaterial* matl)
-{
-  angio_matls.push_back(matl);
-  registerMaterial(matl);
-}
-
-void SimulationState::registerAngioMaterial(AngioMaterial* matl,
-                                            unsigned int index)
-{
-  angio_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
-
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
    arches_matls.push_back(matl);
@@ -231,16 +216,6 @@ void SimulationState::finalizeMaterials()
     tmp_cz_matls[i] = cz_matls[i]->getDWIndex();
   }
   all_cz_matls->addAll(tmp_cz_matls);
-  
-  if (all_angio_matls && all_angio_matls->removeReference())
-    delete all_angio_matls;
-  all_angio_matls = scinew MaterialSet();
-  all_angio_matls->addReference();
-  vector<int> tmp_angio_matls(angio_matls.size());
-  for( int i=0; i<(int)angio_matls.size(); i++ ) {
-    tmp_angio_matls[i] = angio_matls[i]->getDWIndex();
-  }
-  all_angio_matls->addAll(tmp_angio_matls);
   
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
@@ -315,9 +290,6 @@ void SimulationState::clearMaterials()
   if(all_cz_matls && all_cz_matls->removeReference())
     delete all_cz_matls;
 
-  if(all_angio_matls && all_angio_matls->removeReference())
-    delete all_angio_matls;
-
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
 
@@ -334,7 +306,6 @@ void SimulationState::clearMaterials()
   matls.clear();
   mpm_matls.clear();
   cz_matls.clear();
-  angio_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
   wasatch_matls.clear();
@@ -348,7 +319,6 @@ void SimulationState::clearMaterials()
   all_matls         = 0;
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
-  all_angio_matls   = 0;
   all_arches_matls  = 0;
   all_ice_matls     = 0;
   all_wasatch_matls = 0;
@@ -384,12 +354,6 @@ const MaterialSet* SimulationState::allCZMaterials() const
 {
   ASSERT(all_cz_matls != 0);
   return all_cz_matls;
-}
-
-const MaterialSet* SimulationState::allAngioMaterials() const
-{
-  ASSERT(all_angio_matls != 0);
-  return all_angio_matls;
 }
 
 const MaterialSet* SimulationState::allArchesMaterials() const

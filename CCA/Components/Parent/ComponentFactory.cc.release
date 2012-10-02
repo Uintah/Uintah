@@ -55,7 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/Wasatch.h>
 #endif
-#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
