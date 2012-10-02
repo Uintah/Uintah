@@ -7,6 +7,7 @@ from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
 import socket
+import resource
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -475,7 +476,19 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   performance_RC  = 0   # performance return code
   memory_RC       = 0   # memory return code
   
-
+  #__________________________________
+  # define the maximum run time
+  Giga = 2**30
+  Kilo = 2**10
+  Mega = 2**20
+  #resource.setrlimit(resource.RLIMIT_AS, (90 * Mega,100*Mega) )  If we ever want to limit the memory
+    
+  if dbg_opt == "dbg":
+    maxAllowRunTime = 30*60   # 30 minutes
+  else:
+    maxAllowRunTime = 15*60   # 15 minutes
+    
+  resource.setrlimit(resource.RLIMIT_CPU, (maxAllowRunTime,maxAllowRunTime) )
 
   output_to_browser=1
   try:
@@ -623,7 +636,13 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
   
   return_code = 0
-  if rc != 0:
+  if rc == 35072 or rc == 36608 :
+    print "\t*** Test %s exceeded maximum allowable run time" % (testname)
+    print 
+    system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    return_code = 1
+  
+  elif rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     
     if startFrom == "restart":
@@ -633,6 +652,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     print 
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
+
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
 
