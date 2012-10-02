@@ -148,7 +148,13 @@ evaluate()
       break;
 
     case Wasatch::WALE:
-      result <<= *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
+    {
+      SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
+      *denom <<= 0.0;
+      *denom <<= pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25);
+      result <<= cond(*denom == 0.0,0.0)
+                     (*rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / *denom);
+    }
       break;
 
     case Wasatch::VREMAN:
