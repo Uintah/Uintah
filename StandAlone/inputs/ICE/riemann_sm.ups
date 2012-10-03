@@ -85,7 +85,7 @@
               <upper>        [1,0.001,0.001]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
-              <resolution>   [1000,1,1]  </resolution>
+              <resolution>   [250,1,1]  </resolution>
            </Box>
        </Level>
     </Grid>    
