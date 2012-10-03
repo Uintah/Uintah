@@ -436,9 +436,9 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
                             int total_reloc[3])
 {
   // this level is the coarsest level involved in the relocation
-  const GridP grid(const_cast<Grid*>(new_dw->getGrid()));
-  LevelP coarsestLevel = grid->getLevel(0);
-
+  const Level* coarsestLevel = patches->get(0)->getLevel();
+  GridP grid = coarsestLevel->getGrid();
+  
   int numMatls = (int)reloc_old_labels.size();
 
   int me = pg->myrank();
@@ -793,9 +793,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   if (patches->size() != 0)
   {
     // this is the coarsest level involved in the relocation
-    const GridP grid(const_cast<Grid*>(new_dw->getGrid()));
-    LevelP coarsestLevel = grid->getLevel(0); 
-
+    const Level* coarsestLevel = patches->get(0)->getLevel();
+    GridP grid = coarsestLevel->getGrid();
   
     int me = pg->myrank();
 
@@ -992,7 +991,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         fromPatches.push_back(toPatch);
         subsets.push_back(keep_pset);
         
-        //__________________________________
         // loop over all neighboring patches and find all of the 'from' patches
         // on this processor
         for(int i=0;i<(int)neighborPatches.size();i++){
