@@ -27,22 +27,14 @@
 
 template< typename FieldT >
 class ParabolicBC
-: public Expr::Expression<FieldT>
+: public BoundaryConditionBase<FieldT>
 { 
   ParabolicBC( const Expr::Tag& indepVarTag,
                const double a,
                const double b,
-               const double c,
-               const double cghost,
-               const std::vector<int> flatGhostPoints,              
-               const double cinterior,
-               const std::vector<int> flatInteriorPoints) : 
+               const double c) : 
   indepVarTag_ (indepVarTag),
-  a_(a), b_(b), c_(c),
-  cghost_(cghost),
-  flatGhostPoints_ (flatGhostPoints),  
-  cinterior_(cinterior),
-  flatInteriorPoints_ ( flatInteriorPoints )
+  a_(a), b_(b), c_(c)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -52,27 +44,15 @@ public:
             const Expr::Tag& indepVarTag,   
             const double a,
             const double b,
-            const double c,            
-            const double cghost,
-            const std::vector<int> flatGhostPoints,            
-            const double cinterior,            
-            const std::vector<int> flatInteriorPoints) : 
+            const double c) : 
     ExpressionBuilder(resultTag), 
     indepVarTag_ (indepVarTag),
-    a_(a), b_(b), c_(c),    
-    cghost_(cghost),
-    flatGhostPoints_ (flatGhostPoints),    
-    cinterior_(cinterior),    
-    flatInteriorPoints_ ( flatInteriorPoints )
+    a_(a), b_(b), c_(c)
     {}
-    Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, cghost_, flatGhostPoints_, cinterior_, flatInteriorPoints_); }
+    Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_); }
   private:
     const Expr::Tag indepVarTag_;
     const double a_, b_, c_;
-    const double cghost_;
-    const std::vector<int> flatGhostPoints_;    
-    const double cinterior_;
-    const std::vector<int> flatInteriorPoints_;  
   };
   
   ~ParabolicBC(){}
@@ -85,14 +65,8 @@ public:
 private:
   const FieldT* x_;
   const Expr::Tag indepVarTag_;
-  const double a_, b_, c_;  
-  const double cghost_;
-  const std::vector<int> flatGhostPoints_;  
-  const double cinterior_;
-  const std::vector<int> flatInteriorPoints_;  
+  const double a_, b_, c_;
 };
-
-
 
 // ###################################################################
 //
@@ -110,11 +84,12 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  
-  std::vector<int>::const_iterator ia = flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = flatInteriorPoints_.begin(); // ib is the interior flat index
-  for( ; ia != flatGhostPoints_.end(); ++ia, ++ib ){
-    f[*ia] = ( (a_ * (*x_)[*ia] * (*x_)[*ia] + b_ * (*x_)[*ia] + c_) - cinterior_*f[*ib] ) / cghost_;
+  const double ci = this->ci_;
+  const double cg = this->cg_;
+  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
+  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
+  for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
+    f[*ia] = ( (a_ * (*x_)[*ia] * (*x_)[*ia] + b_ * (*x_)[*ia] + c_) - ci*f[*ib] ) / cg;
   }
 }
 
