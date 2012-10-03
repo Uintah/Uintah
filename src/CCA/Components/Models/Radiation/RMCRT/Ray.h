@@ -137,8 +137,6 @@ namespace Uintah{
 
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
-                          const int wallTypes[],
-                          const int nWallTypes,
                           constCCVariable<int> &celltype,
                           int &face);
 
