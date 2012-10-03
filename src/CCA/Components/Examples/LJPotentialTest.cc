@@ -291,7 +291,10 @@ void LJPotentialTest::generateNeighborList()
         // eliminate atoms outside of cutoff radius, add those within as neighbors
         if ((fabs(reducedCoordinates[0]) < cutoffRadius_) && (fabs(reducedCoordinates[1]) < cutoffRadius_)
             && (fabs(reducedCoordinates[2]) < cutoffRadius_)) {
-          r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
+          double reducedX = reducedCoordinates[0];
+          double reducedY = reducedCoordinates[1];
+          double reducedZ = reducedCoordinates[2];
+          r2 = sqrt(reducedX + reducedY + reducedZ);
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
             neighborList[i].push_back(j);
@@ -446,7 +449,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
         atomForce = Vector(0.0, 0.0, 0.0);
 
         // loop over the neighbors of atom "i"
-        register unsigned idx;
+        unsigned int idx;
         unsigned int numNeighbors = neighborList[i].size();
         for (unsigned int j = 0; j < numNeighbors; j++) {
           idx = neighborList[i][j];
@@ -456,11 +459,13 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
 
           // this is required for periodic boundary conditions
           reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
-
-          r2 = pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0);
+          double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
+          double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
+          double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
+          r2 = reducedX + reducedY + reducedZ;
           ir2 = 1.0 / r2;  // 1/r^2
-          ir6 = pow(ir2, 3.0);  // 1/r^6
-          ir12 = pow(ir6, 2.0);  // 1/r^12
+          ir6 = ir2 * ir2 * ir2;  // 1/r^6
+          ir12 = ir6 * ir6;  // 1/r^12
           T12 = R12_ * ir12;
           T6 = R6_ * ir6;
           penergynew[idx] = T12 - T6;  // energy
@@ -491,7 +496,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
         }
       }  // end atom loop
 
-      // this acounts for double energy with Aij and Aji
+      // this accounts for double energy with Aij and Aji
       vdwEnergy *= 0.50;
 
       if (ljdbg.active()) {
