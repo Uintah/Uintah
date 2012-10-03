@@ -44,6 +44,7 @@
 #include <time.h>
 #include <fstream>
 #include <include/sci_defs/uintah_testdefs.h.in>
+#include <CCA/Components/Arches/BoundaryCondition.h>
 
 
 //--------------------------------------------------------------
@@ -735,13 +736,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           // !! HACK !! Hard coded for Arches wall types!!
           // !! In the future, specify this based on the current component
-          int nWallTypes = 3;
-          int wallTypes[3] = {6,7,8}; // make a std::vector
           int face = -1;
           if(_benchmark==4 || _benchmark==5) face = 5; // Benchmark4 benchmark5
           face = 1; // ifrf restart flux line
 
-          if (has_a_boundary(origin, wallTypes, nWallTypes, celltype, face)){
+          if (has_a_boundary(origin, celltype, face)){
          // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
          // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
             originAndFace.push_back( origin.x() );
@@ -1570,15 +1569,13 @@ void Ray::adjustLocation(Vector &location,
 //______________________________________________________________________
 //
 bool Ray::has_a_boundary(const IntVector &c, 
-                         const int wallTypes[], 
-                         const int nWallTypes,  
                          constCCVariable<int> &celltype, 
                          int &face){
 
   IntVector adjacentCell = c;
 
   // Loop over the different wall types and check the 6 adjacent cells to see if any of them are boundaries
-  for (int i=0; i<nWallTypes; ++i){
+ // for (int i=0; i<nWallTypes; ++i){
 
     //  !! In the future, this fuction can be made more efficient. Rather than
     // resetting adjacentCell to c each time, I can do something like
@@ -1589,47 +1586,47 @@ bool Ray::has_a_boundary(const IntVector &c,
 
     adjacentCell[0] = c[0] - 1; // west
 
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
       face = 0;
       return(true);
     }
 
     adjacentCell = c;
     adjacentCell[0] = c[0] + 1; // east
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == BoundaryCondition::WALL){
       face = 1;
       return(true);
     }
 
     adjacentCell = c;
     adjacentCell[1] = c[1] - 1; // south
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == BoundaryCondition::WALL){
       face = 2;
       return(true);
     }
 
     adjacentCell = c;
     adjacentCell[1] = c[1] + 1; // north
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == BoundaryCondition::WALL){
       face = 3;
       return(true);
     }
 
     adjacentCell = c;
     adjacentCell[2] = c[2] - 1; // bottom
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == BoundaryCondition::WALL){
       face = 4;
       return(true);
     }
 
     adjacentCell = c;
     adjacentCell[2] = c[2] + 1; // top
-    if (celltype[adjacentCell] == wallTypes[i]){
+    if (celltype[adjacentCell] == BoundaryCondition::WALL){
       face = 5;
       return(true);
     }
 
-  } // end loop over wall types.
+  //} // end loop over wall types.
 
 // if none of the above returned true, then the current cell must not be adjacent to a wall
 return (false);
