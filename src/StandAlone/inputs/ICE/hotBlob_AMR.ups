@@ -135,7 +135,7 @@
               <upper>        [0.5,  0.5, 0.025]    </upper>
               <extraCells>   [1,1,1]               </extraCells>
               <patches>      [2,2,1]               </patches>
-              <resolution>   [50,50,1]             </resolution>
+              <resolution>   [25,25,1]             </resolution>
            </Box>
        </Level>
     </Grid>    
