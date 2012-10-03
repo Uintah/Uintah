@@ -90,6 +90,16 @@ namespace Uintah {
       virtual void scheduleTimeAdvance(const LevelP& level,
                                        SchedulerP&);
 
+    protected:
+
+      void scheduleCalculateNonBondedForces(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls);
+
+      void scheduleIntegrateVelocity(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+
     private:
 
       inline bool containsAtom(const IntVector &l,
@@ -103,6 +113,9 @@ namespace Uintah {
 
       void extractCoordinates();
 
+      bool isNeighbor(const Point* atom1,
+                      const Point* atom2);
+
       void initialize(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -115,35 +128,57 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
+      // TODO delete me
       void timeAdvance(const ProcessorGroup* pg,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
-      SimulationStateP sharedState_;
+
+      void calculateNonBondedForces(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
+      void integrateVelocity(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
+
+      SimulationStateP d_sharedState_;
       SimpleMaterial* mymat_;
-      LJPotentialTest(const LJPotentialTest&);
-      LJPotentialTest& operator=(const LJPotentialTest&);
       double delt_;
-      int doOutput_;
 
       std::vector<std::vector<const VarLabel*> > d_particleState;
       std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
 
+      // vector quantities
       const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
-      const VarLabel* pEnergyLabel;
-      const VarLabel* pEnergyLabel_preReloc;
       const VarLabel* pForceLabel;
       const VarLabel* pForceLabel_preReloc;
+      const VarLabel* pAccelLabel;
+      const VarLabel* pAccelLabel_preReloc;
+
+      // scalars
+      const VarLabel* pEnergyLabel;
+      const VarLabel* pEnergyLabel_preReloc;
+      const VarLabel* pMassLabel;
+      const VarLabel* pMassLabel_preReloc;
+      const VarLabel* pChargeLabel;
+      const VarLabel* pChargeLabel_preReloc;
       const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
+
+      // reduction variables
       const VarLabel* vdwEnergyLabel;
 
       // fields specific to non-bonded interaction (LJ Potential)
       string coordinateFile_;
       unsigned int numAtoms_;
-      double cutoffDistance_;  // the short ranged cut off distances (in Angstroms)
+      double cutoffRadius_;  // the short ranged cut off distances (in Angstroms)
       Vector box_;  // the size of simulation
       double R12_;  // this is the v.d.w. repulsive parameter
       double R6_;  // this is the v.d.w. attractive parameter
@@ -151,6 +186,10 @@ namespace Uintah {
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
       std::vector<Point> atomList;
       std::vector<vector<int> > neighborList;
+
+      // copy constructor and operator=
+      LJPotentialTest(const LJPotentialTest&);
+      LJPotentialTest& operator=(const LJPotentialTest&);
   };
 }
 

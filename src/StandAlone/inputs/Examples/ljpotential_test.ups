@@ -8,6 +8,10 @@
 
    <SimulationComponent type="ljpotentialtest" />
 
+   <!--____________________________________________________________________-->
+   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+   <!--____________________________________________________________________-->
+
    <Time>
        <maxTime>10.0</maxTime>
        <initTime>0.0</initTime>
@@ -16,32 +20,60 @@
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
    
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    
    <DataArchiver>
        <filebase>ljpotentialtest.uda</filebase>
        <outputInterval>1</outputInterval>
        <save label = "p.x"/>
-       <save label = "p.energy"/>
        <save label = "p.force"/>
+       <save label = "p.accel"/>
+       <save label = "p.energy"/>
+       <save label = "p.mass"/>
+       <save label = "p.charge"/>
        <save label = "p.particleID"/>
        <checkpoint cycle = "2" interval = "1"/>
    </DataArchiver>
+   
+      ParticleVariable<Point> px;
+      ParticleVariable<Vector> pforce;
+      ParticleVariable<Vector> paccel;
+      ParticleVariable<double> penergy;
+      ParticleVariable<double> pmass;
+      ParticleVariable<double> pcharge;
+      ParticleVariable<long64> pids;
 
+    <!--____________________________________________________________________-->
+    <!--   S I M U LA T I O N     O P T I O N S                             -->
+    <!--____________________________________________________________________-->
+    
    <LoadBalancer type="DLB">
      <timestepInterval>2</timestepInterval>
      <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
    </LoadBalancer>
 
+
+    <!--____________________________________________________________________-->
+    <!--   L O A D - B A L A N C E R     O P T I O N S                      -->
+    <!--____________________________________________________________________-->
+    
    <LJPotentialTest>
-      <doOutput>1</doOutput>
-      <doGhostCells>0</doGhostCells>
       <coordinateFile>ljpotential_input.medium</coordinateFile>
       <numAtoms>4096</numAtoms>
       <boxSize>[45.04,45.04,45.04]</boxSize>
-      <cutoffDistance>10.0</cutoffDistance>
+      <cutoffRadius>10.0</cutoffRadius>
       <R12>1.0E5</R12>
       <R6>1.0E3</R6>
    </LJPotentialTest>
 
+
+    <!--____________________________________________________________________-->
+    <!--   G R I D     S P E C I F C A T I O N                              -->
+    <!--____________________________________________________________________-->
+    
     <Grid>
        <Level>
            <Box label = "1">
