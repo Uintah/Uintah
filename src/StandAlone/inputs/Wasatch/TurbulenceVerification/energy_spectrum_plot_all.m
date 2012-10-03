@@ -63,7 +63,7 @@ function [] = energy_spectrum_plot_all(output_filename,base_name, figure_title)
   uvelFileName = strcat('uvel_',base_name,'_t0.0s.txt');
   vvelFileName = strcat('vvel_',base_name,'_t0.0s.txt');
   wvelFileName = strcat('wvel_',base_name,'_t0.0s.txt');
-  plot_energy_spectrum_uda(uvelFileName,vvelFileName,wvelFileName,9*2*pi/100, 'r.-');
+  plot_energy_spectrum_uda(uvelFileName,vvelFileName,wvelFileName,9*2*pi/100, 'k.-');
 
 
   % plot the spectrum at t = 0.28s
