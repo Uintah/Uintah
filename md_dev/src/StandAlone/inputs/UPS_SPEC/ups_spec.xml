@@ -855,12 +855,10 @@
   
   <!--  Lennard Jones Potential Test Component -->
   <LJPotentialTest            spec="OPTIONAL NO_DATA" >
-    <doOutput                 spec="OPTIONAL INTEGER" />
-    <doGhostCells             spec="OPTIONAL INTEGER" />
     <coordinateFile           spec="REQUIRED STRING" />
     <numAtoms                 spec="REQUIRED INTEGER"/>
     <boxSize                  spec="REQUIRED VECTOR" />
-    <cutoffDistance           spec="REQUIRED DOUBLE" />
+    <cutoffRadius             spec="REQUIRED DOUBLE" />
     <R12                      spec="REQUIRED DOUBLE" />
     <R6                       spec="REQUIRED DOUBLE" />
   </LJPotentialTest>
