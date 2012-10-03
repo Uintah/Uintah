@@ -291,9 +291,9 @@ void LJPotentialTest::generateNeighborList()
         // eliminate atoms outside of cutoff radius, add those within as neighbors
         if ((fabs(reducedCoordinates[0]) < cutoffRadius_) && (fabs(reducedCoordinates[1]) < cutoffRadius_)
             && (fabs(reducedCoordinates[2]) < cutoffRadius_)) {
-          double reducedX = reducedCoordinates[0];
-          double reducedY = reducedCoordinates[1];
-          double reducedZ = reducedCoordinates[2];
+          double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
+          double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
+          double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
           r2 = sqrt(reducedX + reducedY + reducedZ);
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
