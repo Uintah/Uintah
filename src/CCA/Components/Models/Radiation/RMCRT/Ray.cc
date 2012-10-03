@@ -389,6 +389,14 @@ Ray::initProperties( const ProcessorGroup* pc,
       }
     }
 
+    if(_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = 2;
+        _sigmaScat = 8;
+      }
+    }
+
   }
 }
 
@@ -703,18 +711,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
       IntVector pLow;
       IntVector pHigh;
       level->findInteriorCellIndexRange(pLow, pHigh);
-      //int Nx = pHigh[0] - pLow[0];
+      int Nx = pHigh[0] - pLow[0];
+      int Ny = pHigh[1] - pLow[1];
+      int Nz = pHigh[2] - pLow[2];
 
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
       if (CellToValuesMap.empty()){
-        CellToValuesMap.clear();
-        PatchToCellsMap.clear(); // !! Test to make sure this doesn't wipe out data from other patches
+        //CellToValuesMap.clear();
+        //PatchToCellsMap.clear(); // !! Test to make sure this doesn't wipe out data from other patches
         // initialize fluxes to zero
         Flux Flux_;
         Flux_.incident = 0;
         Flux_.net = 0;
-
 
 
         for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -722,7 +731,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           
           // this 4 member vector will be the key for the CellToValuesMap.
           // 0 thru 2 are i,j,k, and 3 is the cell face
-          std::vector<int> originAndFace;
+          std::vector<int> originAndFace;  // !! 9/25/12 does this vector grow every time through the cell loop? !!
 
           // !! HACK !! Hard coded for Arches wall types!!
           // !! In the future, specify this based on the current component
@@ -730,21 +739,24 @@ Ray::rayTrace( const ProcessorGroup* pc,
           int wallTypes[3] = {6,7,8}; // make a std::vector
           int face = -1;
           if(_benchmark==4 || _benchmark==5) face = 5; // Benchmark4 benchmark5
+          face = 1; // ifrf restart flux line
+
           if (has_a_boundary(origin, wallTypes, nWallTypes, celltype, face)){
-          //  if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
+         // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
+         // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
             originAndFace.push_back( origin.x() );
             originAndFace.push_back( origin.y() );
             originAndFace.push_back( origin.z() );
             originAndFace.push_back( face );
-
-
-
+            
+            cout << "originAndFace size: " << originAndFace.size() << endl;
             CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
+         // originAndFace.clear();
           }
         }// end populate map cell iterator
+
         PatchToCellsMap.insert(make_pair( patchID, CellToValuesMap ));
       }// end if map is empty
-
 
 
 
@@ -843,19 +855,17 @@ Ray::rayTrace( const ProcessorGroup* pc,
         int i = itr->first[0];
         int j = itr->first[1];
         int k = itr->first[2];
-        int face = itr->first[3];
+
+        int face = itr->first[3];  // face uses Uintah ordering
         int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
         int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
         IntVector origin = IntVector(i,j,k);
-
-         // int i = origin.x();
-         // int j = origin.y();
-         // int k = origin.z();
 
 
         // quick flux debug test
         //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
         //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
+        //if (face==0 && origin.x()==0 && origin.y()==234){    // ifrf restart case
 
         double sumI     = 0;
         double sumProjI = 0;
@@ -918,9 +928,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
         itr->second.incident = sumProjI * 2*_pi/_NoOfRays;
         itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
-
+        //cout << itr->first << ":   ";
         cout << itr->second.incident << endl;
         if(_benchmark==5)fprintf(f, "%lf \n",itr->second.incident);
+
+
+        //cout << sumProjI * 2*_pi/_NoOfRays<< endl;
 
         //} // end of quick flux debug
       } // end of iterating through boundary map
