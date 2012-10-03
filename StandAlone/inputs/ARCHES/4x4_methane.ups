@@ -293,8 +293,9 @@
 
       <PropertyModels> 
         <model label="soot" type="empirical_soot" initialization="constant"> 
-          <carbon_content>.75</carbon_content> 
-          <scaling_factor>1.0</scaling_factor> 
+          <carbon_content_fuel>.75</carbon_content_fuel> 
+          <carbon_content_ox>0.0</carbon_content_ox> 
+          <E_st>1.1</E_st>
         </model> 
       </PropertyModels> 
 
