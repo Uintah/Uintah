@@ -8,7 +8,7 @@
     <NameTag              spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING"
                             attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
-
+                            
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
@@ -323,6 +323,24 @@
       </InterpolateExpression>
 
     </PostProcessingExpression>
+    
+    
+    <!-- Spec for boundary condition expression types -->
+    <BCExpression      spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD ParabolicFunction" >
+      <TaskList           spec="REQUIRED STRING 'initialization, advance_solution'" />
+      
+      <NameTag            spec="REQUIRED" />
+
+      <!-- parabolic function: a x^2 + b x + c !-->
+      <ParabolicFunction  spec="OPTIONAL NO_DATA"
+                            attribute1="a REQUIRED DOUBLE"
+                            attribute2="b REQUIRED DOUBLE"
+                            attribute3="c REQUIRED DOUBLE">
+        <NameTag            spec="REQUIRED"/>
+      </ParabolicFunction>      
+    </BCExpression>
 
   </CommonTags>
 
@@ -339,6 +357,8 @@
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
     <BasicExpression            spec="MULTIPLE" />
+
+    <BCExpression            spec="MULTIPLE" />
     
     <PrecipitationBasicExpression     spec="MULTIPLE" />
 

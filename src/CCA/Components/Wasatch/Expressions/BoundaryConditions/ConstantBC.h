@@ -20,12 +20,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BasicBoundaryCondition_Expr_h
-#define BasicBoundaryCondition_Expr_h
-
+#ifndef ConstantBC_Expr_h
+#define ConstantBC_Expr_h
+#include "BoundaryConditionBase.h"
 #include <expression/Expression.h>
 /**
- *  \class 	BasicBoundaryCondition
+ *  \class 	ConstantBC
  *  \ingroup 	Expressions
  *  \author 	Tony Saad
  *  \date    September, 2012
@@ -38,19 +38,11 @@
  */
 
 template< typename FieldT >
-class BasicBoundaryCondition
-: public Expr::Expression<FieldT>
+class ConstantBC
+: public BoundaryConditionBase<FieldT>
 {
-  BasicBoundaryCondition( const double bcValue,
-                         const double cghost,
-                         const std::vector<int> flatGhostPoints,                         
-                         const double cinterior,
-                         const std::vector<int> flatInteriorPoints) : 
-  bcValue_(bcValue),
-  cghost_(cghost),
-  flatGhostPoints_ (flatGhostPoints),  
-  cinterior_(cinterior),
-  flatInteriorPoints_ ( flatInteriorPoints )
+  ConstantBC( const double bcValue) :
+  bcValue_(bcValue)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -63,42 +55,27 @@ public:
      * @param flatGhostPoints  flat indices of the ghost points in which BC is being set.
      * @param cinterior interior coefficient. This is usually provided by an operator.
      * @param flatInteriorPoints  flat indices of the interior points that are used to set the ghost value.
-     */    
-    Builder( const Expr::Tag& resultTag, 
-            const double bcValue,            
-            const double cghost,
-            const std::vector<int> flatGhostPoints,            
-            const double cinterior,            
-            const std::vector<int> flatInteriorPoints) : 
-    ExpressionBuilder(resultTag), 
-    bcValue_(bcValue),
-    cghost_(cghost),
-    flatGhostPoints_ (flatGhostPoints),    
-    cinterior_(cinterior),    
-    flatInteriorPoints_ ( flatInteriorPoints )
+     */
+    Builder( const Expr::Tag& resultTag,
+            const double bcValue ) :
+    ExpressionBuilder(resultTag),
+    bcValue_(bcValue)
     {}
-    Expr::ExpressionBase* build() const{ return new BasicBoundaryCondition(bcValue_, cghost_, flatGhostPoints_, cinterior_, flatInteriorPoints_); }
+    Expr::ExpressionBase* build() const{ return new ConstantBC(bcValue_); }
   private:
     const double bcValue_;
-    const double cghost_;
-    const std::vector<int> flatGhostPoints_;    
-    const double cinterior_;
-    const std::vector<int> flatInteriorPoints_;  
   };
   
-  ~BasicBoundaryCondition(){}
+  ~ConstantBC(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){}
   void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
+  //  void set_interior_points( const std::vector<int> flatGhostPoints ){}
+  //  void set_ghost_points( const std::vector<int> flatGhostPoints ){}
+  
 private:
   const double bcValue_;
-  const double cghost_;
-  const std::vector<int> flatGhostPoints_;  
-  const double cinterior_;
-  const std::vector<int> flatInteriorPoints_;  
 };
-
-
 
 // ###################################################################
 //
@@ -108,17 +85,19 @@ private:
 
 template< typename FieldT >
 void
-BasicBoundaryCondition<FieldT>::
+ConstantBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
+  const double ci = this->ci_;
+  const double cg = this->cg_;
   
-  std::vector<int>::const_iterator ig = flatGhostPoints_.begin();    // ig is the ghost flat index
-  std::vector<int>::const_iterator ii = flatInteriorPoints_.begin(); // ii is the interior flat index
-  for( ; ig != flatGhostPoints_.end(); ++ig, ++ii ){
-    f[*ig] = ( bcValue_- cinterior_ * f[*ii] ) / cghost_;    
+  std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
+  std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
+  for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
+    f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
   }
 }
 
-#endif // BasicBoundaryCondition_Expr_h
+#endif // ConstantBC_Expr_h

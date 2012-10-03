@@ -53,6 +53,11 @@
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
+// BC Expressions Includes
+#include "BoundaryConditions/ConstantBC.h"
+#include "BoundaryConditions/ParabolicBC.h"
+#include "BoundaryConditions/BoundaryConditionBase.h"
+
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
@@ -710,6 +715,41 @@ namespace Wasatch{
 
     return builder;
   }
+  
+  //------------------------------------------------------------------
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_bc_expr( Uintah::ProblemSpecP params )
+  {
+    
+    std::cout << "registering bc expressions" << std::endl;
+
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    Expr::ExpressionBuilder* builder = NULL;
+    
+    std::string exprType;
+    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+    if( params->findBlock("Constant") ){
+      double val;  params->get("Constant",val);
+      typedef typename ConstantBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, val );
+    }
+    
+    else if ( params->findBlock("ParabolicFunction") ) {
+      std::cout << "registering parabolic bc" << std::endl;
+      double a, b, c;
+      Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
+      valParams->getAttribute("a",a);
+      valParams->getAttribute("b",b);
+      valParams->getAttribute("c",c);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename ParabolicBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, a, b, c);
+    }
+    return builder;
+  }
 
   //------------------------------------------------------------------
 
@@ -861,6 +901,41 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
+      GraphHelper* const graphHelper = gc[cat];
+      graphHelper->exprFactory->register_expression( builder );
+    }
+    
+    //___________________________________________________
+    // parse and build boundary condition expressions
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("BCExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("BCExpression") ){
+      
+      std::string fieldType, taskListName;
+      exprParams->getAttribute("type",fieldType);
+      exprParams->require("TaskList",taskListName);
+      
+      switch( get_field_type(fieldType) ){
+        case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
+        case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
+        case YVOL : builder = build_bc_expr< YVolField >( exprParams );  break;
+        case ZVOL : builder = build_bc_expr< ZVolField >( exprParams );  break;
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << fieldType << "'. Postprocessing expressions are setup with SVOLFields as destination fields only." << std::endl
+          << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
