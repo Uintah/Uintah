@@ -31,6 +31,7 @@
        <save label = "p.x"/>
        <save label = "p.force"/>
        <save label = "p.accel"/>
+       <save label = "p.velocity"/>
        <save label = "p.energy"/>
        <save label = "p.mass"/>
        <save label = "p.charge"/>

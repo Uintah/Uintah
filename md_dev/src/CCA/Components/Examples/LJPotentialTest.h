@@ -96,9 +96,9 @@ namespace Uintah {
                                             const PatchSet* patches,
                                             const MaterialSet* matls);
 
-      void scheduleIntegrateVelocity(SchedulerP& sched,
-                                     const PatchSet* patches,
-                                     const MaterialSet* matls);
+      void scheduleUpdatePosition(SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
     private:
 
@@ -128,24 +128,17 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      // TODO delete me
-      void timeAdvance(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw);
-
       void calculateNonBondedForces(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
-      void integrateVelocity(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
+      void updatePosition(const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
       SimulationStateP d_sharedState_;
       SimpleMaterial* mymat_;
@@ -161,6 +154,8 @@ namespace Uintah {
       const VarLabel* pForceLabel_preReloc;
       const VarLabel* pAccelLabel;
       const VarLabel* pAccelLabel_preReloc;
+      const VarLabel* pVelocityLabel;
+      const VarLabel* pVelocityLabel_preReloc;
 
       // scalars
       const VarLabel* pEnergyLabel;
