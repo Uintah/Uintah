@@ -610,6 +610,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   vars->volq.initialize(0.0);
   vars->cenint.initialize(0.0);
   vars->src.initialize(0.0);
+  vars->qfluxe.initialize(0.0);
+  vars->qfluxw.initialize(0.0);
+  vars->qfluxn.initialize(0.0);
+  vars->qfluxs.initialize(0.0);
+  vars->qfluxt.initialize(0.0);
+  vars->qfluxb.initialize(0.0);
+
 
   //__________________________________
   //begin discrete ordinates
