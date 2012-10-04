@@ -62,6 +62,9 @@ LJPotentialTest::LJPotentialTest(const ProcessorGroup* myworld) :
   pAccelLabel = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
   pAccelLabel_preReloc = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
 
+  pVelocityLabel = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
+  pVelocityLabel_preReloc = VarLabel::create("p.velocity+", ParticleVariable<Vector>::getTypeDescription());
+
   pEnergyLabel = VarLabel::create("p.energy", ParticleVariable<double>::getTypeDescription());
   pEnergyLabel_preReloc = VarLabel::create("p.energy+", ParticleVariable<double>::getTypeDescription());
 
@@ -85,6 +88,8 @@ LJPotentialTest::~LJPotentialTest()
   VarLabel::destroy(pForceLabel_preReloc);
   VarLabel::destroy(pAccelLabel);
   VarLabel::destroy(pAccelLabel_preReloc);
+  VarLabel::destroy(pVelocityLabel);
+  VarLabel::destroy(pVelocityLabel_preReloc);
   VarLabel::destroy(pEnergyLabel);
   VarLabel::destroy(pEnergyLabel_preReloc);
   VarLabel::destroy(pMassLabel);
@@ -134,6 +139,7 @@ void LJPotentialTest::scheduleInitialize(const LevelP& level,
   task->computes(pXLabel);
   task->computes(pForceLabel);
   task->computes(pAccelLabel);
+  task->computes(pVelocityLabel);
   task->computes(pEnergyLabel);
   task->computes(pMassLabel);
   task->computes(pChargeLabel);
@@ -164,7 +170,7 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   d_particleState_preReloc.resize(matls->size());
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
-  scheduleIntegrateVelocity(sched, patches, matls);
+  scheduleUpdatePosition(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState, pParticleIDLabel,
                                     matls);
@@ -212,21 +218,24 @@ void LJPotentialTest::scheduleCalculateNonBondedForces(SchedulerP& sched,
   }
 }
 
-void LJPotentialTest::scheduleIntegrateVelocity(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSet* matls)
+void LJPotentialTest::scheduleUpdatePosition(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
 {
-  Task* task = scinew Task("integrateVelocity", this, &LJPotentialTest::integrateVelocity);
+  Task* task = scinew Task("updatePosition", this, &LJPotentialTest::updatePosition);
 
   task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pForceLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pMassLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_sharedState_->get_delt_label());
 
   task->computes(pXLabel_preReloc);
   task->computes(pAccelLabel_preReloc);
+  task->computes(pVelocityLabel_preReloc);
   task->computes(pMassLabel_preReloc);
   task->computes(pChargeLabel_preReloc);
   task->computes(pParticleIDLabel_preReloc);
@@ -236,15 +245,16 @@ void LJPotentialTest::scheduleIntegrateVelocity(SchedulerP& sched,
   // for particle relocation
   for (int m = 0; m < matls->size(); m++) {
     d_particleState_preReloc[m].push_back(pAccelLabel_preReloc);
+    d_particleState_preReloc[m].push_back(pVelocityLabel_preReloc);
     d_particleState_preReloc[m].push_back(pMassLabel_preReloc);
     d_particleState_preReloc[m].push_back(pChargeLabel_preReloc);
     d_particleState_preReloc[m].push_back(pParticleIDLabel_preReloc);
     d_particleState[m].push_back(pAccelLabel);
+    d_particleState[m].push_back(pVelocityLabel);
     d_particleState[m].push_back(pMassLabel);
     d_particleState[m].push_back(pChargeLabel);
     d_particleState[m].push_back(pParticleIDLabel);
   }
-
 }
 
 void LJPotentialTest::extractCoordinates()
@@ -350,6 +360,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
       ParticleVariable<Point> px;
       ParticleVariable<Vector> pforce;
       ParticleVariable<Vector> paccel;
+      ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> penergy;
       ParticleVariable<double> pmass;
       ParticleVariable<double> pcharge;
@@ -367,6 +378,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
       new_dw->allocateAndPut(px, pXLabel, pset);
       new_dw->allocateAndPut(pforce, pForceLabel, pset);
       new_dw->allocateAndPut(paccel, pAccelLabel, pset);
+      new_dw->allocateAndPut(pvelocity, pVelocityLabel, pset);
       new_dw->allocateAndPut(penergy, pEnergyLabel, pset);
       new_dw->allocateAndPut(pmass, pMassLabel, pset);
       new_dw->allocateAndPut(pcharge, pChargeLabel, pset);
@@ -378,6 +390,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
         px[i] = pos;
         pforce[i] = Vector(0.0, 0.0, 0.0);
         paccel[i] = Vector(0.0, 0.0, 0.0);
+        pvelocity[i] = Vector(0.0, 0.0, 0.0);
         penergy[i] = 0.0;
         pmass[i] = 0.1;
         pcharge[i] = 0.0;
@@ -489,8 +502,8 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
           std::cout << "Energy: ";
           std::cout << std::setw(14) << std::setprecision(6) << penergynew[i];
           std::cout << "Force: [";
-          std::cout << std::setw(12) << std::setprecision(6) << pforcenew[i].x();
-          std::cout << std::setw(12) << std::setprecision(6) << pforcenew[i].y();
+          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].x();
+          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
           std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
           std::cout << std::endl;
         }
@@ -525,11 +538,11 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
 
 }
 
-void LJPotentialTest::integrateVelocity(const ProcessorGroup* pg,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* matls,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+void LJPotentialTest::updatePosition(const ProcessorGroup* pg,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
 {
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -548,12 +561,14 @@ void LJPotentialTest::integrateVelocity(const ProcessorGroup* pg,
       constParticleVariable<Point> px;
       constParticleVariable<Vector> pforce;
       constParticleVariable<Vector> paccel;
+      constParticleVariable<Vector> pvelocity;
       constParticleVariable<double> pmass;
       constParticleVariable<double> pcharge;
       constParticleVariable<long64> pids;
       old_dw->get(px, pXLabel, lpset);
       old_dw->get(pforce, pForceLabel, lpset);
       old_dw->get(paccel, pAccelLabel, lpset);
+      old_dw->get(pvelocity, pVelocityLabel, lpset);
       old_dw->get(pmass, pMassLabel, lpset);
       old_dw->get(pcharge, pChargeLabel, lpset);
       old_dw->get(pids, pParticleIDLabel, lpset);
@@ -561,11 +576,13 @@ void LJPotentialTest::integrateVelocity(const ProcessorGroup* pg,
       // computes variables
       ParticleVariable<Point> pxnew;
       ParticleVariable<Vector> paccelnew;
+      ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<double> pmassnew;
       ParticleVariable<double> pchargenew;
       ParticleVariable<long64> pidsnew;
       new_dw->allocateAndPut(pxnew, pXLabel_preReloc, lpset);
       new_dw->allocateAndPut(paccelnew, pAccelLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pvelocitynew, pVelocityLabel_preReloc, lpset);
       new_dw->allocateAndPut(pmassnew, pMassLabel_preReloc, lpset);
       new_dw->allocateAndPut(pchargenew, pChargeLabel_preReloc, lpset);
       new_dw->allocateAndPut(pidsnew, pParticleIDLabel_preReloc, lpset);
@@ -574,13 +591,12 @@ void LJPotentialTest::integrateVelocity(const ProcessorGroup* pg,
       unsigned int localNumParticles = lpset->numParticles();
       for (unsigned int i = 0; i < localNumParticles; i++) {
 
-        // no time integration here yet... just testing
-        pxnew[i] = px[i];
-        paccelnew[i] = paccel[i];
         pmassnew[i] = pmass[i];
         pchargenew[i] = pcharge[i];
         pidsnew[i] = pids[i];
-
+        paccelnew[i] = paccel[i];
+        pvelocitynew[i] = pvelocity[i];
+        pxnew[i] = px[i];
       }  // end atom loop
 
       new_dw->deleteParticles(delset);
