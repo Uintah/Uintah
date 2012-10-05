@@ -55,6 +55,7 @@
 
 // BC Expressions Includes
 #include "BoundaryConditions/ConstantBC.h"
+#include "BoundaryConditions/LinearBC.h"
 #include "BoundaryConditions/ParabolicBC.h"
 #include "BoundaryConditions/BoundaryConditionBase.h"
 
@@ -736,7 +737,17 @@ namespace Wasatch{
       typedef typename ConstantBC<FieldT>::Builder Builder;
       builder = scinew Builder( tag, val );
     }
-    
+
+    else if( params->findBlock("LinearFunction") ){
+      double slope, intercept;
+      Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename LinearBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, slope, intercept );
+    }
+
     else if ( params->findBlock("ParabolicFunction") ) {
       std::cout << "registering parabolic bc" << std::endl;
       double a, b, c;
@@ -911,35 +922,46 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("BCExpression") ){
       
-      std::string fieldType, taskListName;
+      std::string fieldType, taskListsName;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskList",taskListName);
+      exprParams->require("TaskLists",taskListsName);
       
-      switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
-        case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
-        case YVOL : builder = build_bc_expr< YVolField >( exprParams );  break;
-        case ZVOL : builder = build_bc_expr< ZVolField >( exprParams );  break;
-        default:
+      std::stringstream ss(taskListsName);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> vstrings(begin, end);
+      std::vector<std::string>::iterator taskListIter = vstrings.begin();
+      
+      while (taskListIter != vstrings.end()) {
+        
+        std::cout << "task list " << *taskListIter << std::endl;
+        std::string taskListName = *taskListIter;
+        switch( get_field_type(fieldType) ){
+          case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
+          case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
+          case YVOL : builder = build_bc_expr< YVolField >( exprParams );  break;
+          case ZVOL : builder = build_bc_expr< ZVolField >( exprParams );  break;
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported field type '" << fieldType << "' while trying to register BC expression.." << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        
+        Category cat = INITIALIZATION;
+        if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+        else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+        else{
           std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << fieldType << "'. Postprocessing expressions are setup with SVOLFields as destination fields only." << std::endl
-          << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
+          msg << "ERROR: unsupported task list '" << taskListName << "' while parsing BCExpression." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        
+        GraphHelper* const graphHelper = gc[cat];
+        graphHelper->exprFactory->register_expression( builder );
+        
+        ++taskListIter;
       }
-      
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      GraphHelper* const graphHelper = gc[cat];
-      graphHelper->exprFactory->register_expression( builder );
     }
-
   }
 
   //------------------------------------------------------------------
