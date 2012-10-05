@@ -1143,7 +1143,7 @@ Arches::sched_paramInit(const LevelP& level,
 
     tsk->computes(d_lab->d_densityCPLabel);
     tsk->computes(d_lab->d_viscosityCTSLabel);
-    tsk->computes(d_lab->d_tauSGSLabel); 
+    tsk->computes(d_lab->d_turbViscosLabel); 
     if (d_dynScalarModel) {
       if (d_calcScalar){
         tsk->computes(d_lab->d_scalarDiffusivityLabel);
@@ -1226,7 +1226,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turb_viscosity; 
     CCVariable<double> scalarDiffusivity;
     CCVariable<double> enthalpyDiffusivity;
     CCVariable<double> reactScalarDiffusivity;
@@ -1382,7 +1382,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-    new_dw->allocateAndPut(tauSGS,    d_lab->d_tauSGSLabel,       indx, patch); 
+    new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch); 
     if (d_dynScalarModel) {
       if (d_calcScalar){
         new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
@@ -1402,7 +1402,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     pressure.initialize(0.0);
     double visVal = d_physicalConsts->getMolecularViscosity();
     viscosity.initialize(visVal);
-    tauSGS.initialize(0.0); 
+    turb_viscosity.initialize(0.0); 
 
     if (d_dynScalarModel) {
       if (d_calcScalar){

@@ -406,7 +406,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);
-    tsk->modifies(d_lab->d_tauSGSLabel); 
+    tsk->modifies(d_lab->d_turbViscosLabel); 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->modifies(d_lab->d_scalarDiffusivityLabel);
@@ -1775,7 +1775,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
     CCVariable<double> scalardiff;
     CCVariable<double> enthalpydiff;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1811,7 +1811,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }      
 
     new_dw->getModifiable(viscosity,         d_lab->d_viscosityCTSLabel,        indx, patch);
-    new_dw->getModifiable(tauSGS,            d_lab->d_tauSGSLabel,              indx, patch);
+    new_dw->getModifiable(turbViscosity,            d_lab->d_turbViscosLabel,              indx, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->getModifiable(scalardiff,    d_lab->d_scalarDiffusivityLabel,   indx, patch);
@@ -2010,7 +2010,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               IsI[currCell] * den[currCell] +
               viscos*voidFraction[currCell];
 
-            tauSGS[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
 
             if (d_dynScalarModel) {
               if (d_calcScalar) {
@@ -2047,7 +2047,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               filter * filter *
               IsI[currCell] * den[currCell] + viscos;
 
-            tauSGS[currCell] = viscosity[currCell] - viscos; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos; 
 
             if (d_dynScalarModel) {
               if (d_calcScalar) {
@@ -2083,7 +2083,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX-1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                             *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2105,7 +2105,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX+1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2127,7 +2127,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY-1, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2149,7 +2149,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2171,7 +2171,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ-1);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2193,7 +2193,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ+1);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {

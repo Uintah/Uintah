@@ -226,7 +226,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   
   // Computes
   tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_tauSGSLabel);
+  tsk->modifies(d_lab->d_turbViscosLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_CsLabel);
@@ -1791,7 +1791,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
@@ -1804,7 +1804,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-    new_dw->getModifiable(tauSGS, d_lab->d_tauSGSLabel, indx, patch);
+    new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch);
     
     new_dw->get(IsI,d_lab->d_strainMagnitudeLabel,    indx, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
@@ -1923,7 +1923,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
 
-            tauSGS[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
           }
         }
       }
@@ -1940,7 +1940,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos;
 
-            tauSGS[currCell] = viscosity[currCell] - viscos; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos; 
           }
         }
       }
@@ -1961,7 +1961,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX-1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -1974,7 +1974,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX+1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -1987,7 +1987,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY-1, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2000,7 +2000,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2013,7 +2013,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ-1);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2026,7 +2026,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ+1);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
