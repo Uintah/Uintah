@@ -328,10 +328,17 @@
     <!-- Spec for boundary condition expression types -->
     <BCExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD ParabolicFunction" >
-      <TaskList           spec="REQUIRED STRING 'initialization, advance_solution'" />
+                            children1="ONE_OF(CHILD LinearFunction, ParabolicFunction" >
+      <TaskLists           spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
       
       <NameTag            spec="REQUIRED" />
+
+      <!-- linear function: a x + b !-->
+      <LinearFunction     spec="OPTIONAL NO_DATA"
+                            attribute1="slope REQUIRED DOUBLE"      
+                            attribute2="intercept REQUIRED DOUBLE" >
+        <NameTag            spec="REQUIRED" />
+      </LinearFunction>
 
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
