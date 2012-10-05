@@ -2,8 +2,11 @@
 
 TEST=$1
 MALLOC_STATS=$2
-COMPARISON_MALLOC_STATS=$3
+COMPARE_ROOT=$3
 TMPDIR=$4
+HELPERPATH=$5
+
+COMPARISON_MALLOC_STATS="$COMPARE_ROOT/$TEST/$MALLOC_STATS"
 error=1
 
 #__________________________________
@@ -59,12 +62,30 @@ if [ ! -f $COMPARISON_MALLOC_STATS ]; then
   exit -1
 fi
 
-#__________________________________
-echo "Performing highwater memory usage check"
+
 
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
+
+
+#__________________________________
+echo "Saving highwater memory usage"
+here="/tmp/$TEST"
+
+if [ ! -f $here ]; then
+  echo "#date highwaterUsage(bytes)" > $here
+fi
+
+now=`date +%m-%d-%Y`
+echo "$now  $abs" >> $here
+
+#eliminate entries from the restart test or if
+#it run more that once a day
+uniq -w 10 $here > $here.clean
+
+#__________________________________
+echo "Performing highwater memory usage check"
 
 if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
   echo "***Highwater memory usage test failed"
@@ -84,6 +105,10 @@ else
   exit 0
 
 fi
+
+
+
+
 
 
 exit $error
