@@ -58,6 +58,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     exit(1)
   #__________________________________
   # setup variables and paths
+  global helperspath
   susdir        = path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
@@ -459,6 +460,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
 def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket):
   global startpath
+  global helperspath
   
   testname = nameoftest(test)
 
@@ -730,7 +732,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     #__________________________________
     # Memory leak test
     if do_memory_test == 1:
-      memory_RC = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
+      memory_RC = system("mem_leak_check %s %s %s %s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, ".", helperspath))
       try:
         short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
