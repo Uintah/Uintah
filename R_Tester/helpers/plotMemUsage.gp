@@ -1,11 +1,10 @@
-
-
+#hard coded font path barf!
 set term png enhanced font '/usr/share/fonts/truetype/ttf-liberation/LiberationSans-Regular.ttf' 9 size 700,700
 #set output '| display png:-'
-set output "me.png"
+set output "memHistory.png"
 
 set grid
-set ylabel 'Bytes'
+set ylabel 'KBytes'
 set xdata time
 set format x "%m/%d"
 set timefmt "%m-%d-%Y"
@@ -25,7 +24,7 @@ FIRST_DAY = system('date -d " $(date +%d) -1week" +%m-%d-%Y')
 set xlabel 'date'
 set xrange [FIRST_DAY:TODAY]
 
-plot 'advect.clean' using 1:2 with linespoints t 'highwater usage (bytes)'
+plot 'memHistory' using 1:($2/1000) with linespoints t 'highwater usage (Kbytes)'
 
 
 #__________________________________
@@ -35,7 +34,7 @@ FIRST_DAY = system('date -d " $(date +%d) -2week" +%m-%d-%Y')
 set xlabel ''
 set xrange [FIRST_DAY:TODAY]
 
-plot 'advect.clean' using 1:2 with linespoints t ''
+plot 'memHistory' using 1:($2/1000) with linespoints t ''
 
 
 #__________________________________
@@ -44,9 +43,8 @@ set origin 0.0,0.66
 FIRST_DAY = system('date -d " $(date +%d) -4week" +%m-%d-%Y')
 set xrange [FIRST_DAY:TODAY]
 
-plot 'advect.clean' using 1:2 with linespoints t ''
+plot 'memHistory' using 1:($2/1000) with linespoints t ''
 
 set nomultiplot
 
-
-pause -1
+#pause -1
