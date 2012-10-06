@@ -922,17 +922,14 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("BCExpression") ){
       
-      std::string fieldType, taskListsName;
+      std::string fieldType;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskLists",taskListsName);
       
-      std::stringstream ss(taskListsName);
-      std::istream_iterator<std::string> begin(ss);
-      std::istream_iterator<std::string> end;
-      std::vector<std::string> vstrings(begin, end);
-      std::vector<std::string>::iterator taskListIter = vstrings.begin();
+      std::vector<std::string> taskListsName;
+      exprParams->get("TaskLists", taskListsName);
+      std::vector<std::string>::iterator taskListIter = taskListsName.begin();
       
-      while (taskListIter != vstrings.end()) {
+      while (taskListIter != taskListsName.end()) {
         
         std::cout << "task list " << *taskListIter << std::endl;
         std::string taskListName = *taskListIter;
