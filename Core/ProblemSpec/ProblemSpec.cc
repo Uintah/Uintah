@@ -1153,6 +1153,18 @@ ProblemSpec::require(const string& name, vector<double>& value)
 }
 
 void
+ProblemSpec::require(const string& name, vector<string>& value)
+{
+  
+  // Check if the prob_spec is NULL
+  
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+  
+}
+
+
+void
 ProblemSpec::require(const string& name, vector<int>& value)
 {
 
@@ -1234,6 +1246,31 @@ ProblemSpec::getAttribute(const string& name, double &value) const
   }
           
   return true;
+}
+
+
+bool
+ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& result) const
+{
+  
+  map<string, string> attributes;
+  getAttributes(attributes);
+  
+  map<string,string>::iterator iter = attributes.find(attribute);
+  
+  if (iter != attributes.end()) {
+    std::string attributeName = iter->second;
+    std::stringstream ss(attributeName);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    result.assign(begin,end);
+    //std::vector<std::string> vstrings(begin, end);
+    //result = iter->second;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 

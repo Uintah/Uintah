@@ -215,6 +215,11 @@ WARNING
       // then 'result' is not modified.
       bool getAttribute(const std::string& attribute, std::string& result) const;
 
+     //////////
+     // If 'attribute' is found, then 'result' is set to the attribute's value.  If it is not found,
+     // then 'result' is not modified.
+     bool getAttribute(const std::string& attribute, std::vector<std::string>& result) const;
+
       //////////
       // passes back the double value associated with value of this node's
       // attributes into result
@@ -285,6 +290,7 @@ WARNING
       void require(const std::string& name, std::vector<double>& value);
       void require(const std::string& name, std::vector<int>& value); 
       void require(const std::string& name, std::vector<IntVector>& value);
+      void require(const std::string& name, std::vector<std::string>& value);
 
       //////////
       // Look for the child tag named 'name' and pass back its

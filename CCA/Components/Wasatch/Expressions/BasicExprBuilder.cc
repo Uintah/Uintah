@@ -925,14 +925,15 @@ namespace Wasatch{
       std::string fieldType;
       exprParams->getAttribute("type",fieldType);
       
-      std::vector<std::string> taskListsName;
-      exprParams->get("TaskLists", taskListsName);
-      std::vector<std::string>::iterator taskListIter = taskListsName.begin();
+      // get the list of tasks
+      std::vector<std::string> taskNamesList;
+      exprParams->require("TaskList", taskNamesList);
+      std::vector<std::string>::iterator taskNameIter = taskNamesList.begin();
       
-      while (taskListIter != taskListsName.end()) {
+      // iterate through the list of tasks to which this expression is to be added
+      while (taskNameIter != taskNamesList.end()) {
+        std::string taskName = *taskNameIter;
         
-        std::cout << "task list " << *taskListIter << std::endl;
-        std::string taskListName = *taskListIter;
         switch( get_field_type(fieldType) ){
           case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
           case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
@@ -945,18 +946,18 @@ namespace Wasatch{
         }
         
         Category cat = INITIALIZATION;
-        if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-        else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+        if     ( taskName == "initialization"   )   cat = INITIALIZATION;
+        else if( taskName == "advance_solution" )   cat = ADVANCE_SOLUTION;
         else{
           std::ostringstream msg;
-          msg << "ERROR: unsupported task list '" << taskListName << "' while parsing BCExpression." << std::endl;
+          msg << "ERROR: unsupported task list '" << taskName << "' while parsing BCExpression." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
         
         GraphHelper* const graphHelper = gc[cat];
         graphHelper->exprFactory->register_expression( builder );
         
-        ++taskListIter;
+        ++taskNameIter;
       }
     }
   }
