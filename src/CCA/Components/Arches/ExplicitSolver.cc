@@ -396,7 +396,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                     *(gh->exprFactory),
                                     level, sched, patches, matls,
                                     wasatch.patch_info_map(),
-                                    true,
                                     curr_level+1,
                                     ioFieldSet 
                                     );
@@ -876,7 +875,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                   *(gh->exprFactory),
                                   level, sched, patches, matls,
                                   wasatch.patch_info_map(),
-                                  true,
                                   1,
                                   ioFieldSet 
                                   );
