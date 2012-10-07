@@ -926,14 +926,18 @@ namespace Wasatch{
       exprParams->getAttribute("type",fieldType);
       
       // get the list of tasks
-      std::vector<std::string> taskNamesList;
-      exprParams->require("TaskList", taskNamesList);
+      std::string taskNames;
+      exprParams->require("TaskList", taskNames);
+      std::stringstream ss(taskNames);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> taskNamesList(begin,end);      
       std::vector<std::string>::iterator taskNameIter = taskNamesList.begin();
       
       // iterate through the list of tasks to which this expression is to be added
       while (taskNameIter != taskNamesList.end()) {
         std::string taskName = *taskNameIter;
-        
+
         switch( get_field_type(fieldType) ){
           case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
           case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
