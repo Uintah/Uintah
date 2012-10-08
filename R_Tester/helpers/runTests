@@ -140,14 +140,14 @@ fi
 #__________________________________
 #
 remake_file=""
-if [ -f "$BUILDROOT"/dbg/remake_failed_scirun.log ]; then
-  remake_file="$BUILDROOT"/dbg/remake_failed_scirun.log
-elif [ -f  "$BUILDROOT"/opt/remake_failed_scirun.log ]; then
-  remake_file="$BUILDROOT"/opt/remake_failed_scirun.log
+if [ -f "$BUILDROOT"/dbg/remake_failed.log ]; then
+  remake_file="$BUILDROOT"/dbg/remake_failed.log
+elif [ -f  "$BUILDROOT"/opt/remake_failed.log ]; then
+  remake_file="$BUILDROOT"/opt/remake_failed.log
 fi
 
 if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
-  subject="Failed to compile scirun with Uintah on `hostname`"
+  subject="Failed to compile Uintah on `hostname`"
 
   cat > "$BUILDROOT"/make_mail.msg <<EOF
 Subject: $subject
