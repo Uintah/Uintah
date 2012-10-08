@@ -586,33 +586,32 @@ void BoundaryCondition_new::setAreaFraction(
 // Method: Compute the volume weights for the filter
 // Note: Assumes CONSTANT volume! 
 //---------------------------------------------------------------------------
-void BoundaryCondition_new::computeFilterVolume( Patch* patch, 
-                                                 CCVariable<int>&    cellType, 
+void BoundaryCondition_new::computeFilterVolume( const Patch* patch, 
+                                                 constCCVariable<int>&    cellType, 
                                                  CCVariable<double>& filterVolume )
 {
 
   int filter_width = 3; //hard coded for now
+  filterVolume.initialize(0.0);
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter; 
-
-    filterVolume[c] = 0.0; 
 
     for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
       for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
         for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
 
           IntVector offset = c + IntVector(i,j,k);
+          int fil_off = abs(i) + abs(j) + abs(k); 
+          double my_value = fil_off + 3; 
 
-          //if ( cellType[c] != WALL || cellType[c] != MMWALL || cellType[c] != INTRUSION ){ 
-          if ( cellType[c] != -1 ){ 
-            filterVolume[offset] += 1.0; 
-          } 
+          if ( cellType[offset] == -1 ){ 
+            filterVolume[c] += 1.0 / ( pow( 2.0,my_value ));
+          }
 
         }
       }
     }
-
   }
 
 }

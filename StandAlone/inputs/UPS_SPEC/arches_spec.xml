@@ -168,6 +168,7 @@
         <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
 
         <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
+        <use_new_filter                 spec="OPTIONAL NO_DATA"/> <!-- Don't adjust filter weights near boundaries --> 
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"

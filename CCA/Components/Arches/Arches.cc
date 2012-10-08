@@ -622,6 +622,10 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP turb_db = db->findBlock("Turbulence");
   turb_db->getAttribute("model", d_whichTurbModel);
+  bool use_old_filter = true; 
+  if ( turb_db->findBlock("use_new_filter") ){ 
+    use_old_filter = false; 
+  } 
 
   //db->require("turbulence_model", turbModel);
   if ( d_whichTurbModel == "smagorinsky"){
@@ -662,7 +666,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
 #ifdef PetscFilter
-    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
+    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld, use_old_filter);
     d_filter->problemSetup(db);
     d_turbModel->setFilter(d_filter);
 #endif
