@@ -152,7 +152,7 @@
       </Coal_Properties>
       
       <Turbulence                       spec="REQUIRED NO_DATA"
-                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
+                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky, wasatch'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />
         <mixture_fraction_label         spec="OPTIONAL STRING" /> <!-- for matching scalar with its label for variance calculation --> 

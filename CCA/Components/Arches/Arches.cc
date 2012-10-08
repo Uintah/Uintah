@@ -80,6 +80,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
+
+#include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
+
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
@@ -455,8 +458,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (turbulenceModelSpec) {
     struct Wasatch::TurbulenceParameters turbParams = {1.0,0.1,0.1,Wasatch::NONE};    
     // parse the turbulence parameters
-    Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);  
-    //std::cout << "Turbulence Model: " << turbParams.turbulenceModelName << std::endl;    
+    Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);
     // register relevant expressions
     Expr::TagList velTags;
     velTags.push_back(xVelTagN);
@@ -634,14 +636,25 @@ Arches::problemSetup(const ProblemSpecP& params,
   }else if ( d_whichTurbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
-  }
-  else {
+#ifdef WASATCH_IN_ARCHES
+  } else  if ( d_whichTurbModel == "wasatch"){
+    
+    if (!turbulenceModelSpec)
+      throw ProblemSetupException("ERROR: When using the Wasatch turbulence models in Arches you must specify a Turbulence block in the Wasatch section. Please revise your input file.", __FILE__, __LINE__);
+    
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);
+#endif
+  } else {
     throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
   }
 
 //  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
+#ifdef WASATCH_IN_ARCHES
+  d_turbModel->problemSetup(params->findBlock("Wasatch"));
+#endif
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   if (d_dynScalarModel){
     d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
