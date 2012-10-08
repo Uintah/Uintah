@@ -38,7 +38,7 @@ echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PAR
 /bin/chmod a+x "$doTestScript"
 
 #__________________________________
-# run the python script that contains all the
+# run the python script that contains all
 # tests for that component
 rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
 "$doTestScript" > comp.log  2>&1
@@ -47,6 +47,27 @@ retval=$?
 mv comp.log "${componentTest}.log"
 cat "${componentTest}.log" >> summary_log
 cat "${componentTest}.log" >> "$HTMLLOG"
+
+#__________________________________
+# find plots that were generated for this component copy them to the 
+# public.html directory. Add a link to the web page
+
+plotDir=`dirname ${HTMLLOG}`
+#plotDir=/tmp
+
+plotDir="$plotDir/Plots/"
+
+compDir="$componentTest-results"
+
+# memory Tests:
+
+# remove previous plots and copy plots to the public directory
+/bin/rm -rf $plotDir/Memory/$compDir >&/dev/null
+find $compDir -name "memHistory.png" -print0 | cpio -pmd0 --quite $plotDir/Memory/ 
+
+# update the web page
+echo "<h4>High water memory usage plots</h4>" >> $HTMLLOG
+find $compDir -name "memHistory.png" -printf "<a href = Plots/Memory/%p> %h</a>\n" >> $HTMLLOG
 
 cd TestScripts
 
