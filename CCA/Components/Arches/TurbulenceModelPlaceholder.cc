@@ -64,7 +64,7 @@ using namespace std;
 
 using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
+//#include <CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
 
 //****************************************************************************
 TurbulenceModelPlaceholder::TurbulenceModelPlaceholder(const ArchesLabel* label,
