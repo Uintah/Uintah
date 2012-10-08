@@ -1,10 +1,11 @@
 #!/bin/bash
 
 TEST=$1
-MALLOC_STATS=$2
-COMPARE_ROOT=$3
-TMPDIR=$4
-HELPERPATH=$5
+MAKEPLOTS=$2
+MALLOC_STATS=$3
+COMPARE_ROOT=$4
+TMPDIR=$5
+HELPERPATH=$6
 
 COMPARISON_MALLOC_STATS="$COMPARE_ROOT/$TEST/$MALLOC_STATS"
 error=1
@@ -70,27 +71,29 @@ abs=`echo $meminfo | cut -d " " -f 2`
 
 
 #__________________________________
-echo "Saving highwater memory usage"
+if [ $MAKEPLOTS -eq "1" ]; then
+  echo "Saving highwater memory usage"
 
-memHistory="/tmp/$TEST"
+  memHistory="/tmp/$TEST"
 
-if [ ! -f $here ]; then
-  echo "#date highwaterUsage(bytes)" > $memHistory
+  if [ ! -f $here ]; then
+    echo "#date highwaterUsage(bytes)" > $memHistory
+  fi
+
+  now=`date +%m-%d-%Y`
+  echo "$now  $abs" >> $memHistory
+
+  #eliminate entries from the restart test or if
+  #it run more that once a day
+  uniq -w 10 $memHistory > $memHistory.clean
+  cp $memHistory.clean $memHistory
+
+  #make a local copy
+  cp $memHistory ./memHistory
+
+  gnuplot $HELPERPATH/plotMemUsage.gp
+  
 fi
-
-now=`date +%m-%d-%Y`
-echo "$now  $abs" >> $memHistory
-
-#eliminate entries from the restart test or if
-#it run more that once a day
-uniq -w 10 $memHistory > $memHistory.clean
-cp $memHistory.clean $memHistory
-
-#make a local copy
-cp $memHistory ./memHistory
-
-gnuplot $HELPERPATH/plotMemUsage.gp
-
 #__________________________________
 echo "Performing highwater memory usage check"
 
