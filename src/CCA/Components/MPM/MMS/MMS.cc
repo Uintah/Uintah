@@ -108,10 +108,10 @@ MMS::initializeParticleForMMS(ParticleVariable<Point> &position,
   		pdisp[i]        = Vector(0.,0.,0.);
 		} 
 	        else if (mms_type == "AxisAligned" || mms_type == "AxisAligned3L"){
-                Vector dx = patch->dCell();             // you need to normalize the variable A by the 
+/*                Vector dx = patch->dCell();             // you need to normalize the variable A by the 
   		double normalization = dx.length();    // cell spacing so the Linear interpolation will work
-  		double A=1e-2 * normalization;
-    
+  		double A=1e-2 * normalization; */
+    		double A=0.05;
   		double mu = 3846.15;
   		double bulk = 8333.33;
   		double E = 9.*bulk*mu/(3.*bulk+mu);
@@ -231,7 +231,7 @@ MMS::computeExternalForceForMMS(DataWarehouse* old_dw,
           double lam = (3.*bulk-2.*mu)/3.;
           double rho0=1.0;
           double c = sqrt(E/rho0);
-          double A=.1;
+          double A=0.05;
 
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
