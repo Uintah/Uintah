@@ -50,6 +50,7 @@ plot 'memHistory' using 1:($2/1000) with lines t ''
 set label "3 months"  at screen 0.7,0.2
 set label "6 months"  at screen 0.7,0.5
 set label "1 year"    at screen 0.7,0.8
+set label TODAY       at screen 0.93,0.95
 
 #__________________________________
 # 3months
