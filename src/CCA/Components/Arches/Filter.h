@@ -99,7 +99,8 @@ public:
   // Construct an instance of a Filter.
   Filter(const ArchesLabel* label,
          BoundaryCondition* bndryCondition,
-         const ProcessorGroup* myworld);
+         const ProcessorGroup* myworld, 
+         bool use_old_filter);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -348,34 +349,63 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
                          Array3<double>& filterVar)        
 {
 
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+  bool it_worked = false; 
 
-    IntVector c = *iter; 
-    int filter_width = 3; //hard coded for now
-    int shift = (filter_width-1)/2;
+  if ( d_use_old_filter ){ 
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-    for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
-      for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
-        for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+      IntVector c = *iter; 
+      int filter_width = 3; //hard coded for now
+      int shift = (filter_width-1)/2;
 
+      filterVar[c] = 0.0; 
 
-          double w = 0.0;
-          if ( cellType[c] == -1 ){ 
-            w = 1.0; 
-          } 
+      double sum_filter = 0.0; 
 
-          w *= filter_array[i+shift][j+shift][k+shift] / filterVol[c]; 
-          if ( filterVol[c] > 0.0 ){ 
-            filterVar[c] += w * var[c + IntVector(i,j,k)];
-          } 
-            
+      for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+        for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+          for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
 
+            IntVector offset = c + IntVector(i,j,k);
+            if ( cellType[offset] == -1 ){ 
+              filterVar[c] += filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)]; 
+            }
+
+          }
         }
       }
+
+      filterVar[c] /= filterVol[c]; 
+
     }
 
-  }
-  return true;
+    it_worked = true; 
+
+  } else { 
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+      int filter_width = 3; //hard coded for now
+      int shift = (filter_width-1)/2;
+
+      filterVar[c] = 0.0; 
+
+      for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+        for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+          for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+            filterVar[c] += filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)]; 
+
+          }
+        }
+      }
+
+    }
+
+    it_worked = true; 
+
+  } 
+  return it_worked;
 }
 //______________________________________________________________________
 protected:
@@ -388,6 +418,7 @@ private:
 
   bool d_matrixInitialize;
   bool d_matrix_vectors_created;
+  bool d_use_old_filter; 
 #ifdef HAVE_PETSC
   map<const Patch*, int> d_petscGlobalStart;
   map<const Patch*, Array3<int> > d_petscLocalToGlobal;

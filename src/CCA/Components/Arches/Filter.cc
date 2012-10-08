@@ -51,10 +51,11 @@ using namespace Uintah;
 // ****************************************************************************
 // Default constructor for Filter
 // ****************************************************************************
-Filter::Filter(const ArchesLabel* label,
-               BoundaryCondition* bndryCondition,
-               const ProcessorGroup* myworld) :
-  d_myworld(myworld), d_lab(label), d_boundaryCondition(bndryCondition)
+Filter::Filter( const ArchesLabel* label,
+                BoundaryCondition* bndryCondition,
+                const ProcessorGroup* myworld,
+                bool use_old_filter ) :
+  d_myworld(myworld), d_lab(label), d_boundaryCondition(bndryCondition), d_use_old_filter(use_old_filter)
 {
   d_perproc_patches= 0;
   d_matrixInitialize = false;
@@ -74,7 +75,6 @@ Filter::Filter(const ArchesLabel* label,
         int offset = abs(i) + abs(j) + abs(k); 
         double my_value = offset+3; 
         filter_array[i+1][j+1][k+1] = 1.0 / (pow(2.0,my_value)); 
-
 
       }
     }
@@ -287,7 +287,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
            bool corner = (bndry_count==3);
            int count = 0;
            double totalVol = 0.0;
-           
+
            for (int kk = -1; kk <= 1; kk ++) {
              for (int jj = -1; jj <= 1; jj ++) {
                for (int ii = -1; ii <= 1; ii ++) {

@@ -5305,6 +5305,8 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
 
+    d_newBC->computeFilterVolume( patch, cellType, filterVolume ); 
+
 #ifdef WASATCH_IN_ARCHES
     //copy for wasatch-arches: 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
