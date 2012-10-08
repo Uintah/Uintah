@@ -199,6 +199,7 @@ namespace Wasatch{
     {
       std::ostringstream msg;
       bool foundExtraCells = false;
+      bool isPeriodic = false;
       Uintah::ProblemSpecP grid = params->findBlock("Grid");
       for( Uintah::ProblemSpecP level = grid->findBlock("Level");
            level != 0;
@@ -206,6 +207,7 @@ namespace Wasatch{
         for( Uintah::ProblemSpecP box = level->findBlock("Box");
              box != 0;
              box = level->findNextBlock("Box") ){
+          isPeriodic = level->findBlock("periodic");
           // note that a [0,0,0] specification gets added by default,
           // so we will check to ensure that something other than
           // [0,0,0] has not been specified.
@@ -231,7 +233,7 @@ namespace Wasatch{
       }
 #endif
 #ifdef	WASATCH_IN_ARCHES
-      if( !foundExtraCells ){
+      if( !foundExtraCells && !isPeriodic ){
         msg << endl
         << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
         << "  Please add an 'extraCells' block to your input file" << endl
