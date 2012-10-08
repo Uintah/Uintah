@@ -119,7 +119,6 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
   
   // Requires
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
@@ -183,7 +182,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
     
     
@@ -345,3 +343,4 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     }
   }
 }
+

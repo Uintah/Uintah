@@ -360,8 +360,6 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
 
       filterVar[c] = 0.0; 
 
-      double sum_filter = 0.0; 
-
       for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
         for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
           for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
