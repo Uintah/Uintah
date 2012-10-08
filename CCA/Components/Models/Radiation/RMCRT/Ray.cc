@@ -712,9 +712,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       IntVector pLow;
       IntVector pHigh;
       level->findInteriorCellIndexRange(pLow, pHigh);
-      int Nx = pHigh[0] - pLow[0];
-      int Ny = pHigh[1] - pLow[1];
-      int Nz = pHigh[2] - pLow[2];
+    // int Nx = pHigh[0] - pLow[0];
+    // int Ny = pHigh[1] - pLow[1];
+    // int Nz = pHigh[2] - pLow[2];
 
       int patchID = patch->getID();
       // see if map is empty, if so,  populate it, and initialize fluxes to zero.
@@ -844,7 +844,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //cout << _sigmaScat << endl;
         //cout << _abskgBench4 << endl;
 */
-      FILE * f;
+      FILE * f = NULL;
       if(_benchmark==5){
         f=fopen("benchmark5.txt", "w");
       }
