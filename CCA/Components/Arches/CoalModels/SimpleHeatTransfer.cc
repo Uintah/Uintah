@@ -476,13 +476,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double scaled_weight;
       double unscaled_weight;
       // temperature - particle
-      double scaled_particle_temperature;
       double unscaled_particle_temperature;
       // paticle length
-      double scaled_length;
       double unscaled_length;
       // particle raw coal mass
-      double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
 
       // temperature - gas
