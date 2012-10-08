@@ -93,8 +93,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   outputpath = startpath
   weboutputpath = startpath
   # If running Nightly RT, output logs in web dir
-  # otherwise, save it in the build
+  # otherwise, save it in the build.  Also turn on plotting
+  do_plots = 0
   if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :
+    do_plots = 1
     try:
       outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
       weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
@@ -282,7 +284,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
-    varBucket   = [sus_options]
+    varBucket   = [sus_options, do_plots]
     
     ran_any_tests = 1
 
@@ -471,13 +473,18 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       return -1; 
 
   sus_options             = varBucket[0]
+  do_plots                = varBucket[1]
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
   compUda_RC      = 0   # compare_uda return code
   performance_RC  = 0   # performance return code
   memory_RC       = 0   # memory return code
-  
+
+  # turn off plotting option on restarts
+  if startFrom == "restart":
+    do_plots = 0
+      
   #__________________________________
   # define the maximum run time
   Giga = 2**30
@@ -732,7 +739,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     #__________________________________
     # Memory leak test
     if do_memory_test == 1:
-      memory_RC = system("mem_leak_check %s %s %s %s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, ".", helperspath))
+    
+      memory_RC = system("mem_leak_check %s %d %s %s %s %s> mem_leak_check.log.txt 2>&1" % 
+                        (testname, do_plots, malloc_stats_file, compare_root, ".", helperspath))
       try:
         short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
