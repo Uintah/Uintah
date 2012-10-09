@@ -73,6 +73,7 @@ NIGHTLYTESTS = [
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
+  ("qmom-realizable-test",          "qmom-realizable-test.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),   \
   ("qmom-test",                     "qmom-test.ups",                     4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "Linux",  ["exactComparison","no_restart"] ),  \
   ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "Linux",  ["exactComparison","no_restart"] ),  \
@@ -117,6 +118,7 @@ LOCALTESTS = [
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("qmom-realizable-test",          "qmom-realizable-test.ups",          8,  "All",   ["exactComparison","no_restart"] ),   \
   ("qmom-test",                     "qmom-test.ups",                     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
