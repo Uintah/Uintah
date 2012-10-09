@@ -717,7 +717,7 @@
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
       
-      <UseMomentReduction spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
+      <RealizableQMOM spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
       
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
