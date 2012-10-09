@@ -55,7 +55,7 @@ cat "${componentTest}.log" >> "$HTMLLOG"
 plotDir=`dirname ${HTMLLOG}`
 #plotDir=/tmp
 
-plotDir="$plotDir/Plots/"
+plotDir="$plotDir/Plots"
 
 compDir="$componentTest-results"
 
@@ -63,11 +63,17 @@ compDir="$componentTest-results"
 
 # remove previous plots and copy plots to the public directory
 /bin/rm -rf $plotDir/Memory/$compDir >&/dev/null
-find $compDir -name "memHistory.png" -print0 | cpio -pmd0 --quite $plotDir/Memory/ 
+find $compDir -name "memHistory.png" -print0 | cpio -pmd0 $plotDir/Memory/ 
 
-# update the web page
-echo "<h4>High water memory usage plots</h4>" >> $HTMLLOG
-find $compDir -name "memHistory.png" -printf "<a href = Plots/Memory/%p> %h</a>\n" >> $HTMLLOG
+# create a separate web page for memory usage
+memory_html="$plotDir/Memory/$compDir/memoryPlots.html"
+echo "<HTML><HEAD><TITLE> $componentTest High Water Memory</TITLE></HEAD><BODY><pre>" > $memory_html
+echo "<a href = \"$memory_html\">High water memory usage plots</a>" >> $HTMLLOG
+
+echo "This is a test" >> $memory_html
+#find $compDir -name "memHistory.png" -printf "<a href = Plots/Memory/%p> %h</a>\n" >> $memory_html
+
+echo "</pre></BODY></HTML>" >> $memory_html
 
 cd TestScripts
 
