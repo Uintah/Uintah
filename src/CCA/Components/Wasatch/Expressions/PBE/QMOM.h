@@ -62,6 +62,7 @@ class QMOM : public Expr::Expression<FieldT>
   std::vector< std::vector<double> > pmatrix_;
   std::vector<double> a_, b_, alpha_, jMatrix_, eigenValues_, weights_, work_;
   const bool realizable_;
+  int nonRealizablePoints_;
 
   QMOM( const Expr::TagList knownMomentsTagList, const bool realizable );
   
@@ -125,6 +126,7 @@ QMOM( const Expr::TagList knownMomentsTaglist, const bool realizable)
   jMatrix_.resize( abSize*abSize ); // note that jMatrix is stored as a vector for LAPACK
   eigenValues_.resize( abSize );
   weights_.resize(abSize);
+  nonRealizablePoints_=0;
 }
 
 //--------------------------------------------------------------------
@@ -180,7 +182,8 @@ evaluate()
   ResultsVec& results = this->get_value_vec();
 
   const int abSize = nMoments_/2;
-
+  nonRealizablePoints_=0;
+  
   // loop over interior points in the patch. To do this, we grab a sample
   // iterator from any of the exisiting fields, for example, m0.
   const FieldT* sampleField = knownMoments_[0];
@@ -258,6 +261,8 @@ evaluate()
       resultsIterators[i] += 1;
     }
   } // end interior points loop
+  
+  if(nonRealizablePoints_ > 0) std::cout << "WARNING QMOM: I found " << nonRealizablePoints_ << " nonrealizable points." << std::endl;
 }
 
 //--------------------------------------------------------------------
@@ -327,12 +332,15 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
       nReducedMoments = nMoments_ - (abSize - (jCol+1))*2;
       if ( !realizable_ ) {
         std::ostringstream errorMsg;
-        errorMsg << std::endl << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
+        errorMsg << std::endl << "ERROR QMOM: Negative number detected while constructing the b auxiliary vector while processing the QMOM expression." << std::endl << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
         std::cout << knownMomentsTagList_ << std::endl; //if there is an error display which set of equations failed (in case there are multiple polymorphs)
         for (int i = 0; i<nMoments_; i++) printf("M[%i] = %.16f \n", i, *knownMomentsIterator[i]);
         throw std::runtime_error( errorMsg.str() );
       } else {
-        std::cout << "WARNING QMOM: Negative number detected in b auxiliary matrix, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
+        nonRealizablePoints_++;
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+        std::cout << "WARNING QMOM: Negative number detected in b auxiliary vector, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
+#endif
         if (nReducedMoments <= 1) {
           std::ostringstream errorMsg;
           errorMsg << std::endl << "ERROR QMOM: Cannot reduce the number of moments to 0. Existing..." << std::endl;
@@ -343,7 +351,6 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     }
     b_[jCol] = -std::sqrt(rhsB);
   }
-
   // fill in the last entry for a
   a_[abSize-1] = alpha_[2*(abSize-1) + 1] + alpha_[2*(abSize-1)];
 
@@ -402,13 +409,13 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   
 #ifdef WASATCH_QMOM_DIAGNOSTICS
   for (int iRow=0; iRow<abSize; iRow++) {
-    printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues_[iRow]);
+    printf("Eigenvalue[%i] = %.12f \t \t",iRow,eigenValues_[iRow]);
   }
   printf("\n");
 #endif
 
   //__________
-  // save the weights and abscissae
+  // calculate the weights. The abscissae are stored in eigenValues_
   double m0 = *knownMomentsIterator[0];
   for (int i=0; i<abSize; ++i) {
     const int matLoc = i*abSize;
