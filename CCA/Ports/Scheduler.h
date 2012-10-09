@@ -160,7 +160,7 @@ WARNING
     // Insert Documentation Here:
     virtual void setPositionVar(const VarLabel* posLabel) = 0;
     
-    virtual void scheduleParticleRelocation(const LevelP& level,
+    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
 					    const VarLabel* posLabel,
 					    const std::vector<std::vector<const VarLabel*> >& labels,
 					    const VarLabel* new_posLabel,

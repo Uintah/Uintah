@@ -177,7 +177,7 @@ void
 Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      const ProcessorGroup* pg,
                                      LoadBalancer* lb,
-                                     const LevelP& level,
+                                     const LevelP& coarsestLevelwithParticles,
                                      const VarLabel* old_posLabel,
                                      const vector<vector<const VarLabel*> >& old_labels,
                                      const VarLabel* new_posLabel,
@@ -214,7 +214,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
   Task* t = scinew Task("Relocate::relocateParticles",
-                  this, &Relocate::relocateParticles);
+                  this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
   if(lb){
     t->usesMPI(true);
   }
@@ -235,16 +235,16 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   
   PatchSet* patches;
-  if(!level->hasFinerLevel()){
+  if(!coarsestLevelwithParticles->hasFinerLevel()){
     // only case since the below version isn't const
-    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level)); 
+    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(coarsestLevelwithParticles)); 
   }else {
-    GridP grid = level->getGrid();
+    GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
    
-    for (int i = level->getIndex(); i < grid->numLevels(); i++) {
+    for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
       
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
       
@@ -707,8 +707,8 @@ const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarse
 void
 Relocate::findNeighboringPatches(const Patch* patch,
                                  const Level* level,
-                                 const bool hasFiner,
-                                 const bool hasCoarser,
+                                 const bool findFiner,
+                                 const bool findCoarser,
                                  Patch::selectType& AllNeighborPatches)
 {
 //  cout << "relocate findNeighboringPatch L-"<< level->getIndex() << " patch: " << patch->getID() << " hasFiner: " << hasFiner << " hasCoarser: " << hasCoarser << endl;
@@ -733,7 +733,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   
   //__________________________________
   //  Find coarse level patches
-  if(hasCoarser){
+  if(findCoarser){
     IntVector refineRatio = level->getRefinementRatio();
     const Level* coarseLevel = level->getCoarserLevel().get_rep();  
 
@@ -755,7 +755,7 @@ Relocate::findNeighboringPatches(const Patch* patch,
   
   //__________________________________
   // Find the fine level patches.
-  if(hasFiner){
+  if(findFiner){
     const Level* fineLevel = level->getFinerLevel().get_rep();
     
     // Particles are only allowed to be one cell out
@@ -787,15 +787,12 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
-                            DataWarehouse* new_dw)
+                            DataWarehouse* new_dw,
+                            const Level* coarsestLevelwithParticles)
 {
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0)
   {
-    // this is the coarsest level involved in the relocation
-    const Level* coarsestLevel = patches->get(0)->getLevel();
-    GridP grid = coarsestLevel->getGrid();
-  
     int me = pg->myrank();
 
     // First pass: For each of the patches we own, look for particles
@@ -812,21 +809,20 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
       // AMR
       const Level* curLevel = patch->getLevel();
-      bool hasFiner   = curLevel->hasFinerLevel();
-      bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
-      
+      bool findFiner   = curLevel->hasFinerLevel();
+      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevelwithParticles->getIndex();
       Level* fineLevel=0;
       Level* coarseLevel=0;
-      
-      if(hasFiner){
+
+      if(findFiner){
         fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
       }
-      if(hasCoarser){
+      if(findCoarser){
         coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
       }
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(patch, level, hasFiner, hasCoarser, neighborPatches);
+      findNeighboringPatches(patch, level, findFiner, findCoarser, neighborPatches);
 
       // Find all of the neighborPatches, and add them to a set
       for(int i=0; i<neighborPatches.size(); i++){
@@ -963,20 +959,20 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       // AMR related
       const Level* curLevel = toPatch->getLevel();
       int curLevelIndex     = curLevel->getIndex();
-      bool hasFiner   = curLevel->hasFinerLevel();
-      bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
+      bool findFiner   = curLevel->hasFinerLevel();
+      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevelwithParticles->getIndex();
       Level* fineLevel=0;
       Level* coarseLevel=0;
-      
-      if(hasFiner){
+
+      if(findFiner){
         fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
       }
-      if(hasCoarser){
+      if(findCoarser){
         coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
       }
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(toPatch, level, hasFiner, hasCoarser, neighborPatches);
+      findNeighboringPatches(toPatch, level, findFiner, findCoarser, neighborPatches);
 
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
