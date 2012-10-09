@@ -798,12 +798,10 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
     if (d_dynScalarModel) {
+#ifdef PetscFilter
       if (d_calcScalar)
-#ifdef PetscFilter
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoF, filterVolume, cellType, filterRhoF);
-#endif
       if (d_calcEnthalpy)
-#ifdef PetscFilter
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoE, filterVolume, cellType, filterRhoE);
 #endif
     }
