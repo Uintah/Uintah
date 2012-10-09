@@ -202,7 +202,7 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void scheduleParticleRelocation(const LevelP& level,
+    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
 					    const VarLabel* old_posLabel,
 					    const std::vector<std::vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
