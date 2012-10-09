@@ -545,6 +545,13 @@ vector< vector <vector <double> > > setChannelAij( double magVelocity, int jSize
       AijProf[j][k][4] = (Rij[4] - AijProf[j][k][1] * AijProf[j][k][3]) / AijProf[j][k][2];
       AijProf[j][k][5] = sqrt(Rij[5] - AijProf[j][k][3] *AijProf[j][k][3] - AijProf[j][k][4] * AijProf[j][k][4] );
       
+      //check for nans
+      for (int i = 0; i<=5; i++) {
+        if (AijProf[j][k][i] != AijProf[j][k][i]) {
+          AijProf[j][k][i] = 0.0;
+        }  
+      }
+      
     }
   }  
   return AijProf;
