@@ -208,6 +208,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
+    
 #ifdef WASATCH_IN_ARCHES
     if (exists_)
       viscosity.copyData(wasatchTurbViscosity);
@@ -225,7 +226,8 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       IntVector c = *iter;
       viscosity[c] = density[c]*viscosity[c] + mol_viscos;
     }
-    
+
+#ifndef WASATCH_IN_ARCHES
     //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -341,6 +343,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
+#endif
   }
 }
 
