@@ -151,7 +151,7 @@
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
-      <Turbulence                       spec="REQUIRED NO_DATA"
+      <Turbulence                       spec="OPTIONAL NO_DATA"
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky, wasatch'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />

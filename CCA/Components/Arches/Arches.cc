@@ -621,11 +621,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->problemSetup(db);
 
   ProblemSpecP turb_db = db->findBlock("Turbulence");
-  turb_db->getAttribute("model", d_whichTurbModel);
-  bool use_old_filter = true; 
-  if ( turb_db->findBlock("use_new_filter") ){ 
-    use_old_filter = false; 
-  } 
+  bool use_old_filter = true;
+
+  if(turb_db) {
+    turb_db->getAttribute("model", d_whichTurbModel);
+    if ( turb_db->findBlock("use_new_filter") ){
+      use_old_filter = false;
+    }    
+  }
 
   //db->require("turbulence_model", turbModel);
   if ( d_whichTurbModel == "smagorinsky"){
@@ -650,7 +653,10 @@ Arches::problemSetup(const ProblemSpecP& params,
                                                     d_boundaryCondition);
 #endif
   } else {
-    throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
+    std::cout << "got here\n";
+    // In case no turbulence model was specified, then use a dummy turbulence model that returns zero turbulent viscosity
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);    
   }
 
 //  if (d_turbModel)
