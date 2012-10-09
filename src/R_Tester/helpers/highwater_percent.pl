@@ -53,6 +53,6 @@ elsif ($percent < 0) {
 else {
     print STDERR "Memory usage stayed the same.\n"
 }
-print "$percent $abs";
+print "$percent $abs $test_highwater";
 exit 0
 

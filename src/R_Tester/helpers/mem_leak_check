@@ -68,25 +68,28 @@ fi
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
+testHighwater=`echo $meminfo | cut -d " " -f 3`
 
 
 #__________________________________
 if [ $MAKEPLOTS -eq "1" ]; then
   echo "Saving highwater memory usage"
 
-  memHistory="/tmp/$TEST"
+  memHistory="$COMPARE_ROOT/$TEST/memHistory"
 
   if [ ! -f $here ]; then
     echo "#date highwaterUsage(bytes)" > $memHistory
   fi
 
   now=`date +%m-%d-%Y`
-  echo "$now  $abs" >> $memHistory
+  echo "$now  $testHighwater" >> $memHistory
 
   #eliminate entries from the restart test or if
-  #it run more that once a day
+  #it runs more that once a day
   uniq -w 10 $memHistory > $memHistory.clean
   cp $memHistory.clean $memHistory
+  
+  /bin/rm $memHistory.clean
 
   #make a local copy
   cp $memHistory ./memHistory

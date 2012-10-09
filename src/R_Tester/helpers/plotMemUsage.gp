@@ -24,7 +24,7 @@ FIRST_DAY = system('date -d " $(date +%d) -1week" +%m-%d-%Y')
 set xlabel 'date'
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t 'highwater usage (Kbytes)'
+plot 'memHistory' using 1:($2/1024) with lines t 'highwater usage (Kbytes)'
 
 
 #__________________________________
@@ -34,7 +34,7 @@ FIRST_DAY = system('date -d " $(date +%d) -2week" +%m-%d-%Y')
 set xlabel ''
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t ''
+plot 'memHistory' using 1:($2/1024) with lines t ''
 
 
 #__________________________________
@@ -43,7 +43,7 @@ set origin 0.0,0.66
 FIRST_DAY = system('date -d " $(date +%d) -4week" +%m-%d-%Y')
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t ''
+plot 'memHistory' using 1:($2/1024) with lines t ''
 
 
 #______________________________________________________________________
@@ -60,7 +60,7 @@ FIRST_DAY = system('date -d " $(date +%d) -3month" +%m-%d-%Y')
 set xlabel 'date'
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t 'highwater usage (Kbytes)'
+plot 'memHistory' using 1:($2/1024) with lines t 'highwater usage (Kbytes)'
 
 
 #__________________________________
@@ -70,7 +70,7 @@ FIRST_DAY = system('date -d " $(date +%d) -6month" +%m-%d-%Y')
 set xlabel ''
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t ''
+plot 'memHistory' using 1:($2/1024) with lines t ''
 
 
 #__________________________________
@@ -79,7 +79,7 @@ set origin 0.5,0.66
 FIRST_DAY = system('date -d " $(date +%d) -12 month" +%m-%d-%Y')
 set xrange [FIRST_DAY:TODAY]
 
-plot 'memHistory' using 1:($2/1000) with lines t ''
+plot 'memHistory' using 1:($2/1024) with lines t ''
 
 set nomultiplot
 
