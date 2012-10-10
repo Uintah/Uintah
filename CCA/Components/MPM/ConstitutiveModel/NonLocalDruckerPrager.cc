@@ -394,9 +394,9 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
     // create node data for the plastic multiplier field
     NCVariable<double> gdlambda,gmat;
-    double NGhost = ceil(l_nonlocal/dx.maxComponent());
-    new_dw->allocateTemporary(gdlambda,               patch,gac,NGhost);
-    new_dw->allocateTemporary(gmat,               patch,gac,NGhost);
+    int NGhost = (int)ceil(l_nonlocal/dx.maxComponent());
+    new_dw->allocateTemporary( gdlambda, patch, gac, NGhost );
+    new_dw->allocateTemporary( gmat,     patch, gac, NGhost );
     gdlambda.initialize(0.0);
     gmat.initialize(0.0);
     double rho_orig = matl->getInitialDensity();
@@ -822,12 +822,12 @@ void NonLocalDruckerPrager::EvaluateNonLocalAverage(double& dlambda_nl,double& V
     int zmax_index = Floor(nl_upper_index.z());
     int zmin_index = ceil(nl_lower_index.z());
     */
-    int xmax_index = ceil(nl_upper_index.x());
-    int xmin_index = floor(nl_lower_index.x());
-    int ymax_index = ceil(nl_upper_index.y());
-    int ymin_index = floor(nl_lower_index.y());
-    int zmax_index = ceil(nl_upper_index.z());
-    int zmin_index = floor(nl_lower_index.z());
+    int xmax_index = (int)ceil(nl_upper_index.x());
+    int xmin_index = (int)floor(nl_lower_index.x());
+    int ymax_index = (int)ceil(nl_upper_index.y());
+    int ymin_index = (int)floor(nl_lower_index.y());
+    int zmax_index = (int)ceil(nl_upper_index.z());
+    int zmin_index = (int)floor(nl_lower_index.z());
     dlambda_nl = 0.0;
     V_alpha=0.0;
     for(int i=xmin_index;i<xmax_index+1;i++){
