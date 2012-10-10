@@ -319,8 +319,8 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   //_________________________
   // construct a and b arrays
   bool needsReduction = false;
-  int reduceBy = 0; // reduce the number of environments by this much
-  int nReducedMoments = 0;
+  int reduceBy = 0; // reduce the number of environments by this much in case of negative b
+  int nReducedMoments = 0; // this is the new number of moments to use
   for (int jCol=0; jCol < abSize-1; ++jCol) {
     const int twojcol = 2*jCol;
     a_[jCol] = alpha_[twojcol+1] + alpha_[twojcol];
@@ -329,7 +329,7 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     if (rhsB < 0) {
       needsReduction = true;
       reduceBy = jCol + 2;
-      nReducedMoments = nMoments_ - (abSize - (jCol+1))*2;
+      nReducedMoments = nMoments_ - 2*reduceBy;
       if ( !realizable_ ) {
         std::ostringstream errorMsg;
         errorMsg << std::endl << "ERROR QMOM: Negative number detected while constructing the b auxiliary vector while processing the QMOM expression." << std::endl << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
@@ -366,10 +366,10 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
 #endif
 
   //___________________
-  //need to initialize JMAtrix to zero at each point
-  for (int i = 0; i<abSize*abSize; i++) jMatrix_[i] = 0.0;
-  for (int i = 0; i<abSize; i++) eigenValues_[i] = 0.0;
-  for (int i = 0; i<abSize; i++) weights_[i] = 0.0;
+  //initialize the JMatrix and the eigenvalues and eigenvectors to 0
+  std::fill(jMatrix_.begin(), jMatrix_.end(),0.0);
+  std::fill(eigenValues_.begin(), eigenValues_.end(),0.0);
+  std::fill(weights_.begin(), weights_.end(),0.0);
   
   // if there is a need for realizability, reduce the number of environments
   if(realizable_ && needsReduction) abSize -= reduceBy;
