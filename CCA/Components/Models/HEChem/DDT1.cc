@@ -324,7 +324,7 @@ void DDT1::initialize(const ProcessorGroup*,
     burningCell.initialize(0);
     det.initialize(0.0);
     Ts.initialize(0.0);
-    BurningCriteria.initialize(0.0);
+    BurningCriteria.initialize( 0 );
   }
 }
 
