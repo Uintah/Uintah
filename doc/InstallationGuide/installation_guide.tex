@@ -129,16 +129,17 @@ Required libraries:
 \item fortran
 \item subversion
 \item cmake
+\item git
 
 \end{itemize}
 
 Useful libraries:
 \begin{itemize}
 \item Hypre v2.8.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item PETSc v3.2 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item PETSc v3.3 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, we suggest using Hypre v2.8.0b and PETSc v3.2-p8.  (Sept, 2012)
+Note, we suggest using Hypre v2.8.0b and PETSc v3.3-p3. 
 
 The Wasatch component requires the following:
 \begin{itemize}
@@ -223,7 +224,8 @@ libraries:
 sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
+boost-static
 \end{verbatim} 
 
 
@@ -235,22 +237,53 @@ Core}
 \begin{verbatim}
 sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
-cmake tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
+tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git
 \end{verbatim} 
+
+Note:  The packages for boost and cmake are too old and the user must
+download and build more recent versions, see below for instructions.
 
 \subsection{OpenSuse  Dependencies}
 
-\textbf{OpenSuse} \url{http://www.centos.org/} is similar to
+\textbf{OpenSuse} \url{http://www.opensuse.org/} is similar to
 \textbf{Fedora Core}
 
 \begin{verbatim}
 sudo zypper install make openmpi-devel openmpi lapack \
-gcc-gfortran blas gcc-c++ libxml2-devel subversion \ 
+gcc-fortran blas gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
+boost-static
 \end{verbatim} 
 
+\section{CMake Installation}
+
+A condensed set of instructions for building \textbf{CMake}
+\url{http://www.cmake.org/} is provided.  The cmake binary and
+resulting libraries are installed in the \texttt{/usr/local} hierarchy.
+
+\begin{verbatim}
+   tar xf cmake-2.8.9.tar.gz 
+   cd cmake-2.8.9
+  ./bootstrap --prefix=/usr/local
+  make
+  sudo make install
+\end{verbatim}
+
+\section{Boost Installation}
+
+A condensed set of instructions for building the \textbf{Boost
+  Libraries} \url{http://www.boost.org/} is provided.  The libraries
+are installed in the user's home directory.
+
+\begin{verbatim}
+  tar xvf boost_1_51_0.tar.bz2 
+  cd boost_1_51_0
+  ./bootstrap.sh --prefix=~/boost-1.51
+  ./b2
+  ./b2 install
+\end{verbatim}
 
 \section{PETSc Installation}
 
@@ -258,7 +291,7 @@ PETSc can be installed by executing the following simplified
 instructions.  Please refer to the PETSc website for comprehensive
 installation instructions if you encounter any difficulties.
 
-Download petsc-v3.1-p8 from
+Download petsc-v3.3-p3 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
 \subsection{Fedora \& CentOS}
@@ -269,7 +302,7 @@ are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
 \texttt{/usr/lib/64/openmpi/bin} in your path for the location of
 mpirun and mpiCC, mpicc, and mpif77.
 
-\begin{Verbatim}
+\begin{verbatim}
 tar zxf petsc-3.1-p8.tar.gz
 cd petsc-3.1-p8
 export PETSC_DIR=$PWD
@@ -282,21 +315,26 @@ LD_LIBRARY_PATH=/usr/lib64/openmpi/lib \
 
 make all
 make install
-\end{Verbatim}
+\end{verbatim}
 
 \subsection{OpenSuse}
 
-\begin{Verbatim}
-tar zxf petsc-3.1-p8.tar.gz
-cd petsc-3.1-p8
-export PETSC_DIR=$PWD
-export PETSC_ARCH=gnu-linux
+\begin{verbatim}
+tar zxf petsc-3.3-p3.tar.gz
+cd petsc-3.3-p3
 
-./config/configure.py --with-shared --with-debugging=0 
+./configure --with-mpi-dir=/usr/lib64/mpi/gcc/openmpi \
+--with-shared-libraries --with-debugging=0 --prefix=/home/jas/petsc
+
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt all
+
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt
+install
+
 
 make all
 make install
-\end{Verbatim}
+\end{verbatim}
 
 
 \section{Hypre Installation}
@@ -337,7 +375,7 @@ make
 
 \begin{verbatim}
 
-cd hypre-2.7.0b/src
+cd hypre-2.8.0b/src
 
 ./configure --enable-shared \
   --with-MPI-libs="mpi mpi_cxx" \
