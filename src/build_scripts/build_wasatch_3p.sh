@@ -16,6 +16,14 @@ if test $3 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
 
+###########################################################################
+# GIT Hash Tags for the various libraries
+
+# SPATIAL_OPS_TAG=
+# EXPR_LIB_TAG=
+# TAB_PROPS_TAG=
+# RAD_PROPS_TAG=
+
 ############################################################################
 
 show_error()
@@ -64,6 +72,11 @@ run "mkdir -p install"
 run "cd src"
 run "rm -rf SpatialOps"
 run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps.git SpatialOps"
+if test ! -z $SPATIAL_OPS_TAG ; then
+    run "cd SpatialOps"
+    run "git reset --hard $SPATIAL_OPS_TAG"
+    run "cd .."
+fi
 run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 
@@ -95,6 +108,11 @@ run "cd ../../.."  # back to Wasatch3P
 run "cd src"
 run "rm -rf ExprLib"
 run "git clone --depth 1 git://software.crsim.utah.edu/ExprLib.git ExprLib"
+if test ! -z $EXPR_LIB_TAG ; then
+    run "cd ExprLib"
+    run "git reset --hard $EXPR_LIB_TAG"
+    run "cd .."
+fi
 run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 
@@ -123,6 +141,11 @@ run "cd ../../.."  # back to Wasatch3P
 run "cd src"
 run "rm -rf TabProps"
 run "git clone --depth 1 git://software.crsim.utah.edu/TabProps.git TabProps"
+if test ! -z $TAB_PROPS_TAG ; then
+    run "cd TabProps"
+    run "git reset --hard $TAB_PROPS_TAG"
+    run "cd .."
+fi
 run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 
@@ -150,6 +173,11 @@ run "cd ../../.."  # back to Wasatch3P
 run "cd src"
 run "rm -rf RadProps"
 run "git clone --depth 1 git://software.crsim.utah.edu/RadProps.git RadProps"
+if test ! -z $RAD_PROPS_TAG ; then
+    run "cd RadProps"
+    run "git reset --hard $RAD_PROPS_TAG"
+    run "cd .."
+fi
 run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
 

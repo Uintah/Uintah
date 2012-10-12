@@ -12,31 +12,25 @@
 # gives unlimited permission to copy, distribute and modify it.
 #
 # ##
-# ##  For more information, please see: http://software.sci.utah.edu
+# ## Copyright (c) 1997-2012 The University of Utah
 # ##
-# ##  The MIT License
+# ## Permission is hereby granted, free of charge, to any person obtaining a copy
+# ## of this software and associated documentation files (the \"Software\"), to
+# ## deal in the Software without restriction, including without limitation the
+# ## rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+# ## sell copies of the Software, and to permit persons to whom the Software is
+# ## furnished to do so, subject to the following conditions:
 # ##
-# ##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
-# ##  University of Utah.
+# ## The above copyright notice and this permission notice shall be included in
+# ## all copies or substantial portions of the Software.
 # ##
-# ##  License for the specific language governing rights and limitations under
-# ##  Permission is hereby granted, free of charge, to any person obtaining a
-# ##  copy of this software and associated documentation files (the "Software"),
-# ##  to deal in the Software without restriction, including without limitation
-# ##  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# ##  and/or sell copies of the Software, and to permit persons to whom the
-# ##  Software is furnished to do so, subject to the following conditions:
-# ##
-# ##  The above copyright notice and this permission notice shall be included
-# ##  in all copies or substantial portions of the Software.
-# ##
-# ##  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# ##  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# ##  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# ##  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# ##  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# ##  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# ##  DEALINGS IN THE SOFTWARE.
+# ## THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# ## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# ## IN THE SOFTWARE.
 # ##
 #
 ## -------------------- ##
@@ -1819,31 +1813,25 @@ This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
 ##
-##  For more information, please see: http://software.sci.utah.edu
+## Copyright (c) 1997-2012 The University of Utah
 ##
-##  The MIT License
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the \"Software\"), to
+## deal in the Software without restriction, including without limitation the
+## rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+## sell copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
 ##
-##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
-##  University of Utah.
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
 ##
-##  License for the specific language governing rights and limitations under
-##  Permission is hereby granted, free of charge, to any person obtaining a
-##  copy of this software and associated documentation files (the "Software"),
-##  to deal in the Software without restriction, including without limitation
-##  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-##  and/or sell copies of the Software, and to permit persons to whom the
-##  Software is furnished to do so, subject to the following conditions:
-##
-##  The above copyright notice and this permission notice shall be included
-##  in all copies or substantial portions of the Software.
-##
-##  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-##  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-##  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-##  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-##  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-##  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-##  DEALINGS IN THE SOFTWARE.
+## THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+## IN THE SOFTWARE.
 ##
 
 _ACEOF
@@ -6751,7 +6739,7 @@ if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
 $as_echo "$as_me: WARNING: Building a statically linked version of Uintah! " >&2;}
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
-  if test "$static" == "full"; then
+  if test "$static" = "full"; then
 
     # If we don't use the 'full' option, then some shared libs may be
     # linked in.  While we probably should make 'full' the default, this
@@ -6840,7 +6828,7 @@ int main()
   double b=.01;
 
   int c=a/b;
-  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+  return c != 100; // Shell return codes are backward in that 0 = success, thus the '!='.
 }
 EOF
 
@@ -15279,7 +15267,7 @@ if test "$with_libxml2"; then
    _sci_optional=specific
 fi
 
-if test "$with_libxml2" == "built-in"; then
+if test "$with_libxml2" = "built-in"; then
   XML2_LIB_FLAG="-lxml2"
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"Using built in libxml2... no explicit linking will be done.\" " >&5
 $as_echo "\"Using built in libxml2... no explicit linking will be done.\" " >&6; }
@@ -34127,7 +34115,7 @@ if test "$with_mpi_extra_libs"; then
          as_fn_error $? "Extra MPI lib '$lib' does not exist..." "$LINENO" 5
       else
          the_dir=`dirname $lib`
-         if test "$the_dir" == "."; then
+         if test "$the_dir" = "."; then
             as_fn_error $? "Extra MPI lib '$lib' must include an absolute path..." "$LINENO" 5
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'`
@@ -38371,12 +38359,12 @@ fi #end sci_required_mpi
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
-if test "$with_petsc" == "no"; then # Handle --without option
+if test "$with_petsc" = "no"; then # Handle --without option
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"PETSc disabled.\" " >&5
 $as_echo "$as_me: WARNING: \"PETSc disabled.\" " >&2;}
 else
 
-  if test "$with_petsc" == "built-in"; then
+  if test "$with_petsc" = "built-in"; then
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
@@ -38387,7 +38375,7 @@ else
       _sci_lib_dir=
 
       if test "$with_petsc"; then
-         if test "$with_petsc" == "yes"; then
+         if test "$with_petsc" = "yes"; then
             as_fn_error $? "--with-petsc=DIR requires a DIRectory to be specified." "$LINENO" 5
          fi
          version_file=$with_petsc/include/petscversion.h
@@ -38440,7 +38428,7 @@ else
         petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
         petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
 
-        if test "$petsc_version_major" == "2"; then
+        if test "$petsc_version_major" = "2"; then
           if test -z "$PETSC_ARCH"; then
             as_fn_error $? "For PETSC version 2x - please set PETSC_ARCH." "$LINENO" 5
           fi
@@ -38451,7 +38439,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
             _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
           fi
         else
-          if test "$petsc_version_major" == "3"; then
+          if test "$petsc_version_major" = "3"; then
             if test -z "$_sci_lib_dir"; then
                _sci_lib_dir="$with_petsc/lib"
             fi
@@ -42070,63 +42058,935 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ##  --  search for Boost ------------------------
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    as_fn_error $? "--with-boost=DIR requires a DIRectory be provided. " "$LINENO" 5
-  else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Boost files (For now we are just verifying the existence of lib and .h files)" >&5
-$as_echo_n "checking for Boost files (For now we are just verifying the existence of lib and .h files)... " >&6; }
-    if test ! -d $with_boost; then
-      echo ""
-      as_fn_error $? "'$with_boost' directory does not exist. " "$LINENO" 5
-    fi
-    # Check for header files
-    BOOST_INCLUDE_DIR=$with_boost/include/boost
-    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
-                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
-                shared_ptr.hpp any.hpp; do
-      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+   if test "$with_boost" = "yes"; then
+       as_fn_error $? "--with-boost=DIR requires a DIRectory be provided. " "$LINENO" 5
+   elif test ! -d $with_boost; then
         echo ""
-        as_fn_error $? "'$BOOST_INCLUDE_DIR/$file' does not exist. " "$LINENO" 5
-      fi
-    done
-    # Check for libraries files
-    BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt libboost_signals-mt libboost_serialization-mt libboost_system-mt; do
-      EXT=$SO_OR_ARCHIVE_EXTENSION
-      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
-        echo ""
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $file.$EXT lib does not exist... looking for non-mt version..." >&5
-$as_echo "$as_me: WARNING: $file.$EXT lib does not exist... looking for non-mt version..." >&2;}
-        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
-        if test ! -f $BOOST_LIB_DIR/$short_name; then
-            as_fn_error $? "$BOOST_LIB_DIR/$short_name lib does not exist!" "$LINENO" 5
-        else
-            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
-            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-        fi
-      else
-        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
-        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-      fi
-    done
+        as_fn_error $? "'$with_boost' directory does not exist. " "$LINENO" 5
+   elif test "$with_boost" = "/usr"; then
+        # Check for header files
+        BOOST_INCLUDE_DIR=$with_boost/include/boost
+        BOOST_LIBRARY_DIR=$with_boost/lib
+
+   else
+        BOOST_INCLUDE_DIR=$with_boost/include
+        BOOST_LIBRARY_DIR=$with_boost/lib
+
+   fi
+
+    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp"
+
+    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt"
+
+   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options"
+
+
+##
+## SCI_TRY_LINK (BOOST):  boost library and include headers
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : BOOST
+## arg 2 : boost library and include headers
+## arg 3 : $_boost_incl
+## arg 4 : $BOOST_INCLUDE_DIR
+## arg 5 : $_boost_libs_mt
+## arg 6 : $BOOST_LIBRARY_DIR
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      BOOST_LIB_DIR        => lib path
+##      BOOST_LIB_DIR_FLAG   => all the -L's
+##      BOOST_LIB_FLAG       => all the -l's
+##      HAVE_BOOST           => yes or no
+##      INC_BOOST_H          => all the -I's
+##      HAVE_BOOST_H         => yes or no
+
+if test 9 != 9; then
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for boost library and include headers (optional)" >&5
+$as_echo_n "checking for boost library and include headers (optional)... " >&6; }
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     echo
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+# If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $BOOST_INCLUDE_DIR; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     as_fn_error $? "Please do not specify /usr/include as the location for BOOST include files." "$LINENO" 5
   fi
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: Found Boost" >&5
-$as_echo "Found Boost" >&6; }
-  DEF_BOOST="#define HAVE_BOOST 1"
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($BOOST_INCLUDE_DIR) of BOOST check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($BOOST_INCLUDE_DIR) of BOOST check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "^\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "$_boost_libs_mt"; then
+
+   found_framework=no
+   for lib in $_boost_libs_mt; do
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of BOOST check (disregarding $lib)." >&5
+$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BOOST check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "^\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$BOOST_LIBRARY_DIR"; then
+
+   for path in $BOOST_LIBRARY_DIR; do
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of BOOST check (disregarding $path)." >&5
+$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $BOOST_LIBRARY_DIR (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $BOOST_LIBRARY_DIR; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $BOOST_INCLUDE_DIR
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $BOOST_INCLUDE_DIR; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$BOOST_INCLUDE_DIR" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" $_boost_incl; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval BOOST_LIB_DIR='"$BOOST_LIBRARY_DIR"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval BOOST_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $_sci_libs; do
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval BOOST_LIB_FLAG="'$final_libs'"
+eval HAVE_BOOST="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_BOOST_H="'$final_incs'"
+eval HAVE_BOOST_H="yes"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+eval BOOST_LIB_DIR=''
+eval BOOST_LIB_DIR_FLAG=''
+eval BOOST_LIB_FLAG=''
+eval HAVE_BOOST="no"
+eval INC_BOOST_H=''
+eval HAVE_BOOST_H="no"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required BOOST failed.
+    To see the failed compile information, look in config.log,
+    search for BOOST. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" $_boost_incl; do
+    #echo looking for $BOOST_INCLUDE_DIR/$i
+    if test ! -e $BOOST_INCLUDE_DIR/$i; then
+     as_fn_error $? "Specifically requested BOOST include file '$BOOST_INCLUDE_DIR/$i' was not found" "$LINENO" 5
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" $_boost_libs_mt; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $BOOST_LIBRARY_DIR/lib$i.so && test ! -e $BOOST_LIBRARY_DIR/lib$i.a && test ! -e $BOOST_LIBRARY_DIR/$i.lib && test ! -e $BOOST_LIBRARY_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BOOST library file '$BOOST_LIBRARY_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (BOOST):  boost library and include headers
+##
+
+
+
+  if test "$HAVE_BOOST" = "no"; then
+
+##
+## SCI_TRY_LINK (BOOST):  boost library (non-mt) and include headers
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : BOOST
+## arg 2 : boost library (non-mt) and include headers
+## arg 3 : $_boost_incl
+## arg 4 : $BOOST_INCLUDE_DIR
+## arg 5 : $_boost_libs
+## arg 6 : $BOOST_LIBRARY_DIR
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      BOOST_LIB_DIR        => lib path
+##      BOOST_LIB_DIR_FLAG   => all the -L's
+##      BOOST_LIB_FLAG       => all the -l's
+##      HAVE_BOOST           => yes or no
+##      INC_BOOST_H          => all the -I's
+##      HAVE_BOOST_H         => yes or no
+
+if test 9 != 9; then
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (non-mt) and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for boost library (non-mt) and include headers (optional)" >&5
+$as_echo_n "checking for boost library (non-mt) and include headers (optional)... " >&6; }
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     echo
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (non-mt) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+# If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $BOOST_INCLUDE_DIR; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     as_fn_error $? "Please do not specify /usr/include as the location for BOOST include files." "$LINENO" 5
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($BOOST_INCLUDE_DIR) of BOOST check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($BOOST_INCLUDE_DIR) of BOOST check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "^\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "$_boost_libs"; then
+
+   found_framework=no
+   for lib in $_boost_libs; do
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of BOOST check (disregarding $lib)." >&5
+$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BOOST check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "^\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$BOOST_LIBRARY_DIR"; then
+
+   for path in $BOOST_LIBRARY_DIR; do
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of BOOST check (disregarding $path)." >&5
+$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $BOOST_LIBRARY_DIR (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $BOOST_LIBRARY_DIR; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $BOOST_INCLUDE_DIR
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $BOOST_INCLUDE_DIR; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$BOOST_INCLUDE_DIR" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" $_boost_incl; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval BOOST_LIB_DIR='"$BOOST_LIBRARY_DIR"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval BOOST_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $_sci_libs; do
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval BOOST_LIB_FLAG="'$final_libs'"
+eval HAVE_BOOST="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_BOOST_H="'$final_incs'"
+eval HAVE_BOOST_H="yes"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+eval BOOST_LIB_DIR=''
+eval BOOST_LIB_DIR_FLAG=''
+eval BOOST_LIB_FLAG=''
+eval HAVE_BOOST="no"
+eval INC_BOOST_H=''
+eval HAVE_BOOST_H="no"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required BOOST failed.
+    To see the failed compile information, look in config.log,
+    search for BOOST. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" $_boost_incl; do
+    #echo looking for $BOOST_INCLUDE_DIR/$i
+    if test ! -e $BOOST_INCLUDE_DIR/$i; then
+     as_fn_error $? "Specifically requested BOOST include file '$BOOST_INCLUDE_DIR/$i' was not found" "$LINENO" 5
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" $_boost_libs; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $BOOST_LIBRARY_DIR/lib$i.so && test ! -e $BOOST_LIBRARY_DIR/lib$i.a && test ! -e $BOOST_LIBRARY_DIR/$i.lib && test ! -e $BOOST_LIBRARY_DIR/lib$i.dylib; then
+     as_fn_error $? "Specifically requested BOOST library file '$BOOST_LIBRARY_DIR/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (BOOST):  boost library (non-mt) and include headers
+##
+
+
+  fi
+
+
+  if test "$HAVE_BOOST" = "yes"; then
+     DEF_BOOST="#define HAVE_BOOST 1"
+  fi
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
-    INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+      INC_BOOST_H="-I$with_boost/include"
+      BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
   fi
-  HAVE_BOOST="yes"
 fi
 
 
 
 
 
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  Handle --enable-wasatch_3p... ------------------------
 

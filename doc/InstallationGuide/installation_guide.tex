@@ -46,7 +46,7 @@
   Carson Brownlee,
   Tony Saad}
 
-\date{Version 1.4.1}
+\date{Version 1.5}
 
 \maketitle
 
@@ -129,16 +129,17 @@ Required libraries:
 \item fortran
 \item subversion
 \item cmake
+\item git
 
 \end{itemize}
 
 Useful libraries:
 \begin{itemize}
-\item Hypre v2.7.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item PETSc v3.1 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item Hypre v2.8.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
+\item PETSc v3.3 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, we suggest using Hypre v2.7.0b and PETSc v3.1-p8.  (Sept, 2011)
+Note, we suggest using Hypre v2.8.0b and PETSc v3.3-p3. 
 
 The Wasatch component requires the following:
 \begin{itemize}
@@ -162,56 +163,56 @@ required for \textbf{Uintah} are satisfied:
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
 libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
-libglui-dev libxmu-dev g++ gfortran
+libglui-dev libxmu-dev g++ gfortran libboost-all-dev git
 \end{verbatim}
 
-\noindent Optional: Additional libraries needed for the Wasatch component:
-\begin{verbatim}
-  aptitude install git
-\end{verbatim}  
- \hspace{0.125in} \textbf{Lenny}:
-\begin{verbatim}
-  aptitude install cmake > 2.8 (from squeeze)
-  download boost-1.46 from www.boost.org
-  bootstrap.sh --prefix=path/to/installation/prefix
-  bjam threading=single install
-\end{verbatim}
-\hspace{0.125in} \textbf{Squeeze}:
-\begin{verbatim}
-  aptitude install cmake > 2.8 (from squeeze)
+% \noindent Optional: Additional libraries needed for the Wasatch component:
+% \begin{verbatim}
+%   aptitude install git
+% \end{verbatim}  
+%  \hspace{0.125in} \textbf{Lenny}:
+% \begin{verbatim}
+%   aptitude install cmake > 2.8 (from squeeze)
+%   download boost-1.46 from www.boost.org
+%   bootstrap.sh --prefix=path/to/installation/prefix
+%   bjam threading=single install
+% \end{verbatim}
+% \hspace{0.125in} \textbf{Squeeze}:
+% \begin{verbatim}
+%   aptitude install cmake > 2.8 (from squeeze)
   
-  sudo aptitude install  libboost-date-time1.46-dev \
-  libboost-date-time1.46.0          \
-  libboost-iostreams1.46.0          \   
-  libboost-program-options1.46-dev  \
-  libboost-program-options1.46.0    \
-  libboost-serialization1.46-dev    \
-  libboost-serialization1.46.0      \
-  libboost-signals1.46-dev          \
-  libboost-signals1.46.0            \
-  libboost-thread1.46-dev           \
-  libboost-thread1.46.0             \
-  libboost1.46-dev
-\end{verbatim}
+%   sudo aptitude install  libboost-date-time1.46-dev \
+%   libboost-date-time1.46.0          \
+%   libboost-iostreams1.46.0          \   
+%   libboost-program-options1.46-dev  \
+%   libboost-program-options1.46.0    \
+%   libboost-serialization1.46-dev    \
+%   libboost-serialization1.46.0      \
+%   libboost-signals1.46-dev          \
+%   libboost-signals1.46.0            \
+%   libboost-thread1.46-dev           \
+%   libboost-thread1.46.0             \
+%   libboost1.46-dev
+% \end{verbatim}
 
-\noindent Once these libraries are installed, VisIt can be installed
-followed by installation of \textbf{Uintah}.
+% \noindent Once these libraries are installed, VisIt can be installed
+% followed by installation of \textbf{Uintah}.
 
-\noindent To install the latest \TT{Nvidia}video drivers:
-\begin{verbatim}
-  As root run the following commands:
-  aptitude install module-assistant module-init-tools
-  aptitude clean
-  aptitude update
-  uname -r
+% \noindent To install the latest \TT{Nvidia}video drivers:
+% \begin{verbatim}
+%   As root run the following commands:
+%   aptitude install module-assistant module-init-tools
+%   aptitude clean
+%   aptitude update
+%   uname -r
   
-  apt-get install nvidia-kernel-common
-  m-a auto-install nvidia-kernel${VERSION}-source
-  apt-get install nvidia-glx${VERSION}
-  apt-get install nvidia-xconfig
-  nvidia-xconfig
-\end{verbatim}
-See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
+%   apt-get install nvidia-kernel-common
+%   m-a auto-install nvidia-kernel${VERSION}-source
+%   apt-get install nvidia-glx${VERSION}
+%   apt-get install nvidia-xconfig
+%   nvidia-xconfig
+% \end{verbatim}
+% See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
 
 \subsection{Fedora Core  Dependencies}
 
@@ -222,8 +223,9 @@ libraries:
 \begin{verbatim}
 sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
-make tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+cmake tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
+boost-static
 \end{verbatim} 
 
 
@@ -233,24 +235,55 @@ mesa-libGL-devel mesa-libGLU-devel libXt-devel
 Core} 
 
 \begin{verbatim}
-sudo zypper install make openmpi-devel openmpi lapack-devel \
+sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
-make tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git
 \end{verbatim} 
+
+Note:  The packages for boost and cmake are too old and the user must
+download and build more recent versions, see below for instructions.
 
 \subsection{OpenSuse  Dependencies}
 
-\textbf{OpenSuse} \url{http://www.centos.org/} is similar to
+\textbf{OpenSuse} \url{http://www.opensuse.org/} is similar to
 \textbf{Fedora Core}
 
 \begin{verbatim}
-sudo yum install make openmpi-devel openmpi lapack \
-gcc-gfortran blas gcc-c++ libxml2-devel subversion \ 
-make tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+sudo zypper install make openmpi-devel openmpi lapack \
+gcc-fortran blas gcc-c++ libxml2-devel subversion \ 
+cmake tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
+boost-static
 \end{verbatim} 
 
+\section{CMake Installation}
+
+A condensed set of instructions for building \textbf{CMake}
+\url{http://www.cmake.org/} is provided.  The cmake binary and
+resulting libraries are installed in the \texttt{/usr/local} hierarchy.
+
+\begin{verbatim}
+   tar xf cmake-2.8.9.tar.gz 
+   cd cmake-2.8.9
+  ./bootstrap --prefix=/usr/local
+  make
+  sudo make install
+\end{verbatim}
+
+\section{Boost Installation}
+
+A condensed set of instructions for building the \textbf{Boost
+  Libraries} \url{http://www.boost.org/} is provided.  The libraries
+are installed in the user's home directory.
+
+\begin{verbatim}
+  tar xvf boost_1_51_0.tar.bz2 
+  cd boost_1_51_0
+  ./bootstrap.sh --prefix=~/boost-1.51
+  ./b2
+  ./b2 install
+\end{verbatim}
 
 \section{PETSc Installation}
 
@@ -258,7 +291,7 @@ PETSc can be installed by executing the following simplified
 instructions.  Please refer to the PETSc website for comprehensive
 installation instructions if you encounter any difficulties.
 
-Download petsc-v3.1-p8 from
+Download petsc-v3.3-p3 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
 \subsection{Fedora \& CentOS}
@@ -269,34 +302,36 @@ are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
 \texttt{/usr/lib/64/openmpi/bin} in your path for the location of
 mpirun and mpiCC, mpicc, and mpif77.
 
-\begin{Verbatim}
-tar zxf petsc-3.1-p8.tar.gz
-cd petsc-3.1-p8
-export PETSC_DIR=$PWD
-export PETSC_ARCH=gnu-linux
+\begin{verbatim}
+tar zxf petsc-3.3-p3.tar.gz
+cd petsc-3.3-p3
 
 LD_LIBRARY_PATH=/usr/lib64/openmpi/lib \
-./config/configure.py --with-shared \
+./configure --with-shared-libraries \
 --with-debugging=O \
---with-mpi-dir=/usr/lib64/openmpi
+--with-mpi-dir=/usr/lib64/openmpi  \
+--prefix=/home/jas/petsc
 
-make all
-make install
-\end{Verbatim}
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt all
+
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt install
+
+\end{verbatim}
 
 \subsection{OpenSuse}
 
-\begin{Verbatim}
-tar zxf petsc-3.1-p8.tar.gz
-cd petsc-3.1-p8
-export PETSC_DIR=$PWD
-export PETSC_ARCH=gnu-linux
+\begin{verbatim}
+tar zxf petsc-3.3-p3.tar.gz
+cd petsc-3.3-p3
 
-./config/configure.py --with-shared --with-debugging=0 
+./configure --with-mpi-dir=/usr/lib64/mpi/gcc/openmpi \
+--with-shared-libraries --with-debugging=0 --prefix=/home/jas/petsc
 
-make all
-make install
-\end{Verbatim}
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt all
+
+make PETSC_DIR=/home/jas/petsc-3.3-p3 PETSC_ARCH=arch-linux2-c-opt install
+
+\end{verbatim}
 
 
 \section{Hypre Installation}
@@ -305,7 +340,7 @@ Hypre can be installed by executing the following simplified
 instructions, however, if you encounter problems please refer to the
 hypre website for troubleshooting.
 
-Download hypre-2.7.0b from
+Download hypre-2.8.0b from
 \url{https://computation.llnl.gov/casc/hypre/software.html}
 
 \subsection{Fedora \& CentOS}
@@ -318,7 +353,7 @@ mpirun and mpiCC, mpicc, and mpif77.
 
 
 \begin{verbatim}
-cd hypre-2.7.0b/src
+cd hypre-2.8.0b/src
 
 LD_LIBRARY_PATH=/usr/lib64/openmpi/lib/ \
  ./configure --enable-shared \
@@ -337,7 +372,7 @@ make
 
 \begin{verbatim}
 
-cd hypre-2.7.0b/src
+cd hypre-2.8.0b/src
 
 ./configure --enable-shared \
   --with-MPI-libs="mpi mpi_cxx" \
@@ -352,7 +387,7 @@ make
 \subsection{For OSX (Macs)}
 
 \begin{verbatim}
-cd hypre-2.7.0b/src
+cd hypre-2.8.0b/src
 
 ./configure \
   --prefix=/usr/local \
@@ -385,15 +420,15 @@ The following information specifies how to run the ``configure''
 script to prepare for building the Uintah executable.  ``Configure''
 is a program that checks the computer's environment and looks for the
 location of libraries and header files, etc.  When it finishes
-running, it will create the \TT{configVars.mk} file which will include all
-the information it has determined about the computer.  The following
-lines show \textbf{generically} how to use ``configure''.
+running, it will create the \TT{configVars.mk} file which will include
+all the information it has determined about the computer.  The
+following lines show \textbf{generically} how to use ``configure''.
 
 Goto the directory \TT{ \textasciitilde/uintah} and create the
 following directories: \TT{dbg} (debug) and \TT{opt} (optimized)
 
 \begin{verbatim}
-cd ~/uintah-1.4.1
+cd ~/uintah-1.5.0
 mkdir dbg opt
 \end{verbatim}
 
@@ -406,10 +441,12 @@ Go to the \TT{dbg} directory and enter the following:
 
 After the configuration process, type \TT{make} to compile Uintah.
 
-If you wish to attach a debugger to Uintah, make sure you use the \TT{--enable-debug} configure option.
+If you wish to attach a debugger to Uintah, make sure you use the
+\TT{--enable-debug} configure option.
 
-If you would like to reduce the amount of output given by the make system when making Uintah, 
-you can set the environment variable \TT{SCI\_MAKE\_BE\_QUIET} to true:
+If you would like to reduce the amount of output given by the make
+system when making Uintah, you can set the environment variable
+\TT{SCI\_MAKE\_BE\_QUIET} to true:
 
 \begin{verbatim}
 setenv SCI_MAKE_BE_QUIET true
@@ -466,6 +503,31 @@ To see a full list of all the configure options type:
     ../src/configure --help
 \end{verbatim}
 
+\subsubsection{Common Configure Lines}
+
+\paragraph{Debian \& Ubuntu}
+
+\begin{verbatim}
+    ../src/configure --enable-debug --with-boost=/usr --enable-wasatch_3p
+\end{verbatim}
+
+\paragraph{Fedora-17 \& CentOS-6.3}
+
+\begin{verbatim}
+../src/configure --enable-debug --with-mpi-lib=/usr/lib64/o
+penmpi/lib --with-mpi-include=/usr/include/openmpi-x86_64 --with-boost=/usr --en
+able-wasatch_3p --with-hypre=/home/jas/hypre2.8.0b/src/hypre --with-petsc=/home/
+jas/petsc
+\end{verbatim}
+
+\paragraph{OpenSuse-12.2}
+
+\begin{verbatim}
+../src/configure --enable-debug --with-mpi-lib=/usr/lib64/o
+penmpi/lib --with-mpi-include=/usr/include/openmpi-x86_64 --with-boost=/usr --en
+able-wasatch_3p --with-hypre=/home/jas/hypre2.8.0b/src/hypre --with-petsc=/home/
+jas/petsc
+\end{verbatim}
 
 \subsection{Build}
 
@@ -500,8 +562,8 @@ the Uintah team.
 
 \subsection{VisIt Installation}
 
-The latest official release of \textbf{\emph{VisIt}} is 2.3.2.
-However, the instructions apply to earlier versions such as 2.2.X.
+The latest official release of \textbf{\emph{VisIt}} is 2.5.2.
+However, the instructions apply to earlier versions such as 2.5.X.
 The UDA reader plugin must be built against an installed version of
 \textbf{\emph{VisIt}}.  \textbf{\emph{VisIt}} can be installed either
 from one of their binary distributions, or by compiling and installing
@@ -541,7 +603,7 @@ and is the recommended installation method outlined below.
 
 \begin{enumerate}
 \item Download the build\_visit script from
-  \url{http://portal.nersc.gov/svn/visit/trunk/releases/2.3.2/build_visit2_3_2}.
+  \url{http://portal.nersc.gov/svn/visit/trunk/releases/2.5.2/build_visit2_5_2}.
 
 
 
@@ -549,10 +611,10 @@ and is the recommended installation method outlined below.
   copy it to a VISIT directory (calling it Visit\_2.3.2 in the
   following description) where you will build the VisIT source code:
 \begin{verbatim}
-mkdir ~/Visit_2.3.2
-cp build_visit_2.3.2 Visit_2.3.2
-cd Visit_2.3.2
-chmod +x build_visit_2.3.2
+mkdir ~/Visit_2.5.2
+cp build_visit_2.5.2 Visit_2.5.2
+cd Visit_2.5.2
+chmod +x build_visit_2.5.2
 \end{verbatim}
 
 \item Build the VisIT source (after it downloads everything) using two
@@ -562,7 +624,7 @@ chmod +x build_visit_2.3.2
   option when the script starts up. 
 
 \begin{verbatim}
- ./build_visit_2.3.2 --makeflags -j2 
+ ./build_visit_2.5.2 --makeflags -j2 
 \end{verbatim}
 
 \emph{NOTE: If you run into problems building QT, you can try setting
