@@ -3701,63 +3701,52 @@ sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
 
 ##  --  search for Boost ------------------------
-
+AC_LANG([C++])
 if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
-  else
-    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_boost; then
-      echo ""
-      AC_MSG_ERROR( '$with_boost' directory does not exist. )
-    fi
-    # Check for header files
-    BOOST_INCLUDE_DIR=$with_boost/include/boost
-    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
-                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
-                shared_ptr.hpp any.hpp; do
-      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+   if test "$with_boost" = "yes"; then
+       AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+   elif test ! -d $with_boost; then
         echo ""
-        AC_MSG_ERROR( '$BOOST_INCLUDE_DIR/$file' does not exist. )
-      fi
-    done
-    # Check for libraries files
-    _boost_lib=$with_boost
-    BOOST_LIB_DIR=
-    BASE_LIB_PATH(BOOST_LIB_DIR,$_boost_lib)
-    for file in libboost_thread-mt libboost_signals-mt libboost_serialization-mt libboost_system-mt; do
-      EXT=$SO_OR_ARCHIVE_EXTENSION
-      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
-        echo ""
-        AC_MSG_WARN( $file.$EXT lib does not exist... looking for non-mt version...)
-        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
-        if test ! -f $BOOST_LIB_DIR/$short_name; then
-            AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
-        else
-            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
-            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-        fi
-      else
-        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
-        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-      fi
-    done
+        AC_MSG_ERROR( '$with_boost' directory does not exist. )
+   elif test "$with_boost" = "/usr"; then
+        # Check for header files
+        BOOST_INCLUDE_DIR=$with_boost/include/boost
+        BOOST_LIBRARY_DIR=$with_boost/lib
+ 
+   else
+        BOOST_INCLUDE_DIR=$with_boost/include
+        BOOST_LIBRARY_DIR=$with_boost/lib
+   
+   fi
+   
+    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp"
+
+    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt"
+
+   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options"
+  
+  SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+
+  if test "$HAVE_BOOST" = "no"; then
+     SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
+  fi                  
+
+
+  if test "$HAVE_BOOST" = "yes"; then
+     DEF_BOOST="#define HAVE_BOOST 1"              
   fi
-  AC_MSG_RESULT(Found Boost)
-  DEF_BOOST="#define HAVE_BOOST 1"
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
-    INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
+      INC_BOOST_H="-I$with_boost/include"
+      BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
   fi
-  HAVE_BOOST="yes"
 fi
 AC_SUBST(HAVE_BOOST)
 AC_SUBST(DEF_BOOST)
 AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
-
+AC_LANG([C])
 ##  --  Handle --enable-wasatch_3p... ------------------------
 
 if test "$wasatch_3p" = "yes"; then
