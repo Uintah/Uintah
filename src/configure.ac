@@ -3722,7 +3722,9 @@ if test "$with_boost"; then
       fi
     done
     # Check for libraries files
-    BOOST_LIB_DIR=$with_boost/lib
+    _boost_lib=$with_boost
+    BOOST_LIB_DIR=
+    BASE_LIB_PATH(BOOST_LIB_DIR,$_boost_lib)
     for file in libboost_thread-mt libboost_signals-mt libboost_serialization-mt libboost_system-mt; do
       EXT=$SO_OR_ARCHIVE_EXTENSION
       if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
@@ -3746,7 +3748,7 @@ if test "$with_boost"; then
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
     INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
   fi
   HAVE_BOOST="yes"
 fi
