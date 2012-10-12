@@ -233,7 +233,7 @@ mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
 Core} 
 
 \begin{verbatim}
-sudo zypper install make openmpi-devel openmpi lapack-devel \
+sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
@@ -245,10 +245,10 @@ mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
 \textbf{Fedora Core}
 
 \begin{verbatim}
-sudo yum install make openmpi-devel openmpi lapack \
+sudo zypper install make openmpi-devel openmpi lapack \
 gcc-gfortran blas gcc-c++ libxml2-devel subversion \ 
-make tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+cmake tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel
 \end{verbatim} 
 
 
@@ -393,7 +393,7 @@ Goto the directory \TT{ \textasciitilde/uintah} and create the
 following directories: \TT{dbg} (debug) and \TT{opt} (optimized)
 
 \begin{verbatim}
-cd ~/uintah-1.4.1
+cd ~/uintah-1.5.0
 mkdir dbg opt
 \end{verbatim}
 
@@ -466,6 +466,13 @@ To see a full list of all the configure options type:
     ../src/configure --help
 \end{verbatim}
 
+\subsubsection{Common Configure Lines}
+
+\paragraph{Debian}
+
+\begin{verbatim}
+    ../src/configure --enable-debug --with-boost=/usr --enable-wasatch_3p
+\end{verbatim}
 
 \subsection{Build}
 
