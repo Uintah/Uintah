@@ -33,7 +33,6 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/Angio/AngioMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
 #include <Core/Containers/StringUtil.h>
@@ -153,18 +152,6 @@ void SimulationState::registerCZMaterial(CZMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
-void SimulationState::registerAngioMaterial(AngioMaterial* matl)
-{
-  angio_matls.push_back(matl);
-  registerMaterial(matl);
-}
-
-void SimulationState::registerAngioMaterial(AngioMaterial* matl,
-                                            unsigned int index)
-{
-  angio_matls.push_back(matl);
-  registerMaterial(matl,index);
-}
 
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
@@ -376,12 +363,6 @@ const MaterialSet* SimulationState::allCZMaterials() const
 {
   ASSERT(all_cz_matls != 0);
   return all_cz_matls;
-}
-
-const MaterialSet* SimulationState::allAngioMaterials() const
-{
-  ASSERT(all_angio_matls != 0);
-  return all_angio_matls;
 }
 
 const MaterialSet* SimulationState::allArchesMaterials() const

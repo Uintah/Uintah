@@ -54,7 +54,6 @@ PSELIBS := \
         $(MPM)           \
         $(MPMICE)        \
         $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/Angio                \
         $(COMPONENTS)/PatchCombiner        \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \

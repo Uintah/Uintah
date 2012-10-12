@@ -47,7 +47,6 @@ class Material;
 class ICEMaterial;
 class MPMMaterial;
 class CZMaterial;
-class AngioMaterial;
 class ArchesMaterial; 
 class WasatchMaterial;
 class SimpleMaterial;
@@ -110,8 +109,6 @@ public:
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
   void registerCZMaterial(CZMaterial*);
   void registerCZMaterial(CZMaterial*,unsigned int index);
-  void registerAngioMaterial(AngioMaterial*);
-  void registerAngioMaterial(AngioMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
@@ -126,9 +123,6 @@ public:
   }
   int getNumCZMatls() const {
     return (int)cz_matls.size();
-  }
-  int getNumAngioMatls() const {
-    return (int)angio_matls.size();
   }
   int getNumArchesMatls() const {
     return (int)arches_matls.size();
@@ -152,9 +146,6 @@ public:
   }
   CZMaterial* getCZMaterial(int idx) const {
     return cz_matls[idx];
-  }
-  AngioMaterial* getAngioMaterial(int idx) const {
-    return angio_matls[idx];
   }
   ArchesMaterial* getArchesMaterial(int idx) const {
     return arches_matls[idx];
@@ -190,7 +181,6 @@ public:
   void finalizeMaterials();
   const MaterialSet* allMPMMaterials() const;
   const MaterialSet* allCZMaterials() const;
-  const MaterialSet* allAngioMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allWasatchMaterials() const;
@@ -284,7 +274,6 @@ private:
   std::vector<Material*>        matls;
   std::vector<MPMMaterial*>     mpm_matls;
   std::vector<CZMaterial*>      cz_matls;
-  std::vector<AngioMaterial*>   angio_matls;
   std::vector<ArchesMaterial*>  arches_matls;
   std::vector<ICEMaterial*>     ice_matls;
   std::vector<WasatchMaterial*> wasatch_matls;

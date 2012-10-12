@@ -19,7 +19,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
@@ -216,9 +215,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "RMCRT_Test ";
 #endif
-  if (sim_comp == "angio") {
-    return scinew Angio(world);
-  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
