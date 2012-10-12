@@ -775,17 +775,6 @@
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
-  <Angio                                spec="OPTIONAL NO_DATA" >
-    <time_integrator                    spec="OPTIONAL STRING 'explicit'" />
-    <interpolator                       spec="OPTIONAL STRING 'linear'" />
-    <Growth_Parameter_a                 spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_b                 spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_x0                spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_y0                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a1                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a2                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a3                spec="OPTIONAL DOUBLE" />
-  </Angio>
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM" />
 
@@ -794,12 +783,6 @@
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
     <include href="ice_spec.xml" section="MaterialProperties/ICE" />
 
-    <Angio                               spec="OPTIONAL NO_DATA">
-      <material                          spec="REQUIRED NO_DATA">
-        <density                         spec="REQUIRED DOUBLE" />
-        <fragment_file                   spec="REQUIRED STRING"/>
-      </material>
-    </Angio>
   </MaterialProperties>
   
   <!--  Models        -->

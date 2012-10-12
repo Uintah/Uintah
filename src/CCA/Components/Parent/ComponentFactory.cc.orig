@@ -40,7 +40,6 @@
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
-#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
@@ -152,9 +151,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
-  } 
-  if (sim_comp == "angio") {
-    return scinew Angio(world);
   } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
