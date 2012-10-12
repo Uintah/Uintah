@@ -501,6 +501,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
 
 void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 {
+
   geompoints::key_type key(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b2 = patch->getExtraBox();
@@ -563,6 +564,31 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
     }  // x
   }  // iterator
 
+/*
+//  *** This part is associated with CBDI_CompressiveCylinder.ups input file.
+//      It creates conforming particle distribution to be used in the simulation.
+//      To use that you need to uncomment the following commands to create the
+//      conforming particle distribution and comment above commands that are used
+//      to create non-conforming particle distributions.
+
+  geompoints::key_type key(patch,obj);
+  int resolutionPart=1;
+  int nPar1=180*resolutionPart;
+  int nPar2=16*resolutionPart;
+    
+  for(int ix=1;ix < nPar1+1; ix++){
+    double ttemp,rtemp;
+    ttemp=(ix-0.5)*2.0*3.14159265358979/nPar1;
+    for(int iy=1;iy < nPar2+1; iy++){
+        rtemp=0.75+(iy-0.5)*0.5/nPar2;
+        Point p(rtemp*cos(ttemp),rtemp*sin(ttemp),0.5);
+        if(patch->containsPoint(p)){
+          d_object_points[key].push_back(p);
+        }
+    }
+  }
+*/
+
 }
 
 
@@ -583,6 +609,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   //  to be used in the conforming CPDI simulations. The input vectors are
   //  optional and if you do not liketo use afine transformation, just do
   //  not define them in the input file.
+
   Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
   Vector affineTrans_A1=(*obj)->getInitialData_Vector("affineTransformation_A1");
   Vector affineTrans_A2=(*obj)->getInitialData_Vector("affineTransformation_A2");
@@ -594,8 +621,27 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Matrix3 size(1./((double) ppc.x()),0.,0.,
               0.,1./((double) ppc.y()),0.,
               0.,0.,1./((double) ppc.z()));
-
   size=affineTrans_A*size;
+
+/*
+//  *** This part is associated with CBDI_CompressiveCylinder.ups input file.
+//      It determines particle domain sizes for the conforming particle distribution,
+//      which is used in the simulation.
+//      To activate that you need to uncomment the following commands to determine
+//      particle domain sizes for the conforming particle distribution, and
+//      comment above commands that are used to determine particle domain sizes for
+//      non-conforming particle distributions.
+
+  int resolutionPart=1;
+  int nPar1=180*resolutionPart;
+  int nPar2=16*resolutionPart;
+  double pi=3.14159265358979;
+  double rtemp=sqrt(p.x()*p.x()+p.y()*p.y());
+  Matrix3 size(2.*pi/nPar1*p.y()/dxcc[0],2.*0.25/nPar2/rtemp*p.x()/dxcc[1],0.,
+              -2.*pi/nPar1*p.x()/dxcc[0],2.*0.25/nPar2/rtemp*p.y()/dxcc[1],0.,
+                                      0.,                               0.,1.);
+*/
+
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
 //MMS
  string mms_type = d_flags->d_mms_type;

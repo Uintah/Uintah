@@ -148,7 +148,6 @@
                 <initialization type="constant">
                   <constant>0.0</constant>
                 </initialization>
-                <use_laminar_pr label="pr_no"/>
               </Eqn>
             </TransportEqns>
 

@@ -295,7 +295,6 @@ private:
 
   MaterialSet    * all_mpm_matls;
   MaterialSet    * all_cz_matls;
-  MaterialSet    * all_angio_matls;
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_wasatch_matls;  
   MaterialSet    * all_arches_matls;

@@ -92,7 +92,8 @@ WARNING
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
+                           DataWarehouse* new_dw,
+                           const Level* coarsestLevelwithParticles);
     void exchangeParticles(const ProcessorGroup*, 
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
@@ -102,8 +103,8 @@ WARNING
     
     void findNeighboringPatches(const Patch* patch,
                                 const Level* level,
-                                const bool hasFiner,
-                                const bool hasCoarser,
+                                const bool findFiner,
+                                const bool findCoarser,
                                 Patch::selectType& AllNeighborPatches);
    
     void finalizeCommunication();

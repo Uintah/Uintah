@@ -7,7 +7,7 @@
 
   <Solver type="hypre"/>
   <Time>
-    <max_Timesteps> 25 </max_Timesteps>
+    <max_Timesteps> 15 </max_Timesteps>
     <maxTime>         1.0        </maxTime>
     <initTime>        0.0         </initTime>
     <delt_min>        0.0001     </delt_min>
@@ -36,16 +36,16 @@
 
   <Grid>
 
-      <BoundaryConditions>
-<Face side="x-">
-  <BCType id="all" label="mixture_fraction" var="Dirichlet">
-    <value> 1.0 </value>
-  </BCType>
-</Face>
+    <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
 
 
       <!--Face side="x-"-->
-<Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
+    <Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
         <!--BCType id = "all" label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType-->
@@ -113,7 +113,7 @@
         <upper>       [.6,.1,.1]   </upper>
         <resolution>  [150,25,25]</resolution>
         <extraCells>  [1,1,1]   </extraCells>
-        <patches>     [1,1,1]   </patches>
+        <patches>     [6,1,1]   </patches>
       </Box>
 <!--periodic> [0,1,0] </periodic-->
     </Level>

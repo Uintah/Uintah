@@ -36,8 +36,11 @@
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
                               <value> 300.0  </value>
         </BCType>
-        <BCType id = "1" label = "Density"      var = "Dirichlet">
+        <BCType id = "1"   label = "Density"      var = "Dirichlet">
                               <value> 1.17929469273743 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value>  0.0 </value>
         </BCType>
       </Face>
       <Face side = "x-">

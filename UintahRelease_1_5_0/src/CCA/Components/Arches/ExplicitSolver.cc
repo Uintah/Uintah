@@ -388,7 +388,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                     *(gh->exprFactory),
                                     level, sched, patches, matls,
                                     wasatch.patch_info_map(),
-                                    true,
                                     curr_level+1,
                                     ioFieldSet 
                                     );
@@ -868,7 +867,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                   *(gh->exprFactory),
                                   level, sched, patches, matls,
                                   wasatch.patch_info_map(),
-                                  true,
                                   1,
                                   ioFieldSet 
                                   );
@@ -911,7 +909,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_tauSGSLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0);
 #ifdef WASATCH_IN_ARCHES
@@ -942,7 +940,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_vmomBoundarySrcLabel);
   tsk->computes(d_lab->d_wmomBoundarySrcLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
-  tsk->computes(d_lab->d_tauSGSLabel);
+  tsk->computes(d_lab->d_turbViscosLabel);
   tsk->computes(d_lab->d_areaFractionLabel);
 #ifdef WASATCH_IN_ARCHES
   tsk->computes(d_lab->d_areaFractionFXLabel);
@@ -1500,7 +1498,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> enthalpy;
     constCCVariable<double> density;
     constCCVariable<double> viscosity;
-    constCCVariable<double> tauSGS; 
+    constCCVariable<double> turb_viscosity; 
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
@@ -1520,7 +1518,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
-    old_dw->get(tauSGS,    d_lab->d_tauSGSLabel,  indx, patch, gn, 0);
+    old_dw->get(turb_viscosity,    d_lab->d_turbViscosLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0);
 #ifdef WASATCH_IN_ARCHES
@@ -1635,9 +1633,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
     viscosity_new.copyData(viscosity); // copy old into new
 
-    CCVariable<double> tauSGS_new;
-    new_dw->allocateAndPut(tauSGS_new, d_lab->d_tauSGSLabel, indx, patch);
-    tauSGS_new.copyData(tauSGS); // copy old into new
+    CCVariable<double> turb_viscosity_new;
+    new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);
+    turb_viscosity_new.copyData(turb_viscosity); // copy old into new
 
 
     CCVariable<double> scalardiff_new;

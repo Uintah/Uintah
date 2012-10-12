@@ -556,7 +556,8 @@ evaluate()
   *bbeta<<=0.0;
   *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
 
-  VremanTsrMag <<= sqrt(*bbeta / *abeta);
+  VremanTsrMag <<= cond ( *abeta == 0.0, 0.0)
+                        (sqrt(*bbeta / *abeta));
 }
 
 //--------------------------------------------------------------------

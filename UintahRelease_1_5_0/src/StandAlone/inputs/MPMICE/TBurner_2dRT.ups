@@ -134,11 +134,11 @@
     
       <Level>
         <Box label="1">
-           <lower>        [-0.411, -0.069, -0.0015]   </lower>
+           <lower>        [-0.411, 0, -0.0015]   </lower>
            <upper>        [ 0.411,  0.069,  0.0015]   </upper>
            <extraCells>   [1,1,1]                     </extraCells>
            <patches>      [4,1,1]                     </patches> 
-           <resolution>   [274, 46, 1]                </resolution>
+           <resolution>   [274, 23, 1]                </resolution>
         </Box>
       </Level>
     </Grid>

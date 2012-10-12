@@ -503,6 +503,27 @@ ProblemSpec::get(const string& name, Vector &value)
   return ps;
 }
 
+ProblemSpec::InputType
+ProblemSpec::getInputType(const std::string& stringValue) {
+  std::string validChars(" +-.0123456789");
+  string::size_type  pos = stringValue.find_first_not_of(validChars);
+  if (pos != string::npos) {
+    // we either have a string or a vector
+    if ( stringValue.find_first_of("[") == 0 ) {
+      // this is most likely a vector vector
+      return ProblemSpec::VECTOR_TYPE;
+    } else {
+      // we have a string
+      return ProblemSpec::STRING_TYPE;
+    }
+  } else {
+    // otherwise we have a number
+    return ProblemSpec::NUMBER_TYPE;
+  }
+  return ProblemSpec::UNKNOWN_TYPE;
+}
+
+
 // value should probably be empty before calling this...
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<double>& value)
@@ -1124,6 +1145,18 @@ ProblemSpec::require(const string& name, vector<double>& value)
 }
 
 void
+ProblemSpec::require(const string& name, vector<string>& value)
+{
+  
+  // Check if the prob_spec is NULL
+  
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+  
+}
+
+
+void
 ProblemSpec::require(const string& name, vector<int>& value)
 {
 
@@ -1205,6 +1238,31 @@ ProblemSpec::getAttribute(const string& name, double &value) const
   }
           
   return true;
+}
+
+
+bool
+ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& result) const
+{
+  
+  map<string, string> attributes;
+  getAttributes(attributes);
+  
+  map<string,string>::iterator iter = attributes.find(attribute);
+  
+  if (iter != attributes.end()) {
+    std::string attributeName = iter->second;
+    std::stringstream ss(attributeName);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    result.assign(begin,end);
+    //std::vector<std::string> vstrings(begin, end);
+    //result = iter->second;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 

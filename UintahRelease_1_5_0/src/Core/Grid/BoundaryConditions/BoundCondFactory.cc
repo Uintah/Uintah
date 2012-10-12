@@ -61,21 +61,36 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
 
   double d_value;
   Vector v_value;
-
+  string s_value = "none";
+  string functor_name = "none";
+  
+  ProblemSpecP functorPS = child->findBlock( "functor_name" );
+  if (functorPS) child->get( "functor_name", functor_name );
+  
   ProblemSpecP valuePS = child->findBlock( "value" );
+  
+  if( valuePS != 0) { // Found <value> tag.
+    child->get( "value", s_value );
+    ProblemSpec::InputType theInputType = child->getInputType(s_value);
 
-  if( valuePS != 0) { // Found <value> tag.    
-    try {
-      child->get( "value", d_value );
-      bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label );
+    switch (theInputType) {
+      case ProblemSpec::NUMBER_TYPE:
+        child->get( "value", d_value );
+        bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+        break;
+      case ProblemSpec::VECTOR_TYPE:
+        child->get( "value", v_value );
+        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name );
+        break;
+      case ProblemSpec::STRING_TYPE:
+        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name );
+        break;
+      case ProblemSpec::UNKNOWN_TYPE:
+      default:
+        bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+        break;
     }
-    catch( ... ) {
-      // If there was an exception, then the 'value' was not a double... try to get a vector...
-      child->get( "value", v_value );
-      bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label );
-    }
-  }
-  else {
+  } else {
     bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
   }
 }
