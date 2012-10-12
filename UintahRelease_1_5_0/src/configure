@@ -42080,7 +42080,45 @@ $as_echo_n "checking for Boost files (For now we are just verifying the existenc
       fi
     done
     # Check for libraries files
-    BOOST_LIB_DIR=$with_boost/lib
+    _boost_lib=$with_boost
+    BOOST_LIB_DIR=
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_boost_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_boost_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_boost_lib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_boost_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_boost_lib/lib
+    fi
+  fi
+  eval BOOST_LIB_DIR='"$_new_lib_path"'
+
     for file in libboost_thread-mt libboost_signals-mt libboost_serialization-mt libboost_system-mt; do
       EXT=$SO_OR_ARCHIVE_EXTENSION
       if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
@@ -42106,7 +42144,7 @@ $as_echo "Found Boost" >&6; }
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
     INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
   fi
   HAVE_BOOST="yes"
 fi
