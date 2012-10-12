@@ -1413,7 +1413,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   //determining rho_ref so pressure does not go negative
   //modified EOS is used when pressure is lower than p_ref
   if(d_useJWLEOS && d_useModifiedEOS) {
-    double K0        = -987654321;
+    K0        = -987654321;
     rho_refrr = -987654321;
     computeRhoRef(rho_orig, p_ref,temperature, pressure, rho_refrr, K0);   
   }
@@ -1676,7 +1676,7 @@ void ViscoScram::computePressEOSCM(double rho_cur,
   
   //determining rho_ref so pressure does not go negative
   if(d_useJWLEOS && d_useModifiedEOS) {
-    double K0        = -987654321;
+    K0        = -987654321;
     rho_refrr = -987654321;
     computeRhoRef(rho_orig, p_ref,temperature, pressure, rho_refrr, K0);  
   }

@@ -103,13 +103,13 @@ WARNING
 
     enum { TEST, WAIT_ONCE, WAIT_ALL };
 
-    ConditionVariable        d_nextsignal;
-    Mutex                    d_nextmutex;            // conditional wait mutex
-    UnifiedSchedulerWorker*  t_worker[MAX_THREADS];  // workers
-    Thread*                  t_thread[MAX_THREADS];
+    ConditionVariable        d_nextsignal;           // conditional wait mutex
+    Mutex                    d_nextmutex;            // mutex
+    UnifiedSchedulerWorker*  t_worker[MAX_THREADS];  // the workers
+    Thread*                  t_thread[MAX_THREADS];  // the threads themselves
     Mutex                    dlbLock;                // load balancer lock
-    Mutex                    schedulerLock;          // scheduler lock
-    mutable CrowdMonitor     recvLock;
+    Mutex                    schedulerLock;          // scheduler lock (acquire and release quickly)
+    mutable CrowdMonitor     recvLock;               // multiple reader, single writer lock (pthread_rwlock_t wrapper)
 
 #ifdef HAVE_CUDA
 
@@ -221,6 +221,7 @@ WARNING
     int           numGPUs_;
     int           currentGPU_;
 
+    // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     mutable CrowdMonitor deviceComputesLock_;
     mutable CrowdMonitor hostComputesLock_;
     mutable CrowdMonitor deviceRequiresLock_;

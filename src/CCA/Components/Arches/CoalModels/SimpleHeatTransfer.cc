@@ -368,36 +368,6 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
     }
   }
 
-  // for each required scalar variable:
-  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter) {
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    /*
-    if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
-        if( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: SimpleHeatTransfer: Invalid variable given in <scalarVars> block for <variable> tag for SimpleHeatTransfer model.";
-          errmsg += "\nCould not find given <insert role name here> variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      }
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: SimpleHeatTransfer: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-    */
-
-  } //end for
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }
@@ -506,13 +476,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double scaled_weight;
       double unscaled_weight;
       // temperature - particle
-      double scaled_particle_temperature;
       double unscaled_particle_temperature;
       // paticle length
-      double scaled_length;
       double unscaled_length;
       // particle raw coal mass
-      double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
 
       // temperature - gas
@@ -549,20 +516,14 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         if(d_unweighted){
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
-          scaled_particle_temperature = w_particle_temperature[c];
           unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
-          scaled_length = w_particle_length[c];
           unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
           unscaled_raw_coal_mass = w_raw_coal_mass[c]*d_rc_scaling_constant;
         } else {
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
-          scaled_particle_temperature = (w_particle_temperature[c])/scaled_weight;
           unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
-          scaled_length = w_particle_length[c]/scaled_weight;
           unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
           unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
         }
 
@@ -573,15 +534,11 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         double unscaled_weight = 1.0e6;
         double scaled_weight = unscaled_weight;
         double unscaled_particle_temperature = 2000.0;
-        double scaled_particle_temperature = unscaled_particle_temperature;
         double d_pt_scaling_constant = 1.0;
         double gas_temperature = 2050;
         double unscaled_length = 1.0e-5;
-        double scaled_length = unscaled_length;
         double unscaled_raw_coal_mass = 1.0e-8;
-        double scaled_raw_coal_mass = unscaled_raw_coal_mass;
         double unscaled_ash_mass = 1.0e-9;
-        double scaled_ash_mass = unscaled_ash_mass;
         double density = 1;
         visc = 1.0e-5;
         // redefine composition array

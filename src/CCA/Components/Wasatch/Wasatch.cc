@@ -193,6 +193,7 @@ namespace Wasatch{
     {
       std::ostringstream msg;
       bool foundExtraCells = false;
+      bool isPeriodic = false;
       Uintah::ProblemSpecP grid = params->findBlock("Grid");
       for( Uintah::ProblemSpecP level = grid->findBlock("Level");
            level != 0;
@@ -200,6 +201,7 @@ namespace Wasatch{
         for( Uintah::ProblemSpecP box = level->findBlock("Box");
              box != 0;
              box = level->findNextBlock("Box") ){
+          isPeriodic = level->findBlock("periodic");
           // note that a [0,0,0] specification gets added by default,
           // so we will check to ensure that something other than
           // [0,0,0] has not been specified.
@@ -225,7 +227,7 @@ namespace Wasatch{
       }
 #endif
 #ifdef	WASATCH_IN_ARCHES
-      if( !foundExtraCells ){
+      if( !foundExtraCells && !isPeriodic ){
         msg << endl
         << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
         << "  Please add an 'extraCells' block to your input file" << endl
@@ -456,9 +458,15 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
-      std::string taskListName;
-      forceOnGraphParams->getAttribute("tasklist", taskListName);
-      force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
+      std::vector<std::string> taskListNames;
+      //std::string taskListName;
+      forceOnGraphParams->getAttribute("tasklist", taskListNames);
+      std::vector<std::string>::iterator taskListIter = taskListNames.begin();
+      while (taskListIter != taskListNames.end()) {
+        std::cout << "Force On Graph Task " << *taskListIter << std::endl;
+        force_expressions_on_graph(forceOnGraphParams, graphCategories_, *taskListIter);
+        ++taskListIter;
+      }
     }
     
   }
@@ -539,7 +547,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials_ );
@@ -623,7 +631,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        true, 1, ioFieldSet_ );
+                                                        1, ioFieldSet_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }

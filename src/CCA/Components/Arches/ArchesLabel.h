@@ -116,7 +116,7 @@ namespace Uintah {
       // Viscosity Labels
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_tauSGSLabel; 
+      const VarLabel* d_turbViscosLabel; 
       const VarLabel* d_scalarDiffusivityLabel;
       const VarLabel* d_enthalpyDiffusivityLabel;
       const VarLabel* d_reactScalarDiffusivityLabel;

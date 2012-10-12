@@ -85,7 +85,7 @@ if(!mms_type.empty()) {
   	double bulk = d_initialData.Bulk;
   	double lambda = (3.*bulk-2.*mu)/3.;
 
-  	double A=.1;
+  	double A=0.05;
                                                                                 
   	new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
   	new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);

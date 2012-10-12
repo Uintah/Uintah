@@ -86,6 +86,23 @@ WARNING
       //  If the string is not valid, a ProblemSetupException is thrown.
       enum CheckType { INT_TYPE, FLOAT_TYPE };
       static void checkForInputError( const std::string & stringValue, CheckType type );
+     
+     /**
+      * \enum InputType
+      * \brief Enum that helps in determining the datatype of some input from the input file.
+      */
+      enum InputType { NUMBER_TYPE,
+                       VECTOR_TYPE,
+                       STRING_TYPE,
+                       UNKNOWN_TYPE
+                      };
+     /**
+      *  \brief Function that returns InputType enum with the likely data contained in the string.
+      *  \param stringValue The input data that we wish to question for type information.
+                This is typically obtained from ProblemSpec::get("value", stringValue).
+      *  \return Returns an InputType enum with the likely data contained in the string. 
+      */
+      static ProblemSpec::InputType getInputType(const std::string& stringValue);
 
       enum NodeType {
         ELEMENT_NODE = 1, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE,
@@ -189,6 +206,11 @@ WARNING
       // then 'result' is not modified.
       bool getAttribute(const std::string& attribute, std::string& result) const;
 
+     //////////
+     // If 'attribute' is found, then 'result' is set to the attribute's value.  If it is not found,
+     // then 'result' is not modified.
+     bool getAttribute(const std::string& attribute, std::vector<std::string>& result) const;
+
       //////////
       // passes back the double value associated with value of this node's
       // attributes into result
@@ -259,6 +281,7 @@ WARNING
       void require(const std::string& name, std::vector<double>& value);
       void require(const std::string& name, std::vector<int>& value); 
       void require(const std::string& name, std::vector<IntVector>& value);
+      void require(const std::string& name, std::vector<std::string>& value);
 
       //////////
       // Look for the child tag named 'name' and pass back its

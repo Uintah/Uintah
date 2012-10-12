@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -36,7 +37,7 @@ using namespace Uintah;
 
 std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
 
-void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid)
+void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags)
 {
   ProblemSpecP test = ps->findBlock("PhysicalBC");
   if (test){
@@ -51,7 +52,7 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid)
 
     for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
         child = child->findNextBlock("pressure") ) {
-       mpmPhysicalBCs.push_back(scinew PressureBC(child, grid));
+       mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;

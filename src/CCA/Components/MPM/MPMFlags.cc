@@ -54,6 +54,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_artificialViscCoeff1 = 0.2;
   d_artificialViscCoeff2 = 2.0;
   d_useLoadCurves = false;
+  d_useCBDI = false;
   d_useCohesiveZones = false;
   d_createNewParticles = false;
   d_addNewMaterial = false;
@@ -185,6 +186,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
   mpm_flag_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
+  mpm_flag_ps->get("use_CBDI_boundary_condition", d_useCBDI);
   mpm_flag_ps->get("exactDeformation",d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones", d_useCohesiveZones);
 
@@ -345,6 +347,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
+    dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
@@ -371,6 +374,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("use_cohesive_zones", d_useCohesiveZones);
   ps->appendElement("use_load_curves", d_useLoadCurves);
+  ps->appendElement("use_CBDI_boundary_condition", d_useCBDI);
   ps->appendElement("exactDeformation",d_exactDeformation);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);

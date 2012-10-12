@@ -350,7 +350,7 @@
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
-                                    attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
+                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
@@ -362,7 +362,7 @@
                                   attribute2="matls OPTIONAL INTEGER"
                                   attribute3="level OPTIONAL STRING 'finest'" />
         <subcomponent               spec="MULTIPLE NO_DATA"
-                                  attribute1="type OPTIONAL STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
+                                  attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
                                                                     poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
@@ -550,6 +550,10 @@
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
                                                                      MassFlowInlet Swirl VelocityInlet, TurbulentInlet" />
+
+          <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
+          <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
+
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput, FromFile, TurbulentInlet" />
           
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
@@ -774,7 +778,6 @@
     <TestCutCells                      spec="REQUIRED BOOLEAN" />              
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
-
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM" />
 

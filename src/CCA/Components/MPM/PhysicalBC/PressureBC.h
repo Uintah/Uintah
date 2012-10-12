@@ -25,10 +25,12 @@
 
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Math/Matrix3.h>
 #include <iosfwd>
 
 namespace Uintah {
@@ -73,7 +75,7 @@ WARNING
       // the area over which pressure is to be applied
       // and the value of that pressure (in the form
       // of a load curve)
-      PressureBC(ProblemSpecP& ps, const GridP& grid);
+      PressureBC(ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags);
       ~PressureBC();
       virtual std::string getType() const;
 
@@ -114,6 +116,16 @@ WARNING
       Vector getForceVector(const Point& px, double forcePerParticle,
                             const double time) const;
 
+      // Get the force vector to be applied at 4 corners of the point 
+      Vector getForceVectorCBDI(const Point& px, const Matrix3& psize,
+                              const Matrix3& pDeformationMeasure,
+                              double forcePerParticle, const double time,
+                              Point& pExternalForceCorner1,
+                              Point& pExternalForceCorner2,
+                              Point& pExternalForceCorner3,
+                              Point& pExternalForceCorner4,
+                              const Vector& dxCell) const;
+
    private:
 
       // Prevent empty constructor
@@ -131,6 +143,7 @@ WARNING
       bool d_cylinder_end;
       bool d_axisymmetric_end;
       bool d_axisymmetric_side;
+      bool d_outwardNormal;
 
       // Load curve information (Pressure and time)
       LoadCurve<double>* d_loadCurve;

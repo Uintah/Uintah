@@ -38,7 +38,7 @@ echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PAR
 /bin/chmod a+x "$doTestScript"
 
 #__________________________________
-# run the python script that contains all the
+# run the python script that contains all
 # tests for that component
 rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
 "$doTestScript" > comp.log  2>&1
@@ -47,6 +47,44 @@ retval=$?
 mv comp.log "${componentTest}.log"
 cat "${componentTest}.log" >> summary_log
 cat "${componentTest}.log" >> "$HTMLLOG"
+
+#__________________________________
+# Find plots that were generated for this component and copy them to the 
+# public.html directory. Add a link to the web page and create a separate 
+# web page for the plots
+
+plot_HTML_dir=`dirname ${HTMLLOG}`
+plot_HTML_dir="$plot_HTML_dir/Plots"
+
+compDir="$componentTest-results"
+
+# memory Tests plots:
+#    The name of 
+nFound=`find $compDir -name "memHistory.png" | wc -l`
+
+if [ $nFound -gt 0 ]; then
+
+  # remove previous plots and copy plots to the public directory
+  /bin/rm -rf $plot_HTML_dir/Memory/$compDir >&/dev/null
+  find $compDir -name "memHistory.png" -print0 | cpio -pmd0 $plot_HTML_dir/Memory/ >&/dev/null
+
+  # create a separate web page for memory usage
+  memory_html="$plot_HTML_dir/Memory/$compDir/memoryPlots.html"
+  
+  #create link to memory_html on main web page
+  echo "<a href = \"Plots/Memory/$compDir/memoryPlots.html\">High water memory usage plots</a>" >> $HTMLLOG
+  
+  echo "<HTML><HEAD><TITLE> $componentTest High Water Memory</TITLE></HEAD><BODY><pre>" > $memory_html
+  echo " $componentTest high water memory usage" >> $memory_html
+  
+  # print out the links to the plots to the memory_html web page
+  #This is what you want:
+  #  <a href = hotBlob2mat/memHistory.png> hotBlob2mat</a>
+  # The find command prints out too much of the path so we prune it with sed
+  find $compDir -name "memHistory.png" -printf "<a href = %p> %h</a>\n"  | sed s/"$compDir\/"//g ->> $memory_html
+
+  echo "</pre></BODY></HTML>" >> $memory_html
+fi
 
 cd TestScripts
 

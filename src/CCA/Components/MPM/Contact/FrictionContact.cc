@@ -286,6 +286,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       if(!compare(centerOfMassMass,0.0)){
         Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
 
+        if(flag->d_axisymmetric){
+          // Nodal volume isn't constant for axisymmetry
+          // volume = r*dr*dtheta*dy  (dtheta = 1 radian)
+          double r = min((patch->getNodePosition(c)).x(),.5*dx.x());
+          cell_vol =  r*dx.x()*dx.y();
+        }
+
         // Only apply contact if the node is nearly "full".  There are
         // two options:
 
@@ -469,6 +476,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       // For grid points with mass calculate velocity
       if(!compare(centerOfMassMass,0.0)){
         Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+
+        if(flag->d_axisymmetric){
+          // Nodal volume isn't constant for axisymmetry
+          // volume = r*dr*dtheta*dy  (dtheta = 1 radian)
+          double r = min((patch->getNodePosition(c)).x(),.5*dx.x());
+          cell_vol =  r*dx.x()*dx.y();
+        }
 
         // Only apply contact if the node is nearly "full".  There are
         // two options:

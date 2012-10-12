@@ -53,6 +53,12 @@
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
+// BC Expressions Includes
+#include "BoundaryConditions/ConstantBC.h"
+#include "BoundaryConditions/LinearBC.h"
+#include "BoundaryConditions/ParabolicBC.h"
+#include "BoundaryConditions/BoundaryConditionBase.h"
+
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
@@ -710,6 +716,51 @@ namespace Wasatch{
 
     return builder;
   }
+  
+  //------------------------------------------------------------------
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_bc_expr( Uintah::ProblemSpecP params )
+  {
+    
+    std::cout << "registering bc expressions" << std::endl;
+
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    Expr::ExpressionBuilder* builder = NULL;
+    
+    std::string exprType;
+    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+    if( params->findBlock("Constant") ){
+      double val;  params->get("Constant",val);
+      typedef typename ConstantBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, val );
+    }
+
+    else if( params->findBlock("LinearFunction") ){
+      double slope, intercept;
+      Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename LinearBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, slope, intercept );
+    }
+
+    else if ( params->findBlock("ParabolicFunction") ) {
+      std::cout << "registering parabolic bc" << std::endl;
+      double a, b, c;
+      Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
+      valParams->getAttribute("a",a);
+      valParams->getAttribute("b",b);
+      valParams->getAttribute("c",c);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename ParabolicBC<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, a, b, c);
+    }
+    return builder;
+  }
 
   //------------------------------------------------------------------
 
@@ -864,7 +915,55 @@ namespace Wasatch{
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
+    
+    //___________________________________________________
+    // parse and build boundary condition expressions
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("BCExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("BCExpression") ){
+      
+      std::string fieldType;
+      exprParams->getAttribute("type",fieldType);
+      
+      // get the list of tasks
+      std::string taskNames;
+      exprParams->require("TaskList", taskNames);
+      std::stringstream ss(taskNames);
+      std::istream_iterator<std::string> begin(ss);
+      std::istream_iterator<std::string> end;
+      std::vector<std::string> taskNamesList(begin,end);      
+      std::vector<std::string>::iterator taskNameIter = taskNamesList.begin();
+      
+      // iterate through the list of tasks to which this expression is to be added
+      while (taskNameIter != taskNamesList.end()) {
+        std::string taskName = *taskNameIter;
 
+        switch( get_field_type(fieldType) ){
+          case SVOL : builder = build_bc_expr< SVolField >( exprParams );  break;
+          case XVOL : builder = build_bc_expr< XVolField >( exprParams );  break;
+          case YVOL : builder = build_bc_expr< YVolField >( exprParams );  break;
+          case ZVOL : builder = build_bc_expr< ZVolField >( exprParams );  break;
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported field type '" << fieldType << "' while trying to register BC expression.." << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        
+        Category cat = INITIALIZATION;
+        if     ( taskName == "initialization"   )   cat = INITIALIZATION;
+        else if( taskName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+        else{
+          std::ostringstream msg;
+          msg << "ERROR: unsupported task list '" << taskName << "' while parsing BCExpression." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        
+        GraphHelper* const graphHelper = gc[cat];
+        graphHelper->exprFactory->register_expression( builder );
+        
+        ++taskNameIter;
+      }
+    }
   }
 
   //------------------------------------------------------------------

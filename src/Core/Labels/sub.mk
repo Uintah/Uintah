@@ -35,7 +35,6 @@ SRCS     += \
 	$(SRCDIR)/MPMLabel.cc \
 	$(SRCDIR)/MPMICELabel.cc 
 
-
 PSELIBS := \
 	Core/Exceptions \
 	Core/Util \

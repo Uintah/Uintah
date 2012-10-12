@@ -1954,33 +1954,6 @@ DataArchiver::makeVersionedDir()
   // If there is a real error, then we can throw an exception because
   // we don't care about the memory penalty.
 
-  // The lab machines use a script that removes world readable permissions.
-  // Create the uda directory setgid csafe so that others in the csafe
-  // group can read. Also depends on umask, which is set in sus.cc
-#ifndef _WIN32
-  const int maxgroups = 20;
-  gid_t grouplist[maxgroups];
-  int num_groups = getgroups(maxgroups,grouplist);
-
-  // list of csafe gids on the various machines
-  const int num_csafe_gids = 3;
-  gid_t csafe_groups[num_csafe_gids];
-  csafe_groups[0] = 1079;  //sci csafe gid
-  csafe_groups[1] = 7545;  //alc uintah gid
-  csafe_groups[2] = 49875; //Q uintah gid
-
-  int found_gid = 0;
-  gid_t csafe_gid = (gid_t)-1;
-  for (int i = 0; i < num_groups && !found_gid; i++){
-    for (int j = 0; j < num_csafe_gids && !found_gid; j++){
-      if (grouplist[i] == csafe_groups[j]){
-        found_gid = 1;
-        csafe_gid = grouplist[i];
-      }
-    }
-  }
-#endif
-
   string dirName;
 
   // first check to see if the suffix passed in on the command line
@@ -1993,13 +1966,6 @@ DataArchiver::makeVersionedDir()
     
     int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) { // Created the directory successfully
-#ifndef _WIN32
-      if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
-        cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
-        cerr<<strerror(errno)<<endl;
-      }
-      chmod(dirName.c_str(),0751|S_ISGID);
-#endif
       dirCreated = true;
     }
     else if( errno != EEXIST )  {
@@ -2018,13 +1984,6 @@ DataArchiver::makeVersionedDir()
       
     int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) {// Created the directory successfully
-#ifndef _WIN32
-      if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
-        cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
-        cerr<<strerror(errno)<<endl;
-      }
-      chmod(dirName.c_str(),0751|S_ISGID);
-#endif
       dirMax = dirNum;
       if (dirMax == dirMin)
         dirCreated = true;

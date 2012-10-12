@@ -143,7 +143,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   }
 
   tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_tauSGSLabel); 
+  tsk->modifies(d_lab->d_turbViscosLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -174,7 +174,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> density;
     
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
@@ -184,7 +184,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
      
     
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
-    new_dw->getModifiable(tauSGS,    d_lab->d_tauSGSLabel, indx, patch ); 
+    new_dw->getModifiable(turbViscosity,    d_lab->d_turbViscosLabel, indx, patch ); 
                            
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
@@ -225,7 +225,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       viscosity[c] = compute_smag_viscos( uVelocity, vVelocity, wVelocity, 
           VelocityCC, density, pmixl, Dx, c ); 
 
-      tauSGS[c] = viscosity[c]; 
+      turbViscosity[c] = viscosity[c]; 
 
       viscosity[c] += mol_viscos; 
 
@@ -250,7 +250,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -265,7 +265,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -280,7 +280,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -295,7 +295,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -310,7 +310,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -325,7 +325,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -342,7 +342,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
             // Store current cell
             IntVector currCell(colX, colY, colZ);
             viscosity[currCell] *=  voidFraction[currCell];
-            tauSGS[currCell] *=  voidFraction[currCell];
+            turbViscosity[currCell] *=  voidFraction[currCell];
           }
         }
       }

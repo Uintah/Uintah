@@ -94,7 +94,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     amr->get("useLockStep", d_lockstepAMR);
 
   all_mpm_matls = 0;
-  all_angio_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
   all_spatialops_matls = 0;
@@ -167,8 +166,6 @@ void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
-
-
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
    arches_matls.push_back(matl);
@@ -210,16 +207,6 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
-  
-  if (all_angio_matls && all_angio_matls->removeReference())
-    delete all_angio_matls;
-  all_angio_matls = scinew MaterialSet();
-  all_angio_matls->addReference();
-  vector<int> tmp_angio_matls(angio_matls.size());
-  for( int i=0; i<(int)angio_matls.size(); i++ ) {
-    tmp_angio_matls[i] = angio_matls[i]->getDWIndex();
-  }
-  all_angio_matls->addAll(tmp_angio_matls);
   
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
@@ -302,9 +289,6 @@ void SimulationState::clearMaterials()
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
 
-  if(all_angio_matls && all_angio_matls->removeReference())
-    delete all_angio_matls;
-
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
 
@@ -320,7 +304,6 @@ void SimulationState::clearMaterials()
 
   matls.clear();
   mpm_matls.clear();
-  angio_matls.clear();
   arches_matls.clear();
   spatialops_matls.clear();
   ice_matls.clear();
@@ -331,7 +314,6 @@ void SimulationState::clearMaterials()
 
   all_matls = 0;
   all_mpm_matls = 0;
-  all_angio_matls = 0;
   all_arches_matls = 0;
   all_spatialops_matls = 0;
   all_ice_matls = 0;
@@ -362,7 +344,6 @@ const MaterialSet* SimulationState::allMPMMaterials() const
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
 }
-
 
 const MaterialSet* SimulationState::allArchesMaterials() const
 {

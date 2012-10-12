@@ -360,7 +360,10 @@ protected:
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
                                    
   Vector   d_acc_ans;               // debugging code used to check the answers (acceleration)
-  Vector   d_vel_ans;               // debugging code used to check the answers (velocity) 
+  double   d_acc_tol;
+  Vector   d_vel_ans;               // debugging code used to check the answers (velocity)
+  double   d_vel_tol;
+
 
   const VarLabel* pDbgLabel;        // debugging labels
   const VarLabel* gSumSLabel;                   

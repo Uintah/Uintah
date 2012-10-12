@@ -1468,7 +1468,7 @@ SchedulerCommon::scheduleParticleRelocation(const LevelP& level,
 }
 
 void
-SchedulerCommon::scheduleParticleRelocation(const LevelP& level,
+SchedulerCommon::scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
                                          const VarLabel* old_posLabel,
                                          const vector<vector<const VarLabel*> >& old_labels,
                                          const VarLabel* new_posLabel,
@@ -1481,7 +1481,7 @@ SchedulerCommon::scheduleParticleRelocation(const LevelP& level,
   reloc_new_posLabel_ = new_posLabel;
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  reloc1_.scheduleParticleRelocation( this, d_myworld, lb, level,
+  reloc1_.scheduleParticleRelocation( this, d_myworld, lb, coarsestLevelwithParticles,
                                      old_posLabel, old_labels,
                                      new_posLabel, new_labels,
                                      particleIDLabel, matls );

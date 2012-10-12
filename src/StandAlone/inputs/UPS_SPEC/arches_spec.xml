@@ -151,8 +151,8 @@
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
-      <Turbulence                       spec="REQUIRED NO_DATA"
-                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
+      <Turbulence                       spec="OPTIONAL NO_DATA"
+                                        attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky, wasatch'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />
         <mixture_fraction_label         spec="OPTIONAL STRING" /> <!-- for matching scalar with its label for variance calculation --> 
@@ -168,6 +168,7 @@
         <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
 
         <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
+        <use_new_filter                 spec="OPTIONAL NO_DATA"/> <!-- Don't adjust filter weights near boundaries --> 
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"

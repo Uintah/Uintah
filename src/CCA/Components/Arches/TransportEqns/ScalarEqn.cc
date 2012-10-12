@@ -395,7 +395,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
-  tsk->requires(Task::NewDW, d_fieldLabels->d_tauSGSLabel, Ghost::AroundCells, 1); 
+  tsk->requires(Task::NewDW, d_fieldLabels->d_turbViscosLabel, Ghost::AroundCells, 1); 
   tsk->requires(Task::NewDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
   tsk->requires(Task::NewDW, d_fieldLabels->d_vVelocitySPBCLabel, Ghost::AroundCells, 1); 
@@ -475,7 +475,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
-    new_dw->get(mu_t, d_fieldLabels->d_tauSGSLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(mu_t, d_fieldLabels->d_turbViscosLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel, d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 

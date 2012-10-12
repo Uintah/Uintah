@@ -168,6 +168,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew UdaReducer(world, uda);
   } 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2 or -poisson3"
                               "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }

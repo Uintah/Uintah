@@ -113,7 +113,7 @@
     <randomSeed>         false     </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
-    <NoOfRays>          10         </NoOfRays>
+    <NoOfRays>          3          </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>

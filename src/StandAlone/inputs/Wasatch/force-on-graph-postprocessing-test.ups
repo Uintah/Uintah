@@ -120,12 +120,11 @@
       </Pressure>
     </MomentumEquations>
 
-    <ForceOnGraph tasklist="initialization">
+    <ForceOnGraph tasklist="initialization advance_solution">
       <NameTag name="vel_magnitude" state="STATE_N" />
     </ForceOnGraph>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_N" />
       <NameTag name="vorticity_z" state="STATE_N" />
     </ForceOnGraph>
 
