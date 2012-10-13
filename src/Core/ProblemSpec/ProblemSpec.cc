@@ -505,7 +505,7 @@ ProblemSpec::get(const string& name, Vector &value)
 
 ProblemSpec::InputType
 ProblemSpec::getInputType(const std::string& stringValue) {
-  std::string validChars(" +-.0123456789");
+  std::string validChars(" +-.0123456789eE");
   string::size_type  pos = stringValue.find_first_not_of(validChars);
   if (pos != string::npos) {
     // we either have a string or a vector
