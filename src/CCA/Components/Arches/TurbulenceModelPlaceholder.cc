@@ -122,7 +122,7 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  //tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
   
 #ifdef WASATCH_IN_ARCHES
   std::string wasatchViscName = turbulent_viscosity_tag().name();
@@ -168,7 +168,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    constCCVariable<double> density;
+    //constCCVariable<double> density;
     
 #ifdef WASATCH_IN_ARCHES
     constCCVariable<double> wasatchTurbViscosity;
@@ -189,11 +189,11 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch );
     
 #ifdef WASATCH_IN_ARCHES
-    exists_ = exists_ && new_dw->exists(wasatchTurbViscLabel, archIndex, patch);
+    exists_ = exists_ && new_dw->exists(wasatchTurbViscLabel, indx, patch);
     if (exists_) new_dw->get(wasatchTurbViscosity, wasatchTurbViscLabel, indx, patch, gn, 0);
 #endif
     
-    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
+//    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
     
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
@@ -224,7 +224,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){      
       IntVector c = *iter;
-      viscosity[c] = density[c]*viscosity[c] + mol_viscos;
+      viscosity[c] = viscosity[c] + mol_viscos;
     }
 
 #ifndef WASATCH_IN_ARCHES
