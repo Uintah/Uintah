@@ -547,7 +547,7 @@ evaluate()
   *b33 <<= *a13 * *a13 + *a23 * *a23 + *a33 * *a33;
 
   SpatFldPtr<SVolField> abeta = SpatialFieldStore::get<SVolField>( VremanTsrMag );
-  *abeta<<=0.0; // abeta = aij * aij
+  *abeta <<= 0.0; // abeta = aij * aij
   *abeta <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
             + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
             + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
@@ -556,8 +556,16 @@ evaluate()
   *bbeta<<=0.0;
   *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
 
-  VremanTsrMag <<= cond ( *abeta == 0.0, 0.0)
-                        (sqrt(*bbeta / *abeta));
+  // TSAAD: The reason that we are using conditionals over here has to do with
+  // embedded boundaries. When embedded boundaries are present, and when taking
+  // the velocity field from Arches, it seems that bbeta/abeta are negative.
+  // This can be easily avoided by multiplying abeta and bbeta by the volume
+  // fraction. It seems, however, that some cells still exhibit undesirable behavior.
+  // It seems that the most conveninent and compact way of dealing with this is
+  // to check if either abeta or beta are negative * less than numeric_limits::epsilone *.
+  const double eps = std::numeric_limits<double>::epsilon();
+  VremanTsrMag <<= cond ( *abeta <= eps || *bbeta <= eps, 0.0    )
+                        ( sqrt(*bbeta / *abeta) );
 }
 
 //--------------------------------------------------------------------

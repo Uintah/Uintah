@@ -152,8 +152,8 @@ evaluate()
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
       *denom <<= 0.0;
       *denom <<= pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25);
-      result <<= cond(*denom == 0.0,0.0)
-                     (*rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / *denom);
+      result <<= cond( *denom == 0.0, 0.0 )
+                     ( *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / *denom );
     }
       break;
 
