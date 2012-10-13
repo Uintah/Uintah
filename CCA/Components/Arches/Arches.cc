@@ -645,7 +645,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                                                     d_boundaryCondition);
 #endif
   } else {
-    std::cout << "got here\n";
     // In case no turbulence model was specified, then use a dummy turbulence model that returns zero turbulent viscosity
     d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);    
@@ -654,9 +653,13 @@ Arches::problemSetup(const ProblemSpecP& params,
 //  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
+  
 #ifdef WASATCH_IN_ARCHES
-  d_turbModel->problemSetup(params->findBlock("Wasatch"));
+  // make sure that if we call problemSetup on the appropriate turbulence model
+  if ( d_whichTurbModel == "wasatch" )
+    d_turbModel->problemSetup(params->findBlock("Wasatch"));
 #endif
+  
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   if (d_dynScalarModel){
     d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
