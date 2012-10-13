@@ -119,13 +119,13 @@ QMOM( const Expr::TagList knownMomentsTaglist, const bool realizable)
   for (int i = 0; i<nMoments_; i++)
     pmatrix_[i].resize(nMoments_ + 1);
 
-  const int abSize = nMoments_/2;
+  const int nEnvironments = nMoments_/2;
   alpha_.resize(nMoments_);
-  a_.resize( abSize );
-  b_.resize( abSize );
-  jMatrix_.resize( abSize*abSize ); // note that jMatrix is stored as a vector for LAPACK
-  eigenValues_.resize( abSize );
-  weights_.resize(abSize);
+  a_.resize( nEnvironments );
+  b_.resize( nEnvironments );
+  jMatrix_.resize( nEnvironments*nEnvironments ); // note that jMatrix is stored as a vector for LAPACK
+  eigenValues_.resize( nEnvironments );
+  weights_.resize(nEnvironments);
   nonRealizablePoints_=0;
 }
 
@@ -181,7 +181,7 @@ evaluate()
   typedef std::vector<FieldT*> ResultsVec;
   ResultsVec& results = this->get_value_vec();
 
-  const int abSize = nMoments_/2;
+  const int nEnvironments = nMoments_/2;
   nonRealizablePoints_=0;
   
   // loop over interior points in the patch. To do this, we grab a sample
@@ -210,7 +210,7 @@ evaluate()
     if (  *knownMomentsIterators[0] == 0 ) {
       // in case m_0 is zero, set the weights to zero and abscissae to 1
       // helps with numerical staility
-      for (int i=0; i<abSize; ++i) {
+      for (int i=0; i<nEnvironments; ++i) {
         int matLoc = 2*i;
         *resultsIterators[matLoc] = 0.0;     // weight
         *resultsIterators[matLoc + 1] = 1.0; // abscissa
@@ -235,7 +235,7 @@ evaluate()
     }
     
     // put the weights and abscissae into the results of this expression
-    for (int i=0; i<abSize; ++i) {
+    for (int i=0; i<nEnvironments; ++i) {
       const int matLoc = 2*i;
       *resultsIterators[matLoc] = weights_[i];
       *resultsIterators[matLoc + 1] = eigenValues_[i];
@@ -243,7 +243,7 @@ evaluate()
 
     // verify that the weights and abscissae are stored properly in the resultsiterators
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-      for (int i=0; i<abSize; i++) {
+      for (int i=0; i<nEnvironments; i++) {
         int matLoc = 2*i;
         printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
         printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);
@@ -271,7 +271,7 @@ template< typename FieldT >
 bool
 QMOM<FieldT>::
 product_difference(const std::vector<typename FieldT::const_interior_iterator>& knownMomentsIterator) {
-  int abSize = nMoments_/2;  
+  int nEnvironments = nMoments_/2;  
   // initialize the p matrix
   for (int i=0; i<nMoments_; ++i) {
     for (int j=0; j<nMoments_+1; ++j) {
@@ -321,14 +321,14 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   bool needsReduction = false;
   int reduceBy = 0; // reduce the number of environments by this much in case of negative b
   int nReducedMoments = 0; // this is the new number of moments to use
-  for (int jCol=0; jCol < abSize-1; ++jCol) {
+  for (int jCol=0; jCol < nEnvironments-1; ++jCol) {
     const int twojcol = 2*jCol;
     a_[jCol] = alpha_[twojcol+1] + alpha_[twojcol];
     const double rhsB = alpha_[twojcol+1]*alpha_[twojcol+2];
     //
     if (rhsB < 0) {
       needsReduction = true;
-      reduceBy = jCol + 2;
+      reduceBy = nEnvironments - jCol -1;
       nReducedMoments = nMoments_ - 2*reduceBy;
       if ( !realizable_ ) {
         std::ostringstream errorMsg;
@@ -341,7 +341,7 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
 #ifdef WASATCH_QMOM_DIAGNOSTICS
         std::cout << "WARNING QMOM: Negative number detected in b auxiliary vector, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
 #endif
-        if (nReducedMoments <= 1) {
+        if (nReducedMoments < 1) {
           std::ostringstream errorMsg;
           errorMsg << std::endl << "ERROR QMOM: Cannot reduce the number of moments to 0. Existing..." << std::endl;
           throw std::runtime_error( errorMsg.str() );
@@ -352,14 +352,14 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     b_[jCol] = -std::sqrt(rhsB);
   }
   // fill in the last entry for a
-  a_[abSize-1] = alpha_[2*(abSize-1) + 1] + alpha_[2*(abSize-1)];
+  a_[nEnvironments-1] = alpha_[2*(nEnvironments-1) + 1] + alpha_[2*(nEnvironments-1)];
 
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<abSize; iRow++) {
+  for (int iRow=0; iRow<nEnvironments; iRow++) {
     printf("a[%i] = %f \t \t",iRow,a_[iRow]);
   }
   printf("\n");
-  for (int iRow=0; iRow<abSize; iRow++) {
+  for (int iRow=0; iRow<nEnvironments; iRow++) {
     printf("b[%i] = %f \t \t",iRow,b_[iRow]);
   }
   printf("\n");
@@ -372,20 +372,20 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   std::fill(weights_.begin(), weights_.end(),0.0);
   
   // if there is a need for realizability, reduce the number of environments
-  if(realizable_ && needsReduction) abSize -= reduceBy;
+  if(realizable_ && needsReduction) nEnvironments -= reduceBy;
   
   //___________________
   // construct J matrix. only fill in the values that are needed after moment reduction
   // The rest of the matrix remains zero.
-  for (int iRow=0; iRow<abSize - 1; ++iRow) {
-    jMatrix_[iRow+iRow*abSize] = a_[iRow];
-    jMatrix_[iRow+(iRow+1)*abSize] = b_[iRow];
-    jMatrix_[iRow + 1 + iRow*abSize] = b_[iRow];
+  for (int iRow=0; iRow<nEnvironments - 1; ++iRow) {
+    jMatrix_[iRow+iRow*nEnvironments] = a_[iRow];
+    jMatrix_[iRow+(iRow+1)*nEnvironments] = b_[iRow];
+    jMatrix_[iRow + 1 + iRow*nEnvironments] = b_[iRow];
   }
-  jMatrix_[abSize*abSize-1] = a_[abSize - 1];
+  jMatrix_[nEnvironments*nEnvironments-1] = a_[nEnvironments - 1];
   
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<abSize*abSize; iRow++) {
+  for (int iRow=0; iRow<nEnvironments*nEnvironments; iRow++) {
     printf("J[%i] = %f \t \t",iRow,jMatrix_[iRow]);
   }
   printf("\n");
@@ -394,7 +394,7 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   //__________
   // Eigenvalue solve
   /* Query and allocate the optimal workspace */
-  int n = abSize, lda = abSize, info, lwork;
+  int n = nEnvironments, lda = nEnvironments, info, lwork;
   double wkopt;
   lwork = -1;
   char jobz='V';
@@ -408,7 +408,7 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   bool status = ( info>0 || info<0 )? false : true;
   
 #ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<abSize; iRow++) {
+  for (int iRow=0; iRow<nEnvironments; iRow++) {
     printf("Eigenvalue[%i] = %.12f \t \t",iRow,eigenValues_[iRow]);
   }
   printf("\n");
@@ -417,8 +417,8 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   //__________
   // calculate the weights. The abscissae are stored in eigenValues_
   double m0 = *knownMomentsIterator[0];
-  for (int i=0; i<abSize; ++i) {
-    const int matLoc = i*abSize;
+  for (int i=0; i<nEnvironments; ++i) {
+    const int matLoc = i*nEnvironments;
     weights_[i] = jMatrix_[matLoc]*jMatrix_[matLoc]*m0;
   }
 
