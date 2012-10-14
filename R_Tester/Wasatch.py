@@ -43,7 +43,7 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("modifier-expression-test-multiple",   "modifier-expression-test-multiple.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                   \
+  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                   \
   ("read-from-file-test",   "read-from-file-test.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                   \
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -89,7 +89,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("modifier-expression-test-multiple",   "modifier-expression-test-multiple.ups",   1,  "All",   ["exactComparison","no_restart"] ),                   \
+  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "All",   ["exactComparison","no_restart"] ),                   \
   ("read-from-file-test",   "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                   \
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                   \
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
