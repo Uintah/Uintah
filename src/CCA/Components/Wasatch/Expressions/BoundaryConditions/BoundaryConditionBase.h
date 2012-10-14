@@ -45,8 +45,13 @@ class BoundaryConditionBase
 public:
   void set_interior_coef( const double coef) { ci_ = coef;}
   void set_ghost_coef( const double coef) { cg_ = coef;}
-  void set_interior_points( const std::vector<int> flatInteriorPoints ){flatInteriorPoints_ = flatInteriorPoints;}
-  void set_ghost_points( const std::vector<int> flatGhostPoints ){flatGhostPoints_ = flatGhostPoints;}
+  void set_interior_points( const std::vector<int> flatInteriorPoints ) {
+    flatInteriorPoints_.insert( flatInteriorPoints_.end(),flatInteriorPoints.begin(),flatInteriorPoints.end() );
+  }
+  void set_ghost_points( const std::vector<int> flatGhostPoints ){
+    flatGhostPoints_.insert( flatGhostPoints_.end(), flatGhostPoints.begin(), flatGhostPoints.end() );
+    //flatGhostPoints_ = flatGhostPoints;
+  }
 protected:
   double ci_, cg_;
   std::vector<int> flatInteriorPoints_;  
