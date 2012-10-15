@@ -5437,6 +5437,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = WALL;
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
+          my_info.mass_flow_rate = 0.0; 
           found_bc = true; 
 
         }
@@ -5729,7 +5730,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     constCCVariable<double> density; 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 
-    proc0cout << "\nBoundary condition summary for inlets: \n";
+    proc0cout << "\nDomain boundary condition summary: \n";
 
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
           bc_iter != d_bc_information.end(); bc_iter++){
@@ -5737,6 +5738,11 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       sum_vartype area_var;
       new_dw->get( area_var, bc_iter->second.total_area_label );
       double area = area_var; 
+
+      proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
+      proc0cout << "            area: " << area << endl;
+      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
 
