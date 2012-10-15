@@ -91,12 +91,6 @@ WARNING
 // #define ExactMPMArchesInitialize
 
 
-#ifdef HAVE_PETSC
-  #define PetscFilter
-#endif
-
-// Filtering of drhodt is now an input parameter for Properties
-
 # ifdef WASATCH_IN_ARCHES
   #include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
   namespace Wasatch{
@@ -120,10 +114,6 @@ namespace Uintah {
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
-
-#ifdef PetscFilter
-  class Filter;
-#endif
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -350,72 +340,67 @@ private:
   Wasatch::Wasatch* const d_wasatch;
 # endif // WASATCH_IN_ARCHES
 
-      double d_init_dt; // The initial dt from input file.
-      double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
-      bool d_variableTimeStep;
-      string d_whichTurbModel;
-      bool d_calcScalar;
-      bool d_calcReactingScalar;
-      bool d_calcEnthalpy;
-      bool d_calcNewEnthalpy;
-      bool d_calcVariance;
-      bool d_mixedModel;
-      bool d_doMMS;
-      bool d_with_mpmarches;
-      bool d_extraProjection;
+  double d_init_dt; // The initial dt from input file.
+  double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
+  bool d_variableTimeStep;
+  string d_whichTurbModel;
+  bool d_calcScalar;
+  bool d_calcReactingScalar;
+  bool d_calcEnthalpy;
+  bool d_calcNewEnthalpy;
+  bool d_calcVariance;
+  bool d_mixedModel;
+  bool d_doMMS;
+  bool d_with_mpmarches;
+  bool d_extraProjection;
 
-      ScaleSimilarityModel* d_scaleSimilarityModel;
-      PhysicalConstants* d_physicalConsts;
-      NonlinearSolver* d_nlSolver;
-      // properties...solves density, temperature and species concentrations
-      Properties* d_props;
-      // Turbulence Model
-      TurbulenceModel* d_turbModel;
-      // Boundary conditions
-      BoundaryCondition* d_boundaryCondition;
-      SimulationStateP d_sharedState;
-      // Variable labels that are used by the simulation controller
-      ArchesLabel* d_lab;
+  ScaleSimilarityModel* d_scaleSimilarityModel;
+  PhysicalConstants* d_physicalConsts;
+  NonlinearSolver* d_nlSolver;
+  // properties...solves density, temperature and species concentrations
+  Properties* d_props;
+  // Turbulence Model
+  TurbulenceModel* d_turbModel;
+  // Boundary conditions
+  BoundaryCondition* d_boundaryCondition;
+  SimulationStateP d_sharedState;
+  // Variable labels that are used by the simulation controller
+  ArchesLabel* d_lab;
 
-      const MPMArchesLabel* d_MAlab;
-#ifdef PetscFilter
-      Filter* d_filter;
-#endif
+  const MPMArchesLabel* d_MAlab;
 
-//      int nofTimeSteps;
+  string d_timeIntegratorType;
 
-    string d_timeIntegratorType;
+  std::vector<AnalysisModule*> d_analysisModules;
 
-    std::vector<AnalysisModule*> d_analysisModules;
+  bool d_set_initial_condition;
+  std::string d_init_inputfile;
 
-    bool d_set_initial_condition;
-    std::string d_init_inputfile;
+  bool d_set_init_vel_condition;    
+  std::string d_init_vel_inputfile;
 
-    bool d_set_init_vel_condition;    
-    std::string d_init_vel_inputfile;
+  TimeIntegratorLabel* init_timelabel;
+  bool init_timelabel_allocated;
+  bool d_dynScalarModel;
+  bool d_underflow;
+  string d_mms;
+  //linear mms
+  double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
+  //sine mms
+  double d_amp;
 
-    TimeIntegratorLabel* init_timelabel;
-    bool init_timelabel_allocated;
-    bool d_dynScalarModel;
-    bool d_underflow;
-    string d_mms;
-    //linear mms
-    double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
-    //sine mms
-    double d_amp;
+  // Variables----
+  vector<string> d_scalarEqnNames;
+  bool d_doDQMOM; // do we need this as a private member?
+  std::string d_which_dqmom;
+  int d_tOrder;
+  ExplicitTimeInt* d_timeIntegrator;
+  PartVel* d_partVel;
+  DQMOM* d_dqmomSolver;
 
-    // Variables----
-    vector<string> d_scalarEqnNames;
-    bool d_doDQMOM; // do we need this as a private member?
-    std::string d_which_dqmom;
-    int d_tOrder;
-    ExplicitTimeInt* d_timeIntegrator;
-    PartVel* d_partVel;
-    DQMOM* d_dqmomSolver;
-
-    bool d_doingRestart;
-    bool d_newBC_on_Restart;
-    bool d_do_dummy_solve; 
+  bool d_doingRestart;
+  bool d_newBC_on_Restart;
+  bool d_do_dummy_solve; 
 
 
 }; // end class Arches

@@ -48,8 +48,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
         $(SRCDIR)/NonlinearSolver.cc           \
-        $(SRCDIR)/OdtClosure.cc                \
-        $(SRCDIR)/OdtData.cc                   \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
         $(SRCDIR)/Properties.cc                \

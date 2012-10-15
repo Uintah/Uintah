@@ -91,6 +91,7 @@ CompDynamicProcedure::getMolecularViscosity() const {
   void 
 CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
+  problemSetupCommon( params ); 
   ProblemSpecP db = params->findBlock("Turbulence");
   if (d_calcVariance) {
 

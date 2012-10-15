@@ -33,7 +33,6 @@
 #include <CCA/Components/Arches/RHSSolver.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -478,7 +477,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefSrcLabel, gn, 0);
 //#endif
 
-  if ((dynamic_cast<const OdtClosure*>(d_turbModel))||d_mixedModel) {
+  if (d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
@@ -720,7 +719,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     //__________________________________
     // for scalesimilarity model add stress tensor to the source of velocity eqn.
-    if ((dynamic_cast<const OdtClosure*>(d_turbModel))||d_mixedModel) {
+    if (d_mixedModel) {
       StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
         for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {

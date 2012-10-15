@@ -83,9 +83,12 @@ ScaleSimilarityModel::getMolecularViscosity() const {
 void 
 ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
 {
-//  SmagorinskyModel::problemSetup(params);
+
   ProblemSpecP db = params->findBlock("ScaleSimilarity");
   db->require("cf", d_CF);
+
+  problemSetupCommon( params ); 
+
 }
 
 //****************************************************************************
@@ -120,6 +123,7 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,       gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,       gac, 1);
 
   // for multimaterial
   if (d_MAlab){
@@ -159,6 +163,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<double> scalar;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
     
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -170,14 +175,8 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch,gac, 1);
 
-#ifndef PetscFilter
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-#endif
-    
     // Get the patch and variable details
     // compatible with fortran index
     double CF = d_CF;
@@ -270,7 +269,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
         }
       }
     }
-    //#ifndef PetscFilter
+
 #if 1
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
@@ -698,100 +697,22 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenPhiW.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-#ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, Vel, filterUVel, 0);
-#if 0
-    cerr << "In the Scale Similarity print vVel" << endl;
-    vVel.print(cerr);
-#endif
 
-    d_filter->applyFilter(pc, patch, Vel, filterVVel, 1);
-#if 0
-    cerr << "In the Scale Similarity model after filter print filterVVel" << endl;
-    filterVVel.print(cerr);
-#endif
-
-    d_filter->applyFilter(pc, patch, Vel, filterWVel, 2);
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denUU, filterdenUU);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denUV, filterdenUV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denUW, filterdenUW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denVV, filterdenVV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denVW, filterdenVW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denWW, filterdenWW);
+    d_filter->applyFilter_noPetsc(pc, patch, Vel, filterVolume, cellType, filterUVel, 0);
+    d_filter->applyFilter_noPetsc(pc, patch, Vel, filterVolume, cellType, filterVVel, 1);
+    d_filter->applyFilter_noPetsc(pc, patch, Vel, filterVolume, cellType, filterWVel, 2);
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch,scalar, filterVolume, cellType, filterPhi);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denUU, filterVolume, cellType, filterdenUU);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denUV, filterVolume, cellType, filterdenUV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denUW, filterVolume, cellType, filterdenUW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denVV, filterVolume, cellType, filterdenVV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denVW, filterVolume, cellType, filterdenVW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denWW, filterVolume, cellType, filterdenWW);
     
-    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiU, filterdenPhiU);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiV, filterdenPhiV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiW, filterdenPhiW);
-#else
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          //double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-          //                       (2.0*cellinfo->stb[colZ]);
-          //double invDelta = 1.0/cube_delta;
-          filterDen[currCell] = 0.0;
-          filterUVel[currCell] = 0.0;
-          filterVVel[currCell] = 0.0;
-          filterWVel[currCell] = 0.0;
-          filterdenUU[currCell] = 0.0;
-          filterdenUV[currCell] = 0.0;
-          filterdenUW[currCell] = 0.0;
-          filterdenVV[currCell] = 0.0;
-          filterdenVW[currCell] = 0.0;
-          filterdenWW[currCell] = 0.0;
-          filterPhi[currCell] = 0.0;
-          filterdenPhiU[currCell] = 0.0;
-          filterdenPhiV[currCell] = 0.0;
-          filterdenPhiW[currCell] = 0.0;
-          double totalVol = 0;
-          for (int kk = -1; kk <= 1; kk ++) {
-            for (int jj = -1; jj <= 1; jj ++) {
-              for (int ii = -1; ii <= 1; ii ++) {
-                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-                             cellinfo->stb[colZ+kk]*
-                             (1.0-0.5*abs(ii))*
-                             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                totalVol += vol;
-                //                filterDen[currCell] += den[filterCell]*vol; 
-                filterDen[currCell] += den[currCell]*vol; 
-                filterUVel[currCell] += Vel[filterCell].x()*vol; 
-                filterVVel[currCell] += Vel[filterCell].y()*vol; 
-                filterWVel[currCell] += Vel[filterCell].z()*vol;
-                filterdenUU[currCell] += denUU[filterCell]*vol;  
-                filterdenUV[currCell] += denUV[filterCell]*vol;  
-                filterdenUW[currCell] += denUW[filterCell]*vol;  
-                filterdenVV[currCell] += denVV[filterCell]*vol;  
-                filterdenVW[currCell] += denVW[filterCell]*vol;  
-                filterdenWW[currCell] += denWW[filterCell]*vol;  
-                filterPhi[currCell] += scalar[filterCell]*vol; 
-                filterdenPhiU[currCell] += denPhiU[filterCell]*vol;  
-                filterdenPhiV[currCell] += denPhiV[filterCell]*vol;  
-                filterdenPhiW[currCell] += denPhiW[filterCell]*vol;  
-              }
-            }
-          }
-          
-          filterDen[currCell] /= totalVol;
-          filterUVel[currCell] /= totalVol;
-          filterVVel[currCell] /= totalVol;
-          filterWVel[currCell] /= totalVol;
-          filterdenUU[currCell] /= totalVol;
-          filterdenUV[currCell] /= totalVol;
-          filterdenUW[currCell] /= totalVol;
-          filterdenVV[currCell] /= totalVol;
-          filterdenVW[currCell] /= totalVol;
-          filterdenWW[currCell] /= totalVol;
-          filterPhi[currCell] /= totalVol;
-          filterdenPhiU[currCell] /= totalVol;
-          filterdenPhiV[currCell] /= totalVol;
-          filterdenPhiW[currCell] /= totalVol;
-        }
-      }
-    }
-#endif
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denPhiU, filterVolume, cellType, filterdenPhiU);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denPhiV, filterVolume, cellType, filterdenPhiV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, denPhiW, filterVolume, cellType, filterdenPhiW);
+
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
