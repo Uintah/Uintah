@@ -12,6 +12,7 @@ SRCS += \
         $(SRCDIR)/TabStripFactor.cc \
         $(SRCDIR)/EmpSoot.cc \
         $(SRCDIR)/AlgebraicScalarDiss.cc \
+        $(SRCDIR)/ScalarVarianceScaleSim.cc \
         $(SRCDIR)/ConstProperty.cc
 
 

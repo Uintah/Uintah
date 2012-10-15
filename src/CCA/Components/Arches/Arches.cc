@@ -668,7 +668,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
 #ifdef PetscFilter
-    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld, use_old_filter);
+    d_filter = scinew Filter(d_sharedState->allArchesMaterials(), d_myworld, use_old_filter);
     d_filter->problemSetup(db);
     d_turbModel->setFilter(d_filter);
 #endif
