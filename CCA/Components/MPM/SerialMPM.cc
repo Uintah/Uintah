@@ -3149,15 +3149,15 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
          double t4 = d_prescribedTimes[s+3];  
          if (time == 0 && t4 != 0)
          {
-	    new_dw->put(delt_vartype(t3 - t2), d_sharedState->get_delt_label(), getLevel(patches));
+            new_dw->put(delt_vartype(t3 - t2), d_sharedState->get_delt_label(), getLevel(patches));
          } 
          else
          {
             F_high = d_prescribedF[s + 2]; //next prescribed deformation gradient
-      	    F_low  = d_prescribedF[s + 1]; //last prescribed deformation gradient
-       	    t3 = d_prescribedTimes[s+2];
+            F_low  = d_prescribedF[s + 1]; //last prescribed deformation gradient
+            t3 = d_prescribedTimes[s+2];
             t4 = d_prescribedTimes[s+3];
-	    double tst = t4 - t3; 
+            double tst = t4 - t3; 
             Ft = F_low*(t2-time)/(t2-t1) + F_high*(time-t1)/(t2-t1);
             Fdot = (F_high - F_low)/(t3-t2);
             thetadot = PrescribedTheta*(degtorad)/(t3-t2);
@@ -3339,6 +3339,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forcePerPart[loadCurveID];
+              
               if (flags->d_useCBDI) {
                Vector dxCell = patch->dCell();
                pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
@@ -3361,23 +3362,21 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         }
       } else {
 // MMS
-	string mms_type = flags->d_mms_type;
+        string mms_type = flags->d_mms_type;
          if(!mms_type.empty()) {
-		MMS MMSObject;
-		MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);
-	  } else { 
-         // Get the external force data and allocate new space for
-         // external force and copy the data
-         constParticleVariable<Vector> pExternalForce;
-         old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+           MMS MMSObject;                                                                                
+           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);    
+         } else { 
+          // Get the external force data and allocate new space for
+          // external force and copy the data
+          constParticleVariable<Vector> pExternalForce;
+          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 
-         for(ParticleSubset::iterator iter = pset->begin();
-             iter != pset->end(); iter++){
-           particleIndex idx = *iter;
-           pExternalForce_new[idx] = 
-                   pExternalForce[idx]*flags->d_forceIncrementFactor;
-	    }
-         }
+          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+          }
+        }
       }
     } // matl loop
   }  // patch loop
@@ -4439,43 +4438,43 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
         Vector velTop(0.0,0.0,0.0);
         Vector velBot(0.0,0.0,0.0);
-	double massTop = 0.0;
-	double massBot = 0.0;
-	double mass_ratio = 0.0;
+        double massTop = 0.0;
+        double massBot = 0.0;
+        double mass_ratio = 0.0;
         int TopMat = czTopMat[idx];
         int BotMat = czBotMat[idx];
-	double cell_volume = dx.x()*dx.y()*dx.z();
-	//double denseTop = rho_init[TopMat];
-	//double denseBot = rho_init[BotMat];
-	double TOPMAX = 0.0;
-	double BOTMAX = 0.0;
-	
-//  	if (denseBot != denseTop){
-//    	   throw ProblemSetupException("Different densities not allowed for Bottom and Top Material of Cohesive Zone",
+        double cell_volume = dx.x()*dx.y()*dx.z();
+        //double denseTop = rho_init[TopMat];
+        //double denseBot = rho_init[BotMat];
+        double TOPMAX = 0.0;
+        double BOTMAX = 0.0;
+        
+//      if (denseBot != denseTop){
+//         throw ProblemSetupException("Different densities not allowed for Bottom and Top Material of Cohesive Zone",
 //                                 __FILE__, __LINE__);
-//  	}
+//      }
 
-	//double density_ratio = denseTop/denseBot;
+        //double density_ratio = denseTop/denseBot;
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
           velTop      += gvelocity[TopMat][node] * S[k];
           velBot      += gvelocity[BotMat][node] * S[k];
-	  massTop     += gmass[TopMat][node]*S[k];
-	  TOPMAX      += cell_volume;
-	  massBot     += gmass[BotMat][node]*S[k];
-	  BOTMAX      += cell_volume;
+          massTop     += gmass[TopMat][node]*S[k];
+          TOPMAX      += cell_volume;
+          massBot     += gmass[BotMat][node]*S[k];
+          BOTMAX      += cell_volume;
         }
-	massTop = massTop/TOPMAX;
-	massBot = massBot/BOTMAX;
-	if (massBot > 0.0) {
-	    mass_ratio = massTop/massBot;
-	    mass_ratio = min(mass_ratio,1.0/mass_ratio);
-	}
-	else {
-	    mass_ratio = 0.0;
-	}
-	double mass_correction_factor = mass_ratio;
+        massTop = massTop/TOPMAX;
+        massBot = massBot/BOTMAX;
+        if (massBot > 0.0) {
+            mass_ratio = massTop/massBot;
+            mass_ratio = min(mass_ratio,1.0/mass_ratio);
+        }
+        else {
+            mass_ratio = 0.0;
+        }
+        double mass_correction_factor = mass_ratio;
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
@@ -4523,7 +4522,7 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           czFailed_new[idx]=2;
           czf=1.0;
         }
-	else {
+        else {
           czFailed_new[idx]=0;
         }
 
