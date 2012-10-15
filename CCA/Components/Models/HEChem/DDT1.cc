@@ -382,6 +382,9 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
                          &DDT1::computeBurnLogic, mi);    
     
   printSchedule(level,cout_doing,"DDT1::computeBurnLogic");  
+    if(d_useCrackModel){  
+    t1->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
+  }
   //__________________________________
   // Requires
   //__________________________________
@@ -390,7 +393,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
   t1->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
   t1->requires(Task::OldDW, Mlb->pXLabel,              mpm_matls,  gn);
-  t1->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
   
   //__________________________________
   // Products
@@ -664,7 +666,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         
         detonating[c] = 1;   // Flag for detonating 
         
-      } else if(press_CC[c] < d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) {
+      } else if(press_CC[c] <  d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) {
           // Steady Burn Model for deflagration
           IntVector c = *iter;
           patch->findNodesFromCell(*iter,nodeIdx);
