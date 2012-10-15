@@ -21,6 +21,7 @@
  */#include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -1917,10 +1918,6 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
                                                             psize[idx],pDeformationMeasure[idx]);
 
         stresspress = pstress[idx];
-        
-/*`==========TESTING==========*/
-//        stresspress = Matrix3(0);                 //HARDWIRED
-/*===========TESTING==========`*/
 
         for (int k = 0; k < n8or27; k++){
           
@@ -2162,23 +2159,26 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
       for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
+        
+        Vector acc(0,0,0);
         if (gmass[n] > flags->d_min_mass_for_acceleration){
-          Vector acc = (internalforce[n] + externalforce[n])/gmass[n];
-          gacceleration[n]  = acc +  gravity;
-          gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
+          acc = (internalforce[n] + externalforce[n])/gmass[n];
+        }
+        gacceleration[n]  = acc +  gravity;
+        gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
+          
 /*`==========TESTING==========*/
 #ifdef DEBUG_ACC
-          if( abs(gacceleration[n].length() - d_acc_ans.length()) > d_acc_tol ) {
-            Vector diff = gacceleration[n] - d_acc_ans;
-            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
-                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] 
-                 << " diff: " << diff
-                 << " gmass: " << gmass[n] 
-                 << " gravity: " << gravity << endl;
-          }
+        if( abs(gacceleration[n].length() - d_acc_ans.length()) > d_acc_tol ) {
+          Vector diff = gacceleration[n] - d_acc_ans;
+          cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
+               <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] 
+               << " diff: " << diff
+               << " gmass: " << gmass[n] 
+               << " gravity: " << gravity << endl;
+        }
 #endif 
 /*===========TESTING==========`*/
-        }
       }
     }  // matls
   }  // patches
@@ -2205,7 +2205,6 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-
       
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
@@ -2218,19 +2217,16 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
           
       //__________________________________
       // Apply grid boundary conditions to velocity_star and acceleration
-      if( patch->hasBoundaryFaces() && !patch->hasCoarseFaces() ){
-        IntVector node(10,10,0);
+      if( patch->hasBoundaryFaces() ){
+        IntVector node(0,4,4);
         //cout << "    L-"<< getLevel(patches)->getIndex() << " before setBC  gvelocity_star: " << gvelocity_star[node] << endl;
         
 
         MPMBoundCond bc;
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
-        
-        //cout << "    L-"<< getLevel(patches)->getIndex() << " After setBC  gvelocity_star: " << gvelocity_star[node] << endl;
-        
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
 
-       //cout << "    L-"<< getLevel(patches)->getIndex() <<  " After setBC2  gvelocity_star: " << gvelocity_star[node] << endl;
+        //cout << "    L-"<< getLevel(patches)->getIndex() <<  " After setBC2  gvelocity_star: " << gvelocity_star[node] << endl;
        
         // Now recompute acceleration as the difference between the velocity
         // interpolated to the grid (no bcs applied) and the new velocity_star
@@ -2239,7 +2235,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
           gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
         }
         // Set symmetry BCs on acceleration
-        bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
+        //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
       } 
       
       //__________________________________
@@ -2485,11 +2481,18 @@ void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
       new_dw->allocateAndPut(pExternalForce_new, 
                              lb->pExtForceLabel_preReloc,  pset);
 
-      // Iterate over the particles
-      ParticleSubset::iterator iter = pset->begin();
-      for(;iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+
+      string mms_type = flags->d_mms_type;
+      if(!mms_type.empty()) {
+        MMS MMSObject;                                                                                
+        MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);
+      } else {
+        // Iterate over the particles
+        ParticleSubset::iterator iter = pset->begin();
+        for(;iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+        }
       }
     } // matl loop
   }  // patch loop
@@ -2619,7 +2622,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempNew[idx]        = pTemperature[idx];
         pTempPreNew[idx]     = pTemperature[idx]; //
         pmassNew[idx]        = pmass[idx];
-        pvolumeNew[idx]      = pvolume[idx];
+//        pvolumeNew[idx]      = pvolume[idx];          This will be eventually modified by the burn model
         
 /*`==========TESTING==========*/
 #ifdef DEBUG_VEL
