@@ -38,7 +38,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/BoundaryCond_new.cc          \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
-        $(SRCDIR)/CompLocalDynamicProcedure.cc \
         $(SRCDIR)/Discretization.cc            \
         $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/EnthalpySolver.cc            \

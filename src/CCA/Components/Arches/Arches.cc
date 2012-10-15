@@ -79,7 +79,6 @@
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
-#include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
 #include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
@@ -144,7 +143,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
   d_props                 =  0;
   d_turbModel             =  0;
-  d_initTurb              =  0;
   d_scaleSimilarityModel  =  0;
   d_boundaryCondition     =  0;
   d_nlSolver              =  0;
@@ -175,7 +173,6 @@ Arches::~Arches()
   delete d_lab;
   delete d_props;
   delete d_turbModel;
-  delete d_initTurb;
   delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
   delete d_nlSolver;
@@ -633,9 +630,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   }else if ( d_whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( d_whichTurbModel == "complocaldynamicprocedure") {
-    d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
-    d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
 #ifdef WASATCH_IN_ARCHES
   } else  if ( d_whichTurbModel == "wasatch"){
     
@@ -1029,10 +1023,8 @@ Arches::scheduleInitialize(const LevelP& level,
                                                             init_timelabel);
     }
 
-    if (d_whichTurbModel == "complocaldynamicprocedure")
-      d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
-    else
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+
   }
 
   //______________________
