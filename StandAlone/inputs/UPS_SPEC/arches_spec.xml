@@ -265,7 +265,7 @@
           <slowfastchem                 spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
-          <inertmixing                  spec="OPTIONAL NO_DATA"
+          <inert_mixing                 spec="OPTIONAL NO_DATA"
                                         attribute1="fp_label REQUIRED STRING"
                                         attribute2="eta_label REQUIRED STRING"
                                         attribute3="inert_label REQUIRED STRING"/> <!-- Attributes must match the transported IV's and the transported IV --> 
@@ -549,7 +549,7 @@
         <Eqn                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type  REQUIRED STRING 'CCscalar'">
-          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)) -->    
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)), default = 0.4 -->    
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
           <addSources                   spec="OPTIONAL BOOLEAN"/> <!-- Add sources on/off --> 
@@ -557,8 +557,11 @@
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
           <scaling_const                spec="OPTIONAL DOUBLE"/>  <!-- Not used at the moment -->                               
+          <!-- Regarding the density guess (next two specs): If the equation is enthalpy or a table parameter, then density_guess=true is automatically set for you.
+               You don't need to set it again if you don't want to. --> 
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
-          <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true --> 
+          <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true. Has the same effect as <use_density_guess> --> 
+          <!--                                                -->
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/> <!-- Pointer to sources defined elsewhere --> 
           <D_mol                        spec="OPTIONAL NO_DATA" 
