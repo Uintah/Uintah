@@ -127,6 +127,13 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     EqnFactory& eqn_factory = EqnFactory::self();
     EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
     std::vector<std::string> srcs = eqn.getSourcesList(); 
+    //check density guess -- must be true in this case: 
+    if ( !eqn.getDensityGuessBool() ){ 
+      proc0cout << " Warning: For equation named " << d_enthalpy_name << endl 
+        << "     Density guess must be used for this equation because it determines properties." << endl
+        << "     Automatically setting density guess = true. " << endl;
+      eqn.setDensityGuessBool( true ); 
+    } 
     for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
 
       //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
@@ -202,6 +209,14 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // then it must be a mixture fraction 
       EqnFactory& eqn_factory = EqnFactory::self();
       EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
+      //check if it uses a density guess (which it should) 
+      //if it isn't set properly, then do it automagically for the user
+      if (!eqn.getDensityGuessBool()){ 
+        proc0cout << " Warning: For equation named " << varName << endl 
+          << "     Density guess must be used for this equation because it determines properties." << endl
+          << "     Automatically setting density guess = true. " << endl;
+        eqn.setDensityGuessBool( true ); 
+      }
       d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel()));
 
     }
@@ -339,6 +354,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    MixingRxnModel::InertMixing* inert_transform=0; 
+    if ( d_does_post_mixing && d_has_transform ){ 
+      inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
+    }
+
     constCCVariable<double> eps_vol; 
     constCCVariable<int> cell_type; 
     new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
@@ -467,7 +487,19 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       }
 
       // do a variable transform (if specified)
-      _iv_transform->transform( iv ); 
+      double total_inert_f = 0.0; 
+      for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+          inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+        double inert_f = inert_iter->second.var[c];
+        total_inert_f += inert_f; 
+      }
+
+      if ( d_does_post_mixing && d_has_transform ) { 
+        inert_transform->transform( iv, total_inert_f ); 
+      } else { 
+        _iv_transform->transform( iv ); 
+      }
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -612,7 +644,19 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             }
           }
 
-          _iv_transform->transform( iv ); 
+          double total_inert_f = 0.0; 
+          for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+              inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+            double inert_f = inert_iter->second.var[c];
+            total_inert_f += inert_f; 
+          }
+
+          if ( d_does_post_mixing && d_has_transform ) { 
+            inert_transform->transform( iv, total_inert_f ); 
+          } else { 
+            _iv_transform->transform( iv ); 
+          }
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -829,6 +873,10 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     std::string heat_loss_string; 
+    MixingRxnModel::InertMixing* inert_transform=0; 
+    if ( d_does_post_mixing && d_has_transform ){ 
+      inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
+    }
 
     CCVariable<double> heat_loss; 
     if ( initialize_me )
@@ -899,7 +947,19 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
           index++; 
         }
 
-        _iv_transform->transform( iv ); 
+        double total_inert_f = 0.0; 
+        for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+            inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+          double inert_f = inert_iter->second.var[c];
+          total_inert_f += inert_f; 
+        }
+
+        if ( d_does_post_mixing && d_has_transform ) { 
+          inert_transform->transform( iv, total_inert_f ); 
+        } else { 
+          _iv_transform->transform( iv ); 
+        }
 
         // actually compute the heat loss: 
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
@@ -1027,6 +1087,11 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    MixingRxnModel::InertMixing* inert_transform=0; 
+    if ( d_does_post_mixing && d_has_transform ){ 
+      inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
+    }
+
     CCVariable<double> enthalpy; 
     new_dw->getModifiable( enthalpy, d_enthalpy_label, matlIndex, patch ); 
 
@@ -1087,7 +1152,19 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
         index++; 
       }
 
-      _iv_transform->transform( iv ); 
+      double total_inert_f = 0.0; 
+      for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
+          inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
+
+        double inert_f = inert_iter->second.var[c];
+        total_inert_f += inert_f; 
+      }
+
+      if ( d_does_post_mixing && d_has_transform ) { 
+        inert_transform->transform( iv, total_inert_f ); 
+      } else { 
+        _iv_transform->transform( iv ); 
+      }
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
@@ -1152,7 +1229,11 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
     }
   }
 
-  _iv_transform->transform( iv ); 
+  if ( d_does_post_mixing && d_has_transform ) { 
+    throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
+  } else { 
+    _iv_transform->transform( iv ); 
+  }
 
   double f                 = 0.0; 
   double adiab_enthalpy    = 0.0; 

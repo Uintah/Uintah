@@ -130,6 +130,11 @@ public:
     return d_use_density_guess; 
   };
 
+  /** @brief Set the density guess bool **/ 
+  inline bool setDensityGuessBool( bool set_point ){ 
+    d_use_density_guess = set_point; 
+  };
+
   /** @brief Return a list of all sources associated with this transport equation */ 
   inline const vector<string> getSourcesList(){
     return d_sources; };

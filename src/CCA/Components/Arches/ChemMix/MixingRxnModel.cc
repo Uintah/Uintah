@@ -79,6 +79,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
   db->getWithDefault("temperature_label_name", _temperature_label_name, "temperature"); 
 
   // create a transform object
+  d_has_transform = true; 
   if ( db->findBlock("coal") ) {
 
     double constant = 0.0; 
@@ -99,9 +100,14 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
 
     _iv_transform = scinew SlowFastTransform(); 
 
+  } else if ( db->findBlock("inert_mixing") ) {
+
+    _iv_transform = scinew InertMixing(); 
+
   } else { 
 
     _iv_transform = scinew NoTransform();
+    d_has_transform = false; 
 
   }
 
@@ -250,4 +256,6 @@ MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(con
 MixingRxnModel::CoalTransform::~CoalTransform(){}
 MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
 MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}
+MixingRxnModel::InertMixing::InertMixing(){}
+MixingRxnModel::InertMixing::~InertMixing(){}
 
