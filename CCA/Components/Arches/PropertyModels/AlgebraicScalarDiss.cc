@@ -15,7 +15,7 @@ AlgebraicScalarDiss::AlgebraicScalarDiss( std::string prop_name, SimulationState
   //_extra_local_labels.push_back( _something_label ); 
   
   // Evaluated before or after table lookup: 
-  _before_table_lookup = false; 
+  _before_table_lookup = true; 
 
 }
 
@@ -73,7 +73,7 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
 
     tsk->computes( _prop_label );
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::OldDW, _mf_label, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _mu_t_label, Ghost::None, 0 ); 
 
   } else { 
 

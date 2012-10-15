@@ -88,8 +88,7 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Construct an instance of a Filter.
-  Filter(const ArchesLabel* label,
-         BoundaryCondition* bndryCondition,
+  Filter(const MaterialSet* matls,
          const ProcessorGroup* myworld, 
          bool use_old_filter);
 
@@ -397,13 +396,81 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
   return it_worked;
 }
 //______________________________________________________________________
+// Specialized filter for filtering vector components
+// dim = vector dimention
+bool applyFilter_noPetsc(const ProcessorGroup* ,
+                         const Patch* patch,               
+                         constCCVariable<Vector>& var,                           
+                         constCCVariable<double>& filterVol, 
+                         constCCVariable<int>& cellType, 
+                         Array3<double>& filterVar,
+                         int dim )        
+{
+
+  bool it_worked = false; 
+
+  if ( d_use_old_filter ){ 
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+      int filter_width = 3; //hard coded for now
+      int shift = (filter_width-1)/2;
+
+      filterVar[c] = 0.0; 
+
+      for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+        for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+          for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+            IntVector offset = c + IntVector(i,j,k);
+            if ( cellType[offset] == -1 ){ 
+              filterVar[c] += filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)][dim]; 
+            }
+
+          }
+        }
+      }
+
+      filterVar[c] /= filterVol[c]; 
+
+    }
+
+    it_worked = true; 
+
+  } else { 
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+      int filter_width = 3; //hard coded for now
+      int shift = (filter_width-1)/2;
+
+      filterVar[c] = 0.0; 
+
+      for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+        for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+          for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+            filterVar[c] += filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)][dim]; 
+
+          }
+        }
+      }
+
+    }
+
+    it_worked = true; 
+
+  } 
+  return it_worked;
+}
+//______________________________________________________________________
+//______________________________________________________________________
 protected:
 
 private:
   const ProcessorGroup* d_myworld;
   const PatchSet* d_perproc_patches;
-  const ArchesLabel* d_lab;
-  BoundaryCondition* d_boundaryCondition;
+  const MaterialSet* d_matls; 
 
   bool d_matrixInitialize;
   bool d_matrix_vectors_created;

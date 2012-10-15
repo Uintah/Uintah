@@ -43,11 +43,10 @@ using namespace Uintah;
 // ****************************************************************************
 // Default constructor for Filter
 // ****************************************************************************
-Filter::Filter( const ArchesLabel* label,
-                BoundaryCondition* bndryCondition,
+Filter::Filter( const MaterialSet* matls,
                 const ProcessorGroup* myworld,
                 bool use_old_filter ) :
-  d_myworld(myworld), d_lab(label), d_boundaryCondition(bndryCondition), d_use_old_filter(use_old_filter)
+  d_myworld(myworld), d_matls(matls), d_use_old_filter(use_old_filter)
 {
   d_perproc_patches= 0;
   d_matrixInitialize = false;
@@ -118,13 +117,12 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
   LoadBalancer* lb = sched->getLoadBalancer();
   d_perproc_patches = lb->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   Task* tsk = scinew Task("Filter::BuildFilterMatrix",this,
                           &Filter::buildFilterMatrix);
 
 
-  sched->addTask(tsk, d_perproc_patches, matls);
+  sched->addTask(tsk, d_perproc_patches, d_matls);
 }
 
 //______________________________________________________________________
@@ -249,7 +247,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
      
-     int flowID = d_boundaryCondition->flowCellType();
+     int flowID = -1;
      
      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
