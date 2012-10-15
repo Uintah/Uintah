@@ -55,6 +55,7 @@
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
+#include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -3012,6 +3013,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         
         // emperical soot model (computes soot volume fraction and abskp) 
         PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "algebraic_scalar_diss" ){ 
+
+        // Algebraic scalar dissipation rate 
+        PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {

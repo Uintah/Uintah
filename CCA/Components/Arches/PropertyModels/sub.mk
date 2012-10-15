@@ -10,7 +10,8 @@ SRCS += \
         $(SRCDIR)/ABSKP.cc \
         $(SRCDIR)/ExtentRxn.cc \
         $(SRCDIR)/TabStripFactor.cc \
-				$(SRCDIR)/EmpSoot.cc \
+        $(SRCDIR)/EmpSoot.cc \
+        $(SRCDIR)/AlgebraicScalarDiss.cc \
         $(SRCDIR)/ConstProperty.cc
 
 
