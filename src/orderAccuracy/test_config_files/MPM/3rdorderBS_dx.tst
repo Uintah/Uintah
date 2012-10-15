@@ -1,7 +1,7 @@
 <start>
 <upsFile>AA.ups</upsFile>
 <gnuplot>
-  <script>plotScript.gp</script>s
+  <script>plotScript.gp</script>
   <title>MPM:Axis Aligned MMS, 10 timeteps, 3rdorderBS</title>
   <ylabel>L2 Error</ylabel>
   <xlabel>Resolution</xlabel>
@@ -36,34 +36,11 @@
 
 <Test>
     <Title>32</Title>
-    <sus_cmd>nice mpirun -np 8 sus </sus_cmd>
+    <sus_cmd> sus </sus_cmd>
     <postProcess_cmd>compare_MPM_AA_MMS.m -norm L2 -MMS 2 </postProcess_cmd>
     <x>32</x>
     <replace_lines>
-      <patches>      [2,2,2]            </patches>
       <resolution>   [32,32,32]         </resolution>
-    </replace_lines>
-</Test>
-
-<Test>
-    <Title>64</Title>
-    <sus_cmd>nice mpirun -np 8 sus </sus_cmd>
-    <postProcess_cmd>compare_MPM_AA_MMS.m -norm L2 -MMS 2 </postProcess_cmd>
-    <x>64</x>
-    <replace_lines>
-      <patches>      [2,2,2]            </patches>
-      <resolution>   [64,64,64]         </resolution>
-    </replace_lines>
-</Test>
-
-<Test>
-    <Title>96</Title>
-    <sus_cmd>nice mpirun -np 8 sus </sus_cmd>
-    <postProcess_cmd>compare_MPM_AA_MMS.m -norm L2 -MMS 2 </postProcess_cmd>
-    <x>96</x>
-    <replace_lines>
-      <patches>      [2,2,2]            </patches>
-      <resolution>   [96,96,96]         </resolution>
     </replace_lines>
 </Test>
 
