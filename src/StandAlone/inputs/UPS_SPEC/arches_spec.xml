@@ -19,7 +19,7 @@
       <VarID                            spec="OPTIONAL NO_DATA"> <!-- matches variables to specific CFD roles --> 
         <var                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy'"/>
+                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction'"/>
       </VarID>
 
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
@@ -29,7 +29,8 @@
                                                                           scalar_diss, laminar_pr, 
                                                                           extent_rxn, tab_strip_factor, 
                                                                           absorption_coefficient, 
-                                                                          empirical_soot'"
+                                                                          empirical_soot, 
+                                                                          algebraic_scalar_diss'"
                                         attribute3="initialization REQUIRED STRING 'constant'">
 
           <!-- constant property model and scalar dissipation rate model --> 
@@ -41,6 +42,14 @@
 
           <!-- scalar dissipation rate model --> 
           <constant_diss                spec="OPTIONAL NO_DATA"/>
+
+          <!-- algebraic scalar dissipation rate model --> 
+          <mixture_fraction_label       spec="REQUIRED STRING"
+                                        need_applies_to="type algebraic_scalar_diss"/>
+          <turbulent_Sc                 spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type algebraic_scalar_diss"/>
+          <D                            spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type algebraic_scalar_diss"/>
 
           <!-- laminar pr --> 
           <atm_pressure                 spec="OPTIONAL DOUBLE"/>
