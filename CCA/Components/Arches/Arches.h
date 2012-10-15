@@ -112,7 +112,6 @@ namespace Uintah {
   class Properties;
   class TurbulenceModel;
   class ScaleSimilarityModel;
-  class CompLocalDynamicProcedure;
   class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
@@ -366,7 +365,6 @@ private:
       bool d_extraProjection;
 
       ScaleSimilarityModel* d_scaleSimilarityModel;
-      CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
       // properties...solves density, temperature and species concentrations

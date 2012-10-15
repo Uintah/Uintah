@@ -178,6 +178,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                 d_lab->d_symTensorMatl, oams, gac, 1);
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gac, 1);
   
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -210,6 +211,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1); 
 
   // for multimaterial
   if (d_MAlab){
@@ -702,11 +704,13 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
     // Get the velocity, density and viscosity from the old data warehouse
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(ccVel,   d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,       indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel,       indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1353,18 +1357,18 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
 
-    d_filter->applyFilter(pc, patch, ccVel, filterUVel, 0);
-    d_filter->applyFilter(pc, patch, ccVel, filterVVel, 1);
-    d_filter->applyFilter(pc, patch, ccVel, filterWVel, 2);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UU, filterUU);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UV, filterUV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UW, filterUW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,VV, filterVV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,VW, filterVW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,WW, filterWW);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterUVel, 0);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterVVel, 1);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterWVel, 2);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UU, filterVolume, cellType, filterUU);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UV, filterVolume, cellType, filterUV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UW, filterVolume, cellType, filterUW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VV, filterVolume, cellType, filterVV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VW, filterVolume, cellType, filterVW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, WW, filterVolume, cellType, filterWW);
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter< constCCVariable<double> >(pc, patch,SIJ[ii], SHATIJ[ii]);
-      d_filter->applyFilter< Array3<double> >(pc, patch,betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, SIJ[ii], filterVolume, cellType, SHATIJ[ii]);
+      d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch,betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
     if (pc->myrank() == 0){
       cerr << "Time for the Filter operation in Turbulence Model: " << 
@@ -1782,6 +1786,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> den;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
     CCVariable<double> viscosity;
     CCVariable<double> turbViscosity; 
 
@@ -1808,6 +1813,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
     }
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1830,8 +1836,8 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MLI, MLHatI);
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MMI, MMHatI);
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
 #else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1884,7 +1890,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // filtering for periodic case is not implemented 
     // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter<CCVariable<double> >(pc, patch, tempCs, Cs);
+    d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then tempCs will have to be computed with ghostcells
@@ -2098,8 +2104,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,
-                  gac, 1);
+    constCCVariable<double> filterVolume;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2130,8 +2137,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
-    d_filter->applyFilter< Array3<double> >(pc, patch,phiSqr, filterPhiSqr);
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, scalar, filterVolume, cellType, filterPhi);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, phiSqr, filterVolume, cellType, filterPhiSqr);
 #else
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
