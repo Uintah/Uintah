@@ -15,6 +15,7 @@
         <delt_max>1.e-2</delt_max>
         <timestep_multiplier>.2</timestep_multiplier>
         <max_Timesteps>100000</max_Timesteps>
+        <end_on_max_time_exactly>true</end_on_max_time_exactly>
     </Time>
     <MPM>
         <time_integrator>explicit</time_integrator>
