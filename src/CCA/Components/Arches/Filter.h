@@ -30,306 +30,52 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <sci_defs/petsc_defs.h>
-
-
-#ifdef HAVE_PETSC
-#undef PETSC_USE_LOG
-extern "C" {
-#  include <petscmat.h>
-}
-#endif
 
 namespace Uintah {
 
-class ProcessorGroup;
-class ArchesLabel;
-class BoundaryCondition;
+/**
+  * @class Filter.cc
+  * @author Jeremy Thornock
+  * @date Oct, 2012
+  *
+  * @brief StandAlone filter class for filter vector and scalar variables.
+  *
+  */
 
-/**************************************
-CLASS
-   Filter
-   
-   Class Filter uses petsc's matmult operation
-   solver
-
-GENERAL INFORMATION
-   Filter.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-   
-   Creation Date:   July 10, 2002
-   
-   C-SAFE 
-   
-   
-KEYWORDS
-
-
-DESCRIPTION
-   Class Filter uses petsc matmult operation for applying box filter
-
-WARNING
-   none
-
-****************************************/
 class Filter {
 
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Construct an instance of a Filter.
-  Filter(const MaterialSet* matls,
-         const ProcessorGroup* myworld, 
-         bool use_old_filter);
+  Filter( bool use_old_filter ) : d_use_old_filter(use_old_filter){
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Destructor
-  ~Filter();
+    // Reference for this filter from: 
+    // A general class of commutative filters for LES in complex geometries
+    // Vasilyev, Lund, and Moin
+    // JCP 146, 82-104, 1998
+    //
+    _filter_width = 3; 
 
-  // GROUP: Problem Setup:
-  ////////////////////////////////////////////////////////////////////////
-  // Problem setup
-  void problemSetup(const ProblemSpecP& params);
+    for ( int i = -(_filter_width-1)/2; i <= (_filter_width-1)/2; i++ ){
+      for ( int j = -(_filter_width-1)/2; j <= (_filter_width-1)/2; j++ ){
+        for ( int k = -(_filter_width-1)/2; k <= (_filter_width-1)/2; k++ ){
 
-  bool isInitialized() {
-    return d_matrixInitialize;
-  }
-  void sched_buildFilterMatrix(const LevelP& level,
-                               SchedulerP& sched);
+          int offset = abs(i) + abs(j) + abs(k); 
+          double my_value = offset+3; 
+          filter_array[i+1][j+1][k+1] = 1.0 / (pow(2.0,my_value)); 
 
-  void buildFilterMatrix(const ProcessorGroup* pg,
-                         const PatchSubset* patches,
-                         const MaterialSubset*,
-                         DataWarehouse*,
-                         DataWarehouse* new_dw);
-
-  // constructs filter matrix will be different for different types of filters
-
-  void matrixCreate(const PatchSet* allpatches,
-                    const PatchSubset* mypatches);
-                    
-  void setFilterMatrix(const ProcessorGroup* pc, 
-                       const Patch* patch,
-                       CellInformation* cellinfo, 
-                       constCCVariable<int>& cellType);            
-                       
-  void destroyMatrix();
-  
-//______________________________________________________________________
-//
-template<class T>
-bool applyFilter(const ProcessorGroup* ,
-                 const Patch* patch,               
-                 T& var,                           
-                 Array3<double>& filterVar)        
-{
-//  TAU_PROFILE("applyFilter", "[Filter::applyFilter]" , TAU_USER);
-  // assemble x vector
-  int ierr;
-  // fill matrix for internal patches
-  // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
-  // petsc matrix
-  int oneGhostCell = 1;
-  IntVector lowIndex  = patch->getExtraCellLowIndex(oneGhostCell);
-  IntVector highIndex = patch->getExtraCellHighIndex(oneGhostCell);
-
-  Array3<int> l2g(lowIndex, highIndex);
-  l2g.copy(d_petscLocalToGlobal[patch]);
-
-  // #ifdef notincludeBdry
-#if 1
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-#else
-  IntVector idxLo = patch->getExtraCellLowIndex();
-  IntVector idxHi = patch->getExtraCellHighIndex()-IntVector(1,1,1);
-#endif
-  IntVector inputLo = idxLo;
-  IntVector inputHi = idxHi;
-
-  double vecvaluex;
-  for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
-    for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
-      for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
-        
-        vecvaluex = var[IntVector(colX, colY, colZ)];
-        int row = l2g[IntVector(colX, colY, colZ)];         
-        
-        ASSERT(!std::isnan(vecvaluex));
-        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-        if(ierr)
-          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        }
       }
     }
   }
+  ~Filter(){
+    delete filter_array; 
+  };
 
-  //__________________________________
-  //  Matrix A
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
-
-  //ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-
-
-  //__________________________________
-  //  Vector B
-  ierr = VecAssemblyBegin(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = VecAssemblyEnd(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  
-  //__________________________________
-  //  Vector X
-  ierr = VecAssemblyBegin(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = VecAssemblyEnd(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  
-  //__________________________________
-  //  Solve 
-  ierr = MatMult(A, d_x, d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-  
-  
-  //__________________________________
-  // copy vector b in the filterVar array
-#if 0
-  ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecView(d_b, PETSC_VIEWER_STDOUT_WORLD);
-#endif
-
-
-  Uintah::PetscToUintah_Vector<Array3<double> >(patch, filterVar, d_b, d_petscLocalToGlobal);
-
-  return true;
-}
-
-//______________________________________________________________________
-//
-/** @brief Applies a filter to a vector component where dim = which component */ 
-bool applyFilter(const ProcessorGroup* ,
-                 const Patch* patch,               
-                 constCCVariable<Vector> var,                           
-                 Array3<double>& filterVar, 
-                 int dim)        
-{
-//  TAU_PROFILE("applyFilter", "[Filter::applyFilter]" , TAU_USER);
-  // assemble x vector
-  int ierr;
-  // fill matrix for internal patches
-  // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
-  // petsc matrix
-  int oneGhostCell = 1;
-  IntVector lowIndex  = patch->getExtraCellLowIndex(oneGhostCell);
-  IntVector highIndex = patch->getExtraCellHighIndex(oneGhostCell);
-
-  Array3<int> l2g(lowIndex, highIndex);
-  l2g.copy(d_petscLocalToGlobal[patch]);
-
-  // #ifdef notincludeBdry
-#if 1
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-#else
-  IntVector idxLo = patch->getExtraCellLowIndex();
-  IntVector idxHi = patch->getExtraCellHighIndex()-IntVector(1,1,1);
-#endif
-  IntVector inputLo = idxLo;
-  IntVector inputHi = idxHi;
-
-  double vecvaluex;
-  for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
-    for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
-      for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
-        
-        vecvaluex = var[IntVector(colX, colY, colZ)][dim];
-        int row = l2g[IntVector(colX, colY, colZ)];         
-        
-        ASSERT(!std::isnan(vecvaluex));
-        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-        if(ierr)
-          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-      }
-    }
-  }
-
-  //__________________________________
-  //  Matrix A
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
-
-  //ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-
-
-  //__________________________________
-  //  Vector B
-  ierr = VecAssemblyBegin(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = VecAssemblyEnd(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  
-  //__________________________________
-  //  Vector X
-  ierr = VecAssemblyBegin(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  
-  ierr = VecAssemblyEnd(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  
-  //__________________________________
-  //  Solve 
-  ierr = MatMult(A, d_x, d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-  
-  
-  //__________________________________
-  // copy vector b in the filterVar array
-#if 0
-  ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
-  ierr = VecView(d_b, PETSC_VIEWER_STDOUT_WORLD);
-#endif
-
-
-  Uintah::PetscToUintah_Vector<Array3<double> >(patch, filterVar, d_b, d_petscLocalToGlobal);
-
-  return true;
-}
-//______________________________________________________________________
-//
+/* @brief Apply a filter to a Uintah::CCVariable<double> */
 template<class T>
 bool applyFilter_noPetsc(const ProcessorGroup* ,
                          const Patch* patch,               
@@ -395,9 +141,8 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
   } 
   return it_worked;
 }
-//______________________________________________________________________
-// Specialized filter for filtering vector components
-// dim = vector dimention
+
+/* @brief Apply a filter to a component of a Uintah::Vector. dim = (0,1,2) = vector component */
 bool applyFilter_noPetsc(const ProcessorGroup* ,
                          const Patch* patch,               
                          constCCVariable<Vector>& var,                           
@@ -464,28 +209,17 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
   return it_worked;
 }
 //______________________________________________________________________
-//______________________________________________________________________
 protected:
 
 private:
-  const ProcessorGroup* d_myworld;
-  const PatchSet* d_perproc_patches;
-  const MaterialSet* d_matls; 
 
-  bool d_matrixInitialize;
-  bool d_matrix_vectors_created;
-  bool d_use_old_filter; 
-#ifdef HAVE_PETSC
-  map<const Patch*, int> d_petscGlobalStart;
-  map<const Patch*, Array3<int> > d_petscLocalToGlobal;
-  Mat A;
-  Vec d_x, d_b;
-  int d_nz, o_nz; // number of non zero values in a row
-#endif
+  // Notice: the filter width is hard coded in the contructor (until we allow for variable filter widths)
+  // delta = 3. 
+  int _filter_width;                          ///< Filter width
 
-  // hard code the filter width for now
-  int _filter_width; 
-  double filter_array[3][3][3]; //WASH ME! clean this up later.
+  double filter_array[3][3][3];               ///< Filter weights for a width of 3*dx
+
+  bool d_use_old_filter;                      ///< Adjusts the filter at boundaries when this variable is true 
 
 
 }; // End class Filter.h

@@ -59,9 +59,7 @@ using namespace Uintah;
 //****************************************************************************
 Discretization::Discretization()
 {
-#ifdef PetscFilter
   d_filter = 0;
-#endif
 }
 
 //****************************************************************************
@@ -247,15 +245,13 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   if ((filter_divergence)&&(!(periodic))) {
   // filtering for periodic case is not implemented 
   // if it needs to be then unfiltered_divergence will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
-    d_filter->applyFilter<CCVariable<double> >(pc, patch, unfiltered_divergence, vars->divergence);
-#else
-    // filtering without petsc is not implemented
-    // if it needs to be then unfiltered_divergence will have to be computed with ghostcells
-    vars->divergence.copy(unfiltered_divergence,
-                          unfiltered_divergence.getLowIndex(),
-                          unfiltered_divergence.getHighIndex());
-#endif
+      
+    // To turn this back on: This function needs two things: 
+    //                       1) The filter volume (which currently isn't in ArchesVariables 
+    //                       2) The cell Type
+    //d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, unfiltered_divergence, constvars->filterVolume, constvars->cellType, vars->divergence);
+    throw InvalidValue("Error: Filtered divergence constraint isnt functional.", __FILE__, __LINE__);
+
   }else{
     vars->divergence.copy(unfiltered_divergence,
                           unfiltered_divergence.getLowIndex(),

@@ -74,9 +74,7 @@ class ProcessorGroup;
 class TurbulenceModel;
 class PhysicalConstants;
 class Source;
-#ifdef PetscFilter
 class Filter;
-#endif
 class BoundaryCondition;
 class RHSSolver;
 class TimeIntegratorLabel;
@@ -152,11 +150,9 @@ public:
                             SFCYVariable<double>& vvel, 
                             SFCZVariable<double>& wvel );
 
-#ifdef PetscFilter
   inline void setDiscretizationFilter(Filter* filter) {
     d_discretize->setFilter(filter);
   }
-#endif
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }

@@ -79,7 +79,6 @@
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
-#include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -121,10 +120,6 @@ using std::endl;
 
 using std::string;
 using namespace Uintah;
-#ifdef PetscFilter
-#include <CCA/Components/Arches/Filter.h>
-#endif
-
 
 static DebugStream dbg("ARCHES", false);
 
@@ -610,17 +605,12 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
 
-  ProblemSpecP turb_db = db->findBlock("Turbulence");
-  bool use_old_filter = true;
-
-  if(turb_db) {
-    turb_db->getAttribute("model", d_whichTurbModel);
-    if ( turb_db->findBlock("use_new_filter") ){
-      use_old_filter = false;
-    }    
+  d_whichTurbModel = "none"; 
+  
+  if ( db->findBlock("Turbulence") ) {
+    db->findBlock("Turbulence")->getAttribute("model",d_whichTurbModel); 
   }
 
-  //db->require("turbulence_model", turbModel);
   if ( d_whichTurbModel == "smagorinsky"){
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
@@ -630,6 +620,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   }else if ( d_whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
+  } else if ( d_whichTurbModel == "none" ){ 
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);
 #ifdef WASATCH_IN_ARCHES
   } else  if ( d_whichTurbModel == "wasatch"){
     
@@ -640,12 +633,9 @@ Arches::problemSetup(const ProblemSpecP& params,
                                                     d_boundaryCondition);
 #endif
   } else {
-    // In case no turbulence model was specified, then use a dummy turbulence model that returns zero turbulent viscosity
-    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
-                                                    d_boundaryCondition);    
+    proc0cout << "Notice: No Turbulence model found." << endl;
   }
 
-//  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
   
@@ -661,12 +651,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                                         d_calcReactingScalar);
   }
 
-#ifdef PetscFilter
-    d_filter = scinew Filter(d_sharedState->allArchesMaterials(), d_myworld, use_old_filter);
-    d_filter->problemSetup(db);
-    d_turbModel->setFilter(d_filter);
-#endif
-
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
     d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
@@ -674,9 +658,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_scaleSimilarityModel->problemSetup(db);
 
     d_scaleSimilarityModel->setMixedModel(d_mixedModel);
-#ifdef PetscFilter
-    d_scaleSimilarityModel->setFilter(d_filter);
-#endif
   }
 
   d_props->setBC(d_boundaryCondition);
@@ -1008,15 +989,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : viscosityCTS
 
   if (!d_MAlab) {
-
-    // check if filter is defined...
-#ifdef PetscFilter
-    if (d_turbModel->getFilter()) {
-      // if the matrix is not initialized
-      if (!d_turbModel->getFilter()->isInitialized())
-        d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-    }
-#endif
 
     if (d_mixedModel) {
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,

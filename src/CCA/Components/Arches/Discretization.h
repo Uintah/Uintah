@@ -35,9 +35,7 @@
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
-#ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
-#endif
 
 #include <Core/Containers/Array1.h>
 namespace Uintah {
@@ -166,11 +164,10 @@ public:
                          const bool filter_divergence,
                          const bool periodic);
 
-#ifdef PetscFilter
   inline void setFilter(Filter* filter) {
     d_filter = filter;
   }
-#endif
+
   inline void setTurbulentPrandtlNumber(double turbPrNo) {
     d_turbPrNo = turbPrNo;
   }
@@ -194,9 +191,7 @@ private:
       // coefficients for all the scalar components
       //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
-#ifdef PetscFilter
       Filter* d_filter;
-#endif
       double d_turbPrNo;
       bool d_doMMS;
 }; // end class Discretization

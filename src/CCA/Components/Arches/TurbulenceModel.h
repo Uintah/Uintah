@@ -59,9 +59,8 @@ WARNING
 ****************************************/
 
 #include <CCA/Components/Arches/Arches.h>
-#ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
-#endif
+
 namespace Uintah {
 class TimeIntegratorLabel;
 class TurbulenceModel
@@ -78,11 +77,9 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Virtual destructor for TurbulenceModel.
       virtual ~TurbulenceModel();
-#ifdef PetscFilter
       inline void setFilter(Filter* filter) {
         d_filter = filter;
       }
-#endif
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscisity
@@ -99,17 +96,10 @@ public:
 
 
       // access function
-#ifdef PetscFilter
       Filter* getFilter() const{
         return d_filter;
       }
 
-      void sched_initFilterMatrix(const LevelP&, 
-                                  SchedulerP&, 
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
-
-#endif
       virtual void set3dPeriodic(bool periodic) = 0;
       virtual double getTurbulentPrandtlNumber() const = 0;
       virtual void setTurbulentPrandtlNumber(double turbPrNo) = 0;
@@ -158,24 +148,16 @@ public:
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
 
-#ifdef PetscFilter
       Filter* d_filter;
-#endif
       bool d_calcScalar, d_calcEnthalpy, d_calcReactingScalar;
       bool d_calcVariance;
       std::string d_mix_frac_label_name; 
       const VarLabel* d_mf_label;
 
+      void problemSetupCommon( const ProblemSpecP& params ); 
+
 private:
 bool d_mixedModel;
-#ifdef PetscFilter
-      void initFilterMatrix(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw);
-#endif
-
 
 }; // End class TurbulenceModel
 } // End namespace Uintah

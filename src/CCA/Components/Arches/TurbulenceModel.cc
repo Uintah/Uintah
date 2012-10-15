@@ -42,60 +42,30 @@ TurbulenceModel::TurbulenceModel(const ArchesLabel* label,
                                  const MPMArchesLabel* MAlb):
                                  d_lab(label), d_MAlab(MAlb)
 {
-#ifdef PetscFilter
   d_filter = 0;
-#endif
 }
 
 TurbulenceModel::~TurbulenceModel()
 {
-#ifdef PetscFilter
   if (d_filter)
     delete d_filter;
-#endif
 }
-#ifdef PetscFilter
-//______________________________________________________________________
-//
+
 void 
-TurbulenceModel::sched_initFilterMatrix(const LevelP& level,
-                                        SchedulerP& sched, 
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls)
+TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
 {
-  d_filter->sched_buildFilterMatrix(level, sched);
-  Task* tsk = scinew Task("TurbulenceModel::initFilterMatrix",this,
-                          &TurbulenceModel::initFilterMatrix);
-                                              
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-  sched->addTask(tsk, patches, matls);
-}
-//______________________________________________________________________
-//
-void
-TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset*,
-                                  DataWarehouse*,
-                                  DataWarehouse* new_dw)
-{ 
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    constCCVariable<int> cellType;
-    
-    new_dw->get(cellType, d_lab->d_cellTypeLabel,indx, patch, Ghost::AroundCells, 1);
 
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
+  ProblemSpecP db = params; 
 
-    d_filter->setFilterMatrix(pg, patch, cellinfo, cellType);
-  }
+  //setup the filter: 
+  bool use_old_filter = true; 
+  if ( db->findBlock("Turbulence")->findBlock("use_new_filter") ) {
+    use_old_filter = false; 
+  } 
+
+  d_filter = scinew Filter( use_old_filter ); 
+
 }
-#endif
 
 
 

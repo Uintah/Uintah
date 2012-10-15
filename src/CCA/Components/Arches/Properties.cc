@@ -89,9 +89,7 @@ Properties::Properties(ArchesLabel* label,
   d_tabulated_soot  = false;
   d_newEnthalpySolver = false; 
   d_bc = 0;
-#ifdef PetscFilter
   d_filter = 0;
-#endif
   d_mixingModel = 0;
 
 }
@@ -1954,14 +1952,17 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   }
   
   Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  ga = Ghost::AroundCells; 
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
   tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, gn,0);
 
-  tsk->requires(Task::NewDW,    d_lab->d_densityCPLabel,   gn,0);
-  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,   gn,0);
-  
+  tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requires(parent_old_dw , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requires(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
+  tsk->requires(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
 
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
@@ -2024,11 +2025,16 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
     CCVariable<double> density_oldold;
+    constCCVariable<double> filterVolume; 
+    constCCVariable<int> cellType; 
     Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  ga = Ghost::AroundCells; 
     
     parent_old_dw->get(old_density,     d_lab->d_densityCPLabel,     indx, patch,gn, 0);
     parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, indx, patch,gn, 0);
-    
+
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 ); 
+    new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 ); 
     
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
       new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
@@ -2094,14 +2100,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     if ((d_filter_drhodt)&&(!(d_3d_periodic))) {
     // filtering for periodic case is not implemented 
     // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
-    d_filter->applyFilter<CCVariable<double> >(pc, patch, drhodt, filterdrhodt);
-#else
-    // filtering without petsc is not implemented
-    // if it needs to be then drhodt will have to be computed with ghostcells
-    filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
-                      drhodt.getHighIndex());
-#endif
+      d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, drhodt, filterVolume, cellType, filterdrhodt);
     }else{
       filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
                       drhodt.getHighIndex());

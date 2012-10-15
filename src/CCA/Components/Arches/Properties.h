@@ -59,9 +59,7 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#ifdef PetscFilter
-#  include <CCA/Components/Arches/Filter.h>
-#endif
+#include <CCA/Components/Arches/Filter.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -170,11 +168,10 @@ public:
     d_bc = bc;
   }
 
-#ifdef PetscFilter
   inline void setFilter(Filter* filter) {
     d_filter = filter;
   }
-#endif
+
   inline void set3dPeriodic(bool periodic) {
     d_3d_periodic = periodic;
   }
@@ -318,9 +315,7 @@ private:
       double d_H_air;
       bool d_tabulated_soot;
       double d_f_stoich, d_carbon_fuel, d_carbon_air;
-#ifdef PetscFilter
       Filter* d_filter;
-#endif
       const ProcessorGroup* d_myworld;
 
       // New Table Interface Stuff:

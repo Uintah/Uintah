@@ -65,9 +65,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
-#ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
-#endif
 
 #ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -240,12 +238,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
-#ifdef PetscFilter
-    d_props->setFilter(d_turbModel->getFilter());
-//#ifdef divergenceconstraint
-    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-//#endif
-#endif
+  d_props->setFilter(d_turbModel->getFilter());
+  d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
+
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   d_mixedModel=d_turbModel->getMixedModel();
   if (d_enthalpySolve) {
@@ -311,35 +306,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  //initializes and allocates vars for new_dw
-  // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP,
-  // densityCP, viscosityCTS
-  // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
-  //                     viscosityIN
-
   sched_setInitialGuess(sched, patches, matls);
 
   d_boundaryCondition->sched_setAreaFraction(sched, patches, matls);
 
-  // Start the iterations
-
-  // check if filter is defined...
-#ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized())
-      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-  }
-#endif
-
-  // Get a reference to all the DQMOM equations
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
   if (dqmomFactory.get_quad_nodes() > 0)
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
 
+  // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
@@ -743,15 +720,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   //                     viscosityIN
 
   sched_setInitialGuess(sched, patches, matls);
-
-  // check if filter is defined...
-#ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized())
-      d_turbModel->sched_initFilterMatrix(          level, sched, patches, matls);
-  }
-#endif
 
   EqnFactory& eqn_factory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
