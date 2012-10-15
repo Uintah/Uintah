@@ -1545,18 +1545,22 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
 
           // get fine level data                                                                                  
           constNCVariable<double> gMass_fine;                                                                     
-          constNCVariable<double> gVolume_fine;                                                                   
-          constNCVariable<Vector> gVelocity_fine;                                                                 
-          constNCVariable<Vector> gExternalforce_fine;                                                            
-          constNCVariable<double> gTemperature_fine;                                                                   
-          Ghost::GhostType  gn = Ghost::None;                                                                     
+          constNCVariable<double> gVolume_fine;
+          constNCVariable<Vector> gVelocity_fine;
+          constNCVariable<Vector> gExternalforce_fine;
+          constNCVariable<double> gTemperature_fine;
+//          Ghost::GhostType  gn = Ghost::None; 
 
           if(flag == coarsenData){
-            new_dw->get(gMass_fine,             lb->gMassLabel,          dwi, finePatch, gn, 0);
-            new_dw->get(gVolume_fine,           lb->gVolumeLabel,        dwi, finePatch, gn, 0);
-            new_dw->get(gVelocity_fine,         lb->gVelocityLabel,      dwi, finePatch, gn, 0);
-            new_dw->get(gTemperature_fine,      lb->gTemperatureLabel,   dwi, finePatch, gn, 0);
-            new_dw->get(gExternalforce_fine,    lb->gExternalForceLabel, dwi, finePatch, gn, 0);
+            // use getRegion() instead of get().  They should be equivalent but 
+            // get() throws assert on parallel runs.
+            IntVector fl = finePatch->getNodeLowIndex();  
+            IntVector fh = finePatch->getNodeHighIndex();
+            new_dw->getRegion(gMass_fine,          lb->gMassLabel,          dwi, fineLevel,fl, fh);
+            new_dw->getRegion(gVolume_fine,        lb->gVolumeLabel,        dwi, fineLevel,fl, fh);
+            new_dw->getRegion(gVelocity_fine,      lb->gVelocityLabel,      dwi, fineLevel,fl, fh);
+            new_dw->getRegion(gTemperature_fine,   lb->gTemperatureLabel,   dwi, fineLevel,fl, fh);
+            new_dw->getRegion(gExternalforce_fine, lb->gExternalForceLabel, dwi, fineLevel,fl, fh);
           }                                                                                     
 
           vector<Patch::FaceType> cf;
@@ -1672,10 +1676,14 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
 
           // get fine level data                                                                                  
           constNCVariable<double> gMass_fine;                                                                 
-          constNCVariable<Vector> internalForce_fine;                                                                  
-          Ghost::GhostType  gn = Ghost::None;                                                                     
-          new_dw->get(gMass_fine,          lb->gMassLabel,          dwi, finePatch, gn, 0);
-          new_dw->get(internalForce_fine,  lb->gInternalForceLabel, dwi, finePatch, gn, 0);
+          constNCVariable<Vector> internalForce_fine;          
+
+          // use getRegion() instead of get().  They should be equivalent but 
+          // get() throws assert on parallel runs.
+          IntVector fl = finePatch->getNodeLowIndex();
+          IntVector fh = finePatch->getNodeHighIndex();
+          new_dw->getRegion(gMass_fine,          lb->gMassLabel,          dwi, fineLevel, fl, fh);
+          new_dw->getRegion(internalForce_fine,  lb->gInternalForceLabel, dwi, fineLevel, fl, fh);
 
           vector<Patch::FaceType> cf;
           finePatch->getCoarseFaces(cf);
@@ -1684,8 +1692,7 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
           vector<Patch::FaceType>::const_iterator iter;  
           for (iter  = cf.begin(); iter != cf.end(); ++iter){
             Patch::FaceType patchFace = *iter;
-            
-            
+
             // determine the iterator on the coarse level.
             NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
             bool isRight_CP_FP_pair;
@@ -2672,6 +2679,8 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
                                                  DataWarehouse* new_dw)
 {
   const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(), coarseLevel );
   
@@ -2690,6 +2699,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
         
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
+    
     
     //__________________________________
     //  Fine patch loop
@@ -2711,10 +2721,14 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
           constNCVariable<double> gmass_fine;
           constNCVariable<Vector> gvelocity_star_fine;
           constNCVariable<Vector> gacceleration_fine;
-          
-          Ghost::GhostType  gn  = Ghost::None;
-          new_dw->get(gvelocity_star_fine,  lb->gVelocityStarLabel, dwi, finePatch, gn, 0);
-          new_dw->get(gacceleration_fine,   lb->gAccelerationLabel, dwi, finePatch, gn, 0);
+
+          // use getRegion() instead of get().  They should be equivalent but 
+          // get() throws assert on parallel runs.
+          IntVector fl = finePatch->getNodeLowIndex();
+          IntVector fh = finePatch->getNodeHighIndex();
+          new_dw->getRegion(gvelocity_star_fine,  lb->gVelocityStarLabel, dwi, fineLevel,fl, fh);   
+          new_dw->getRegion(gacceleration_fine,   lb->gAccelerationLabel, dwi, fineLevel,fl, fh); 
+            
           
           // get coarse level particle data
           ParticleVariable<Point>  pxnew_coarse;
