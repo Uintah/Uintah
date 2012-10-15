@@ -23,7 +23,8 @@
   <DataArchiver>
     <filebase>advect_3L_3D.uda</filebase>
     <!--<outputInitTimestep/> -->
-    <outputTimestepInterval>20</outputTimestepInterval>
+    <!--<outputTimestepInterval>20</outputTimestepInterval> -->
+    <outputInterval> 0.0002 </outputInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
@@ -89,7 +90,7 @@
                <radius>           1.0                </radius>
             </sphere>           
 
-            <res>         [1,1,1]       </res>
+            <res>         [2,2,2]       </res>
             <velocity>    [100,100,100] </velocity>
             <temperature>     12        </temperature>
             <color>            0        </color>
