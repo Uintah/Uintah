@@ -61,6 +61,6 @@ PSELIBS := \
         $(WASATCH)                         \
         $(MORE_LIBS)
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
