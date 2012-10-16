@@ -217,7 +217,15 @@ namespace Wasatch{
           }
         }
       }
-#ifndef WASATCH_IN_ARCHES                
+#     ifdef WASATCH_IN_ARCHES
+      if( !foundExtraCells && !isPeriodic ){
+        msg << endl
+        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
+        << "  Please add an 'extraCells' block to your input file" << endl
+        << endl;
+        throw std::runtime_error( msg.str() );
+      }
+#     else
       if( foundExtraCells ){
         msg << endl
             << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
@@ -225,16 +233,7 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
-#endif
-#ifdef	WASATCH_IN_ARCHES
-      if( !foundExtraCells && !isPeriodic ){
-        msg << endl
-        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
-        << "  Please add an 'extraCells' block to your input file" << endl
-        << endl;
-        throw std::runtime_error( msg.str() );
-      }      
-#endif
+#     endif
     }
 
 
