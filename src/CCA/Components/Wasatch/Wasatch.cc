@@ -448,7 +448,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
+      timeStepper_ = scinew TimeStepper( sharedState_,
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
     }    
     
@@ -506,7 +506,8 @@ namespace Wasatch{
     timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
     timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
     const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, 1 ), true );
+    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -772,7 +773,7 @@ namespace Wasatch{
       timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
       timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
       const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, rkStage), true );
+      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     } else {
       timeID = exprFactory.get_id(timeTag);
     }

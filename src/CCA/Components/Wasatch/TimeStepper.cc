@@ -43,6 +43,7 @@
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Grid/SimulationState.h>
 
 using std::endl;
 namespace SO=SpatialOps::structured;
@@ -133,10 +134,10 @@ namespace Wasatch{
 
   //==================================================================
 
-  TimeStepper::TimeStepper( const Uintah::VarLabel* const deltaTLabel,
+  TimeStepper::TimeStepper( Uintah::SimulationStateP sharedState,
                             GraphHelper& solnGraphHelper )
-    : solnGraphHelper_( &solnGraphHelper ),
-      deltaTLabel_( deltaTLabel ),
+    : sharedState_( sharedState ),
+      solnGraphHelper_( &solnGraphHelper ),
       coordHelper_( new CoordHelper( *(solnGraphHelper_->exprFactory) ) )
   {}
 
@@ -196,7 +197,7 @@ namespace Wasatch{
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time
       Uintah::Task* updateCurrentTimeTask = scinew Uintah::Task( "update current time", this, &TimeStepper::update_current_time, timeTask->get_time_tree(), rkStage );
-      updateCurrentTimeTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
+      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
       sched->addTask( updateCurrentTimeTask, patches, materials );
     }
 
@@ -245,7 +246,7 @@ namespace Wasatch{
       set_soln_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss, rkStage );
 
       // we require the timestep value
-      updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
+      updateTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
       /* jcs if we specify this, then things fail:
                             patches, Uintah::Task::NormalDomain,
                             mss, Uintah::Task::NormalDomain,
@@ -270,12 +271,13 @@ namespace Wasatch{
   {
     // grab the timestep
     Uintah::delt_vartype deltat;
-    oldDW->get( deltat, deltaTLabel_ );
+    oldDW->get( deltat, sharedState_->get_delt_label() );
 
-    const Expr::Tag TimeTag (StringNames::self().time,Expr::STATE_NONE);
-    SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>( timeTree->get_expression( TimeTag ) );
-    settimeexpr.set_integrator_stage(rkStage);
-    settimeexpr.set_deltat(deltat);
+    const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
+    SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>( timeTree->get_expression( timeTag ) );
+    settimeexpr.set_integrator_stage( rkStage );
+    settimeexpr.set_deltat( deltat );
+    settimeexpr.set_time( sharedState_->getElapsedTime() );
   }
 
   //------------------------------------------------------------------
@@ -304,7 +306,7 @@ namespace Wasatch{
         Uintah::delt_vartype deltat;
         //jcs this doesn't work:
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
-        oldDW->get( deltat, deltaTLabel_ );
+        oldDW->get( deltat, sharedState_->get_delt_label() );
 
         //____________________________________________
         // update variables on this material and patch
