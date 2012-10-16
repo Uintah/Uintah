@@ -616,20 +616,6 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  TreePtr
-  TaskInterface::get_time_tree()
-  {
-    BOOST_FOREACH( TreeTaskExecute* taskexec, execList_ ){
-      TreePtr tree = taskexec->get_patch_tree_map().begin()->second.tree;
-      if( tree->name()=="set_time" ){
-        return tree;
-      }
-    }
-    throw std::runtime_error( "TaskInterface::get_time_tree() could not resolve a valid tree");
-  }
-
-  //------------------------------------------------------------------
-
   Expr::TagList
   TaskInterface::collect_tags_in_task() const
   {

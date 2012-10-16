@@ -31,6 +31,8 @@
 //-- ExprLib includes --//
 #include <expression/FieldManager.h>  // for field type mapping
 #include <expression/ExpressionTree.h>
+#include <expression/ExpressionFactory.h>
+#include <expression/PlaceHolderExpr.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/FieldExpressions.h>
@@ -44,6 +46,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/SimulationState.h>
+
 
 using std::endl;
 namespace SO=SpatialOps::structured;
@@ -187,16 +190,22 @@ namespace Wasatch{
     // This is required by the time integrator.
     {
       IDSet ids; ids.insert(timeID);
-      TaskInterface* const timeTask = scinew TaskInterface( ids,
-                                                            "set_time",
-                                                            *(solnGraphHelper_->exprFactory),
-                                                            level, sched, patches, materials,
-                                                            patchInfoMap,
-                                                            1, persistentFields );
+      TaskInterface* const timeTask =
+          scinew TaskInterface( ids,
+                                "set_time",
+                                *(solnGraphHelper_->exprFactory),
+                                level, sched, patches, materials,
+                                patchInfoMap,
+                                1, persistentFields );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time
-      Uintah::Task* updateCurrentTimeTask = scinew Uintah::Task( "update current time", this, &TimeStepper::update_current_time, timeTask->get_time_tree(), rkStage );
+      Uintah::Task* updateCurrentTimeTask =
+          scinew Uintah::Task( "update current time",
+                               this,
+                               &TimeStepper::update_current_time,
+                               solnGraphHelper_->exprFactory,
+                               rkStage );
       updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
       sched->addTask( updateCurrentTimeTask, patches, materials );
     }
@@ -266,7 +275,7 @@ namespace Wasatch{
                                     const Uintah::MaterialSubset* const materials,
                                     Uintah::DataWarehouse* const oldDW,
                                     Uintah::DataWarehouse* const newDW,
-                                    Expr::ExpressionTree::TreePtr timeTree,
+                                    Expr::ExpressionFactory* const factory,
                                     const int rkStage )
   {
     // grab the timestep
@@ -274,10 +283,17 @@ namespace Wasatch{
     oldDW->get( deltat, sharedState_->get_delt_label() );
 
     const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
-    SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>( timeTree->get_expression( timeTag ) );
-    settimeexpr.set_integrator_stage( rkStage );
-    settimeexpr.set_deltat( deltat );
-    settimeexpr.set_time( sharedState_->getElapsedTime() );
+    //__________________
+    // loop over patches
+    for( int ip=0; ip<patches->size(); ++ip ){
+      if( factory->have_entry(timeTag) ){
+        SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
+            factory->retrieve_expression( timeTag, patches->get(ip)->getID(), true ) );
+        settimeexpr.set_integrator_stage( rkStage );
+        settimeexpr.set_deltat( deltat );
+        settimeexpr.set_time( sharedState_->getElapsedTime() );
+      }
+    }
   }
 
   //------------------------------------------------------------------
@@ -321,5 +337,59 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
+
+  template<typename FieldT>
+  void
+  TimeStepper::add_equation( const std::string& solnVarName,
+                             Expr::ExpressionID rhsID )
+  {
+    const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
+    const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
+    const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
+    Uintah::VarLabel* const solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
+    Uintah::VarLabel* const rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
+    std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
+    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
+    createdVarLabels_.push_back( solnVarLabel );
+    createdVarLabels_.push_back( rhsVarLabel );
+
+    typedef Expr::PlaceHolder<FieldT>  FieldExpr;
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )),true );
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)),true );
+  }
+
+  //------------------------------------------------------------------
+
+  template<>
+  inline std::set< TimeStepper::FieldInfo<SpatialOps::structured::SVolField> >&
+  TimeStepper::field_info_selctor<SpatialOps::structured::SVolField>()
+  {
+    return scalarFields_;
+  }
+  template<>
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::XVolField> >&
+  TimeStepper::field_info_selctor<SpatialOps::structured::XVolField>()
+  {
+    return xVolFields_;
+  }
+  template<>
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::YVolField> >&
+  TimeStepper::field_info_selctor<SpatialOps::structured::YVolField>()
+  {
+    return yVolFields_;
+  }
+  template<>
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::ZVolField> >&
+  TimeStepper::field_info_selctor<SpatialOps::structured::ZVolField>()
+  {
+    return zVolFields_;
+  }
+
+  //------------------------------------------------------------------
+
+  template void TimeStepper::add_equation<SpatialOps::structured::SVolField>( const std::string&, Expr::ExpressionID );
+  template void TimeStepper::add_equation<SpatialOps::structured::XVolField>( const std::string&, Expr::ExpressionID );
+  template void TimeStepper::add_equation<SpatialOps::structured::YVolField>( const std::string&, Expr::ExpressionID );
+  template void TimeStepper::add_equation<SpatialOps::structured::ZVolField>( const std::string&, Expr::ExpressionID );
 
 } // namespace Wasatch
