@@ -723,9 +723,6 @@ namespace Wasatch{
   Expr::ExpressionBuilder*
   build_bc_expr( Uintah::ProblemSpecP params )
   {
-    
-    std::cout << "registering bc expressions" << std::endl;
-
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     
     Expr::ExpressionBuilder* builder = NULL;
@@ -749,7 +746,6 @@ namespace Wasatch{
     }
 
     else if ( params->findBlock("ParabolicFunction") ) {
-      std::cout << "registering parabolic bc" << std::endl;
       double a, b, c;
       Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
       valParams->getAttribute("a",a);

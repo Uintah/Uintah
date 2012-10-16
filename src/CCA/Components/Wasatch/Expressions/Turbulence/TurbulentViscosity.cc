@@ -138,7 +138,7 @@ evaluate()
   switch ( turbulenceParameters_.turbulenceModelName ) {
 
     case Wasatch::SMAGORINSKY:
-      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|
+      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
       break;
 
     case Wasatch::DYNAMIC:
@@ -158,7 +158,10 @@ evaluate()
       break;
 
     case Wasatch::VREMAN:
-      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|
+      // NOTE: the constant used in the Vreman model input corresponds to the
+      // best Smagorinsky constant when using the constant Smagorinsky model
+      // for this problem. The Vreman constant is estimated at Cv ~ 2.5 Cs
+      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|, Cs is the Smagorinsky constant
       break;
       
     default:
