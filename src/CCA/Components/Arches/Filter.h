@@ -72,7 +72,6 @@ public:
     }
   }
   ~Filter(){
-    delete filter_array; 
   };
 
 /* @brief Apply a filter to a Uintah::CCVariable<double> */
