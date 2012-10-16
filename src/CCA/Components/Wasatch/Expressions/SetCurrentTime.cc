@@ -43,7 +43,7 @@ namespace Wasatch{
   void
   SetCurrentTime::evaluate()
   {
-    assert( deltat_  >  0.0 );
+    assert( deltat_  >= 0.0 );
     assert( simTime_ >= 0.0 );
 
     typedef std::vector<double*>& DoubleVec;
