@@ -286,13 +286,11 @@ namespace Wasatch{
     //__________________
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){
-      if( factory->have_entry(timeTag) ){
-        SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
-            factory->retrieve_expression( timeTag, patches->get(ip)->getID(), true ) );
-        settimeexpr.set_integrator_stage( rkStage );
-        settimeexpr.set_deltat( deltat );
-        settimeexpr.set_time( sharedState_->getElapsedTime() );
-      }
+      SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
+          factory->retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
+      settimeexpr.set_integrator_stage( rkStage );
+      settimeexpr.set_deltat( deltat );
+      settimeexpr.set_time( sharedState_->getElapsedTime() );
     }
   }
 
