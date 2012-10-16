@@ -248,11 +248,14 @@ for ($i=0;$i<=$num_of_tests;$i++){
   if( defined $replaceValues[$i] ){
     @replacementValues = (@{$replaceValues[$i]});
     foreach $rv (@replacementValues){
-      @tmp = split(/:/,$rv);
-      $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
-      $value   = $tmp[1];
-      system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
-      print "\t\treplace_XML_value $xmlPath $value\n";
+
+      if ($rv !~ /^\s*$/ ) {      # ignore blank lines
+        @tmp = split(/:/,$rv);
+        $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
+        $value   = $tmp[1];
+        system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
+        print "\t\treplace_XML_value $xmlPath $value\n";
+      }
     }
   }
   

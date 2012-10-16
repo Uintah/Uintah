@@ -190,6 +190,10 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
        }
      }
      
+     # clean out any comment in the TST file
+     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean");
+     $tstFile = "$tstFile.clean";
+     
      
      #__________________________________
      # run the tests
