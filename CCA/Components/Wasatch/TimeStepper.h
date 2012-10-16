@@ -27,6 +27,7 @@
 
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationStateP.h>
 
 #include <expression/ExpressionID.h>
 #include <expression/FieldManager.h> // field type conversion tools
@@ -92,6 +93,8 @@ namespace Wasatch{
 
   private:
 
+    Uintah::SimulationStateP sharedState_;
+
     typedef std::set< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
     typedef std::set< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
     typedef std::set< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
@@ -103,8 +106,6 @@ namespace Wasatch{
     ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
     GraphHelper* const solnGraphHelper_;
-    const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
-
     CoordHelper* const coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
 
     std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
@@ -143,7 +144,7 @@ namespace Wasatch{
     /**
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
-     *  \param deltaTLabel - the VarLabel associated with the time step value
+     *  \param sharedState
      *
      *  \param factory - the ExpressionFactory that will be used to
      *                   construct the trees for any transport
@@ -151,7 +152,7 @@ namespace Wasatch{
      *                   factory should be used when constructing the
      *                   expressions in each transport equation.
      */
-    TimeStepper( const Uintah::VarLabel* deltaTLabel,
+    TimeStepper( Uintah::SimulationStateP sharedState,
                  GraphHelper& solnGraphHelper );
 
     ~TimeStepper();
