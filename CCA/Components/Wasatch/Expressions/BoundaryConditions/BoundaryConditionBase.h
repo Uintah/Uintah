@@ -50,7 +50,6 @@ public:
   }
   void set_ghost_points( const std::vector<int> flatGhostPoints ){
     flatGhostPoints_.insert( flatGhostPoints_.end(), flatGhostPoints.begin(), flatGhostPoints.end() );
-    //flatGhostPoints_ = flatGhostPoints;
   }
 protected:
   double ci_, cg_;

@@ -234,24 +234,36 @@ namespace Wasatch {
     const bool withoutGhost = true;
     SpatialOps::structured::MemoryWindow fieldWindow = get_memory_window_for_uintah_field<FieldT>(patch, withoutGhost);        
     BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, 0, opdb );
-    const double cg = bcOp.getGhostCoef();
-    const double ci = bcOp.getInteriorCoef();
-    const std::vector<int> flatGhostPoints = bcOp.getFlatGhostPoints();
-    const std::vector<int> flatInteriorPoints = bcOp.getFlatInteriorPoints();
+    double cg = bcOp.getGhostCoef();
+    double ci = bcOp.getInteriorCoef();
+    std::vector<int> flatGhostPoints;   // = bcOp.getFlatGhostPoints();
+    std::vector<int> flatInteriorPoints;// = bcOp.getFlatInteriorPoints();
 
     // construct flat indices for staggered fields
-    std::vector<int> staggeredFlatInteriorPoints;
-    std::vector<int> staggeredFlatGhostPoints;
+    // NOTE ON STAGGERED FIELDS: To avoid random values in the ghost (extra) cell
+    // layer, we also set the SAME BC on those faces if we have Dirichlet conditions.
     if (isStaggered && bc_kind.compare("Dirichlet")==0) {
       for( std::vector<IntVec>::const_iterator interiorIJKIter = bcPointsIJK.begin(),
           ghostIJKIter = ghostPointsIJK.begin();
           interiorIJKIter != bcPointsIJK.end() && ghostIJKIter != ghostPointsIJK.end();
           ++interiorIJKIter, ++ghostIJKIter )
       {
-        staggeredFlatInteriorPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));
-        staggeredFlatGhostPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));
+        flatInteriorPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));
+        flatInteriorPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));
+
+        flatGhostPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));
+        flatGhostPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));
       }
+      
+      cg = 1.0;
+      ci = 0.0;
+      
+    } else {
+      flatGhostPoints = bcOp.getFlatGhostPoints();
+      flatInteriorPoints = bcOp.getFlatInteriorPoints();
     }
+    
+    assert( flatInteriorPoints.size() == flatGhostPoints.size() );
         
     // create unique names for the modifier expressions
     std::string strPatchID;
@@ -263,66 +275,27 @@ namespace Wasatch {
     Expr::Tag modTagGhost;
     
     Expr::ExpressionBuilder* builder = NULL;
-    Expr::ExpressionBuilder* ghostBuilder = NULL;
-    
-    // create constant bc expressions. These are not created from the input file.
-    if (bc_functor_name.compare("none")==0) {
-      modTag = Expr::Tag(fieldName + "_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
-      modTagGhost = Expr::Tag(fieldName + "_ghost_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
-      if (isStaggered) {
-        if (bc_kind.compare("Dirichlet")==0) {
-          builder = new typename ConstantBC<FieldT>::Builder(modTag, bcValue);
-          // also set the value on the staggered ghost cell
-          ghostBuilder = new typename ConstantBC<FieldT>::Builder(modTagGhost, bcValue);
-        } else {
-          builder = new typename ConstantBC<FieldT>::Builder(modTag, bcValue);
-        }
-      } else {
-        builder = new typename ConstantBC<FieldT>::Builder(modTag, bcValue);
-      }
-      
-      if (builder) {
-        factory.register_expression( builder, true );
-        factory.attach_modifier_expression( modTag, phiTag,patch->getID() );
-      }
-      
-      if (ghostBuilder) {
-        factory.register_expression( ghostBuilder, true );
-        factory.attach_modifier_expression( modTagGhost, phiTag,patch->getID() );
-      }
-    } else { // functor - coming soon
-      modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
-      //modTagGhost = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
-      factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
-    }
-    
-    // set the ghost and interior points as well as coefficients
-    BoundaryConditionBase<FieldT>& modExpr = dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
-    if (isStaggered) {
-      if (bc_kind.compare("Dirichlet")==0) {
-        modExpr.set_ghost_coef(1.0);
-        modExpr.set_ghost_points(staggeredFlatInteriorPoints);        
-        modExpr.set_interior_coef(0.0);
-        modExpr.set_interior_points(staggeredFlatGhostPoints);
-        //
-        BoundaryConditionBase<FieldT>& ghostModExpr = dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTagGhost, patch->getID(), false ) );
-        ghostModExpr.set_ghost_coef(1.0);
-        ghostModExpr.set_ghost_points(staggeredFlatGhostPoints);
-        ghostModExpr.set_interior_coef(0.0);
-        ghostModExpr.set_interior_points(staggeredFlatInteriorPoints);
-      } else {
-        modExpr.set_ghost_coef(cg);
-        modExpr.set_ghost_points(flatGhostPoints);        
-        modExpr.set_interior_coef(ci);
-        modExpr.set_interior_points(flatInteriorPoints);
-      }
-    } else {
-      modExpr.set_ghost_coef(cg);
-      modExpr.set_ghost_points(flatGhostPoints);      
-      modExpr.set_interior_coef(ci);
-      modExpr.set_interior_points(flatInteriorPoints);
+    // create constant bc expressions. These are not created from the input file.
+    if (bc_functor_name.compare("none")==0) { // constant bc
+      modTag = Expr::Tag(fieldName + "_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
+      builder = new typename ConstantBC<FieldT>::Builder(modTag, bcValue);
+      factory.register_expression( builder, true );
+    } else { // expression
+      modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
     }
+    // attach the modifier expression to the target expression
+    factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
+    
+    // now retrieve the modifier expression and set the ghost and interior points
+    BoundaryConditionBase<FieldT>& modExpr =
+      dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
+
+    // set the ghost and interior points as well as coefficients
+    modExpr.set_ghost_coef(cg);
+    modExpr.set_ghost_points(flatGhostPoints);
+    modExpr.set_interior_coef(ci);
+    modExpr.set_interior_points(flatInteriorPoints);
   }
   
   //****************************************************************************    

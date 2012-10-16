@@ -70,8 +70,6 @@ public:
   void advertise_dependents( Expr::ExprDeps& exprDeps ){}
   void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
-  //  void set_interior_points( const std::vector<int> flatGhostPoints ){}
-  //  void set_ghost_points( const std::vector<int> flatGhostPoints ){}
   
 private:
   const double bcValue_;

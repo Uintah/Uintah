@@ -462,7 +462,6 @@ namespace Wasatch{
       forceOnGraphParams->getAttribute("tasklist", taskListNames);
       std::vector<std::string>::iterator taskListIter = taskListNames.begin();
       while (taskListIter != taskListNames.end()) {
-        std::cout << "Force On Graph Task " << *taskListIter << std::endl;
         force_expressions_on_graph(forceOnGraphParams, graphCategories_, *taskListIter);
         ++taskListIter;
       }
