@@ -14,7 +14,7 @@
       <initTime>        0.0     </initTime>    
       <delt_min>        1e-10   </delt_min>    
       <delt_max>        0.001   </delt_max>    
-      <max_Timesteps>  120      </max_Timesteps>
+      <max_Timesteps>   25      </max_Timesteps>
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
@@ -23,8 +23,8 @@
   <DataArchiver>
     <filebase>advect_3L_3D.uda</filebase>
     <!--<outputInitTimestep/> -->
-    <!--<outputTimestepInterval>20</outputTimestepInterval> -->
-    <outputInterval> 0.0002 </outputInterval>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <!--<outputInterval> 0.0002 </outputInterval> -->
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
@@ -49,7 +49,7 @@
     <save label = "p.deformationMeasure"/>
     <save label = "p.velocity"/>
 
-     <checkpoint cycle = "2" timestepInterval = "20"/>
+     <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
   <AMR>
@@ -87,7 +87,7 @@
 
             <sphere label = "sphere">
                <origin>           [ 0.0, 0.0, 0.0]   </origin>
-               <radius>           1.0                </radius>
+               <radius>           0.7                </radius>
             </sphere>           
 
             <res>         [2,2,2]       </res>
@@ -107,9 +107,9 @@
       <!--       3D    -->
       <Level>
         <Box label = "0">
-          <lower>       [-2, -2, -2]    </lower>
-          <upper>       [ 2,  2,  2]    </upper>
-          <resolution>  [40, 40, 40]    </resolution>
+          <lower>       [-1, -1, -1]    </lower>
+          <upper>       [ 1,  1,  1]    </upper>
+          <resolution>  [20, 20, 20]    </resolution>
           <patches>     [3,3,3]         </patches>
           <extraCells>  [0,0,0]         </extraCells>
         </Box>

@@ -610,7 +610,7 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
         ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       
-      cerr << setprecision(16) << endl;
+      cerr << setprecision(18) << endl;
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
       
       IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
