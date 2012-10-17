@@ -87,6 +87,8 @@ namespace Uintah{
       const VarLabel* _mf_label; 
       const VarLabel* _density_label; 
 
+      Filter* _filter; 
+
   }; // class ScalarVarianceScaleSim
 }   // namespace Uintah
 
