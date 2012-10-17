@@ -6,7 +6,6 @@ SRCS += \
         $(SRCDIR)/PropertyModelBase.cc \
         $(SRCDIR)/PropertyModelFactory.cc \
         $(SRCDIR)/LaminarPrNo.cc \
-        $(SRCDIR)/ScalarDiss.cc \
         $(SRCDIR)/ABSKP.cc \
         $(SRCDIR)/ExtentRxn.cc \
         $(SRCDIR)/TabStripFactor.cc \
