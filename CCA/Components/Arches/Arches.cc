@@ -50,7 +50,6 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
-#include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
@@ -2938,14 +2937,6 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         // Laminar Pr number calculation
         PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "scalar_diss" ) {
-
-        // Scalar dissipation rate calculation
-        if ( prop_name != "scalar_dissipation_rate" )
-          proc0cout << "Note:  " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
-        PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "absorption_coefficient" ) {

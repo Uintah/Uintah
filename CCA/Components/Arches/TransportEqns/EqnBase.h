@@ -131,7 +131,7 @@ public:
   };
 
   /** @brief Set the density guess bool **/ 
-  inline bool setDensityGuessBool( bool set_point ){ 
+  inline void setDensityGuessBool( bool set_point ){ 
     d_use_density_guess = set_point; 
   };
 

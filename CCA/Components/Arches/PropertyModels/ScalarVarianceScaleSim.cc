@@ -47,7 +47,7 @@ ScalarVarianceScaleSim::~ScalarVarianceScaleSim( )
 
   }
 
-  //delete _filter; 
+  delete _filter; 
 }
 
 
@@ -58,11 +58,14 @@ void ScalarVarianceScaleSim::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
+  bool use_old_filter; 
+
   db->require( "mixture_fraction_label", _mf_label_name ); 
   db->require( "density_label", _density_label_name ); 
-  //db->getWithDefault( "use_old_filter", _use_old_filter, true ); 
+  db->getWithDefault( "use_old_filter", use_old_filter, true ); 
 
-  //_filter = scinew Filter(d_sharedState->allArchesMaterials(), d_myworld, use_old_filter);
+  _filter = scinew Filter( use_old_filter );
+
 }
 
 //---------------------------------------------------------------------------
