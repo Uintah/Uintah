@@ -189,6 +189,16 @@ namespace Wasatch{
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
     {
+      // add a task to update current simulation time
+      Uintah::Task* updateCurrentTimeTask =
+          scinew Uintah::Task( "update current time",
+                               this,
+                               &TimeStepper::update_current_time,
+                               solnGraphHelper_->exprFactory,
+                               rkStage );
+      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+      sched->addTask( updateCurrentTimeTask, patches, materials );
+
       IDSet ids; ids.insert(timeID);
       TaskInterface* const timeTask =
           scinew TaskInterface( ids,
@@ -199,15 +209,6 @@ namespace Wasatch{
                                 1, persistentFields );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
-      // add a task to update current simulation time
-      Uintah::Task* updateCurrentTimeTask =
-          scinew Uintah::Task( "update current time",
-                               this,
-                               &TimeStepper::update_current_time,
-                               solnGraphHelper_->exprFactory,
-                               rkStage );
-      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
-      sched->addTask( updateCurrentTimeTask, patches, materials );
     }
 
     //_________________________________________________________________
