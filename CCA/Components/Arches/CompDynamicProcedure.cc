@@ -765,9 +765,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     filterRho.copy(density, patch->getExtraCellLowIndex(),
         patch->getExtraCellHighIndex());
-#ifdef PetscFilter
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
-#endif 
 
     // making filterRho nonzero 
     sum_vartype den_ref_var;
@@ -791,12 +789,10 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
     if (d_dynScalarModel) {
-#ifdef PetscFilter
       if (d_calcScalar)
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoF, filterVolume, cellType, filterRhoF);
       if (d_calcEnthalpy)
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoE, filterVolume, cellType, filterRhoE);
-#endif
     }
   }
 }
@@ -1544,7 +1540,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexHigh = patch->getFortranCellHighIndex();
     double start_turbTime = Time::currentSeconds();
 
-#ifdef PetscFilter
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoU,   filterVolume, cellType, filterRhoU);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoV,   filterVolume, cellType, filterRhoV);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoW,   filterVolume, cellType, filterRhoW);
@@ -1554,34 +1549,27 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVV,  filterVolume, cellType,  filterRhoVV);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVW,  filterVolume, cellType,  filterRhoVW);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoWW,  filterVolume, cellType,  filterRhoWW);
-#endif
 
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-#ifdef PetscFilter
       d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
-#endif 
     }
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-#ifdef PetscFilter
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFU, filterVolume, cellType, filterRhoFU);
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFV, filterVolume, cellType, filterRhoFV);
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFW, filterVolume, cellType, filterRhoFW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
           d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, scalarBeta[ii], filterVolume, cellType, scalarBetaHat[ii]);
         }
-#endif
       }
       if (d_calcEnthalpy) {
-#ifdef PetscFilter
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEU, filterVolume, cellType, filterRhoEU);
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEV, filterVolume, cellType, filterRhoEV);
         d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEW, filterVolume, cellType, filterRhoEW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
           d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, enthalpyBeta[ii], filterVolume, cellType, enthalpyBetaHat[ii]);
         }
-#endif 
       }
     }  
 
@@ -1894,7 +1882,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-#ifdef PetscFilter
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
     if (d_dynScalarModel) {
@@ -1907,7 +1894,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, enthalpyDenom, filterVolume, cellType, enthalpyDenomHat);
       }
     }      
-#endif
 
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -1968,7 +1954,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
       // filtering for periodic case is not implemented 
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
       d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
       if (d_dynScalarModel) {
         if (d_calcScalar) {
@@ -1978,7 +1963,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempShE, filterVolume, cellType,  ShE);
         }
       }      
-#endif 
     }
     else
       Cs.copy(tempCs, tempCs.getLowIndex(),
@@ -2336,11 +2320,9 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-#ifdef PetscFilter
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhi, filterVolume, cellType, filterRhoPhi);
     d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhiSqr, filterVolume, cellType, filterRhoPhiSqr);
-#endif
 
     // making filterRho nonzero 
     sum_vartype den_ref_var;
