@@ -49,7 +49,6 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
-#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
@@ -620,6 +619,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
   } else if ( d_whichTurbModel == "none" ){ 
+    proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
     d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);
 #ifdef WASATCH_IN_ARCHES
@@ -632,7 +632,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                                                     d_boundaryCondition);
 #endif
   } else {
-    proc0cout << "Notice: No Turbulence model found." << endl;
+    proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
   }
 
   d_turbModel->modelVariance(d_calcVariance);
@@ -2931,12 +2931,6 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         // An example of a constant CC variable property
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "laminar_pr" ) {
-
-        // Laminar Pr number calculation
-        PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "absorption_coefficient" ) {
