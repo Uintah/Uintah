@@ -73,9 +73,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   svn_revision    = getoutput("svn info ../src |grep Revision")
   
   
-                    # 1 for GPU RT machine (kaibab), 0 otherwise.
+                    # 1 for GPU RT machine (albion), 0 otherwise.
                     #   need to make this generic, perhaps pycuda?
-  has_gpu         = 1 if socket.gethostname() == "kaibab" else 0
+  has_gpu         = 1 if socket.gethostname() == "albion" else 0
   
   #__________________________________
   # set environmental variables
