@@ -58,7 +58,7 @@ if [ "$OS" = "Linux" ]; then
        --with-hypre=/usr/local/hypre \\
        --with-boost=/usr/local/boost \\
        --with-cuda=/usr/local/cuda \\
-	   --with-cuda-sdk=/usr/local/cuda-4.0-sdk \\
+       --enable-gencode=20 \\
        --enable-wasatch_3p \\
        USE_WASATCH=yes \\"
 
@@ -73,7 +73,7 @@ if [ "$OS" = "Linux" ]; then
        --with-hypre=/usr/local/hypre \\
        --with-boost=/usr/local/boost \\
        --with-cuda=/usr/local/cuda \\
-	     --with-cuda-sdk=/usr/local/NVIDIA_GPU_Computing_SDK \\
+       --enable-gencode=20 \\
        --enable-wasatch_3p \\
        USE_WASATCH=yes \\"
 
