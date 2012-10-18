@@ -61,8 +61,8 @@ foreach X ( $ts[*]:q)
   #scripts/ICE/gradient.m -dat press.dat -pDir 1 > /dev/null
   #scripts/ICE/gradient.m -dat rho.dat   -pDir 1 > /dev/null
   #scripts/ICE/gradient.m -dat temp.dat  -pDir 1 > /dev/null
-  scripts/ICE/removeBraces vel.dat  >& /dev/null
-  scripts/ICE/removeBraces mom_L.dat >& /dev/null
+  scripts/removeBraces vel.dat  >& /dev/null
+  scripts/removeBraces mom_L.dat >& /dev/null
 
   mv *.dat $uda/.
 

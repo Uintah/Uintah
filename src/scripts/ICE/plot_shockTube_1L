@@ -62,7 +62,7 @@ lineextract -v vel_CC    -o vel.dat   -l 0 -cellCoords -timestep $timeStep -ista
 lineextract -v press_CC  -o press.dat -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
 lineextract -v rho_CC    -o rho.dat   -l 0 -cellCoords -timestep $timeStep -istart -1 0 0 -iend 10000 0 0 -m 0 -uda $uda
 
-scripts/ICE/removeBraces vel.dat
+scripts/removeBraces vel.dat
 
 cp scripts/ICE/riemann.dat $uda/exactSolution.dat
 mv *.dat $uda/.
