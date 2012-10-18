@@ -53,6 +53,12 @@ set file  = $argv[3]
 
 #echo "replace_XML_value  xpath: $xpath, value: $value, file: $file"
 
+# ignore blank lines
+@ nWords = `echo "$xpath" |wc -w`
+
+if( $nWords == 0 ) then
+  exit
+endif
 
 set tmp = (`which xmlstarlet`)
 if ( $status ) then
