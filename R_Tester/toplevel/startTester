@@ -55,7 +55,7 @@ if test "$MACHINE" = "blaze"; then
   WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 fi
 
-if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
+if test "$MACHINE" = "albion" -o "$MACHINE" = "kaibab"; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
   DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
   REPLY_TO="ahumphrey@sci.utah.edu"
