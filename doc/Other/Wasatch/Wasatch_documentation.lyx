@@ -6,6 +6,7 @@
 \begin_preamble
 \usepackage{color}
 \usepackage[font=small,labelfont=bf,margin=0.5in]{caption}
+\newrefformat{lst}{Listing (\ref{#1})}
 \newrefformat{eq}{Eq. (\ref{#1})}
 \newrefformat{lem}{Lemma \ref{#1}}
 \newrefformat{cla}{Claim \ref{#1}}
@@ -6074,6 +6075,193 @@ Turbulent kinetic energy spectrum for the constant Vreman model with
 
 \begin_layout Chapter
 Summary of Supported Expressions
+\end_layout
+
+\begin_layout Section*
+ExprAlgebra
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ExprAlgebra
+\end_layout
+
+\end_inset
+
+ expression provides a simple and intuitive mechanism to add, subtract,
+ or multiply an arbitrary number of source expressions.
+ As an example, consider initializing a scalar variable 
+\begin_inset Formula $\phi$
+\end_inset
+
+ as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi=x+y+z
+\end{equation}
+
+\end_inset
+
+This may be easily accomplished by The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ExprAlgebra
+\end_layout
+
+\end_inset
+
+ expression.
+ The input specification is shown in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+prettyref{lst:wasatch-expr-algebra}
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstset{caption=Specification of an ExprAlgebra expression as the sum of
+ three other expressions.,label=lst:wasatch-expr-algebra} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<BasicExpression type="SVOL">        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <TaskList>initialization</TaskList>        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <NameTag name="phi" state="STATE_N" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <ExprAlgebra algebraicOperation="SUM"> 	
+\end_layout
+
+\begin_layout Plain Layout
+
+      <!-- specify the list of tags of the source expressions -->	  
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="XSVOL" state="STATE_NONE"/> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="YSVOL" state="STATE_NONE"/> 
+\end_layout
+
+\begin_layout Plain Layout
+
+      <NameTag name="ZSVOL" state="STATE_NONE"/> 
+\end_layout
+
+\begin_layout Plain Layout
+
+  </ExprAlgebra>     
+\end_layout
+
+\begin_layout Plain Layout
+
+</BasicExpression>        
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It is possible to construct highly complicated expressions with 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ExprAlgebra
+\end_layout
+
+\end_inset
+
+ by combining different 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ExprAlgebra
+\end_layout
+
+\end_inset
+
+ expressions.
+ This, however, is highly costly from the point of view of graph granularity
+ and scheduling.
+ It is highly desirable that dedicated expressions be written that accomplish
+ specific purposes.
+ However, 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+ExprAlgebra
+\end_layout
+
+\end_inset
+
+ remains a very useful expression for constructing complex initial conditions
+ where the cost invested at initialization is shadowed by the time advance
+ solution.
 \end_layout
 
 \begin_layout Section*
