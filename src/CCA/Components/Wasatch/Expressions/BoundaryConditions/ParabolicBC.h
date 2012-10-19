@@ -32,9 +32,10 @@ class ParabolicBC
   ParabolicBC( const Expr::Tag& indepVarTag,
                const double a,
                const double b,
-               const double c) : 
+               const double c,
+               const double x0) :
   indepVarTag_ (indepVarTag),
-  a_(a), b_(b), c_(c)
+  a_(a), b_(b), c_(c), x0_(x0)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -44,15 +45,16 @@ public:
             const Expr::Tag& indepVarTag,   
             const double a,
             const double b,
-            const double c) : 
+            const double c,
+            const double x0) :
     ExpressionBuilder(resultTag), 
     indepVarTag_ (indepVarTag),
-    a_(a), b_(b), c_(c)
+    a_(a), b_(b), c_(c), x0_(x0)
     {}
-    Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_); }
+    Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, x0_); }
   private:
     const Expr::Tag indepVarTag_;
-    const double a_, b_, c_;
+    const double a_, b_, c_, x0_;
   };
   
   ~ParabolicBC(){}
@@ -65,7 +67,7 @@ public:
 private:
   const FieldT* x_;
   const Expr::Tag indepVarTag_;
-  const double a_, b_, c_;
+  const double a_, b_, c_, x0_;
 };
 
 // ###################################################################
@@ -88,8 +90,10 @@ evaluate()
   const double cg = this->cg_;
   std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
   std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
+  double x = 0.0;
   for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
-    f[*ia] = ( (a_ * (*x_)[*ia] * (*x_)[*ia] + b_ * (*x_)[*ia] + c_) - ci*f[*ib] ) / cg;
+    x = (*x_)[*ia] - x0_;
+    f[*ia] = ( (a_ * x*x + b_ * x + c_) - ci*f[*ib] ) / cg;
   }
 }
 

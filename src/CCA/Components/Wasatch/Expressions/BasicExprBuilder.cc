@@ -755,14 +755,31 @@ namespace Wasatch{
     }
 
     else if ( params->findBlock("ParabolicFunction") ) {
-      double a, b, c;
+      double a=0.0, b=0.0, c=0.0, x0=0.0, f0=0.0, h=0.0;
       Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
-      valParams->getAttribute("a",a);
-      valParams->getAttribute("b",b);
-      valParams->getAttribute("c",c);
+      
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      
+      std::string parabolaType;
+      valParams->getAttribute("type", parabolaType);
+
+      if (parabolaType.compare("CENTERED") == 0) {
+        valParams = valParams->findBlock("Centered");
+        valParams->getAttribute("x0",x0);
+        valParams->getAttribute("f0",f0);
+        valParams->getAttribute("h",h);
+        a = - f0/(h*h);
+        b = 0.0;
+        c = f0;
+      } else if (parabolaType.compare("GENERAL") == 0) {
+        valParams = valParams->findBlock("General");
+        valParams->getAttribute("a",a);
+        valParams->getAttribute("b",b);
+        valParams->getAttribute("c",c);
+      }
+      
       typedef typename ParabolicBC<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag, a, b, c);
+      builder = scinew Builder( tag, indepVarTag, a, b, c, x0);
     }
     return builder;
   }
