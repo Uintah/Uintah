@@ -81,9 +81,9 @@ namespace Uintah {
     }
     
     void getOutputFileName(vector<string>& fname) const {
-      fname.push_back( "output/A" + outputFileName );
-      fname.push_back( "output/b" + outputFileName );
-      fname.push_back( "output/x" + outputFileName );
+      fname.push_back( "A" + outputFileName );
+      fname.push_back( "b" + outputFileName );
+      fname.push_back( "x" + outputFileName );
     }
     
     
