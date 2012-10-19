@@ -837,6 +837,27 @@ void Matrix3::prettyPrint(std::ostream &out_file) const
     out_file <<  m3(2,0) << ' ' << m3(2,1) << ' ' << m3(2,2) << endl;
 }
 
+void Matrix3::gershgorinBounds(double &minBound, double& maxBound)
+{
+   // Use the Gershgorin circle theorem (see, e.g. Wikipedia) to find
+   // the lower and upper bounds of the eigenvalues
+
+   double radius1=fabs(mat3[0][1])+fabs(mat3[0][2]);
+   double radius2=fabs(mat3[1][0])+fabs(mat3[1][2]);
+   double radius3=fabs(mat3[2][0])+fabs(mat3[2][1]);
+
+   double min1=mat3[0][0]-radius1;
+   double min2=mat3[1][1]-radius2;
+   double min3=mat3[2][2]-radius3;
+
+   double max1=mat3[0][0]+radius1;
+   double max2=mat3[1][1]+radius2;
+   double max3=mat3[2][2]+radius3;
+
+   maxBound = std::max(max1,std::max(max2,max3));
+   minBound = std::min(min1,std::min(min2,min3));
+}
+
 namespace Uintah {
   ostream &
   operator << (ostream &out_file, const Matrix3 &m3)
