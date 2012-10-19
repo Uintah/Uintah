@@ -154,13 +154,22 @@ namespace Wasatch{
     else if ( params->findBlock("ExprAlgebra") ) {
       std::string algebraicOperation;
       Uintah::ProblemSpecP valParams = params->findBlock("ExprAlgebra");
-      const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
-      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
-      valParams->getAttribute("algebraicOperation",algebraicOperation);
+      
+
+       Expr::TagList srcFieldTagList;
+       
+       for( Uintah::ProblemSpecP exprParams = valParams->findBlock("NameTag");
+           exprParams != 0;
+           exprParams = exprParams->findNextBlock("NameTag") )
+       {
+          srcFieldTagList.push_back( parse_nametag( exprParams ) );
+       }
+
+       valParams->getAttribute("algebraicOperation",algebraicOperation);
 
       // for now, only support parsing for fields of same type.  In the future,
       // we could extend parsing support for differing source field types.
-      typedef ExprAlgebra<FieldT,FieldT,FieldT> AlgExpr;
+      typedef ExprAlgebra<FieldT> AlgExpr;
       typename AlgExpr::OperationType optype;
       if      (algebraicOperation == "SUM"       ) optype = AlgExpr::SUM;
       else if (algebraicOperation == "DIFFERENCE") optype = AlgExpr::DIFFERENCE;
@@ -172,7 +181,7 @@ namespace Wasatch{
         << " is not supported in ExprAlgebra." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename AlgExpr::Builder( tag, field1Tag, field2Tag, optype );
+      builder = scinew typename AlgExpr::Builder( tag, srcFieldTagList, optype );
     }
 
     else if ( params->findBlock("Cylinder") ) {

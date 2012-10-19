@@ -35,6 +35,7 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
@@ -719,19 +720,23 @@ namespace Wasatch{
   Expr::ExpressionID
   MomentumTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
-  {
-
-    if( icFactory.have_entry( thisVelTag_ ) ){
+  {     
+    if( icFactory.have_entry( thisVelTag_ ) ) {
+      typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
+      Expr::Tag interpolatedDensityTag(densityTag_.name() +"_interp_" + this->dir_name(), Expr::STATE_NONE);
+      icFactory.register_expression(scinew Builder(interpolatedDensityTag, densityTag_));
+      
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file
-      typedef ExprAlgebra<FieldT,FieldT,SVolField> ExprAlgbr;
-      return icFactory.register_expression(
-          new typename ExprAlgbr::Builder( mom_tag(thisMomName_),
-                                           thisVelTag_,
-                                           Expr::Tag(densityTag_.name(),Expr::STATE_NONE),
-                                           ExprAlgbr::PRODUCT ) );
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(thisVelTag_);
+      theTagList.push_back(interpolatedDensityTag);
+      return icFactory.register_expression( new typename ExprAlgbr::Builder( mom_tag(thisMomName_),
+                                                                             theTagList,
+                                                                             ExprAlgbr::PRODUCT ) );
     }
-
+    
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 
