@@ -180,6 +180,10 @@ namespace Uintah {
 
      void prettyPrint(std::ostream &out_file) const;
 
+     // Use the Gershgorin circle theorem (see, e.g. Wikipedia) to find
+     // the lower and upper bounds of the eigenvalues
+     void gershgorinBounds(double &min, double& max);
+
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
     // in e1.  If it returns 2, the values are passed back in e1
