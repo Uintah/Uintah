@@ -338,11 +338,18 @@
 
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
-                            attribute1="a REQUIRED DOUBLE"
-                            attribute2="b REQUIRED DOUBLE"
-                            attribute3="c REQUIRED DOUBLE">
+                          attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
+				<Centered  spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+															attribute1="x0 REQUIRED DOUBLE"
+															attribute2="f0 REQUIRED DOUBLE"
+															attribute3="h REQUIRED DOUBLE"/>
+				<General  spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
+															attribute1="a REQUIRED DOUBLE"
+															attribute2="b REQUIRED DOUBLE"
+															attribute3="c REQUIRED DOUBLE"/>                          
         <NameTag            spec="REQUIRED"/>
       </ParabolicFunction>      
+      
     </BCExpression>
 
   </CommonTags>

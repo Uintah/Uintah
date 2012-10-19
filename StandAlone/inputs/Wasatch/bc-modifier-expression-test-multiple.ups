@@ -23,7 +23,8 @@
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="parabolic-inlet" state="STATE_NONE" />
-      <ParabolicFunction a="-2560" b="640" c="-30">
+      <ParabolicFunction type="GENERAL">
+         <General a="-2560" b="640" c="-30"/>
          <NameTag name="YSVOL" state="STATE_NONE" />
        </ParabolicFunction>
     </BCExpression>
