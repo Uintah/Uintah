@@ -886,16 +886,14 @@ namespace Uintah {
         }
         
         
-
 #ifdef PRINTSYSTEM
-
         //__________________________________
         //   Debugging 
         vector<string> fname;   
         params->getOutputFileName(fname);
-        HYPRE_StructMatrixPrint(fname[0].c_str(), HA, 0);
-        HYPRE_StructVectorPrint(fname[1].c_str(), HB, 0);
-        HYPRE_StructVectorPrint(fname[2].c_str(), HX, 0);
+        HYPRE_StructMatrixPrint(fname[0].c_str(), *HA, 0);
+        HYPRE_StructVectorPrint(fname[1].c_str(), *HB, 0);
+        HYPRE_StructVectorPrint(fname[2].c_str(), *HX, 0);
 #endif
         
         printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );
