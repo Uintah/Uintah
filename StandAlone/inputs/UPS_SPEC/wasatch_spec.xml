@@ -88,12 +88,7 @@
       <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
       <ExprAlgebra   spec="OPTIONAL NO_DATA"
                        attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
-        <Field1      spec="REQUIRED NO_DATA">
-          <NameTag   spec="REQUIRED"/>
-        </Field1>
-        <Field2      spec="REQUIRED NO_DATA">
-          <NameTag   spec="REQUIRED"/>
-        </Field2>
+      <NameTag                  spec="MULTIPLE" />
       </ExprAlgebra>
       
       <!-- creates a circular cylinder "patch" in the domain. this can be used for initialization of scalars for example  !-->
