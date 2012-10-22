@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
