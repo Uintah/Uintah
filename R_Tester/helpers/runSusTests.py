@@ -682,7 +682,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # performance test
     if do_performance_test == 1:
       print "\tPerforming performance test on %s" % (date())
-      performance_RC = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
+      
+      performance_RC = system("performance_check %s %s %s %s %s > performance_check.log.txt 2>&1" % 
+                             (testname, do_plots, ts_file, compare_root, helperspath))
       try:
         short_message_file = open("performance_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
