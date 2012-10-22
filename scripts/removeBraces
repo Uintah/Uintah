@@ -3,14 +3,17 @@
 #    removeBraces <filename> 
 #  This removes the '[' ']' from a file
 #-------------------------------------------------
-set filename = $argv[1]
+set files = ($argv)
 
-echo "file is " $filename
-if ($#argv != 1) then
-  echo " removeBraces <filename>"
+echo "files: " $files
+if ($#argv == 1) then
+  echo " removeBraces <file1 file2 file3......>"
   exit(0)
 endif
 
-sed 's/\[//g' $filename | sed 's/\]//g' >$filename.tmp
-mv $filename.tmp $filename
+foreach X ( $files[*]:q )
+  sed 's/\[//g' $X | sed 's/\]//g' >$X.tmp
+  mv $X.tmp $X
+end
+
 exit
