@@ -163,7 +163,8 @@ required for \textbf{Uintah} are satisfied:
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
 libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
-libglui-dev libxmu-dev g++ gfortran libboost-all-dev git
+libglui-dev libxmu-dev g++ gfortran libboost-all-dev git \
+libxrender-dev libxi-dev
 \end{verbatim}
 
 % \noindent Optional: Additional libraries needed for the Wasatch component:
@@ -225,7 +226,7 @@ sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
-boost-static
+boost-static libXrender-devel libXi-devel
 \end{verbatim} 
 
 
@@ -238,7 +239,8 @@ Core}
 sudo yum install make openmpi-devel openmpi lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 tar diffutils libX11-devel libXext-devel patch wget \
-mesa-libGL-devel mesa-libGLU-devel libXt-devel git
+mesa-libGL-devel mesa-libGLU-devel libXt-devel git \
+libXrender-devel libXi-devel
 \end{verbatim} 
 
 Note:  The packages for boost and cmake are too old and the user must
@@ -254,7 +256,7 @@ sudo zypper install make openmpi-devel openmpi lapack \
 gcc-fortran blas gcc-c++ libxml2-devel subversion \ 
 cmake tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel git boost-devel \
-boost-static
+boost-static libXrender-devel libXi-devel
 \end{verbatim} 
 
 \section{CMake Installation}
@@ -601,7 +603,7 @@ and is the recommended installation method outlined below.
 \subsubsection{Using the ``build\_visit'' Script to Build VisIt}
 \label{subsec:VisItVersion2_tarball}
 
-\begin{enumerate}
+\begin{enumerpate}
 \item Download the build\_visit script from
   \url{http://portal.nersc.gov/svn/visit/trunk/releases/2.5.2/build_visit2_5_2}.
 
@@ -624,7 +626,7 @@ chmod +x build_visit_2.5.2
   option when the script starts up. 
 
 \begin{verbatim}
- ./build_visit_2.5.2 --makeflags -j2 
+./build_visit2_5_2 --makeflags -j2 --no-icet --console
 \end{verbatim}
 
 \emph{NOTE: If you run into problems building QT, you can try setting
@@ -653,31 +655,31 @@ should pick up where it left off.
   directory and make a binary distribution for it so it can be
   installed.  
 \begin{verbatim}
-cd visit2.3.2/src
+cd visit2.5.2/src
  make package 
 \end{verbatim}
 
-Within the visit2.3.2/src directory there should be a gzip'ed tar
+Within the visit2.5.2/src directory there should be a gzip'ed tar
 file that can be installed in different location (VisIT must be
 installed in order to compile and build the UDA reader plugin to
 visualize Uintah data), i.e
 
 \begin{verbatim}
-ls visit2.3.2/src
+ls visit2.5.2/src
  . . . 
- visit2_3_2.linux-x86_64.tar.gz
+ visit2_5_2.linux-x86_64.tar.gz
  . . .
 \end{verbatim}
 
 \item Copy the gzip'd tar file to another location and install VisIT
   (using the visit-install script found in
-  Visit\_2.3.2/visit2.3.2/src/svn\_bin/visit-install) in the directory
+  Visit\_2.5.2/visit2.5.2/src/svn\_bin/visit-install) in the directory
   \emph{visit\_bin\_dir}.
 
 \begin{verbatim}
-cp visit2_3_2.linux-x86_64.tar.gz ~/
+cp visit2_5_2.linux-x86_64.tar.gz ~/
 cd ~/
-~/Visit_2.3.2/visit2.3.2/src/svn_bin/visit-install 2.3.2 linux-x86_64
+~/Visit_2.5.2/visit2.5.2/src/svn_bin/visit-install 2.5.2 linux-x86_64
 visit_bin_dir
 \end{verbatim}
 
@@ -720,7 +722,7 @@ by hand. The instructions for doing this are carefully outlined in the
 VisIt Build Notes file,
 
 \begin{verbatim}
-https://wci.llnl.gov/codes/visit/2.3.2/BUILD_NOTES
+https://wci.llnl.gov/codes/visit/2.5.2/BUILD_NOTES
 \end{verbatim}
 
 \subsubsection{VisIt executable}
