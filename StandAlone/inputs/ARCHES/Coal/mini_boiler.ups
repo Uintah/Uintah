@@ -69,7 +69,7 @@
     <save label="pE_qn1_icv"/>
     <save label="pE_qn2_icv"/>
     <!-- Table Variables -->
-    <save label = "mixture_fraction"/>
+    <save label = "mixture_fraction_2"/>
     <save label = "heatLoss"/>
     <save label = "coal_gas_mix_frac"/>
     <save label = "temperature" table_lookup = "true"/>
@@ -123,7 +123,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -234,7 +234,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -345,7 +345,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -456,7 +456,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -567,7 +567,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -678,7 +678,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
@@ -790,7 +790,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -903,7 +903,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1016,7 +1016,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1129,7 +1129,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1242,7 +1242,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1355,7 +1355,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1468,7 +1468,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1581,7 +1581,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-7620000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>1.0000</value>
         </BCType>
         <BCType id="all" label="test_scalar" var="Dirichlet">
@@ -1694,7 +1694,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -1807,7 +1807,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -1920,7 +1920,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2033,7 +2033,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2146,7 +2146,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2259,7 +2259,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2372,7 +2372,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2485,7 +2485,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2598,7 +2598,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2711,7 +2711,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2824,7 +2824,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -2937,7 +2937,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3050,7 +3050,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3163,7 +3163,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3276,7 +3276,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3389,7 +3389,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3502,7 +3502,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3615,7 +3615,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3728,7 +3728,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3841,7 +3841,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -3954,7 +3954,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4067,7 +4067,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4180,7 +4180,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4293,7 +4293,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4406,7 +4406,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4519,7 +4519,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4632,7 +4632,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4745,7 +4745,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4858,7 +4858,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -4971,7 +4971,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -5084,7 +5084,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -5197,7 +5197,7 @@
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-5435000.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
@@ -5309,7 +5309,7 @@
         <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0000</value>
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
@@ -5473,7 +5473,7 @@
           </initialization>
         </Eqn>
 
-        <Eqn label="mixture_fraction" type="CCscalar">
+        <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <use_density_guess/>
@@ -5596,7 +5596,7 @@
           <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
           <inputfile>../ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
           <hl_scalar_init>0.885</hl_scalar_init>
-          <coal fp_label="mixture_fraction" eta_label="coal_gas_mix_frac"/>
+          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
         </ClassicTable>
       </Properties>
 
