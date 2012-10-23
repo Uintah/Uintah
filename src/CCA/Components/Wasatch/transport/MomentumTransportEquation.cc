@@ -724,7 +724,7 @@ namespace Wasatch{
     if( icFactory.have_entry( thisVelTag_ ) ) {
       typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
       Expr::Tag interpolatedDensityTag(densityTag_.name() +"_interp_" + this->dir_name(), Expr::STATE_NONE);
-      icFactory.register_expression(scinew Builder(interpolatedDensityTag, densityTag_));
+      icFactory.register_expression(scinew Builder(interpolatedDensityTag, Expr::Tag(densityTag_.name(),Expr::STATE_NONE)));
       
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file
