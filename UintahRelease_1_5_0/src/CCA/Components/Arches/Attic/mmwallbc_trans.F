@@ -6,7 +6,7 @@ C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
 C deal in the Software without restriction, including without limitation the
-C rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+C rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 C sell copies of the Software, and to permit persons to whom the Software is
 C furnished to do so, subject to the following conditions:
 C
