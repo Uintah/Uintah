@@ -61,7 +61,7 @@ if [ $MAKEPLOTS -eq "1" ]; then
 fi
 
 #__________________________________
-echo "\nPerforming performance check"
+echo "Performing performance check"
 if [ $percent -gt "10" ]; then
     echo "***Performance test failed"
     echo " -- Time increased by %$percent" > performance_shortmessage.txt
