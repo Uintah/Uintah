@@ -1,7 +1,7 @@
 #hard coded font path barf!
 set term png enhanced font '/usr/share/fonts/truetype/ttf-liberation/LiberationSans-Regular.ttf' 9 size 1400,700
-set output '| display png:-'
-#set output "simRunTimeHistory.png"
+#set output '| display png:-'
+set output "simRunTimeHistory.png"
 
 set grid
 set ylabel 'Simulation Run Time [s]'
