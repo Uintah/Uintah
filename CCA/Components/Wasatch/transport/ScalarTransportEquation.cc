@@ -176,7 +176,7 @@ namespace Wasatch{
       typedef ExprAlgebra<SVolField> ExprAlgbr;
       Expr::TagList theTagList;
       theTagList.push_back(primVarTag_);
-      theTagList.push_back(densityTag_);
+      theTagList.push_back(Expr::Tag(densityTag_.name(),Expr::STATE_NONE));
       return icFactory.register_expression( new typename ExprAlgbr::Builder( solnVarTag_,
                                                                              theTagList,
                                                                              ExprAlgbr::PRODUCT ) );
