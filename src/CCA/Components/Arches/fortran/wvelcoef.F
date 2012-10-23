@@ -1,17 +1,19 @@
 C
+C The MIT License
+C
 C Copyright (c) 1997-2012 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
-C of this software and associated documentation files (the \"Software\"), to
+C of this software and associated documentation files (the "Software"), to
 C deal in the Software without restriction, including without limitation the
-C rights to use, copy, modify, merge, publish, distribute, sublicense, and\/or
+C rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 C sell copies of the Software, and to permit persons to whom the Software is
 C furnished to do so, subject to the following conditions:
 C
 C The above copyright notice and this permission notice shall be included in
 C all copies or substantial portions of the Software.
 C
-C THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+C THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 C IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 C FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 C AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
