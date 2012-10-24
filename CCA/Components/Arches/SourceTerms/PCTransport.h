@@ -32,7 +32,7 @@ class PCTransport: public SourceTermBase {
 public: 
 
   PCTransport( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames );
+                vector<std::string> reqLabelNames, std::string type );
   ~PCTransport();
 
   void problemSetup(const ProblemSpecP& db);
@@ -57,11 +57,13 @@ public:
     public: 
 
       Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
+          _type="pctransport";
+        };
       ~Builder(){}; 
 
       PCTransport* build()
-      { return scinew PCTransport( _name, _shared_state, _required_label_names ); };
+      { return scinew PCTransport( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 
@@ -73,7 +75,16 @@ public:
 
 private:
 
-  double d_constant; 
+  std::string _pc_scal_file; 
+  std::string _pc_st_scal_file; 
+  std::string _svm_base_name;
+  vector<std::string> _svm_models; 
+
+  int _N_PCS;
+  int _N_STS; 
+  int _N_IND; 
+  int _N_TOT;
+
 
 }; // end PCTransport
 } // end namespace Uintah
