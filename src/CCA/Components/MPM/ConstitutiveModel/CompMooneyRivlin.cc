@@ -334,7 +334,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
         // Change F such that the determinant is equal to the average for
         // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index]/J);
       }
 
       // Compute the left Cauchy-Green deformation tensor
@@ -354,7 +354,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       i3w3 = invar3*w3;
 
       pstress[idx]=(B*C1pi1C2 - (B*B)*C2 + Identity*i3w3)*2.0/J;
-      
+
       // Update particle volumes
       pvolume[idx]=(pmass[idx]/rho_orig)*J;
 

@@ -409,7 +409,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
 
         // Change F such that the determinant is equal to the average for
         // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index]/J);
       }
 
       double Jold = deformationGradient[idx].Determinant();

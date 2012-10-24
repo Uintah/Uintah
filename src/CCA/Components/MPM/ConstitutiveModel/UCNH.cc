@@ -1528,7 +1528,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         
         // Change F such that the determinant is equal to the average for
         // the cell
-        pDefGrad_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        pDefGrad_new[idx]*=cbrt(J_CC[cell_index]/J);
         pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       }
       else{
