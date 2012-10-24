@@ -58,7 +58,7 @@ TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps)
   if ( d_minor_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus minor_radius must be > 0.0", __FILE__, __LINE__));
   }
-  if ( d_major_radius <= 0.0) {
+  if ( d_major_radius < 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus major_radius must be > 0.0", __FILE__, __LINE__));
   }
   if(d_axis != "x" && d_axis != "y" && d_axis != "z"){
