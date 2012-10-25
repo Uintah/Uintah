@@ -301,11 +301,13 @@ WARNING
       ProblemSpecP get(const std::string& name, IntVector& value);
       ProblemSpecP get(const std::string& name, Vector& value);
       ProblemSpecP get(const std::string& name, Point& value);
-      ProblemSpecP get(const std::string& name, std::vector<double>& value);   
+      ProblemSpecP get(const std::string& name, std::vector<double>& value);
+      ProblemSpecP get(const std::string& name, std::vector<double>& value, const int nItems); // parse only nItems separated by comma or space
       ProblemSpecP get(const std::string& name, std::vector<int>& value); 
       ProblemSpecP get(const std::string& name, std::vector<IntVector>& value);
       ProblemSpecP get(const std::string& name, std::vector<std::string>& value);
-      
+      ProblemSpecP get(const std::string& name, std::vector<std::string>& value, const int nItems); // parse only nItems separated by comma or space
+
       void parseIntVector(const std::string& str, IntVector& value);
       
       //////////
