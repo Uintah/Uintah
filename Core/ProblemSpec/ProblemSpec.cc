@@ -590,7 +590,7 @@ ProblemSpec::get(const string& name, vector<string>& value)
         continue;
       next = in.peek();
       result += c;
-      if (next == ',' ||  next == ' ' || next == ']') {
+      if (next == ',' ||  next == ' ' || next == ']' || in.eof() ) {
         // push next string onto stack
         value.push_back(result);
         result.erase();
