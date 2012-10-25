@@ -113,14 +113,6 @@ public:
                  const bool with_energy_exch, 
                  const bool modify_ref_den );
 
-  /** @brief Schedule computeHeatLoss -- Not used for this model. */
-  void sched_computeHeatLoss( const LevelP& level, 
-                              SchedulerP& sched, 
-                              const bool intialize_me, const bool calcEnthalpy ){}; 
-
-  /** @brief  schedules computeFirstEnthalpy -- Not used for this model. */
-  void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ){}; 
-
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
@@ -149,9 +141,15 @@ public:
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
 
+	void tableMatching(){}; 
+
   double getTableValue( std::vector<double>, std::string ); 
 
-	void tableMatching(){}; 
+	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
+
+  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions ){return -99;};
+
+	int findIndex( std::string ){return 0; }; 
 
 private:
 

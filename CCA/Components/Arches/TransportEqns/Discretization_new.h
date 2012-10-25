@@ -1794,10 +1794,10 @@ namespace Uintah{
           if (new_bcs != 0) {
             bc_kind = new_bcs->getBCType__NEW(); 
             bc_value = new_bcs->getValue();
-          } else {
-            std::cout << "Warning!  Boundary condition not set for: " << std::endl
-                      << "variable = " << varName << std::endl
-                      << "face = " << face << std::endl;
+//          } else {
+//            std::cout << "Warning!  Boundary condition not set for: " << std::endl
+//                      << "variable = " << varName << std::endl
+//                      << "face = " << face << std::endl;
           }
 
           delete bc; 
@@ -2109,10 +2109,10 @@ namespace Uintah{
           if (new_bcs != 0) {
             bc_kind = new_bcs->getBCType__NEW(); 
             bc_value = new_bcs->getValue();
-          } else {
-            std::cout << "Warning!  Boundary condition not set for: " << std::endl
-                      << "variable = " << varName << std::endl
-                      << "face = " << face << std::endl;
+//          } else {
+//            std::cout << "Warning!  Boundary condition not set for: " << std::endl
+//                      << "variable = " << varName << std::endl
+//                      << "face = " << face << std::endl;
           }
 
           delete bc; 

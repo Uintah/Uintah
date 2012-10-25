@@ -30,7 +30,8 @@
                                                                           extent_rxn, tab_strip_factor, 
                                                                           absorption_coefficient, 
                                                                           empirical_soot, 
-                                                                          algebraic_scalar_diss'"
+                                                                          algebraic_scalar_diss,
+                                                                          heat_loss'"
                                         attribute3="initialization REQUIRED STRING 'constant'">
 
           <!-- constant property model and scalar dissipation rate model --> 
@@ -105,7 +106,24 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
-                                        
+
+          <!-- Heat loss --> 
+          <enthalpy_label               spec="OPTIONAL STRING"
+                                        need_applies_to="type heat_loss"/>  <!-- point to the enthalpy transport equation... optional because you can choose constant value--> 
+          <adiabatic_enthalpy_label     spec="OPTIONAL STRING"
+                                        need_applies_to="type heat_loss"/>  <!-- point to the tabulated adiabatic enthalpy, default = "adiabaticenthalpy" --> 
+          <sensible_enthalpy_label      spec="OPTIONAL STRING"
+                                        need_applies_to="type heat_loss"/>  <!-- point to the tabulated sensible enthalpy, default = "sensibleenthalpy" --> 
+          <hl_bounds                    spec="OPTIONAL NO_DATA" 
+                                        attribute1="low REQUIRED DOUBLE"
+                                        attribute2="high REQUIRED DOUBLE"
+                                        need_applies_to="type heat_loss"/>  <!-- bounds on heat loss.  default = [-1,1] --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
+          <constant_heat_loss           spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE"
+                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant --> 
+                                          
         </model>
       </PropertyModels>
 
@@ -184,7 +202,7 @@
       <Properties                       spec="REQUIRED NO_DATA"
                                           children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
 
-        <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default if false --> 
+        <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default is false --> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
@@ -260,7 +278,7 @@
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
           <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
-          <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- use for simple two stream mixing --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- force adiabatic condition --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />  <!-- initial heat loss value in the domain --> 
           <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
@@ -579,7 +597,7 @@
           <D_mol_constant               spec="OPTIONAL NO_DATA"
                                         attribute1="value REQUIRED DOUBLE"/> <!-- [m^2/s] --> <!-- for constant diffusivity --> 
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian'">
+                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z, gaussian, tabulated'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
@@ -599,6 +617,9 @@
             <center                     spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
             <std                        spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian --> 
             <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant --> 
+
+            <!-- Initialize a variable using table lookup --> 
+            <depend_varname             spec="REQUIRED STRING" need_applies_to="type tabulated"/> <!-- the name of the variable from the table --> 
 
           </initialization>                              
 

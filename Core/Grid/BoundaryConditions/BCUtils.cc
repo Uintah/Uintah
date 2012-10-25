@@ -139,4 +139,32 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   }
 }
 
+void
+getBCKind( const Patch* patch, 
+           const Patch::FaceType face,
+           const int child,
+           const string& desc,
+           const int mat_id,
+           std::string& bc_kind, 
+           std::string& face_label)
+{ 
+  bc_kind = "NotSet";
+
+  const BoundCondBase* bc;
+  const BCDataArray* bcd = patch->getBCDataArray(face);
+  //__________________________________
+  //  non-symmetric BCs
+  // find the bc_value and kind
+  //
+  bc = bcd->getBoundCondData( mat_id, desc, child);
+
+  if (bc != 0) {
+    bc_kind  = bc->getBCType__NEW();
+    delete bc;
+  }
+
+  face_label = bc->getBCFaceName(); 
+
+}  
+
 } // uintah namespace

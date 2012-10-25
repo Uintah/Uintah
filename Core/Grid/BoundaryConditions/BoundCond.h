@@ -88,7 +88,6 @@ WARNING
 
    T getValue() const { return d_value;}; 
 
-   
  protected:
    T d_value;
 

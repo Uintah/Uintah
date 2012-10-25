@@ -129,18 +129,6 @@ public:
 
 
   ///////////////////////////////////////////////////////////////////////
-  // Do not solve the nonlinear system but just copy variables to end
-  // so that they retain the right guess for the next step
-
-  virtual int noSolve(const LevelP& level,
-                      SchedulerP& sched
-#                             ifdef WASATCH_IN_ARCHES
-                      , Wasatch::Wasatch& wasatch,
-                      ExplicitTimeInt* d_timeIntegrator
-#                             endif // WASATCH_IN_ARCHES
-                      );  
-
-  ///////////////////////////////////////////////////////////////////////
   // Schedule the Initialization of non linear solver
   //    [in]
   //        data User data needed for solve

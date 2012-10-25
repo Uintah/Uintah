@@ -194,6 +194,11 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       } 
       db_initialValue->getWithDefault( "shift", d_shift_gauss, 0.0 ); 
 
+    } else if ( d_initFunction == "tabulated" ){ 
+
+      db_initialValue->require( "depend_varname", d_init_dp_varname ); 
+      _table_init = true; 
+      
     } 
   }
 
@@ -749,20 +754,6 @@ ScalarEqn::clipPhi( const Patch* p,
 void
 ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "ScalarEqn::dummyInit"; 
-
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::dummyInit);
-
-  Ghost::GhostType  gn = Ghost::None;
-
-  tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0); 
-  tsk->computes(d_transportVarLabel);
-  tsk->computes(d_oldtransportVarLabel); 
-  tsk->computes(d_FconvLabel); 
-  tsk->computes(d_FdiffLabel); 
-  tsk->computes(d_RHSLabel); 
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
 void 
@@ -772,37 +763,4 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw )
 {
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> phi; 
-    CCVariable<double> rkold_phi;
-    CCVariable<double> RHS; 
-    CCVariable<double> Fconv; 
-    CCVariable<double> Fdiff; 
-    constCCVariable<double> old_phi; 
-
-    new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
-    new_dw->allocateAndPut( rkold_phi, d_oldtransportVarLabel, matlIndex, patch ); 
-    new_dw->allocateAndPut( RHS, d_RHSLabel, matlIndex, patch); 
-    new_dw->allocateAndPut( Fconv, d_FconvLabel, matlIndex, patch); 
-    new_dw->allocateAndPut( Fdiff, d_FdiffLabel, matlIndex, patch); 
-
-    old_dw->get( old_phi, d_transportVarLabel, matlIndex, patch, Ghost::None, 0); 
-
-    Fconv.initialize(0.0); 
-    Fdiff.initialize(0.0); 
-    RHS.initialize(0.0);
-    phi.initialize(0.0); 
-    rkold_phi.initialize(0.0); 
-
-    phi.copyData(old_phi);
-
-    d_boundaryCond->setScalarValueBC( 0, patch, phi, d_eqnName ); 
-
-  }
 }

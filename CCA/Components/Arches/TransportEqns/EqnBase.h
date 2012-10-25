@@ -34,6 +34,7 @@ class ArchesLabel;
 class BoundaryCondition_new;
 class Discretization_new; 
 class ExplicitTimeInt;  
+class MixingRxnModel; 
 class EqnBase{
 
 public:
@@ -45,6 +46,9 @@ public:
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
   virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
+
+  /** @brief Setup any extra information that may need to occur later (like after the table is setup) **/ 
+  void extraProblemSetup( ProblemSpecP& db ); 
 
   /** @brief Creates instances of variables in the new_dw at the begining of the timestep 
              and copies old data into the new variable */
@@ -93,6 +97,14 @@ public:
   /** @brief Set the initial value of the DQMOM transported variable to some function */
   template <class phiType, class constPhiType>  
   void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  );
+
+  /** @brief Initializes the scalar to a value from the table as a function of the dependent variables **/
+  void sched_tableInitialization( const LevelP&, SchedulerP& sched );
+  void tableInialization(const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw );
 
   // Access functions:
   /** @brief Set the boundary condition object associated with this transport equation object */
@@ -158,6 +170,14 @@ public:
     _using_new_intrusion = using_new_intrusions; 
   };
 
+  inline void set_table( MixingRxnModel* table ){
+  	_table = table; 	
+  }; 
+  
+  inline bool does_table_initialization(){ 
+  	return _table_init; 
+  };
+
 protected:
 
   template<class T> 
@@ -178,6 +198,7 @@ protected:
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
   IntrusionBC* _intrusions;               ///< Intrusions for boundary conditions. 
+  MixingRxnModel* _table; 								///< Reference to the table for lookup 
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
@@ -195,6 +216,8 @@ protected:
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
   std::string d_initFunction;             ///< A functional form for initial value.
   std::string d_mol_D_label_name;         ///< Name of the molecular diffusivity label. 
+  std::string d_init_dp_varname; 					///< The name of a table dependent variable which could be used to initialize the transported variable
+	
 
   // Clipping:
   bool d_doClipping;                ///< Boolean: are values clipped?
@@ -240,6 +263,7 @@ protected:
   vector<std::string> d_sources;    ///< List of source terms for this eqn
   double d_mol_diff;                ///< Molecular Diffusivity
   bool d_use_constant_D;            ///< Switch for using constant D or not. 
+  bool _table_init;                 ///< Requires a table lookup for initialization 
 
 private:
 
@@ -458,6 +482,8 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
 
     } else if ( d_initFunction == "gaussian" ) { 
 
+      //======= Gaussian ========
+
       if ( d_dir_gauss == 0 ){ 
 
         phi[c] = d_a_gauss * exp( -1.0*std::pow(x-d_b_gauss,2.0)/(2.0*std::pow(d_c_gauss,2.0))) + d_shift_gauss;
@@ -493,6 +519,12 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
           phi[c] = 0.0;
         }
       }
+
+    } else if ( d_initFunction == "tabulated" ){ 
+
+      //will do the actual initialization later on
+      //but need this here to keep the InvalidValue from throwing..
+
     // ======= add other initialization functions below here ======
     } else {
 

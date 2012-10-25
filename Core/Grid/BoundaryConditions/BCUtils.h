@@ -20,7 +20,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */#ifndef Packages_Uintah_Core_Grid_BC_BCUtils_h
+ */
+#ifndef Packages_Uintah_Core_Grid_BC_BCUtils_h
 #define Packages_Uintah_Core_Grid_BC_BCUtils_h
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -108,7 +109,58 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   }
   return false;
 }  
+
+template <class T>
+bool getIteratorBCValue( const Patch* patch, 
+                         const Patch::FaceType face,
+                         const int child,
+                         const string& desc,
+                         const int mat_id,
+                         T& bc_value,
+                         Iterator& bound_ptr )
+{ 
+  bool foundBC = false;
+
+  const BoundCondBase* bc;
+  const BoundCond<T>* new_bcs;
+  const BCDataArray* bcd = patch->getBCDataArray(face);
+  //__________________________________
+  //  non-symmetric BCs
+  // find the bc_value and kind
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,desc,child);
+    new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
+
+    if (new_bcs != 0) {
+      bc_value = new_bcs->getValue();
+      foundBC = true;
+    }
+    delete bc;
+  }
   
+  //__________________________________
+  //  Now deteriming the iterator
+  if(foundBC){
+    // For this face find the iterator
+    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
+    
+    // bulletproofing
+    if (bound_ptr.done()){  // size of the iterator is 0
+      return false;
+    }
+    return true;
+  }
+  return false;
+}  
+
+void
+getBCKind( const Patch* patch, 
+           const Patch::FaceType face,
+           const int child,
+           const string& desc,
+           const int mat_id,
+           std::string& bc_kind,
+           std::string& face_label );
   
 //______________________________________________________________________
 //  Neumann BC:  CCVariable
