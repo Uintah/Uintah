@@ -549,6 +549,28 @@ ProblemSpec::get(const string& name, vector<double>& value)
 
 // value should probably be empty before calling this...
 ProblemSpecP
+ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  vector<string> string_values;
+  if(!this->get(name, string_values,nItems)) {
+    return 0;
+  }
+  
+  for(vector<string>::const_iterator vit(string_values.begin());
+      vit!=string_values.end();vit++) {
+    const string v(*vit);
+    
+    checkForInputError( v, FLOAT_TYPE );
+    value.push_back( atof(v.c_str()) );
+  }
+  
+  return this;
+}
+
+
+// value should probably be empty before calling this...
+ProblemSpecP
 ProblemSpec::get(const string& name, vector<int>& value)
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
@@ -599,6 +621,40 @@ ProblemSpec::get(const string& name, vector<string>& value)
   }
   return ps;
 } 
+
+// value should probably be empty before calling this...
+ProblemSpecP
+ProblemSpec::get(const string& name, vector<string>& value, const int nItems)
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  ProblemSpecP ps;
+  
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
+    return ps;
+  }
+  else {
+    istringstream in(stringValue);
+    char c,next;
+    string result;
+    int counter = 0;
+    while ( !in.eof() && counter < nItems ) {
+      in >> c;
+      if (c == '[' || c == ',' || c == ' ' || c == ']')
+        continue;
+      next = in.peek();
+      result += c;
+      if (next == ',' ||  next == ' ' || next == ']' || in.eof() ) {
+        // push next string onto stack
+        value.push_back(result);
+        result.erase();
+        counter++;
+      }
+    }
+  }
+  return ps;
+}
 
 ProblemSpecP
 ProblemSpec::get(const string& name, IntVector &value)
