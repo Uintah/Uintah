@@ -5,6 +5,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 
 using namespace std;
 using namespace Uintah;
@@ -19,12 +20,20 @@ d_use_constant_D(false)
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
   d_disc = scinew Discretization_new(); 
   _using_new_intrusion = false; 
+	_table_init = false; 
 }
 
 EqnBase::~EqnBase()
 {
   delete(d_boundaryCond);
   delete(d_disc);
+}
+
+void
+EqnBase::extraProblemSetup( ProblemSpecP& db ){ 
+
+  d_boundaryCond->setupTabulatedBC( db, d_eqnName, _table );
+
 }
 
 void 
@@ -67,10 +76,19 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex, 
                                                            d_eqnName, bound_ptr, 
                                                            nu, child ); 
-        const BoundCond<double> *new_bcs = dynamic_cast<const BoundCond<double> *>(bc); 
-        if (new_bcs != 0) 
-          bc_kind = new_bcs->getBCType__NEW(); 
-        else {
+        const BoundCond<double> *new_bcs_d = dynamic_cast<const BoundCond<double> *>(bc); 
+        const BoundCond<std::string> *new_bcs_st = dynamic_cast<const BoundCond<std::string> *>(bc);
+        bool failed = false; 
+
+        if ( new_bcs_d == 0 ){ 
+          failed = true; 
+          //check string type
+          if ( new_bcs_st != 0 ){ 
+            failed = false; 
+          }
+        }
+
+        if (failed){ 
           string whichface; 
           if (face == 0)
             whichface = "x-";
@@ -99,4 +117,98 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
       }
     }
   }
+}
+
+void
+EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
+{
+
+	std::string taskname = "EqnBase::tableInialization";
+  Task* tsk = scinew Task(taskname, this, &EqnBase::tableInialization); 
+
+	MixingRxnModel::VarMap ivVarMap = _table->getIVVars();
+
+  // independent variables :: these must have been computed previously 
+  for ( MixingRxnModel::VarMap::iterator i = ivVarMap.begin(); i != ivVarMap.end(); ++i ) {
+
+    tsk->requires( Task::NewDW, i->second, Ghost::None, 0 ); 
+
+  }
+
+	// for inert mixing
+	MixingRxnModel::InertMasterMap inertMap = _table->getInertMap(); 
+  for ( MixingRxnModel::InertMasterMap::iterator iter = inertMap.begin(); iter != inertMap.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+  } 
+
+	tsk->modifies( d_transportVarLabel ); 
+
+  sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() ); 
+
+
+}
+
+void 
+EqnBase::tableInialization(const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    //independent variables:
+    std::vector<constCCVariable<double> > indep_storage; 
+		MixingRxnModel::VarMap ivVarMap = _table->getIVVars();
+    std::vector<string> allIndepVarNames = _table->getAllIndepVars(); 
+
+    for ( int i = 0; i < (int) allIndepVarNames.size(); i++ ){
+
+      MixingRxnModel::VarMap::iterator ivar = ivVarMap.find( allIndepVarNames[i] ); 
+
+      constCCVariable<double> the_var; 
+      new_dw->get( the_var, ivar->second, matlIndex, patch, Ghost::None, 0 );
+      indep_storage.push_back( the_var ); 
+
+    }
+
+		MixingRxnModel::InertMasterMap inertMap = _table->getInertMap(); 
+		MixingRxnModel::StringToCCVar inert_mixture_fractions; 
+		inert_mixture_fractions.clear(); 
+    for ( MixingRxnModel::InertMasterMap::iterator iter = inertMap.begin(); iter != inertMap.end(); iter++ ){ 
+      const VarLabel* label = VarLabel::find( iter->first ); 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, label, matlIndex, patch, Ghost::None, 0 ); 
+			MixingRxnModel::ConstVarContainer container; 
+      container.var = variable; 
+
+      inert_mixture_fractions.insert( std::make_pair( iter->first, container) ); 
+
+    } 
+
+		CCVariable<double> eqn_var; 
+		new_dw->getModifiable( eqn_var, d_transportVarLabel, matlIndex, patch ); 
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+			IntVector c = *iter; 
+
+			std::vector<double> iv;
+			for (std::vector<constCCVariable<double> >::iterator iv_iter = indep_storage.begin(); 
+					iv_iter != indep_storage.end(); iv_iter++ ){ 
+
+				iv.push_back( (*iv_iter)[c] ); 
+
+			}
+
+			eqn_var[c] = _table->getTableValue( iv, d_init_dp_varname, inert_mixture_fractions, c ); 
+
+		}
+	}
 }

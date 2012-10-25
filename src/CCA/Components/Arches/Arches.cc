@@ -56,6 +56,7 @@
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -145,7 +146,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcReactingScalar    =  0;
   d_calcScalar            =  0;
   d_calcEnthalpy          =  0;
-  d_calcNewEnthalpy       =  0;
   d_doingRestart          =  false;
 
   nofTimeSteps                     =  0;
@@ -245,9 +245,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     if (db->findBlock("ExplicitSolver")){
       if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
         d_calcEnthalpy = true;
-      }
-      if (db->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver")){
-        d_calcNewEnthalpy = true;
       }
     }
     // Moved model_mixture_fraction_variance to properties
@@ -866,6 +863,13 @@ Arches::problemSetup(const ProblemSpecP& params,
     EqnBase* eqn = ieqn->second;
     eqn->set_intrusion( intrusion_ref );
     eqn->set_intrusion_bool( using_new_intrusions );
+
+    //send a reference of the mixing/rxn table to the eqn for initializiation
+    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    eqn->set_table( d_mixingTable ); 
+
+    //look for an set any tabulated bc's
+    eqn->extraProblemSetup( db ); 
   }
 
 }
@@ -914,6 +918,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls );
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
 
+  // base initialization of all scalars
   sched_scalarInit(level, sched);
 
   // computing flow inlet areas
@@ -967,9 +972,7 @@ Arches::scheduleInitialize(const LevelP& level,
   else {
     bool initialize_it = true;
     bool modify_ref_den = true;
-          d_props->doTableMatching();
-    if ( d_calcEnthalpy || d_calcNewEnthalpy )
-      d_props->sched_initEnthalpy( level, sched );
+    d_props->doTableMatching();
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
   }
 
@@ -1034,6 +1037,11 @@ Arches::scheduleInitialize(const LevelP& level,
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second;
     eqn->sched_checkBCs( level, sched );
+
+    // also, do table initialization here since all scalars should be initialized by now 
+    if (eqn->does_table_initialization()){
+      eqn->sched_tableInitialization( level, sched ); 
+    }
   }
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
@@ -1047,6 +1055,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
+
 
 }
 
@@ -1678,46 +1687,17 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   nofTimeSteps++ ;
   
 #ifdef WASATCH_IN_ARCHES
+
   // disable Wasatch's time integrator because Arches is handling it.
   d_wasatch->disable_timestepper_creation();
   d_wasatch->scheduleTimeAdvance( level, sched );
-#endif // WASATCH_IN_ARCHES
-  
+  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator );
 
-  if ( d_MAlab && d_do_dummy_solve ) {
-#ifndef ExactMPMArchesInitialize
-    if (time < 1.0E-10) {
-      proc0cout << "Calculating at time step = " << nofTimeSteps << endl;
-      d_nlSolver->noSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-          , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-                          );
-    } else {
+#else 
 
-      d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-          );
+  d_nlSolver->nonlinearSolve(level, sched);
 
-    }
-#else //ExactMPMArchesInitialize
-      d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-    );
-#endif
-
-  } else {
-
-    d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-    );
-  }
+#endif 
 
   //__________________________________
   //  on the fly analysis
@@ -2970,6 +2950,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         // Algebraic scalar dissipation rate 
         PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "heat_loss" ){ 
+
+        // Algebraic scalar dissipation rate 
+        PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {

@@ -11,6 +11,7 @@ SRCS += \
         $(SRCDIR)/EmpSoot.cc \
         $(SRCDIR)/AlgebraicScalarDiss.cc \
         $(SRCDIR)/ScalarVarianceScaleSim.cc \
+        $(SRCDIR)/HeatLoss.cc \
         $(SRCDIR)/ConstProperty.cc
 
 

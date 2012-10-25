@@ -89,7 +89,6 @@ Properties::Properties(ArchesLabel* label,
   d_sulfur_chem     = false;
   d_soot_precursors = false;
   d_tabulated_soot  = false;
-  d_newEnthalpySolver = false; 
   d_bc = 0;
   d_filter = 0;
   d_mixingModel = 0;
@@ -298,16 +297,6 @@ Properties::problemSetup(const ProblemSpecP& params)
         }  // tabulated_soot
       }  // radiation
     }
-  } else { 
-
-    // allowance for other enthalpy solver
-    ProblemSpecP params_non_constant = params;
-    const ProblemSpecP params_root = params_non_constant->getRootNode();
-    if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver") ){ 
-
-      d_newEnthalpySolver = true; 
-
-    } 
   } 
 }
 
@@ -2131,20 +2120,9 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool modify_ref_den )
 {
   // this method is temporary while we get rid of properties.cc 
-  if ( ! d_newEnthalpySolver ) { 
-    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
-  } else { 
-    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_newEnthalpySolver );
-  } 
-
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
 }
 
-void 
-Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
-{
-  d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-}
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {

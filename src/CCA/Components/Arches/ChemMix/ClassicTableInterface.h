@@ -82,6 +82,7 @@ class ArchesLabel;
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
 class BoundaryCondition_new; 
+class MixingRxnModel;
 class ClassicTableInterface : public MixingRxnModel {
 
 public:
@@ -117,33 +118,9 @@ public:
                  const bool with_energy_exch, 
                  const bool modify_ref_den );
 
-  /** @brief Schedule computeHeatLoss */
-  void sched_computeHeatLoss( const LevelP& level, 
-                              SchedulerP& sched, 
-                              const bool intialize_me, const bool calcEnthalpy ); 
-
-  /** @brief  Computes the heat loss from the table */
-  void computeHeatLoss( const ProcessorGroup* pc, 
-                        const PatchSubset* patches, 
-                        const MaterialSubset* matls, 
-                        DataWarehouse* old_dw, 
-                        DataWarehouse* new_dw, 
-                        const bool intialize_me, 
-                        const bool calcEnthalpy ); 
-
 
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
-
-  /** @brief  schedules computeFirstEnthalpy */
-  void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ); 
-
-  /** @brief This will initialize the enthalpy to a table value for the first timestep */
-  void computeFirstEnthalpy( const ProcessorGroup* pc, 
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw ); 
 
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
@@ -783,9 +760,47 @@ public:
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
 
+	/** @brief Return a table lookup for a variable given the independent variable space. **/ 
   double getTableValue( std::vector<double>, std::string ); 
 
+	/** @brief Match the requested dependent variable with their table index. **/ 
 	void tableMatching(); 
+
+	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
+	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
+
+	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
+	double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
+
+	/** @brief Return a reference to the inert map for scheduling purposes in other classes.**/ 
+	InertMasterMap& getInertMap(){
+		return d_inertMap; 
+	};
+
+  /** @brief Method to find the index for any dependent variable.  **/
+  int inline findIndex( std::string name ){ 
+
+    int index = -1; 
+
+    for ( int i = 0; i < d_varscount; i++ ) { 
+
+      if ( name.compare( d_allDepVarNames[i] ) == 0 ) {
+        index = i; 
+        break; 
+      }
+    }
+
+    if ( index == -1 ) {
+      ostringstream exception;
+      exception << "Error: The variable " << name << " was not found in the table." << "\n" << 
+        "Please check your input file and try again. " << endl;
+      throw InternalError(exception.str(),__FILE__,__LINE__);
+    }
+
+    return index; 
+  }
+
+
 	
 protected :
 	
@@ -794,9 +809,6 @@ private:
 	Interp_class * ND_interp;
 	
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
-  bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
-  bool d_allocate_soot;     ///< For new DORadiation source term...allocate soot variable 
-  bool _use_mf_for_hl;     ///< Rather than using adiabatic enthalpy from the table, compute using mix. frac and fuel/ox enthalpy
 
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
@@ -840,29 +852,6 @@ private:
     CCVariable<double> data; 
   };
 
-
-  /// @brief Method to find the index for any dependent variable.  
-  int inline findIndex( std::string name ){ 
-
-    int index = -1; 
-
-    for ( int i = 0; i < d_varscount; i++ ) { 
-
-      if ( name.compare( d_allDepVarNames[i] ) == 0 ) {
-        index = i; 
-        break; 
-      }
-    }
-
-    if ( index == -1 ) {
-      ostringstream exception;
-      exception << "Error: The variable " << name << " was not found in the table." << "\n" << 
-        "Please check your input file and try again. " << endl;
-      throw InternalError(exception.str(),__FILE__,__LINE__);
-    }
-
-    return index; 
-  }
 
   void getIndexInfo(); 
   void getEnthalpyIndexInfo(); 

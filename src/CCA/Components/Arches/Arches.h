@@ -349,7 +349,6 @@ private:
   bool d_calcScalar;
   bool d_calcReactingScalar;
   bool d_calcEnthalpy;
-  bool d_calcNewEnthalpy;
   bool d_calcVariance;
   bool d_mixedModel;
   bool d_doMMS;

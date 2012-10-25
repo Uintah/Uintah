@@ -27,9 +27,12 @@
 <!-- Table Variables -->
 <!-- iv's -->
     <save label="coal_gas_mix_frac"/>
+    <save label="mixture_fraction_2"/>
+    <save label="heat_loss"/>
 <!-- dv's -->
     <save label="density" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
+    <save label="temperature" table_lookup="true"/>
     <checkpoint cycle="2" interval="0.2"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -77,6 +80,9 @@
   <Grid>
     <BoundaryConditions>
       <Face side="x-" name="x- face">
+        <BCType id="all" label="bottom wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -94,6 +100,9 @@
         </BCType>
       </Face>
       <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+        <BCType id="all" label="inlet" var="MassFlowInlet">
+          <value>0.1</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
           <value>1.0</value>
         </BCType>
@@ -111,6 +120,9 @@
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
+        <BCType id="all" label="top" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -128,6 +140,9 @@
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
+        <BCType id="all" label="y-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -145,6 +160,9 @@
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
+        <BCType id="all" label="y+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -162,6 +180,9 @@
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
+        <BCType id="all" label="z-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -179,6 +200,9 @@
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
+        <BCType id="all" label="z+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -232,11 +256,11 @@
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
           <addSources>false</addSources>
-          <initialization type="constant">
+          <initialization type="geometry_fill">
             <geom_object>
               <cylinder label="inner cylinder"/>
             </geom_object>
-            <constant>0.0343</constant>
+            <constant>1.0</constant>
           </initialization>
           <Clipping>
             <low>0.0</low>
@@ -250,19 +274,25 @@
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
           <addSources>false</addSources>
-          <initialization type="constant">
+          <initialization type="geometry_fill">
             <geom_object>
               <cylinder label="inner cylinder"/>
             </geom_object>
-            <constant>0.0549</constant>
+            <constant>0.5</constant>
           </initialization>
           <Clipping>
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
       </TransportEqns>
+
+      <PropertyModels>
+        <model type="heat_loss" label="heat_loss" initialization="constant">
+          <constant>0</constant> <!-- for initialization --> 
+          <constant_heat_loss value="0.0"/>
+        </model>
+      </PropertyModels>
 
       <Turbulence model="smagorinsky">
         <variance_coefficient>0.1</variance_coefficient>
@@ -281,60 +311,7 @@
       </Properties>
 
       <BoundaryConditions>
-        <FlowInlet>
-          <Flow_rate>1.0</Flow_rate>
-          <mixture_fraction>1.0</mixture_fraction>
-          <geom_object>
-            <cylinder label="inlet">
-              <bottom>[-5,1.5,1.5]</bottom>
-              <top>[0,1.5,1.5]</top>
-              <radius> .5 </radius>
-            </cylinder>
-          </geom_object>
-          <Prefill direction="X">
-            <geom_object>
-              <cylinder label="inner cylinder"/>
-            </geom_object>
-          </Prefill>
-        </FlowInlet>
-        <WallBC>
-          <geom_object>
-            <box label="botWall">
-              <min>[-1,-1,-1]</min>
-              <max>[0,4,4]</max>
-            </box>
-          </geom_object>
-        </WallBC>
-        <PressureBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="posY_xzWall">
-              <min>[0,3,-1]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroY_xzWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,0,4]</max>
-            </box>
-            <box label="posZ_xyWall">
-              <min>[0,-1,3]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroZ_xyWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,4,0]</max>
-            </box>
-          </geom_object>
-        </PressureBC>
-        <OutletBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="topWall">
-              <min>[3,-1,-1]</min>
-              <max>[4,4,4]</max>
-            </box>
-          </geom_object>
-        </OutletBC>
+        <use_new_bcs/>
         <intrusions>
           <intrusion label="pipe">
             <geom_object>

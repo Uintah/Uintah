@@ -83,7 +83,13 @@ namespace Uintah {
     typedef std::map<string, const VarLabel* >           VarMap;
     typedef std::map<string, CCVariable<double>* >       CCMap; 
     typedef std::map<string, double >                    doubleMap; 
-    typedef std::map<string, doubleMap>                   InertMasterMap; 
+    typedef std::map<string, doubleMap>                  InertMasterMap; 
+    struct ConstVarContainer {
+
+      constCCVariable<double> var; 
+
+    }; 
+    typedef std::map<std::string, ConstVarContainer> StringToCCVar; 
 
     MixingRxnModel( ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
@@ -100,15 +106,6 @@ namespace Uintah {
         const bool with_energy_exch,
         const bool modify_ref_den ) = 0;
 
-    /** @brief Computes the heat loss value */ 
-    virtual void sched_computeHeatLoss( const LevelP& level, 
-        SchedulerP& sched,
-        const bool initialize, const bool calcEnthalpy ) = 0;
-
-    /** @brief Initializes the enthalpy for the first time step */ 
-    virtual void sched_computeFirstEnthalpy( const LevelP& level, 
-        SchedulerP& sched ) = 0; 
-
     /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
     void addAdditionalDV( std::vector<string>& vars );
 
@@ -122,6 +119,14 @@ namespace Uintah {
     /** @brief Returns the value of a single variable given the iv vector 
      * This will be useful for other classes to have access to */
     virtual double getTableValue( std::vector<double>, std::string ) = 0; 
+
+		/** @brief Get a table value **/ 
+    virtual double getTableValue( std::vector<double> iv, std::string depend_varname, 
+        StringToCCVar inert_mixture_fractions, IntVector c) = 0;
+
+    /** @brief Get a table value **/ 
+    virtual double getTableValue( std::vector<double> iv, std::string depend_varname, 
+                   doubleMap inert_mixture_fractions ) = 0;
 		
 		/** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
 		virtual void tableMatching() = 0; 
@@ -140,6 +145,9 @@ namespace Uintah {
   
     /** @brief Returns a <string, double> map of KEY constants found in the table */ 
     inline doubleMap& getAllConstants(){ return d_constants; };
+
+    /** @brief Returns the map of participating inerts **/
+    inline InertMasterMap& getInertMap(){ return d_inertMap; }; 
   
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
     inline void insertIntoMap( const string var_name ){
@@ -157,6 +165,9 @@ namespace Uintah {
       } 
       return; 
     };
+
+    /** @brief Get a dependant variable's index **/ 
+    virtual int findIndex(std::string) = 0; 
 
     /** @brief Returns false if flow is changing temperature */ 
     // In other words, is temperature changing? 
@@ -459,12 +470,6 @@ namespace Uintah {
     VarMap d_ivVarMap;         ///< Independent variable map
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing
-    struct ConstVarContainer {
-
-      constCCVariable<double> var; 
-
-    }; 
-    typedef std::map<std::string, ConstVarContainer> StringToCCVar; 
 
     /** @brief Sets the mixing table's dependent variable list. */
     void setMixDVMap( const ProblemSpecP& root_params ); 
@@ -478,7 +483,6 @@ namespace Uintah {
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
     bool d_adiabatic;                       ///< Will not compute heat loss
-    bool d_use_mixing_model;                ///< Turn on/off mixing model
     bool d_does_post_mixing;                ///< Turn on/off post mixing of inerts
     bool d_has_transform;                   ///< Indicates if a variable transform is used
 
@@ -501,7 +505,7 @@ namespace Uintah {
 
         i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
 
-        proc0cout << "    ---> " << var_name << endl; 
+        proc0cout << " creating a label for  ---> " << var_name << endl; 
 
       } 
       return; 

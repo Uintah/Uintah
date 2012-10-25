@@ -119,15 +119,6 @@ public:
 #                             endif // WASATCH_IN_ARCHES
                               ) = 0;
 
-  ///////////////////////////////////////////////////////////////////////
-  // Interface for dummy Solve of the nonlinear System
-  virtual int noSolve(const LevelP& level,
-                      SchedulerP& sched
-#                             ifdef WASATCH_IN_ARCHES
-                      , Wasatch::Wasatch& wasatch,
-                      ExplicitTimeInt* d_timeIntegrator
-#                             endif // WASATCH_IN_ARCHES
-                      ) = 0;  
 
   const string& getTimeIntegratorType() const
   {

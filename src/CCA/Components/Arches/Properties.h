@@ -201,8 +201,6 @@ public:
                                  const bool initialize, 
                                  const bool modify_ref_den ); 
 
-  void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
-
   void sched_doTPDummyInit( const LevelP&, SchedulerP& );
 
 	void doTableMatching(); 
@@ -324,8 +322,6 @@ private:
 
       // for doing adiabatic gas with non-adiabatic particles
       bool d_adiabGas_nonadiabPart;
-
-      bool d_newEnthalpySolver; 
 
       string mixModel; 
 

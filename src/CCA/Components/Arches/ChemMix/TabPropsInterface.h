@@ -121,33 +121,9 @@ public:
                  const bool with_energy_exch,
                  const bool modify_ref_den );
 
-  /** @brief Schedule computeHeatLoss */
-  void sched_computeHeatLoss( const LevelP& level,
-                              SchedulerP& sched,
-                              const bool intialize_me, const bool calcEnthalpy );
-
-  /** @brief  Computes the heat loss from the table */
-  void computeHeatLoss( const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw,
-                        const bool intialize_me,
-                        const bool calcEnthalpy );
-
 
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
-
-  /** @brief  schedules computeFirstEnthalpy */
-  void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched );
-
-  /** @brief This will initialize the enthalpy to a table value for the first timestep */
-  void computeFirstEnthalpy( const ProcessorGroup* pc,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw );
 
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table
@@ -195,9 +171,15 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
 
+	void tableMatching(){};
+
   double getTableValue( std::vector<double>, std::string );
 
-	void tableMatching(){};
+	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
+
+  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions ){return -99;};
+
+	int findIndex( std::string ){return 0; }; 
 
 protected :
 
