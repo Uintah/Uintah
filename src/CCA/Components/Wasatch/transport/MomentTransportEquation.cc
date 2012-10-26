@@ -452,7 +452,7 @@ namespace Wasatch {
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_modifier", Expr::STATE_NONE);
       icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                   theTagList,
-                                                  ExprAlgbr::PRODUCT ) );      
+                                                  ExprAlgbr::PRODUCT, true ) );
       // attach the modifier expression to the target expression
       icFactory.attach_modifier_expression( modifierTag, phiTag );
     }
