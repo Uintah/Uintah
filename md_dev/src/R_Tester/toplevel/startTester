@@ -37,7 +37,13 @@ if [ "$MACHINE" == "rt" ]; then
   SCRIPT_DIR=/home/csafe-tester/scripts
   CHECKPOINTS=/home/csafe-tester/CheckPoints
   
-  # where the webpage will be, and init webpage
+  # Where the webpage will be, and init webpage
+  # Note you need the following directory structure:
+  #     public_html/          
+  #       Plots/
+  #          Memory/
+  #          simRunTime/
+  
   HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi
@@ -50,12 +56,12 @@ if test "$MACHINE" = "blaze"; then
   SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
   CHECKPOINTS=/usr/local/home/csafe-tester/CheckPoints
   
-  # where the webpage will be, and init webpage
+  # Where the webpage will be, and init webpage  (SEE above notes)
   HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 fi
 
-if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
+if test "$MACHINE" = "albion" -o "$MACHINE" = "kaibab"; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
   DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
   REPLY_TO="ahumphrey@sci.utah.edu"
@@ -66,7 +72,7 @@ if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
   SCRIPT_DIR=/home/csafe-tester/scripts
   CHECKPOINTS=/home/csafe-tester/CheckPoints
   
-  # where the webpage will be, and init webpage
+  # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi

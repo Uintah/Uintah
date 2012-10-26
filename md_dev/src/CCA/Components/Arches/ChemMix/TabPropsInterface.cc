@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- TabPropsInterface.cc --------------------------------------------------
 
@@ -82,33 +76,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
-  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
-
-  d_noisy_hl_warning = false; 
-  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
-    d_noisy_hl_warning = true; 
-  db_tabprops->getWithDefault("lower_hl_bound", d_hl_lower_bound, -1.0); 
-  db_tabprops->getWithDefault("upper_hl_bound", d_hl_upper_bound, 1.0); 
-
-  // only solve for heat loss if a working radiation model is found
-  const ProblemSpecP params_root = db_tabprops->getRootNode();
-  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-  if (db_enthalpy) { 
-    ProblemSpecP db_DO_rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
-    ProblemSpecP db_RMCRT_rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
-    d_adiabatic = true; 
-    if (db_DO_rad || db_RMCRT_rad) { 
-      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
-      d_adiabatic = false; 
-    } else { 
-      proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
-      d_adiabatic = true; 
-    }
-  } else {
-    d_adiabatic = true; 
-  }
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
@@ -552,256 +520,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       }
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
-    }
-  }
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Compute Heat Loss
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
-{
-  string taskname = "TabPropsInterface::computeHeatLoss"; 
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::computeHeatLoss, initialize_me, calcEnthalpy );
-
-  // independent variables
-  for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
-
-    const VarLabel* the_label = i->second;
-    if (i->first != "heat_loss" && i->first != "HeatLoss" ) 
-      tsk->requires( Task::NewDW, the_label, gn, 0 ); 
-  }
-
-  // heat loss must be computed if this is the first FE step 
-  if (initialize_me)
-    tsk->computes( d_lab->d_heatLossLabel );
-  else 
-    tsk->modifies( d_lab->d_heatLossLabel ); 
-
-  if ( calcEnthalpy )
-    tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
-
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
-}
-
-//--------------------------------------------------------------------------- 
-// Compute Heat Loss
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc, 
-                                    const PatchSubset* patches, 
-                                    const MaterialSubset* matls, 
-                                    DataWarehouse* old_dw, 
-                                    DataWarehouse* new_dw, 
-                                    const bool initialize_me,
-                                    const bool calcEnthalpy )
-{
-  for (int p=0; p < patches->size(); p++){
-
-    Ghost::GhostType gn = Ghost::None; 
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> heat_loss; 
-    if ( initialize_me )
-      new_dw->allocateAndPut( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
-    else 
-      new_dw->getModifiable ( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
-    heat_loss.initialize(0.0); 
-
-    constCCVariable<double> enthalpy; 
-    if ( calcEnthalpy ) 
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
-
-    std::vector<constCCVariable<double> > the_variables; 
-
-    // exceptions for cold flow or adiabatic cases
-    bool compute_heatloss = true; 
-    if ( d_coldflow ) 
-      compute_heatloss = false; 
-    if ( d_adiabatic ) 
-      compute_heatloss = false; 
-
-    if ( compute_heatloss ) { 
-
-      for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
-
-        VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
-        if ( ivar->first != "heat_loss" && ivar->first != "HeatLoss" ){
-          constCCVariable<double> test_Var; 
-          new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
-
-          the_variables.push_back( test_Var ); 
-        } else {
-          constCCVariable<double> a_null_var; 
-          the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
-        }
-      }
-
-      bool lower_hl_exceeded = false; 
-      bool upper_hl_exceeded = false;
-
-      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
-        IntVector c = *iter; 
-
-        vector<double> iv; 
-        int index = 0; 
-        for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
-
-          if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss" ) 
-            iv.push_back( (*i)[c] );
-          else 
-            iv.push_back( 0.0 ); 
-
-          index++; 
-        }
-
-        _iv_transform->transform( iv ); 
-
-        // actually compute the heat loss: 
-        SplineMap::iterator i_spline = d_enthalpyVarSpline.find( "sensibleenthalpy" ); 
-        double sensible_enthalpy  = getSingleState( i_spline->second, "sensibleenthalpy", iv ); 
-        i_spline = d_enthalpyVarSpline.find( "adiabaticenthalpy" ); 
-        double adiabatic_enthalpy = getSingleState( i_spline->second, "adiabaticenthalpy", iv );  
-        double current_heat_loss  = 0.0;
-        double small = 1e-10; 
-        if ( calcEnthalpy )
-          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
-
-        if ( current_heat_loss < d_hl_lower_bound ) {
-
-          current_heat_loss = d_hl_lower_bound; 
-          lower_hl_exceeded = true; 
-
-        } else if ( current_heat_loss > d_hl_upper_bound ) { 
-
-          current_heat_loss = d_hl_upper_bound; 
-          upper_hl_exceeded = true; 
-
-        }
-
-        heat_loss[c] = current_heat_loss; 
-
-      }
-
-      if ( d_noisy_hl_warning ) { 
-       
-        if ( upper_hl_exceeded || lower_hl_exceeded ) {  
-          cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
-          if ( lower_hl_exceeded ) 
-            cout << "   --> lower heat loss exceeded. " << endl;
-          if ( upper_hl_exceeded ) 
-            cout << "   --> upper heat loss exceeded. " << endl;
-        } 
-      } 
-    }
-  }
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Compute First Enthalpy
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched )
-{
-  string taskname = "TabPropsInterface::computeFirstEnthalpy"; 
-  Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::computeFirstEnthalpy );
-
-  tsk->modifies( d_lab->d_enthalpySPLabel ); 
-
-  // independent variables
-  for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
-
-    const VarLabel* the_label = i->second;
-    if (i->first != "heat_loss" && i->first != "HeatLoss") 
-      tsk->requires( Task::NewDW, the_label, gn, 0 ); 
-  }
-
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
-
-}
-
-//--------------------------------------------------------------------------- 
-// Compute First Enthalpy
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc, 
-                                         const PatchSubset* patches, 
-                                         const MaterialSubset* matls, 
-                                         DataWarehouse* old_dw, 
-                                         DataWarehouse* new_dw ) 
-{
-
-  for (int p=0; p < patches->size(); p++){
-
-    cout_tabledbg << " In TabPropsInterface::getFirstEnthalpy " << endl;
-
-    Ghost::GhostType gn = Ghost::None; 
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> enthalpy; 
-    new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
-
-    std::vector<constCCVariable<double> > the_variables; 
-
-    for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
-
-      const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
-
-      if ( iv_iter == d_ivVarMap.end() ) {
-        cout << " For variable named: " << *i << endl;
-        throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
-      }
-
-      if ( *i != "heat_loss" && *i != "HeatLoss" ) { // heat loss hasn't been computed yet so this is why 
-                                                     // we have an "if" here.
-        cout_tabledbg << " Found label = " << iv_iter->first << endl;
-        constCCVariable<double> test_Var;
-        new_dw->get( test_Var, iv_iter->second, matlIndex, patch, gn, 0 ); 
-
-        the_variables.push_back( test_Var ); 
-
-      } else {
-
-        constCCVariable<double> a_null_var;
-        the_variables.push_back( a_null_var ); // to preserve the total number of 
-                                               // IV otherwise you will have problems below
-
-      }
-    }
-
-    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
-      IntVector c = *iter; 
-
-      vector<double> iv; 
-      int index = 0; 
-      for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
-
-        if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss") 
-          iv.push_back( (*i)[c] );
-        else 
-          iv.push_back( d_hl_scalar_init ); 
-
-        index++; 
-      }
-
-      _iv_transform->transform( iv ); 
-
-      double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
-      SplineMap::iterator i_spline = d_enthalpyVarSpline.find( "sensibleenthalpy" ); 
-      double sensible_enthalpy  = getSingleState( i_spline->second, "sensibleenthalpy", iv ); 
-      i_spline = d_enthalpyVarSpline.find( "adiabaticenthalpy" ); 
-      double adiabatic_enthalpy = getSingleState( i_spline->second, "adiabaticenthalpy", iv );  
-      enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
-
     }
   }
 }

@@ -47,6 +47,6 @@ elsif ($percent < 0) {
 else {
     print STDERR "Total time stayed the same.\n"
 }
-print $percent;
+print "$percent $test_time";
 exit 0
 

@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/DQMOM.h>
@@ -57,12 +51,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
-#include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
-#include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
+#include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -80,11 +74,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
+
+#include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
+
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
-#include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -126,10 +121,6 @@ using std::endl;
 
 using std::string;
 using namespace Uintah;
-#ifdef PetscFilter
-#include <CCA/Components/Arches/Filter.h>
-#endif
-
 
 static DebugStream dbg("ARCHES", false);
 
@@ -148,7 +139,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
   d_props                 =  0;
   d_turbModel             =  0;
-  d_initTurb              =  0;
   d_scaleSimilarityModel  =  0;
   d_boundaryCondition     =  0;
   d_nlSolver              =  0;
@@ -156,7 +146,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcReactingScalar    =  0;
   d_calcScalar            =  0;
   d_calcEnthalpy          =  0;
-  d_calcNewEnthalpy       =  0;
   d_doingRestart          =  false;
 
   nofTimeSteps                     =  0;
@@ -179,7 +168,6 @@ Arches::~Arches()
   delete d_lab;
   delete d_props;
   delete d_turbModel;
-  delete d_initTurb;
   delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
   delete d_nlSolver;
@@ -257,9 +245,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     if (db->findBlock("ExplicitSolver")){
       if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
         d_calcEnthalpy = true;
-      }
-      if (db->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver")){
-        d_calcNewEnthalpy = true;
       }
     }
     // Moved model_mixture_fraction_variance to properties
@@ -455,8 +440,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (turbulenceModelSpec) {
     struct Wasatch::TurbulenceParameters turbParams = {1.0,0.1,0.1,Wasatch::NONE};    
     // parse the turbulence parameters
-    Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);  
-    //std::cout << "Turbulence Model: " << turbParams.turbulenceModelName << std::endl;    
+    Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);
     // register relevant expressions
     Expr::TagList velTags;
     velTags.push_back(xVelTagN);
@@ -618,10 +602,12 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
 
-  ProblemSpecP turb_db = db->findBlock("Turbulence");
-  turb_db->getAttribute("model", d_whichTurbModel);
+  d_whichTurbModel = "none"; 
+  
+  if ( db->findBlock("Turbulence") ) {
+    db->findBlock("Turbulence")->getAttribute("model",d_whichTurbModel); 
+  }
 
-  //db->require("turbulence_model", turbModel);
   if ( d_whichTurbModel == "smagorinsky"){
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
@@ -631,28 +617,37 @@ Arches::problemSetup(const ProblemSpecP& params,
   }else if ( d_whichTurbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  }else if ( d_whichTurbModel == "complocaldynamicprocedure") {
-    d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
-    d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
-  }
-  else {
-    throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
+  } else if ( d_whichTurbModel == "none" ){ 
+    proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);
+#ifdef WASATCH_IN_ARCHES
+  } else  if ( d_whichTurbModel == "wasatch"){
+    
+    if (!turbulenceModelSpec)
+      throw ProblemSetupException("ERROR: When using the Wasatch turbulence models in Arches you must specify a Turbulence block in the Wasatch section. Please revise your input file.", __FILE__, __LINE__);
+    
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);
+#endif
+  } else {
+    proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
   }
 
-//  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
+  
+#ifdef WASATCH_IN_ARCHES
+  // make sure that if we call problemSetup on the appropriate turbulence model
+  if ( d_whichTurbModel == "wasatch" )
+    d_turbModel->problemSetup(params->findBlock("Wasatch"));
+#endif
+  
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   if (d_dynScalarModel){
     d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
                                         d_calcReactingScalar);
   }
-
-#ifdef PetscFilter
-    d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
-    d_filter->problemSetup(db);
-    d_turbModel->setFilter(d_filter);
-#endif
 
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
@@ -661,9 +656,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_scaleSimilarityModel->problemSetup(db);
 
     d_scaleSimilarityModel->setMixedModel(d_mixedModel);
-#ifdef PetscFilter
-    d_scaleSimilarityModel->setFilter(d_filter);
-#endif
   }
 
   d_props->setBC(d_boundaryCondition);
@@ -871,6 +863,13 @@ Arches::problemSetup(const ProblemSpecP& params,
     EqnBase* eqn = ieqn->second;
     eqn->set_intrusion( intrusion_ref );
     eqn->set_intrusion_bool( using_new_intrusions );
+
+    //send a reference of the mixing/rxn table to the eqn for initializiation
+    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    eqn->set_table( d_mixingTable ); 
+
+    //look for an set any tabulated bc's
+    eqn->extraProblemSetup( db ); 
   }
 
 }
@@ -919,6 +918,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls );
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
 
+  // base initialization of all scalars
   sched_scalarInit(level, sched);
 
   // computing flow inlet areas
@@ -972,9 +972,7 @@ Arches::scheduleInitialize(const LevelP& level,
   else {
     bool initialize_it = true;
     bool modify_ref_den = true;
-          d_props->doTableMatching();
-    if ( d_calcEnthalpy || d_calcNewEnthalpy )
-      d_props->sched_initEnthalpy( level, sched );
+    d_props->doTableMatching();
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
   }
 
@@ -996,24 +994,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   if (!d_MAlab) {
 
-    // check if filter is defined...
-#ifdef PetscFilter
-    if (d_turbModel->getFilter()) {
-      // if the matrix is not initialized
-      if (!d_turbModel->getFilter()->isInitialized())
-        d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-    }
-#endif
-
     if (d_mixedModel) {
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
                                                             init_timelabel);
     }
 
-    if (d_whichTurbModel == "complocaldynamicprocedure")
-      d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
-    else
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+
   }
 
   //______________________
@@ -1050,6 +1037,11 @@ Arches::scheduleInitialize(const LevelP& level,
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second;
     eqn->sched_checkBCs( level, sched );
+
+    // also, do table initialization here since all scalars should be initialized by now 
+    if (eqn->does_table_initialization()){
+      eqn->sched_tableInitialization( level, sched ); 
+    }
   }
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
@@ -1063,6 +1055,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
+
 
 }
 
@@ -1143,7 +1136,7 @@ Arches::sched_paramInit(const LevelP& level,
 
     tsk->computes(d_lab->d_densityCPLabel);
     tsk->computes(d_lab->d_viscosityCTSLabel);
-    tsk->computes(d_lab->d_tauSGSLabel); 
+    tsk->computes(d_lab->d_turbViscosLabel); 
     if (d_dynScalarModel) {
       if (d_calcScalar){
         tsk->computes(d_lab->d_scalarDiffusivityLabel);
@@ -1226,7 +1219,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turb_viscosity; 
     CCVariable<double> scalarDiffusivity;
     CCVariable<double> enthalpyDiffusivity;
     CCVariable<double> reactScalarDiffusivity;
@@ -1382,7 +1375,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-    new_dw->allocateAndPut(tauSGS,    d_lab->d_tauSGSLabel,       indx, patch); 
+    new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch); 
     if (d_dynScalarModel) {
       if (d_calcScalar){
         new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
@@ -1402,7 +1395,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     pressure.initialize(0.0);
     double visVal = d_physicalConsts->getMolecularViscosity();
     viscosity.initialize(visVal);
-    tauSGS.initialize(0.0); 
+    turb_viscosity.initialize(0.0); 
 
     if (d_dynScalarModel) {
       if (d_calcScalar){
@@ -1694,46 +1687,17 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   nofTimeSteps++ ;
   
 #ifdef WASATCH_IN_ARCHES
+
   // disable Wasatch's time integrator because Arches is handling it.
   d_wasatch->disable_timestepper_creation();
   d_wasatch->scheduleTimeAdvance( level, sched );
-#endif // WASATCH_IN_ARCHES
-  
+  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator );
 
-  if ( d_MAlab && d_do_dummy_solve ) {
-#ifndef ExactMPMArchesInitialize
-    if (time < 1.0E-10) {
-      proc0cout << "Calculating at time step = " << nofTimeSteps << endl;
-      d_nlSolver->noSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-          , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-                          );
-    } else {
+#else 
 
-      d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-          );
+  d_nlSolver->nonlinearSolve(level, sched);
 
-    }
-#else //ExactMPMArchesInitialize
-      d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-    );
-#endif
-
-  } else {
-
-    d_nlSolver->nonlinearSolve(level, sched
-#ifdef WASATCH_IN_ARCHES
-                                , *d_wasatch, d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
-    );
-  }
+#endif 
 
   //__________________________________
   //  on the fly analysis
@@ -2951,20 +2915,6 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
-      } else if ( prop_type == "laminar_pr" ) {
-
-        // Laminar Pr number calculation
-        PropertyModelBase::Builder* the_builder = new LaminarPrNo::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "scalar_diss" ) {
-
-        // Scalar dissipation rate calculation
-        if ( prop_name != "scalar_dissipation_rate" )
-          proc0cout << "Note:  " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
-        PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
       } else if ( prop_type == "absorption_coefficient" ) {
         // Coal particles absorption coefficient rate calculation
         if ( prop_name != "abskp" )
@@ -2994,6 +2944,18 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         
         // emperical soot model (computes soot volume fraction and abskp) 
         PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "algebraic_scalar_diss" ){ 
+
+        // Algebraic scalar dissipation rate 
+        PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "heat_loss" ){ 
+
+        // Algebraic scalar dissipation rate 
+        PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {

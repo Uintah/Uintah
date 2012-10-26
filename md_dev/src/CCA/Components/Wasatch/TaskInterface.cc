@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -612,20 +614,6 @@ namespace Wasatch{
   {
     Expr::TagSet newDWFields;
     this->schedule( newDWFields, rkStage );
-  }
-
-  //------------------------------------------------------------------
-
-  TreePtr
-  TaskInterface::get_time_tree()
-  {
-    BOOST_FOREACH( TreeTaskExecute* taskexec, execList_ ){
-      TreePtr tree = taskexec->get_patch_tree_map().begin()->second.tree;
-      if( tree->name()=="set_time" ){
-        return tree;
-      }
-    }
-    throw std::runtime_error( "TaskInterface::get_time_tree() could not resolve a valid tree");
   }
 
   //------------------------------------------------------------------

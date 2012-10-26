@@ -216,7 +216,7 @@
               <lower>        [-3,0,-0.03]     </lower>
               <upper>        [ 3,6, 0.03]     </upper>         
               <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [1,1,1]         </patches>    
+              <patches>      [2,2,1]         </patches>    
               <resolution>   [100,100,1]     </resolution>
            </Box>
 <!--

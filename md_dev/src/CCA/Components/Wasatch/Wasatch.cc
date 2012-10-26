@@ -1,30 +1,26 @@
 /*
-
-  The MIT License
-
-  Copyright (c) 2010-2012 Institute for Clean & Secure Energy (ICSE), University of Utah.
-
-  License for the specific language governing rights and limitations under
-  Permission is hereby granted, free of charge, to any person obtaining a
-  copy of this software and associated documentation files (the "Software"),
-  to deal in the Software without restriction, including without limitation
-  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-  and/or sell copies of the Software, and to permit persons to whom the
-  Software is furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included
-  in all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-  DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 2010-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 #include <fstream>
 
 //-- Uintah framework includes --//
@@ -199,6 +195,7 @@ namespace Wasatch{
     {
       std::ostringstream msg;
       bool foundExtraCells = false;
+      bool isPeriodic = false;
       Uintah::ProblemSpecP grid = params->findBlock("Grid");
       for( Uintah::ProblemSpecP level = grid->findBlock("Level");
            level != 0;
@@ -206,6 +203,7 @@ namespace Wasatch{
         for( Uintah::ProblemSpecP box = level->findBlock("Box");
              box != 0;
              box = level->findNextBlock("Box") ){
+          isPeriodic = level->findBlock("periodic");
           // note that a [0,0,0] specification gets added by default,
           // so we will check to ensure that something other than
           // [0,0,0] has not been specified.
@@ -221,7 +219,15 @@ namespace Wasatch{
           }
         }
       }
-#ifndef WASATCH_IN_ARCHES                
+#     ifdef WASATCH_IN_ARCHES
+      if( !foundExtraCells && !isPeriodic ){
+        msg << endl
+        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
+        << "  Please add an 'extraCells' block to your input file" << endl
+        << endl;
+        throw std::runtime_error( msg.str() );
+      }
+#     else
       if( foundExtraCells ){
         msg << endl
             << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
@@ -229,16 +235,7 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
-#endif
-#ifdef	WASATCH_IN_ARCHES
-      if( !foundExtraCells ){
-        msg << endl
-        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
-        << "  Please add an 'extraCells' block to your input file" << endl
-        << endl;
-        throw std::runtime_error( msg.str() );
-      }      
-#endif
+#     endif
     }
 
 
@@ -452,7 +449,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
+      timeStepper_ = scinew TimeStepper( sharedState_,
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
     }    
     
@@ -462,9 +459,14 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
-      std::string taskListName;
-      forceOnGraphParams->getAttribute("tasklist", taskListName);
-      force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
+      std::vector<std::string> taskListNames;
+      //std::string taskListName;
+      forceOnGraphParams->getAttribute("tasklist", taskListNames);
+      std::vector<std::string>::iterator taskListIter = taskListNames.begin();
+      while (taskListIter != taskListNames.end()) {
+        force_expressions_on_graph(forceOnGraphParams, graphCategories_, *taskListIter);
+        ++taskListIter;
+      }
     }
     
   }
@@ -504,7 +506,8 @@ namespace Wasatch{
     timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
     timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
     const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, 1 ), true );
+    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -770,7 +773,7 @@ namespace Wasatch{
       timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
       timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
       const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTags, sharedState_, rkStage), true );
+      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     } else {
       timeID = exprFactory.get_id(timeTag);
     }

@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,10 +27,6 @@
 
 #include <expression/Expression.h>
 
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationStateP.h>
-
-
 namespace Wasatch{
 
 /**
@@ -42,25 +40,18 @@ namespace Wasatch{
 class SetCurrentTime
  : public Expr::Expression<double>
 {
-  const Uintah::SimulationStateP state_;
-  int RKStage_;
-  double deltat_;
+  int rkStage_;
+  double deltat_, simTime_;
 
-  SetCurrentTime( const Uintah::SimulationStateP sharedState,
-                  const int RKStage );
+  SetCurrentTime();
 
 public:
-  int RKStage;
+  int rkStage;
 
   class Builder : public Expr::ExpressionBuilder
   {
-    const Uintah::SimulationStateP state_;
-    const int RKStage_;
-
   public:
-    Builder( const Expr::TagList& resultsTags,
-             const Uintah::SimulationStateP sharedState,
-             const int RKStage );
+    Builder( const Expr::TagList& resultsTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };
@@ -71,12 +62,10 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml ){}
   void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
   void evaluate();
-  void set_integrator_stage( const int RKStage ){RKStage_ = RKStage;}
+  void set_integrator_stage( const int rkStage ){rkStage_ = rkStage;}
   void set_deltat( const double deltat ) {deltat_ = deltat;}
+  void set_time( const double t ){ simTime_ = t; }
 };
-
-
-
 
 } // namespace Wasatch
 

@@ -379,36 +379,6 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     }
   }
 
-  // for each required scalar variable:
-  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter) {
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    /*
-    if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
-        if( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: CharOxidationShaddix: Invalid variable given in <scalarVars> block for <variable> tag for CharOxidationShaddix model.";
-          errmsg += "\nCould not find given <insert role name here> variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      }
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: CharOxidationShaddix: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-    */
-
-  } //end for
-  
    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }

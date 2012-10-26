@@ -8,7 +8,7 @@
     <NameTag              spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING"
                             attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
-
+                            
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
@@ -88,12 +88,7 @@
       <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
       <ExprAlgebra   spec="OPTIONAL NO_DATA"
                        attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
-        <Field1      spec="REQUIRED NO_DATA">
-          <NameTag   spec="REQUIRED"/>
-        </Field1>
-        <Field2      spec="REQUIRED NO_DATA">
-          <NameTag   spec="REQUIRED"/>
-        </Field2>
+      <NameTag                  spec="MULTIPLE" />
       </ExprAlgebra>
       
       <!-- creates a circular cylinder "patch" in the domain. this can be used for initialization of scalars for example  !-->
@@ -323,6 +318,39 @@
       </InterpolateExpression>
 
     </PostProcessingExpression>
+    
+    
+    <!-- Spec for boundary condition expression types -->
+    <BCExpression      spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD LinearFunction, ParabolicFunction" >
+
+      <TaskList           spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
+      
+      <NameTag            spec="REQUIRED" />
+
+      <!-- linear function: a x + b !-->
+      <LinearFunction     spec="OPTIONAL NO_DATA"
+                            attribute1="slope REQUIRED DOUBLE"      
+                            attribute2="intercept REQUIRED DOUBLE" >
+        <NameTag            spec="REQUIRED" />
+      </LinearFunction>
+
+      <!-- parabolic function: a x^2 + b x + c !-->
+      <ParabolicFunction  spec="OPTIONAL NO_DATA"
+                          attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
+				<Centered  spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+															attribute1="x0 REQUIRED DOUBLE"
+															attribute2="f0 REQUIRED DOUBLE"
+															attribute3="h REQUIRED DOUBLE"/>
+				<General  spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
+															attribute1="a REQUIRED DOUBLE"
+															attribute2="b REQUIRED DOUBLE"
+															attribute3="c REQUIRED DOUBLE"/>                          
+        <NameTag            spec="REQUIRED"/>
+      </ParabolicFunction>      
+      
+    </BCExpression>
 
   </CommonTags>
 
@@ -339,6 +367,8 @@
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
     <BasicExpression            spec="MULTIPLE" />
+
+    <BCExpression            spec="MULTIPLE" />
     
     <PrecipitationBasicExpression     spec="MULTIPLE" />
 
@@ -689,7 +719,7 @@
         <NameTag spec="REQUIRED" />
       </MultiEnvMixingModel>
       
-      <UseMomentReduction spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
+      <RealizableQMOM spec="OPTIONAL NO_DATA"/>  <!-- this tag will decrease moment order by 2 if a singularity happens -->
       
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
@@ -815,7 +845,7 @@
     </MomentTransportEquation>
 
     <ForceOnGraph             spec="MULTIPLE NO_DATA"
-                    attribute1="tasklist REQUIRED STRING 'initialization,advance_solution">
+                    attribute1="tasklist REQUIRED STRING">
       <NameTag                  spec="MULTIPLE" />
     </ForceOnGraph>
 

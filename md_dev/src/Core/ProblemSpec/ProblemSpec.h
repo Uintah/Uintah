@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #ifndef UINTAH_HOMEBREW_ProblemSpec_H
 #define UINTAH_HOMEBREW_ProblemSpec_H
@@ -73,7 +67,6 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 SCI Group
 
 KEYWORDS
    Problem_Specification
@@ -95,6 +88,23 @@ WARNING
       //  If the string is not valid, a ProblemSetupException is thrown.
       enum CheckType { INT_TYPE, FLOAT_TYPE };
       static void checkForInputError( const std::string & stringValue, CheckType type );
+     
+     /**
+      * \enum InputType
+      * \brief Enum that helps in determining the datatype of some input from the input file.
+      */
+      enum InputType { NUMBER_TYPE,
+                       VECTOR_TYPE,
+                       STRING_TYPE,
+                       UNKNOWN_TYPE
+                      };
+     /**
+      *  \brief Function that returns InputType enum with the likely data contained in the string.
+      *  \param stringValue The input data that we wish to question for type information.
+                This is typically obtained from ProblemSpec::get("value", stringValue).
+      *  \return Returns an InputType enum with the likely data contained in the string. 
+      */
+      static ProblemSpec::InputType getInputType(const std::string& stringValue);
 
       enum NodeType {
         ELEMENT_NODE = 1, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE,
@@ -198,6 +208,11 @@ WARNING
       // then 'result' is not modified.
       bool getAttribute(const std::string& attribute, std::string& result) const;
 
+     //////////
+     // If 'attribute' is found, then 'result' is set to the attribute's value.  If it is not found,
+     // then 'result' is not modified.
+     bool getAttribute(const std::string& attribute, std::vector<std::string>& result) const;
+
       //////////
       // passes back the double value associated with value of this node's
       // attributes into result
@@ -268,6 +283,7 @@ WARNING
       void require(const std::string& name, std::vector<double>& value);
       void require(const std::string& name, std::vector<int>& value); 
       void require(const std::string& name, std::vector<IntVector>& value);
+      void require(const std::string& name, std::vector<std::string>& value);
 
       //////////
       // Look for the child tag named 'name' and pass back its
@@ -285,11 +301,13 @@ WARNING
       ProblemSpecP get(const std::string& name, IntVector& value);
       ProblemSpecP get(const std::string& name, Vector& value);
       ProblemSpecP get(const std::string& name, Point& value);
-      ProblemSpecP get(const std::string& name, std::vector<double>& value);   
+      ProblemSpecP get(const std::string& name, std::vector<double>& value);
+      ProblemSpecP get(const std::string& name, std::vector<double>& value, const int nItems); // parse only nItems separated by comma or space
       ProblemSpecP get(const std::string& name, std::vector<int>& value); 
       ProblemSpecP get(const std::string& name, std::vector<IntVector>& value);
       ProblemSpecP get(const std::string& name, std::vector<std::string>& value);
-      
+      ProblemSpecP get(const std::string& name, std::vector<std::string>& value, const int nItems); // parse only nItems separated by comma or space
+
       void parseIntVector(const std::string& str, IntVector& value);
       
       //////////

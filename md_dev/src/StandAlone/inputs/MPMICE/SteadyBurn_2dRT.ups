@@ -85,10 +85,10 @@
     <Level>
       <Box label="1">
         <lower>        [ 0.000,  0.000, -0.0005]    </lower>
-        <upper>        [ 0.090,  0.090,  0.0005]    </upper>
+        <upper>        [ 0.070,  0.070,  0.0005]    </upper>
         <extraCells>   [ 1, 1, 1]                   </extraCells>
         <patches>      [ 2, 2, 1]                   </patches>
-        <resolution>   [ 90, 90, 1]               </resolution>
+        <resolution>   [ 70, 70, 1]               </resolution>
       </Box>
     </Level>
   </Grid>

@@ -9,7 +9,7 @@
 
    <SimulationComponent type="mpm" />
   <Time>
-       <maxTime>200.0e-6</maxTime>
+       <maxTime>20.0e-6</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.5e-14</delt_min>
        <delt_max>1.e-7</delt_max>
@@ -17,7 +17,7 @@
    </Time>
    <DataArchiver>
         <filebase>Charpy.uda</filebase>
-       <outputInterval>10e-6</outputInterval>
+       <outputInterval>1e-6</outputInterval>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.particleID"/>
@@ -48,7 +48,7 @@
        <MPM>	
         <material>
              <density>7.850</density>
-             <constitutive_model type="elastic_plastic">
+             <constitutive_model type="elastic_plastic_hp">
   		<shear_modulus>80.0e10</shear_modulus>
   		<bulk_modulus>173.33e10</bulk_modulus>
                 <yield_condition type="vonMises">
@@ -148,7 +148,7 @@
               </parallelepiped>
               </difference>
                   <res>[2,2,1]</res>
-                  <velocity>[0,-8174,0.0]</velocity>
+                  <velocity>[0,-30000,0.0]</velocity>
                   <temperature>298</temperature>
 		  <color>2</color>
              </geom_object>

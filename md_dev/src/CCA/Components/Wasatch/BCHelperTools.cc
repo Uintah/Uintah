@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,8 +48,9 @@
 #include "Operators/OperatorTypes.h"
 #include "FieldTypes.h"
 #include "BCHelperTools.h"
-#include "Expressions/BoundaryConditions/BasicBoundaryCondition.h"
+#include "Expressions/BoundaryConditions/ConstantBC.h"
 #include "Expressions/BoundaryConditions/ParabolicBC.h"
+#include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
 
 //#define WASATCH_BC_DIAGNOSTICS
 
@@ -224,7 +227,8 @@ namespace Wasatch {
                         const SpatialOps::OperatorDatabase& opdb,
                         const bool isStaggered,
                         const std::string& bc_kind,
-                        const std::string& bc_name)
+                        const std::string& bc_name,
+                        const std::string& bc_functor_name)
   {
     using namespace SpatialOps::structured;
     Expr::ExpressionFactory& factory = *gh.exprFactory;
@@ -232,49 +236,68 @@ namespace Wasatch {
     const bool withoutGhost = true;
     SpatialOps::structured::MemoryWindow fieldWindow = get_memory_window_for_uintah_field<FieldT>(patch, withoutGhost);        
     BCOpT bcOp(fieldWindow, bcPointsIJK, bcSide, 0, opdb );
-    const double ca = bcOp.getGhostCoef();
-    const double cb = bcOp.getInteriorCoef();
-    const std::vector<int> flatGhostPoints = bcOp.getFlatGhostPoints();
-    const std::vector<int> flatInteriorPoints = bcOp.getFlatInteriorPoints();
+    double cg = bcOp.getGhostCoef();
+    double ci = bcOp.getInteriorCoef();
+    std::vector<int> flatGhostPoints;   // = bcOp.getFlatGhostPoints();
+    std::vector<int> flatInteriorPoints;// = bcOp.getFlatInteriorPoints();
 
     // construct flat indices for staggered fields
-    std::vector<int> staggeredFlatInteriorPoints;
-    std::vector<int> staggeredFlatGhostPoints;
-    for( std::vector<IntVec>::const_iterator interiorIJKIter = bcPointsIJK.begin(),
-         ghostIJKIter = ghostPointsIJK.begin();
-        interiorIJKIter != bcPointsIJK.end() && ghostIJKIter != ghostPointsIJK.end(); 
-        ++interiorIJKIter, ++ghostIJKIter )
-    {
-      staggeredFlatInteriorPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));           
-      staggeredFlatGhostPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));           
-    }                        
+    // NOTE ON STAGGERED FIELDS: To avoid random values in the ghost (extra) cell
+    // layer, we also set the SAME BC on those faces if we have Dirichlet conditions.
+    if (isStaggered && bc_kind.compare("Dirichlet")==0) {
+      for( std::vector<IntVec>::const_iterator interiorIJKIter = bcPointsIJK.begin(),
+          ghostIJKIter = ghostPointsIJK.begin();
+          interiorIJKIter != bcPointsIJK.end() && ghostIJKIter != ghostPointsIJK.end();
+          ++interiorIJKIter, ++ghostIJKIter )
+      {
+        flatInteriorPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));
+        flatInteriorPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));
+
+        flatGhostPoints.push_back(fieldWindow.flat_index(*interiorIJKIter));
+        flatGhostPoints.push_back(fieldWindow.flat_index(*ghostIJKIter));
+      }
+      
+      cg = 1.0;
+      ci = 0.0;
+      
+    } else {
+      flatGhostPoints = bcOp.getFlatGhostPoints();
+      flatInteriorPoints = bcOp.getFlatInteriorPoints();
+    }
+    
+    assert( flatInteriorPoints.size() == flatGhostPoints.size() );
         
-    // add patch ID to the name of the bc expression
+    // create unique names for the modifier expressions
     std::string strPatchID;
     std::ostringstream intToStr;
     intToStr << patch->getID();
     strPatchID = intToStr.str();
-    const Expr::Tag modTag(fieldName + "_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
-    //const Expr::Tag yvoltag("YSVOL",Expr::STATE_NONE);
+    
+    Expr::Tag modTag;
+    Expr::Tag modTagGhost;
     
     Expr::ExpressionBuilder* builder = NULL;
-        
-    if (isStaggered) {
-      if (bc_kind.compare("Dirichlet")==0) {
-        builder = new typename BasicBoundaryCondition<FieldT>::Builder(modTag, bcValue,1.0, staggeredFlatInteriorPoints, 0.0, staggeredFlatGhostPoints);
-        // also set the value on the staggered ghost cell
-        const Expr::Tag modTagGhost(fieldName + "_ghost_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
-        factory.register_expression( new typename BasicBoundaryCondition<FieldT>::Builder(modTagGhost, bcValue,1.0, staggeredFlatGhostPoints, 0.0, staggeredFlatInteriorPoints), true );
-        factory.attach_modifier_expression( modTagGhost, phiTag,patch->getID() );        
-      } else {
-        builder = new typename BasicBoundaryCondition<FieldT>::Builder(modTag, bcValue,ca, flatGhostPoints, cb, flatInteriorPoints);
-      }
-    } else {
-      builder = new typename BasicBoundaryCondition<FieldT>::Builder(modTag, bcValue,ca, flatGhostPoints, cb, flatInteriorPoints);           
-      //builder = new typename ParabolicBC<FieldT>::Builder(modTag, yvoltag,-1,1,0,ca, flatGhostPoints, cb, flatInteriorPoints);           
+
+    // create constant bc expressions. These are not created from the input file.
+    if (bc_functor_name.compare("none")==0) { // constant bc
+      modTag = Expr::Tag(fieldName + "_bc_" + bc_name + "_patch_" + strPatchID,Expr::STATE_NONE);
+      builder = new typename ConstantBC<FieldT>::Builder(modTag, bcValue);
+      factory.register_expression( builder, true );
+    } else { // expression
+      modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
     }
-    factory.register_expression( builder, true );
-    factory.attach_modifier_expression( modTag, phiTag,patch->getID() );
+    // attach the modifier expression to the target expression
+    factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
+    
+    // now retrieve the modifier expression and set the ghost and interior points
+    BoundaryConditionBase<FieldT>& modExpr =
+      dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
+
+    // set the ghost and interior points as well as coefficients
+    modExpr.set_ghost_coef(cg);
+    modExpr.set_ghost_points(flatGhostPoints);
+    modExpr.set_interior_coef(ci);
+    modExpr.set_interior_points(flatInteriorPoints);
   }
   
   //****************************************************************************    
@@ -377,7 +400,8 @@ namespace Wasatch {
                              T& bc_value,
                              SCIRun::Iterator& bound_ptr,
                              std::string& bc_kind,
-                             std::string& bc_face_name)
+                             std::string& bc_face_name,
+                             std::string& bc_functor_name)
   {
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
@@ -385,10 +409,12 @@ namespace Wasatch {
 
     bc_value=T(-9);
     bc_kind="NotSet";
+    bc_functor_name="none";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
       bc_kind =  new_bcs->getBCType__NEW();
       bc_face_name = new_bcs->getBCFaceName();
+      bc_functor_name = new_bcs->getFunctorName();
     }
 
     // if no name was specified for the face, then create a unique identifier
@@ -424,7 +450,8 @@ namespace Wasatch {
                            const double bc_value,
                            const SpatialOps::OperatorDatabase& opdb,
                            const std::string& bc_kind,
-                           const std::string& bc_name,                        
+                           const std::string& bc_name,
+                           const std::string& bc_functor_name,
                            const SpatialOps::structured::BCSide bcSide,
                            const SpatialOps::structured::IntVec& faceOffset,
                            const bool hasExtraCells)
@@ -455,7 +482,7 @@ namespace Wasatch {
       set_bc_on_points< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
                                      bcPointsIJK, ghostPointsIJK, bcSide, bc_value,
                                      opdb, is_staggered_bc(staggeredLocation, face),
-                                     bc_kind, bc_name);
+                                     bc_kind, bc_name, bc_functor_name);
     
   }
 
@@ -500,7 +527,8 @@ namespace Wasatch {
                             const double bc_value,
                             const SpatialOps::OperatorDatabase& opdb,
                             const std::string& bc_kind,
-                            const std::string& bc_name )
+                            const std::string& bc_name,
+                            const std::string& bc_functor_name)
   {
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvalT; // basic functor for constant functions.
@@ -513,22 +541,22 @@ namespace Wasatch {
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name,bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         default:
           break;
@@ -537,22 +565,22 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         default:
           break;
@@ -575,7 +603,8 @@ namespace Wasatch {
                                                          const double bc_value,
                                                          const SpatialOps::OperatorDatabase& opdb,
                                                          const std::string& bc_kind,
-                                                         const std::string& bc_name )
+                                                         const std::string& bc_name,
+                                                         const std::string& bc_functor_name)
   {
     namespace SS = SpatialOps::structured;
     typedef FaceTypes<XVolField>::XFace FieldT;
@@ -590,10 +619,10 @@ namespace Wasatch {
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
@@ -606,10 +635,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
@@ -636,7 +665,8 @@ namespace Wasatch {
                                                          const double bc_value,
                                                          const SpatialOps::OperatorDatabase& opdb,
                                                          const std::string& bc_kind,
-                                                         const std::string& bc_name )
+                                                         const std::string& bc_name,
+                                                         const std::string& bc_functor_name)
   {
     namespace SS = SpatialOps::structured;
     typedef FaceTypes<YVolField>::YFace FieldT;
@@ -651,10 +681,10 @@ namespace Wasatch {
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
@@ -667,10 +697,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
         case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
@@ -696,7 +726,8 @@ namespace Wasatch {
                                                          const double bc_value,
                                                          const SpatialOps::OperatorDatabase& opdb,
                                                          const std::string& bc_kind,
-                                                         const std::string& bc_name )
+                                                         const std::string& bc_name,
+                                                         const std::string& bc_functor_name)
   {
     namespace SS = SpatialOps::structured;
     typedef FaceTypes<ZVolField>::ZFace FieldT;
@@ -710,10 +741,10 @@ namespace Wasatch {
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
@@ -726,10 +757,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
         case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
@@ -836,6 +867,7 @@ namespace Wasatch {
               double bc_value = -9;
               std::string bc_kind = "NotSet";
               std::string bc_name = "none";
+              std::string bc_functor_name = "none";
               SCIRun::Iterator bound_ptr;
               //
               // TSAAD NOTE TO SELF:
@@ -845,10 +877,10 @@ namespace Wasatch {
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
               //
-              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name);
+              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
-                process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name);
+                process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name);
               }
             } // child loop
           } // face loop
@@ -916,9 +948,10 @@ namespace Wasatch {
 
         double bc_value = -9;
         std::string bc_kind = "NotSet";
-        std::string bc_name = "none";        
+        std::string bc_name = "none";
+        std::string bc_functor_name = "none";        
         SCIRun::Iterator bound_ptr;
-        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name);
+        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name,bc_functor_name);
 
         if (foundIterator) {
 
@@ -1040,7 +1073,8 @@ namespace Wasatch {
         double bc_value;
         std::string bc_kind;
         std::string bc_name = "none";
-        get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name);
+        std::string bc_functor_name = "none";        
+        get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
         
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
@@ -1236,9 +1270,10 @@ namespace Wasatch {
         
         double bc_value = -9;
         std::string bc_kind = "NotSet";
-        std::string bc_name = "none";        
+        std::string bc_name = "none";
+        std::string bc_functor_name = "none";
         SCIRun::Iterator bound_ptr;
-        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind, bc_name);
+        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
         
         if (foundIterator) {
           
@@ -1318,8 +1353,9 @@ namespace Wasatch {
                                              const std::string& fieldName,            \
                                              const double bc_value,                   \
                                              const SpatialOps::OperatorDatabase& opdb,\
-                                             const std::string& bc_kind,               \
-                                             const std::string& bc_name);
+                                             const std::string& bc_kind,              \
+                                             const std::string& bc_name,              \
+                                             const std::string& bc_functor_name);
 
   INSTANTIATE_PROCESS_BCS_ON_FACE(SVolField);
   INSTANTIATE_PROCESS_BCS_ON_FACE(XVolField);

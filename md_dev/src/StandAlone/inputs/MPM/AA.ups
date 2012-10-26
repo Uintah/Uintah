@@ -5,154 +5,6 @@
     <Meta>
         <title>Axis aligned MMS</title>
     </Meta>
-<!--______________________________________________________________________
-
-  Running this simulation properly will require some changes
-      to the source code:
-
-      1.  to src/CCA/Components/MPM/ParticleCreator/ParticleCreator.cc
-
-          in initializeParticles(...), the first and last lines are included as context:
-{
-
-  Vector dx = patch->dCell();             // you need to normalize the variable A by the 
-  double normalization = dx.length();    // cell spacing so the Linear interpolation will work
-  double A=1e-2 * normalization;
-    
-  double mu = 3846.;
-  double bulk = 8333.;
-  double E = 9.*bulk*mu/(3.*bulk+mu);
-  double rho0=matl->getInitialDensity();
-  double c = sqrt(E/rho0);
-  double U = 0.;
-  double V = A*sin(M_PI*p.y())*sin(M_PI*(2./3.));
-  double W = A*sin(M_PI*p.z())*sin(M_PI*(4./3.));
-  double Fxx=1;
-  double Fyy=1+A*M_PI*cos(M_PI*p.y())*sin(2./3.*M_PI);
-  double Fzz=1+A*M_PI*cos(M_PI*p.z())*sin(4./3.*M_PI);
-  double J = Fxx*Fyy*Fzz;
-  double u = A*(c*M_PI)*sin(M_PI*p.x())*cos(0.);
-  double v = A*(c*M_PI)*sin(M_PI*p.y())*cos(M_PI*(2./3.));
-  double w = A*(c*M_PI)*sin(M_PI*p.z())*cos(M_PI*(4./3.));
-
-  Vector disp(U,V,W);
-  IntVector ppc = (*obj)->getNumParticlesPerCell();
-  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
-  Vector size(1./((double) ppc.x()),
-              1./((double) ppc.y()),
-              1./((double) ppc.z()));
-  position[i] = p+disp;
-  if(d_flags->d_axisymmetric){
-    // assume unit radian extent in the circumferential direction
-    pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
-  } else {
-    // standard voxel volume
-    pvolume[i]  = J*dxpp.x()*dxpp.y()*dxpp.z();
-  }
-
-  psize[i]    = Vector(size.x()*Fxx,size.y()*Fyy,size.z()*Fzz);
-
-  pvelocity[i]    = Vector(u,v,w);
-  ptemperature[i] = (*obj)->getInitialData("temperature");
-  pmass[i]        = matl->getInitialDensity()*pvolume[i]/J;
-  pdisp[i]        = disp;
-
-  if(d_with_color){
-
-      2.  to src/Packages/Uintah/CCA/Components/MPM/SerialMPM.cc
-
-           -In applyExternalLoads, replace:
-      __________________________________
-      } else {
-        // Get the external force data and allocate new space for
-        // external force and copy the data
-        constParticleVariable<Vector> pExternalForce;
-        ParticleVariable<Vector> pExternalForce_new;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExternalForce_new,
-                               lb->pExtForceLabel_preReloc,  pset);
-
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          pExternalForce_new[idx] =
-                  pExternalForce[idx]*flags->d_forceIncrementFactor;
-        }
-      }
-      __________________________________
-          with:
-      __________________________________
-      
-      } else {
-        // Get the external force data and allocate new space for
-        // external force and copy the data
-        constParticleVariable<Vector> pExternalForce;
-        constParticleVariable<Point>  px;
-        constParticleVariable<Vector> pdisp;
-        constParticleVariable<double> pmass;
-        ParticleVariable<Vector> pExternalForce_new;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        old_dw->get(px,             lb->pXLabel,             pset);
-        old_dw->get(pdisp,          lb->pDispLabel,          pset);
-        old_dw->get(pmass,          lb->pMassLabel,          pset);
-        new_dw->allocateAndPut(pExternalForce_new,
-                               lb->pExtForceLabel_preReloc,  pset);
-
-        double mu = 3846.;
-        double bulk = 8333.;
-        double E = 9.*bulk*mu/(3.*bulk+mu);
-        double lam = (3.*bulk-2.*mu)/3.;
-        double rho0=mpm_matl->getInitialDensity();
-        double c = sqrt(E/rho0);
-        double A=.1;
-
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          double X = px[idx].x()-pdisp[idx].x();
-          double Y = px[idx].y()-pdisp[idx].y();
-          double Z = px[idx].z()-pdisp[idx].z();
-
-          double U = A*sin(M_PI*X)*sin(M_PI*c*time);
-          double V = A*sin(M_PI*Y)*sin(M_PI*((2./3.)+c*time));
-          double W = A*sin(M_PI*Z)*sin(M_PI*((4./3.)+c*time));
-
-          double Fxx=1.+A*M_PI*cos(M_PI*X)*sin(c*M_PI*time);
-          double Fyy=1.+A*M_PI*cos(M_PI*Y)*sin(M_PI*((2./3.)+c*time));
-          double Fzz=1.+A*M_PI*cos(M_PI*Z)*sin(M_PI*((4./3.)+c*time));
-
-          double K = log(Fxx*Fyy*Fzz);
-
-          double bx=(M_PI*M_PI)*U*(mu/rho0-c*c-(lam*(K-1.)-mu)/(rho0*Fxx*Fxx));
-          double by=(M_PI*M_PI)*V*(mu/rho0-c*c-(lam*(K-1.)-mu)/(rho0*Fyy*Fyy));
-          double bz=(M_PI*M_PI)*W*(mu/rho0-c*c-(lam*(K-1.)-mu)/(rho0*Fzz*Fzz));
-
-          pExternalForce_new[idx] = pmass[idx]*Vector(bx,by,bz);
-        }
-      }
-      __________________________________
-      
-        -  In interpolateToParticlesAndUpdate, declare and get pFnew (again,
-        the first line is for context):
-
-      constParticleVariable<double> pErosion;
-      constParticleVariable<Matrix3> pFnew;
-
-      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
-      new_dw->get(pFnew,        lb->pDeformationMeasureLabel_preReloc,pset);
-
-        Then, in the loop over particles, add:
-
-        psizeNew[idx]=.5*Vector(pFnew[idx](0,0),pFnew[idx](1,1),pFnew[idx](2,2));
-
-      Note that this assumes 2X2X2 particles/cell.
-
-      Recompile, and run this input file at various resolutions.
-
-      With those runs made, use puda -AA_MMS to determine the error in the
-      solution.
-
-______________________________________________________________________-->
 
    <SimulationComponent type="mpm" />
 
@@ -162,7 +14,8 @@ ______________________________________________________________________-->
         <delt_min>1.e-6</delt_min>
         <delt_max>1.e-2</delt_max>
         <timestep_multiplier>.2</timestep_multiplier>
-        <max_Timesteps>10</max_Timesteps>
+        <max_Timesteps>100000</max_Timesteps>
+        <end_on_max_time_exactly>true</end_on_max_time_exactly>
     </Time>
     <MPM>
         <time_integrator>explicit</time_integrator>
@@ -173,8 +26,7 @@ ______________________________________________________________________-->
     </MPM>
     <DataArchiver>
         <filebase>AA_MMS.uda</filebase>
-        <!-- <outputInterval>0.001</outputInterval> -->
-        <outputTimestepInterval>2</outputTimestepInterval>
+        <outputInterval>0.0005</outputInterval>
         <save label="p.x"></save>
         <save label="p.volume"></save>
         <save label="p.displacement"></save>

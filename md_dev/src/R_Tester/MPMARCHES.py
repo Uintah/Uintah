@@ -14,7 +14,8 @@ from helpers.modUPS import modUPS
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
-#       do_performance_test:    - Run the performance test
+#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
+#                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
@@ -33,7 +34,7 @@ NIGHTLYTESTS = [
                   ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison", "no_restart"]), 
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]), 
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]),
-                  ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["exactComparison", "no_restart"]),
+#                  ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["exactComparison", "no_restart"]),
                   ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "Linux" , ["exactComparison", "no_restart"])
                ]
                
@@ -42,7 +43,7 @@ LOCALTESTS =   [
                   ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
                   ("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
                   ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
-                  ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["exactComparison", "no_restart"]),
+#                  ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["exactComparison", "no_restart"]),
                   ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "All" , ["exactComparison", "no_restart"])
                ]  
 

@@ -465,36 +465,6 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
     }
   }
 
-  // for each required scalar variable:
-  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter) {
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    /*
-    if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
-        if( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: EnthalpyShaddix: Invalid variable given in <scalarVars> block for <variable> tag for EnthalpyShaddix model.";
-          errmsg += "\nCould not find given <insert role name here> variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      }
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: EnthalpyShaddix: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-    */
-
-  } //end for
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }
@@ -630,16 +600,12 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       double scaled_weight;
       double unscaled_weight;
       // enthalpy - particle
-      double scaled_particle_enthalpy;
       double unscaled_particle_enthalpy;
       // paticle length
-      double scaled_length;
       double unscaled_length;
       // particle raw coal mass
-      double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
       // particle char mass
-      double scaled_char_mass;
       double unscaled_char_mass;
 
       // temperature - gas
@@ -680,13 +646,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         } else {
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
-          scaled_particle_enthalpy = (w_particle_enthalpy[c])/scaled_weight;
           unscaled_particle_enthalpy = (w_particle_enthalpy[c]*d_pe_scaling_constant)/scaled_weight;
-          scaled_length = w_particle_length[c]/scaled_weight;
           unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
           unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
-          scaled_char_mass = w_char_mass[c]/scaled_weight;
           unscaled_char_mass = (w_char_mass[c]*d_rh_scaling_constant)/scaled_weight;
         }
 

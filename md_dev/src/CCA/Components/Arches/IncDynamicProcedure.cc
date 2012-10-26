@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- IncDynamicProcedure.cc --------------------------------------------------
 
@@ -102,6 +96,7 @@ IncDynamicProcedure::getMolecularViscosity() const {
 void 
 IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
+  problemSetupCommon( params ); 
   ProblemSpecP db = params->findBlock("Turbulence");
   if (d_calcVariance) {
     proc0cout << "Scale similarity type model with Reynolds filter will be used"<<endl;
@@ -186,6 +181,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                 d_lab->d_symTensorMatl, oams, gac, 1);
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gac, 1);
   
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -218,6 +214,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1); 
 
   // for multimaterial
   if (d_MAlab){
@@ -226,7 +223,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   
   // Computes
   tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_tauSGSLabel);
+  tsk->modifies(d_lab->d_turbViscosLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_CsLabel);
@@ -710,11 +707,13 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
     // Get the velocity, density and viscosity from the old data warehouse
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(ccVel,   d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,       indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel,       indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -856,488 +855,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
   TAU_PROFILE_STOP(compute1);
-#ifndef PetscFilter
-    if (xminus) { 
-      for (int colZ = startZ; colZ < endZ; colZ ++) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(startX-1, colY, colZ);
-          IntVector prevCell(startX, colY, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-    }
-    if (xplus) {
-      for (int colZ = startZ; colZ < endZ; colZ ++) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(endX, colY, colZ);
-          IntVector prevCell(endX-1, colY, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-    }
-    if (yminus) { 
-      for (int colZ = startZ; colZ < endZ; colZ ++) {
-        for (int colX = startX; colX < endX; colX ++) {
-          IntVector currCell(colX, startY-1, colZ);
-          IntVector prevCell(colX, startY, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-    }
-    if (yplus) {
-      for (int colZ = startZ; colZ < endZ; colZ ++) {
-        for (int colX = startX; colX < endX; colX ++) {
-          IntVector currCell(colX, endY, colZ);
-          IntVector prevCell(colX, endY-1, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-    }
-    if (zminus) { 
-      for (int colY = startY; colY < endY; colY ++) {
-        for (int colX = startX; colX < endX; colX ++) {
-          IntVector currCell(colX, colY, startZ-1);
-          IntVector prevCell(colX, colY, startZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-                               
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-                               
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-                               
-
-        }
-      }
-    }
-    if (zplus) {
-      for (int colY = startY; colY < endY; colY ++) {
-        for (int colX = startX; colX < endX; colX ++) {
-          IntVector currCell(colX, colY, endZ);
-          IntVector prevCell(colX, colY, endZ-1);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-                               
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-                               
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-                               
-
-        }
-      }
-    }
-    // fill the corner cells
-    if (xminus) {
-      if (yminus) {
-        for (int colZ = startZ; colZ < endZ; colZ ++) {
-          IntVector currCell(startX-1, startY-1, colZ);
-          IntVector prevCell(startX, startY, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (yplus) {
-        for (int colZ = startZ; colZ < endZ; colZ ++) {
-          IntVector currCell(startX-1, endY, colZ);
-          IntVector prevCell(startX, endY-1, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (zminus) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(startX-1, colY, startZ-1);
-          IntVector prevCell(startX, colY, startZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (zplus) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(startX-1, colY, endZ);
-          IntVector prevCell(startX, colY, endZ-1);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (yminus&&zminus) {
-        IntVector currCell(startX-1, startY-1, startZ-1);
-        IntVector prevCell(startX, startY, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yminus&&zplus) {
-        IntVector currCell(startX-1, startY-1, endZ);
-        IntVector prevCell(startX, startY, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yplus&&zminus) {
-        IntVector currCell(startX-1, endY, startZ-1);
-        IntVector prevCell(startX, endY-1, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yplus&&zplus) {
-        IntVector currCell(startX-1, endY, endZ);
-        IntVector prevCell(startX, endY-1, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-        
-    }
-    if (xplus) {
-      if (yminus) {
-        for (int colZ = startZ; colZ < endZ; colZ ++) {
-          IntVector currCell(endX, startY-1, colZ);
-          IntVector prevCell(endX-1, startY, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (yplus) {
-        for (int colZ = startZ; colZ < endZ; colZ ++) {
-          IntVector currCell(endX, endY, colZ);
-          IntVector prevCell(endX-1, endY-1, colZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (zminus) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(endX, colY, startZ-1);
-          IntVector prevCell(endX-1, colY, startZ);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (zplus) {
-        for (int colY = startY; colY < endY; colY ++) {
-          IntVector currCell(endX, colY, endZ);
-          IntVector prevCell(endX-1, colY, endZ-1);
-          (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-          (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-          (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-          (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-          (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-          (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-        }
-      }
-      if (yminus&&zminus) {
-        IntVector currCell(endX, startY-1, startZ-1);
-        IntVector prevCell(endX-1, startY, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yminus&&zplus) {
-        IntVector currCell(endX, startY-1, endZ);
-        IntVector prevCell(endX-1, startY, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yplus&&zminus) {
-        IntVector currCell(endX, endY, startZ-1);
-        IntVector prevCell(endX-1, endY-1, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-      if (yplus&&zplus) {
-        IntVector currCell(endX, endY, endZ);
-        IntVector prevCell(endX-1, endY-1, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-        
-    }
-    // for yminus&&zminus fill the corner cells for all internal x
-    if (yminus&&zminus) {
-      for (int colX = startX; colX < endX; colX++) {
-        IntVector currCell(colX, startY-1, startZ-1);
-        IntVector prevCell(colX, startY, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-    }
-    if (yminus&&zplus) {
-      for (int colX = startX; colX < endX; colX++) {
-        IntVector currCell(colX, startY-1, endZ);
-        IntVector prevCell(colX, startY, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-    }
-    if (yplus&&zminus) {
-      for (int colX = startX; colX < endX; colX++) {
-        IntVector currCell(colX, endY, startZ-1);
-        IntVector prevCell(colX, endY-1, startZ);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-          UU[currCell] = UU[prevCell];
-          UV[currCell] = UV[prevCell];
-          UW[currCell] = UW[prevCell];
-          VV[currCell] = VV[prevCell];
-          VW[currCell] = VW[prevCell];
-          WW[currCell] = WW[prevCell];
-      }
-    }
-    if (yplus&&zplus) {
-      for (int colX = startX; colX < endX; colX++) {
-        IntVector currCell(colX, endY, endZ);
-        IntVector prevCell(colX, endY-1, endZ-1);
-        (betaIJ[0])[currCell] =  (betaIJ[0])[prevCell];
-        (betaIJ[1])[currCell] =  (betaIJ[1])[prevCell];
-        (betaIJ[2])[currCell] =  (betaIJ[2])[prevCell];
-        (betaIJ[3])[currCell] =  (betaIJ[3])[prevCell];
-        (betaIJ[4])[currCell] =  (betaIJ[4])[prevCell];
-        (betaIJ[5])[currCell] =  (betaIJ[5])[prevCell];
-        UU[currCell] = UU[prevCell];
-        UV[currCell] = UV[prevCell];
-        UW[currCell] = UW[prevCell];
-        VV[currCell] = VV[prevCell];
-        VW[currCell] = VW[prevCell];
-        WW[currCell] = WW[prevCell];
-      }
-    }        
-#endif
     Array3<double> filterUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUU.initialize(0.0);
     Array3<double> filterUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -1359,84 +876,26 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
     double start_turbTime = Time::currentSeconds();
-#ifdef PetscFilter
 
-    d_filter->applyFilter(pc, patch, ccVel, filterUVel, 0);
-    d_filter->applyFilter(pc, patch, ccVel, filterVVel, 1);
-    d_filter->applyFilter(pc, patch, ccVel, filterWVel, 2);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UU, filterUU);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UV, filterUV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,UW, filterUW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,VV, filterVV);
-    d_filter->applyFilter< Array3<double> >(pc, patch,VW, filterVW);
-    d_filter->applyFilter< Array3<double> >(pc, patch,WW, filterWW);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterUVel, 0);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterVVel, 1);
+    d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterWVel, 2);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UU, filterVolume, cellType, filterUU);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UV, filterVolume, cellType, filterUV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, UW, filterVolume, cellType, filterUW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VV, filterVolume, cellType, filterVV);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VW, filterVolume, cellType, filterVW);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, WW, filterVolume, cellType, filterWW);
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter< constCCVariable<double> >(pc, patch,SIJ[ii], SHATIJ[ii]);
-      d_filter->applyFilter< Array3<double> >(pc, patch,betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, SIJ[ii], filterVolume, cellType, SHATIJ[ii]);
+      d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch,betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
+
     if (pc->myrank() == 0){
       cerr << "Time for the Filter operation in Turbulence Model: " << 
         Time::currentSeconds()-start_turbTime << " seconds\n";
     }
-#else
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-          double filter = pow(delta, 1.0/3.0);
-          double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-                             (2.0*cellinfo->stb[colZ]);
-          double invDelta = 1.0/cube_delta;
-          filterUVel[currCell] = 0.0;
-          filterVVel[currCell] = 0.0;
-          filterWVel[currCell] = 0.0;
-          filterUU[currCell] = 0.0;
-          filterUV[currCell] = 0.0;
-          filterUW[currCell] = 0.0;
-          filterVV[currCell] = 0.0;
-          filterVW[currCell] = 0.0;
-          filterWW[currCell] = 0.0;
-          
-          for (int kk = -1; kk <= 1; kk ++) {
-            for (int jj = -1; jj <= 1; jj ++) {
-              for (int ii = -1; ii <= 1; ii ++) {
-                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-                             cellinfo->stb[colZ+kk]*
-                             (1.0-0.5*abs(ii))*
-                             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                filterUVel[currCell] += ccVel[filterCell][0]*vol*invDelta; 
-                filterVVel[currCell] += ccVel[filterCell][1]*vol*invDelta; 
-                filterWVel[currCell] += ccVel[filterCell][2]*vol*invDelta;
-                filterUU[currCell] += UU[filterCell]*vol*invDelta;  
-                filterUV[currCell] += UV[filterCell]*vol*invDelta;  
-                filterUW[currCell] += UW[filterCell]*vol*invDelta;  
-                filterVV[currCell] += VV[filterCell]*vol*invDelta;  
-                filterVW[currCell] += VW[filterCell]*vol*invDelta;  
-                filterWW[currCell] += WW[filterCell]*vol*invDelta;  
 
-                (SHATIJ[0])[currCell] += (SIJ[0])[filterCell]*vol*invDelta;
-                (SHATIJ[1])[currCell] += (SIJ[1])[filterCell]*vol*invDelta;
-                (SHATIJ[2])[currCell] += (SIJ[2])[filterCell]*vol*invDelta;
-                (SHATIJ[3])[currCell] += (SIJ[3])[filterCell]*vol*invDelta;
-                (SHATIJ[4])[currCell] += (SIJ[4])[filterCell]*vol*invDelta;
-                (SHATIJ[5])[currCell] += (SIJ[5])[filterCell]*vol*invDelta;
-                                     
-
-                (betaHATIJ[0])[currCell] += (betaIJ[0])[filterCell]*vol*invDelta;
-                (betaHATIJ[1])[currCell] += (betaIJ[1])[filterCell]*vol*invDelta;
-                (betaHATIJ[2])[currCell] += (betaIJ[2])[filterCell]*vol*invDelta;
-                (betaHATIJ[3])[currCell] += (betaIJ[3])[filterCell]*vol*invDelta;
-                (betaHATIJ[4])[currCell] += (betaIJ[4])[filterCell]*vol*invDelta;
-                (betaHATIJ[5])[currCell] += (betaIJ[5])[filterCell]*vol*invDelta;
-              }
-            }
-          }
-        }
-      }
-    }
-#endif  
   TAU_PROFILE_START(compute2);
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1790,8 +1249,9 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> den;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
+    constCCVariable<double> filterVolume; 
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
@@ -1804,7 +1264,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-    new_dw->getModifiable(tauSGS, d_lab->d_tauSGSLabel, indx, patch);
+    new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch);
     
     new_dw->get(IsI,d_lab->d_strainMagnitudeLabel,    indx, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
@@ -1816,6 +1276,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
     }
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1837,38 +1298,10 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     MMHatI.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-#ifdef PetscFilter
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MLI, MLHatI);
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MMI, MMHatI);
-#else
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-                             (2.0*cellinfo->stb[colZ]);
-          double delta = pow(cellinfo->sew[colX]*cellinfo->sns[colY]*
-                               cellinfo->stb[colZ],1.0/3.0);
-          double invDelta = 1.0/cube_delta;
-          for (int kk = -1; kk <= 1; kk ++) {
-            for (int jj = -1; jj <= 1; jj ++) {
-              for (int ii = -1; ii <= 1; ii ++) {
-                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-                             cellinfo->stb[colZ+kk]*
-                             (1.0-0.5*abs(ii))*
-                             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                                     
-                // calculate absolute value of the grid strain rate
-                MLHatI[currCell] += MLI[filterCell]*vol*invDelta;
-                MMHatI[currCell] += MMI[filterCell]*vol*invDelta;
-              }
-            }
-          }
-        }
-      }
-    }
-#endif
+
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
+
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     tempCs.initialize(0.0);
@@ -1891,14 +1324,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
     // filtering for periodic case is not implemented 
     // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
-    d_filter->applyFilter<CCVariable<double> >(pc, patch, tempCs, Cs);
-#else
-    // filtering without petsc is not implemented
-    // if it needs to be then tempCs will have to be computed with ghostcells
-    Cs.copy(tempCs, tempCs.getLowIndex(),
-                      tempCs.getHighIndex());
-#endif
+    d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
     }
     else
     Cs.copy(tempCs, tempCs.getLowIndex(),
@@ -1923,7 +1349,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
 
-            tauSGS[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
           }
         }
       }
@@ -1940,7 +1366,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos;
 
-            tauSGS[currCell] = viscosity[currCell] - viscos; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos; 
           }
         }
       }
@@ -1961,7 +1387,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX-1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -1974,7 +1400,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX+1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -1987,7 +1413,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY-1, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2000,7 +1426,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2013,7 +1439,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ-1);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2026,7 +1452,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ+1);
           if (cellType[currCell] != wall_celltypeval)
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
         }
@@ -2106,15 +1532,13 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,
-                  gac, 1);
+    constCCVariable<double> filterVolume;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-#ifndef PetscFilter
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-#endif
     
     int ngc = 1; // number of ghost cells
     IntVector idxLo = patch->getExtraCellLowIndex(ngc);
@@ -2137,38 +1561,10 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-#ifdef PetscFilter
-    d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
-    d_filter->applyFilter< Array3<double> >(pc, patch,phiSqr, filterPhiSqr);
-#else
 
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-                             (2.0*cellinfo->stb[colZ]);
-          double invDelta = 1.0/cube_delta;
-          for (int kk = -1; kk <= 1; kk ++) {
-            for (int jj = -1; jj <= 1; jj ++) {
-              for (int ii = -1; ii <= 1; ii ++) {
-                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-                             cellinfo->stb[colZ+kk]*
-                             (1.0-0.5*abs(ii))*
-                             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                filterPhi[currCell] += scalar[filterCell]*vol; 
-                filterPhiSqr[currCell] += phiSqr[filterCell]*vol; 
-              }
-            }
-          }
-          
-          filterPhi[currCell] *= invDelta;
-          filterPhiSqr[currCell] *= invDelta;
-        }
-      }
-    }
-#endif
+    d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, scalar, filterVolume, cellType, filterPhi);
+    d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, phiSqr, filterVolume, cellType, filterPhiSqr);
+
     double small = 1.0e-10;
     double var_limit = 0.0;
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {

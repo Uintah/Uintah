@@ -17,6 +17,7 @@
 namespace Uintah {
 
 class ArchesLabel; 
+class MixingRxnModel; 
 class BoundaryCondition_new {
 
 public: 
@@ -27,12 +28,18 @@ public:
   typedef std::map<IntVector, double> CellToValueMap; 
   typedef std::map<Patch*, vector<CellToValueMap> > PatchToBCValueMap; 
   typedef std::map<std::string, CellToValueMap> ScalarToBCValueMap; 
+  typedef std::map< std::string, const VarLabel* > LabelMap; 
+  typedef std::map< std::string, double  > DoubleMap; 
+  typedef std::map< std::string, DoubleMap > MapDoubleMap;
 
   BoundaryCondition_new(const ArchesLabel* fieldLabels);
 
   ~BoundaryCondition_new();
   /** @brief Interface for the input file and set constants */ 
   void  problemSetup( ProblemSpecP& db, std::string eqn_name );
+
+	/** @brief Interface for setting up tabulated BCs */
+  void setupTabulatedBC( ProblemSpecP& db, std::string eqn_name, MixingRxnModel* table );
 
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
@@ -67,33 +74,35 @@ public:
     const int flowType );
 
   /** @brief Compute the volume weights for the filter cell **/
-  void computeFilterVolume( Patch* patch, 
-                            CCVariable<int>&    cellType, 
+  void computeFilterVolume( const Patch* patch, 
+                            constCCVariable<int>&    cellType, 
                             CCVariable<double>& filterVolume ); 
 
-  void sched_computeBCArea( SchedulerP& sched, 
-                            const PatchSet* patches, 
-                            const MaterialSet* matls );
+  void sched_assignTabBCs( SchedulerP& sched, 
+                           const PatchSet* patches, 
+                           const MaterialSet* matls,
+                           const std::string eqnName );
 
   /** @brief Read in a file for boundary conditions **/ 
   std::map<IntVector, double> readInputFile( std::string file_name ); 
-
-
-  typedef std::map< std::string, const VarLabel* > LabelMap; 
 
 private: 
  
   //variables
   const ArchesLabel* d_fieldLabels;
 
-  LabelMap areaMap; 
+  LabelMap           areaMap;
+  MapDoubleMap       _tabVarsMap;
   ScalarToBCValueMap scalar_bc_from_file; 
 
-  void computeBCArea( const ProcessorGroup*, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset*, 
-                      DataWarehouse*, 
-                      DataWarehouse* new_dw );
+  void assignTabBCs( const ProcessorGroup*, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset*, 
+                     DataWarehouse*, 
+                     DataWarehouse* new_dw,
+                     const std::string eqnName );
+
+
 
 
 

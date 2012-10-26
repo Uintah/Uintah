@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- BoundaryCondition.cc ----------------------------------------------
 
@@ -5305,6 +5299,8 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
 
+    d_newBC->computeFilterVolume( patch, cellType, filterVolume ); 
+
 #ifdef WASATCH_IN_ARCHES
     //copy for wasatch-arches: 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -5443,6 +5439,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = WALL;
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
+          my_info.mass_flow_rate = 0.0; 
           found_bc = true; 
 
         }
@@ -5735,7 +5732,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     constCCVariable<double> density; 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 
-    proc0cout << "\nBoundary condition summary for inlets: \n";
+    proc0cout << "\nDomain boundary condition summary: \n";
 
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
           bc_iter != d_bc_information.end(); bc_iter++){
@@ -5743,6 +5740,11 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       sum_vartype area_var;
       new_dw->get( area_var, bc_iter->second.total_area_label );
       double area = area_var; 
+
+      proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
+      proc0cout << "            area: " << area << endl;
+      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
 
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
 

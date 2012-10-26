@@ -229,7 +229,7 @@
       <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
-      vi               spec="MULTIPLE" />
+      <ellipsoid              spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
@@ -350,7 +350,7 @@
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
-                                    attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, reduce_uda,
+                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                                       advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test, particletest, ljpotentialtest'" >
@@ -360,7 +360,7 @@
                                   attribute2="matls OPTIONAL INTEGER"
                                   attribute3="level OPTIONAL STRING 'finest'" />
         <subcomponent               spec="MULTIPLE NO_DATA"
-                                  attribute1="type OPTIONAL STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
+                                  attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
                                                                     poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
@@ -543,11 +543,15 @@
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
                               VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
-                              TurbulentInlet  '"
+                              TurbulentInlet, Tabulated '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
-                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet" />
+                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, Tabulated" />
+
+          <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
+          <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
+
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput, FromFile, TurbulentInlet" />
           
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
@@ -773,18 +777,6 @@
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
-  <Angio                                spec="OPTIONAL NO_DATA" >
-    <time_integrator                    spec="OPTIONAL STRING 'explicit'" />
-    <interpolator                       spec="OPTIONAL STRING 'linear'" />
-    <Growth_Parameter_a                 spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_b                 spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_x0                spec="OPTIONAL DOUBLE" />
-    <Growth_Parameter_y0                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a1                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a2                spec="OPTIONAL DOUBLE" />
-    <Branch_Parameter_a3                spec="OPTIONAL DOUBLE" />
-  </Angio>
-
   <include href="mpm_spec.xml" section="Uintah_specification/MPM" />
 
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
@@ -792,12 +784,6 @@
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
     <include href="ice_spec.xml" section="MaterialProperties/ICE" />
 
-    <Angio                               spec="OPTIONAL NO_DATA">
-      <material                          spec="REQUIRED NO_DATA">
-        <density                         spec="REQUIRED DOUBLE" />
-        <fragment_file                   spec="REQUIRED STRING"/>
-      </material>
-    </Angio>
   </MaterialProperties>
   
   <!--  Models        -->

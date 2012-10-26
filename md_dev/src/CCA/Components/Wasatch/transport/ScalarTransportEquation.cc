@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -173,12 +175,13 @@ namespace Wasatch{
     if (isStrong_ && !isConstDensity_) {
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
-      typedef ExprAlgebra<FieldT,FieldT,SVolField> ExprAlgbr;
-      return icFactory.register_expression(
-          new typename ExprAlgbr::Builder( solnVarTag_,
-                                           primVarTag_,
-                                           Expr::Tag(densityTag_.name(),Expr::STATE_NONE),
-                                           ExprAlgbr::PRODUCT ) );
+      typedef ExprAlgebra<SVolField> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(primVarTag_);
+      theTagList.push_back(Expr::Tag(densityTag_.name(),Expr::STATE_NONE));
+      return icFactory.register_expression( new typename ExprAlgbr::Builder( solnVarTag_,
+                                                                             theTagList,
+                                                                             ExprAlgbr::PRODUCT ) );
     }
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }

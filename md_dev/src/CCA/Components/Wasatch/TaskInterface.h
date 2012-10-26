@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,9 +35,6 @@
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
 
-//-- ExprLib includes --//
-#include <expression/ExpressionTree.h>
-
 // forward declarations
 namespace Uintah{
   class DataWarehouse;
@@ -44,11 +43,6 @@ namespace Uintah{
   class Material;
   class Patch;
 }
-
-namespace Expr{
-  class FieldManagerList;
-}
-
 
 namespace Wasatch{
 
@@ -146,8 +140,6 @@ namespace Wasatch{
      *  scheduled it for execution.
      */
     void schedule( const int RKStage = 1);
-
-    Expr::ExpressionTree::TreePtr get_time_tree();
 
     /**
      * Obtain a TagList containing all tags computed by the graph(s)

@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- ExplicitSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/EfficiencyCalculator.h>
@@ -73,9 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
-#ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
-#endif
 
 #ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -248,12 +240,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
-#ifdef PetscFilter
-    d_props->setFilter(d_turbModel->getFilter());
-//#ifdef divergenceconstraint
-    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-//#endif
-#endif
+  d_props->setFilter(d_turbModel->getFilter());
+  d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
+
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   d_mixedModel=d_turbModel->getMixedModel();
   if (d_enthalpySolve) {
@@ -319,35 +308,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  //initializes and allocates vars for new_dw
-  // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP,
-  // densityCP, viscosityCTS
-  // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
-  //                     viscosityIN
-
   sched_setInitialGuess(sched, patches, matls);
 
   d_boundaryCondition->sched_setAreaFraction(sched, patches, matls);
 
-  // Start the iterations
-
-  // check if filter is defined...
-#ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized())
-      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-  }
-#endif
-
-  // Get a reference to all the DQMOM equations
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
   if (dqmomFactory.get_quad_nodes() > 0)
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
 
+  // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
@@ -396,7 +367,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                     *(gh->exprFactory),
                                     level, sched, patches, matls,
                                     wasatch.patch_info_map(),
-                                    true,
                                     curr_level+1,
                                     ioFieldSet 
                                     );
@@ -549,7 +519,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           iprop != all_prop_models.end(); iprop++){
 
       PropertyModelBase* prop_model = iprop->second;
-      prop_model->sched_computeProp( level, sched, curr_level );
+      if ( !prop_model->beforeTableLookUp() )
+        prop_model->sched_computeProp( level, sched, curr_level );
 
     }
 
@@ -603,6 +574,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level]);
       }
 
+      // Property models before table lookup
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+            iprop != all_prop_models.end(); iprop++){
+
+        PropertyModelBase* prop_model = iprop->second;
+        if ( prop_model->beforeTableLookUp() )
+          prop_model->sched_computeProp( level, sched, curr_level );
+
+      }
+
+
       if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
@@ -620,7 +602,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
             iprop != all_prop_models.end(); iprop++){
 
         PropertyModelBase* prop_model = iprop->second;
-        prop_model->sched_computeProp( level, sched, curr_level );
+        if ( !prop_model->beforeTableLookUp() )
+          prop_model->sched_computeProp( level, sched, curr_level );
 
       }
 
@@ -722,183 +705,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 }
 
 // ****************************************************************************
-// No Solve option (used to skip first time step calculation
-// so that further time steps will have correct initial condition)
-// ****************************************************************************
-
-int ExplicitSolver::noSolve(const LevelP& level,
-                            SchedulerP& sched
-#                                  ifdef WASATCH_IN_ARCHES
-                            , Wasatch::Wasatch& wasatch, 
-                            ExplicitTimeInt* d_timeIntegrator
-#                                  endif // WASATCH_IN_ARCHES
-                            )
-{
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-
-  d_eff_calculator->sched_dummySolve( level, sched ); 
-
-  // use FE timelabels for nosolve
-  nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
-                                            TimeIntegratorStepType::FE);
-  nosolve_timelabels_allocated = true;
-
-  //initializes and allocates vars for new_dw
-  // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP,
-  // densityCP, viscosityCTS
-  // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
-  //                     viscosityIN
-
-  sched_setInitialGuess(sched, patches, matls);
-
-  // check if filter is defined...
-#ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized())
-      d_turbModel->sched_initFilterMatrix(          level, sched, patches, matls);
-  }
-#endif
-
-  EqnFactory& eqn_factory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-
-    EqnBase* eqn = iter->second;
-    eqn->sched_dummyInit( level, sched );
-
-  }
-
-
-  if (d_calcVariance) {
-    d_turbModel->sched_computeScalarVariance(             sched, patches, matls,
-                                                          nosolve_timelabels);
-
-    d_turbModel->sched_computeScalarDissipation(          sched, patches, matls,
-                                                          nosolve_timelabels);
-  }
-
-  string mixmodel = d_props->getMixingModelType();
-  if ( mixmodel == "TabProps"  || mixmodel == "ClassicTable" || mixmodel == "ColdFlow" )
-    d_props->sched_doTPDummyInit( level, sched );
-
-  d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
-
-  d_props->sched_computeDrhodt(                           sched, patches, matls,
-                                                          nosolve_timelabels);
-
-  d_boundaryCondition->sched_setInletFlowRates(           sched, patches, matls);
-
-  sched_dummySolve(                                       sched, patches, matls);
-
-  sched_interpolateFromFCToCC(                            sched, patches, matls,
-                                                          nosolve_timelabels);
-
-  if (d_mixedModel) {
-    d_scaleSimilarityModel->sched_reComputeTurbSubmodel(  sched, patches, matls,
-                                                          nosolve_timelabels);
-  }
-
-  d_turbModel->sched_reComputeTurbSubmodel(               sched, patches, matls,
-                                                          nosolve_timelabels);
-
-  d_pressSolver->sched_addHydrostaticTermtoPressure(      sched, patches, matls,
-                                                          nosolve_timelabels);
-
-  // DQMOM and scalar transport init
-
-  // Get a reference to all the DQMOM equations
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
-  if (dqmomFactory.get_quad_nodes() > 0)
-    d_doDQMOM = true;
-  else
-    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
-
-  if (d_doDQMOM) {
-
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-
-      std::string currname = ieqn->first;
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_dummyInit( level, sched );
-
-    }
-
-    CoalModelFactory& modelFactory = CoalModelFactory::self();
-    CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-    for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-
-      imodel->second->sched_dummyInit( level, sched );
-
-    }
-  }
-
-  SourceTermFactory& src_factory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
-
-    SourceTermBase* src = iter->second;
-    src->sched_dummyInit( level, sched );
-
-  }
-
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-      iprop != all_prop_models.end(); iprop++){
-
-    PropertyModelBase* prop_model = iprop->second;
-    prop_model->sched_dummyInit( level, sched );
-
-  }
-
-
-  // Schedule an interpolation of the face centered velocity data
-  // to a cell centered vector for used by the viz tools
-
-#   ifdef WASATCH_IN_ARCHES
-  {
-    
-    const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
-    Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];      
-    
-    // create a dummy_init task to allow us to save all wasatch fields. Since there is
-    // no time integration, this dummy wasatch task will have no effect on the solution, albeit
-    // at the cost of a wasatch calculation during the dummy init step.
-    const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
-    Wasatch::TaskInterface* wasatchDummyInitTask =
-    scinew Wasatch::TaskInterface( gh->rootIDs,
-                                  "wasatch_in_arches_dummy_init_rhs_task",
-                                  *(gh->exprFactory),
-                                  level, sched, patches, matls,
-                                  wasatch.patch_info_map(),
-                                  true,
-                                  1,
-                                  ioFieldSet 
-                                  );
-    wasatch.task_interface_list().push_back( wasatchDummyInitTask );
-    wasatchDummyInitTask->schedule();
-    
-    // because of the dummy, dummy_init, we have to manually copy the wasatch 
-    // transported variables from the old dw to the new dw.
-    std::vector<std::string> phi;      
-    for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-      Wasatch::TransportEquation* transEq = (*ia)->equation();
-      std::string solnVarName = transEq->solution_variable_name();
-      phi.push_back(solnVarName);
-    }          
-    d_timeIntegrator->sched_dummy_init(sched, patches, matls, phi);
-  }
-#   endif // WASATCH_IN_ARCHES
-  
-  return(0);
-}
-
-// ****************************************************************************
 // Schedule initialize
 // ****************************************************************************
 void
@@ -919,7 +725,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_tauSGSLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0);
 #ifdef WASATCH_IN_ARCHES
@@ -950,7 +756,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_vmomBoundarySrcLabel);
   tsk->computes(d_lab->d_wmomBoundarySrcLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
-  tsk->computes(d_lab->d_tauSGSLabel);
+  tsk->computes(d_lab->d_turbViscosLabel);
   tsk->computes(d_lab->d_areaFractionLabel);
 #ifdef WASATCH_IN_ARCHES
   tsk->computes(d_lab->d_areaFractionFXLabel);
@@ -1508,7 +1314,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> enthalpy;
     constCCVariable<double> density;
     constCCVariable<double> viscosity;
-    constCCVariable<double> tauSGS; 
+    constCCVariable<double> turb_viscosity; 
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
@@ -1528,7 +1334,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
-    old_dw->get(tauSGS,    d_lab->d_tauSGSLabel,  indx, patch, gn, 0);
+    old_dw->get(turb_viscosity,    d_lab->d_turbViscosLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0);
 #ifdef WASATCH_IN_ARCHES
@@ -1643,9 +1449,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
     viscosity_new.copyData(viscosity); // copy old into new
 
-    CCVariable<double> tauSGS_new;
-    new_dw->allocateAndPut(tauSGS_new, d_lab->d_tauSGSLabel, indx, patch);
-    tauSGS_new.copyData(tauSGS); // copy old into new
+    CCVariable<double> turb_viscosity_new;
+    new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);
+    turb_viscosity_new.copyData(turb_viscosity); // copy old into new
 
 
     CCVariable<double> scalardiff_new;

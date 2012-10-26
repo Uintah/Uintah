@@ -93,9 +93,9 @@ lineextract -v vel_CC    -o vel_L2.dat   -l 2 -cellCoords -timestep $timeStep -i
 lineextract -v press_CC  -o press_L2.dat -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
 lineextract -v rho_CC    -o rho_L2.dat   -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
 
-scripts/ICE/removeBraces vel_L0.dat
-scripts/ICE/removeBraces vel_L1.dat
-scripts/ICE/removeBraces vel_L2.dat
+scripts/removeBraces vel_L0.dat
+scripts/removeBraces vel_L1.dat
+scripts/removeBraces vel_L2.dat
 
 cp scripts/ICE/$whichDatFile $uda/exactSolution.dat
 mv *.dat $uda/.

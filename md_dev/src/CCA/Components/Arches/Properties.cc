@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- Properties.cc --------------------------------------------------
 #include <TauProfilerForSCIRun.h>
@@ -95,11 +89,8 @@ Properties::Properties(ArchesLabel* label,
   d_sulfur_chem     = false;
   d_soot_precursors = false;
   d_tabulated_soot  = false;
-  d_newEnthalpySolver = false; 
   d_bc = 0;
-#ifdef PetscFilter
   d_filter = 0;
-#endif
   d_mixingModel = 0;
 
 }
@@ -306,16 +297,6 @@ Properties::problemSetup(const ProblemSpecP& params)
         }  // tabulated_soot
       }  // radiation
     }
-  } else { 
-
-    // allowance for other enthalpy solver
-    ProblemSpecP params_non_constant = params;
-    const ProblemSpecP params_root = params_non_constant->getRootNode();
-    if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver") ){ 
-
-      d_newEnthalpySolver = true; 
-
-    } 
   } 
 }
 
@@ -1962,14 +1943,17 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   }
   
   Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  ga = Ghost::AroundCells; 
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
   tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, gn,0);
 
-  tsk->requires(Task::NewDW,    d_lab->d_densityCPLabel,   gn,0);
-  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,   gn,0);
-  
+  tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requires(parent_old_dw , d_lab->d_densityCPLabel    , gn , 0);
+  tsk->requires(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
+  tsk->requires(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
 
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
@@ -2032,11 +2016,16 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
     CCVariable<double> density_oldold;
+    constCCVariable<double> filterVolume; 
+    constCCVariable<int> cellType; 
     Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  ga = Ghost::AroundCells; 
     
     parent_old_dw->get(old_density,     d_lab->d_densityCPLabel,     indx, patch,gn, 0);
     parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, indx, patch,gn, 0);
-    
+
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 ); 
+    new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 ); 
     
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
       new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
@@ -2102,14 +2091,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     if ((d_filter_drhodt)&&(!(d_3d_periodic))) {
     // filtering for periodic case is not implemented 
     // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
-    d_filter->applyFilter<CCVariable<double> >(pc, patch, drhodt, filterdrhodt);
-#else
-    // filtering without petsc is not implemented
-    // if it needs to be then drhodt will have to be computed with ghostcells
-    filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
-                      drhodt.getHighIndex());
-#endif
+      d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, drhodt, filterVolume, cellType, filterdrhodt);
     }else{
       filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
                       drhodt.getHighIndex());
@@ -2138,20 +2120,9 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool modify_ref_den )
 {
   // this method is temporary while we get rid of properties.cc 
-  if ( ! d_newEnthalpySolver ) { 
-    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
-  } else { 
-    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_newEnthalpySolver );
-  } 
-
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
 }
 
-void 
-Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
-{
-  d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-}
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {
