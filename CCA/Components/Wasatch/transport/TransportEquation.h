@@ -176,8 +176,8 @@ namespace Wasatch{
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
+    Expr::Tag volFracTag_;    
     bool hasVolFrac_;
-    Expr::Tag volFracTag_;
   };
 
 } // namespace Wasatch
