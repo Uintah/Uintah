@@ -309,6 +309,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
   for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
+    Point  P  = patch->getCellPosition(c); 
 
     double x=0.0,y=0.0,z=0.0; 
     int cellx=0, celly=0, cellz=0;
@@ -317,9 +318,9 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     celly = c[1];
     cellz = c[2];
 
-    x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
-    y = c[1]*Dx.y() + Dx.y()/2.; 
-    z = c[2]*Dx.z() + Dx.z()/2.;
+    x = P.x(); // the +Dx/2 is because variable is cell-centered
+    y = P.y(); 
+    z = P.z();
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
@@ -420,6 +421,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
   for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
     Vector Dx = patch->dCell(); 
+    Point  P  = patch->getCellPosition(c);
 
     double x=0.0,y=0.0,z=0.0; 
     int cellx=0, celly=0, cellz=0;
@@ -428,9 +430,9 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
     celly = c[1];
     cellz = c[2];
 
-    x = c[0]*Dx.x() + Dx.x()/2.; // the +Dx/2 is because variable is cell-centered
-    y = c[1]*Dx.y() + Dx.y()/2.; 
-    z = c[2]*Dx.z() + Dx.z()/2.;
+    x = P.x(); 
+    y = P.y(); 
+    z = P.z(); 
 
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
