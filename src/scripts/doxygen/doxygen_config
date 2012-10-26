@@ -563,7 +563,7 @@ FILE_PATTERNS          = *.c \
 
 RECURSIVE              = YES
 
-# The EXCLUDE tag can be used to specify files and/or directories that should 
+# The EXCLUDE tag can be used to specify files and/ory directories that should 
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 

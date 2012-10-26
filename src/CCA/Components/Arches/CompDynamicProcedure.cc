@@ -1,32 +1,26 @@
 /*
-
-   The MIT License
-
-   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-   Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-   University of Utah.
-
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a 
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation 
-   the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-   and/or sell copies of the Software, and to permit persons to whom the 
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included 
-   in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-   DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- CompDynamicProcedure.cc --------------------------------------------------
 
@@ -99,6 +93,7 @@ CompDynamicProcedure::getMolecularViscosity() const {
   void 
 CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
+  problemSetupCommon( params ); 
   ProblemSpecP db = params->findBlock("Turbulence");
   if (d_calcVariance) {
 
@@ -132,12 +127,6 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
   }
 
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
-#ifndef PetscFilter
-  throw ProblemSetupException("ERROR Arches::CompDynamicProcedure::ProblemSetup \n"
-      "Filtering without Petsc is not supported in variable \n"
-      "density dynamic Smagorinsky model\n", __FILE__, __LINE__);
-#endif
-
 
 }
 
@@ -307,6 +296,8 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
 
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
         d_lab->d_symTensorMatl, oams,gac, 1);
@@ -387,6 +378,8 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+    tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -406,7 +399,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);
-    tsk->modifies(d_lab->d_tauSGSLabel); 
+    tsk->modifies(d_lab->d_turbViscosLabel); 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->modifies(d_lab->d_scalarDiffusivityLabel);
@@ -774,9 +767,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     filterRho.copy(density, patch->getExtraCellLowIndex(),
         patch->getExtraCellHighIndex());
-#ifdef PetscFilter
-    d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterRho);
-    //d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
+    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
 
     // making filterRho nonzero 
     sum_vartype den_ref_var;
@@ -801,11 +792,10 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
     if (d_dynScalarModel) {
       if (d_calcScalar)
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoF, filterRhoF);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoF, filterVolume, cellType, filterRhoF);
       if (d_calcEnthalpy)
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoE, filterRhoE);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoE, filterVolume, cellType, filterRhoE);
     }
-#endif
   }
 }
 //****************************************************************************
@@ -1214,9 +1204,14 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<double> filterRhoF;
     constCCVariable<double> filterRhoE;
     constCCVariable<double> filterRhoRF;
+    constCCVariable<double> filterVolume; 
+    constCCVariable<int> cellType; 
+
 
     // Get the velocity and density
     Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
+    new_dw->get(cellType,     d_lab->d_cellTypeLabel,     indx, patch, gac, 2);
     new_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(den,       d_lab->d_densityCPLabel,      indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,      indx, patch, gac, 1);
@@ -1547,35 +1542,35 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexHigh = patch->getFortranCellHighIndex();
     double start_turbTime = Time::currentSeconds();
 
-#ifdef PetscFilter
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoU, filterRhoU);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoV, filterRhoV);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoW, filterRhoW);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUU, filterRhoUU);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUV, filterRhoUV);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUW, filterRhoUW);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVV, filterRhoVV);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVW, filterRhoVW);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoWW, filterRhoWW);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoU,   filterVolume, cellType, filterRhoU);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoV,   filterVolume, cellType, filterRhoV);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoW,   filterVolume, cellType, filterRhoW);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUU,  filterVolume, cellType,  filterRhoUU);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUV,  filterVolume, cellType,  filterRhoUV);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUW,  filterVolume, cellType,  filterRhoUW);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVV,  filterVolume, cellType,  filterRhoVV);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVW,  filterVolume, cellType,  filterRhoVW);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoWW,  filterVolume, cellType,  filterRhoWW);
+
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter<Array3<double> >(pc, patch, betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFU, filterRhoFU);
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFV, filterRhoFV);
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFW, filterRhoFW);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFU, filterVolume, cellType, filterRhoFU);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFV, filterVolume, cellType, filterRhoFV);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFW, filterVolume, cellType, filterRhoFW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter<Array3<double> >(pc, patch, scalarBeta[ii], scalarBetaHat[ii]);
+          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, scalarBeta[ii], filterVolume, cellType, scalarBetaHat[ii]);
         }
       }
       if (d_calcEnthalpy) {
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEU, filterRhoEU);
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEV, filterRhoEV);
-        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEW, filterRhoEW);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEU, filterVolume, cellType, filterRhoEU);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEV, filterVolume, cellType, filterRhoEV);
+        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEW, filterVolume, cellType, filterRhoEW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter<Array3<double> >(pc, patch, enthalpyBeta[ii], enthalpyBetaHat[ii]);
+          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, enthalpyBeta[ii], filterVolume, cellType, enthalpyBetaHat[ii]);
         }
       }
     }  
@@ -1584,7 +1579,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       cerr << "Time for the Filter operation in Turbulence Model: " << 
         Time::currentSeconds()-start_turbTime << " seconds\n";
     TAU_PROFILE_START(compute2);
-#endif
+
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1775,9 +1770,10 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
     CCVariable<double> scalardiff;
     CCVariable<double> enthalpydiff;
+    constCCVariable<double> filterVolume; 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
       if (d_dynScalarModel) {
@@ -1811,7 +1807,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }      
 
     new_dw->getModifiable(viscosity,         d_lab->d_viscosityCTSLabel,        indx, patch);
-    new_dw->getModifiable(tauSGS,            d_lab->d_tauSGSLabel,              indx, patch);
+    new_dw->getModifiable(turbViscosity,            d_lab->d_turbViscosLabel,              indx, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->getModifiable(scalardiff,    d_lab->d_scalarDiffusivityLabel,   indx, patch);
@@ -1828,6 +1824,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
     new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, indx, patch, gac, 1);
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gn, 0); 
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -1886,20 +1883,20 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }      
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-#ifdef PetscFilter
-    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MLI, MLHatI);
-    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MMI, MMHatI);
+
+    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
+    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        d_filter->applyFilter<constCCVariable<double> >(pc, patch, scalarNum,   scalarNumHat);
-        d_filter->applyFilter<constCCVariable<double> >(pc, patch, scalarDenom, scalarDenomHat);
+        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, scalarNum,   filterVolume, cellType, scalarNumHat);
+        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, scalarDenom, filterVolume, cellType, scalarDenomHat);
       }
       if (d_calcEnthalpy) {
-        d_filter->applyFilter<constCCVariable<double> >(pc, patch, enthalpyNum,   enthalpyNumHat);
-        d_filter->applyFilter<constCCVariable<double> >(pc, patch, enthalpyDenom, enthalpyDenomHat);
+        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, enthalpyNum,   filterVolume, cellType, enthalpyNumHat);
+        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, enthalpyDenom, filterVolume, cellType, enthalpyDenomHat);
       }
     }      
-#endif
+
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     tempCs.initialize(0.0);
@@ -1959,17 +1956,15 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
       // filtering for periodic case is not implemented 
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
-#ifdef PetscFilter
-      d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);
+      d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
       if (d_dynScalarModel) {
         if (d_calcScalar) {
-          d_filter->applyFilter<Array3<double> >(pc, patch, tempShF, ShF);
+          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempShF, filterVolume, cellType, ShF);
         }
         if (d_calcEnthalpy) {
-          d_filter->applyFilter<Array3<double> >(pc, patch, tempShE, ShE);
+          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempShE, filterVolume, cellType,  ShE);
         }
       }      
-#endif
     }
     else
       Cs.copy(tempCs, tempCs.getLowIndex(),
@@ -2005,12 +2000,13 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
             Cs[currCell] = Min(Cs[currCell],10.0);
             Cs[currCell] = factor * sqrt(Cs[currCell]);
+
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] *
               filter * filter *
               IsI[currCell] * den[currCell] +
               viscos*voidFraction[currCell];
 
-            tauSGS[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
 
             if (d_dynScalarModel) {
               if (d_calcScalar) {
@@ -2047,7 +2043,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               filter * filter *
               IsI[currCell] * den[currCell] + viscos;
 
-            tauSGS[currCell] = viscosity[currCell] - viscos; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos; 
 
             if (d_dynScalarModel) {
               if (d_calcScalar) {
@@ -2083,7 +2079,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX-1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                             *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2105,7 +2101,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX+1, colY, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2127,7 +2123,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY-1, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2149,7 +2145,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2171,7 +2167,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ-1);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2193,7 +2189,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           IntVector currCell(colX, colY, colZ+1);
           if (cellType[currCell] != wall_celltypeval) {
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
             if (d_dynScalarModel) {
@@ -2235,6 +2231,7 @@ CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_mf_label,              gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, Ghost::None, 0); 
 
   int mmWallID = d_boundaryCondition->getMMWallId();
   if (mmWallID > 0)
@@ -2272,6 +2269,8 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     constCCVariable<double> density;
     CCVariable<double> scalarVar;
     CCVariable<double> normalizedScalarVar;
+    constCCVariable<double> filterVolume;
+    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
     // Get the velocity, density and viscosity from the old data warehouse
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2323,11 +2322,9 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-#ifdef PetscFilter
-    d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterRho);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoPhi, filterRhoPhi);
-    d_filter->applyFilter<Array3<double> >(pc, patch, rhoPhiSqr, filterRhoPhiSqr);
-#endif
+    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhi, filterVolume, cellType, filterRhoPhi);
+    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhiSqr, filterVolume, cellType, filterRhoPhiSqr);
 
     // making filterRho nonzero 
     sum_vartype den_ref_var;

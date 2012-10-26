@@ -1,29 +1,25 @@
 ##
-##  For more information, please see: http://software.sci.utah.edu
-## 
-##  The MIT License
-## 
-##  Copyright (c) 2004-2012 Scientific Computing and Imaging Institute,
-##  University of Utah.
-## 
-##  License for the specific language governing rights and limitations under
-##  Permission is hereby granted, free of charge, to any person obtaining a
-##  copy of this software and associated documentation files (the "Software"),
-##  to deal in the Software without restriction, including without limitation
-##  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-##  and/or sell copies of the Software, and to permit persons to whom the
-##  Software is furnished to do so, subject to the following conditions:
-## 
-##  The above copyright notice and this permission notice shall be included
-##  in all copies or substantial portions of the Software.
-## 
-##  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-##  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-##  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-##  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-##  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-##  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-##  DEALINGS IN THE SOFTWARE.
+## The MIT License
+##
+## Copyright (c) 1997-2012 The University of Utah
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to
+## deal in the Software without restriction, including without limitation the
+## rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+## sell copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+## IN THE SOFTWARE.
 ##
 
 ##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -76,31 +72,27 @@ AC_PREREQ(2.68)
 
 AC_COPYRIGHT(
 ##
-##  For more information, please see: http://software.sci.utah.edu
-## 
-##  The MIT License
-## 
-##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
-##  University of Utah.
-## 
-##  License for the specific language governing rights and limitations under
-##  Permission is hereby granted, free of charge, to any person obtaining a
-##  copy of this software and associated documentation files (the "Software"),
-##  to deal in the Software without restriction, including without limitation
-##  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-##  and/or sell copies of the Software, and to permit persons to whom the
-##  Software is furnished to do so, subject to the following conditions:
-## 
-##  The above copyright notice and this permission notice shall be included
-##  in all copies or substantial portions of the Software.
-## 
-##  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-##  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-##  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-##  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-##  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-##  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-##  DEALINGS IN THE SOFTWARE.
+## The MIT License
+##
+## Copyright (c) 1997-2012 The University of Utah
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to
+## deal in the Software without restriction, including without limitation the
+## rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+## sell copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+## IN THE SOFTWARE.
 ##
 )
 
@@ -1074,7 +1066,7 @@ if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
-  if test "$static" == "full"; then
+  if test "$static" = "full"; then
 
     # If we don't use the 'full' option, then some shared libs may be
     # linked in.  While we probably should make 'full' the default, this
@@ -1161,7 +1153,7 @@ int main()
   double b=.01;
 
   int c=a/b;
-  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+  return c != 100; // Shell return codes are backward in that 0 = success, thus the '!='.
 }
 EOF
 
@@ -2195,7 +2187,7 @@ if test "$with_libxml2"; then
    _sci_optional=specific
 fi
 
-if test "$with_libxml2" == "built-in"; then
+if test "$with_libxml2" = "built-in"; then
   XML2_LIB_FLAG="-lxml2"
   AC_MSG_RESULT( "Using built in libxml2... no explicit linking will be done." )
 else
@@ -3046,7 +3038,7 @@ if test "$with_mpi_extra_libs"; then
          AC_MSG_ERROR(Extra MPI lib '$lib' does not exist...)
       else
          the_dir=`dirname $lib`
-         if test "$the_dir" == "."; then
+         if test "$the_dir" = "."; then
             AC_MSG_ERROR(Extra MPI lib '$lib' must include an absolute path...)
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
@@ -3296,11 +3288,11 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
-if test "$with_petsc" == "no"; then # Handle --without option
+if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
 
-  if test "$with_petsc" == "built-in"; then
+  if test "$with_petsc" = "built-in"; then
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
@@ -3311,7 +3303,7 @@ else
       _sci_lib_dir=
 
       if test "$with_petsc"; then
-         if test "$with_petsc" == "yes"; then
+         if test "$with_petsc" = "yes"; then
             AC_MSG_ERROR(--with-petsc=DIR requires a DIRectory to be specified.)
          fi
          version_file=$with_petsc/include/petscversion.h
@@ -3328,7 +3320,7 @@ else
         petsc_version_major=`grep PETSC_VERSION_MAJOR $version_file | grep define | awk '{print $3}'`
         petsc_version_minor=`grep PETSC_VERSION_MINOR $version_file | grep define | awk '{print $3}'`
 
-        if test "$petsc_version_major" == "2"; then
+        if test "$petsc_version_major" = "2"; then
           if test -z "$PETSC_ARCH"; then
             AC_MSG_ERROR(For PETSC version 2x - please set PETSC_ARCH.)
           fi
@@ -3338,7 +3330,7 @@ else
             _sci_inc="$_sci_inc $with_petsc/bmake/$PETSC_ARCH"
           fi
         else
-          if test "$petsc_version_major" == "3"; then
+          if test "$petsc_version_major" = "3"; then
             if test -z "$_sci_lib_dir"; then
                _sci_lib_dir="$with_petsc/lib"
             fi
@@ -3713,61 +3705,52 @@ sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
 
 ##  --  search for Boost ------------------------
-
+AC_LANG([C++])
 if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
-  else
-    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_boost; then
-      echo ""
-      AC_MSG_ERROR( '$with_boost' directory does not exist. )
-    fi
-    # Check for header files
-    BOOST_INCLUDE_DIR=$with_boost/include/boost
-    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
-                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
-                shared_ptr.hpp any.hpp; do
-      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+   if test "$with_boost" = "yes"; then
+       AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+   elif test ! -d $with_boost; then
         echo ""
-        AC_MSG_ERROR( '$BOOST_INCLUDE_DIR/$file' does not exist. )
-      fi
-    done
-    # Check for libraries files
-    BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt libboost_signals-mt libboost_serialization-mt libboost_system-mt; do
-      EXT=$SO_OR_ARCHIVE_EXTENSION
-      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
-        echo ""
-        AC_MSG_WARN( $file.$EXT lib does not exist... looking for non-mt version...)
-        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
-        if test ! -f $BOOST_LIB_DIR/$short_name; then
-            AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
-        else
-            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
-            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-        fi
-      else
-        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
-        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
-      fi
-    done
+        AC_MSG_ERROR( '$with_boost' directory does not exist. )
+   elif test "$with_boost" = "/usr"; then
+        # Check for header files
+        BOOST_INCLUDE_DIR=$with_boost/include/boost
+        BOOST_LIBRARY_DIR=$with_boost/lib
+ 
+   else
+        BOOST_INCLUDE_DIR=$with_boost/include
+        BOOST_LIBRARY_DIR=$with_boost/lib
+   
+   fi
+   
+    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp"
+
+    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt"
+
+   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options"
+  
+  SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+
+  if test "$HAVE_BOOST" = "no"; then
+     SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
+  fi                  
+
+
+  if test "$HAVE_BOOST" = "yes"; then
+     DEF_BOOST="#define HAVE_BOOST 1"              
   fi
-  AC_MSG_RESULT(Found Boost)
-  DEF_BOOST="#define HAVE_BOOST 1"
   if test "$with_boost" != "/usr"; then
     # If with_boost points to /usr, then we don't need to explicitly point to it...
-    INC_BOOST_H="-I$with_boost/include"
-    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+      INC_BOOST_H="-I$with_boost/include"
+      BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
   fi
-  HAVE_BOOST="yes"
 fi
 AC_SUBST(HAVE_BOOST)
 AC_SUBST(DEF_BOOST)
 AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
-
+AC_LANG([C])
 ##  --  Handle --enable-wasatch_3p... ------------------------
 
 if test "$wasatch_3p" = "yes"; then

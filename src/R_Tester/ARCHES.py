@@ -26,7 +26,8 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
-#       do_performance_test:    - Run the performance test
+#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
+#                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
@@ -68,7 +69,7 @@ NIGHTLYTESTS = [
    ("xminus_scalar_test"          , "ScalarTests/xminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"          , "ScalarTests/yminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"          , "ScalarTests/zminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
-   ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
+   ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
@@ -96,7 +97,7 @@ LOCALTESTS = [
    ("xminus_scalar_test"         , "ScalarTests/xminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"         , "ScalarTests/yminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"         , "ScalarTests/zminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
-   ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"])
+   ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"])
 ]
 
 #__________________________________

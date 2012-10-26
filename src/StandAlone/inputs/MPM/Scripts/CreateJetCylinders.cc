@@ -39,6 +39,10 @@ int main()
   dest << "<?xml version='1.0' encoding='ISO-8859-1' ?>" << endl;
   dest << "<Uintah_Include>" << endl;
 
+  // delayTime allows the target to be pressurized prior to it being
+  // impacted by the jet
+  double delayTime = 0.e-6;
+
   // Density fits
   double ae = -27739.2;  // Tail region of jet
   double be = 8248.14;   // Tail region of jet
@@ -69,6 +73,27 @@ int main()
   dest << "rho_W = " << rho_W << endl;
   dest << "delT = " << delT << endl;
   dest << "-->\n" << endl;
+
+  // Integrate rho*dV = rho*(Pi*rad*rad)*dx over the length of the bilinearly
+  // fitted jet to see how the created jet compares in total mass
+  double y=.3;
+  double mass_in_fit_jet = 0.25*q*q*a*y*y*y*y + (1./3.)*(2.*q*r*a+b*q*q)*y*y*y
+                         + 0.5*(r*r*a + 2.*q*r*b)*y*y + r*r*b*y;
+  y=.13;
+  mass_in_fit_jet -= 0.25*q*q*a*y*y*y*y + (1./3.)*(2.*q*r*a+b*q*q)*y*y*y
+                   + 0.5*(r*r*a + 2.*q*r*b)*y*y + r*r*b*y;
+
+  y=.13;
+  mass_in_fit_jet += 0.25*c*c*ae*y*y*y*y + (1./3.)*(2.*c*d*ae+be*c*c)*y*y*y
+                   + 0.5*(d*d*ae + 2.*c*d*be)*y*y + d*d*be*y;
+
+  y=.05;
+  mass_in_fit_jet -= 0.25*c*c*ae*y*y*y*y + (1./3.)*(2.*c*d*ae+be*c*c)*y*y*y
+                   + 0.5*(d*d*ae + 2.*c*d*be)*y*y + d*d*be*y;
+
+  mass_in_fit_jet*=M_PI;
+
+  cout << "mass_in_fit_jet  = " << mass_in_fit_jet << endl;
 
   double T0=(x-L0)/v_tip; // Time at which tip is at x
   double t=T0; 
@@ -110,7 +135,7 @@ int main()
     }
     double elapT = t-T0;
     double init_pos = vel*(-elapT) - 0.001;
-    dest_IP << t-T0 << " " << n << " " << " 0.0  0.01 0.0  0.0 " << vel << " 0.0\n";
+    dest_IP << delayTime + (t-T0) << " " << n << " " << " 0.0  0.01 0.0  0.0 " << vel << " 0.0\n";
     // adjust delT as to keep cylinders from shrinking too much
     if(X>0.25){
       delT=delT*pow(v_tip/vel,.05);
@@ -145,7 +170,7 @@ int main()
     dest << "    <color>" << n++ << "</color>\n";
     dest << "  </geom_object>\n\n";
   }
-  cout << "Total Mass = " << total_mass << endl;
+  cout << "Total Mass in created jet = " << total_mass << endl;
 
   dest << "</Uintah_Include>" << endl;
 }

@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -69,21 +63,36 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
 
   double d_value;
   Vector v_value;
-
+  string s_value = "none";
+  string functor_name = "none";
+  
+  ProblemSpecP functorPS = child->findBlock( "functor_name" );
+  if (functorPS) child->get( "functor_name", functor_name );
+  
   ProblemSpecP valuePS = child->findBlock( "value" );
+  
+  if( valuePS != 0) { // Found <value> tag.
+    child->get( "value", s_value );
+    ProblemSpec::InputType theInputType = child->getInputType(s_value);
 
-  if( valuePS != 0) { // Found <value> tag.    
-    try {
-      child->get( "value", d_value );
-      bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label );
+    switch (theInputType) {
+      case ProblemSpec::NUMBER_TYPE:
+        child->get( "value", d_value );
+        bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+        break;
+      case ProblemSpec::VECTOR_TYPE:
+        child->get( "value", v_value );
+        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name );
+        break;
+      case ProblemSpec::STRING_TYPE:
+        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name );
+        break;
+      case ProblemSpec::UNKNOWN_TYPE:
+      default:
+        bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+        break;
     }
-    catch( ... ) {
-      // If there was an exception, then the 'value' was not a double... try to get a vector...
-      child->get( "value", v_value );
-      bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label );
-    }
-  }
-  else {
+  } else {
     bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
   }
 }

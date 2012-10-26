@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -511,6 +505,27 @@ ProblemSpec::get(const string& name, Vector &value)
   return ps;
 }
 
+ProblemSpec::InputType
+ProblemSpec::getInputType(const std::string& stringValue) {
+  std::string validChars(" +-.0123456789eE");
+  string::size_type  pos = stringValue.find_first_not_of(validChars);
+  if (pos != string::npos) {
+    // we either have a string or a vector
+    if ( stringValue.find_first_of("[") == 0 ) {
+      // this is most likely a vector vector
+      return ProblemSpec::VECTOR_TYPE;
+    } else {
+      // we have a string
+      return ProblemSpec::STRING_TYPE;
+    }
+  } else {
+    // otherwise we have a number
+    return ProblemSpec::NUMBER_TYPE;
+  }
+  return ProblemSpec::UNKNOWN_TYPE;
+}
+
+
 // value should probably be empty before calling this...
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<double>& value)
@@ -531,6 +546,28 @@ ProblemSpec::get(const string& name, vector<double>& value)
   
   return this;
 }
+
+// value should probably be empty before calling this...
+ProblemSpecP
+ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  vector<string> string_values;
+  if(!this->get(name, string_values,nItems)) {
+    return 0;
+  }
+  
+  for(vector<string>::const_iterator vit(string_values.begin());
+      vit!=string_values.end();vit++) {
+    const string v(*vit);
+    
+    checkForInputError( v, FLOAT_TYPE );
+    value.push_back( atof(v.c_str()) );
+  }
+  
+  return this;
+}
+
 
 // value should probably be empty before calling this...
 ProblemSpecP
@@ -575,7 +612,7 @@ ProblemSpec::get(const string& name, vector<string>& value)
         continue;
       next = in.peek();
       result += c;
-      if (next == ',' ||  next == ' ' || next == ']') {
+      if (next == ',' ||  next == ' ' || next == ']' || in.eof() ) {
         // push next string onto stack
         value.push_back(result);
         result.erase();
@@ -584,6 +621,40 @@ ProblemSpec::get(const string& name, vector<string>& value)
   }
   return ps;
 } 
+
+// value should probably be empty before calling this...
+ProblemSpecP
+ProblemSpec::get(const string& name, vector<string>& value, const int nItems)
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  ProblemSpecP ps;
+  
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
+    return ps;
+  }
+  else {
+    istringstream in(stringValue);
+    char c,next;
+    string result;
+    int counter = 0;
+    while ( !in.eof() && counter < nItems ) {
+      in >> c;
+      if (c == '[' || c == ',' || c == ' ' || c == ']')
+        continue;
+      next = in.peek();
+      result += c;
+      if (next == ',' ||  next == ' ' || next == ']' || in.eof() ) {
+        // push next string onto stack
+        value.push_back(result);
+        result.erase();
+        counter++;
+      }
+    }
+  }
+  return ps;
+}
 
 ProblemSpecP
 ProblemSpec::get(const string& name, IntVector &value)
@@ -1132,6 +1203,18 @@ ProblemSpec::require(const string& name, vector<double>& value)
 }
 
 void
+ProblemSpec::require(const string& name, vector<string>& value)
+{
+  
+  // Check if the prob_spec is NULL
+  
+  if (! this->get(name,value))
+    throw ParameterNotFound(name, __FILE__, __LINE__);
+  
+}
+
+
+void
 ProblemSpec::require(const string& name, vector<int>& value)
 {
 
@@ -1213,6 +1296,31 @@ ProblemSpec::getAttribute(const string& name, double &value) const
   }
           
   return true;
+}
+
+
+bool
+ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& result) const
+{
+  
+  map<string, string> attributes;
+  getAttributes(attributes);
+  
+  map<string,string>::iterator iter = attributes.find(attribute);
+  
+  if (iter != attributes.end()) {
+    std::string attributeName = iter->second;
+    std::stringstream ss(attributeName);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    result.assign(begin,end);
+    //std::vector<std::string> vstrings(begin, end);
+    //result = iter->second;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 

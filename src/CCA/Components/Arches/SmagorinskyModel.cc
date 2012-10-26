@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //----- SmagorinskyModel.cc --------------------------------------------------
 
@@ -151,7 +145,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   }
 
   tsk->modifies(d_lab->d_viscosityCTSLabel);
-  tsk->modifies(d_lab->d_tauSGSLabel); 
+  tsk->modifies(d_lab->d_turbViscosLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -182,7 +176,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> density;
     
     CCVariable<double> viscosity;
-    CCVariable<double> tauSGS; 
+    CCVariable<double> turbViscosity; 
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
@@ -192,7 +186,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
      
     
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
-    new_dw->getModifiable(tauSGS,    d_lab->d_tauSGSLabel, indx, patch ); 
+    new_dw->getModifiable(turbViscosity,    d_lab->d_turbViscosLabel, indx, patch ); 
                            
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
@@ -233,7 +227,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       viscosity[c] = compute_smag_viscos( uVelocity, vVelocity, wVelocity, 
           VelocityCC, density, pmixl, Dx, c ); 
 
-      tauSGS[c] = viscosity[c]; 
+      turbViscosity[c] = viscosity[c]; 
 
       viscosity[c] += mol_viscos; 
 
@@ -258,7 +252,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -273,7 +267,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -288,7 +282,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -303,7 +297,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           IntVector currCell(colX, colY+1, colZ);
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -318,7 +312,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -333,7 +327,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
           
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            tauSGS[currCell] = tauSGS[IntVector(colX,colY,colZ)];
+            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
 //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
 //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
@@ -350,7 +344,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
             // Store current cell
             IntVector currCell(colX, colY, colZ);
             viscosity[currCell] *=  voidFraction[currCell];
-            tauSGS[currCell] *=  voidFraction[currCell];
+            turbViscosity[currCell] *=  voidFraction[currCell];
           }
         }
       }

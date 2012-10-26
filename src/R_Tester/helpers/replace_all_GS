@@ -55,7 +55,7 @@ endif
 
 #__________________________________
 # which part of the gold standards to replace
-set opts = (`/usr/bin/dialog --stdout --separate-output --checklist "Select what you want to replace" 20 50 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "all" "" on`)
+set opts = (`/usr/bin/dialog --stdout --separate-output --checklist "Select what you want to replace" 20 55 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "logs" "clear memory/performance logs" off, "all" "" on`)
 
 if( $status != 0 ) then
   echo "cancel selected"
@@ -66,7 +66,7 @@ set tmp = ""
 foreach X ( $opts[*]:q )
   set tmp = ( $tmp `echo $X|sed s/^/\ --/` )
 end
-set opts = ($tmp)
+set opts = ($tmp)  # this has to match the input arguments for replace_gold_standard
 
 #__________________________________
 # input the log message

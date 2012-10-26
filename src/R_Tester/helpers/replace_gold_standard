@@ -21,6 +21,7 @@
 # Defaults
 do_all="false"
 do_uda="false"
+do_logs="false"
 do_mem="false"
 do_perf="false"
 do_input="false"
@@ -49,15 +50,17 @@ printUsage(){
   echo "       -c | --checkpoints  replace just the checkpoint directory"
   echo "       -h | --help"
   echo "       -i | --inputFile    replace the input file"
+  echo "       -l | --logs         clear high water memory usage and simulation run time history logs"
   echo "       -m | --memory       replace the memory stats file"
   echo "       -p | --performance  replace the performance file"
   echo "       -u | --uda          replace the uda"
+
   exit
 }
 
 #______________________________________________________________________
 # Evaluate the command line options
-INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "$@"`
+INPUTS=`getopt --options=a,c,h,i,l,m,p,u  --longoptions=all,checkpoints,help,inputFile,logs,memory,performance,uda -- "$@"`
 if [ $? != 0 ] ; then 
   echo "Invalid input option.  Now exiting..." >&2 ; 
   exit 1 ; 
@@ -66,7 +69,7 @@ fi
 #__________________________________
 # If user didn't input an options or a comment
 if [ $# -le 3 ]; then
-  inputs=`dialog --stdout --separate-output --checklist "Select what you want to replace" 20 50 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "all" "" on`
+  inputs=`dialog --stdout --separate-output --checklist "Select what you want to replace" 20 55 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "logs" "clear memory/performance logs" off, "all" "" on`
   
   # add "--" to the input options
   options=""
@@ -74,9 +77,9 @@ if [ $# -le 3 ]; then
     do
       options=( ${options[@]} `echo $opt|sed s/^/\ --/` )
     done
-  
+
   #__________________________________                                                         
-  # input the comment message must say something                                                
+  # input the comment message it must say something                                                
   logMessage=""                                                                               
   while [ `echo $logMessage |wc -w` == 0 ];                                                
     do                                                                                            
@@ -88,7 +91,7 @@ if [ $# -le 3 ]; then
   done  
   # evaluate the user inputs
   tmp=("${options[@]}" "$@" "${logMessage[@]}" "--" )
-  INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "${tmp[@]}"`                                                                                     
+  INPUTS=`getopt --options=a,c,h,i,l,m,p,u  --longoptions=all,checkpoints,help,inputFile,logs,memory,performance,uda -- "${tmp[@]}"`                                                                                     
 fi
 echo "------------------------"
 #echo ${INPUTS[@]}
@@ -98,13 +101,14 @@ eval set -- "$INPUTS"
 
 while true ; do
   case "$1" in                                                    
-    -a|--all)         echo " replace all" ;         do_all="true";        shift ;;          
-    -c|--checkpoints) echo " replace Checkpoints" ; do_checkpoint="true"; shift ;;
-    -h|--help)        echo " replace help"        ; printHelp="true";     shift ;;
-    -i|--inputFile)   echo " replace input file" ;  do_input="true";      shift ;; 
-    -m|--memory)      echo " replace memory" ;      do_mem="true";        shift ;;
-    -p|--performance) echo " replace performance" ; do_perf="true" ;      shift ;;
-    -u|--uda)         echo " replace uda"         ; do_uda="true";        shift ;;                                                                                    
+    -a|--all)         echo " replace all" ;                          do_all="true";        shift ;;          
+    -c|--checkpoints) echo " replace Checkpoints" ;                  do_checkpoint="true"; shift ;;
+    -h|--help)        echo " replace help"        ;                  printHelp="true";     shift ;;
+    -i|--inputFile)   echo " replace input file" ;                   do_input="true";      shift ;; 
+    -l|--logs)        echo " clear memory/runtime history logs" ;    do_logs="true";       shift ;;
+    -m|--memory)      echo " replace memory" ;                       do_mem="true";        shift ;;
+    -p|--performance) echo " replace performance" ;                  do_perf="true" ;      shift ;;
+    -u|--uda)         echo " replace uda"         ;                  do_uda="true";        shift ;;                                                                           
     --) shift ; break ;;                                                  
     *) echo "Internal error!" ; exit 1 ;;                                 
   esac                                                                          
@@ -141,6 +145,7 @@ fi
 
 #__________________________________
 replaced_uda="false"
+cleared_logs="false"
 replaced_mem="false"
 replaced_perf="false"
 replaced_input="false"
@@ -300,9 +305,27 @@ if [ "$do_input" = "true" ]; then
   cp $replacement_dir/$testname/*.uda/input*.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
 fi
 
+
 #__________________________________
-# LOG FILE
-if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_input" = "true" -o "$do_checkpoint" = "true" -o "$do_all" = "true" ]; then
+# clear highwater memory and simulation time history logs
+if [[ "$do_logs" = "true" || "$do_all" = "true" ]]; then
+  if [ -f $replacement_dir/$testname/memHistory ]; then
+    echo "Clearing ($testname) high water memory usage log."
+    mv $replacement_dir/$testname/memHistory $replacement_dir/$testname/memHistory.old
+    cleared_logs="true"
+  fi
+  if [ -f $replacement_dir/$testname/perfHistory ]; then
+    echo "Clearing ($testname) simulation run time log."
+    mv $replacement_dir/$testname/perfHistory $replacement_dir/$testname/perfHistory.old
+    cleared_logs="true"
+  fi
+fi
+
+
+#__________________________________
+# Write an entry on what was replaced to the log
+# file
+if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_input" = "true" -o "$do_checkpoint" = "true" -o "$do_all" = "true" -o "$do_logs" = "true" ]; then
   # make a log
   if [ ! -f $logfile ]; then
     echo "Replacement log for $gold_standard_dir/$testname" >> $logfile
@@ -330,6 +353,9 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
     echo -n " input file," >> $logfile
   fi 
   
+  if [ "$cleared_logs" = "true" ]; then
+    echo -n " cleared memory/performance logs," >> $logfile
+  fi
   echo -n "       Comment: $comment" >> $logfile
   
   echo >> $logfile

@@ -1,13 +1,17 @@
 #!/bin/bash
 
-TEST_NAME=$1
-TEST_TIMEFILE=$2
-COMPARISON_TIMEFILE=$3
+TEST=$1            # name of test
+MAKEPLOTS=$2       # switch: 1 or 0
+TEST_TIMEFILE=$3   # filename
+COMPARE_ROOT=$4
+HELPERPATH=$5
 
-echo "group $COMMON_GROUP"
+COMPARISON_TIMEFILE="$COMPARE_ROOT/$TEST/$TEST_TIMEFILE"
 
+#__________________________________
+# bulletproofing
 if [ ! -f $TEST_TIMEFILE ]; then
-    echo "No performance output found.  Can't do performance test."
+    echo "No performance output ($TEST_TIMEFILE) found.  Can't do performance test."
     exit 5
 fi
 
@@ -21,9 +25,43 @@ fi
 
 error=0
 
-echo "Performing performance check"
-percent=`performance_percent.pl $TEST_TIMEFILE $COMPARISON_TIMEFILE`
+#__________________________________
+# calculate the percent change and the time the test took to run
+perfInfo=`performance_percent.pl $TEST_TIMEFILE $COMPARISON_TIMEFILE`
+percent=`echo $perfInfo | cut -d " " -f 1`
+testTime=`echo $perfInfo | cut -d " " -f 2`
 
+#__________________________________
+# write data to log file and plot 
+# the results
+if [ $MAKEPLOTS -eq "1" ]; then
+  echo "Saving simulation run time data"
+
+  simRunTimeHistory="$COMPARE_ROOT/$TEST/simRunTimeHistory"
+
+  if [ ! -f $here ]; then
+    echo "#date Run Time(sec)" > $simRunTimeHistory
+  fi
+
+  now=`date +%m-%d-%Y`
+  echo "$now  $testTime" >> $simRunTimeHistory
+
+  #eliminate entries from the restart test or if
+  #it runs more that once a day
+  uniq -w 10 $simRunTimeHistory > $simRunTimeHistory.clean
+  cp $simRunTimeHistory.clean $simRunTimeHistory
+  
+  /bin/rm $simRunTimeHistory.clean
+
+  #make a local copy
+  cp $simRunTimeHistory ./simRunTimeHistory
+  echo "Now plotting results"
+  gnuplot $HELPERPATH/plotRunTimeHistory.gp
+  
+fi
+
+#__________________________________
+echo "Performing performance check"
 if [ $percent -gt "10" ]; then
     echo "***Performance test failed"
     echo " -- Time increased by %$percent" > performance_shortmessage.txt

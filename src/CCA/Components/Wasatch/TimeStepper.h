@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,27 +26,22 @@
 #define Wasatch_TimeStepper_h
 
 #include <set>
+#include <list>
+#include <vector>
 
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationStateP.h>
 
-#include <expression/ExpressionID.h>
-#include <expression/FieldManager.h> // field type conversion tools
-#include <expression/ExpressionFactory.h>
-#include <expression/PlaceHolderExpr.h>
-#include <expression/ExprLib.h>
+#include <expression/ExprFwd.h>
 
 #include "GraphHelperTools.h"
-
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 #include "FieldTypes.h"
 
-#include <list>
-
 namespace Uintah{
   class ProcessorGroup;
   class DataWarehouse;
+  class VarLabel;
 }
 
 namespace Wasatch{
@@ -92,6 +89,8 @@ namespace Wasatch{
 
   private:
 
+    Uintah::SimulationStateP sharedState_;
+
     typedef std::set< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
     typedef std::set< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
     typedef std::set< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
@@ -103,8 +102,6 @@ namespace Wasatch{
     ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
     GraphHelper* const solnGraphHelper_;
-    const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
-
     CoordHelper* const coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
 
     std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
@@ -134,7 +131,7 @@ namespace Wasatch{
                          const Uintah::MaterialSubset* const materials,
                          Uintah::DataWarehouse* const oldDW,
                          Uintah::DataWarehouse* const newDW,
-                         Expr::ExpressionTree::TreePtr timeTree,
+                         Expr::ExpressionFactory* const factory,
                          const int rkStage );
 
 
@@ -143,7 +140,7 @@ namespace Wasatch{
     /**
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
-     *  \param deltaTLabel - the VarLabel associated with the time step value
+     *  \param sharedState
      *
      *  \param factory - the ExpressionFactory that will be used to
      *                   construct the trees for any transport
@@ -151,7 +148,7 @@ namespace Wasatch{
      *                   factory should be used when constructing the
      *                   expressions in each transport equation.
      */
-    TimeStepper( const Uintah::VarLabel* deltaTLabel,
+    TimeStepper( Uintah::SimulationStateP sharedState,
                  GraphHelper& solnGraphHelper );
 
     ~TimeStepper();
@@ -168,8 +165,8 @@ namespace Wasatch{
      *  with the Expression library.
      */
     template<typename FieldT>
-    inline void add_equation( const std::string& solnVarName,
-                              Expr::ExpressionID rhsID );
+    void add_equation( const std::string& solnVarName,
+                       Expr::ExpressionID rhsID );
 
     /**
      *  \brief schedule the tasks associated with this TimeStepper
@@ -191,56 +188,8 @@ namespace Wasatch{
 
     const std::list< TaskInterface* >&
     get_task_interfaces() const{ return taskInterfaceList_; }
+
   };
-
-  //------------------------------------------------------------------
-
-  template<>
-  inline std::set< TimeStepper::FieldInfo<SpatialOps::structured::SVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::SVolField>()
-  {
-    return scalarFields_;
-  }
-  template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::XVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::XVolField>()
-  {
-    return xVolFields_;
-  }
-  template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::YVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::YVolField>()
-  {
-    return yVolFields_;
-  }
-  template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::ZVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::ZVolField>()
-  {
-    return zVolFields_;
-  }
-
-  //------------------------------------------------------------------
-
-  template<typename FieldT>
-  void
-  TimeStepper::add_equation( const std::string& solnVarName,
-                             Expr::ExpressionID rhsID )
-  {
-    const std::string& rhsName = solnGraphHelper_->exprFactory->get_label(rhsID).name();
-    const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
-    const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
-    Uintah::VarLabel* const solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
-    Uintah::VarLabel* const rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
-    std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
-    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
-    createdVarLabels_.push_back( solnVarLabel );
-    createdVarLabels_.push_back( rhsVarLabel );
-
-    typedef Expr::PlaceHolder<FieldT>  FieldExpr;
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )),true );
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)),true );
-  }
 
   //==================================================================
 

@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,16 +24,15 @@
 
 #include <expression/ExprLib.h>
 
-#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
+#include "SetCurrentTime.h"
 
 namespace Wasatch{
 
-  SetCurrentTime::SetCurrentTime( const Uintah::SimulationStateP sharedState,
-                                  const int RKStage )
+  SetCurrentTime::SetCurrentTime()
     : Expr::Expression<double>(),
-      state_( sharedState ),
-      RKStage_( RKStage ),
-      deltat_ ( 0.0 )
+      rkStage_( 0 ),
+      deltat_ ( 0.0 ),
+      simTime_( 0.0 )
   {}
 
   //--------------------------------------------------------------------
@@ -44,28 +45,24 @@ namespace Wasatch{
   void
   SetCurrentTime::evaluate()
   {
-    //std::cout << "set current time deltat: " << deltat_ << std::endl;
-    typedef std::vector<double*>& doubleVec;
-    doubleVec results = this->get_value_vec();
-    const double delt = state_->d_current_delt;
-    const double elapsedTime = state_->getElapsedTime();
-    *results[0] = elapsedTime;
-    *results[1] = delt;
-    if (RKStage_ == 2) *results[0] += delt;
-    if (RKStage_ == 3) {
-        *results[0] += delt*0.5;
-        *results[1]  = 0.5*delt;
+    assert( deltat_  >= 0.0 );
+    assert( simTime_ >= 0.0 );
+
+    typedef std::vector<double*>& DoubleVec;
+    DoubleVec results = this->get_value_vec();
+    *results[0] = simTime_;
+    *results[1] = deltat_;
+    if( rkStage_ == 2 ) *results[0] += deltat_;
+    if( rkStage_ == 3 ) {
+      *results[0] += 0.5*deltat_;
+      *results[1]  = 0.5*deltat_;
     }
   }
 
   //--------------------------------------------------------------------
 
-  SetCurrentTime::Builder::Builder( const Expr::TagList& resultsTags,
-                                    const Uintah::SimulationStateP sharedState,
-                                    const int RKStage )
-    : ExpressionBuilder(resultsTags),
-      state_( sharedState ),
-      RKStage_(RKStage)
+  SetCurrentTime::Builder::Builder( const Expr::TagList& resultsTags )
+    : ExpressionBuilder(resultsTags)
   {}
 
   //--------------------------------------------------------------------
@@ -73,7 +70,7 @@ namespace Wasatch{
   Expr::ExpressionBase*
   SetCurrentTime::Builder::build() const
   {
-    return new SetCurrentTime( state_, RKStage_ );
+    return new SetCurrentTime();
   }
 
 } // namespace Wasatch

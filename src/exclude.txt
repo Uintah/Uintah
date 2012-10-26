@@ -32,6 +32,7 @@ TODO
 exclude.txt
 scripts
 
+build_scripts/*.release
 
 CCA/Components/*.orig
 CCA/Components/*.release

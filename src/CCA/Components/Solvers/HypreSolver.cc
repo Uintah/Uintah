@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #include <CCA/Components/Solvers/HypreSolver.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
@@ -209,6 +203,12 @@ namespace Uintah {
 
         //__________________________________
         // Setup grid
+#ifdef HYPRE_TIMING
+        hypre_global_timing = NULL;
+#endif        
+        int time_index = hypre_InitializeTiming("Setup grid");
+        hypre_BeginTiming(time_index);
+        
         HYPRE_StructGrid grid;
         HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
         
@@ -245,8 +245,13 @@ namespace Uintah {
         // Assemble the grid
         HYPRE_StructGridAssemble(grid);
 
+        hypre_EndTiming(time_index);
+        
         //__________________________________
         // Create the stencil
+        time_index = hypre_InitializeTiming("Create matrix");
+        hypre_BeginTiming(time_index);
+        
         HYPRE_StructStencil stencil;
         if(params->symmetric){
           
@@ -403,10 +408,13 @@ namespace Uintah {
           }
         }
         HYPRE_StructMatrixAssemble(*HA);
-
+        hypre_EndTiming(time_index);
 
         //__________________________________
         // Create the RHS
+        time_index = hypre_InitializeTiming("Setup RHS");
+        hypre_BeginTiming(time_index);
+        
         HYPRE_StructVector* HB = hypre_solver_s->HB;
 
         if (timestep == 1 || restart) {
@@ -452,9 +460,13 @@ namespace Uintah {
           }
         }
         HYPRE_StructVectorAssemble(*HB);
-
+        hypre_EndTiming(time_index);
+        
         //__________________________________
         // Create the solution vector
+        time_index = hypre_InitializeTiming("Setup X");
+        hypre_BeginTiming(time_index);
+                
         HYPRE_StructVector* HX = hypre_solver_s->HX;
 
         if (timestep == 1 || restart) {
@@ -503,6 +515,15 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         HYPRE_StructVectorAssemble(*HX);
+        
+        hypre_EndTiming(time_index);
+        hypre_PrintTiming("Uintah->Struct Interface", pg->getComm());
+
+        for(int i=0; i<= time_index; i++){
+          hypre_FinalizeTiming(i);
+        }
+        hypre_ClearTiming();
+        
         
         //__________________________________
         //  Dynamic tolerances  Arches uses this
@@ -894,16 +915,14 @@ namespace Uintah {
         }
         
         
-
 #ifdef PRINTSYSTEM
-
         //__________________________________
         //   Debugging 
         vector<string> fname;   
         params->getOutputFileName(fname);
-        HYPRE_StructMatrixPrint(fname[0].c_str(), HA, 0);
-        HYPRE_StructVectorPrint(fname[1].c_str(), HB, 0);
-        HYPRE_StructVectorPrint(fname[2].c_str(), HX, 0);
+        HYPRE_StructMatrixPrint(fname[0].c_str(), *HA, 0);
+        HYPRE_StructVectorPrint(fname[1].c_str(), *HB, 0);
+        HYPRE_StructVectorPrint(fname[2].c_str(), *HX, 0);
 #endif
         
         printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );

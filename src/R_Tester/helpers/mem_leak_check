@@ -1,9 +1,13 @@
 #!/bin/bash
 
 TEST=$1
-MALLOC_STATS=$2
-COMPARISON_MALLOC_STATS=$3
-TMPDIR=$4
+MAKEPLOTS=$2
+MALLOC_STATS=$3
+COMPARE_ROOT=$4
+TMPDIR=$5
+HELPERPATH=$6
+
+COMPARISON_MALLOC_STATS="$COMPARE_ROOT/$TEST/$MALLOC_STATS"
 error=1
 
 #__________________________________
@@ -59,12 +63,42 @@ if [ ! -f $COMPARISON_MALLOC_STATS ]; then
   exit -1
 fi
 
-#__________________________________
-echo "Performing highwater memory usage check"
+
 
 meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 percent=`echo $meminfo | cut -d " " -f 1`
 abs=`echo $meminfo | cut -d " " -f 2`
+testHighwater=`echo $meminfo | cut -d " " -f 3`
+
+
+#__________________________________
+if [ $MAKEPLOTS -eq "1" ]; then
+  echo "Saving highwater memory usage"
+
+  memHistory="$COMPARE_ROOT/$TEST/memHistory"
+
+  if [ ! -f $here ]; then
+    echo "#date highwaterUsage(bytes)" > $memHistory
+  fi
+
+  now=`date +%m-%d-%Y`
+  echo "$now  $testHighwater" >> $memHistory
+
+  #eliminate entries from the restart test or if
+  #it runs more that once a day
+  uniq -w 10 $memHistory > $memHistory.clean
+  cp $memHistory.clean $memHistory
+  
+  /bin/rm $memHistory.clean
+
+  #make a local copy
+  cp $memHistory ./memHistory
+
+  gnuplot $HELPERPATH/plotMemUsage.gp
+  
+fi
+#__________________________________
+echo "Performing highwater memory usage check"
 
 if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
   echo "***Highwater memory usage test failed"
@@ -84,6 +118,10 @@ else
   exit 0
 
 fi
+
+
+
+
 
 
 exit $error

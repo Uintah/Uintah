@@ -1,4 +1,6 @@
 /*
+ * The MIT License
+ *
  * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -138,7 +140,7 @@ evaluate()
   switch ( turbulenceParameters_.turbulenceModelName ) {
 
     case Wasatch::SMAGORINSKY:
-      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|
+      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
       break;
 
     case Wasatch::DYNAMIC:
@@ -148,11 +150,20 @@ evaluate()
       break;
 
     case Wasatch::WALE:
-      result <<= *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / ( pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25) + 1e-15);
+    {
+      SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
+      *denom <<= 0.0;
+      *denom <<= pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25);
+      result <<= cond( *denom == 0.0, 0.0 )
+                     ( *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / *denom );
+    }
       break;
 
     case Wasatch::VREMAN:
-      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|
+      // NOTE: the constant used in the Vreman model input corresponds to the
+      // best Smagorinsky constant when using the constant Smagorinsky model
+      // for this problem. The Vreman constant is estimated at Cv ~ 2.5 Cs
+      result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|, Cs is the Smagorinsky constant
       break;
       
     default:

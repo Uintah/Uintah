@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <Core/Malloc/Allocator.h>
@@ -423,8 +417,25 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                                                                   px[idx]);
       }
 
-      deformationGradient_new[idx]=(velGrad_new*delT+Identity)
-                                    *deformationGradient[idx];
+      Matrix3 F=deformationGradient[idx];
+      double Lnorm_dt = velGrad_new.Norm()*delT;
+      int num_scs = min(max(4,2*((int) Lnorm_dt)),10000);
+      if(num_scs > 1000){
+        cout << "NUM_SCS = " << num_scs << endl;
+      }
+      double dtsc = delT/(double (num_scs));
+      Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
+      for(int n=0;n<num_scs;n++){
+        F=OP_tensorL_DT*F;
+//          if(num_scs >1000){
+//          cerr << "n = " << n << endl;
+//          cerr << "F = " << F << endl;
+//          cerr << "J = " << F.Determinant() << endl << endl;
+//          }
+      }
+
+      deformationGradient_new[idx]=F;
+
       velGrad[idx] = velGrad_new;
     }
 
@@ -477,7 +488,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
         // Change F such that the determinant is equal to the average for
         // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index]/J);
         J=J_CC[cell_index];
       }
       if (J<=0.0) {

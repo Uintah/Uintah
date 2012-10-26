@@ -110,7 +110,6 @@
           <cw>.0</cw>
           <cp>0</cp>
           <phi0>0.0</phi0>
-          <esphi0>0.0</esphi0>
         </constantMMS>
       </MMS>
 

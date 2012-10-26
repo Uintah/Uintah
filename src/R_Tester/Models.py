@@ -13,7 +13,8 @@ from helpers.runSusTests import runSusTests
 #       no_restart:             - skip the restart tests
 #       no_dbg:                 - skip all debug compilation tests
 #       no_opt:                 - skip all optimized compilation tests
-#       do_performance_test:    - Run the performance test
+#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
+#                                 (You cannot perform uda comparsions with this flag set)
 #       doesTestRun:            - Checks if a test successfully runs
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
@@ -27,14 +28,13 @@ from helpers.runSusTests import runSusTests
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
+NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"]), \
                    ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	        ]
                
                
 # Tests that are run during local regression testing               
-LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
+LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"]), \
                    ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	        ]
 

@@ -79,8 +79,8 @@ namespace Uintah {
     const VarLabel* pBackStressLabel_preReloc;
     const VarLabel* pBackStressIsoLabel;
     const VarLabel* pBackStressIsoLabel_preReloc;
-    const VarLabel* pKappaStateLabel;
-    const VarLabel* pKappaStateLabel_preReloc;
+    const VarLabel* pKappaFlagLabel;
+    const VarLabel* pKappaFlagLabel_preReloc;
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
   private:
@@ -118,15 +118,10 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    void computeInvariants(Matrix3& stress, Matrix3& S,  double& I1, double& J2);
-
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
 
     double YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double& PEAKI1);
-
-
-    double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1);
 
     ////////////////////////////////////////////////////////////////////////
     /* Make the value for pLocalized computed locally available outside of the model. */
@@ -157,9 +152,6 @@ namespace Uintah {
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
 
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch,
-                                           MPMLabel* lb) const;
 
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,

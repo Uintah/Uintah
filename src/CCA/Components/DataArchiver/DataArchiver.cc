@@ -1,32 +1,26 @@
 /*
-  
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 #include <TauProfilerForSCIRun.h>
 
@@ -1962,33 +1956,6 @@ DataArchiver::makeVersionedDir()
   // If there is a real error, then we can throw an exception because
   // we don't care about the memory penalty.
 
-  // The lab machines use a script that removes world readable permissions.
-  // Create the uda directory setgid csafe so that others in the csafe
-  // group can read. Also depends on umask, which is set in sus.cc
-#ifndef _WIN32
-  const int maxgroups = 20;
-  gid_t grouplist[maxgroups];
-  int num_groups = getgroups(maxgroups,grouplist);
-
-  // list of csafe gids on the various machines
-  const int num_csafe_gids = 3;
-  gid_t csafe_groups[num_csafe_gids];
-  csafe_groups[0] = 1079;  //sci csafe gid
-  csafe_groups[1] = 7545;  //alc uintah gid
-  csafe_groups[2] = 49875; //Q uintah gid
-
-  int found_gid = 0;
-  gid_t csafe_gid = (gid_t)-1;
-  for (int i = 0; i < num_groups && !found_gid; i++){
-    for (int j = 0; j < num_csafe_gids && !found_gid; j++){
-      if (grouplist[i] == csafe_groups[j]){
-        found_gid = 1;
-        csafe_gid = grouplist[i];
-      }
-    }
-  }
-#endif
-
   string dirName;
 
   // first check to see if the suffix passed in on the command line
@@ -2001,13 +1968,6 @@ DataArchiver::makeVersionedDir()
     
     int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) { // Created the directory successfully
-#ifndef _WIN32
-      if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
-        cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
-        cerr<<strerror(errno)<<endl;
-      }
-      chmod(dirName.c_str(),0751|S_ISGID);
-#endif
       dirCreated = true;
     }
     else if( errno != EEXIST )  {
@@ -2026,13 +1986,6 @@ DataArchiver::makeVersionedDir()
       
     int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) {// Created the directory successfully
-#ifndef _WIN32
-      if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
-        cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
-        cerr<<strerror(errno)<<endl;
-      }
-      chmod(dirName.c_str(),0751|S_ISGID);
-#endif
       dirMax = dirNum;
       if (dirMax == dirMin)
         dirCreated = true;

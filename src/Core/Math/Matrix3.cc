@@ -1,32 +1,26 @@
 /*
-
-The MIT License
-
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
-University of Utah.
-
-License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-DEALINGS IN THE SOFTWARE.
-
-*/
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2012 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 //  class Matrix3
 //    Matrix3 data type -- holds components of a 3X3 matrix
@@ -843,6 +837,27 @@ void Matrix3::prettyPrint(std::ostream &out_file) const
     out_file <<  m3(0,0) << ' ' << m3(0,1) << ' ' << m3(0,2) << endl;
     out_file <<  m3(1,0) << ' ' << m3(1,1) << ' ' << m3(1,2) << endl;
     out_file <<  m3(2,0) << ' ' << m3(2,1) << ' ' << m3(2,2) << endl;
+}
+
+void Matrix3::gershgorinBounds(double &minBound, double& maxBound)
+{
+   // Use the Gershgorin circle theorem (see, e.g. Wikipedia) to find
+   // the lower and upper bounds of the eigenvalues
+
+   double radius1=fabs(mat3[0][1])+fabs(mat3[0][2]);
+   double radius2=fabs(mat3[1][0])+fabs(mat3[1][2]);
+   double radius3=fabs(mat3[2][0])+fabs(mat3[2][1]);
+
+   double min1=mat3[0][0]-radius1;
+   double min2=mat3[1][1]-radius2;
+   double min3=mat3[2][2]-radius3;
+
+   double max1=mat3[0][0]+radius1;
+   double max2=mat3[1][1]+radius2;
+   double max3=mat3[2][2]+radius3;
+
+   maxBound = std::max(max1,std::max(max2,max3));
+   minBound = std::min(min1,std::min(min2,min3));
 }
 
 namespace Uintah {
