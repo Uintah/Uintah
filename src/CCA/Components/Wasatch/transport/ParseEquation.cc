@@ -500,37 +500,20 @@ namespace Wasatch{
     int nEnv = 1;
     params->get( "NumberOfEnvironments", nEnv );
     const int nEqs = 2*nEnv;
-    
+
+    //________________________
+    //get the initial moments
     std::vector< double> initialMoments;
-    double val;
-    initialMoments = std::vector< double >(nEqs);
-    
-    //loop over all basic exprs to find initialized moments 
-    for( int i=0; i<nEqs; i++) { 
-      std::stringstream ss;
-      ss << i;
-      std::string thisPhiName = basePhiName + "_" + ss.str();
-      std::string thisBasePhiName = basePhiName + "_" + ss.str() + "base";
+    for( Uintah::ProblemSpecP exprParams = wasatchParams->findBlock("MomentInitialization");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("MomentInitialization") ){
       
-      for( Uintah::ProblemSpecP expressionParams=wasatchParams->findBlock("BasicExpression");
-          expressionParams != 0;
-          expressionParams=expressionParams->findNextBlock("BasicExpression") ){
+      std::string populationName;
+      exprParams->get("PopulationName", populationName);
+      std::string inputMomentName = "m_" + populationName;
 
-        std::string exprName;
-        expressionParams->findBlock("NameTag")->getAttribute("name",exprName);
-       
-        if (exprName == thisBasePhiName ){
-          expressionParams->get("Constant",val);
-          initialMoments[i] = val;
-          proc0cout << "getting initial moment base value [" << i << "] = " << val <<std::endl; 
-          break;
-        }
-
-        if (exprName == thisPhiName ){
-          expressionParams->get("Constant",val);
-          initialMoments[i] = val;
-          proc0cout << "getting initial moment [" << i << "] = " << val <<std::endl; //quick debug statement
-        }
+      if ( basePhiName.compare(inputMomentName) == 0 ) {
+        exprParams->get("Values", initialMoments,nEqs);
       }
     }
     
@@ -549,7 +532,7 @@ namespace Wasatch{
       const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
                                                                       params, weightsTags, abscissaeTags,
                                                                       momentID, initialMoments[iMom]);
-      momtranseq = scinew MomTransEq( thisPhiName, rhsID);
+      momtranseq = scinew MomTransEq( thisPhiName, rhsID, params);
       adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
       adaptors.push_back(adaptor);
       // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
@@ -565,9 +548,9 @@ namespace Wasatch{
       Wasatch::TransportEquation* momtranseq = adaptor->equation();
 
       //_____________________________________________________
-      // set up initial conditions on this momentum equation
+      // set up initial conditions on this moment equation
       try{
-        proc0cout << "Setting initial conditions for scalability test equation: "
+        proc0cout << "Setting initial conditions for moment transport equation: "
         << momtranseq->solution_variable_name()
         << std::endl;
         icGraphHelper->rootIDs.insert( momtranseq->initial_condition( *icGraphHelper->exprFactory ) );
@@ -576,7 +559,7 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << e.what()
         << std::endl
-        << "ERORR while setting initial conditions on scalability test equation "
+        << "ERORR while setting initial conditions on moment transport equation "
         << momtranseq->solution_variable_name()
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );

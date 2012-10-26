@@ -92,7 +92,8 @@ namespace Wasatch{
      *  obtain the appropriate input arguments here.
      */
     MomentTransportEquation(const std::string thisPhiName,
-                            const Expr::ExpressionID id );
+                            const Expr::ExpressionID id,
+                            Uintah::ProblemSpecP params);
 
     ~MomentTransportEquation();
 

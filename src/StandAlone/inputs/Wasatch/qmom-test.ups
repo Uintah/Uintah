@@ -7,64 +7,30 @@
   <SimulationComponent type="wasatch"/>  
 
   <Wasatch>    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_0" state="STATE_N" />
-    <Constant>0.999999713348</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_1" state="STATE_N" />
-    <Constant>5.000000053462</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_2" state="STATE_N" />
-    <Constant>25.999999980657</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_3" state="STATE_N" />
-    <Constant>140.000000010207</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_4" state="STATE_N" />
-    <Constant>777.999999993004</Constant>
-    </BasicExpression>
-   
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_5" state="STATE_N" />
-    <Constant>4450.000000005849</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_6" state="STATE_N" />
-    <Constant>26139.999999994263</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_7" state="STATE_N" />
-    <Constant>157400.000000006403</Constant>
-    </BasicExpression>
+  
+    <MomentInitialization>
+			<PopulationName>CACO3</PopulationName>
+			<Values>
+				0.999999713348,
+				5.000000053462,
+				25.999999980657,
+				140.000000010207,
+				777.999999993004,
+				4450.000000005849,
+				26139.999999994263,
+				157400.000000006403
+			</Values>
+    </MomentInitialization>
 
     <MomentTransportEquation>
         <PopulationName>CACO3</PopulationName>
-        <NumberOfEnvironments>2</NumberOfEnvironments>
-        
+        <NumberOfEnvironments>2</NumberOfEnvironments>        
         <GrowthExpression>
             <GrowthModel>MONOSURFACE</GrowthModel>
             <PreGrowthCoefficient>1.0</PreGrowthCoefficient>
         </GrowthExpression>
-
     </MomentTransportEquation>
+    
   </Wasatch>
 
   <Time>
