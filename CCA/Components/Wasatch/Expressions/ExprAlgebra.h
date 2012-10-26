@@ -121,9 +121,7 @@ ExprAlgebra( const Expr::TagList srcTagList,
   srcTagList_ (srcTagList),
   algebraicOperation_( algebraicOperation ),
   isModifierExpr_( isModifierExpr )
-{
-  std::cout << "Is Modifier Expr = " << isModifierExpr_ << std::endl;
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -200,9 +198,7 @@ Builder::Builder( const Expr::Tag& resultTag,
 srcTagList_( srcTagList ),
 algebraicOperation_( algebraicOperation ),
 isModifierExpr_( isModifierExpr )
-{
-  std::cout << "is modifier = " << isModifierExpr_ << std::endl;
-}
+{}
 
 //--------------------------------------------------------------------
 
