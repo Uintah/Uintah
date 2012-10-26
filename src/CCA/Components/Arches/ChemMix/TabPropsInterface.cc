@@ -76,33 +76,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
-  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
-
-  d_noisy_hl_warning = false; 
-  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
-    d_noisy_hl_warning = true; 
-  db_tabprops->getWithDefault("lower_hl_bound", d_hl_lower_bound, -1.0); 
-  db_tabprops->getWithDefault("upper_hl_bound", d_hl_upper_bound, 1.0); 
-
-  // only solve for heat loss if a working radiation model is found
-  const ProblemSpecP params_root = db_tabprops->getRootNode();
-  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-  if (db_enthalpy) { 
-    ProblemSpecP db_DO_rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
-    ProblemSpecP db_RMCRT_rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
-    d_adiabatic = true; 
-    if (db_DO_rad || db_RMCRT_rad) { 
-      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
-      d_adiabatic = false; 
-    } else { 
-      proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
-      d_adiabatic = true; 
-    }
-  } else {
-    d_adiabatic = true; 
-  }
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
