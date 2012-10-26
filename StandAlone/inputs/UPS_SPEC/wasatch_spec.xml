@@ -352,6 +352,13 @@
       
     </BCExpression>
 
+    <!-- Spec for initializing moments -->
+    <MomentInitialization      spec="MULTIPLE NO_DATA">
+      <!-- this is for example ACC, Aragonite... the solution variables will be m_PopulationName_0, m_PopulationName_1... -->
+      <PopulationName           spec="REQUIRED STRING" /> 
+      <Values                   spec="REQUIRED MULTIPLE_DOUBLES"/>
+    </MomentInitialization>
+    
   </CommonTags>
 
   <Wasatch                      spec="OPTIONAL NO_DATA">
@@ -369,6 +376,8 @@
     <BasicExpression            spec="MULTIPLE" />
 
     <BCExpression            spec="MULTIPLE" />
+    
+    <MomentInitialization   spec="MULTIPLE"/>
     
     <PrecipitationBasicExpression     spec="MULTIPLE" />
 

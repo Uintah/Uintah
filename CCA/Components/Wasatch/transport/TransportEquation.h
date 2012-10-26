@@ -39,6 +39,7 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/PatchInfo.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
 
 namespace Wasatch{
 
@@ -83,11 +84,19 @@ namespace Wasatch{
      */
     TransportEquation( const std::string solutionVarName,
                        const Expr::ExpressionID rhsExprID,
-                       const Direction stagLoc )
+                       const Direction stagLoc,
+                       Uintah::ProblemSpecP params=NULL)
       : solnVarName_( solutionVarName ),
         rhsExprID_( rhsExprID ),
-        stagLoc_( stagLoc )
-    {}
+        stagLoc_( stagLoc ),
+        volFracTag_( Expr::Tag() ),
+        hasVolFrac_( false )
+    {
+      if (params && params->findBlock("VolumeFractionExpression")) {
+        volFracTag_ = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+        hasVolFrac_ = true;
+      }
+    }
 
     virtual ~TransportEquation(){}
 
@@ -167,6 +176,8 @@ namespace Wasatch{
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
+    bool hasVolFrac_;
+    Expr::Tag volFracTag_;
   };
 
 } // namespace Wasatch

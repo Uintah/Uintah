@@ -8,41 +8,19 @@
 
 
   <Wasatch>    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_0" state="STATE_N" />
-    <Constant>0.695237824224621</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_1" state="STATE_N" />
-    <Constant>0.464617179659112</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_2" state="STATE_N" />
-    <Constant>0.310469654411472</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_3" state="STATE_N" />
-    <Constant>0.209925424119099</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_4" state="STATE_N" />
-    <Constant>0.338591051272169</Constant>
-    </BasicExpression>
-   
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_5" state="STATE_N" />
-    <Constant>16.759040794776848</Constant>
-    </BasicExpression>
+  
+
+    <MomentInitialization>
+			<PopulationName>CACO3</PopulationName>
+			<Values>
+				0.695237824224621,
+				0.464617179659112,
+				0.310469654411472,
+				0.209925424119099,
+				0.338591051272169,
+				16.759040794776848
+			</Values>
+    </MomentInitialization>
     
     <MomentTransportEquation>
         <PopulationName>CACO3</PopulationName>
