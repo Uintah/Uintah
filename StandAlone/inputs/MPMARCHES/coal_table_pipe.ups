@@ -33,7 +33,7 @@
     <save label="density" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
     <save label="temperature" table_lookup="true"/>
-    <checkpoint cycle="2" interval="0.2"/>
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
