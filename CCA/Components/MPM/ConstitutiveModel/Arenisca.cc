@@ -2370,6 +2370,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pBackStressIsoLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pKappaFlagLabel,        matlset, Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
   task->computes(pPlasticStrainLabel_preReloc,    matlset);
   task->computes(pPlasticStrainVolLabel_preReloc, matlset);
   task->computes(pElasticStrainVolLabel_preReloc, matlset);
