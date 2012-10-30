@@ -3607,7 +3607,6 @@ As a final example the table:
 \end{Verbatim}
 would result in 50\% hydrostatic compression at time=1 with a 45 degree superimposed rotation about the 2-axis, followed by  simple shear and a 90 degree rotation about the 3-axis between time=1 and time=2.
 
-
 \subsubsection{Cohesive Zones} \label{Sec:CohesiveZones}
 A cohesive zone formulation is available in Uintah based on the description
 by Daphalapurkar, et al.~\cite{Daphalapurkar}.  As in their implementation,
@@ -4189,6 +4188,63 @@ magnitude.
   \label{fig:WSphereSteelFinal}
 \end{figure}
 
+\subsection{Method Of Manufactured Solutions (MMS)}
+There are three manufactured solutions available in Uintah for nonlinear elastic constitutive models. The input files are available in the {\tt inputs/MPM} folder. 
+\begin{verbatim}
+AA.ups (Axis Aligned MMS)
+GenVortex.ups (Genralized Vortex MMS)
+Ring_MMS.ups (Expanding Ring MMS)
+\end{verbatim}
+All these input files have the following tag included in the {\tt <MPM>} section of the input file:
+\begin{verbatim}
+<MPM>
+   <RunMMSProblem>Name of the MMS</RunMMSProblem>	
+</MPM>
+\end{verbatim}
+The exact solutions for these problems are available in {\tt puda}, and the call to extract the error is
+\begin{verbatim}
+puda -AA_MMS_2 AA_MMS.uda (for AxisAligned MMS)
+puda -GV_MMS GenVortex.uda (for Generalized Vortex MMS)
+puda -ER_MMS Ring_MMS.uda (for Expanding Ring MMS)
+\end{verbatim}
+
+The current implementation allows the user to add a new manufactured solution in the {\tt MPM} component in a relatively-straight forward way. The current implementation of these manufactured solutions are located in {\tt src/CCA/Components/MPM/MMS} folder.
+The following files require modifications either to change the exisiting MMS or add a new one.
+\begin{verbatim}
+1) src/CCA/Components/MPM/MPMFlags.cc
+2) src/StandAlone/inputs/UPS_SPEC/mpm_spec.xml
+3) src/CCA/Components/MPM/MMS/MMS.cc
+4) src/CCA/Components/MPM/ConstitutiveModel/CNH_MMS.cc (Right now, all these MMS use
+the same constitutive model. User can change the constitutive model accordingly)
+5) src/StandAlone/tools/puda/puda.cc
+\end{verbatim}
+Following are the sequential steps to add a new MMS to the existing framework. 
+\newline
+1) In {\tt MPMFlags.cc}, add another {\tt if} condition for the new MMS string in the following {\tt loop}
+\begin{verbatim}
+if(d_mms_type=="AxisAligned"){
+    d_mms_type = "AxisAligned";
+  } else if(d_mms_type=="GeneralizedVortex"){
+    d_mms_type = "GeneralizedVortex";
+  } else if(d_mms_type=="ExpandingRing"){
+    d_mms_type = "ExpandingRing";
+  } else if(d_mms_type=="AxisAligned3L"){
+    d_mms_type = "AxisAligned3L";
+  }
+}
+\end{verbatim}
+2) Add the same string in the {\tt <RunMMSProblem>} tag located in the {\tt mpm\_spec.xml} file.
+\newline
+3) There are two member functions available in {\tt MMS.cc}.
+\begin{verbatim}
+		MMS::initializeParticleForMMS
+		MMS::computeExternalForceForMMS
+\end{verbatim}
+Similar to step $1$, add another {\tt if} condition in both the member functions for the new MMS. In the {\tt initializeParticleForMMS} function, initialize the particle data at time $t=0$, and in the {\tt computeExternalForceForMMS} function, code the analytical body forces. The exisiting analytical solutions can be used as a guide.
+\newline
+4) Add the exact solution in the {\tt src/StandAlone/tools/puda} folder. Look at the {\tt AA\_MMS.cc, GV\_MMS.cc, and ER\_MMS.cc} for reference. Add the option for the new MMS in the {\tt puda.cc} file.
+\newline
+5) If the new MMS has a non-zero stress, necessary modifications needs to be made in the {\tt initializeCMData} function located in that particular constitutive model (CNH\_MMS.cc for reference).
 %______________________________________________________________________
 %\section{References}
 \bibliographystyle{plain}
