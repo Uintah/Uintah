@@ -1007,7 +1007,7 @@ namespace Wasatch{
       
       exprParams->get("Values", initialMoments, nEqs); // get only the first nEqs moments
       
-      assert(initialMoments.size() == nEqs);
+      assert( (int) initialMoments.size() == nEqs );
       
       const int nMoments = initialMoments.size();
       typedef Expr::ConstantExpr<SVolField>::Builder Builder;

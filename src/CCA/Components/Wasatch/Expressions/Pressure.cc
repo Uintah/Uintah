@@ -28,6 +28,7 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
+#include <CCA/Components/Wasatch/StringNames.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -70,7 +71,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const double     refPressureValue,
                     const SCIRun::IntVector refPressureLocation,
                     const bool       use3DLaplacian,
-                    const Uintah::SolverParameters& solverParams,
+                    Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
 
@@ -82,6 +83,7 @@ Pressure::Pressure( const std::string& pressureName,
     d2rhodt2t_( d2rhodt2tag ),
 
     timestept_( timesteptag ),
+    currenttimet_(Expr::Tag(StringNames::self().time,Expr::STATE_NONE) ),
 
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
@@ -201,6 +203,10 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( doDens_ )  exprDeps.requires_expression( d2rhodt2t_ );
   exprDeps.requires_expression( dilatationt_ );
   exprDeps.requires_expression( timestept_ );
+  
+  const StringNames& sName = StringNames::self();
+  const Expr::Tag simTimeTag(sName.time,Expr::STATE_NONE);
+  exprDeps.requires_expression( simTimeTag );
 }
 
 //--------------------------------------------------------------------
@@ -221,6 +227,7 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
 
   const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
   timestep_ = &doublefm.field_ref( timestept_ );
+  currenttime_ = &doublefm.field_ref( currenttimet_ );
 }
 
 //--------------------------------------------------------------------
@@ -313,6 +320,10 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
   rhs <<= 0.0;
 
+  std::ostringstream strs;
+  strs << "_t_"<< *currenttime_ << "s_rkstage_"<< rkStage_ << "_patch";
+
+  solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
   // start by subtracting the dilatation from the previous timestep or integrator
   // stage. This is needed to account for any non-divergence free initial conditions
   rhs <<= - *dilatation_/ *timestep_;
@@ -406,7 +417,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const double     refPressureValue,
                             const SCIRun::IntVector refPressureLocation,
                             const bool       use3dlaplacian,
-                            const Uintah::SolverParameters& sparams,
+                            Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
    fxt_( fxtag ),
