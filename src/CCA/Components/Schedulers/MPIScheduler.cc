@@ -132,7 +132,6 @@ SchedulerP
 MPIScheduler::createSubScheduler()
 {
   MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
-  newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   newsched->d_sharedState=d_sharedState;
@@ -289,6 +288,13 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     parentScheduler->mpi_info_.totalsend+=mpi_info_.totalsend;
     parentScheduler->mpi_info_.totalwaitmpi+=mpi_info_.totalwaitmpi;
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
+    mpi_info_.totalreduce = 0;
+    mpi_info_.totalsend = 0;
+    mpi_info_.totalrecv = 0;
+    mpi_info_.totaltask = 0;
+    mpi_info_.totalreducempi = 0;
+    mpi_info_.totaltestmpi = 0;
+    mpi_info_.totalwaitmpi = 0;
   }
 
   emitNode(task, taskstart, dtask, 0);
@@ -888,7 +894,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
              mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
-  if (d_sharedState != 0) { // subschedulers don't have a sharedState
+  if (!parentScheduler) {//if this schedule is root scheduler
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
