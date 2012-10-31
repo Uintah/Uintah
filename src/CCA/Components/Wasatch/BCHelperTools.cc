@@ -287,7 +287,7 @@ namespace Wasatch {
       modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
     }
     // attach the modifier expression to the target expression
-    factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
+    factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
     
     // now retrieve the modifier expression and set the ghost and interior points
     BoundaryConditionBase<FieldT>& modExpr =
