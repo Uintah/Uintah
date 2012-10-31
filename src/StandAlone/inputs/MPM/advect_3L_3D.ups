@@ -39,14 +39,6 @@
     <save label = "p.x"/>
     <save label = "p.particleID"/>
     <save label = "particleCount"/>
-    <save label = "p.volume"/>
-    <save label = "p.color"/>
-    <save label = "p.stress"/>
-    <save label = "p.mass"/>
-    <save label = "p.temperature"/>
-
-    <save label = "p.displacement"/>
-    <save label = "p.deformationMeasure"/>
     <save label = "p.velocity"/>
 
      <checkpoint cycle = "2" timestepInterval = "10"/>
