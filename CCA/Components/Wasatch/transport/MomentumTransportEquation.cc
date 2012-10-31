@@ -522,7 +522,7 @@ namespace Wasatch{
       proc0cout << "PRESSURE: " << std::endl
           << pbuilder->get_computed_field_tags() << std::endl;
       pressureID_ = factory.register_expression( pbuilder );
-      //factory.cleave_from_children( pressureID_ );
+      factory.cleave_from_children( pressureID_ );
       factory.cleave_from_parents ( pressureID_ );
     }
     else {
