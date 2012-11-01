@@ -108,6 +108,7 @@
           <value> 10.0 </value>
         </BCType>
       </Face>
+      
       <Face side="x+">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>

@@ -176,7 +176,7 @@ namespace Wasatch{
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
                                             const Uintah::MaterialSubset* const materials,
-                                           const std::set<std::string>& functorSet);
+                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap_);
 
 
     /**
@@ -186,7 +186,7 @@ namespace Wasatch{
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials,
-                                   const std::set<std::string>& functorSet);
+                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap_);
 
     /**
      *  \brief setup the initial conditions for this transport equation.

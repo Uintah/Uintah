@@ -144,7 +144,7 @@ namespace Wasatch{
                                                     const Uintah::PatchSet* const localPatches,
                                                     const PatchInfoMap& patchInfoMap,
                                                     const Uintah::MaterialSubset* const materials,
-                                                   const std::set<std::string>& functorSet) = 0;
+                                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap_) = 0;
 
 
     /**
@@ -159,7 +159,7 @@ namespace Wasatch{
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
                                             const Uintah::MaterialSubset* const materials,
-                                           const std::set<std::string>& functorSet) = 0;
+                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap_ ) = 0;
 
     /**
      *  Return the ExpressionID that identifies an expression that will
