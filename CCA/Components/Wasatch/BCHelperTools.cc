@@ -806,8 +806,10 @@ namespace Wasatch {
                                     const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials )
+                                    const Uintah::MaterialSubset* const materials,
+                                    const std::set<std::string>& functorSet)
   {
+
     /*
      ALGORITHM:
      1. loop over the patches
@@ -842,6 +844,25 @@ namespace Wasatch {
         // loop over materials
         for( int im=0; im<materials->size(); ++im ){
 
+          // process functors... this is an ugly part of the code but we
+          // have to deal with this because Uintah doesn't allow a given task
+          // to run on different patches with different requires. We also can't
+          // get a bc graph to play nicely with the time advance graphs.
+          // this block will essentially enforce the same dependencies across
+          // all patches by adding functor expressions on them. those patches
+          // that do NOT have that functor associated with any of their boundaries
+          // will just expose the dependencies advertised by the functor but will
+          // accomplish nothing else because that functor doesn't have any bc points
+          // associated with it.
+          Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+          std::set<std::string>::iterator functorIter = functorSet.begin();
+          while ( functorIter != functorSet.end() ) {
+            Expr::Tag modTag = Expr::Tag(*functorIter,Expr::STATE_NONE);
+            // attach the modifier expression to the target expression
+            factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
+            ++functorIter;
+          }
+
           const int materialID = materials->get(im);
 
           std::vector<Uintah::Patch::FaceType> bndFaces;
@@ -856,7 +877,7 @@ namespace Wasatch {
             SCIRun::IntVector insideCellDir = patch->faceDirection(face);
             //std::cout << "Inside Cell Dir: \n" << insideCellDir << std::endl;
 
-            //get the number of children
+            // get the number of children
             // jcs note that we need to do some error checking here.
             // If the BC has not been set then we get a cryptic error
             // from Uintah.
@@ -1373,7 +1394,8 @@ namespace Wasatch {
                                                        const GraphHelper& graphHelper,                \
                                                        const Uintah::PatchSet* const localPatches,    \
                                                        const PatchInfoMap& patchInfoMap,              \
-                                                       const Uintah::MaterialSubset* const materials);
+                                                       const Uintah::MaterialSubset* const materials, \
+                                                       const std::set<std::string>& functorSet);
 
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(SVolField);
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(XVolField);

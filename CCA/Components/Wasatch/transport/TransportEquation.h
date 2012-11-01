@@ -143,7 +143,8 @@ namespace Wasatch{
     virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                                     const Uintah::PatchSet* const localPatches,
                                                     const PatchInfoMap& patchInfoMap,
-                                                    const Uintah::MaterialSubset* const materials ) = 0;
+                                                    const Uintah::MaterialSubset* const materials,
+                                                   const std::set<std::string>& functorSet) = 0;
 
 
     /**
@@ -157,7 +158,8 @@ namespace Wasatch{
     virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials ) = 0;
+                                            const Uintah::MaterialSubset* const materials,
+                                           const std::set<std::string>& functorSet) = 0;
 
     /**
      *  Return the ExpressionID that identifies an expression that will
