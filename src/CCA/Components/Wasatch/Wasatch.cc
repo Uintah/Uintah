@@ -190,7 +190,7 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
-
+    
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -238,8 +238,28 @@ namespace Wasatch{
 #     endif
     }
 
+    // PARSE BC FUNCTORS
+    Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
+    if (bcParams) {
+      for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
+          faceBCParams != 0;
+          faceBCParams=faceBCParams->findNextBlock("BCType") ){
+        
+        for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
+            bcTypeParams != 0;
+            bcTypeParams=bcTypeParams->findNextBlock("BCType") ){
+          
+          std::string functorName;
+          if ( bcTypeParams->get("functor_name",functorName) ) {
+            if ( bcFunctorSet_.find(functorName) == bcFunctorSet_.end() ) {
+              bcFunctorSet_.insert(functorName);
+            }
+          }          
+        }
+      }
+    }
 
-    // ADD BLOCK FOR IO FIELDS
+    // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
         saveLabelParams != 0;
@@ -527,7 +547,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion());
+          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion(), bcFunctorSet_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -697,7 +717,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion(),bcFunctorSet_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

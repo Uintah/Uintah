@@ -104,7 +104,8 @@ namespace Wasatch{
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            const Uintah::PatchSet* const localPatches,
                                            const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);
+                                           const Uintah::MaterialSubset* const materials,
+                                           const std::set<std::string>& functorSet);
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
@@ -112,7 +113,8 @@ namespace Wasatch{
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                    const Uintah::PatchSet* const localPatches,
                                    const PatchInfoMap& patchInfoMap,
-                                   const Uintah::MaterialSubset* const materials);
+                                   const Uintah::MaterialSubset* const materials,
+                                   const std::set<std::string>& functorSet);
 
     /**
      *  \brief setup the initial conditions for this transport equation.

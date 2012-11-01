@@ -466,7 +466,8 @@ namespace Wasatch {
   setup_initial_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials)
+                            const Uintah::MaterialSubset* const materials,
+                                    const std::set<std::string>& functorSet)
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
@@ -477,7 +478,7 @@ namespace Wasatch {
                                           graphHelper,
                                           localPatches,
                                           patchInfoMap,
-                                          materials );
+                                          materials, functorSet );
     }
 
   }
@@ -489,7 +490,8 @@ namespace Wasatch {
   setup_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials)
+                            const Uintah::MaterialSubset* const materials,
+                            const std::set<std::string>& functorSet)
   {
 
     // see BCHelperTools.cc
@@ -500,7 +502,7 @@ namespace Wasatch {
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials );
+                                        materials, functorSet );
   }
 
   //------------------------------------------------------------------

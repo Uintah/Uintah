@@ -83,7 +83,8 @@ namespace Wasatch {
                                     const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials );
+                                    const Uintah::MaterialSubset* const materials,
+                                    const std::set<std::string>& functorSet);
   /**
    *  \ingroup WasatchCore
    *
