@@ -25,7 +25,7 @@
 #include <sci_defs/hypre_defs.h>
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
-#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
