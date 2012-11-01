@@ -161,14 +161,6 @@ EOF
   rm -f "$BUILDROOT"/make_mail.msg
 fi
 
-if [ $failed = "0" ]; then
-  if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
-    rm -r "${BUILD_DIR}/last_successful.lock" 
-  fi
-  ln -s "$BUILDROOT" "${BUILD_DIR}/last_successful.lock"
-fi
-
 cd "$BUILD_DIR"
-cleanup
 
 exit $failed
