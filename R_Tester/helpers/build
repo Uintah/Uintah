@@ -136,7 +136,7 @@ fi
 
 #__________________________________
 #  run configure
-rm -f "$BUILDROOT"/${mode}/configure.log
+/bin/rm -f "$BUILDROOT"/${mode}/configure.log
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 
@@ -152,14 +152,9 @@ if [ $retval -ne 0 ]; then
 
   echo "*** Configure failed with code $retval"
   echo ""
-# echo "Showing configure log:"
-# cat "${BUILDROOT}/${mode}/configure.log"
+  echo "Showing configure log:"
+  cat "${BUILDROOT}/${mode}/configure.log"
 
-  cd "${BUILD_DIR}"
-  if [ ! -d "configure-${mode}.lock" ]; then
-   # failed ${mode} configure, set a lock
-   ln -s "$BUILDROOT" "configure-${mode}.lock"
-  fi
   exit 1
 fi
 
@@ -167,19 +162,13 @@ fi
 # configure:  Passed
 echo "Configure successful"
 
-if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
-  # configured successfully - remove old configure lock 
-  rm "${BUILD_DIR}/configure-${mode}.lock"
-fi
-
-
 #__________________________________
 #  start compiling
 echo "Starting build on `date`:" >> $HTMLLOG
 
 cd "${BUILDROOT}/${mode}/build"
     
-rm -f "../make.log" "../make_results.log"
+/bin/rm -f "../make.log" "../make_results.log"
 
 $MAKE -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 
@@ -213,22 +202,11 @@ if [ $retval != "0" ]; then
 
     # Add compilation errors to webpage
     cat ../make_results.log >> "$HTMLLOG"
-
-    set a lock for this build
-    if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-      ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
-    fi
     
   else  
     #sus didn't compile
     exit 1
   fi
-fi
-
-#__________________________________
-# compile successfully remove make lock
-if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-  rm "${BUILD_DIR}/make-${mode}.lock"
 fi
 
 echo "Sus compiled successfully"
