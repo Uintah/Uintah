@@ -89,29 +89,39 @@ namespace Uintah {
     VarLabel::destroy(hypre_solver_label);
 
   }
-
+  //__________________________________
+  //
   class HypreSolver2Params : public SolverParameters {
   public:
-    HypreSolver2Params()
-    {
-    }
+    HypreSolver2Params(){}
+    
     ~HypreSolver2Params() {}
-    string solvertype;
-    string precondtype;
-    double tolerance;
-    int maxiterations;
-    int npre;
-    int npost;
-    int skip;
-    int jump;
-    int logging;
-    int relax_type; 
-    bool symmetric;
-    bool restart;
-    int setupFrequency;
-    SimulationStateP state;
-  };
+   
+    // Parameters common for all Hypre Solvers
+    string solvertype;         // String corresponding to solver type
+    string precondtype;        // String corresponding to preconditioner type
+    double tolerance;          // Residual tolerance for solver
+    int    maxiterations;      // Maximum # iterations allowed
+    int    logging;            // Log Hypre solver (using Hypre options)
+    bool   symmetric;          // Is LHS matrix symmetric
+    bool   restart;            // Allow solver to restart if not converged
+    int setupFrequency;        // Frequency for calling hypre setup calls 
+    int    relax_type;         // relaxation type
+    
+    // SMG parameters
+    int    npre;               // # pre relaxations for Hypre SMG solver
+    int    npost;              // # post relaxations for Hypre SMG solver
 
+    // PFMG parameters
+    int    skip;               // Hypre PFMG parameter
+
+    // SparseMSG parameters
+    int    jump;               // Hypre Sparse MSG parameter
+    
+    SimulationStateP state;    // simulation state    
+  };
+  //__________________________________
+  //
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
@@ -137,6 +147,8 @@ namespace Uintah {
     {
         hypre_solver_label = VarLabel::create("hypre_solver_label",
                    SoleVariable<hypre_solver_structP>::getTypeDescription());
+                   
+      firstPassThrough = true;
     }
 
     virtual ~HypreStencil7() {
@@ -161,7 +173,13 @@ namespace Uintah {
       if (suFreq != 0)
         mod_setup = (timestep % suFreq);
       bool do_setup = ((timestep == 1) || ! mod_setup);
-
+      
+      // always setup on first pass through
+      if(firstPassThrough){
+        do_setup = true;
+        firstPassThrough = false;
+      }
+      
       struct hypre_solver_struct* hypre_solver_s = 0;
       bool restart = false;
 
@@ -1129,6 +1147,7 @@ namespace Uintah {
 
     const VarLabel* hypre_solver_label;
     SoleVariable<hypre_solver_structP> d_hypre_solverP_;
+    bool firstPassThrough;
 
   };
   
@@ -1218,10 +1237,6 @@ namespace Uintah {
 
     SoleVariable<hypre_solver_structP> hypre_solverP_;
     hypre_solver_struct* hypre_solver_ = scinew hypre_solver_struct;
-#if 0
-    hypre_solver_->precond_solver = scinew HYPRE_StructSolver;
-    hypre_solver_->solver = scinew HYPRE_StructSolver;
-#endif
 
     hypre_solver_->solver = scinew HYPRE_StructSolver;
     hypre_solver_->precond_solver = scinew HYPRE_StructSolver;
@@ -1243,21 +1258,7 @@ namespace Uintah {
     //cout << "Doing Hypre Initialize " << endl;
 
     allocateHypreMatrices(new_dw);
-#if 0
-    SoleVariable<hypre_solver_structP> hypre_solverP_;
-    hypre_solver_struct* hypre_solver_ = scinew hypre_solver_struct;
-#if 0
-    hypre_solver_->precond_solver = scinew HYPRE_StructSolver;
-    hypre_solver_->solver = scinew HYPRE_StructSolver;
-#endif
 
-    hypre_solver_->HA = scinew HYPRE_StructMatrix;
-    hypre_solver_->HX = scinew HYPRE_StructVector;
-    hypre_solver_->HB = scinew HYPRE_StructVector;
-
-    hypre_solverP_.setData(hypre_solver_);
-    new_dw->put(hypre_solverP_,hypre_solver_label);
-#endif
   } 
 
 
