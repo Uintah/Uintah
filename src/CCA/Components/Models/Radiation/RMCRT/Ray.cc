@@ -64,6 +64,7 @@ void Ray::constructor(){
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
   d_VRFluxLabel          = VarLabel::create( "VRFlux",           CCVariable<double>::getTypeDescription() );
   d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
+  d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -108,6 +109,7 @@ Ray::~Ray()
   VarLabel::destroy( d_ROI_HiCellLabel );
   VarLabel::destroy( d_VRFluxLabel);
   VarLabel::destroy( d_boundFluxLabel);
+  VarLabel::destroy( d_cellTypeLabel);
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -297,6 +299,8 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched )
 
     tsk->modifies( d_temperatureLabel );
     tsk->modifies( d_abskgLabel );
+    tsk->modifies( d_cellTypeLabel );
+
 
     sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
   }
@@ -319,9 +323,12 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
+    CCVariable<double> celltype;
 
     new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
     abskg.initialize  ( 0.0 ); 
+
+
 
     IntVector pLow;
     IntVector pHigh;
@@ -607,7 +614,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             //_orient[0,1,2] represent the user specified vector normal of the radiometer.
             // These will be converted to rotations about the x,y, and z axes, respectively.
-            //Each rotation is couterclockwise when the observer is looking from the
+            //Each rotation is counterclockwise when the observer is looking from the
             //positive axis about which the rotation is occurring.
 
             // Avoid division by zero by re-assigning orientations of 0
@@ -710,49 +717,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     // int Ny = pHigh[1] - pLow[1];
     // int Nz = pHigh[2] - pLow[2];
 
-      int patchID = patch->getID();
-      // see if map is empty, if so,  populate it, and initialize fluxes to zero.
-      if (CellToValuesMap.empty()){
-        //CellToValuesMap.clear();
-        //PatchToCellsMap.clear(); // !! Test to make sure this doesn't wipe out data from other patches
-        // initialize fluxes to zero
-        Flux Flux_;
-        Flux_.incident = 0;
-        Flux_.net = 0;
-
-
-        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          IntVector origin = *iter;
-          
-          // this 4 member vector will be the key for the CellToValuesMap.
-          // 0 thru 2 are i,j,k, and 3 is the cell face
-          std::vector<int> originAndFace;  // !! 9/25/12 does this vector grow every time through the cell loop? !!
-
-          // !! HACK !! Hard coded for Arches wall types!!
-          // !! In the future, specify this based on the current component
-          int face = -1;
-          if(_benchmark==4 || _benchmark==5) face = 5; // Benchmark4 benchmark5
-          face = 1; // ifrf restart flux line
-
-          if (has_a_boundary(origin, celltype, face)){
-         // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
-         // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
-            originAndFace.push_back( origin.x() );
-            originAndFace.push_back( origin.y() );
-            originAndFace.push_back( origin.z() );
-            originAndFace.push_back( face );
-            
-            cout << "originAndFace size: " << originAndFace.size() << endl;
-            CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
-         // originAndFace.clear();
-          }
-        }// end populate map cell iterator
-
-        PatchToCellsMap.insert(make_pair( patchID, CellToValuesMap ));
-      }// end if map is empty
-
-
-
+      // int patchID = patch->getID();
 
       //_____________________________________________
       //   Ordering for Surface Method
@@ -792,10 +757,72 @@ Ray::rayTrace( const ProcessorGroup* pc,
       locationShift[5] = IntVector(0, 0, 0);
 
 
-      /*  Benchmark4
-      // Loop over 40 kappa and sigma_s values
+      /*
+      // see if map is empty, if so,  populate it, and initialize fluxes to zero.
+      if (CellToValuesMap.empty()){
+        CellToValuesMap.clear();
+        PatchToCellsMap.clear(); // !! Test to make sure this doesn't wipe out data from other patches
+        initialize fluxes to zero
+        Flux Flux_;
+        Flux_.incident = 0;
+        Flux_.net = 0;
 
-      // open sigma_s
+
+        for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector origin = *iter;
+          
+          // this 4 member vector will be the key for the CellToValuesMap.
+          // 0 thru 2 are i,j,k, and 3 is the cell face
+          std::vector<int> originAndFace;  // !! 9/25/12 does this vector grow every time through the cell loop? !!
+
+          // !! HACK !! Hard coded for Arches wall types!!
+          // !! In the future, specify this based on the current component
+          int face = -1;
+          if(_benchmark==4 || _benchmark==5) face = 5; // Benchmark4 benchmark5
+          vector<int> boundaryFaces;
+          boundaryFaces.clear();
+          //face = 1; // ifrf restart flux line  Now should be boundaryFaces.push_back(1);
+
+          if (has_a_boundary(origin, celltype, boundaryFaces)){
+         // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
+         // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
+            originAndFace.push_back( origin.x() );
+            originAndFace.push_back( origin.y() );
+            originAndFace.push_back( origin.z() );
+            originAndFace.push_back( face );
+            
+            cout << "originAndFace size: " << originAndFace.size() << endl;
+            CellToValuesMap.insert(make_pair( originAndFace, Flux_ )); // !! This might need to be moved down.
+         // originAndFace.clear();
+          }
+        }// end populate map cell iterator
+
+        PatchToCellsMap.insert(make_pair( patchID, CellToValuesMap ));
+      }// end if map is empty
+*/
+
+      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector origin = *iter;
+
+        //int face = -1;
+        // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
+        // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
+        vector<int> boundaryFaces;
+        boundaryFaces.clear();
+        if(_benchmark==4 || _benchmark==5) boundaryFaces.push_back(5); // Benchmark4 benchmark5
+
+
+        //face = 1; // ifrf restart flux line  Now should be boundaryFaces.push_back(1);
+
+        boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
+        // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
+        // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
+
+
+        /*  Benchmark4
+        // Loop over 40 kappa and sigma_s values
+
+        // open sigma_s
       char inputFilename[] = "sigma_s.txt";
       ifstream inFile;
       inFile.open(inputFilename, ios::in);
@@ -827,7 +854,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         i_s++;
       }
 
-      i_s=0;
+       i_s=0;
        while(i_s<40) {
 
         _abskgBench4 = kappa[i_s];
@@ -838,102 +865,112 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //cout << _sigmaScat << endl;
         //cout << _abskgBench4 << endl;
 */
-      FILE * f = NULL;
-      if(_benchmark==5){
-        f=fopen("benchmark5.txt", "w");
-      }
+        FILE * f = NULL;
+        if(_benchmark==5){
+          f=fopen("benchmark5.txt", "w");
+        }
     //__________________________________
-    // Loop over boundary faces and compute incident radiative flux
-      for (map<std::vector<int>,Flux>::iterator itr = CellToValuesMap.begin(); itr!=CellToValuesMap.end(); ++itr ){  // 5/25
-        int i = itr->first[0];
-        int j = itr->first[1];
-        int k = itr->first[2];
+    // Loop over boundary faces of the cell at hand and compute incident radiative flux
+        for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){  // 5/25
+         // int i = itr->first[0];
+         // int j = itr->first[1];
+         // int k = itr->first[2];
 
-        int face = itr->first[3];  // face uses Uintah ordering
-        int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
-        int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
-        IntVector origin = IntVector(i,j,k);
+          int face = *it;  // face uses Uintah ordering
+          int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
+          int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
+          //  IntVector origin = IntVector(i,j,k);
 
 
-        // quick flux debug test
-        //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
-        //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
-        //if (face==0 && origin.x()==0 && origin.y()==234){    // ifrf restart case
+          // quick flux debug test
+          //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
+          //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
+          //if (face==0 && origin.x()==0 && origin.y()==234){    // ifrf restart case
 
-        double sumI     = 0;
-        double sumProjI = 0;
-        double sumI_prev= 0;
+          double sumI     = 0;
+          double sumProjI = 0;
+          double sumI_prev= 0;
 
-        //__________________________________
-        // Flux ray loop
-        for (int iRay=0; iRay < _NoOfRays; iRay++){
+          //__________________________________
+          // Flux ray loop
+          for (int iRay=0; iRay < _NoOfRays; iRay++){
 
-          IntVector cur = origin;
+            IntVector cur = origin;
 
-          if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
-            _mTwister.seed((i + j +k) * iRay +1);
-          }
+            if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
+              _mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+            }
 
-          Vector direction_vector;
+            Vector direction_vector;
 
-          // Surface Way to generate a ray direction from the positive z face
-          double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
-          double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
+            // Surface Way to generate a ray direction from the positive z face
+            double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
+            double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
           
-          //Convert to Cartesian
-          direction_vector[0] =  sin(theta) * cos(phi);
-          direction_vector[1] =  sin(theta) * sin(phi);
-          direction_vector[2] =  cos(theta);
+            //Convert to Cartesian
+            direction_vector[0] =  sin(theta) * cos(phi);
+            direction_vector[1] =  sin(theta) * sin(phi);
+            direction_vector[2] =  cos(theta);
           
-          // Put direction vector as coming from correct face
-          adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
+            // Put direction vector as coming from correct face
+            adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
 //cout << "direction_vector: " << direction_vector << endl;
-          Vector inv_direction_vector = Vector(1.0)/direction_vector;
+            Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-          double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-          double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+            double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+            double DzDxRatio = Dx.z() / Dx.x(); //noncubic
 
-          Vector ray_location;
+            Vector ray_location;
 
-          // Surface way to generate a ray location from the negative y face
-          ray_location[0] =  _mTwister.rand() ;
-          ray_location[1] =  0;
-          ray_location[2] =  _mTwister.rand() * DzDxRatio ;
+            // Surface way to generate a ray location from the negative y face
+            ray_location[0] =  _mTwister.rand() ;
+            ray_location[1] =  0;
+            ray_location[2] =  _mTwister.rand() * DzDxRatio ;
           
-          // Put point on correct face
-          adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
+            // Put point on correct face
+            adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
 //cout << "ray location: " << ray_location << endl;
-          ray_location[0] += i;
-          ray_location[1] += j;
-          ray_location[2] += k;
-         updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+            ray_location[0] += origin.x();
+            ray_location[1] += origin.y();
+            ray_location[2] += origin.z();
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
 
-          sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-
-
-          // from all the rays up to that point
-          sumI_prev = sumI;
-
-        } // end of flux ray loop
-
-        //__________________________________
-        //  Compute Net Flux to the boundary
-        //itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
-        itr->second.incident = sumProjI * 2*_pi/_NoOfRays;
-        itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
-        //cout << itr->first << ":   ";
-        cout << itr->second.incident << endl;
-        if(_benchmark==5)fprintf(f, "%lf \n",itr->second.incident);
+            sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
 
 
-        //cout << sumProjI * 2*_pi/_NoOfRays<< endl;
+            // from all the rays up to that point
+            sumI_prev = sumI;
 
-        //} // end of quick flux debug
-      } // end of iterating through boundary map
-      if(_benchmark==5) fclose(f);
+          } // end of flux ray loop
 
-    //}// end of file for benchmark4 verification test
-    } // end if _solveBoundaryFlux
+          //__________________________________
+          //  Compute Net Flux to the boundary
+          //itr->second = sumProjI * 2*_pi/_NoOfRays; //- abskg[origin] * sigmaT4OverPi[origin] * _pi;
+          //itr->second.incident = sumProjI * 2*_pi/_NoOfRays;
+          //itr->second.net = sumProjI * 2*_pi/_NoOfRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
+          //cout << itr->first << ":   ";
+          //cout << itr->second.incident << endl;
+
+          double fluxIn = sumProjI * 2 *_pi/_NoOfRays;
+          switch(face){
+          case '0' : boundFlux[origin].w = fluxIn; break;
+          case '1' : boundFlux[origin].e = fluxIn; break;
+          case '2' : boundFlux[origin].s = fluxIn; break;
+          case '3' : boundFlux[origin].n = fluxIn; break;
+          case '4' : boundFlux[origin].b = fluxIn; break;
+          case '5' : boundFlux[origin].t = fluxIn; break;
+          }
+          if(_benchmark==5)fprintf(f, "%lf \n",sumProjI * 2*_pi/_NoOfRays);
+
+
+          //} // end of quick flux debug
+        } // end of looping through the vector boundaryFaces
+
+        if(_benchmark==5) fclose(f);
+
+      //}// end of file for benchmark4 verification test
+      }// end cell iterator
+    }   // end if _solveBoundaryFlux
         
          
     //______________________________________________________________________
@@ -1564,7 +1601,7 @@ void Ray::adjustLocation(Vector &location,
 //
 bool Ray::has_a_boundary(const IntVector &c, 
                          constCCVariable<int> &celltype, 
-                         int &face){
+                         vector<int> &boundaryFaces){
 
   IntVector adjacentCell = c;
 
@@ -1576,54 +1613,62 @@ bool Ray::has_a_boundary(const IntVector &c,
     // adjacentCell[0] += 2 for the east face for instance.  It's easier
     // to make coding mistakes that way, so leaving it as is for now.
 
+    bool hasBoundary = false;
+
     adjacentCell = c;
 
     adjacentCell[0] = c[0] - 1; // west
 
+
     if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      face = 0;
-      return(true);
+      boundaryFaces.push_back(0);
+      hasBoundary = true;
     }
 
     adjacentCell = c;
     adjacentCell[0] = c[0] + 1; // east
-    if (celltype[adjacentCell] == BoundaryCondition::WALL){
-      face = 1;
-      return(true);
+
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+      boundaryFaces.push_back(1);
+      hasBoundary = true;
     }
 
     adjacentCell = c;
     adjacentCell[1] = c[1] - 1; // south
-    if (celltype[adjacentCell] == BoundaryCondition::WALL){
-      face = 2;
-      return(true);
+
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+      boundaryFaces.push_back(2);
+      hasBoundary = true;
     }
 
     adjacentCell = c;
     adjacentCell[1] = c[1] + 1; // north
-    if (celltype[adjacentCell] == BoundaryCondition::WALL){
-      face = 3;
-      return(true);
+
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+      boundaryFaces.push_back(3);
+      hasBoundary = true;
     }
 
     adjacentCell = c;
     adjacentCell[2] = c[2] - 1; // bottom
-    if (celltype[adjacentCell] == BoundaryCondition::WALL){
-      face = 4;
-      return(true);
+
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+      boundaryFaces.push_back(4);
+      hasBoundary = true;
     }
 
     adjacentCell = c;
     adjacentCell[2] = c[2] + 1; // top
-    if (celltype[adjacentCell] == BoundaryCondition::WALL){
-      face = 5;
-      return(true);
+
+    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+      boundaryFaces.push_back(5);
+      hasBoundary = true;
     }
 
   //} // end loop over wall types.
 
 // if none of the above returned true, then the current cell must not be adjacent to a wall
-return (false);
+return (hasBoundary);
 
 }
 
@@ -1696,6 +1741,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4OverPi;
+      CCVariable<double> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch );
@@ -1732,6 +1778,8 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       // set the boundary conditions
       setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
+      setBC(cellType, d_cellTypeLabel->getName(), patch, d_matl);
+
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
