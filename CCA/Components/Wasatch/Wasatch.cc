@@ -248,11 +248,21 @@ namespace Wasatch{
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
             bcTypeParams != 0;
             bcTypeParams=bcTypeParams->findNextBlock("BCType") ){
-          
           std::string functorName;
           if ( bcTypeParams->get("functor_name",functorName) ) {
-            if ( bcFunctorSet_.find(functorName) == bcFunctorSet_.end() ) {
-              bcFunctorSet_.insert(functorName);
+            
+            std::string phiName;
+            bcTypeParams->getAttribute("label",phiName);
+            std::cout << "functor applies to " << phiName << std::endl;
+            
+            std::map< std::string,std::set<std::string> >::iterator iter = bcFunctorMap_.find(phiName);
+            // check if we already have an entry for phiname
+            if ( iter != bcFunctorMap_.end() ) {
+              (*iter).second.insert(functorName);
+            } else if ( iter == bcFunctorMap_.end() ) {
+              std::set<std::string> functorSet;
+              functorSet.insert(functorName);
+              bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );
             }
           }          
         }
@@ -547,7 +557,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion(), bcFunctorSet_);
+          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -717,7 +727,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion(),bcFunctorSet_);
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion(),bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

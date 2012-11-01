@@ -807,7 +807,7 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials,
-                                    const std::set<std::string>& functorSet)
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
 
     /*
@@ -854,13 +854,23 @@ namespace Wasatch {
           // will just expose the dependencies advertised by the functor but will
           // accomplish nothing else because that functor doesn't have any bc points
           // associated with it.
+          
           Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-          std::set<std::string>::iterator functorIter = functorSet.begin();
-          while ( functorIter != functorSet.end() ) {
-            Expr::Tag modTag = Expr::Tag(*functorIter,Expr::STATE_NONE);
-            // attach the modifier expression to the target expression
-            factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
-            ++functorIter;
+          std::map< std::string, std::set<std::string> >::const_iterator iter = bcFunctorMap.begin();
+          
+          while ( iter != bcFunctorMap.end() ) {
+            std::string functorPhiName = (*iter).first;
+            if ( functorPhiName.compare(fieldName) == 0 ) {
+              // get the functor set associated with this field
+              std::set<std::string>::iterator functorIter = (*iter).second.begin();
+              while (functorIter != (*iter).second.end() ) {
+                std::string functorName = *functorIter;
+                Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
+                factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
+                ++functorIter;
+              }
+            }
+            ++iter;
           }
 
           const int materialID = materials->get(im);
@@ -1395,7 +1405,7 @@ namespace Wasatch {
                                                        const Uintah::PatchSet* const localPatches,    \
                                                        const PatchInfoMap& patchInfoMap,              \
                                                        const Uintah::MaterialSubset* const materials, \
-                                                       const std::set<std::string>& functorSet);
+                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap);
 
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(SVolField);
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(XVolField);

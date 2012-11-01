@@ -548,7 +548,7 @@ namespace Wasatch{
                                      const Uintah::PatchSet* const localPatches,
                                      const PatchInfoMap& patchInfoMap,
                                      const Uintah::MaterialSubset* const materials,
-                                    const std::set<std::string>& functorSet)
+                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
@@ -566,7 +566,7 @@ namespace Wasatch{
                                            graphHelper,
                                            localPatches,
                                            patchInfoMap,
-                                           materials, functorSet );
+                                           materials, bcFunctorMap );
     }
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
@@ -600,7 +600,7 @@ namespace Wasatch{
                                            graphHelper,
                                            localPatches,
                                            patchInfoMap,
-                                           materials, functorSet );
+                                           materials, bcFunctorMap );
     }
 
   }
@@ -611,10 +611,10 @@ namespace Wasatch{
   void
   MomentumTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
-                                 const Uintah::PatchSet* const localPatches,
-                                 const PatchInfoMap& patchInfoMap,
-                                 const Uintah::MaterialSubset* const materials,
-                            const std::set<std::string>& functorSet)
+                             const Uintah::PatchSet* const localPatches,
+                             const PatchInfoMap& patchInfoMap,
+                             const Uintah::MaterialSubset* const materials,
+                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
@@ -629,7 +629,7 @@ namespace Wasatch{
                                          graphHelper,
                                          localPatches,
                                          patchInfoMap,
-                                         materials, functorSet );
+                                         materials, bcFunctorMap );
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
@@ -646,7 +646,7 @@ namespace Wasatch{
                                          graphHelper,
                                          localPatches,
                                          patchInfoMap,
-                                         materials, functorSet );
+                                         materials, bcFunctorMap );
 
     // set bcs for pressure
 //    process_boundary_conditions<SVolField>( pressure_tag(),
@@ -663,7 +663,7 @@ namespace Wasatch{
                                          graphHelper,
                                          localPatches,
                                          patchInfoMap,
-                                         materials, functorSet );
+                                         materials, bcFunctorMap );
     // set bcs for partial full rhs
     process_boundary_conditions<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE),
                                         thisMomName_ + "_rhs_full",
@@ -671,7 +671,7 @@ namespace Wasatch{
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials,functorSet );
+                                        materials,bcFunctorMap );
 
 
 //    // set bcs for density
@@ -703,7 +703,7 @@ namespace Wasatch{
                 graphHelper,
                 localPatches,
                 patchInfoMap,
-                materials, functorSet);
+                materials, bcFunctorMap);
     }
 
     // set bcs for normal convective fluxes
@@ -714,7 +714,7 @@ namespace Wasatch{
                                 graphHelper,
                                 localPatches,
                                 patchInfoMap,
-                                materials, functorSet);
+                                materials, bcFunctorMap);
 
   }
 

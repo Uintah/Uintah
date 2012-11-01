@@ -121,7 +121,7 @@ namespace Wasatch{
                                      const Uintah::PatchSet* const localPatches,
                                      const PatchInfoMap& patchInfoMap,
                                      const Uintah::MaterialSubset* const materials,
-                                    const std::set<std::string>& functorSet)
+                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
 
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
@@ -133,7 +133,7 @@ namespace Wasatch{
                                            graphHelper,
                                            localPatches,
                                            patchInfoMap,
-                                           materials, functorSet );
+                                           materials, bcFunctorMap );
     }
   }
 
@@ -146,7 +146,7 @@ namespace Wasatch{
                              const Uintah::PatchSet* const localPatches,
                              const PatchInfoMap& patchInfoMap,
                              const Uintah::MaterialSubset* const materials,
-                            const std::set<std::string>& functorSet)
+                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     // see BCHelperTools.cc
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),Expr::STATE_N ),
@@ -155,7 +155,7 @@ namespace Wasatch{
                                          graphHelper,
                                          localPatches,
                                          patchInfoMap,
-                                         materials, functorSet );
+                                         materials, bcFunctorMap );
     // see BCHelperTools.cc
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name()+"_rhs",Expr::STATE_NONE ),
                                         this->solution_variable_name() + "_rhs",
@@ -163,7 +163,7 @@ namespace Wasatch{
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials, functorSet );
+                                        materials, bcFunctorMap );
 
   }
 
