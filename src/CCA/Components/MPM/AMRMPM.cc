@@ -113,6 +113,12 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   
   pDbgLabel = VarLabel::create("p.dbg",ParticleVariable<double>::getTypeDescription());
   gSumSLabel= VarLabel::create("g.sum_S",NCVariable<double>::getTypeDescription());
+  
+  d_one_matl = scinew MaterialSubset();
+  d_one_matl->add(0);
+  d_one_matl->addReference();
+  
+  
 }
 
 AMRMPM::~AMRMPM()
@@ -120,6 +126,9 @@ AMRMPM::~AMRMPM()
   delete lb;
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
+  
+  if (d_one_matl->removeReference())
+    delete d_one_matl;
   
   delete flags;
   for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
@@ -421,20 +430,20 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeInternalForce(           sched, patches, matls);
   }
-#if 1
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeInternalForce_CFI(       sched, patches, matls);
   }
-#endif
-#if 1
+
+
   for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI2( sched, patches, matls);
   }
-#endif
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -513,20 +522,16 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
   int L_indx = level->getIndex();
 
   if(L_indx > 0 ){
-    MaterialSubset* one_matl = scinew MaterialSubset();
-    one_matl->add(0);
-    one_matl->addReference();
+
 
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence");
     Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
                     this, &AMRMPM::computeZoneOfInfluence);
 
-    t->computes(lb->gZOILabel, one_matl);
+    t->computes(lb->gZOILabel, d_one_matl);
 
     sched->addTask(t, patches, matls);
 
-    if (one_matl->removeReference())
-      delete one_matl;
   }
 }
 
@@ -618,7 +623,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, lb->gZOILabel,   Ghost::None, 0);
+    t->requires(Task::NewDW, lb->gZOILabel,                d_one_matl,  Ghost::None, 0);
     t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
@@ -859,7 +864,7 @@ void AMRMPM::scheduleComputeInternalForce_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, lb->gZOILabel,   Ghost::None,0);
+    t->requires(Task::NewDW, lb->gZOILabel,     d_one_matl, Ghost::None,0);
     t->requires(Task::OldDW, lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pStressLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pVolumeLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
@@ -1015,9 +1020,9 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     t->requires(Task::OldDW, d_sharedState->get_delt_label() );
     
     t->requires(Task::OldDW, lb->pXLabel, gn);
-    t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
+    t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
+    t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, gn,0);
     
     t->modifies(lb->pXLabel_preReloc);
     t->modifies(lb->pDispLabel_preReloc);
@@ -2993,9 +2998,8 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
   
   if(level->hasFinerLevel()){ 
     #define allPatches 0
-    #define allMatls 0
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
-    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,allMatls, ND, gn, 0);
+    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, gn, 0);
   }
   
   t->computes(lb->pColorLabel_preReloc);
