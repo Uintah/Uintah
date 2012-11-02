@@ -335,6 +335,10 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
+  
+  if(flags->d_artificial_viscosity){
+    t->computes(lb->p_qLabel);
+  }
 
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
@@ -826,7 +830,10 @@ void AMRMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,  gan,NGP);
-
+  if(flags->d_artificial_viscosity){
+    t->requires(Task::OldDW, lb->p_qLabel,                gan,NGP);
+  }
+  
   t->computes( gSumSLabel );
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalVolumeDeformedLabel);
@@ -868,6 +875,10 @@ void AMRMPM::scheduleComputeInternalForce_CFI(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pStressLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, lb->pVolumeLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    
+    if(flags->d_artificial_viscosity){
+      t->requires(Task::OldDW, lb->p_qLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    }
     
     t->modifies( gSumSLabel );
     t->modifies(lb->gInternalForceLabel);
@@ -1898,7 +1909,19 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
       gstress.initialize(Matrix3(0));
       internalforce.initialize(Vector(0,0,0));
-      // getParticleSubset_CFI
+      
+      // load p_q
+      if(flags->d_artificial_viscosity){
+        old_dw->get(p_q,lb->p_qLabel, pset);
+      }
+      else {
+        ParticleVariable<double>  p_q_create;
+        new_dw->allocateTemporary(p_q_create,  pset);
+        for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+          p_q_create[*it]=0.0;
+        }
+        p_q = p_q_create; // reference created data
+      }
       
 /*`==========TESTING==========*/
       NCVariable<double> gSumS;
@@ -1910,6 +1933,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       //  fine Patch     
       gstress.initialize(Matrix3(0));
 
+      Matrix3 stressvol;
       Matrix3 stresspress;
       int n8or27 = flags->d_8or27;
       vector<IntVector> ni(interpolator->size());
@@ -1924,7 +1948,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S,
                                                             psize[idx],pDeformationMeasure[idx]);
 
-        stresspress = pstress[idx];
+        stresspress = pstress[idx] + Id*(/*p_pressure*/-p_q[idx]);
 
         for (int k = 0; k < n8or27; k++){
           
@@ -2005,7 +2029,8 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
       Level::selectType coarsePatches;
       finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
         
-
+      Matrix3 Id;
+      Id.Identity();
         
       constNCVariable<Stencil7> zoi_fine;
       new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
@@ -2033,6 +2058,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
           constParticleVariable<Point> px_coarse;
           constParticleVariable<Matrix3> pstress_coarse;
           constParticleVariable<double>  pvol_coarse;
+          constParticleVariable<double>  p_q_coarse;
           
           // coarseLow and coarseHigh cannot lie outside of the coarse patch
           IntVector cl = Max(cl_tmp, coarsePatch->getCellLowIndex());
@@ -2051,7 +2077,20 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
           old_dw->get(px_coarse,       lb->pXLabel,       pset_coarse);
           old_dw->get(pvol_coarse,     lb->pVolumeLabel,  pset_coarse);
           old_dw->get(pstress_coarse,  lb->pStressLabel,  pset_coarse);
-
+          
+          // Artificial Viscosity
+          if(flags->d_artificial_viscosity){
+            old_dw->get(p_q_coarse,    lb->p_qLabel,      pset_coarse);
+          }
+          else {
+            ParticleVariable<double>  p_q_create;
+            new_dw->allocateTemporary(p_q_create,  pset_coarse);
+            for(ParticleSubset::iterator it = pset_coarse->begin();it != pset_coarse->end();it++){
+              p_q_create[*it]=0.0;
+            }
+            p_q_coarse = p_q_create; // reference created data
+          }
+          
           //__________________________________
           //  Iterate over the coarse level particles and 
           // add their contribution to the internal stress on the fine patch
@@ -2063,10 +2102,8 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
             vector<Vector> div;
             interpolator->findCellAndWeightsAndShapeDerivatives_CFI( px_coarse[idx], ni, S, div, zoi_fine );
 
-            Matrix3 stresspress = pstress_coarse[idx];
-/*`==========TESTING==========*/
-//            stresspress = Matrix3(0);              // hardwire
-/*===========TESTING==========`*/
+            
+            Matrix3 stresspress =  pstress_coarse[idx] + Id*(/*p_pressure*/ - p_q_coarse[idx]);
 
             IntVector fineNode;
             for(int k = 0; k < (int)ni.size(); k++) {   
