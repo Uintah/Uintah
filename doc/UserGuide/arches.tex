@@ -1258,6 +1258,31 @@ In addition to the pre-tabulated chemistry, cold-flow mixing is available for si
 % 
 where \verb=<mixture_fraction_label>= is the name given to the mixture fraction equation defined in the \verb=<TransportEqns>= section.  A mixture fraction of, $f=1$ represents a mixture of pure Stream 1 and conversely a mixture fraction of, $f=0$, is pure Stream 2.  
 
+\subsubsection{Classic Table Format}
+
+The Classic Mixing Tables can function with an arbitrary number of independent variables.  The parser for the tables treats \# as a commented line, so any header information in the table should be precluded by this.  The header information can also include various table constants with \verb+#KEY VARNAME=VALUE+.  After the header the sizes of the table and its variables must be specified in a specific order.  This is:
+
+\begin{enumerate}
+\item{Number of independent variables}
+\item{Names of independent variables}
+\item{Grid Sizes of independent variables}
+\item{Number of dependent variables}
+\item{Names of dependent variables}
+\item{Units of dependent variables}
+\end{enumerate}
+
+This is followed by a list of grid points for each independent variable, listed \textit{backwards} from N through independent variable 2. The table format allows for the grid points used for independent variable 1 to vary as a function of the value of last independent variable. The grid point list for independent variable 1 is listed at the start of each block of data where the N$^{th}$ variable varies.  The blocks of data for the dependent variable are listed similarly to how Matlab displays a full N-D matrix.  Independent  variable 1 varies across the row, and independent variable 2 varies down the columns.  The next block of data should then change the value of the third independent variable, and vary independent variables 1 and 2 as before.  This is repeated up to the (N-1)$^{th}$ independent variable.  Then the list of the grid points for the first independent variable for the next value of the N$^{th}$ independent variable is listed , then the other variables are listed as before, and repeated until the last value of the N$^{th}$ independent variable is used.  This is repeated for all of the dependent variables.
+
+Refer to \verb=src/StandAlone/inputs/ARCHES/ClassicMixingTables/= for example tables.  A diagram of a 5 dimensional table layout (i.e. for a flamelet model) is also included in figure \ref{fig:table_ex}.
+
+\newpage
+\begin{figure}[H]
+ \begin{center}
+    \scalebox{.75}{\includegraphics{TableDiagram.pdf}}
+   \caption{Example 5D Table Layout}\label{fig:table_ex}
+   \end{center}
+\end{figure}
+
 %\subsection{Extra Scalar Solvers}
 %This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
 
