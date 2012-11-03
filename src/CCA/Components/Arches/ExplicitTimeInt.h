@@ -219,7 +219,7 @@ private:
 //---------------------------------------------------------------------------
 // ----RK AVERAGING
 //     to get the time averaged phi^{time averaged}
-//     See: Gettlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+//     See: Gottlieb et al., SIAM Review, vol 43, No 1, pp 89-112
 //          Strong Stability-Preserving High-Order Time Discretization Methods
   template <class phiT, class constphiT>
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
