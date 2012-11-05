@@ -1,12 +1,13 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Test scalar transport equations on each mesh (scalar, x,y,z staggered)</title>
+    <title> RK3SSP test using dphi/dt = sin(t) </title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
 
   <Wasatch>
+  
      <TimeIntegrator>RK3SSP</TimeIntegrator>
      
      <Density>
@@ -21,21 +22,12 @@
       <Constant> 1.0 </Constant>      
     </BasicExpression>
 
-    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- Set the initial condition for the cell centered scalar scalar phi -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_N" />
+      <NameTag name="phi" state="STATE_N" />
       <Constant>-1.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="phi-source" state="STATE_NONE" />
-      <LinearFunction slope="1" intercept="0.0">
-        <NameTag name="phi-scalar" state="STATE_N" />
-      </LinearFunction>
-    </BasicExpression>
-
+    </BasicExpression>    
     
     <BasicExpression type="SVOL" >
       <TaskList>advance_solution</TaskList>
@@ -44,10 +36,10 @@
     </BasicExpression>
 
 
-    <!-- Build a non-staggered scalar transport equation -->
+    <!-- Build a cell centered scalar transport equation -->
     <TransportEquation equation="generic">
       <StrongForm>true</StrongForm>
-      <SolutionVariable>phi-scalar</SolutionVariable>
+      <SolutionVariable>phi</SolutionVariable>
       <SourceTermExpression>
         <NameTag name="sine-source" state="STATE_NONE" />
       </SourceTermExpression>
@@ -56,9 +48,10 @@
   </Wasatch>
   <DataArchiver>
     <filebase>RK-verification-sine-source.uda</filebase>
+    <checkpoint cycle = "2" interval = "0.1"/>        
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <save label="phi-scalar"/>
+    <save label="phi"/>
   </DataArchiver> 
 
 
