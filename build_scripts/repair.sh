@@ -3,9 +3,17 @@
 #
 # repair.sh [-quiet] <bad_include>
 #
-# The purpose of this script is to find .d (Makefile dependency files
+# The purpose of this script is to find .d (Makefile dependency files)
 # that have bad (old) include files in them and to delete the .d and
-# corresponding .o file.
+# corresponding .o file.  This is useful/necessary when you see an error
+# like:
+#
+#    No rule to make target `../src/Dataflow/Modules/Render/SCIBaWGL.h'...
+#
+# In this case, you would run (from your build directory):
+#
+#    ../src/build_scripts/repair.sh SCIBaWGL.h
+#
 
 usage()
 {
@@ -30,7 +38,7 @@ usage()
   echo "You could run this script like this:"
   echo ""
   echo "cd .../SCIRun/<bin>"
-  echo "../src/scripts/repair.sh Thirdparty/1.20"
+  echo "../src/build_scripts/repair.sh Thirdparty/1.20"
   echo ""
   echo "And then run your 'gmake' again."
   echo ""
@@ -43,7 +51,7 @@ usage()
   echo ""
   echo "Then you would use:"
   echo ""
-  echo "../src/scripts/repair.sh SCIBaWGL.h"
+  echo "../src/build_scripts/repair.sh SCIBaWGL.h"
   echo ""
   exit
 }
