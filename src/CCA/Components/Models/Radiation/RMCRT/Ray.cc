@@ -885,8 +885,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
          // int k = itr->first[2];
 
           int face = *it;  // face uses Uintah ordering
-          //int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
-          int UintahFace[6] = {0,1,2,3,4,5}; // Nov 5 2012:  I may not need to change the order after all since this line does nothing
+          int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
           int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
           //  IntVector origin = IntVector(i,j,k);
 
