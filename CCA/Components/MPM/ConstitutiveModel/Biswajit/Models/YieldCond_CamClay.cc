@@ -76,6 +76,7 @@ YieldCond_CamClay::evalYieldCondition(const ModelState* state)
 double 
 YieldCond_CamClay::computeVolStressDerivOfYieldFunction(const ModelState* state)
 {
+  // std::cout << " p = " << state->p << " pc = " << state->p_c << " dfdp = " << 2*state->p-state->p_c << endl;
   return (2.0*state->p - state->p_c);
 }
 

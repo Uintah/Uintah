@@ -332,64 +332,31 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double totalStrainEnergy = 0.0;
 
-  // Deformation variables
-  Matrix3 velGrad(0.0);
-  Matrix3 rateOfDef_new(0.0);
-  Matrix3 defGrad_new; defGrad_new.Identity(); 
-  Matrix3 defGradInc; defGradInc.Identity();
-  Matrix3 strainInc(0.0);
-  // Matrix3 rightStretch_old; rightStretch_old.Identity();
-  // Matrix3 rotation_old; rotation_old.Identity();
-  Matrix3 rightStretch_new; rightStretch_new.Identity();
-  Matrix3 rotation_new; rotation_new.Identity();
+  // Strain variables  (declared later)
+  // Matrix3 strain(0.0);                  // Total strain
+  // double strain_v = 0.0;                // Volumeric strain (eps_v)
+  // Matrix3 strain_dev(0.0);              // Deviatoric strain (e)
+  // double strain_dev_norm = 0.0;         // ||e||
+  // double strain_s = 0.0;                // eps_s = sqrt(2/3) ||e|| 
 
-  // Strain variables
-  Matrix3 strain(0.0);                  // Total strain
-  double strain_v = 0.0;                // Volumeric strain (eps_v)
-  Matrix3 strain_dev(0.0);              // Deviatoric strain (e)
-  double strain_dev_norm = 0.0;         // ||e||
-  double strain_s = 0.0;                // eps_s = sqrt(2/3) ||e|| 
+  // Matrix3 strain_elast_tr(0.0);         // Trial elastic strain
+  // double strain_elast_v_tr(0.0);        // Trial volumetric elastic strain
+  // Matrix3 strain_elast_devtr(0.0);      // Trial deviatoric elastic strain
+  // double strain_elast_devtr_norm = 0.0; // ||ee||
+  // double strain_elast_s_tr = 0.0;       // epse_s = sqrt(2/3) ||ee||
 
-  Matrix3 strain_elast_tr(0.0);         // Trial elastic strain
-  double strain_elast_v_tr(0.0);        // Trial volumetric elastic strain
-  Matrix3 strain_elast_devtr(0.0);      // Trial deviatoric elastic strain
-  double strain_elast_devtr_norm = 0.0; // ||ee||
-  double strain_elast_s_tr = 0.0;       // epse_s = sqrt(2/3) ||ee||
-
-  double strain_elast_v_n = 0.0;        // last volumetric elastic strain
-  Matrix3 strain_elast_dev_n(0.0);      // last devaitoric elastic strain
-  double strain_elast_dev_n_norm = 0.0;
-  double strain_elast_s_n = 0.0;
-
-  double strain_elast_v = 0.0;        
-  double strain_elast_s = 0.0;        
+  // double strain_elast_v_n = 0.0;        // last volumetric elastic strain
+  // Matrix3 strain_elast_dev_n(0.0);      // last devaitoric elastic strain
+  // double strain_elast_dev_n_norm = 0.0;
+  // double strain_elast_s_n = 0.0;
 
   // Plasticity related variables
-  Matrix3 flow(0.0);                    // Plastic flow direction n = ee/||ee||
+  // Matrix3 nn(0.0);                    // Plastic flow direction n = ee/||ee||
 
   // Newton iteration constants
-  double tolr = 1.0e-8; //1e-4
-  double tola = 1.0e-8; //1e-8
-  double tola_f = 1.0e-1; //1e-8
-  int iter_break = 20;
-
-  // Newton iteration variables
-  double strain_elast_v_k = 0.0;
-  double strain_elast_s_k = 0.0;
-  double delgamma = 0.0;
-  double pc = 0.0;
-  double fyield = 0.0;
-  double rv = 0.0, rs = 0.0, rf = 0.0;  // residuals
-  double rv0 = 0.0, normrv0 = 0.0, normrv = 0.0;
-  double rs0 = 0.0, normrs0 = 0.0, normrs = 0.0;
-  double rf0 = 0.0, normrf0 = 0.0, normrf = 0.0;
-
-  // Newton iteration computed variables
-  double dfdp = 0.0, dfdq = 0.0;
-  double dpdepsev = 0.0, dpdepses = 0.0, dqdepsev = 0.0, dqdepses = 0.0, dpcdepsev = 0.0;
-  double d2fdpdepsev = 0.0, d2fdpdepses = 0.0, drvdepsev = 0.0, drvdepses = 0.0, drvdgamma = 0.0;
-  double d2fdqdepsev = 0.0, d2fdqdepses = 0.0, drsdepsev = 0.0, drsdepses = 0.0, drsdgamma = 0.0;
-  double drfdepsev = 0.0, drfdepses = 0.0;
+  double tolr = 1.0e-4; //1e-4
+  double tolf = 1.0e-8;
+  int iter_break = 100;
 
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
@@ -487,6 +454,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       // Stage 1:
       //-----------------------------------------------------------------------
       // Calculate the velocity gradient (L) from the grid velocity
+      Matrix3 velGrad(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
@@ -501,15 +469,15 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       }
 
       // Calculate rate of deformation tensor (D)
-      rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
+      Matrix3 rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
       // Update the deformation gradient tensor to its time n+1 value.
       // *TO DO* Compute defGradInc more accurately using previous timestep velGrad
       //         and mid point rule
-      defGradInc = velGrad*delT + one;
-      defGrad_new = defGradInc*pDefGrad[idx];
+      Matrix3 defGradInc = velGrad*delT + one;
+      Matrix3 defGrad_new = defGradInc*pDefGrad[idx];
       pDefGrad_new[idx] = defGrad_new;
       double J_new = defGrad_new.Determinant();
 
@@ -533,38 +501,41 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
       // Compute polar decompositions of F_old and F_new (F = RU)
       // pDefGrad[idx].polarDecompositionRMB(rightStretch_old, rotation_old);
+      Matrix3 rightStretch_new; rightStretch_new.Identity();
+      Matrix3 rotation_new; rotation_new.Identity();
       defGrad_new.polarDecompositionRMB(rightStretch_new, rotation_new);
 
       // Unrotate the spatial rate of deformation tensor and elastic strain
       rateOfDef_new = (rotation_new.Transpose())*(rateOfDef_new*rotation_new);
       Matrix3 elasticStrain_old = (rotation_new.Transpose())*(pElasticStrain_old[idx]*rotation_new);
 
+      // Calc volumetric and deviatoric elastic strains at beginninging of timestep (t_n)
+      double strain_elast_v_n = elasticStrain_old.Trace();
+      Matrix3 strain_elast_dev_n = elasticStrain_old - one*(strain_elast_v_n/3.0);
+      double strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
+      double strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
+      
+      cout << "idx = " << idx 
+           << " t_n: eps_v_e = " << strain_elast_v_n << " eps_s_e = " << strain_elast_s_n << endl;
+
       // Compute strain increment from rotationally corrected rate of deformation
       // (Forward Euler)
-      strainInc = rateOfDef_new*delT; 
+      Matrix3 strainInc = rateOfDef_new*delT; 
 
       // Calculate the total strain  
       //   Volumetric strain &  Deviatoric strain
-      strain = pStrain_old[idx] + strainInc;
-      strain_v = strain.Trace();
-      strain_dev = strain - one*(strain_v/3.0);
-      strain_dev_norm = strain_dev.Norm();
-      strain_s = sqrtTwoThird*strain_dev_norm;
+      Matrix3 strain = pStrain_old[idx] + strainInc;
+      double strain_v = strain.Trace();
+      Matrix3 strain_dev = strain - one*(strain_v/3.0);
 
       // Trial elastic strain
       //   Volumetric elastic strain &  Deviatoric elastic strain
-      strain_elast_tr = elasticStrain_old + strainInc;
-      strain_elast_v_tr = strain_elast_tr.Trace();
-      strain_elast_devtr = strain_elast_tr - one*(strain_elast_v_tr/3.0);
-      strain_elast_devtr_norm = strain_elast_devtr.Norm();
-      strain_elast_s_tr = sqrtTwoThird*strain_elast_devtr_norm;
+      Matrix3 strain_elast_tr = elasticStrain_old + strainInc;
+      double strain_elast_v_tr = strain_elast_tr.Trace();
+      Matrix3 strain_elast_devtr = strain_elast_tr - one*(strain_elast_v_tr/3.0);
+      double strain_elast_devtr_norm = strain_elast_devtr.Norm();
+      double strain_elast_s_tr = sqrtTwoThird*strain_elast_devtr_norm;
 
-      // Previous volumetric and deviatoric elastic strains
-      strain_elast_v_n = elasticStrain_old.Trace();
-      strain_elast_dev_n = elasticStrain_old - one*(strain_elast_v_n/3.0);
-      strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
-      strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
-      
       // Set up the ModelState (for t_n)
       UintahBB::ModelState* state = scinew UintahBB::ModelState();
       state->density             = rho_cur;
@@ -606,46 +577,33 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       // Magic to deal with small strains
       double small = 1.0e-12;
       double oo_strain_elast_s_tr =  (strain_elast_s_tr > small) ? 1.0/strain_elast_s_tr : 1.0;
-      flow = strain_elast_devtr*(sqrtTwoThird*oo_strain_elast_s_tr);
+      Matrix3 nn = strain_elast_devtr*(sqrtTwoThird*oo_strain_elast_s_tr);
       
       // Calculate yield function
       double ftrial = d_yield->evalYieldCondition(state);
 
       small = 1.0e-8; // **WARNING** Should not be hard coded (use d_tol)
      
-      std::cout << " iter = 0" 
-                << " p = " << state->p << " q = " << state->q << " pc = " << state->p_c 
-                << " dfdp = 0" << " dfdq = 0" << " fyield = " << ftrial << endl;
+      double strain_elast_v = strain_elast_v_n;
+      double strain_elast_s = strain_elast_s_n;
+      double pc = pc_n;
       if (ftrial > small) { // Plastic loading
 
-        fyield = ftrial;
-        strain_elast_v = strain_elast_v_n;
-        strain_elast_s = strain_elast_s_n;
-        strain_elast_v_k = strain_elast_v;
-        strain_elast_s_k = strain_elast_s;
-        delgamma = pDeltaGamma_old[idx];
-        pc = pc_n;
+        double fyield = ftrial;
+        double strain_elast_v_k = strain_elast_v;
+        double strain_elast_s_k = strain_elast_s;
+        double delgamma = pDeltaGamma_old[idx];
 
         // Derivatives
-        dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
-        dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
+        double dfdp = d_yield->computeVolStressDerivOfYieldFunction(state);
+        double dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
         // Residual
-        rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
-        rs = strain_elast_s - strain_elast_s_tr + delgamma*dfdq;
-        rf = fyield;
+        double rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
+        double rs = strain_elast_s - strain_elast_s_tr + delgamma*dfdq;
+        double rf = fyield;
 
         // Set up Newton iterations
-        rv0 = rv;
-        normrv0 = (fabs(rv0) < small) ? fabs(strain_elast_v_tr) : fabs(rv0);
-        normrv = normrv0;
-        rs0 = rs;
-        normrs0 = (fabs(rs0) < small) ? fabs(strain_elast_s_tr) : fabs(rs0);
-        normrs = normrs0;
-        rf0 = rf;
-        normrf0 = (fabs(rf0) < small) ? 1.0 : fabs(rf0);
-        normrf = normrf0;
-        
         double rtolv = 1.0;
         double rtols = 1.0;
         double rtolf = 1.0;
@@ -654,48 +612,50 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         // Do Newton iterations
         state->elasticStrain = elasticStrain_old;
         state->elasticStrainTrial = strain_elast_tr;
-        while (( (rtolv > tolr) || (rtols > tolr) || (rtolf > tolr) ) 
-              && ( (normrv > tola) || (normrs > tola) || (normrf > tola_f) ))
+        while ((rtolv > tolr) || (rtols > tolr) || (rtolf > tolf)) 
         {
           klocal++;
          
-          // calc deldelgamma
-          dpdepsev = d_eos->computeDpDepse_v(state);
-          dpdepses = d_eos->computeDpDepse_s(state);
-          dqdepsev = dpdepses;
-          dqdepses = d_shear->computeDqDepse_s(state);
-          dpcdepsev = d_intvar->computeVolStrainDerivOfInternalVariable(state);
-            
-          d2fdpdepsev = d_yield->computeVolStrainDerivOfDfDp(state, d_eos, d_shear, d_intvar);
-          d2fdpdepses = d_yield->computeDevStrainDerivOfDfDp(state, d_eos, d_shear, d_intvar);
-          drvdepsev = 1.0 + delgamma*d2fdpdepsev;
-          drvdepses = delgamma*d2fdpdepses;
-          drvdgamma = dfdp;
+          // Compute needed derivatives
+          double dpdepsev = d_eos->computeDpDepse_v(state);
+          double dpdepses = d_eos->computeDpDepse_s(state);
+          double dqdepsev = dpdepses;
+          double dqdepses = d_shear->computeDqDepse_s(state);
+          double dpcdepsev = d_intvar->computeVolStrainDerivOfInternalVariable(state);
 
-          d2fdqdepsev = d_yield->computeVolStrainDerivOfDfDq(state, d_eos, d_shear, d_intvar);
-          d2fdqdepses = d_yield->computeDevStrainDerivOfDfDq(state, d_eos, d_shear, d_intvar);
-          drsdepsev = delgamma*d2fdqdepsev;
-          drsdepses = 1.0 + delgamma*d2fdqdepses;
-          drsdgamma = dfdq;
+          // Compute derivatives of residuals
+          double dr1_dx1 = 1.0 + delgamma*(2.0*dpdepsev - dpcdepsev);
+          double dr1_dx2 = 2.0*delgamma*dpdepses;
+          double dr1_dx3 = dfdp;
 
-          drfdepsev = d_yield->computeVolStrainDerivOfYieldFunction(state, d_eos, d_shear, d_intvar);
-          drfdepses = d_yield->computeDevStrainDerivOfYieldFunction(state, d_eos, d_shear, d_intvar);
-          // drfdgamma = 0.0;
+          // dfdq = 2q/M^2 => 2/M^2 = 1/q dfdq
+          double dr2_dx1 = (delgamma*dqdepsev*dfdq)/(state->q);
+          double dr2_dx2 = 1.0 + (delgamma*dqdepses*dfdq)/(state->q);
+          double dr2_dx3 = dfdq;
+
+          double dr3_dx1 = dfdq*dqdepsev + dfdp*dpdepsev - state->p*dpcdepsev;
+          double dr3_dx2 = dfdq*dqdepses + dfdp*dpdepses;
 
           FastMatrix A_MAT(2, 2), inv_A_MAT(2,2);
-          A_MAT(0, 0) = drvdepsev;
-          A_MAT(0, 1) = drvdepses;
-          A_MAT(1, 0) = drsdepsev;
-          A_MAT(1, 1) = drsdepses;
+          A_MAT(0, 0) = dr1_dx1;
+          A_MAT(0, 1) = dr1_dx2;
+          A_MAT(1, 0) = dr2_dx1;
+          A_MAT(1, 1) = dr2_dx2;
+
           inv_A_MAT.destructiveInvert(A_MAT);
+
           vector<double> B_MAT(2), C_MAT(2), AinvB(2), rvs_vec(2), Ainvrvs(2);
-          B_MAT[0] = drvdgamma; 
-          B_MAT[1] = drsdgamma;
-          C_MAT[0] = drfdepsev;
-          C_MAT[1] =  drfdepses;
+          B_MAT[0] = dr1_dx3; 
+          B_MAT[1] = dr2_dx3;
+
+          C_MAT[0] = dr3_dx1;
+          C_MAT[1] = dr3_dx2;
+
           rvs_vec[0] = rv;
           rvs_vec[1] = rs;
+
           inv_A_MAT.multiply(B_MAT, AinvB);
+
           inv_A_MAT.multiply(rvs_vec, Ainvrvs);
 
           double denom = C_MAT[0]*AinvB[0] + C_MAT[1]*AinvB[1];
@@ -709,19 +669,20 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           delvoldev[0] = -Ainvrvs[0] - AinvB[0]*deldelgamma;
           delvoldev[1] = -Ainvrvs[1] - AinvB[1]*deldelgamma;
 
-          //std::cout << "deldelgamma = " << deldelgamma << " delvoldev = " << delvoldev[0] 
-          //          << " , " << delvoldev[1] << endl;
-
+          //std::cout << "deldelgamma = " << deldelgamma 
+          //          << " delvoldev = " << delvoldev[0] << " , " << delvoldev[1] << endl;
 
           // update
           strain_elast_v = strain_elast_v_k + delvoldev[0];
           strain_elast_s = strain_elast_s_k + delvoldev[1];
           strain_elast_v_k = strain_elast_v;
           if (strain_elast_s < 0.0) {
-            strain_elast_s = strain_elast_s_k;
+             strain_elast_s = strain_elast_s_k;
           }
           strain_elast_s_k = strain_elast_s;
-          delgamma = delgamma + deldelgamma;
+          double delgamma_old = delgamma;
+          delgamma += deldelgamma;
+          if (delgamma < 0.0) delgamma = delgamma_old;
         
           state->epse_v = strain_elast_v;
           state->epse_s = strain_elast_s;
@@ -730,6 +691,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           q = d_shear->computeQ(state);
           p = d_eos->computePressure(matl, state, zero, zero, 0.0);
           pc = d_intvar->computeInternalVariable(state);
+
           state->shearModulus = mu;
           state->q = q;
           state->p = p;
@@ -740,62 +702,61 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           dfdq = d_yield->computeDevStressDerivOfYieldFunction(state);
 
           fyield = d_yield->evalYieldCondition(state);
-          std::cout << " iter = " << klocal
-                    << " p = " << state->p << " q = " << state->q << " pc = " << state->p_c 
-                    << " dfdp = " << dfdp << " dfdq = " << dfdq << " fyield = " << fyield << endl;
 
           // update residual
           rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
           rs = strain_elast_s - strain_elast_s_tr + delgamma*dfdq;
           rf = fyield;
-        
+
           // calculate tolerances
-          normrv=fabs(rv);
-          normrs=fabs(rs);
-          normrf=fabs(rf);
-          rtolv=fabs(rv)/normrv0;
-          rtols=fabs(rs)/normrs0;
-          rtolf=fabs(rf)/normrf0;
+          rtolv=fabs(delvoldev[0]);
+          rtols=fabs(delvoldev[1]);
+          rtolf=fabs(deldelgamma);
+
 
           // Check max iters
           if (klocal == iter_break) {
             ostringstream desc;
             desc << "**ERROR** Newton iterations did not converge" 
-                 << " normrv = " << normrv << " normrs = " << normrs 
-                 << " normrf = " << normrf << " rtolv = " << rtolv 
-                 << " rtols = " << rtols << " rtolf = " << rtolf 
+                 << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
                  << " klocal = " << klocal << endl;
-            throw ConvergenceFailure(desc.str(), iter_break, normrf, rtolf, __FILE__, __LINE__);
+            throw ConvergenceFailure(desc.str(), iter_break, rtolf, tolf, __FILE__, __LINE__);
           }
 
         } // End of Newton-Raphson while
 
-        double delgammaneg = 0.0;
         if ((delgamma < 0.0) && (fabs(delgamma) > 1.0e-10)) {
-          delgammaneg = delgamma;
           ostringstream desc;
           desc << "**ERROR** delgamma less than 0.0 in local converged solution." << endl;
-          throw ConvergenceFailure(desc.str(), klocal, delgamma, normrf, __FILE__, __LINE__);
+          throw ConvergenceFailure(desc.str(), klocal, rtolf, delgamma, __FILE__, __LINE__);
         }
 
         // update stress
-        pStress_new[idx] = one*p + flow*(sqrtTwoThird*q);
+        pStress_new[idx] = one*p + nn*(sqrtTwoThird*q);
 
         // update elastic strain
-        pElasticStrain_new[idx] = flow*(sqrtThreeTwo*strain_elast_s) + one*(strain_elast_v/3.0);
+        pElasticStrain_new[idx] = nn*(sqrtThreeTwo*strain_elast_s) + one*(strain_elast_v/3.0);
 
         // update delta gamma (plastic strain)
         pDeltaGamma_new[idx] = pDeltaGamma_old[idx] + delgamma;
 
+        std::cout << "Plastic: t_{n+1}:  eps_v_e = " << strain_elast_v 
+                  << " eps_s_e = " << strain_elast_s << " f_n+1 = " << fyield << endl;
+        std::cout << "          pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
+
       } else { // Elastic range
 
         // update stress from trial elastic strain
-        pStress_new[idx] = one*p + flow*(sqrtTwoThird*q);
+        pStress_new[idx] = one*p + nn*(sqrtTwoThird*q);
 
         // update elastic strain from trial value
         pElasticStrain_new[idx] = strain_elast_tr;
         strain_elast_v = strain_elast_v_tr;
         strain_elast_s = strain_elast_s_tr;
+
+        std::cout << "Elastic: t_{n+1}:  eps_v_e = " << strain_elast_v << " eps_s_e = " << strain_elast_s 
+                  << endl;
+        std::cout << "  pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
 
         // update delta gamma (plastic strain increament)
         pDeltaGamma_new[idx] = pDeltaGamma_old[idx];

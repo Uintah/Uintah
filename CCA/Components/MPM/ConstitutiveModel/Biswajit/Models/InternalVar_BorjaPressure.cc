@@ -192,7 +192,7 @@ InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state) cons
   double strain_elast_v = state->epse_v;
 
   // Calculate new p_c
-  double pc = pc_n*exp((strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
+  double pc = pc_n*exp(-(strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
   return pc;
 }
 
@@ -211,6 +211,6 @@ InternalVar_BorjaPressure::computeVolStrainDerivOfInternalVariable(const ModelSt
   double strain_elast_v = state->epse_v;
 
   // Calculate  dp_c/depse_v
-  double pc = -pc_n*exp((strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
+  double pc = pc_n*exp(-(strain_elast_v_tr-strain_elast_v)/(d_lambdatilde-d_kappatilde));
   return pc/(d_lambdatilde-d_kappatilde);;
 }
