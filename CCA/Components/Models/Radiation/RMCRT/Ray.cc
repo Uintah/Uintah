@@ -721,6 +721,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
       //_____________________________________________
       //   Ordering for Surface Method
+      // This block of code is used to properly place ray origins, and orient ray directions
+      // onto the correct face.  This is necessary, because by default, the rays are placed
+      // and oriented onto a default face, then require adjustment onto the proper face.
       vector <IntVector> dirIndexOrder(6);
       vector <IntVector> dirSignSwap(6);
       vector <IntVector> locationIndexOrder(6);
@@ -804,7 +807,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
-        //int face = -1;
+        // quick flux debug test
+        //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
+        //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
+        //if ( origin.x()==0 && origin.y()==234 ){    // ifrf restart case. face should be 0 for these cells.
+
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
@@ -812,9 +819,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
         if(_benchmark==4 || _benchmark==5) boundaryFaces.push_back(5); // Benchmark4 benchmark5
 
 
-        //face = 1; // ifrf restart flux line  Now should be boundaryFaces.push_back(1);
-
+        // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
+
+
         // if (origin.y()==Nx/2 && origin.z()==Nx-1){ // benchmark4 benchmark5
         // if (origin.x()==0 && origin.y()==234){    // ifrf restart case
 
@@ -877,15 +885,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
          // int k = itr->first[2];
 
           int face = *it;  // face uses Uintah ordering
-          int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
+          //int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
+          int UintahFace[6] = {0,1,2,3,4,5}; // Nov 5 2012:  I may not need to change the order after all since this line does nothing
           int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
           //  IntVector origin = IntVector(i,j,k);
-
-
-          // quick flux debug test
-          //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
-          //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
-          //if (face==0 && origin.x()==0 && origin.y()==234){    // ifrf restart case
 
           double sumI     = 0;
           double sumProjI = 0;
@@ -953,22 +956,23 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           double fluxIn = sumProjI * 2 *_pi/_NoOfRays;
           switch(face){
-          case '0' : boundFlux[origin].w = fluxIn; break;
-          case '1' : boundFlux[origin].e = fluxIn; break;
-          case '2' : boundFlux[origin].s = fluxIn; break;
-          case '3' : boundFlux[origin].n = fluxIn; break;
-          case '4' : boundFlux[origin].b = fluxIn; break;
-          case '5' : boundFlux[origin].t = fluxIn; break;
+          case 0 : boundFlux[origin].w = fluxIn; break;
+          case 1 : boundFlux[origin].e = fluxIn; break;
+          case 2 : boundFlux[origin].s = fluxIn; break;
+          case 3 : boundFlux[origin].n = fluxIn; break;
+          case 4 : boundFlux[origin].b = fluxIn; break;
+          case 5 : boundFlux[origin].t = fluxIn; break;
           }
           if(_benchmark==5)fprintf(f, "%lf \n",sumProjI * 2*_pi/_NoOfRays);
 
 
-          //} // end of quick flux debug
         } // end of looping through the vector boundaryFaces
 
         if(_benchmark==5) fclose(f);
 
       //}// end of file for benchmark4 verification test
+      //} // end of quick flux debug
+
       }// end cell iterator
     }   // end if _solveBoundaryFlux
         
@@ -1616,7 +1620,6 @@ bool Ray::has_a_boundary(const IntVector &c,
     bool hasBoundary = false;
 
     adjacentCell = c;
-
     adjacentCell[0] = c[0] - 1; // west
 
 
