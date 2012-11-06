@@ -415,7 +415,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     // GLOBAL
     ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
     ParticleVariable<double>  pVol_new;
-    ParticleVariable<double>  pdTdt;
+    ParticleVariable<double>  pdTdt, p_q;
 
     new_dw->allocateAndPut(pDefGrad_new,  
                            lb->pDeformationMeasureLabel_preReloc, pset);
@@ -424,6 +424,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pVol_new, 
                            lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
     // LOCAL
     ParticleVariable<Matrix3>  pStrain_new, pElasticStrain_new; 
@@ -515,8 +516,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       double strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
       double strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
       
-      cout << "idx = " << idx 
-           << " t_n: eps_v_e = " << strain_elast_v_n << " eps_s_e = " << strain_elast_s_n << endl;
+      //cout << "idx = " << idx 
+      //     << " t_n: eps_v_e = " << strain_elast_v_n << " eps_s_e = " << strain_elast_s_n << endl;
 
       // Compute strain increment from rotationally corrected rate of deformation
       // (Forward Euler)
@@ -612,7 +613,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         // Do Newton iterations
         state->elasticStrain = elasticStrain_old;
         state->elasticStrainTrial = strain_elast_tr;
-        while ((rtolv > tolr) || (rtols > tolr) || (rtolf > tolf)) 
+        //while ((rtolv > tolr) || (rtols > tolr) || (rtolf > tolf)) 
+        while ((rtolv > tolr) || (rtols > tolr))
         {
           klocal++;
          
@@ -717,10 +719,16 @@ CamClay::computeStressTensor(const PatchSubset* patches,
           // Check max iters
           if (klocal == iter_break) {
             ostringstream desc;
-            desc << "**ERROR** Newton iterations did not converge" 
+            std::cout << "**ERROR** Newton iterations did not converge" 
                  << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
                  << " klocal = " << klocal << endl;
-            throw ConvergenceFailure(desc.str(), iter_break, rtolf, tolf, __FILE__, __LINE__);
+            std::cout << "idx = " << idx << " p = " << p << " q = " << q << " pc = " << pc << " f = " << fyield
+                      << " eps_v_e = " << strain_elast_v << " eps_s_e = " << strain_elast_s << endl;
+            klocal = 0;
+            // desc << "**ERROR** Newton iterations did not converge" 
+            //      << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
+            //      << " klocal = " << klocal << endl;
+            // throw ConvergenceFailure(desc.str(), iter_break, rtolf, tolf, __FILE__, __LINE__);
           }
 
         } // End of Newton-Raphson while
@@ -740,9 +748,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         // update delta gamma (plastic strain)
         pDeltaGamma_new[idx] = pDeltaGamma_old[idx] + delgamma;
 
-        std::cout << "Plastic: t_{n+1}:  eps_v_e = " << strain_elast_v 
-                  << " eps_s_e = " << strain_elast_s << " f_n+1 = " << fyield << endl;
-        std::cout << "          pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
+        //std::cout << "Plastic: t_{n+1}:  eps_v_e = " << strain_elast_v 
+        //          << " eps_s_e = " << strain_elast_s << " f_n+1 = " << fyield << endl;
+        //std::cout << "          pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
 
       } else { // Elastic range
 
@@ -754,9 +762,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         strain_elast_v = strain_elast_v_tr;
         strain_elast_s = strain_elast_s_tr;
 
-        std::cout << "Elastic: t_{n+1}:  eps_v_e = " << strain_elast_v << " eps_s_e = " << strain_elast_s 
-                  << endl;
-        std::cout << "  pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
+        //std::cout << "Elastic: t_{n+1}:  eps_v_e = " << strain_elast_v << " eps_s_e = " << strain_elast_s 
+        //          << endl;
+        //std::cout << "  pqpc = [" << p << " " << q << " " << pc <<"]" << endl;
 
         // update delta gamma (plastic strain increament)
         pDeltaGamma_new[idx] = pDeltaGamma_old[idx];
@@ -781,6 +789,16 @@ CamClay::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
       delete state;
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        double Dkk = rateOfDef_new.Trace();
+        p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
     }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;

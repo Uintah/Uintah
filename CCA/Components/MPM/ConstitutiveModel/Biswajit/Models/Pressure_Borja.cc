@@ -191,6 +191,7 @@ Pressure_Borja::computePressure(const double& rho_orig,
   double epse_v = J - 1.0;
 
   pressure = evalPressure(epse_v, 0.0);
+  //std::cout << "J = " << J << " epse_v = " << epse_v << " pressure = " << pressure << endl;
   double K = computeBulkModulus(rho_orig, rho_cur);
   csquared = K/rho_cur;
   dp_drho = - J*csquared;
@@ -227,8 +228,9 @@ double
 Pressure_Borja::computeDensity(const double& rho_orig,
                                const double& pressure)
 {
-  if (pressure > 0.0) return rho_orig;
+  if (pressure >= 0.0) return rho_orig;
   double denom = 1.0 + d_epse_v0 - d_kappatilde*log(pressure/d_p0);
+  //std::cout << "rho_orig = " << rho_orig << " pressure = " << pressure << " denom = " << denom << endl;
   double rho = rho_orig/denom;
   return rho;
 }
