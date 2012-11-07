@@ -537,7 +537,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       velGrad_old=velGrad[idx];
       velGrad[idx]=tensorL;
 
-      int num_scs = 1;
+      int num_scs = 4;
       Matrix3 one; one.Identity();
 #ifdef JC_USE_BB_DEFGRAD_UPDATE
       // Improve upon first order estimate of deformation gradient
@@ -549,7 +549,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient in a new way using subcycling
       Matrix3 F=deformationGradient[idx];
       double Lnorm_dt = tensorL.Norm()*delT;
-      num_scs = max(1,2*((int) Lnorm_dt));
+      num_scs = max(4,2*((int) Lnorm_dt));
       if(num_scs > 1000){
         cout << "NUM_SCS = " << num_scs << endl;
       }
@@ -565,7 +565,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       
       // Compute the Jacobian and delete the particle in the case of negative Jacobian
       J = deformationGradient_new[idx].Determinant();
-      if (J<=0){
+      if (J<=0 || J>10){
         cout<<"ERROR, negative J! "<<endl;
         cout<<"pParticleID="<<pParticleID[idx]<<endl;
         cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
