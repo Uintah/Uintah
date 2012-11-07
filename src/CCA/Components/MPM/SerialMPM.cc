@@ -3897,7 +3897,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
           if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
-            pvelocitynew[idx]=pvelocity[idx];
+	     pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())*(flags->d_max_vel*.9);	  
+	     cout<<endl<<"Warning: particle "<<pids[idx]<<" hit speed ceiling #1. Modifying particle velocity accordingly."<<endl;
+            //pvelocitynew[idx]=pvelocity[idx];
           }
         }
       }
@@ -3992,7 +3994,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       ParticleVariable<Vector> pdispnew;
       constParticleVariable<double> pmass;
       constParticleVariable<Matrix3> pFOld;
-
+      constParticleVariable<long64> pids;
+	  
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
 
@@ -4004,7 +4007,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(psize,        lb->pSizeLabel,                      pset);
-
+      old_dw->get(pids,                lb->pParticleIDLabel,          pset);
+	  
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
@@ -4012,8 +4016,8 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
-      new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
-
+      new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);  
+	  
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -4054,7 +4058,9 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         if(pvelocitynew[idx].length() > flags->d_max_vel){
-          pvelocitynew[idx]=pvelocity[idx];
+	      pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())*flags->d_max_vel;
+		  cout<<endl<<"Warning: particle "<<pids[idx]<<" hit speed ceiling #2. Modifying particle velocity accordingly."<<endl;
+          //pvelocitynew[idx]=pvelocity[idx];
         }
       }
     }
