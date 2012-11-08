@@ -70,7 +70,7 @@
     <save label="pE_qn2_icv"/>
     <!-- Table Variables -->
     <save label = "mixture_fraction_2"/>
-    <save label = "heatLoss"/>
+    <save label = "heat_loss"/>
     <save label = "coal_gas_mix_frac"/>
     <save label = "temperature" table_lookup = "true"/>
     <save label = "density"     table_lookup = "true"/>
