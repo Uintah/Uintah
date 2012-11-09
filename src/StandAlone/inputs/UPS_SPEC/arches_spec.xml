@@ -7,7 +7,7 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-      <set_initial_vel_condition             spec="OPTIONAL NO_DATA"
+      <set_initial_vel_condition        spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
           
       <set_initial_condition             spec="OPTIONAL NO_DATA"
@@ -651,7 +651,8 @@
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
-                                                                           wasatch_expr'">                                                           
+                                                                           wasatch_expr,
+                                                                           pc_transport'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -700,6 +701,20 @@
               <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
               <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
             </DORadiationModel>
+
+            <!-- pc transport --> 
+            <pc_scal_file                spec="REQUIRED STRING" need_applies_to="type pc_transport"/> <!-- ..... --> 
+            <pc_st_scal_file             spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <svm_model_base_name         spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <n_pcs                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_sts                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_ind                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_tot                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <pc                          spec="MULTIPLE NO_DATA" 
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="score_number REQUIRED INTEGER"
+                                         need_applies_to="type pc_transport"/>
+
             
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >

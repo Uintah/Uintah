@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -26,19 +27,43 @@ PCTransport::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
-  db->require("PC_SCAL_FILE",_pc_scal_file);
-  db->require("PC_ST_SCAL_FILE",_pc_st_scal_file);
-  db->require("SVM_MODEL_BASE_NAME",_svm_base_name);
-  db->require("N_PCS",_N_PCS ); 
-  db->require("N_STS",_N_STS ); 
-  db->require("N_IND",_N_IND ); 
-  db->require("N_TOT",_N_TOT ); 
+  db->require("pc_scal_file",_pc_scal_file);
+  db->require("pc_st_scal_file",_pc_st_scal_file);
+  db->require("svm_model_base_name",_svm_base_name);
+  db->require("n_pcs",_N_PCS ); 
+  db->require("n_sts",_N_STS ); 
+  db->require("n_ind",_N_IND ); 
+  db->require("n_tot",_N_TOT ); 
 
   ostringstream s_num; 
   for (int i=0; i < _N_PCS; i++){
     s_num << i; 
     _svm_models.push_back(_svm_base_name+s_num.str());
   }
+
+  //we also need to know which equations actually are identified as the 
+  //transported pc's by getting their labels
+  for ( ProblemSpecP db_trans_pc = db->findBlock( "pc" ); 
+      db_trans_pc != 0; db_trans_pc = db_trans_pc->findNextBlock( "pc" ) ){
+
+    std::string pc_name; 
+    double pc_num; 
+
+    // looking for <pc label="some string"/>
+    db_trans_pc->getAttribute("label", pc_name); 
+    db_trans_pc->getAttribute("score_number", pc_num);  
+    //Ben: I am not sure how you want to handle this last input.  I assume you need to pass your scores into 
+    //your code in a certain order.  I used the score_number input attribute to allow the user to specify 
+    //which score is which, since the label attribute for the actual transported score is completely arbitrary 
+    //Also, note that the score number MUST start at ZERO, otherwise this will cause problems below.  May want to add 
+    //some bullet proofing for this...(ie, check to make sure the user has pc numbers running from 0 to N-1.
+
+    // store these names into a map to be used later
+    // see http://www.cplusplus.com/reference/stl/map/ for a description of a map
+    _pc_info.insert( make_pair( int(pc_num), pc_name )); 
+
+  }
+
  
 //	///////////////////THINGS THAT NEED TO BE DONE ONLY ONCE///////////////////
 //	// get index
@@ -149,8 +174,9 @@ PCTransport::problemSetup(const ProblemSpecP& inputdb)
 void 
 PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "PCTransport::eval";
+  std::string taskname = "PCTransport::computeSource";
   Task* tsk = scinew Task(taskname, this, &PCTransport::computeSource, timeSubStep);
+  check_for_pc_labels();
 
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -159,9 +185,17 @@ PCTransport::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->computes(_src_label);
 
+    for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){ 
+      tsk->requires( Task::OldDW, iter->second, Ghost::None, 0 );  
+    } 
+
   } else {
 
     tsk->modifies(_src_label); 
+
+    for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){ 
+      tsk->requires( Task::NewDW, iter->second, Ghost::None, 0 );  
+    } 
 
   }
 
@@ -185,6 +219,61 @@ PCTransport::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    DataWarehouse* which_dw;
+
+    CCVariable<double> src; 
+    if ( timeSubStep == 0 ){ 
+
+      which_dw = old_dw; 
+      new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
+
+    } else { 
+
+      which_dw = new_dw; 
+      new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
+
+    } 
+    
+    //loop over all scores and get the values for this patch from uintah 
+    PcStorage pc_storage;  // this is a convenient map for storing the score values. 
+                           // the map key is the pc number and the map value is the actual score value.
+                           // see: http://www.cplusplus.com/reference/stl/map/ for description of a c++ map
+
+    for ( map<int,const VarLabel*>::iterator iter = _pc_labels.begin(); iter != _pc_labels.end(); iter++ ){ 
+
+      constCCVariable<double> temp_var; 
+
+      which_dw->get( temp_var, iter->second, matlIndex, patch, Ghost::None, 0 ); 
+
+      pc_storage.insert( std::make_pair(iter->first,temp_var) );  //this map actually holds the grid variables for transported pc's 
+
+    }
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; //(i,j,k) 
+
+      double pc_test[3]; 
+      //populated the pc_test array: 
+      //note that this is currently hard coded for 3 scores.  Need to make this general. 
+      for (int i = 0; i < 3; i++){
+
+        PcStorage::iterator pc_iter = pc_storage.find(i); 
+        pc_test[i] = pc_iter->second[c];  
+
+      }
+
+
+      double src_value = 0.0; 
+
+      // ben->put_your_magic_here;
+
+      // Note that the source term is assumed to be in kg/(m^3*sec)
+      src[c] = src_value; //actually assigning the source value here. 
+
+      // you're done!
+
 
 //	///////////////////THINGS THAT NEED TO BE AT EVERY TIME STEP///////////////////
 //	
@@ -250,6 +339,8 @@ PCTransport::computeSource( const ProcessorGroup* pc,
 //	cout << "\n";
 //    // add actual calculation of the source here. 
 
+
+    }
   }
 }
 
@@ -271,3 +362,18 @@ PCTransport::dummyInit( const ProcessorGroup* pc,
   //not needed
 }
 
+void
+PCTransport::check_for_pc_labels(){ 
+
+  for ( std::map<int, std::string>::iterator iter = _pc_info.begin(); iter != _pc_info.end(); iter++ ){ 
+
+    const VarLabel* the_label = VarLabel::find( iter->second ); 
+    if ( the_label == 0 ){ 
+      throw ProblemSetupException( "Error: The PC Transport source term cant find the transport equation for: "+iter->second, __FILE__, __LINE__);
+    } 
+
+    _pc_labels.insert( std::make_pair(iter->first, the_label)); 
+
+
+  } 
+}

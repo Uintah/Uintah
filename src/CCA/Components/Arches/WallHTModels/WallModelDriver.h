@@ -38,10 +38,63 @@ namespace Uintah{
       /** @brief Input file interface **/
       void problemSetup( const ProblemSpecP& db ); 
 
+      /** @brief Compute the heat tranfer to the walls/tubes -- does all to all **/
+      void sched_doWallHT_alltoall( const LevelP& level, SchedulerP& sched, const int time_substep );
+
       /** @brief Compute the heat tranfer to the walls/tubes **/
       void sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_substep );
 
+      struct HTVariables {
+
+        CCVariable<double> T; 
+        constCCVariable<int> celltype; 
+        constCCVariable<double > hf_e; 
+        constCCVariable<double > hf_w; 
+        constCCVariable<double > hf_n; 
+        constCCVariable<double > hf_s; 
+        constCCVariable<double > hf_t; 
+        constCCVariable<double > hf_b; 
+
+      };
+
     private: 
+
+
+      /** @brief The base class definition for all derived wall heat transfer models **/ 
+      class HTModelBase{
+
+        public: 
+
+          HTModelBase(){}; 
+          virtual ~HTModelBase(){}; 
+
+          virtual void problemSetup( const ProblemSpecP& input_db ) = 0;
+          virtual void computeHT( const Patch* patch, HTVariables* vars ) = 0; 
+
+        private: 
+
+          std::string _model_name; 
+
+      };
+
+      /** @brief A simple wall heat transfer model for domain walls only **/
+      class SimpleHT : public HTModelBase { 
+
+        public: 
+
+          SimpleHT(); 
+          ~SimpleHT(); 
+
+          void problemSetup( const ProblemSpecP& input_db ); 
+          void computeHT( const Patch* patch, HTVariables* vars ); 
+
+        private: 
+
+          double _k;         ///< Thermal conductivity 
+          double _dy;        ///< Wall thickness 
+          double _T_inner;   ///< Inner wall temperature
+
+      };
 
       std::string _T_label_name; 
 
@@ -57,6 +110,8 @@ namespace Uintah{
 
       SimulationStateP& _shared_state; 
 
+      std::vector<HTModelBase> _all_ht_models; 
+
       int _matl_index; 
 
       void doWallHT( const ProcessorGroup* my_world,
@@ -65,6 +120,13 @@ namespace Uintah{
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw, 
                      const int time_substep );
+
+      void doWallHT_alltoall( const ProcessorGroup* my_world,
+                              const PatchSubset* patches, 
+                              const MaterialSubset* matls, 
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw, 
+                              const int time_substep );
 
       bool check_varlabels(){ 
         bool result = true; 
