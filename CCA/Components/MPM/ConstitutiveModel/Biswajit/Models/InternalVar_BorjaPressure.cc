@@ -184,7 +184,7 @@ double
 InternalVar_BorjaPressure::computeInternalVariable(const ModelState* state) const
 {
   // Get old p_c
-  double pc_n = state->p_c;  // Old Pc
+  double pc_n = state->p_c0;  // Old Pc
 
   // Get the trial elastic strain and the updated elastic strain
   // (volumetric part)
@@ -203,7 +203,7 @@ double
 InternalVar_BorjaPressure::computeVolStrainDerivOfInternalVariable(const ModelState* state) const
 {
   // Get old p_c
-  double pc_n = state->p_c;
+  double pc_n = state->p_c0;
 
   // Get the trial elastic strain and the updated elastic strain
   // (volumetric part)

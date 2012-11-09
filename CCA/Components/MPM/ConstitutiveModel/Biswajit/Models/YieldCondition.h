@@ -181,6 +181,11 @@ namespace UintahBB {
     virtual double evalYieldCondition(const ModelState* state) = 0;
 
     //--------------------------------------------------------------
+    // Compute max value of yield function for convergence tolerance check
+    //--------------------------------------------------------------
+    virtual double evalYieldConditionMax(const ModelState* state) = 0;
+
+    //--------------------------------------------------------------
     // Compute df/dp  where p = volumetric stress = 1/3 Tr(sigma)
     //--------------------------------------------------------------
     virtual double computeVolStressDerivOfYieldFunction(const ModelState* state) = 0;
