@@ -31,6 +31,8 @@ namespace Uintah{
 class PCTransport: public SourceTermBase {
 public: 
 
+  typedef std::map<int, constCCVariable<double> > PcStorage;         
+
   PCTransport( std::string srcName, SimulationStateP& shared_state, 
                 vector<std::string> reqLabelNames, std::string type );
   ~PCTransport();
@@ -79,12 +81,16 @@ private:
   std::string _pc_st_scal_file; 
   std::string _svm_base_name;
   vector<std::string> _svm_models; 
+  std::map<int, std::string> _pc_info; 
+  std::map<int, const VarLabel*> _pc_labels; 
 
   int _N_PCS;
   int _N_STS; 
   int _N_IND; 
   int _N_TOT;
 
+  /** @brief Looks for all the PC labels and makes sure they exist **/
+  void check_for_pc_labels(); 
 
 }; // end PCTransport
 } // end namespace Uintah
