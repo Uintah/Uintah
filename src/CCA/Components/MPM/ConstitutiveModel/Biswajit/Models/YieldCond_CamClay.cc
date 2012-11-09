@@ -67,6 +67,19 @@ YieldCond_CamClay::evalYieldCondition(const ModelState* state)
 }
 
 //--------------------------------------------------------------
+// Evaluate yield condition max (q = state->q
+//                               p = state->p
+//                               p_c = state->p_c)
+//--------------------------------------------------------------
+double 
+YieldCond_CamClay::evalYieldConditionMax(const ModelState* state)
+{
+  double p_c = state->p_c;
+  double qmax = fabs(0.5*d_M*p_c);
+  return qmax*qmax/(d_M*d_M);
+}
+
+//--------------------------------------------------------------
 // Derivatives needed by return algorithms and Newton iterations
 
 //--------------------------------------------------------------
