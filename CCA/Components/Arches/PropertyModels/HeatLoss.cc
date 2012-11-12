@@ -33,9 +33,11 @@ void HeatLoss::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb; 
 
   if ( db->findBlock("constant_heat_loss") ){ 
+
     _constant_heat_loss = true; 
-    db->findBlock("constant_heat_loss")->getAttribute("value",_constant);
+
   } else {  
+
 	  db->require( "enthalpy_label", _enthalpy_label_name ); 
 	  db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
 	  db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
@@ -153,7 +155,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
 		  } 
 
-      prop.initialize( _constant ); 
+      prop.initialize( _const_init ); 
 
     } else { 
 

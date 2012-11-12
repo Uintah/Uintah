@@ -303,8 +303,10 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="heat_loss" label="heat_loss" initialization="constant">
-          <constant>0</constant> <!-- for initialization --> 
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0</constant> 
+          </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
       </PropertyModels>
