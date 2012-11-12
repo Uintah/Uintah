@@ -320,16 +320,6 @@ namespace Wasatch{
 //      }
     }
     
-    Uintah::ProblemSpecP pressureParams = wasatchParams->findBlock("Pressure");
-    Uintah::SolverParameters* sparams = 
-      linSolver_->readParameters(pressureParams, "", sharedState_ );
-#if 0
-    linSolver_->readParameters(pressureParams,"ImplicitPressure",sharedState_);
-#endif
-    sparams->setSolveOnExtraCells( false );
-
-    delete sparams;
-
     //
     std::string timeIntegrator;
     wasatchParams->get("TimeIntegrator",timeIntegrator);
