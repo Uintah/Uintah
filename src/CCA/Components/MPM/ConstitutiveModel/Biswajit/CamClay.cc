@@ -67,10 +67,14 @@
 using namespace std;
 using namespace Uintah;
 
+
+//__________________________________
+//  To turn on debug flags
+//  csh/tcsh : setenv SCI_DEBUG "cout_CC:+".....
+//  bash     : export SCI_DEBUG="cout_CC:+" )
+//  default is OFF
+
 static DebugStream cout_CC("SSEP",false);
-static DebugStream cout_CC1("SSEP1",false);
-static DebugStream CSTi("SSEPi",false);
-static DebugStream CSTir("SSEPir",false);
 
 CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -141,7 +145,7 @@ void CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","cam_clay");
+    cm_ps->setAttribute("type","camclay");
   }
   
   d_eos->outputProblemSpec(cm_ps);
@@ -600,7 +604,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       
       // Calculate yield function
       double ftrial = d_yield->evalYieldCondition(state);
-      //double p_old = p; double q_old = q; double pc_old = pc_n; double f_old = ftrial;
+      double p_old = p; double q_old = q; double pc_old = pc_n; double f_old = ftrial;
 
       small = 1.0e-8; // **WARNING** Should not be hard coded (use d_tol)
      
@@ -718,20 +722,26 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
             if (isnan(p)) {
               ostringstream desc;
-              desc << "idx = " << idx << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
-                   << " p = " << p << endl;
+              desc << "idx = " << idx << " k = " << klocal 
+                   << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
+                   << " p = " << p << " q = " << q << " pc = " << pc << " f = " << fyield << endl;
+              desc << " rf = " << rf << " rv = " << rv << " rs = " << rs << endl;
               throw InvalidValue(desc.str(), __FILE__, __LINE__);
             }
             if (isnan(q)) {
               ostringstream desc;
-              desc << "idx = " << idx << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
-                   << " q = " << q << endl;
+              desc << "idx = " << idx << " k = " << klocal 
+                   << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
+                   << " p = " << p << " q = " << q << " pc = " << pc << " f = " << fyield << endl;
+              desc << " rf = " << rf << " rv = " << rv << " rs = " << rs << endl;
               throw InvalidValue(desc.str(), __FILE__, __LINE__);
             }
             if (isnan(pc)) {
               ostringstream desc;
-              desc << "idx = " << idx << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
-                   << " pc = " << pc << endl;
+              desc << "idx = " << idx << " k = " << klocal 
+                   << " epse_v = " << state->epse_v << " epse_s = " << state->epse_s
+                   << " p = " << p << " q = " << q << " pc = " << pc << " f = " << fyield << endl;
+              desc << " rf = " << rf << " rv = " << rv << " rs = " << rs << endl;
               throw InvalidValue(desc.str(), __FILE__, __LINE__);
             }
 
@@ -753,13 +763,27 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
             // save old residuals
             double rf_old = rf;
+            //double rv_old = rv;
+            //double rs_old = rs;
 
             // update residual
             rv = strain_elast_v - strain_elast_v_tr + delgamma*dfdp;
             rs = strain_elast_s - strain_elast_s_tr + delgamma*dfdq;
             rf = fyield;
 
-            if (fabs(rf) > fabs(rf_old)) {
+            if (cout_CC.active()) {
+              // if (idx == 83) {
+              cout_CC << "idx = " << idx << " k = " << klocal  
+                        << " rv = " << rv << " rs = " << rs << " rf = " << rf << " rf_old = " << rf_old 
+                        << " fmax = " << fmax << endl;
+              cout_CC << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
+                        << " tolr = " << tolr << " tolf = " << tolf << endl;
+              cout_CC << " pqpc = [" << p << " " << q << " " << pc << "]" 
+                        << " pqpc_old = [" << p_old << " " << q_old << " " << pc_old << "]" 
+                        << " fold = " << f_old << endl;
+              cout_CC << " epsv = " << strain_elast_v << " epss = " << strain_elast_s << " f = " << fyield << endl;
+            }
+            if ((fabs(rf) > fabs(rf_old)) || fabs(rf-rf_old) > fmax) {
               //std::cout << "idx = " << idx << " rf = " << rf << " rf_old = " << rf_old << endl;
               do_line_search = true;
               delvoldev[0] *= 0.5;

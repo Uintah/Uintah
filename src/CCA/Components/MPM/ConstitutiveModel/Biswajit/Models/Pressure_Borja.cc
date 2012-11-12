@@ -65,10 +65,10 @@ void Pressure_Borja::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP eos_ps = ps->appendChild("pressure_model");
   eos_ps->setAttribute("type","borja_pressure");
 
-  ps->appendElement("p0",d_p0);
-  ps->appendElement("alpha",d_alpha);
-  ps->appendElement("kappatilde",d_kappatilde);
-  ps->appendElement("epse_v0",d_epse_v0);
+  eos_ps->appendElement("p0",d_p0);
+  eos_ps->appendElement("alpha",d_alpha);
+  eos_ps->appendElement("kappatilde",d_kappatilde);
+  eos_ps->appendElement("epse_v0",d_epse_v0);
 }
 
 //////////
