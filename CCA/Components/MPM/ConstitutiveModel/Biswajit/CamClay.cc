@@ -70,11 +70,11 @@ using namespace Uintah;
 
 //__________________________________
 //  To turn on debug flags
-//  csh/tcsh : setenv SCI_DEBUG "cout_CC:+".....
-//  bash     : export SCI_DEBUG="cout_CC:+" )
+//  csh/tcsh : setenv SCI_DEBUG "CamClay:+".....
+//  bash     : export SCI_DEBUG="CamClay:+" )
 //  default is OFF
 
-static DebugStream cout_CC("SSEP",false);
+static DebugStream cout_CC("CamClay",false);
 
 CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -772,7 +772,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
             rf = fyield;
 
             if (cout_CC.active()) {
-              // if (idx == 83) {
+            if (idx == 9) {
               cout_CC << "idx = " << idx << " k = " << klocal  
                         << " rv = " << rv << " rs = " << rs << " rf = " << rf << " rf_old = " << rf_old 
                         << " fmax = " << fmax << endl;
@@ -783,7 +783,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
                         << " fold = " << f_old << endl;
               cout_CC << " epsv = " << strain_elast_v << " epss = " << strain_elast_s << " f = " << fyield << endl;
             }
-            if ((fabs(rf) > fabs(rf_old)) || fabs(rf-rf_old) > fmax) {
+            }
+            if ((fabs(rf) > fabs(rf_old)) || (rf < 0.0 && fabs(rf-rf_old) > fmax)) {
               //std::cout << "idx = " << idx << " rf = " << rf << " rf_old = " << rf_old << endl;
               do_line_search = true;
               delvoldev[0] *= 0.5;
