@@ -340,7 +340,9 @@ namespace Wasatch{
   {
     const Expr::Tag momTag = mom_tag( momName );
     const Expr::Tag rhsFull( momTag.name() + "_rhs_full", Expr::STATE_NONE );
-    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, pressure_tag(), rhs_part_tag(momTag) ) );
+    bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
+    
+    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) ) );
   }
 
   //==================================================================
@@ -351,6 +353,7 @@ namespace Wasatch{
                              const std::string momName,
                              const Expr::Tag densTag,
                              const Expr::Tag bodyForceTag,
+                             const Expr::Tag srcTermTag,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
@@ -467,7 +470,7 @@ namespace Wasatch{
         new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
                                                   cfxt, cfyt, cfzt,
                                                   tauxt, tauyt, tauzt, densityTag_,
-                                                  bodyForceTag ) );
+                                                  bodyForceTag, srcTermTag ) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
 
@@ -482,51 +485,55 @@ namespace Wasatch{
 
     //__________________
     // pressure
-    if( !factory.have_entry( pressure_tag() ) ){
-      Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
-      
-      bool usePressureRefPoint = false;
-      double refPressureValue = 0.0;
-      SCIRun::IntVector refPressureLocation(0,0,0);
-      if (pressureParams->findBlock("ReferencePressure")) {
-        usePressureRefPoint = true;
-        Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");
-        refPressureParams->getAttribute("value", refPressureValue);
-        refPressureParams->get("ReferenceCell", refPressureLocation);
-      }
-      
-      bool use3DLaplacian = true;
-      pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
-      
-      solverParams_ = linSolver.readParameters( pressureParams, "",
-                                               sharedState );
-      solverParams_->setSolveOnExtraCells( false );
-      solverParams_->setUseStencil4( true );
-      solverParams_->setOutputFileName( "WASATCH" );      
-      
-      // if pressure expression has not be registered, then register it
-      Expr::Tag fxt, fyt, fzt;
-      if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
-      if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
-      if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
+    bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
 
-      const StringNames& sName = StringNames::self();
-      const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
-
-      Expr::TagList ptags;
-      ptags.push_back( pressure_tag() );
-      ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-      const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
+    if (enablePressureSolve) {
+      if( !factory.have_entry( pressure_tag() ) ){
+        Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
+        
+        bool usePressureRefPoint = false;
+        double refPressureValue = 0.0;
+        SCIRun::IntVector refPressureLocation(0,0,0);
+        if (pressureParams->findBlock("ReferencePressure")) {
+          usePressureRefPoint = true;
+          Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");
+          refPressureParams->getAttribute("value", refPressureValue);
+          refPressureParams->get("ReferenceCell", refPressureLocation);
+        }
+        
+        bool use3DLaplacian = true;
+        pressureParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
+        
+        solverParams_ = linSolver.readParameters( pressureParams, "",
+                                                 sharedState );
+        solverParams_->setSolveOnExtraCells( false );
+        solverParams_->setUseStencil4( true );
+        solverParams_->setOutputFileName( "WASATCH" );
+        
+        // if pressure expression has not be registered, then register it
+        Expr::Tag fxt, fyt, fzt;
+        if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
+        if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
+        if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
+        
+        const StringNames& sName = StringNames::self();
+        const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
+        
+        Expr::TagList ptags;
+        ptags.push_back( pressure_tag() );
+        ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
+        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
                                                                                        d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *solverParams_, linSolver);
-      proc0cout << "PRESSURE: " << std::endl
-          << pbuilder->get_computed_field_tags() << std::endl;
-      pressureID_ = factory.register_expression( pbuilder );
-      factory.cleave_from_children( pressureID_ );
-      factory.cleave_from_parents ( pressureID_ );
-    }
-    else {
-      pressureID_ = factory.get_id( pressure_tag() );
+        proc0cout << "PRESSURE: " << std::endl
+        << pbuilder->get_computed_field_tags() << std::endl;
+        pressureID_ = factory.register_expression( pbuilder );
+        factory.cleave_from_children( pressureID_ );
+        factory.cleave_from_parents ( pressureID_ );
+      }
+      else {
+        pressureID_ = factory.get_id( pressure_tag() );
+      }
     }
   }
 
