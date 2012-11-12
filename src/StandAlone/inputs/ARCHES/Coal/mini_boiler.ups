@@ -5423,7 +5423,7 @@
         <upper>[2.0,0.84,1.0]</upper>
         <resolution>[200,84,100]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[6,4,5]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
     </Level>
   </Grid>
@@ -5582,9 +5582,15 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model label="abskp" type="absorption_coefficient" initialization="constant"/>
-        <model type="heat_loss" label="heat_loss" initialization="constant">
-          <constant>0</constant> <!-- for initialization --> 
+        <model label="abskp" type="absorption_coefficient">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+        </model>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
       </PropertyModels>

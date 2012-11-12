@@ -31,8 +31,15 @@
                                                                           absorption_coefficient, 
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
-                                                                          heat_loss'"
-                                        attribute3="initialization REQUIRED STRING 'constant'">
+                                                                          heat_loss'">
+
+          <initialization               spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant'">
+
+            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant"/>
+
+          </initialization>
+
 
           <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
@@ -121,8 +128,7 @@
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"
                                         need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
           <constant_heat_loss           spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"
-                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant --> 
+                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant.  Uses the intialization value (or field) --> 
                                           
         </model>
       </PropertyModels>

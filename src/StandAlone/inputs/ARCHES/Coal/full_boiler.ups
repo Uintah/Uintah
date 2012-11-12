@@ -10063,7 +10063,10 @@
       </TimeIntegrator>
 
       <PropertyModels>
-        <model label="abskp" type="absorption_coefficient" initialization="constant">
+        <model label="abskp" type="absorption_coefficient">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
         </model>
       </PropertyModels>
       
