@@ -76,6 +76,7 @@ namespace Wasatch{
                                const std::string momName,
                                const Expr::Tag densTag,
                                const Expr::Tag bodyForceTag,
+                               const Expr::Tag srcTermTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,

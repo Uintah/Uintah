@@ -582,19 +582,31 @@
         
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
+      <DisablePressureSolve   spec="OPTIONAL NO_DATA" />    
+      
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
       <Z-Velocity             spec="OPTIONAL STRING" />
       <X-Momentum             spec="OPTIONAL STRING" />
       <Y-Momentum             spec="OPTIONAL STRING" />
       <Z-Momentum             spec="OPTIONAL STRING" />
+
+      <!-- Specify a source term. This has units of kg / (m^2 . s^2) -->      
+      <SourceTerm             spec="MULTIPLE NO_DATA">
+        <Direction            spec="REQUIRED STRING 'X,Y,Z'" />                               
+        <NameTag              spec="REQUIRED" />
+      </SourceTerm>            
+
+      <!-- Specify a body force. This has units of m / s^2 and will be multiplied by the density -->
       <BodyForce              spec="MULTIPLE NO_DATA">
         <Direction            spec="REQUIRED STRING 'X,Y,Z'" />                               
         <NameTag              spec="REQUIRED" />
       </BodyForce>      
+      
       <Viscosity              spec="OPTIONAL NO_DATA">
         <NameTag              spec="REQUIRED" />
       </Viscosity>
+      
       <Pressure                             spec="OPTIONAL NO_DATA">
           <!-- Specify whether Wasatch should use a reference point or not. Set the ref pressure value and the ref cell IJK location. -->
           <!-- NOTE: the Reference pressure is turned off by default. If you don't want to use it, simply do NOT include the following block. -->   
@@ -622,7 +634,6 @@
           </Parameters>
       </Pressure>
     </MomentumEquations>
-
 
     <!-- ======================================================================== -->
     <!-- POISSON EQUATION                                                         -->

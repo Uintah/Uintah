@@ -313,6 +313,18 @@ namespace Wasatch{
       if (bodyForceDir == "Z") zBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
     }
 
+    // parse source expression
+    std::string srcTermDir;
+    Expr::Tag xSrcTermTag, ySrcTermTag, zSrcTermTag;
+    for( Uintah::ProblemSpecP srcTermParams=params->findBlock("SourceTerm");
+        srcTermParams != 0;
+        srcTermParams=srcTermParams->findNextBlock("SourceTerm") ){
+      srcTermParams->get("Direction", srcTermDir );
+      if (srcTermDir == "X") xSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
+      if (srcTermDir == "Y") ySrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
+      if (srcTermDir == "Z") zSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
+    }
+    
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
 
@@ -330,6 +342,7 @@ namespace Wasatch{
                                       xmomname,
                                       densityTag,
                                       xBodyForceTag,
+                                      xSrcTermTag,
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       turbParams,
@@ -349,6 +362,7 @@ namespace Wasatch{
                                      ymomname,
                                      densityTag,
                                      yBodyForceTag,
+                                     ySrcTermTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
@@ -368,6 +382,7 @@ namespace Wasatch{
                                      zmomname,
                                      densityTag,
                                      zBodyForceTag,
+                                     zSrcTermTag,
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
