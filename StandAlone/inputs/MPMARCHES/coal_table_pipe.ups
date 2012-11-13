@@ -292,7 +292,7 @@
           <initialization type="constant">
             <constant>0</constant> 
           </initialization>
-          <constant_heat_loss value="0.0"/>
+          <constant_heat_loss/>
         </model>
       </PropertyModels>
 
