@@ -117,7 +117,7 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[512,512,2]</resolution>
-        <patches>[2,2,1]</patches>
+        <patches>[4,4,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
