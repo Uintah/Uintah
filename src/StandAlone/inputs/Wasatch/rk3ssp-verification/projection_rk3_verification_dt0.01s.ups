@@ -1,0 +1,140 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Momentum Test with Taylor-Green Vortex MMS</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="x-mom" state="STATE_N" />
+      <VelocityX amplitude="1.0" viscosity="0.0">
+        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityX>
+    </TaylorVortexMMS>
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="XSVOL" state="STATE_NONE" />    
+      <NameTag name="YSVOL" state="STATE_NONE" />                
+      <NameTag name="XXVOL" state="STATE_NONE" />    
+      <NameTag name="XYVOL" state="STATE_NONE" />
+      <NameTag name="YXVOL" state="STATE_NONE" />    
+      <NameTag name="YYVOL" state="STATE_NONE" />      
+    </ForceOnGraph>
+
+    <!-- Set the initial condition for y-momentum -->
+    <TaylorVortexMMS type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="y-mom" state="STATE_N" />
+      <VelocityY amplitude="1.0" viscosity="0.0" >
+        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityY>
+    </TaylorVortexMMS>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.001</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  100    </maxiterations>
+            <relax_type> 2 </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>10</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+    <max_Timesteps> 1 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>projection_rk3_verification_dt0.01s.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="u"/>
+    <save label="v"/>
+    <save label="pressure"/>
+    <save label="XSVOL"/>
+    <save label="YSVOL"/>    
+    <save label="XXVOL"/>
+    <save label="XYVOL"/>    
+    <save label="YXVOL"/>
+    <save label="YYVOL"/>        
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[512,512,2]</resolution>
+        <patches>[2,2,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
