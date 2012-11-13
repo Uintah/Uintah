@@ -101,7 +101,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
     <delt_max>0.01</delt_max>
-    <max_Timesteps> 1 </max_Timesteps>            
+    <max_Timesteps> 2 </max_Timesteps>            
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -110,7 +110,7 @@
     <filebase>projection_rk3_verification_dt0.01s.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -131,7 +131,7 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[512,512,2]</resolution>
-        <patches>[2,2,1]</patches>
+        <patches>[4,4,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
