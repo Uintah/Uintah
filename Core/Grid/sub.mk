@@ -50,7 +50,8 @@ SRCS += \
         $(SRCDIR)/Level.cc                 \
         $(SRCDIR)/LinearInterpolator.cc    \
         $(SRCDIR)/Material.cc              \
-        $(SRCDIR)/GIMPInterpolator.cc    \
+        $(SRCDIR)/GIMPInterpolator.cc      \
+        $(SRCDIR)/AxiGIMPInterpolator.cc   \
         $(SRCDIR)/PatchRangeTree.cc        \
         $(SRCDIR)/Patch.cc                 \
         $(SRCDIR)/Region.cc                \
