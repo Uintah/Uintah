@@ -20,9 +20,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */#include <CCA/Components/MPM/AMRMPM.h>
+ */
+#include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
@@ -102,6 +104,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   flags->d_maxGridLevel = 1000;
 
   d_SMALL_NUM_MPM=1e-200;
+  contactModel   = 0;
   NGP     = -9;
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
@@ -124,13 +127,15 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 AMRMPM::~AMRMPM()
 {
   delete lb;
+  delete flags;
+//  delete contactModel;  // deleted in SerialMPM.cc
+  
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
   
   if (d_one_matl->removeReference())
     delete d_one_matl;
   
-  delete flags;
   for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
     delete d_refine_geom_objs[i];
   }
@@ -242,6 +247,10 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGP=2;
     NGN=2;
   }
+  
+  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, mat_ps,sharedState,lb,flags);
+  cout << " contactModel: " << contactModel << endl;
+  
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
   // Gimp Interpolation:    2 layers
@@ -1079,6 +1088,10 @@ void AMRMPM::scheduleRefine(const PatchSet* patches,
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
   }
+  
+  if(flags->d_artificial_viscosity){
+    t->computes(lb->p_qLabel);
+  }
 
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
@@ -1352,6 +1365,10 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           }
         }
       }  // End of particle loop
+      
+      // gvelocity and gtemperature are divided by gmass in 
+      // AMRMPM::Nodal_velocity_temperature() task
+      
     }  // End loop over materials
     delete interpolator;
   }  // End loop over patches
@@ -2199,6 +2216,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(gacceleration,  lb->gAccelerationLabel, dwi, patch);
 
       gacceleration.initialize(Vector(0.,0.,0.));
+      double damp_coef = flags->d_artificialDampCoeff;
       gvelocity_star.initialize(Vector(0.,0.,0.));
 
       for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
@@ -2207,6 +2225,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         Vector acc(0,0,0);
         if (gmass[n] > flags->d_min_mass_for_acceleration){
           acc = (internalforce[n] + externalforce[n])/gmass[n];
+          acc -= damp_coef * gvelocity[n];
         }
         gacceleration[n]  = acc +  gravity;
         gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
