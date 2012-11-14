@@ -27,6 +27,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/GIMPInterpolator.h>
+#include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
 #include <Core/Grid/fastCpdiInterpolator.h>
@@ -289,8 +290,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_interpolator = scinew LinearInterpolator();
     d_8or27 = 8;
   } else if(d_interpolator_type=="gimp"){
-    d_interpolator = scinew GIMPInterpolator();
-    d_8or27 = 27;
+    if(d_axisymmetric){
+      d_interpolator = scinew AxiGIMPInterpolator();
+      d_8or27 = 18;
+    } else{
+      d_interpolator = scinew GIMPInterpolator();
+      d_8or27 = 27;
+    }
   } else if(d_interpolator_type=="cpgimp"){
     d_interpolator = scinew GIMPInterpolator();
     d_8or27 = 27;
