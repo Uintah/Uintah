@@ -117,7 +117,8 @@ namespace Wasatch{
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      const Uintah::PatchSet* const localPatches,
                                      const PatchInfoMap& patchInfoMap,
-                                     const Uintah::MaterialSubset* const materials )
+                                     const Uintah::MaterialSubset* const materials,
+                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {}
 
   //------------------------------------------------------------------
@@ -127,7 +128,8 @@ namespace Wasatch{
   setup_boundary_conditions( const GraphHelper& graphHelper,
                              const Uintah::PatchSet* const localPatches,
                              const PatchInfoMap& patchInfoMap,
-                             const Uintah::MaterialSubset* const materials)
+                             const Uintah::MaterialSubset* const materials,
+                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
                              {}
 
   //------------------------------------------------------------------

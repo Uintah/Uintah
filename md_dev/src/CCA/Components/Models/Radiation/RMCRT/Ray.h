@@ -132,7 +132,7 @@ namespace Uintah{
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
-                          int &face);
+                          vector<int> &boundaryFaces);
 
 
       //__________________________________
@@ -180,8 +180,9 @@ namespace Uintah{
       double _abskg_thld;
       
        
-      int    _NoOfRays;
-      int    _NoRadRays;
+      int    _NoOfRays;                      // number of rays per cell used to compute divQ
+      int    _NoRadRays;                     // number of rays per radiometer used to compute radiative flux
+      int    _NoOfFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       

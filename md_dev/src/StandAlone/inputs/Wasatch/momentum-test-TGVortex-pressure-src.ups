@@ -1,0 +1,180 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Momentum Test with Taylor-Green Vortex and analytical pressure source term</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+
+	<TimeIntegrator>FE</TimeIntegrator>
+	
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="psrcx" state="STATE_NONE" />
+      <GradPX amplitude="1.0" viscosity="0.001">
+        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+      </GradPX>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="psrcy" state="STATE_NONE" />
+      <GradPY amplitude="1.0" viscosity="0.001">
+        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+      </GradPY>
+    </TaylorVortexMMS>
+
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="psrcx" state="STATE_NONE" />    
+      <NameTag name="psrcy" state="STATE_NONE" />
+    </ForceOnGraph>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="psrcx" state="STATE_NONE" />
+      <GradPX amplitude="1.0" viscosity="0.001">
+        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+      </GradPX>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="psrcy" state="STATE_NONE" />
+      <GradPY amplitude="1.0" viscosity="0.001">
+        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+      </GradPY>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="x-mom" state="STATE_N" />
+      <VelocityX amplitude="1.0" viscosity="0.001">
+        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityX>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition for y-momentum -->
+    <TaylorVortexMMS type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="y-mom" state="STATE_N" />
+      <VelocityY amplitude="1.0" viscosity="0.001" >
+        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityY>
+    </TaylorVortexMMS>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.001</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <DisablePressureSolve/>
+      <SourceTerm>
+        <Direction>X</Direction>
+        <NameTag name="psrcx" state="STATE_NONE" />
+      </SourceTerm>
+      <SourceTerm>
+        <Direction>Y</Direction>
+        <NameTag name="psrcy" state="STATE_NONE" />
+      </SourceTerm>
+
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-13  </tolerance>
+            <maxiterations>  1000    </maxiterations>
+            <relax_type> 2 </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>momentum-test-TGVortex-pressure-src.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="psrcx"/>    
+    <save label="psrcy"/>        
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[64,64,2]</resolution>
+        <patches>[2,2,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

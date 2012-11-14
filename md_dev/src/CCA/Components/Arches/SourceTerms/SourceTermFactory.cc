@@ -14,6 +14,7 @@
 #include <CCA/Components/Arches/SourceTerms/WasatchExprSource.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
+#include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -256,6 +257,11 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
           
         //Allows any arbitrary wasatch expression to be used as a source, as long as ForceOnGraph is used and expression is saved in data archiver
         SourceTermBase::Builder* srcBuilder = scinew WasatchExprSource::Builder( src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if ( src_type == "pc_transport" ) { 
+
+        SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, shared_state ); 
         factory.register_source_term( src_name, srcBuilder );
 
       } else {

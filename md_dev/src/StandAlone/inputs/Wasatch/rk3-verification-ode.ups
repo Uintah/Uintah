@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Test scalar transport equations on each mesh (scalar, x,y,z staggered)</title>
+    <title>RK3SSP test using dphi/dt = phi </title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -21,6 +21,7 @@
     </BasicExpression>
     
      <TimeIntegrator>RK3SSP</TimeIntegrator>
+     
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -37,7 +38,7 @@
     </BasicExpression>
 
 
-    <!-- Build a non-staggered scalar transport equation -->
+    <!-- Build a cell centered scalar transport equation -->
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
@@ -60,7 +61,7 @@
 
 
   <Time>
-    <maxTime>2</maxTime>
+    <maxTime>4</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.1</delt_min>
     <delt_max>0.1</delt_max>
@@ -71,7 +72,7 @@
 
   <Grid>
     <Level>
-      <Box label="1">
+      <Box label="domain">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[2,2,2]</resolution>

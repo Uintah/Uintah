@@ -7,7 +7,7 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-      <set_initial_vel_condition             spec="OPTIONAL NO_DATA"
+      <set_initial_vel_condition        spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
           
       <set_initial_condition             spec="OPTIONAL NO_DATA"
@@ -31,8 +31,15 @@
                                                                           absorption_coefficient, 
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
-                                                                          heat_loss'"
-                                        attribute3="initialization REQUIRED STRING 'constant'">
+                                                                          heat_loss'">
+
+          <initialization               spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant'">
+
+            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant"/>
+
+          </initialization>
+
 
           <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
@@ -121,8 +128,7 @@
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"
                                         need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
           <constant_heat_loss           spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"
-                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant --> 
+                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant.  Uses the intialization value (or field) --> 
                                           
         </model>
       </PropertyModels>
@@ -651,7 +657,8 @@
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
-                                                                           wasatch_expr'">                                                           
+                                                                           wasatch_expr,
+                                                                           pc_transport'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -700,6 +707,20 @@
               <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
               <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
             </DORadiationModel>
+
+            <!-- pc transport --> 
+            <pc_scal_file                spec="REQUIRED STRING" need_applies_to="type pc_transport"/> <!-- ..... --> 
+            <pc_st_scal_file             spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <svm_model_base_name         spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <n_pcs                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_sts                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_ind                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_tot                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <pc                          spec="MULTIPLE NO_DATA" 
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="score_number REQUIRED INTEGER"
+                                         need_applies_to="type pc_transport"/>
+
             
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
@@ -722,6 +743,7 @@
               <VRLocationsMin            spec="OPTIONAL VECTOR 'positive'"/>
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
               <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
+              <NoOfFluxRays              spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>

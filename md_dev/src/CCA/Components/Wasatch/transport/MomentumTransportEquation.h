@@ -76,6 +76,7 @@ namespace Wasatch{
                                const std::string momName,
                                const Expr::Tag densTag,
                                const Expr::Tag bodyForceTag,
+                               const Expr::Tag srcTermTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
@@ -100,7 +101,8 @@ namespace Wasatch{
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials);
+                                            const Uintah::MaterialSubset* const materials,
+                                            const std::map<std::string, std::set<std::string> >& bcFunctorMap);
 
 
     /**
@@ -109,7 +111,8 @@ namespace Wasatch{
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials);
+                                    const Uintah::MaterialSubset* const materials,
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap);
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */

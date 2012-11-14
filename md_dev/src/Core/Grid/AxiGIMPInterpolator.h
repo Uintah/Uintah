@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef NODE27_INTERPOLATOR_H
-#define NODE27_INTERPOLATOR_H
+#ifndef AXI_GIMP_INTERPOLATOR_H
+#define AXI_GIMP_INTERPOLATOR_H
 
 #include <Core/Grid/ParticleInterpolator.h>
 
@@ -31,15 +31,15 @@ namespace Uintah {
 
   class Patch;
 
-  class Node27Interpolator : public ParticleInterpolator {
+  class AxiGIMPInterpolator : public ParticleInterpolator {
     
   public:
     
-    Node27Interpolator();
-    Node27Interpolator(const Patch* patch);
-    virtual ~Node27Interpolator();
+    AxiGIMPInterpolator();
+    AxiGIMPInterpolator(const Patch* patch);
+    virtual ~AxiGIMPInterpolator();
     
-    virtual Node27Interpolator* clone(const Patch*);
+    virtual AxiGIMPInterpolator* clone(const Patch*);
     
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
                                     vector<double>& S, const Matrix3& size, const Matrix3& defgrad);

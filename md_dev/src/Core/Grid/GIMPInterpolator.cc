@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/GIMPInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
@@ -32,28 +32,28 @@ using namespace SCIRun;
 using namespace Uintah;
 
     
-Node27Interpolator::Node27Interpolator()
+GIMPInterpolator::GIMPInterpolator()
 {
   d_size = 27;
   d_patch = 0;
 }
 
-Node27Interpolator::Node27Interpolator(const Patch* patch)
+GIMPInterpolator::GIMPInterpolator(const Patch* patch)
 {
   d_size = 27;
   d_patch = patch;
 }
     
-Node27Interpolator::~Node27Interpolator()
+GIMPInterpolator::~GIMPInterpolator()
 {
 }
 
-Node27Interpolator* Node27Interpolator::clone(const Patch* patch)
+GIMPInterpolator* GIMPInterpolator::clone(const Patch* patch)
 {
-  return scinew Node27Interpolator(patch);
+  return scinew GIMPInterpolator(patch);
 }
     
-void Node27Interpolator::findCellAndWeights(const Point& pos,
+void GIMPInterpolator::findCellAndWeights(const Point& pos,
                                             vector<IntVector>& ni, 
                                             vector<double>& S,
                                             const Matrix3& size,
@@ -192,7 +192,7 @@ void Node27Interpolator::findCellAndWeights(const Point& pos,
 
 }
  
-void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
+void GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
                                                      vector<Vector>& d_S,
                                                      const Matrix3& size,
@@ -364,7 +364,7 @@ void Node27Interpolator::findCellAndShapeDerivatives(const Point& pos,
 }
 
 void 
-Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+GIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
@@ -564,7 +564,7 @@ Node27Interpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
 }
 
-int Node27Interpolator::size()
+int GIMPInterpolator::size()
 {
   return d_size;
 }
