@@ -1706,6 +1706,60 @@ We recently implemented the moment transport equation in Wasatch with the
  We also added three growth rate models; namely, constant growth, mono-surface
  nucleation, and bulk diffusion to illustrate the ease with which new growth
  models can be implemented.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+SOME OLD STUFF...
+\end_layout
+
+\begin_layout Section
+Basic CFD Algorithm using Expression Graphs
+\end_layout
+
+\begin_layout Plain Layout
+Wasatch is currently able to solve the momentum equations in three dimensional
+ space with periodic boundary conditions using the graph-based algorithm.
+ An example problem that uses two dimensional
+\end_layout
+
+\begin_layout Subsection
+Improved Boundary Conditions Support
+\end_layout
+
+\begin_layout Plain Layout
+We have recently revisited the boundary conditions processing in Wasatch.
+ The user/developer has the flexibility of automatically specifying Dirichlet
+ or Neumann boundary conditions on any field type (Scalar, Staggered) and
+ any expression used in the solution process.
+ Furthermore, the boundary condition functionality is now fully templated
+ on the type of field.
+ This allows for partial and full specialization for fields that require
+ specific treatment such as normal stresses.
+\end_layout
+
+\begin_layout Section
+Runge-Kutta Time Integrator
+\end_layout
+
+\begin_layout Plain Layout
+There is currently a working version of a third order, strong stability
+ preserving Runge-Kutta integrator.
+ There are two problems to be resolved as of this writing, one pertaining
+ to the pressure projection on multi-patch problems while the other has
+ to do with field memory management at various integrator stages.
+ An abstraction for multistage integrators is in order to address these
+ problems as well as provide support for higher order time integrators in
+ the future.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -1744,7 +1798,7 @@ key "oberkampf_verification_2010"
  It can be generally defined as
 \begin_inset Formula 
 \begin{equation}
-E=\left|\phi_{\mathrm{exact}}-\phi_{\mathrm{numerical}}\right|,\label{eq:wasatch-total-error}
+E=\left|\phi_{\mathrm{exact}}-\phi_{\mathrm{numerical}}\right|,
 \end{equation}
 
 \end_inset
@@ -1901,57 +1955,22 @@ tion method.
 \end_layout
 
 \begin_layout Section
-Common Approaches for Order-of-Accuracy Calculation
+Order-of-Accuracy in a Single Dimension
 \end_layout
 
 \begin_layout Standard
-There are two key approaches to estimating the order of accuracy of a given
- implementation.
- The first requires an exact solution and requires at least two mesh refinements
- while the second is based on Richardson extrapolation and requires at least
- three mesh refinements.
- The latter, however, does not require an analytical solution to estimate
- the truncation error.
-\end_layout
-
-\begin_layout Subsection
-Using and Exact Solution
-\end_layout
-
-\begin_layout Standard
-When an exact solution is available, the error is readily available as shown
- in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "eq:wasatch-total-error"
-
+To solve for 
+\begin_inset Formula $p$
 \end_inset
 
-.
- Using 
+ in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "eq:total-error-one-d"
 
 \end_inset
 
-, there are two unknowns (
-\begin_inset Formula $\alpha$
-\end_inset
-
- and 
-\begin_inset Formula $p$
-\end_inset
-
-) and therefore one needs two equations to solve for 
-\begin_inset Formula $p$
-\end_inset
-
- (and 
-\begin_inset Formula $\alpha$
-\end_inset
-
-).
+, one needs two equations.
  With knowledge of an exact solution, a test problem can be setup and solved
  on two different grid spacings, 
 \begin_inset Formula $\Delta x_{1}$
@@ -1974,16 +1993,25 @@ E_{2}= & \alpha\Delta x_{2}^{p}
 
 \end_inset
 
-These equations can be easily solved by taking their ratio
+These equations can be easily solved by taking the difference of their logarithm
+s.
+ One recovers
 \begin_inset Formula 
 \begin{equation}
-\frac{E_{1}}{E_{2}}=\left(\frac{\Delta x_{1}}{\Delta x_{2}}\right)^{p}=r_{x}^{p}.
+\ln E_{1}-\ln E_{2}=p\ln\Delta x_{1}-p\ln\Delta x_{2}
 \end{equation}
 
 \end_inset
 
-Finally, by taking the logarithm of the former equation, the observed order
- of accuracy is at hand
+or
+\begin_inset Formula 
+\begin{equation}
+\ln\frac{E_{1}}{E_{2}}=p\ln\frac{\Delta x_{1}}{\Delta x_{2}}=p\ln r_{x}
+\end{equation}
+
+\end_inset
+
+finally, the observed order of accuracy is at hand
 \begin_inset Formula 
 \begin{equation}
 p=\frac{\ln\frac{E_{1}}{E_{2}}}{\ln r_{x}}.
@@ -1991,32 +2019,27 @@ p=\frac{\ln\frac{E_{1}}{E_{2}}}{\ln r_{x}}.
 
 \end_inset
 
+A word of caution must be said about temporal order of accuracy analysis.
+ Many people think that by taking 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+??? 
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
 \begin_layout Standard
-This method is usually well suited for ODEs or for PDEs when one is after
- the dominant error source.
- The method can be extended for combined order analysis but requires the
- solution of a nonlinear system of equations and at least seven mesh refinement
- levels 
-\begin_inset CommandInset citation
-LatexCommand citep
-before "see"
-key "oberkampf_verification_2010"
-
-\end_inset
-
-.
- A more convenient method uses Richardson's extrapolation and does not require
- an analytical solution.
+It is easiest to first determine the temporal order of accuracy of a transient
+ CFD code.
+ As discussed in the previous paragraph
 \end_layout
 
-\begin_layout Subsection
-Using Richardson's Extrapolation
-\end_layout
-
-\begin_layout Subsection
+\begin_layout Section
 Combined Spatio-Temporal Order-of-Accuracy Analysis
 \end_layout
 
@@ -2036,13 +2059,13 @@ This excludes all terms that have mixed orders in them.
 Order-of-Accuracy Verification in Wasatch
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Temporal Order of Accuracy
 \end_layout
 
 \begin_layout Standard
-Wasatch currently entertains both forward Euler (FE) and third-order Rungue-Kutt
-a strong stability preserving (RK3SSP) time integrators.
+Wasatch currently entertains both forward Euler (FE) and 3rd order Rungue-Kutta
+ strong stability preserving (RK3SSP) time integrators.
  To verify the temporal order of accuracy of these integrators, an ODE test
  was designed.
  In the first, we solve an ODE with a time dependent source term.
@@ -2067,8 +2090,22 @@ a strong stability preserving (RK3SSP) time integrators.
 
 \end_layout
 
+\begin_layout Standard
+Written in discretized form, this leads to
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+need to finish this...
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
-ODE with Time-Dependent Source Term
+Time-Dependent Source Term
 \end_layout
 
 \begin_layout Standard
@@ -2097,14 +2134,14 @@ The analytical solution for this case is
 \begin_layout Standard
 The tests varied over a time interval of 1 second with systematic mesh refinemen
 t.
- The results for both the FE and the RK3SSP are shown in the table below.
+ The results for both the FE and the RK3SSP are shown in the table below
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float table
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -2598,7 +2635,7 @@ Observed Order
 \end_layout
 
 \begin_layout Paragraph
-ODE with Implicit Source Term
+Implicit Source Term
 \end_layout
 
 \begin_layout Standard
@@ -2610,45 +2647,13 @@ In this verification test, we solve the following ODE
 
 \end_inset
 
-The exact solution is given by
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{equation}
-\Phi=e^{t}
-\end{equation}
-
-\end_inset
-
 
 \end_layout
 
 \begin_layout Standard
-Being a time-dependent ODE with no spatial variation, the mesh resolution
- is set to [2, 2, 2] in Wasatch to reduce computational time.
- The code is run with both FE and RK3 time integrators with 6 refinement
- levels (or a total of 7 tests) starting with 
-\begin_inset Formula $\Delta t_{0}=0.1\mathrm{s}$
-\end_inset
-
- with a refinement ratio of 
-\begin_inset Formula $r_{t}=2$
-\end_inset
-
- (recall that 
-\begin_inset Formula $r_{t}\equiv\frac{\Delta t_{i}}{\Delta t_{i+1}}$
-\end_inset
-
- where 
-\begin_inset Formula $\Delta t_{i}$
-\end_inset
-
- and 
-\begin_inset Formula $\Delta t_{i+1}$
-\end_inset
-
- correspond to the coarse and fine meshes, respectively).
+Since this is an ODE, the spatial resolution is set to [2, 2, 2] in Wasatch.
+ The code is run with both FE and RK3 time integrators at several time-steps
+ ranging from
 \end_layout
 
 \begin_layout Standard
@@ -3200,10 +3205,6 @@ Observed Order
 \end_layout
 
 \begin_layout Paragraph
-Pressure Projection with Taylor-Green Vortex
-\end_layout
-
-\begin_layout Subsection
 Spatial Order of Accuracy
 \end_layout
 
