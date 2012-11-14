@@ -44,7 +44,11 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                   \
+  ("projection_rk3_verification_dt0.01s",      "rk3ssp-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
+  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
+  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                                \
+  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                     \
+  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                  \
   ("read-from-file-test",   "read-from-file-test.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                   \
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -90,12 +94,16 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("read-from-file-test",   "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
-  ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
-  ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),               \
+  ("projection_rk3_verification_dt0.01s",      "rk3ssp-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
+  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
+  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                \
+  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),                     \
+  ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),                \
+  ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                                 \
+  ("channel-flow-symmetry-bc",                 "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                            \
+  ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                \
+  ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),         \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \

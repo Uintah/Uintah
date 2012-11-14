@@ -375,6 +375,8 @@ protected:
 
 private:
 
+  MaterialSubset* d_one_matl;         // matlsubset for zone of influence
+
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);

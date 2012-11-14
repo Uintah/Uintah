@@ -12,6 +12,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <sci_defs/uintah_defs.h>
 #ifdef HAVE_RADPROPS
 #include <radprops/AbsCoeffGas.h>
 #include <radprops/RadiativeSpecies.h>
@@ -45,6 +46,7 @@ namespace Uintah {
             _calculator = scinew BurnsChriston(); 
           } else if ( calculator_type == "radprops" ){
 #ifdef HAVE_RADPROPS
+            std::cout << "going to allocated a radprops interface " << std::endl;
             _calculator = scinew RadPropsInterface(); 
 #else
             throw InvalidValue("Error: You haven't configured with RADPROPS!.",__FILE__,__LINE__);

@@ -2,7 +2,6 @@
 #______________________________________________________________________
 # run:  This shell script
 #         - runs a component's test
-#         - set locks if a component's tests fails.
 # environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $WEBLOG $LOCAL_OR_NIGHTLY_TEST $WHICH_TEST
 
 mode=$1
@@ -118,27 +117,18 @@ fi
 cd TestScripts
 
 #__________________________________
-# Setting or removing component locks
+# 
 if [ $retval = "0" ]; then
   echo "Passed: ${componentTest}-${mode} tests! "
 
-  # It was successful, so it can remove the lock
-  if [ -d "${BUILD_DIR}/${componentTest}-${mode}.lock" ]; then
-      rm "${BUILD_DIR}/${componentTest}-${mode}.lock"
-  fi
 elif [ $retval = "3" ]; then
   echo "Skipped: ${componentTest}-$mode tests"
 else
   echo "Failed: ${componentTest}-${mode} tests"
-  if [ ! -d "${BUILD_DIR}/${componentTest}-${mode}.lock" ]; then
-    ln -s "$BUILDROOT" "${BUILD_DIR}/${componentTest}-${mode}.lock" > /dev/null 2>&1
-  fi
   if [ -f "${BUILDROOT}/${mode}/${componentTest}-short.log" ]; then
     cat "${BUILDROOT}/${mode}/${componentTest}-short.log"
   fi
   failed=1
 fi
-
-
 
 exit $failed

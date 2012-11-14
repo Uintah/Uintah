@@ -987,6 +987,38 @@ namespace Wasatch{
         
         ++taskNameIter;
       }
+    }    
+    
+    //___________________________________________________
+    // parse and build initial conditions for moment transport
+    int nEnv = 0;
+    if (parser->findBlock("MomentTransportEquation")) {
+      parser->findBlock("MomentTransportEquation")->get( "NumberOfEnvironments", nEnv );
+    }
+    int nEqs = 2*nEnv; // we need the number of equations so that we only build the necessary number of moments for initialization
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("MomentInitialization");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("MomentInitialization") ){
+
+      std::string populationName;
+      
+      exprParams->get("PopulationName", populationName);
+      std::vector<double> initialMoments;
+      
+      exprParams->get("Values", initialMoments, nEqs); // get only the first nEqs moments
+      
+      assert( (int) initialMoments.size() == nEqs );
+      
+      const int nMoments = initialMoments.size();
+      typedef Expr::ConstantExpr<SVolField>::Builder Builder;
+      GraphHelper* const graphHelper = gc[INITIALIZATION];
+      for (int i=0; i<nMoments; i++) {
+        double val = initialMoments[i];
+        std::stringstream ss;
+        ss << i;
+        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_N);
+        graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
+      }
     }
   }
 

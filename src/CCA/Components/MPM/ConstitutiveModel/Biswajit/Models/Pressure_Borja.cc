@@ -65,10 +65,10 @@ void Pressure_Borja::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP eos_ps = ps->appendChild("pressure_model");
   eos_ps->setAttribute("type","borja_pressure");
 
-  ps->appendElement("p0",d_p0);
-  ps->appendElement("alpha",d_alpha);
-  ps->appendElement("kappatilde",d_kappatilde);
-  ps->appendElement("epse_v0",d_epse_v0);
+  eos_ps->appendElement("p0",d_p0);
+  eos_ps->appendElement("alpha",d_alpha);
+  eos_ps->appendElement("kappatilde",d_kappatilde);
+  eos_ps->appendElement("epse_v0",d_epse_v0);
 }
 
 //////////
@@ -191,6 +191,7 @@ Pressure_Borja::computePressure(const double& rho_orig,
   double epse_v = J - 1.0;
 
   pressure = evalPressure(epse_v, 0.0);
+  //std::cout << "J = " << J << " epse_v = " << epse_v << " pressure = " << pressure << endl;
   double K = computeBulkModulus(rho_orig, rho_cur);
   csquared = K/rho_cur;
   dp_drho = - J*csquared;
@@ -227,8 +228,9 @@ double
 Pressure_Borja::computeDensity(const double& rho_orig,
                                const double& pressure)
 {
-  if (pressure > 0.0) return rho_orig;
+  if (pressure >= 0.0) return rho_orig;
   double denom = 1.0 + d_epse_v0 - d_kappatilde*log(pressure/d_p0);
+  //std::cout << "rho_orig = " << rho_orig << " pressure = " << pressure << " denom = " << denom << endl;
   double rho = rho_orig/denom;
   return rho;
 }
@@ -256,7 +258,6 @@ Pressure_Borja::evalPressure(const double& epse_v, const double& epse_s) const
 {
   double beta = 1.0 + 1.5*(d_alpha/d_kappatilde)*(epse_s*epse_s);
   double p = d_p0*beta*exp(-(epse_v - d_epse_v0)/d_kappatilde);
-  // std::cout << "beta = " << beta << " epse_v = " << epse_v << " p = " << p << endl;
 
   return p;
 }

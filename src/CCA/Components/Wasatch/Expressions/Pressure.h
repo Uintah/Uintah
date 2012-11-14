@@ -76,7 +76,7 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
+  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_;
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
@@ -87,13 +87,14 @@ class Pressure
   const SCIRun::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
   
-  const Uintah::SolverParameters& solverParams_;
+  Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
   const Uintah::VarLabel* matrixLabel_;
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
   const double* timestep_;
+  const double* currenttime_;
 
   const SVolField* dilatation_;
   const SVolField* d2rhodt2_;
@@ -133,7 +134,7 @@ class Pressure
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
             const bool       use3dlaplacian,
-            const Uintah::SolverParameters& solverParams,
+            Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
 public:
@@ -144,7 +145,7 @@ public:
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
-    const Uintah::SolverParameters& sparams_;
+    Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
     Builder( const Expr::TagList& result,
@@ -158,7 +159,7 @@ public:
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
              const bool       use3DLaplacian,            
-             const Uintah::SolverParameters& sparams,
+             Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}
     Expr::ExpressionBase* build() const;

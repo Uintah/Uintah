@@ -45,58 +45,61 @@
  */
 template< typename FieldT>
 class ExprAlgebra
- : public Expr::Expression<FieldT>
+: public Expr::Expression<FieldT>
 {
 public:
-   enum OperationType{
-     SUM,
-     DIFFERENCE,
-     PRODUCT
-   };
-
+  enum OperationType{
+    SUM,
+    DIFFERENCE,
+    PRODUCT
+  };
+  
 public:
-   class Builder : public Expr::ExpressionBuilder
-   {
-   public:
-     /**
-      *  @brief Build a ExprAlgebra expression.  Note that this should
-      *   only be used for initialization or post-processing - not in
-      *   performance critical operations.
-      *
-      *  @param resultTag the tag for the value that this expression computes
-      *
-      *  @param src1Tag the tag to hold the value of the first source field
-      *
-      *  @param src2Tag the tag to hold the value of the second source field
-      *
-      *  @param algebraicOperation selects the operation to apply
-      */
-      Builder( const Expr::Tag& resultTag,
-              Expr::TagList srcTagList,
-              const OperationType algebraicOperation );
-
-      Expr::ExpressionBase* build() const;
-
-   private:
-      const Expr::TagList srcTagList_;
-      const OperationType algebraicOperation_;
-   };
-
-   ~ExprAlgebra();
-   void advertise_dependents( Expr::ExprDeps& exprDeps );
-   void bind_fields( const Expr::FieldManagerList& fml );
-   void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
-   void evaluate();
-
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    /**
+     *  @brief Build a ExprAlgebra expression.  Note that this should
+     *   only be used for initialization or post-processing - not in
+     *   performance critical operations.
+     *
+     *  @param resultTag the tag for the value that this expression computes
+     *
+     *  @param src1Tag the tag to hold the value of the first source field
+     *
+     *  @param src2Tag the tag to hold the value of the second source field
+     *
+     *  @param algebraicOperation selects the operation to apply
+     */
+    Builder( const Expr::Tag& resultTag,
+            Expr::TagList srcTagList,
+            const OperationType algebraicOperation,
+            const bool isModifierExpr=false);
+    
+    Expr::ExpressionBase* build() const;
+    
+  private:
+    const Expr::TagList srcTagList_;
+    const OperationType algebraicOperation_;
+    const bool isModifierExpr_;
+  };
+  
+  ~ExprAlgebra();
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
+  void evaluate();
+  
 private:
-   const Expr::TagList srcTagList_;
-   typedef std::vector<const FieldT*> FieldTVec;
-   FieldTVec srcFields_;
-   
-   const OperationType algebraicOperation_;
-
-   ExprAlgebra( Expr::TagList srcTagList,
-               const OperationType algebraicOperation );
+  const Expr::TagList srcTagList_;
+  typedef std::vector<const FieldT*> FieldTVec;
+  FieldTVec srcFields_;
+  
+  const OperationType algebraicOperation_;
+  const bool isModifierExpr_;
+  ExprAlgebra( Expr::TagList srcTagList,
+              const OperationType algebraicOperation,
+              const bool isModifierExpr);
 };
 
 
@@ -112,10 +115,12 @@ private:
 template< typename FieldT >
 ExprAlgebra<FieldT>::
 ExprAlgebra( const Expr::TagList srcTagList,
-             const OperationType algebraicOperation )
-  : Expr::Expression<FieldT>(),
-    srcTagList_ (srcTagList),
-    algebraicOperation_( algebraicOperation )
+            const OperationType algebraicOperation,
+            const bool isModifierExpr)
+: Expr::Expression<FieldT>(),
+  srcTagList_ (srcTagList),
+  algebraicOperation_( algebraicOperation ),
+  isModifierExpr_( isModifierExpr )
 {}
 
 //--------------------------------------------------------------------
@@ -132,11 +137,11 @@ void
 ExprAlgebra<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-   for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
-       iSrcTag!=srcTagList_.end();
-       ++iSrcTag ){
-      exprDeps.requires_expression( *iSrcTag );
-   }
+  for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
+      iSrcTag!=srcTagList_.end();
+      ++iSrcTag ){
+    exprDeps.requires_expression( *iSrcTag );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -145,14 +150,14 @@ template< typename FieldT >
 void
 ExprAlgebra<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
-{   
-   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-   srcFields_.clear();
-   for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
-       iSrcTag!=srcTagList_.end();
-       ++iSrcTag ){
-      srcFields_.push_back( &fm.field_ref(*iSrcTag) );
-   }
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  srcFields_.clear();
+  for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
+      iSrcTag!=srcTagList_.end();
+      ++iSrcTag ){
+    srcFields_.push_back( &fm.field_ref(*iSrcTag) );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -164,9 +169,11 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
-  if (algebraicOperation_ == PRODUCT) result <<= 1.0;
-    
+  if (!isModifierExpr_) {
+    result <<= 0.0;
+    if (algebraicOperation_ == PRODUCT) result <<= 1.0;
+  }
+  
   typename std::vector<const FieldT*>::const_iterator srcFieldsIter = srcFields_.begin();
   while (srcFieldsIter != srcFields_.end()) {
     switch( algebraicOperation_ ){
@@ -184,11 +191,13 @@ evaluate()
 template< typename FieldT >
 ExprAlgebra<FieldT>::
 Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::TagList srcTagList,
-                  const OperationType algebraicOperation )
-  : ExpressionBuilder( resultTag ),
-    srcTagList_( srcTagList ),
-    algebraicOperation_( algebraicOperation )
+                 const Expr::TagList srcTagList,
+                 const OperationType algebraicOperation,
+                 const bool isModifierExpr)
+: ExpressionBuilder( resultTag ),
+srcTagList_( srcTagList ),
+algebraicOperation_( algebraicOperation ),
+isModifierExpr_( isModifierExpr )
 {}
 
 //--------------------------------------------------------------------
@@ -198,7 +207,7 @@ Expr::ExpressionBase*
 ExprAlgebra<FieldT>::
 Builder::build() const
 {
-  return new ExprAlgebra<FieldT>( srcTagList_,algebraicOperation_ );
+  return new ExprAlgebra<FieldT>( srcTagList_,algebraicOperation_,isModifierExpr_ );
 }
 
 //====================================================================

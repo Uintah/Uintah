@@ -160,11 +160,9 @@ getBCKind( const Patch* patch,
 
   if (bc != 0) {
     bc_kind  = bc->getBCType__NEW();
+    face_label = bc->getBCFaceName(); 
     delete bc;
   }
-
-  face_label = bc->getBCFaceName(); 
-
 }  
 
 } // uintah namespace

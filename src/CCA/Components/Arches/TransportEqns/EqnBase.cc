@@ -123,8 +123,8 @@ void
 EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
 {
 
-	std::string taskname = "EqnBase::tableInialization";
-  Task* tsk = scinew Task(taskname, this, &EqnBase::tableInialization); 
+	std::string taskname = "EqnBase::tableInitialization";
+  Task* tsk = scinew Task(taskname, this, &EqnBase::tableInitialization); 
 
 	MixingRxnModel::VarMap ivVarMap = _table->getIVVars();
 
@@ -150,7 +150,7 @@ EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
 }
 
 void 
-EqnBase::tableInialization(const ProcessorGroup* pc, 
+EqnBase::tableInitialization(const ProcessorGroup* pc, 
                  const PatchSubset* patches, 
                  const MaterialSubset* matls, 
                  DataWarehouse* old_dw, 
@@ -210,5 +210,9 @@ EqnBase::tableInialization(const ProcessorGroup* pc,
 			eqn_var[c] = _table->getTableValue( iv, d_init_dp_varname, inert_mixture_fractions, c ); 
 
 		}
+
+    //recompute the BCs
+    computeBCsSpecial( patch, d_eqnName, eqn_var );
+
 	}
 }

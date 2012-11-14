@@ -190,7 +190,7 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
-
+    
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -238,8 +238,38 @@ namespace Wasatch{
 #     endif
     }
 
+    // PARSE BC FUNCTORS
+    Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
+    if (bcParams) {
+      for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
+          faceBCParams != 0;
+          faceBCParams=faceBCParams->findNextBlock("BCType") ){
+        
+        for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
+            bcTypeParams != 0;
+            bcTypeParams=bcTypeParams->findNextBlock("BCType") ){
+          std::string functorName;
+          if ( bcTypeParams->get("functor_name",functorName) ) {
+            
+            std::string phiName;
+            bcTypeParams->getAttribute("label",phiName);
+            std::cout << "functor applies to " << phiName << std::endl;
+            
+            std::map< std::string,std::set<std::string> >::iterator iter = bcFunctorMap_.find(phiName);
+            // check if we already have an entry for phiname
+            if ( iter != bcFunctorMap_.end() ) {
+              (*iter).second.insert(functorName);
+            } else if ( iter == bcFunctorMap_.end() ) {
+              std::set<std::string> functorSet;
+              functorSet.insert(functorName);
+              bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );
+            }
+          }          
+        }
+      }
+    }
 
-    // ADD BLOCK FOR IO FIELDS
+    // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
         saveLabelParams != 0;
@@ -281,25 +311,15 @@ namespace Wasatch{
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      if ( (linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
-        std::ostringstream msg;
-        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-        << std::endl;
-        throw std::runtime_error( msg.str() );
-      }
+//      if ( (linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
+//        std::ostringstream msg;
+//        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
+//        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+//        << std::endl;
+//        throw std::runtime_error( msg.str() );
+//      }
     }
     
-    Uintah::ProblemSpecP pressureParams = wasatchParams->findBlock("Pressure");
-    Uintah::SolverParameters* sparams = 
-      linSolver_->readParameters(pressureParams, "", sharedState_ );
-#if 0
-    linSolver_->readParameters(pressureParams,"ImplicitPressure",sharedState_);
-#endif
-    sparams->setSolveOnExtraCells( false );
-
-    delete sparams;
-
     //
     std::string timeIntegrator;
     wasatchParams->get("TimeIntegrator",timeIntegrator);
@@ -527,7 +547,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion());
+          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -697,7 +717,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion());
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion(),bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

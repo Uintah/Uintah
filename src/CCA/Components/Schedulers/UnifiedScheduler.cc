@@ -173,7 +173,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
       taskQueueAlg_ = PatchOrderRandom;
   }
   if (d_myworld->myrank() == 0) {
-    cout << "   Using \"" << taskQueueAlg << "\" Algorithm" << endl;
+    cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << endl;
   }
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
@@ -192,8 +192,12 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
-         << "\tCreating " << numThreads_ << " threads for task execution." << endl;
+    if (numThreads_ < 0) {
+      cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << endl;
+    } else {
+      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
+           << "\tCreating " << numThreads_ << " thread(s) for task execution." << endl;
+    }
   }
 
 //  d_nextsignal = scinew ConditionVariable("NextCondition");

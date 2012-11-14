@@ -44,6 +44,8 @@
 #include <CCA/Components/Wasatch/transport/ScalarTransportEquation.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
+#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
@@ -419,9 +421,11 @@ namespace Wasatch {
   template< typename FieldT >
   MomentTransportEquation<FieldT>::
   MomentTransportEquation( const std::string thisPhiName,
-                          const Expr::ExpressionID rhsID )
+                          const Expr::ExpressionID rhsID,
+                          Uintah::ProblemSpecP params)
   : Wasatch::TransportEquation( thisPhiName, rhsID,
-                                get_staggered_location<FieldT>() )
+                                get_staggered_location<FieldT>(),
+                                params)
   {}
 
   //------------------------------------------------------------------
@@ -437,8 +441,22 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_id( Expr::Tag( this->solution_variable_name(),
-                                                      Expr::STATE_N ) );
+    Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
+                                 Expr::STATE_N );
+    if (hasVolFrac_) {
+      //create modifier expression
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(volFracTag_);
+      //theTagList.push_back(phiTag);
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_modifier", Expr::STATE_NONE);
+      icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+                                                  theTagList,
+                                                  ExprAlgbr::PRODUCT, true ) );
+      // attach the modifier expression to the target expression
+      icFactory.attach_modifier_expression( modifierTag, phiTag );
+    }
+    return icFactory.get_id( phiTag );
   }
 
   //------------------------------------------------------------------
@@ -448,7 +466,8 @@ namespace Wasatch {
   setup_initial_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials)
+                            const Uintah::MaterialSubset* const materials,
+                            const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
@@ -459,7 +478,7 @@ namespace Wasatch {
                                           graphHelper,
                                           localPatches,
                                           patchInfoMap,
-                                          materials );
+                                          materials, bcFunctorMap );
     }
 
   }
@@ -471,7 +490,8 @@ namespace Wasatch {
   setup_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials)
+                            const Uintah::MaterialSubset* const materials,
+                            const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
 
     // see BCHelperTools.cc
@@ -482,7 +502,7 @@ namespace Wasatch {
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials );
+                                        materials, bcFunctorMap );
   }
 
   //------------------------------------------------------------------

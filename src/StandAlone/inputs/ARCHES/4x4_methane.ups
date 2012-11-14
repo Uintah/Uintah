@@ -9,7 +9,7 @@
   <Solver type="hypre"/>
 
   <Time>
-    <maxTime>.10</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
@@ -31,7 +31,7 @@
     <save label="mixture_fraction"/>
     <save label="enthalpy"/>
     <save label="scalarVarSP"/>
-    <save label="heatLoss"/>
+    <save label="heat_loss"/>
     <save label="areaFraction"/>
 
     <!-- properties --> 
@@ -57,14 +57,14 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[3,4,4]</upper>
-        <resolution>[25,50,50]</resolution>
+        <resolution>[15,25,25]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[1,2,2]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
     </Level>
     <BoundaryConditions>
       <!-- Secondary, Co-Flow Inlet --> 
-      <Face side="x-">
+      <Face side="x-" name="coflow">
         <!-- Momentum BCs --> 
         <BCType id="0" label="co-flow inlet" var="MassFlowInlet">
           <value>1.204</value>
@@ -76,17 +76,17 @@
         <BCType id="0" label="heat_loss" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Dirichlet">
+        <BCType id="0" label="normalizedScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy" var="Dirichlet">
-          <value>-112.327</value> <!-- Pure oxidizer enthalpy --> 
+        <BCType id="0" label="enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
         <!-- Other BCs --> 
       </Face>
       <!-- Bottom Annular Ring -->
-      <Face annulus="x-" origin="0.0 2.0 2.0" inner_radius="0.5" outer_radius="1.01">
+      <Face annulus="x-" origin="0.0 2.0 2.0" inner_radius="0.5" outer_radius="1.01" name="annulus">
         <!-- Momentum BCs --> 
         <BCType id="0" label="annular ring" var="WallBC">
           <value>0.0</value>
@@ -98,7 +98,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -108,7 +108,7 @@
         <!-- Other BCs --> 
       </Face>
       <!-- Primary Flow Inlet --> 
-      <Face circle="x-" origin="0.0 2.0 2.0" radius="0.5">
+      <Face circle="x-" origin="0.0 2.0 2.0" radius="0.5" name="primary">
         <!-- Momentum BCs --> 
         <BCType id="0" label="primary inlet" var="MassFlowInlet">
           <value>0.0990</value>
@@ -120,12 +120,12 @@
         <BCType id="0" label="heat_loss" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Dirichlet">
+        <BCType id="0" label="normalizedScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy" var="Dirichlet">
-          <value>-4.65039e+06</value> <!-- Pure fuel enthalpy --> 
+        <BCType id="0" label="enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value> <!-- Pure fuel enthalpy --> 
         </BCType>
         <!-- Other BCs --> 
       </Face>
@@ -142,7 +142,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -162,7 +162,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -182,7 +182,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -202,7 +202,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -223,7 +223,7 @@
         <BCType id="0" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="scalar_variance" var="Neumann">
+        <BCType id="0" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
@@ -251,7 +251,6 @@
         <Eqn label="mixture_fraction" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <determines_properties/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>false</addSources>
           <initialization type="constant">
@@ -265,7 +264,6 @@
         <Eqn label="enthalpy" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <use_density_guess/>
           <conv_scheme>super_bee</conv_scheme>
           <addSources>true</addSources>
           <initialization type="constant">
@@ -279,12 +277,12 @@
             <soot_label>soot</soot_label>
             <abskp_label>absorpIN</abskp_label>
             <DORadiationModel>
-              <opl>3.0</opl>
+              <opl>.01</opl>
               <LinearSolver type="hypre">
                   <res_tol>1.0e-10</res_tol>
                   <ksptype>gmres</ksptype>
                   <pctype>jacobi</pctype>
-                  <max_iter>175</max_iter>
+                  <max_iter>275</max_iter>
               </LinearSolver>
             </DORadiationModel>
           </src>
@@ -292,10 +290,21 @@
       </TransportEqns>
 
       <PropertyModels> 
+        <model label="heat_loss" type="heat_loss" initialization="constant">
+          <constant>0.0</constant>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
         <model label="soot" type="empirical_soot" initialization="constant"> 
           <carbon_content_fuel>.75</carbon_content_fuel> 
-          <carbon_content_ox>0.0</carbon_content_ox> 
-          <E_st>1.1</E_st>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <C1>0.1</C1>
+          <E_cr>1.0</E_cr>
+          <E_inf>2.0</E_inf>
+          <E_st>0.25</E_st>
+          <soot_density>1950</soot_density>
+          <density_label>density</density_label>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
         </model> 
       </PropertyModels> 
 

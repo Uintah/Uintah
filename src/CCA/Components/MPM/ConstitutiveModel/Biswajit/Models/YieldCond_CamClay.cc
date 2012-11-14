@@ -47,7 +47,7 @@ YieldCond_CamClay::~YieldCond_CamClay()
 void YieldCond_CamClay::outputProblemSpec(Uintah::ProblemSpecP& ps)
 {
   ProblemSpecP yield_ps = ps->appendChild("plastic_yield_condition");
-  yield_ps->setAttribute("type","camclay");
+  yield_ps->setAttribute("type","camclay_yield_function");
   yield_ps->appendElement("M",d_M);
 
 }
@@ -67,6 +67,19 @@ YieldCond_CamClay::evalYieldCondition(const ModelState* state)
 }
 
 //--------------------------------------------------------------
+// Evaluate yield condition max (q = state->q
+//                               p = state->p
+//                               p_c = state->p_c)
+//--------------------------------------------------------------
+double 
+YieldCond_CamClay::evalYieldConditionMax(const ModelState* state)
+{
+  double p_c = state->p_c;
+  double qmax = fabs(0.5*d_M*p_c);
+  return qmax*qmax/(d_M*d_M);
+}
+
+//--------------------------------------------------------------
 // Derivatives needed by return algorithms and Newton iterations
 
 //--------------------------------------------------------------
@@ -76,6 +89,7 @@ YieldCond_CamClay::evalYieldCondition(const ModelState* state)
 double 
 YieldCond_CamClay::computeVolStressDerivOfYieldFunction(const ModelState* state)
 {
+  // std::cout << " p = " << state->p << " pc = " << state->p_c << " dfdp = " << 2*state->p-state->p_c << endl;
   return (2.0*state->p - state->p_c);
 }
 

@@ -39,16 +39,18 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& tauY,
             const Expr::Tag& tauZ,
             const Expr::Tag& densityTag,
-            const Expr::Tag& bodyForce )
+            const Expr::Tag& bodyForceTag,
+            const Expr::Tag& srcTermTag)
   : Expr::Expression<FieldT>(),
-    cfluxXt_   ( convFluxX   ),
-    cfluxYt_   ( convFluxY   ),
-    cfluxZt_   ( convFluxZ   ),
-    tauXt_     ( tauX        ),
-    tauYt_     ( tauY        ),
-    tauZt_     ( tauZ        ),
-    densityt_  ( densityTag  ),
-    bodyForcet_( bodyForce   ),
+    cfluxXt_   ( convFluxX    ),
+    cfluxYt_   ( convFluxY    ),
+    cfluxZt_   ( convFluxZ    ),
+    tauXt_     ( tauX         ),
+    tauYt_     ( tauY         ),
+    tauZt_     ( tauZ         ),
+    densityt_  ( densityTag   ),
+    bodyForcet_( bodyForceTag ),
+    srcTermt_  ( srcTermTag   ),
     emptyTag_  ( Expr::Tag() )
 {}
 
@@ -74,6 +76,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   if( tauZt_   != emptyTag_ )  exprDeps.requires_expression( tauZt_   );
   exprDeps.requires_expression( densityt_);
   if( bodyForcet_!=emptyTag_)  exprDeps.requires_expression( bodyForcet_);
+  if( srcTermt_!=emptyTag_  )  exprDeps.requires_expression( srcTermt_  );
 }
 
 //--------------------------------------------------------------------
@@ -98,6 +101,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   density_ = &fml.field_manager<SVolField>().field_ref( densityt_ );
 
   if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fml.field_manager<FieldT>().field_ref( bodyForcet_ );
+  if( srcTermt_ != emptyTag_   )  srcTerm_   = &fml.field_manager<FieldT>().field_ref( srcTermt_   );
 }
 
 //--------------------------------------------------------------------
@@ -160,6 +164,10 @@ evaluate()
     densityInterpOp_->apply_to_field( *density_, *tmp );
     result <<= result + *tmp * *bodyForce_;
   }
+  
+  if( srcTermt_ != emptyTag_ ){
+    result <<= result + *srcTerm_;
+  }
 
 }
 
@@ -175,16 +183,18 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
                   const Expr::Tag& densityTag,
-                  const Expr::Tag& bodyForce )
+                  const Expr::Tag& bodyForceTag,
+                  const Expr::Tag& srcTermTag)
   : ExpressionBuilder(result),
-    cfluxXt_   ( convFluxX  ),
-    cfluxYt_   ( convFluxY  ),
-    cfluxZt_   ( convFluxZ  ),
-    tauXt_     ( tauX       ),
-    tauYt_     ( tauY       ),
-    tauZt_     ( tauZ       ),
-    densityt_  ( densityTag ),
-    bodyForcet_( bodyForce  )
+    cfluxXt_   ( convFluxX    ),
+    cfluxYt_   ( convFluxY    ),
+    cfluxZt_   ( convFluxZ    ),
+    tauXt_     ( tauX         ),
+    tauYt_     ( tauY         ),
+    tauZt_     ( tauZ         ),
+    densityt_  ( densityTag   ),
+    bodyForcet_( bodyForceTag ),
+    srcTermt_  ( srcTermTag   )
 {}
 
 //--------------------------------------------------------------------
@@ -193,7 +203,7 @@ template< typename FieldT >
 Expr::ExpressionBase*
 MomRHSPart<FieldT>::Builder::build() const
 {
-  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_ );
+  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_ );
 }
 
 //--------------------------------------------------------------------
