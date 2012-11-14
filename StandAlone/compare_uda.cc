@@ -1273,7 +1273,8 @@ main(int argc, char** argv)
     Thread::exitAll(1);
   }
 
-  int digits_precision = (int)ceil(-log10(rel_tolerance)) + 1;
+  // default to 16 digits of precision when using exact comparison (i.e. rel_tolerance = 0)
+  int digits_precision = (rel_tolerance > 0 ) ? (int)ceil(-log10(rel_tolerance)) + 1 : 16;
   cerr << setprecision(digits_precision);
   cout << setprecision(digits_precision);
 
