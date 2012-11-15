@@ -436,6 +436,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleNodal_velocity_temperature( sched, patches, matls);
+    scheduleExMomInterpolated(          sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -461,6 +462,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+    scheduleExMomIntegrated(                sched, patches, matls);
     scheduleSetGridBoundaryConditions(      sched, patches, matls);
   }
 
@@ -602,6 +604,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gTemperatureLabel);
+  t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalForceLabel);
   
   sched->addTask(t, patches, matls);
@@ -979,6 +982,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
   
   t->requires(Task::OldDW, lb->pXLabel,                            gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                         gnone);
@@ -989,6 +994,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                         gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                       gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  gnone);
+  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,                gnone);
   t->modifies(lb->pVolumeLabel_preReloc);
 
   t->computes(lb->pDispLabel_preReloc);
@@ -1326,12 +1332,14 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gTemperature;
+      NCVariable<double> gTemperatureRate;
 
-      new_dw->allocateAndPut(gmass,            lb->gMassLabel,         dwi,patch);
-      new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,       dwi,patch);
-      new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,     dwi,patch);
-      new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,  dwi,patch);
-      new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,dwi,patch);
+      new_dw->allocateAndPut(gmass,            lb->gMassLabel,           dwi,patch);
+      new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,         dwi,patch);
+      new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,       dwi,patch);
+      new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,    dwi,patch);
+      new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,dwi,patch);
+      new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,  dwi,patch);
       
       
       gmass.initialize(d_SMALL_NUM_MPM);
@@ -1339,6 +1347,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
+      gTemperatureRate.initialize(0);
       
       Vector pmom;
       int n8or27=flags->d_8or27;
@@ -2608,7 +2617,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<Matrix3> psizeNew;
-      constParticleVariable<double> pmass, pvolume, pTemperature;
+      constParticleVariable<double> pmass, pvolume, pTemperature, pdTdt;
       ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
@@ -2618,6 +2627,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Get the arrays of grid data on which the new particle values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
+      constNCVariable<double> gTemperatureRate;
+      constNCVariable<double> dTdt, frictionTempRate;
       double Cp =mpm_matl->getSpecificHeat();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2629,6 +2640,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pvolume,      lb->pVolumeLabel,                    pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
       new_dw->get(pDeformationMeasure,   lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->getModifiable(pvolumeNew,  lb->pVolumeLabel_preReloc,             pset);
       
@@ -2646,6 +2658,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* delset = scinew ParticleSubset(0,dwi,patch);
 
+      //Carry forward ParticleID
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
@@ -2654,6 +2667,20 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,    lb->gVelocityStarLabel,   dwi,patch,gac,NGN);
       new_dw->get(gacceleration,     lb->gAccelerationLabel,   dwi,patch,gac,NGN);
+      new_dw->get(gTemperatureRate,  lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+      new_dw->get(frictionTempRate,  lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
+
+      if(flags->d_with_ice){
+        new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+      }
+      else{
+        NCVariable<double> dTdt_create,massBurnFrac_create;
+        new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        dTdt_create.initialize(0.);
+        dTdt = dTdt_create;                         // reference created data
+      }
+
+
 
       // Loop over particles
       int n8or27=flags->d_8or27;
@@ -2666,6 +2693,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         Vector acc(0.0, 0.0, 0.0); 
         Vector vel(0.0, 0.0, 0.0);
+        double fricTempRate = 0.0;
+        double tempRate = 0.0;
 
         // Accumulate the contribution from vertices on this level
        for(int k = 0; k < n8or27; k++) {
@@ -2673,6 +2702,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           //S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
+          
+          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
+          tempRate += (gTemperatureRate[node] + dTdt[node] + fricTempRate) * S[k];
         }
         
         // Update the particle's position and velocity
@@ -2682,7 +2714,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
-        pTempNew[idx]        = pTemperature[idx];
+        pTempNew[idx]        = pTemperature[idx] + (tempRate+pdTdt[idx])*delT;
         pTempPreNew[idx]     = pTemperature[idx]; //
         pmassNew[idx]        = pmass[idx];
 //        pvolumeNew[idx]      = pvolume[idx];          This will be eventually modified by the burn model
