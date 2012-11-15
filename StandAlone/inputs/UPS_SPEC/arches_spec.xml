@@ -498,7 +498,7 @@
 
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
-        <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
+        <MixtureFractionSolver          spec="OPTIONAL NO_DATA" >
           <initial_value                spec="OPTIONAL DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
           <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>

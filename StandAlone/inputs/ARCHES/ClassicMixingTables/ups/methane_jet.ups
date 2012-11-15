@@ -311,11 +311,6 @@
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
 
-        <MixtureFractionSolver>
-          <convection_scheme>flux_limited</convection_scheme>
-          <limiter_type>upwind</limiter_type>
-        </MixtureFractionSolver>
-
         <EnthalpySolver>
           <convection_scheme>central-upwind</convection_scheme>
           <radiationCalcFreq>5</radiationCalcFreq>

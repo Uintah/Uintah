@@ -211,6 +211,13 @@ public:
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels);
 
+  /** @brief This is a temporary function to allow us to avoid having to specify 
+   * <MixtureFractionSolver> in the input file. **/ 
+  void sched_allocateDummyScalar( SchedulerP& sched, 
+                                   const PatchSet* patches, 
+                                   const MaterialSet* matls, 
+                                   int timesubstep );
+
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
   }
@@ -363,6 +370,13 @@ private:
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
+
+  void allocateDummyScalar(const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           int timesubstep );
 
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };

@@ -128,7 +128,9 @@ ExplicitSolver::~ExplicitSolver()
 {
   delete d_pressSolver;
   delete d_momSolver;
-  delete d_scalarSolver;
+  if ( d_calScalar ){
+    delete d_scalarSolver;
+  }
   delete d_enthalpySolver;
   delete d_eff_calculator; 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -445,6 +447,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    if ( !d_calScalar ){ 
+      sched_allocateDummyScalar( sched, patches, matls, curr_level ); 
+    } 
+
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
     sched_getDensityGuess(sched, patches, matls,
@@ -453,8 +459,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    d_scalarSolver->solve(sched, patches, matls,
-                          d_timeIntegratorLabels[curr_level]);
+    if ( d_calScalar ){ 
+      d_scalarSolver->solve(sched, patches, matls,
+                            d_timeIntegratorLabels[curr_level]);
+    }
 
     EqnFactory& eqn_factory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
@@ -563,7 +571,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
       d_props->sched_averageRKProps(sched, patches, matls,
-                                    d_timeIntegratorLabels[curr_level]);
+                                    d_timeIntegratorLabels[curr_level], d_calScalar);
       d_props->sched_saveTempDensity(sched, patches, matls,
                                      d_timeIntegratorLabels[curr_level]);
       if (d_calcVariance) {
@@ -2834,4 +2842,63 @@ void ExplicitSolver::setInitVelConditionInterface( const Patch* patch,
 
   d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel );
 
+}
+
+void 
+ExplicitSolver::sched_allocateDummyScalar( SchedulerP& sched, 
+                                           const PatchSet* patches, 
+                                           const MaterialSet* matls, 
+                                           int timesubstep )
+{
+  string taskname =  "ExplicitSolver::allocateDummyScalar";
+  Task* tsk = scinew Task( taskname, this,
+                           &ExplicitSolver::allocateDummyScalar,
+                           timesubstep );
+
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  if ( timesubstep == 0 ){ 
+    tsk->modifies( d_lab->d_scalarSPLabel ); 
+    tsk->computes( d_lab->d_scalarDiffusivityLabel);
+    tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
+    tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
+  } 
+
+  sched->addTask(tsk, patches, matls);
+
+}
+
+void
+ExplicitSolver::allocateDummyScalar(const ProcessorGroup* pc,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    int timesubstep )
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->
+                     getArchesMaterial(archIndex)->getDWIndex();
+
+    CCVariable<double> scalar; 
+    CCVariable<double> scalarDiff; 
+    CCVariable<double> scalarDiffSrc; 
+    StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 pt stl
+
+    if ( timesubstep == 0 ){ 
+      new_dw->getModifiable( scalar, d_lab->d_scalarSPLabel, indx, patch ); 
+      new_dw->allocateAndPut( scalarDiff, d_lab->d_scalarDiffusivityLabel, indx, patch ); 
+      new_dw->allocateAndPut( scalarDiffSrc, d_lab->d_scalDiffCoefSrcLabel, indx, patch ); 
+      for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
+        new_dw->allocateAndPut(scalarDiffusionCoeff[ii],
+                             d_lab->d_scalDiffCoefLabel, ii, patch);
+        scalarDiffusionCoeff[ii].initialize(0.0); 
+      }
+      scalar.initialize(0.0); 
+      scalarDiff.initialize(0.0); 
+      scalarDiffSrc.initialize(0.0); 
+    } 
+  }
 }
