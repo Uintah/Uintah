@@ -279,7 +279,7 @@ private:
                                     int step, double time )
   {
 
-                for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter; 
 
