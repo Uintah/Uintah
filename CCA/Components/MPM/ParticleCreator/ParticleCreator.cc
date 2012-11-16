@@ -60,6 +60,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
+  d_computeScaleFactor = flags->d_computeScaleFactor;
 
   d_flags = flags;
 
@@ -876,6 +877,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
+  }
+
+  if (d_computeScaleFactor) {
+    particle_state.push_back(d_lb->pScaleFactorLabel);
+    particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
