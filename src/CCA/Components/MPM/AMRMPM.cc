@@ -285,6 +285,7 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
     MPMMaterial* mat = d_sharedState->getMPMMaterial(i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
+  contactModel->outputProblemSpec(mpm_ps);
 }
 
 //______________________________________________________________________
