@@ -28,7 +28,8 @@ HeatLoss::~HeatLoss( )
 //---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
-void HeatLoss::problemSetup( const ProblemSpecP& inputdb )
+void
+HeatLoss::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
@@ -36,24 +37,24 @@ void HeatLoss::problemSetup( const ProblemSpecP& inputdb )
 
     _constant_heat_loss = true; 
 
-  } else {  
+  } 
+  else {
 
-	  db->require( "enthalpy_label", _enthalpy_label_name ); 
-	  db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
-	  db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
+    db->require( "enthalpy_label", _enthalpy_label_name ); 
+    db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
+    db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
 
-
-	  _low_hl  = -1; 
-	  _high_hl =  1;
-	  if ( db->findBlock( "hl_bounds" ) ) { 
-	  	db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
-	  	db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
+    _low_hl  = -1; 
+    _high_hl =  1;
+    if ( db->findBlock( "hl_bounds" ) ) { 
+      db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
+      db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
     }
 
-	  _noisy_heat_loss = false; 
-	  if ( db->findBlock( "noisy_hl_warning" ) ){ 
-	  	_noisy_heat_loss; 
-	  } 
+    _noisy_heat_loss = false; 
+    if ( db->findBlock( "noisy_hl_warning" ) ){ 
+      _noisy_heat_loss = true;
+    } 
   }
 }
 
