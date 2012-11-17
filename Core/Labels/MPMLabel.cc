@@ -702,6 +702,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pScaleFactorLabel);
+  VarLabel::destroy(pScaleFactorLabel_preReloc);
   VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pSizeLabel);
