@@ -34,6 +34,7 @@
 #include <Core/Util/Handle.h>
 #include <HYPRE_struct_ls.h>
 #include <HYPRE_krylov.h>
+#include <iostream>
 /**
  *  @class  HypreSolver2
  *  @author Steve Parker
@@ -64,6 +65,8 @@ namespace Uintah {
 
 
   struct hypre_solver_struct : public RefCounted {
+    bool created_solver;
+    bool created_precond_solver;
     SolverType solver_type;
     SolverType precond_solver_type;
     HYPRE_StructSolver* solver;
@@ -73,6 +76,10 @@ namespace Uintah {
     HYPRE_StructVector* HX;
     
     hypre_solver_struct() {
+      created_solver=false;
+      created_precond_solver=false;
+      solver_type=smg;
+      precond_solver_type=diagonal;
       solver=0;
       precond_solver=0;
       HA=0;
@@ -80,65 +87,81 @@ namespace Uintah {
       HX=0;
     };
     virtual ~hypre_solver_struct() {
-      HYPRE_StructMatrixDestroy(*HA);
-      HYPRE_StructVectorDestroy(*HB);
-      HYPRE_StructVectorDestroy(*HX);
+      if (created_solver) {
+        HYPRE_StructMatrixDestroy(*HA);
+        HYPRE_StructVectorDestroy(*HB);
+        HYPRE_StructVectorDestroy(*HX);
+      }
+      if (created_solver)
+        switch (solver_type) {
+        case smg:
+          HYPRE_StructSMGDestroy(*solver);
+          break;
+        case pfmg:
+          HYPRE_StructPFMGDestroy(*solver);
+          break;
+        case sparsemsg:
+          HYPRE_StructSparseMSGDestroy(*solver);
+          break;
+        case pcg:
+          HYPRE_StructPCGDestroy(*solver);
+          break;
+        case gmres:
+          HYPRE_StructGMRESDestroy(*solver);
+          break;
+        case jacobi:
+          HYPRE_StructJacobiDestroy(*solver);
+          break;
+        default:
+          throw InternalError("HypreSolver given a bad solver type!", 
+                              __FILE__, __LINE__);
+        }
 
-      switch (solver_type) {
-      case smg:
-        HYPRE_StructSMGDestroy(*solver);
-        break;
-      case pfmg:
-        HYPRE_StructPFMGDestroy(*solver);
-        break;
-      case sparsemsg:
-        HYPRE_StructSparseMSGDestroy(*solver);
-        break;
-      case pcg:
-        HYPRE_StructPCGDestroy(*solver);
-        break;
-      case gmres:
-        HYPRE_StructGMRESDestroy(*solver);
-        break;
-      case jacobi:
-        HYPRE_StructJacobiDestroy(*solver);
-        break;
-      default:
-        throw InternalError("HypreSolver given a bad solver type!", 
-                            __FILE__, __LINE__);
+      if (created_precond_solver)
+        switch (precond_solver_type) {
+        case smg:
+          HYPRE_StructSMGDestroy(*precond_solver);
+          break;
+        case pfmg:
+          HYPRE_StructPFMGDestroy(*precond_solver);
+          break;
+        case sparsemsg:
+          HYPRE_StructSparseMSGDestroy(*precond_solver);
+          break;
+        case pcg:
+          HYPRE_StructPCGDestroy(*precond_solver);
+          break;
+        case gmres:
+          HYPRE_StructGMRESDestroy(*precond_solver);
+          break;
+        case jacobi:
+          HYPRE_StructJacobiDestroy(*precond_solver);
+          break;
+        default:
+          throw InternalError("HypreSolver given a bad solver type!", 
+                              __FILE__, __LINE__);
       }
 
-
-      switch (precond_solver_type) {
-      case smg:
-        HYPRE_StructSMGDestroy(*precond_solver);
-        break;
-      case pfmg:
-        HYPRE_StructPFMGDestroy(*precond_solver);
-        break;
-      case sparsemsg:
-        HYPRE_StructSparseMSGDestroy(*precond_solver);
-        break;
-      case pcg:
-        HYPRE_StructPCGDestroy(*precond_solver);
-        break;
-      case gmres:
-        HYPRE_StructGMRESDestroy(*precond_solver);
-        break;
-      case jacobi:
-        HYPRE_StructJacobiDestroy(*precond_solver);
-        break;
-      default:
-        throw InternalError("HypreSolver given a bad solver type!", 
-                            __FILE__, __LINE__);
+      if (HA) {
+        delete HA;  
+        HA = 0;
       }
-
-      delete HA;  
-      delete HB;  
-      delete HX;  
+      if (HB){
+        delete HB;  
+        HB = 0;
+      }
+      if (HX) {
+        delete HX;  
+        HX = 0;
+      }
+      if (solver) {
       delete solver;
+      solver = 0;
+      }
+      if (precond_solver) {
       delete precond_solver;
-
+      precond_solver = 0;
+      }
     };
   };
 
