@@ -136,13 +136,6 @@ public:
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule dummy solve (data copy) for first time step of MPMArches
-  // to overcome scheduler limitation on getting pset from old_dw
-
-  void sched_dummySolve(SchedulerP& sched,
-                        const PatchSet* patches,
-                        const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the interpolation of velocities from Face Centered Variables
@@ -265,15 +258,6 @@ private:
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
 
-  ///////////////////////////////////////////////////////////////////////
-  // actual data copy for first time step of MPMArches to overcome
-  // scheduler limitation on getting pset from old_dw
-
-  void dummySolve(const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////
   // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
