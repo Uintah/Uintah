@@ -32,6 +32,8 @@
     <save label="temperature"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
+    <save label = "boundFlux" />
+
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
 
@@ -209,6 +211,7 @@
                 <abskg>             999        </abskg>
                 <NoOfRays>          25         </NoOfRays>
                 <Threshold>         0.05       </Threshold>
+                <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <property_calculator type="burns_christon">
              
