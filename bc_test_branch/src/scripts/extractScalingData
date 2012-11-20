@@ -1,0 +1,66 @@
+#!/bin/csh
+#______________________________________________________________________
+#  This script parses the output file from sus and 
+#  generates a data file used for scaling plots
+# 
+#  usage:
+#      extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >
+#  
+#______________________________________________________________________
+
+if ( $#argv < 3 ) then
+  echo "    Usage:  extractScalingData  <sus_output.1, sus_output_2, sus_output_3 >"
+  exit
+endif
+
+#__________________________________
+# DEFAULTS:  Edit these
+set startTimestep = "3"
+set endTimestep   = "50"  # timestep to extract elapsed time from.
+set nThreads      = 1     # number of threads per mpi process.
+#__________________________________
+
+set out = ($argv)
+
+set here = .tmpFiles
+
+/bin/rm  -rf $here  >& /dev/null
+mkdir $here
+touch $here/data
+
+foreach X ( $out[*] )
+
+  grep -q "(timestep $endTimestep)" $X
+  
+  if ($status == 0 ) then
+    echo $X > $here/file
+    grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
+    grep processors $X | awk -v nThreads=$nThreads -F" " '{ print $2*nThreads }' > $here/processors
+    
+    grep "(timestep $startTimestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/startTime
+    grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/endTime
+
+    paste -d " " $here/file $here/processors $here/startTime $here/endTime >> $here/data
+
+    echo "working on $X"
+  else
+    echo "---------------------$X did not run to completion"
+  endif
+  
+end
+#__________________________________
+# compute the average mean time per timestep
+
+@ n = $endTimestep - $startTimestep
+echo " computing average mean time per timestep for $n timesteps"
+echo "#file procs startTime endTime aveMean">$here/data2  
+
+awk -vnSteps=$n '{print ($4-$3)/nSteps}' $here/data >> $here/aveMeanTime
+
+paste -d " " $here/data $here/aveMeanTime >> $here/data2
+sort -n -k2 $here/data2 >scalingData
+
+more scalingData
+
+/bin/rm -rf $here
+exit

@@ -1,0 +1,37 @@
+#!/bin/csh
+#
+#_____________________________________________________________________.
+#   This reports any VarLabels that have been created 
+#    but not destroyed.
+#   usage;    mem_leak_checkVarLabels < output file>
+#_____________________________________________________________________.
+
+set out = $argv
+if ( ($#argv != 1) || (! -e $out ) ) then
+  echo " mem_leak_checkVarLabels   <outputfileName> "
+  exit(1)
+endif
+
+set created   = ( `grep ^"Created VarLabel" $out | cut -f2 -d:` )
+set destroyed = ( `grep ^"Deleted VarLabel" $out | cut -f2 -d:` )
+
+if ( $#created == 0 ) then
+  echo "You must set the environmental variable:"
+  echo  "  csh/tcsh:  setenv SCI_DEBUG VarLabel:+"
+  echo "before you run the input file."
+endif
+echo ""
+
+foreach C ( $created[*] )
+  set found = "false"
+  foreach D ( $destroyed[*] )
+     if ($C == $D) then
+       set found = "true"
+     endif
+   end
+   if ($found == "false") then
+     echo "            <<<  VarLabel ($C) was not deleted >>>"
+   endif
+end
+echo ""
+exit 

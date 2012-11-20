@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Uintah_Include>
+		<density>2700.0</density>
+                <constitutive_model type="elastic_plastic">
+                  <damage_cutoff>0.7</damage_cutoff>
+                  <shear_modulus>26.0e9</shear_modulus>
+                  <bulk_modulus>66.4e9</bulk_modulus>
+                  <yield_condition type="vonMises">
+                  </yield_condition>
+                  <stability_check type="none">
+                  </stability_check>
+                  <flow_model type="johnson_cook">
+                        <A>324.0e6</A>
+                        <B>114.0e6</B>
+                        <C>0.002</C>
+                        <n>0.42</n>
+                        <m>1.34</m>
+                  </flow_model>
+                  <damage_model type="johnson_cook">
+                        <D1>-0.77</D1>
+                        <D2>1.45</D2>
+                        <D3>-0.47</D3>
+                        <D4>0.0</D4>
+                        <D5>1.60</D5>
+                  </damage_model>
+                  <equation_of_state type="mie_gruneisen">
+                        <C_0>5386</C_0>
+                        <Gamma_0>1.99</Gamma_0>
+                        <S_alpha>1.339</S_alpha>
+                  </equation_of_state>
+                  <do_melting>true</do_melting>
+                </constitutive_model>
+                <thermal_conductivity>166.9</thermal_conductivity>
+                <specific_heat>896.0</specific_heat>
+                <room_temp>294.0</room_temp>
+                <melt_temp>925.0</melt_temp>
+</Uintah_Include>

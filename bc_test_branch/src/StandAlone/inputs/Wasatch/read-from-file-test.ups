@@ -1,0 +1,117 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equations on each mesh (scalar, x,y,z staggered)</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-scalar" state="STATE_N" />
+      <ReadFromFile>
+        <FileName>inputs/Wasatch/read-from-file-test-init.dat.gz</FileName>
+      </ReadFromFile>
+    </BasicExpression>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+
+    
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>10</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.1</delt_max>
+    <max_Timesteps> 2 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>read_from_file.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "1" interval = "0.1"/>
+    <save label="phi-scalar" />
+  </DataArchiver> 
+
+  <Grid>
+  
+     <BoundaryConditions>      
+      <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
+      <Face side="x-">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[10,10,10]</upper>
+        <resolution>[4,4,4]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# should have the environmental variables:
+# PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,
+# BUILDROOT, TEST_DATA,HTMLLOG,WEBLOG, SEND_MAIL_TO, REPLY_TO  DO_OPT DO_DBG all set
+
+PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH":/usr/sbin
+export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA COMMON_GROUP
+
+if [ ! -d "$BUILDROOT"/dbg ]; then
+  mkdir "$BUILDROOT"/dbg
+fi
+if [ ! -d "$BUILDROOT"/opt ]; then
+  mkdir "$BUILDROOT"/opt
+fi
+
+failed=0
+dbg_failed=0
+opt_failed=0
+
+dbg_passFail="passed"
+opt_passFail="passed"
+use_html=1
+
+#remove files from previous tests if necessary
+rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
+
+
+#if VERBOSE is on, then have all output go to stdout instead of log
+
+#__________________________________
+# debug tests
+if [ "$DO_DBG" = "1" ]; then
+  echo "" >> "$HTMLLOG"
+  echo "/--------------------------\\" >> "$HTMLLOG"
+  echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
+  echo "\\--------------------------/" >> "$HTMLLOG"
+
+  # compile and run
+  if [ $VERBOSE = "yes" ]; then
+    build_and_run "dbg"
+  else
+    build_and_run "dbg" > "$BUILDROOT"/dbg/log 2>&1
+  fi
+  
+  # set flags
+  if [ $? -ne 0 ]; then
+    failed=1
+    dbg_failed=1
+    dbg_passFail="failed"
+  fi
+  echo "Debug tests $dbg_passFail!" >> "$HTMLLOG"
+fi
+
+#__________________________________
+# optimized
+if [ "$DO_OPT" = "1" ]; then
+  echo "" >> "$HTMLLOG"
+  echo "/--------------------------\\" >> "$HTMLLOG"
+  echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
+  echo "\\--------------------------/" >> "$HTMLLOG"
+
+  # compile and run   
+  if [ $VERBOSE = "yes" ]; then
+    build_and_run "opt"
+  else
+    build_and_run "opt" > "$BUILDROOT"/opt/log 2>&1
+  fi
+
+  retval=$?
+  if [ $retval -ne 0 ]; then
+    failed=1
+    opt_failed=1
+    opt_passFail="failed"
+  fi
+  echo "Optimized tests $opt_passFail!" >> "$HTMLLOG"
+
+
+  if [ $failed = "0" ]; then
+    echo "All tests passed!" >> "$BUILDROOT"/log
+    echo "All tests passed!" >> "$HTMLLOG"
+  fi
+fi
+#__________________________________
+# Build the log that will be sent out in the email
+echo "" >> "$BUILDROOT"/log
+
+if [ "$DO_DBG" = "1" ]; then
+  echo "/--------------------------\\" >> "$BUILDROOT"/log
+  echo "| DEBUG TESTS - $dbg_passFail     |" >> "$BUILDROOT"/log
+  echo "\\--------------------------/" >> "$BUILDROOT"/log
+  echo "" >> "$BUILDROOT"/log
+
+  cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
+
+  echo "" >> "$BUILDROOT"/log
+fi
+
+if [ "$DO_OPT" = "1" ]; then
+  echo "/--------------------------\\" >> "$BUILDROOT"/log
+  echo "| OPTIMIZED TESTS - $opt_passFail |" >> "$BUILDROOT"/log
+  echo "\\--------------------------/" >> "$BUILDROOT"/log
+  echo "" >> "$BUILDROOT"/log
+
+  cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
+fi
+
+echo "</pre></body></html>" >> "$HTMLLOG"
+echo "" >> "$BUILDROOT"/log
+
+#chmod -R g+w "$BUILDROOT"
+chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
+
+#__________________________________
+# 
+if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
+  if [ $failed = "0" ]; then
+    subject="SUCCESS: Regression tests on `hostname`"
+  else
+    subject="FAILURE:  Regression tests on `hostname`***"
+  fi
+
+  cat > "$BUILDROOT"/mail.msg <<EOF
+Subject: $subject
+To: $SEND_MAIL_TO
+EOF
+  if [ "$REPLY_TO" != "" ]; then
+    echo "Reply-To: $REPLY_TO" >> "$BUILDROOT"/mail.msg
+  fi
+  cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
+
+  if [ $use_html = "1" ]; then
+    echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
+    echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
+  fi
+  sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+#   rm -f "$BUILDROOT"/mail.msg
+fi
+
+#__________________________________
+#
+remake_file=""
+if [ -f "$BUILDROOT"/dbg/remake_failed.log ]; then
+  remake_file="$BUILDROOT"/dbg/remake_failed.log
+elif [ -f  "$BUILDROOT"/opt/remake_failed.log ]; then
+  remake_file="$BUILDROOT"/opt/remake_failed.log
+fi
+
+if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
+  subject="Failed to compile Uintah on `hostname`"
+
+  cat > "$BUILDROOT"/make_mail.msg <<EOF
+Subject: $subject
+To: $MAIL_REMAKE_LOG_TO
+$remake_file:
+
+EOF
+  cat $remake_file >> "$BUILDROOT"/make_mail.msg
+
+  sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
+  rm -f "$BUILDROOT"/make_mail.msg
+fi
+
+cd "$BUILD_DIR"
+
+exit $failed

@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test for a MPM and ICE material</title>
+   </Meta>
+
+   <SimulationComponent type="rmpmice" />
+   <Solver type="hypre"/>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            2.0       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <max_delt_increase>  0.5      </max_delt_increase>
+       <timestep_multiplier>0.3         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0" var = "Dirichlet" label = "Pressure">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" var = "Dirichlet" label = "Pressure">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face> 
+     <!-- top outlet -->
+      <Face circle = "y+" origin = "0.0 1.0 0.0" radius = "0.2">
+        <BCType id = "0" var = "Dirichlet" label = "Pressure">
+                              <value> 100000.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>             
+      <!-- Other y+ faces -->
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0   </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--__________________________________-->
+    <!-- WARNING                         
+    For boundary conditions to be set properly  on the y+ faces you must manually
+    define the verticalLeg box such that the patch boundaries align with the
+    horizontal leg.  Don't attempt to run unless the verticalLeg and horizontal
+    leg boundaries are aligned.
+    -->
+       <Level>
+           <Box label = "horizontalLeg">
+              <lower>        [-1,0,0]           </lower>
+              <upper>        [ 1.0, 0.5, 0.01]  </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [5,1,1]            </patches>
+              <resolution>   [200,25,1]         </resolution>
+           </Box>
+           <Box label = "verticalLeg">
+              <lower>        [-0.2, 0.5,0]     </lower>
+              <upper>        [ 0.2, 1.0,0.01]  </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [3,1,1]            </patches>
+              <resolution>   [40,25,1]          </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>T_channel.uda</filebase>
+      <outputInitTimestep/>
+      <!--<outputTimestepInterval>1</outputTimestepInterval> -->
+      <outputInterval> 0.001 </outputInterval>
+      <save label = "vel_CC"/>
+      <save label = "press_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+      <cfl>0.25</cfl>
+      <ICE>
+        <advection type = "SecondOrder" />
+                <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
+           <Parameters>
+              <maxiterations>  1000   </maxiterations>
+              <solver>         cg     </solver>
+              <preconditioner> pfmg   </preconditioner>
+              <tolerance>   1.e-8     </tolerance> 
+              <norm>      LInfinity   </norm>
+              <criteria>  Absolute    </criteria>
+           </Parameters>
+        </ImplicitSolver>
+      </ICE>        
+    </CFD>
+    <MPM>
+      <time_integrator>         explicit </time_integrator>
+      <interpolator>            linear     </interpolator>
+      <DoExplicitHeatConduction> false   </DoExplicitHeatConduction>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+         
+          <density>                  8900.        </density>
+          <constitutive_model type = "comp_neo_hook">                          
+          <bulk_modulus>          117.0e9       </bulk_modulus>                
+          <shear_modulus>          43.8e9       </shear_modulus>               
+          </constitutive_model>                                                
+          <thermal_conductivity>     400.0        </thermal_conductivity>      
+          <specific_heat>            386.0        </specific_heat> 
+           <geom_object>
+             <difference>
+               <box label = "walls">
+                   <min>           [-1.0,0.0,-1.0]   </min>
+                   <max>           [ 1.0,1.5, 1.0]   </max>
+               </box>
+
+               <union>
+                 <box label = "horizontalChannel">
+                   <min>         [-1.0, 0.05,-1.0]   </min>     
+                   <max>         [ 1.0, 0.45, 1.0]   </max>     
+                 </box>
+                 <box label = "vertcalChannel">
+                   <min>         [-0.1, 0.05,-1.0]   </min>     
+                   <max>         [ 0.1, 1.0,  1.0]   </max>     
+                 </box>
+               </union>
+             </difference>
+
+             <res>               [2,2,2]         </res>
+             <velocity>          [0.0,0.0,0.0]   </velocity>
+             <temperature>       300             </temperature>
+
+           </geom_object>
+         </material>
+         <contact>
+           <type>null</type>
+           <materials>              [0]         </materials>
+         </contact>
+      </MPM>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          15.86e-6        </dynamic_viscosity>
+           <thermal_conductivity>       26.3e-3             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+               <union>
+                  <box label = "horizontalChannel"> </box>
+                  <box label = "vertcalChannel">    </box>
+               </union>
+               <res>                      [2,2,2]       </res>
+               <velocity>           [0.0,0.0,0.0]       </velocity>
+               <temperature>        300.0               </temperature>
+               <density>            1.1784717376136     </density>
+               <pressure>           101325.0            </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+        <exchange_properties>
+         <exchange_coefficients>
+               <momentum>              [1e15]          </momentum>
+               <heat>                  [1e4]           </heat>
+         </exchange_coefficients>
+        </exchange_properties>
+    </MaterialProperties>
+</Uintah_specification>

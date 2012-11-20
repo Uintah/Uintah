@@ -1,0 +1,8 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+<test>
+  <name>Propagation</name>
+  <ups>ConvectiveBurning.ups</ups>
+  <tst>Propagation_burning.tst</tst>
+</test>
+</config>
