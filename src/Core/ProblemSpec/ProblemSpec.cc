@@ -578,7 +578,7 @@ ProblemSpec::get( const string & name, vector<string> & value, const int nItems 
     char   c, next;
     string result;
     int    counter = 0;
-    while( !in.eof() && counter < nItems ) {
+    while( !in.eof() && ( nItems < 0 || counter < nItems ) ) {
       in >> c;
       if (c == '[' || c == ',' || c == ' ' || c == ']')
         continue;
