@@ -1,9 +1,0 @@
-#!/usr/bin/python
-
-from sys import argv,exit
-from helpers.runSusTests import runSusTests
-
-TESTS = [   ("cyl_smag", "cyl_smag.ups", "", 6, "ALL"),	\
-    	]
-
-exit(runSusTests(argv, TESTS, "rmpmice"))

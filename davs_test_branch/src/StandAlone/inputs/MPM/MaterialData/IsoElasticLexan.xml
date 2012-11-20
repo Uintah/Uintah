@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Lexan -->
-<Uintah_Include>
-  <shear_modulus>0.84e9</shear_modulus>
-  <bulk_modulus>2.95e9</bulk_modulus>
-</Uintah_Include>
-

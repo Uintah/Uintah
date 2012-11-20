@@ -1,9 +1,0 @@
-<config>  
- <!-- spaces are not allowed in component names -->
- <component>Arches</component>
- <component>ICE</component>
- <!--<component>MPM</component> -->
- <!--<component>MPMICE</component>-->
- <sus_path>/usr/local/home/harman/Builds/Fresh/NB/opt_Linux/StandAlone/</sus_path>
- 
-</config>
