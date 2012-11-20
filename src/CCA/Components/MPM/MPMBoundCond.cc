@@ -130,8 +130,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   for(NodeIterator it(l,h); !it.done(); it++) { //extra nodes
                     IntVector nd = *it;
                     variable[nd] = Vector(-variable[nd+inner].x(),
-                                          variable[nd+inner].y(), 
-                                          variable[nd+inner].z());
+                                           variable[nd+inner].y(), 
+                                           variable[nd+inner].z());
                   }
                 }
               }  // cpdi, gimp or 3rdorderBS
@@ -307,9 +307,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               
               double gradv = bc->getValue();
+
+              for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
+		IntVector nd = *nbound_ptr;
+		variable[nd] = variable[nd-off] - gradv*dx;
+	      }
+
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
-                variable[nd] = variable[nd-off] + gradv*dx;
+                variable[nd] = variable[nd-off] - gradv*dx;
               }
             }
             
