@@ -77,7 +77,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 
   // set model clipping (not used yet...)
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-  db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+  db->getWithDefault( "high_clip", d_highModelClip, 999999.0 );
 
   // grab weight scaling factor and small value
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
@@ -102,7 +102,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 
   // set model clipping
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-  db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+  db->getWithDefault( "high_clip", d_highModelClip, 999999.0 );
 
   string node;
   std::stringstream out;

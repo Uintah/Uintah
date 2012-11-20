@@ -1166,19 +1166,19 @@ namespace Uintah {
         if(param->getAttribute("variable", variable) && variable != varname)
           continue;
           
-        param->getWithDefault ("solver",          p->solvertype,     "smg");      
-        param->getWithDefault ("preconditioner",  p->precondtype,    "diagonal"); 
-        param->getWithDefault ("tolerance",       p->tolerance,      1.e-10);     
-        param->getWithDefault ("maxiterations",   p->maxiterations,  75);         
-        param->getWithDefault ("npre",            p->npre,           1);          
-        param->getWithDefault ("npost",           p->npost,          1);          
-        param->getWithDefault ("skip",            p->skip,           0);          
-        param->getWithDefault ("jump",            p->jump,           0);          
-        param->getWithDefault ("logging",         p->logging,        0);          
-        param->getWithDefault ("setupFrequency",  p->setupFrequency, 1);        
+        param->getWithDefault( "solver",          p->solvertype,     string("smg") );
+        param->getWithDefault( "preconditioner",  p->precondtype,    string("diagonal") );
+        param->getWithDefault( "tolerance",       p->tolerance,      1.e-10 );
+        param->getWithDefault( "maxiterations",   p->maxiterations,  75 );
+        param->getWithDefault( "npre",            p->npre,           1 );
+        param->getWithDefault( "npost",           p->npost,          1 );
+        param->getWithDefault( "skip",            p->skip,           0 );
+        param->getWithDefault( "jump",            p->jump,           0 );
+        param->getWithDefault( "logging",         p->logging,        0 );
+        param->getWithDefault( "setupFrequency",  p->setupFrequency, 1 );
 
-        param->getWithDefault ("relax_type",      p->relax_type,     1); 
-        
+        param->getWithDefault( "relax_type",      p->relax_type,     1 );
+
         // Options from the HYPRE_ref_manual 2.8
         // npre:   Number of relaxation sweeps before coarse grid correction
         // npost:  Number of relaxation sweeps after coarse grid correction

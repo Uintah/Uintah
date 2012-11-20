@@ -23,10 +23,11 @@
  */
 
 #include <Core/Grid/BoundaryConditions/BCData.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Core/Util/DebugStream.h>
 
-
+#include <Core/Grid/BoundaryConditions/BoundCond.h> // testing, remove this FIXME
 
 #include <iostream>
 #include <algorithm>
@@ -34,153 +35,154 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-// export SCI_DEBUG="BCDA_DBG:+"
-static DebugStream BCData_dbg("BCDATA_DBG",false);
+////////////////////////////////////////////////////////////////////////
 
-#define PRINT
-#undef PRINT
+const int UNINITIALIZED = -2;
 
-BCData::BCData() 
+////////////////////////////////////////////////////////////////////////
+
+BCData::BCData() :
+  d_matl( UNINITIALIZED )
 {
-}
-
-BCData::~BCData()
-{
-  vector<BoundCondBase*>::const_iterator itr;
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
-    delete (*itr);
-  }
-  d_BCData.clear();
 }
 
 BCData::BCData(const BCData& rhs)
 {
+  throw ProblemSetupException( "Error, broken BCData() copy constructor called...", __FILE__, __LINE__ );
+#if 0
+  This copy constructor appears to be broken... but don't see how...
+However, I do know that using it causes the resultant BCData object
+to be slightly corrupted, specifically, the BoundCondBase *s in 
+d_BCBs somehow sort of lose their parent class pointer... :(
+  cout << "!!!!!In the BCData copy constructor!!!!!!!!\n";
+
   vector<BoundCondBase*>::const_iterator i;
-  for (i = rhs.d_BCData.begin(); i != rhs.d_BCData.end(); ++i) {
-    d_BCData.push_back((*i)->clone());
+  for (i = rhs.d_BCBs.begin(); i != rhs.d_BCBs.end(); ++i) {
+    d_BCBs.push_back((*i)->clone());
   }
+#endif
 }
 
-BCData& BCData::operator=(const BCData& rhs)
+BCData::~BCData()
 {
+  cout << "in ~BCData() for " << this << "\n";
+  // FIXME... may need to make the d_BCBs hold smart pointers so they will clean
+  // themselves up...
+}
+
+////////////////////////////////////////////////////////////////////////
+
+BCData&
+BCData::operator= ( const BCData & rhs )
+{
+  throw ProblemSetupException( "BCData.cc: Error, don't call operator=.", __FILE__, __LINE__ );
+
+#if 0
   if (this == &rhs)
     return *this;
 
-  // Delete the lhs
+  // Delete the current lhs (if it exists)
   vector<BoundCondBase*>::const_iterator itr;
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) 
+  for (itr = d_BCBs.begin(); itr != d_BCBs.end(); ++itr) {
     delete (*itr);
+  }
 
-  d_BCData.clear();
-  // Copy the rhs to the lhs
+  d_BCBs.clear();
+
+  // Now copy the rhs to the lhs...
+  //
+  for( vector<BoundCondBase*>::const_iterator i = rhs.d_BCBs.begin(); i != rhs.d_BCBs.end(); ++i ) {
   
-  vector<BoundCondBase*>::const_iterator i;
-  for (i = rhs.d_BCData.begin(); i != rhs.d_BCData.end(); ++i) {
-    d_BCData.push_back((*i)->clone());
+    d_BCBs.push_back( (*i)->clone() );
   }
     
+#endif
   return *this;
 }
 
-bool BCData::operator==(const BCData& rhs)
-{
-  if (d_BCData.size() != rhs.d_BCData.size())
-    return false;
-
-  vector<BoundCondBase*>::const_iterator itr;
-  for (itr = d_BCData.begin(); itr != d_BCData.end();) {
-    if (rhs.find((*itr)->getBCVariable()) == false)
-      return false;
-    else
-      ++itr;
-  }
-  return true;
-}
-
-bool BCData::operator<(const BCData& rhs) const
-{
-  vector<BoundCondBase*>::const_iterator itr;
-  if (d_BCData.size() < rhs.d_BCData.size())
-    return true;
-  else 
-    return false;
-}
-
 void 
-BCData::setBCValues(BoundCondBase* bc)
+BCData::addBC( const BoundCondBase * bc )
 {
-  if (!find(bc->getBCVariable()))
-    d_BCData.push_back(bc->clone());
+  if( d_matl == UNINITIALIZED ) {
+    d_matl = bc->getMatl();
+  }
+  else if( bc->getMatl() != d_matl ) {
+    throw ProblemSetupException( "BCData::addBC(): bc has wrong matl index...", __FILE__, __LINE__ );
+  }
+
+  if( exists( bc->getVariable() ) ) {
+    throw ProblemSetupException( "BCData::addBC(): bc already exists...", __FILE__, __LINE__ );
+  }
+  d_BCBs.push_back( bc );
 }
-
-
 
 const BoundCondBase*
-BCData::getBCValues(const string& var_name) const
+BCData::getBCValue( const string & var_name ) const
 {
-  // The default location for BCs defined for all materials is mat_id = -1.
-  // Need to first check the actual mat_id specified.  If this is not found,
-  // then will check mat_id = -1 case.  If it isn't found, then return 0.
+  for( unsigned int index = 0; index < d_BCBs.size(); index++ ) {
 
+    const BoundCondBase * bcb = d_BCBs[ index ];
 
-  vector<BoundCondBase*>::const_iterator itr;
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
-    if ((*itr)->getBCVariable() == var_name)
-      return (*itr)->clone();
+#if 0 // FIXME
+    static int count = 0;
+    cout << "here: "<< index << ", " << count++ << "\n";
+    if( var_name == "mixture_fraction" && count >= 4331 ) {
+      cout << "in here\n";
+      this->print(3);
+      cout << "  bcb is: "; bcb->debug(); cout << "\n";
+    }
+#endif
+
+    if( bcb->getVariable() == var_name ) {
+      return bcb;
+    }
   }
-  return 0;
-
+  return NULL;
 }
 
-
-bool BCData::find(const string& var_name) const
+bool
+BCData::exists( const string & var_name ) const
 {
-  vector<BoundCondBase*>::const_iterator itr;
+  return ( getBCValue( var_name ) != NULL );
+}
 
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
-    if ((*itr)->getBCVariable() == var_name) {
+bool
+BCData::exists( const string & bc_type, const string & bc_variable ) const
+{
+  const BoundCondBase * bc = getBCValue( bc_variable );
+
+  if( bc ) {
+    if( bc->getType() == bc_type ) {
       return true;
     }
   }
-  return false;
-}
-
-bool BCData::find(const string& bc_type,const string& bc_variable) const
-{
-  const BoundCondBase* bc = getBCValues(bc_variable);
-
-  if (bc) {
-    if (bc->getBCType__NEW() == bc_type) {
-      delete bc;
-      return true;
-    }
-  }
-  delete bc;
   return false; 
-      
 }
 
-void BCData::combine(BCData& from)
+void
+BCData::combine( const BCData & from )
 {
-  vector<BoundCondBase*>::const_iterator itr;
-  for (itr = from.d_BCData.begin(); itr != from.d_BCData.end(); ++itr) {
-    // cerr << "bc = " << itr->first << " address = " << itr->second << endl;
-    setBCValues(*itr);
+  for( vector<const BoundCondBase*>::const_iterator itr = from.d_BCBs.begin(); itr != from.d_BCBs.end(); ++itr ) {
+    addBC( *itr );
   }
-
 }
 
-
-void BCData::print() const
+void
+BCData::print( int depth ) const
 {
-  vector<BoundCondBase*>::const_iterator itr;
-  BCData_dbg << "size of d_BCData = " << d_BCData.size() << endl;
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
-    BCData_dbg << "BC = " << (*itr)->getBCVariable() << " type = " 
-               << (*itr)->getBCType__NEW() << endl;
-  }
+  static bool verbose = true; // FIXME debugging helper var 
+
+  string indentation( depth*2, ' ' );
+  string indent2( (depth+1)*2, ' ' );
   
+  cout << indentation << "BCData for matl " << d_matl << ", contains " << d_BCBs.size() << " BoundCondBases) [" << this << "]:\n";
+
+  if( verbose ) { // FIXME debugging output
+    for( unsigned int pos = 0; pos < d_BCBs.size(); pos++ ) {
+      const BoundCondBase * bcb = d_BCBs[ pos ];
+      cout << indent2 << "BC = " << bcb->getVariable() << ", type = " << bcb->getType() << ", matl = " << bcb->getMatl() << "\n";
+    }
+  }
 }

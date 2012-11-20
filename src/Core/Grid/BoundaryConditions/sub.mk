@@ -31,10 +31,12 @@
 SRCDIR   := Core/Grid/BoundaryConditions
 
 SRCS     += \
+	$(SRCDIR)/BoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
 	$(SRCDIR)/BCData.cc \
 	$(SRCDIR)/BCDataArray.cc \
+	$(SRCDIR)/BCFace.cc \
 	$(SRCDIR)/BCGeomBase.cc \
 	$(SRCDIR)/UnionBCData.cc \
 	$(SRCDIR)/DifferenceBCData.cc \

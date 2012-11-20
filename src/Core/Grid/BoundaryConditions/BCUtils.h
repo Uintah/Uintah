@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_Core_Grid_BC_BCUtils_h
+#define Packages_Uintah_Core_Grid_BC_BCUtils_h
+
 /*
  * The MIT License
  *
@@ -21,18 +24,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#ifndef Packages_Uintah_Core_Grid_BC_BCUtils_h
-#define Packages_Uintah_Core_Grid_BC_BCUtils_h
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Patch.h>
 
 namespace Uintah {
 
-void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls);
-  
+void is_BC_specified( const ProblemSpecP & prob_spec, string variable, const MaterialSubset* matls );
   
 /* --------------------------------------------------------------------- 
  For a given domain face, material, variable this returns 
@@ -42,107 +43,50 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
     - BC_kind ( Dirichlet, symmetry, Neumann.....)
  ---------------------------------------------------------------------  */
 template <class T>
-bool getIteratorBCValueBCKind( const Patch* patch, 
-                               const Patch::FaceType face,
-                               const int child,
-                               const string& desc,
-                               const int mat_id,
-                               T& bc_value,
-                               Iterator& bound_ptr,
-                               string& bc_kind)
-{ 
-  bc_value=T(-9);
-  bc_kind="NotSet";
-  bool foundBC = false;
-
-  //__________________________________
-  //  Any variable with zero Neumann BC
-  if (desc == "zeroNeumann" ){
-    bc_kind = "zeroNeumann";
-    bc_value = T(0.0);
-    foundBC = true;
-  }
+bool
+getIteratorBCValueBCKind( const Patch           * patch, 
+                          const Patch::FaceType   face,
+                          const int               child,
+                          const string          & desc,
+                          const int               mat_id,
+                                T               & bc_value,
+                                Iterator        & bound_ptr,
+                                string          & bc_kind );
   
-  const BoundCondBase* bc;
-  const BoundCond<T>* new_bcs;
-  const BCDataArray* bcd = patch->getBCDataArray(face);
-  //__________________________________
-  //  non-symmetric BCs
-  // find the bc_value and kind
-  if( !foundBC ){
-    bc = bcd->getBoundCondData(mat_id,desc,child);
-    new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
-
-    if (new_bcs != 0) {
-      bc_value = new_bcs->getValue();
-      bc_kind  = new_bcs->getBCType__NEW();
-      foundBC = true;
-    }
-    delete bc;
-  }
   
-  //__________________________________
-  // Symmetry
-  if( !foundBC ){
-    bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
-    string test  = bc->getBCType__NEW();
-
-    if (test == "symmetry") {
-      bc_kind  = "symmetry";
-      bc_value = T(0.0);
-      foundBC = true;
-    }
-    delete bc;
-  }
-  
-  //__________________________________
-  //  Now deteriming the iterator
-  if(foundBC){
-    // For this face find the iterator
-    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
-    
-    // bulletproofing
-    if (bound_ptr.done()){  // size of the iterator is 0
-      return false;
-    }
-    return true;
-  }
-  return false;
-}  
-
 template <class T>
-bool getIteratorBCValue( const Patch* patch, 
-                         const Patch::FaceType face,
-                         const int child,
-                         const string& desc,
-                         const int mat_id,
-                         T& bc_value,
-                         Iterator& bound_ptr )
+bool getIteratorBCValue( const Patch           * patch,
+                         const Patch::FaceType   face,
+                         const int               child,
+                         const string          & desc,
+                         const int               mat_id,
+                         T                     & bc_value,
+                         Iterator              & bound_ptr )
 { 
   bool foundBC = false;
 
   const BoundCondBase* bc;
   const BoundCond<T>* new_bcs;
-  const BCDataArray* bcd = patch->getBCDataArray(face);
+  const BCDataArray* bcda = patch->getBCDataArray(face);
   //__________________________________
   //  non-symmetric BCs
   // find the bc_value and kind
   if( !foundBC ){
-    bc = bcd->getBoundCondData(mat_id,desc,child);
+    bc = bcda->getBoundCondData(mat_id,desc,child);
     new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
 
     if (new_bcs != 0) {
       bc_value = new_bcs->getValue();
       foundBC = true;
     }
-    delete bc;
+    //    delete bc;  FIXME
   }
   
   //__________________________________
   //  Now deteriming the iterator
   if(foundBC){
     // For this face find the iterator
-    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
+    bound_ptr = bcda->getCellFaceIterator( mat_id, child, patch );
     
     // bulletproofing
     if (bound_ptr.done()){  // size of the iterator is 0
@@ -154,23 +98,25 @@ bool getIteratorBCValue( const Patch* patch,
 }  
 
 void
-getBCKind( const Patch* patch, 
-           const Patch::FaceType face,
-           const int child,
-           const string& desc,
-           const int mat_id,
-           std::string& bc_kind,
-           std::string& face_label );
+getBCKind( const Patch           * patch, 
+           const Patch::FaceType   face,
+           const int               child,
+           const string          & desc,
+           const int               mat_id,
+           std::string           & bc_kind,
+           std::string           & face_label );
   
+
 //______________________________________________________________________
 //  Neumann BC:  CCVariable
- template<class T>
- int setNeumannBC_CC( const Patch* patch,
-                      const Patch::FaceType face,
-                      CCVariable<T>& var,               
-                      Iterator& bound_ptr,                 
-                      T& value,                         
-                      const Vector& cell_dx)                  
+template<class T>
+int
+setNeumannBC_CC( const Patch           * patch,
+                 const Patch::FaceType   face,
+                       CCVariable<T>   & var,
+                       Iterator        & bound_ptr,
+                       T               & value,
+                 const Vector          & cell_dx )
 {
  SCIRun::IntVector oneCell = patch->faceDirection(face);
  SCIRun::IntVector dir= patch->getFaceAxes(face);
@@ -196,10 +142,11 @@ getBCKind( const Patch* patch,
 
 //______________________________________________________________________
 //  Dirichlet BC:    CCVariable
- template<class T>
- int setDirichletBC_CC( CCVariable<T>& var,     
-                        Iterator& bound_ptr,    
-                        T& value) 
+template<class T>
+int
+setDirichletBC_CC( CCVariable<T> & var,
+                   Iterator      & bound_ptr,
+                   T             & value )
 {
  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
    var[*bound_ptr] = value;
@@ -209,4 +156,5 @@ getBCKind( const Patch* patch,
 }
 
 } // End namespace Uintah
+
 #endif

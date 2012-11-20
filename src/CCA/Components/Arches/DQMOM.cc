@@ -217,13 +217,13 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
   if( db_linear_solver ) {
 
-    db_linear_solver->getWithDefault("tolerance", d_solver_tolerance, 1.0e-5);
+    db_linear_solver->getWithDefault( "tolerance", d_solver_tolerance, 1.0e-5 );
 
-    db_linear_solver->getWithDefault("maxConditionNumber", d_maxConditionNumber, 1.0e16);
+    db_linear_solver->getWithDefault( "maxConditionNumber", d_maxConditionNumber, 1.0e16 );
 
-    db_linear_solver->getWithDefault("calcConditionNumber", b_calcConditionNumber, false);
+    db_linear_solver->getWithDefault( "calcConditionNumber", b_calcConditionNumber, false );
 
-    db_linear_solver->getWithDefault("type", d_solverType, "LU");
+    db_linear_solver->getWithDefault( "type", d_solverType, string("LU") );
 
     b_optimize = false;
 

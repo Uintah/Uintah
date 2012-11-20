@@ -105,9 +105,9 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   }
 
   // Discretization information:
-  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
-  db->getWithDefault( "doConv", d_doConv, false);
-  db->getWithDefault( "doDiff", d_doDiff, false);
+  db->getWithDefault( "conv_scheme", d_convScheme, string("upwind") );
+  db->getWithDefault( "doConv", d_doConv, false );
+  db->getWithDefault( "doDiff", d_doDiff, false );
   d_addSources = true; 
   d_addExtraSources = false; 
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 

@@ -426,7 +426,7 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
           const BoundCond<double>* bc =
             dynamic_cast<const BoundCond<double>*>(temp_bcs);
           if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
+            if (bc->getType() == "Dirichlet") {
               for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                 gtemp[*nbound_ptr] = bc->getValue();
               }

@@ -761,7 +761,14 @@ void setBC(CCVariable<double>& var_CC,
     string bc_kind = "NotSet";      
     int nCells = 0;
 
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+    // begin testing FIXME DEBUG delete
+    //    cout << "begin ice debug stuff\n";
+    //    const BCDataArray * temp = patch->getBCDataArray(face);
+    //    temp->print();
+    //    cout << "end ice debug stuff\n";
+    // end testing FIXME DEBUG delete
+
+    int numChildren = patch->getBCDataArray( face )->getNumberChildren( mat_id );
 
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
@@ -769,24 +776,24 @@ void setBC(CCVariable<double>& var_CC,
 
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
-                                               bc_value, bound_ptr,bc_kind); 
+                                          bc_value, bound_ptr,bc_kind );
                                                 
       if (foundIterator && bc_kind != "LODI") {
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           nCells += setDirichletBC_CC<double>( var_CC, bound_ptr, bc_value);
+           nCells += setDirichletBC_CC<double>( var_CC, bound_ptr, bc_value );
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+           nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx );
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<double >( patch, face, var_CC, bound_ptr, bc_value, cell_dx );
         }
         //__________________________________
         //  Custom Boundary Conditions
@@ -825,7 +832,7 @@ void setBC(CCVariable<double>& var_CC,
         
         //__________________________________
         //  debugging
-        if( BC_dbg.active() ) {
+        if( BC_dbg.active() && false ) {
           bound_ptr.reset();
           cout  <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
                 <<"\t child " << child  <<" NumChildren "<<numChildren 
@@ -853,9 +860,10 @@ void setBC(CCVariable<double>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      warn << "ERROR: ICE: SetBC(double_CC) Boundary conditions were not set correctly ("<< desc<< ", " 
-           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << " nCells_LODI: " << nCells_LODI[face] <<") " << endl;
+      warn << "ERROR: ICE: SetBC(double_CC): Boundary conditions were not set correctly for:\n   "<< desc<< ", " 
+           << patch->getFaceName(face) << ", " << bc_kind  << "\n   numChildren: " << numChildren 
+           << ", nCells Touched: " << nCells << ", nCells on boundary: "<< nFaceCells << ", nCells_LODI: " 
+           << nCells_LODI[face] << "\n";
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
   }  // faces loop

@@ -28,12 +28,11 @@
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <string>
 
 namespace Uintah {
-using std::string;
- using namespace SCIRun;
-   
+
 /**************************************
 
 CLASS
@@ -61,43 +60,53 @@ WARNING
   
 ****************************************/
 
- class NoValue {
+/////////////////////////////////////////
+//
+//  Note, the 'Type' for BoundCond is usually 'double', 'vector', or 'string' ('string', is just a dummy
+//  to hold a value of 'no value' in the case where the BoundCond does not have an associated <value> tag).
+//
 
- public:
-   NoValue() {};
-   ~NoValue() {};
- };
+template <class Type>
+class BoundCond : public BoundCondBase
+{
+public:
 
- template <class T>  class BoundCond : public BoundCondBase {
- public:
-   BoundCond() {};
+  BoundCond( const std::string & var_name,
+             const std::string & type,
+             const Type        & value, 
+             const std::string & face_label,
+             const std::string & functor_name,
+                   int           matl_id ) :
+    BoundCondBase( var_name, type, face_label, functor_name, matl_id )
+  {
+    d_value = value;
+  }
 
-   BoundCond(string var_name, string type, T value, const std::string face_label, const std::string functor_name)
-     {
-       d_variable = var_name;
-       d_type__NEW = type;
-       d_value = value;
-       d_face_label = face_label;
-       d_functor_name = functor_name;
-     };
-   virtual ~BoundCond() {};
-   virtual BoundCond* clone()
-   {
-     return scinew BoundCond(*this);
-   };
+  virtual ~BoundCond() {}
 
-   T getValue() const { return d_value;}; 
+  virtual BoundCond* clone()
+  {
+    return scinew BoundCond<Type>( *this );
+  }
 
- protected:
-   T d_value;
+  virtual void debug() const;
 
- };
+  Type getValue() const { return d_value; }
 
+protected:
 
- template <> class BoundCond<NoValue> : public BoundCondBase {
+   Type d_value;
+
+private:
+
+  // Disallow creation of empty BoundConds.
+  BoundCond() {}
 
 
- public:
+};
+
+#if 0
+Tonys stuff... put back in if we need it... 
 
    BoundCond(string var_name,string type)
      {
@@ -106,7 +115,7 @@ WARNING
        d_value = NoValue();
        d_face_label = "none";
        d_functor_name = "none";
-     };
+     }
 
    BoundCond(string var_name)
      {
@@ -115,21 +124,9 @@ WARNING
        d_value = NoValue();
        d_face_label = "none";
        d_functor_name = "none";
-     };
+     }
+#endif
 
-   virtual BoundCond* clone()
-   {
-     return scinew BoundCond(*this);
-   };
-
-   
- protected:
-   NoValue d_value;
-
- };
- 
 } // End namespace Uintah
-
-
 
 #endif

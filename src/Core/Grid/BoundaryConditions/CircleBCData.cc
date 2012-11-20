@@ -23,28 +23,16 @@
  */
 
 #include <Core/Grid/BoundaryConditions/CircleBCData.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 
 using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-CircleBCData::CircleBCData() : BCGeomBase()
-{
-  
-}
-
-
-CircleBCData::CircleBCData(Point& p, double radius)
-  : BCGeomBase(), d_radius(radius), d_origin(p)
+CircleBCData::CircleBCData( const Point & origin, double radius, const string & name, const Patch::FaceType & side ) :
+  BCGeomBase( name, side ), d_radius( radius ), d_origin( origin )
 {
 }
 
@@ -52,42 +40,19 @@ CircleBCData::~CircleBCData()
 {
 }
 
-bool CircleBCData::operator==(const BCGeomBase& rhs) const
+bool
+CircleBCData::operator==( const BCGeomBase & rhs ) const
 {
-
-  const CircleBCData* p_rhs =
-    dynamic_cast<const CircleBCData*>(&rhs);
+  const CircleBCData* p_rhs = dynamic_cast<const CircleBCData*>(&rhs);
 
   if (p_rhs == NULL)
     return false;
   else
-    return (this->d_radius == p_rhs->d_radius) && 
-      (this->d_origin == p_rhs->d_origin);
-
+    return( ( d_radius == p_rhs->d_radius) && ( d_origin == p_rhs->d_origin ) );
 }
 
-CircleBCData* CircleBCData::clone()
-{
-  return scinew CircleBCData(*this);
-}
-
-void CircleBCData::addBCData(BCData& bc) 
-{
-  d_bc = bc;
-}
-
-
-void CircleBCData::addBC(BoundCondBase* bc) 
-{
-  d_bc.setBCValues(bc);
-}
-
-void CircleBCData::getBCData(BCData& bc) const 
-{
-  bc = d_bc;
-}
-
-bool CircleBCData::inside(const Point &p) const 
+bool
+CircleBCData::inside( const Point &p ) const 
 {
   Vector diff = p - d_origin;
   if (diff.length() > d_radius)
@@ -96,22 +61,26 @@ bool CircleBCData::inside(const Point &p) const
     return true;
 }
 
-void CircleBCData::print()
+void
+CircleBCData::print( int depth ) const
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  d_bc.print();
+  string indentation( depth*2, ' ' );
+  cout << indentation << "CircleBCData: " << d_name << "\n";
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 2 );
+  }
 }
 
 
-void CircleBCData::determineIteratorLimits(Patch::FaceType face, 
-                                           const Patch* patch, 
-                                           vector<Point>& test_pts)
+void
+CircleBCData::determineIteratorLimits(       Patch::FaceType   face, 
+                                       const Patch           * patch, 
+                                             vector<Point>   & test_pts )
 {
-#if 0
-  cout << "Circle determineIteratorLimits() " << patch->getFaceName(face)<< endl;
-#endif
+  cout << "CircleBCData::determineIteratorLimits() " << face << ", " << this << "\n";
 
-  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+  BCGeomBase::determineIteratorLimits( face, patch, test_pts );
 
+  cout << "Circle Limits:\n";
+  printLimits();
 }
-

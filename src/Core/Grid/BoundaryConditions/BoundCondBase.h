@@ -27,8 +27,9 @@
 
 #include <string>
 
+#include <iostream> // FIXME: for debugging cout
+
 namespace Uintah {
-using std::string;
    
 /**************************************
 
@@ -57,23 +58,39 @@ WARNING
   
 ****************************************/
 
-  class BoundCondBase  {
-  public:
+class BoundCondBase
+{
+public:
   
-    BoundCondBase() {};
-    virtual ~BoundCondBase() {};
-    virtual BoundCondBase* clone() = 0;
-    const string getBCVariable() const { return d_variable; };
-    const string getBCType__NEW() const { return d_type__NEW; };
-    const std::string getBCFaceName() const { return d_face_label; };
-    const std::string getFunctorName() const { return d_functor_name; };
-    
-  protected:
-    string d_variable;          // Pressure, Density, etc
-    string d_type__NEW;         // Dirichlet, Neumann, etc
-    std::string d_face_label;   // holds the user specified name of the bc face: left-wall, ox-inlet,...
-    std::string d_functor_name; // holds the name of a functor to be applied on this boundary
-  };
+  BoundCondBase( const std::string & var_name,
+                 const std::string & type,
+                 const std::string & face_label,
+                 const std::string & functor_name,
+                       int           matl_id ) :
+    d_variable( var_name ), d_type( type ), d_face_label( face_label ), d_functor_name( functor_name ), d_matl_id( matl_id )
+  {
+  }
+
+  virtual ~BoundCondBase() { std::cout << "in ~BoundCondBase() for " << this << "\n"; }
+
+  const std::string & getVariable() const { return d_variable; }
+  const std::string & getType() const     { return d_type; }
+        int           getMatl() const     { return d_matl_id; }
+
+  const std::string & getBCFaceName() const  { return d_face_label; }
+  const std::string & getFunctorName() const { return d_functor_name; }
+
+  virtual void debug() const = 0;
+  
+protected:
+  std::string d_variable;     // Eg: Pressure, Density, etc
+  std::string d_type;         // Eg: Dirichlet, Neumann, etc
+  std::string d_face_label;   // The user specified name of the bc face: left-wall, ox-inlet, etc...
+  std::string d_functor_name; // The name of a functor to be applied on this boundary.
+  int         d_matl_id;      // Material Id.  -1 == "all materials"
+  
+};
+
 } // End namespace Uintah
 
 #endif

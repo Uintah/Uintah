@@ -784,11 +784,12 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
          // add the timestep to the index.xml
          ostringstream timestep_str;
          timestep_str << timestep;
-         ProblemSpecP newTS = timesteps->appendElement("timestep", timestep_str.str().c_str());
+         timesteps->appendElement( "timestep", timestep_str.str().c_str() );
 
-         for (map<string,string>::iterator iter = attributes.begin();
-              iter != attributes.end(); iter++) {
-           newTS->setAttribute((*iter).first, (*iter).second);
+         ProblemSpecP timestepBlock = timesteps->findBlock( "timestep" );
+
+         for( map<string,string>::iterator iter = attributes.begin(); iter != attributes.end(); iter++ ) {
+           timestepBlock->setAttribute( (*iter).first, (*iter).second );
          }
          
       }
@@ -1317,21 +1318,26 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           }
         }
       }
-      if(!found){
-        // add timestep info
-        string timestepindex = tname.str()+"/timestep.xml";      
+      if( !found ){ // add timestep info
+
+        string timestepindex = tname.str() + "/timestep.xml";
         
         ostringstream value, timeVal, deltVal;
         value << timestep;
-        ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
-        newElem->setAttribute("href", timestepindex.c_str());
+
+        ts->appendElement( "timestep", value.str().c_str() );
+
+        // Grab the "timestep" block that was just appeneded at the end...
+        ProblemSpecP timestepBlock = ts->findLastBlock( "timestep" );
+
+        timestepBlock->setAttribute("href", timestepindex.c_str());
         timeVal << std::setprecision(17) << d_tempElapsedTime;
-        newElem->setAttribute("time", timeVal.str());
+        timestepBlock->setAttribute("time", timeVal.str());
         deltVal << std::setprecision(17) << delt;
-        newElem->setAttribute("oldDelt", deltVal.str());
+        timestepBlock->setAttribute("oldDelt", deltVal.str());
       }
       
-      indexDoc->output(iname.c_str());
+      indexDoc->output( iname.c_str() );
       //indexDoc->releaseDocument();
 
       // make a timestep.xml file for this timestep 
@@ -1537,7 +1543,7 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
 
 // be sure to call releaseDocument on the value returned
 ProblemSpecP
-DataArchiver::loadDocument(string xmlName)
+DataArchiver::loadDocument( const string & xmlName )
 {
   return ProblemSpecReader().readInputFile( xmlName );
 }

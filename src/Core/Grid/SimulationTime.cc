@@ -59,7 +59,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   {
     // max_iterations is deprecated now... verify that it isn't used....
     int max_iterations = 0;
-    if( time_ps->get( "max_iterations", max_iterations ).get_rep() != NULL ) {
+    if( time_ps->get( "max_iterations", max_iterations ) ) {
       std::cerr << "\n";
       std::cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       std::cerr << "\n";
@@ -87,9 +87,11 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     }
 }
 
-//__________________________________
+//______________________________________________________________
 //  This only called by the switcher component
-void SimulationTime::problemSetup(const ProblemSpecP& params)
+
+void
+SimulationTime::problemSetup(const ProblemSpecP& params)
 {
   proc0cout << "  Reading <Time> section from: " << SCIRun::basename(params->getFile()) << "\n";
   ProblemSpecP time_ps = params->findBlock("Time");
@@ -105,5 +107,4 @@ void SimulationTime::problemSetup(const ProblemSpecP& params)
     max_delt_increase=1.e99;
   
   time_ps->get( "override_restart_delt", override_restart_delt);
-
 }

@@ -524,23 +524,59 @@
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
       </microSlip>
 
-       <!-- angle in degrees for ellipse -->
-      <Face                 spec="MULTIPLE NO_DATA"
-                              attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                              attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                              attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"
-                              attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"
-                              attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
-                              attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                              attribute7="radius        OPTIONAL DOUBLE 'positive'" 
-                              attribute8="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
-                              attribute9="lower         OPTIONAL MULTIPLE_DOUBLES" 
-                              attribute10="upper        OPTIONAL MULTIPLE_DOUBLES"
-                              attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                              
+      <!-- FaceGeometry is used to specify 2d objects that can be used on a face.  These objects must have a unique
+           'name'.  For type 'difference', use 'part1' - 'part2'.  For 'union's, it is a combination of 
+           'part1' and 'part2'.  Only two parts are allowed for a given specification (though multiple
+           specifications could be used to 'union'/'difference'.
+
+           NOTE: only one FaceGeometry with type 'side' for each side is allowed.
+
+           NOTE: (IMPORTANT) Even when specified, FaceGeometry pieces are not used by default!!!  In order for them
+                 to be used by the simulation, they must be applied to a <Face> (see below).
+
+           Direction - must be the same as the <Face> this FaceGeometry piece will be associated with.
+
+           Types:
+                  side       - The entire side (Only one allowed per side: x+, x-, y+, etc.)
+                  annulus    - Uses 'inner_radius', 'outer_radius', and 'origin'
+                  circle     - Uses 'origin' and 'radius'
+                  rectangle  - Uses 'lower' and 'upper' (eg: lower = "0.0 0.181 0.0" upper = "0.0 0.5 0.0")
+                  union      - Uses 'part1' and 'part2'
+                  difference - Uses 'part1' and 'part2'
+      -->
+      <FaceGeometry         spec="MULTIPLE NO_DATA"
+                              attribute1="name          REQUIRED STRING"
+                              attribute2="type          REQUIRED STRING 'side,annulus,circle,ellipse,rectangle,union,difference'"
+                              attribute3="direction     REQUIRED STRING 'x-, x+, y-, y+, z-, z+'"
+                              attribute4="part1         OPTIONAL STRING"
+                              attribute5="part2         OPTIONAL STRING"
+
+                              attribute6="origin        OPTIONAL MULTIPLE_DOUBLES"
+
+                              attribute7="inner_radius  OPTIONAL DOUBLE 'positive'"
+                              attribute8="outer_radius  OPTIONAL DOUBLE 'positive'"
+
+                              attribute9="radius        OPTIONAL DOUBLE 'positive'"
+
+                              attribute10="lower        OPTIONAL MULTIPLE_DOUBLES"
+                              attribute11="upper        OPTIONAL MULTIPLE_DOUBLES"
+
                               attribute12="major_radius OPTIONAL DOUBLE 'positive'"
                               attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
-                              attribute14="angle        OPTIONAL DOUBLE"                                                                                          
-                              attribute15="name         OPTIONAL STRING">
+                              attribute14="angle        OPTIONAL DOUBLE" />
+
+      <!-- In order to specify boundary conditions for the outside edge of a simulation, you must use the
+           <Face> tags for each face.  The 'geometry' attribute refers to a previously delcared <FaceGeometry>
+           (see above).  There must be one (and only one) <Face> tag that uses a FaceGeometry of type side.
+           This will specify the default boundary conditions for the entire face.  However, other <Face>s may
+           be specified for the same side (but with a different 'type' of FaceGeometry).  The areas of these
+           other geometry pieces will be implicity subtracted from the main <Face>.
+
+           'id' for BCType is the 'Material Id' and can be 'all', or a number from 0 and 6.
+      -->
+      <Face                 spec="MULTIPLE NO_DATA"
+                              attribute1="geometry      REQUIRED STRING"
+                              attribute2="side          REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 

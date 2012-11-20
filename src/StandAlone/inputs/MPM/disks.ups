@@ -10,7 +10,7 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>0.2</maxTime>
+       <maxTime>0.003</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
@@ -24,6 +24,7 @@
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
        <save label = "TotalMomentum"/>
+       <save label = "p.particleID"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.color"/>
@@ -101,34 +102,41 @@
     </MaterialProperties>
        
     <Grid>
-       <BoundaryConditions>
-          <Face side = "x-">
+      <BoundaryConditions>
+          <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+          <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+          <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+          <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+          <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+          <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+          <Face geometry="x- wall" side="x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
                         <value> [0.0,0.0,0.0] </value>
                    </BCType>
-           </Face>
-           <Face side = "x+">
+          </Face>
+          <Face geometry="x+ wall" side="x+">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
                     <value> [0.0,0.0,0.0] </value>
                   </BCType>
-           </Face>
-           <Face side = "y-">
+          </Face>
+          <Face geometry="y- wall" side="y-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
                       <value> [0.0,0.0,0.0] </value>
                   </BCType>
-           </Face>                  
-          <Face side = "y+">
+          </Face>                  
+          <Face geometry="y+ wall" side="y+">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
                      <value> [0.0,0.0,0.0] </value>
                  </BCType>
-           </Face>
-           <Face side = "z-">
+          </Face>
+          <Face geometry="z- wall" side="z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face geometry="z+ wall" side="z+">
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-           </Face>
-           <Face side = "z+">
-             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-           </Face>                           
+          </Face>                           
        </BoundaryConditions>
+
        <Level>
            <Box label = "1">
               <lower>[0,0,0]</lower>

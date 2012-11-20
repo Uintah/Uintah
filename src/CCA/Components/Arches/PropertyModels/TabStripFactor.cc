@@ -39,11 +39,11 @@ void TabStripFactor::problemSetup( const ProblemSpecP& inputdb )
   db->require("Y", _Y); 
   _M_CO2 = 44.0; 
   _M_HC  = _X*12.0 + _Y; 
-  db->require("fuel_mass_fraction", _HC_F1); 
-  db->getWithDefault("co2_label", _co2_label, "CO2"); 
-  db->getWithDefault("ch4_label",_ch4_label, "CH4"); 
-  db->require("mix_frac_label", _f_label); 
-  db->getWithDefault("small", _small, 1e-8); 
+  db->require( "fuel_mass_fraction", _HC_F1 ); 
+  db->getWithDefault( "co2_label", _co2_label, string("CO2") ); 
+  db->getWithDefault( "ch4_label",_ch4_label, string("CH4") ); 
+  db->require( "mix_frac_label", _f_label ); 
+  db->getWithDefault( "small", _small, 1e-8 ); 
   
 }
 

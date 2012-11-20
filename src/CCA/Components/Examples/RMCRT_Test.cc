@@ -181,7 +181,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     uda_ps->get( "abskg_varName"  ,     d_old_uda->abskgName );
     uda_ps->get( "temperature_varName", d_old_uda->temperatureName );
     uda_ps->getWithDefault( "matl_index",          d_old_uda->matl, 0 );
-    uda_ps->getWithDefault( "cellType_varName"  ,  d_old_uda->cellTypeName, "NONE" );
+    uda_ps->getWithDefault( "cellType_varName"  ,  d_old_uda->cellTypeName, string("NONE") );
   }
   
   //__________________________________

@@ -61,16 +61,16 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
   db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
   // labels: 
-  db->getWithDefault("temperature_label", d_T_label, "temperature");          // The name of the mixture fraction label
-  db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
-  db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
-  db->require("equil_fraction_label", d_ceq_label);                           // The name of the secondary mixture fraciton label
-  db->require("cstar_for_strip_label", d_cstar_strip_label);                  // The name of the C* mixture fraction used for the stripping calc. 
-  db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
-  db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
+  db->getWithDefault( "temperature_label",     d_T_label,     string("temperature") );  // The name of the mixture fraction label
+  db->getWithDefault( "density_label",         d_rho_label,   string("density") );      // The name of the density label 
+  db->require(        "cstar_fraction_label",  d_cstar_label );                         // The name of the C* mixture fraction label
+  db->require(        "equil_fraction_label",  d_ceq_label );                           // The name of the secondary mixture fraciton label
+  db->require(        "cstar_for_strip_label", d_cstar_strip_label);                    // The name of the C* mixture fraction used for the stripping calc. 
+  db->getWithDefault( "mw_label",              d_mw_label,    string("mixture_molecular_weight") ); // The name of the MW label
+  db->getWithDefault( "o2_label",              d_o2_label,    string("O2") );                       // The name of the O2 label
 
-  if ( db->findBlock("temperature_clip") ){ 
-    db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
+  if ( db->findBlock( "temperature_clip" ) ){ 
+    db->getWithDefault( "temperature_clip", d_T_clip, 10000.0 );                    // [K], Turns off the rate below this T.
     _use_T_clip = true;
   }
   if ( db->findBlock("flammability_limit") ){ 

@@ -113,8 +113,8 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   }
   proc0cout << endl;
   
-  ps->getWithDefault("format",d_file_format,"text");
-  if (d_file_format=="bin"){   
+  ps->getWithDefault( "format", d_file_format, string("text" ) );
+  if( d_file_format == "bin" ) {   
     d_file_format = isLittleEndian()?"lsb":"msb";
   }
 

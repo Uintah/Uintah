@@ -39,12 +39,12 @@ BowmanNOx::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP db = inputdb; 
 
-  db->getWithDefault("A", _A, 6.0e16); 
-  db->getWithDefault("E_R", _E_R, 69090); 
-  db->getWithDefault("o2_label", _o2_name, "O2"); 
-  db->getWithDefault("n2_label", _n2_name, "N2"); 
-  db->getWithDefault("density_label", _rho_name, "density"); 
-  db->getWithDefault("temperature_label", _temperature_name, "temperature"); 
+  db->getWithDefault( "A", _A, 6.0e16 );
+  db->getWithDefault( "E_R", _E_R, 69090.0 );
+  db->getWithDefault( "o2_label", _o2_name, string("O2") );
+  db->getWithDefault( "n2_label", _n2_name, string("N2") );
+  db->getWithDefault( "density_label", _rho_name, string("density") );
+  db->getWithDefault( "temperature_label", _temperature_name, string("temperature") ); 
 
   _field_labels->add_species( _o2_name ); 
   _field_labels->add_species( _n2_name ); 

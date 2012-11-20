@@ -82,6 +82,76 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Obtain object parameters
   db_classic->require( "inputfile", tableFileName );
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
+#if 0
+FIXME delete the following section
+<<<<<<< .mine
+  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
+  db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, string("enthalpySP") ); 
+ 
+  // Developer only for now. 
+  if ( db_classic->findBlock("mf_for_hl") ){ 
+    _use_mf_for_hl =  true; 
+  } 
+
+  d_noisy_hl_warning = false; 
+  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
+    d_noisy_hl_warning = true; 
+
+  // only solve for heat loss if a working radiation model is found
+  const ProblemSpecP params_root = db_classic->getRootNode();
+  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  ProblemSpecP db_sources   =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources"); 
+  d_allocate_soot = false; 
+  if ( db_sources ) { 
+    for (ProblemSpecP src_db = db_sources->findBlock("src");
+        src_db !=0; src_db = src_db->findNextBlock("src")){
+      std::string type="null";
+      src_db->getAttribute("type",type); 
+      if ( type == "do_radiation" || type == "rmcrt_radiation" ){ 
+        d_allocate_soot = true; 
+      } 
+    }
+  } 
+  if (db_enthalpy) { 
+    ProblemSpecP db_DO_Rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    ProblemSpecP db_RMCRT_Rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
+    d_adiabatic = true; 
+    if (db_DO_Rad || db_RMCRT_Rad) { 
+      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
+      d_adiabatic = false; 
+      d_allocate_soot = false; // needed for new DORadiation source term 
+    }
+  } else {
+    d_adiabatic = true; 
+  }
+
+  if ( d_enthalpy_name != "enthalpySP" ){ 
+    // For cases where <TransportEqn> defines the enthalpy equation. 
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
+    std::vector<std::string> srcs = eqn.getSourcesList(); 
+    //check density guess -- must be true in this case: 
+    if ( !eqn.getDensityGuessBool() ){ 
+      proc0cout << " Warning: For equation named " << d_enthalpy_name << endl 
+        << "     Density guess must be used for this equation because it determines properties." << endl
+        << "     Automatically setting density guess = true. " << endl;
+      eqn.setDensityGuessBool( true ); 
+    } 
+    for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
+
+      //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      SourceTermBase& src = src_factory.retrieve_source_term( *iter ); 
+      std::string type = src.getSourceType(); 
+
+      if ( type == "do_radiation" ) { 
+        d_adiabatic = false; 
+      } 
+    } 
+  }
+=======
+>>>>>>> .r49572
+#endif
   
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_classic->getRootNode(); 
@@ -178,8 +248,8 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       std::string adiab_name, sens_name; 
 
-	    model_db->getWithDefault( "adiabatic_enthalpy_label" , adiab_name  , "adiabaticenthalpy" );
-	    model_db->getWithDefault( "sensible_enthalpy_label"  , sens_name   , "sensibleenthalpy" );
+      model_db->getWithDefault( "adiabatic_enthalpy_label" , adiab_name  , string( "adiabaticenthalpy" ) );
+      model_db->getWithDefault( "sensible_enthalpy_label"  , sens_name   , string( "sensibleenthalpy" ) );
 
       if ( type == "heat_loss" ){ 
         insertIntoMap( adiab_name ); 
@@ -545,7 +615,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           }
 
           double bc_value     = new_bcs->getValue();
-          std::string bc_kind = new_bcs->getBCType__NEW(); 
+          std::string bc_kind = new_bcs->getType(); 
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ClassicTableInterface::DIRICHLET); 
@@ -685,7 +755,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           // if new_bcs == 0, then it assumes you intelligently set the temperature some other way. 
           double bc_value     = new_bcs->getValue();
-          std::string bc_kind = new_bcs->getBCType__NEW(); 
+          std::string bc_kind = new_bcs->getType(); 
 
           double dx = 0.0;
           double the_sign = 1.0; 

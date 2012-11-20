@@ -284,14 +284,14 @@ namespace Wasatch{
     Wasatch::TransportEquation* momtranseq = NULL;
 
     std::string xvelname, yvelname, zvelname;
-    const Uintah::ProblemSpecP doxvel = params->get( "X-Velocity", xvelname );
-    const Uintah::ProblemSpecP doyvel = params->get( "Y-Velocity", yvelname );
-    const Uintah::ProblemSpecP dozvel = params->get( "Z-Velocity", zvelname );
+    const bool doxvel = params->get( "X-Velocity", xvelname );
+    const bool doyvel = params->get( "Y-Velocity", yvelname );
+    const bool dozvel = params->get( "Z-Velocity", zvelname );
 
     std::string xmomname, ymomname, zmomname;
-    const Uintah::ProblemSpecP doxmom = params->get( "X-Momentum", xmomname );
-    const Uintah::ProblemSpecP doymom = params->get( "Y-Momentum", ymomname );
-    const Uintah::ProblemSpecP dozmom = params->get( "Z-Momentum", zmomname );
+    const bool doxmom = params->get( "X-Momentum", xmomname );
+    const bool doymom = params->get( "Y-Momentum", ymomname );
+    const bool dozmom = params->get( "Z-Momentum", zmomname );
 
     // check if none of the momentum directions were specified
     if( !(doxvel || doyvel || dozvel) ){

@@ -22,17 +22,21 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h> // FIXME, used for testing, delete
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Core/Grid/BoundaryConditions/SideBCData.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <algorithm>
 #include <set>
@@ -41,209 +45,165 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using std::endl;
-
+using namespace std;
 
 // export SCI_DEBUG="BCDA_DBG:+"
-static DebugStream BCDA_dbg("BCDA_DBG",false);
+static DebugStream BCDA_dbg( "BCDA_DBG", false );
+
+////////////////////////////////////////////////////////////////////////////////////
 
 BCDataArray::BCDataArray() 
 {
 }
 
+BCDataArray::BCDataArray( const BCDataArray & rhs )
+{
+  bcDataArrayType::const_iterator mat_id_itr;
+  for( mat_id_itr = rhs.d_BCDataArray.begin(); mat_id_itr != rhs.d_BCDataArray.end(); ++mat_id_itr ) {
+    int mat_id = mat_id_itr->first;
+    const vector<BCGeomBase*>& rhs_vec = mat_id_itr->second;
+    vector<BCGeomBase*>& bcDataArray_vec = d_BCDataArray[mat_id];
+    vector<BCGeomBase*>::const_iterator vec_itr;
+    for( vec_itr = rhs_vec.begin(); vec_itr != rhs_vec.end(); ++vec_itr ) {
+
+      BCGeomBase * bcb = (*vec_itr);
+
+      bcDataArray_vec.push_back( bcb );
+    }
+  }
+}
+
+// FIXME Dd: Not sure if I want to do this copying...
+#if 0
+BCDataArray *
+BCDataArray::copy( const BCDataArray & bcda )
+{
+  bcDataArrayType::const_iterator mat_id_itr;
+  for( mat_id_itr = bcda.d_BCDataArray.begin(); mat_id_itr != bcda.d_BCDataArray.end(); ++mat_id_itr ) {
+    int mat_id = mat_id_itr->first;
+    const vector<BCGeomBase*>& bcda_vec = mat_id_itr->second;
+    vector<BCGeomBase*>& bcDataArray_vec = d_BCDataArray[mat_id];
+    vector<BCGeomBase*>::const_iterator vec_itr;
+    for( vec_itr = bcda_vec.begin(); vec_itr != rhs_vec.end(); ++vec_itr ) {
+
+      BCGeomBase * bcb = (*vec_itr);
+
+      bcDataArray_vec.push_back( bcb );
+    }
+  }
+}
+#endif
+
 BCDataArray::~BCDataArray()
 {
- // cout << "Calling BCDataArray destructor" << endl;
-  bcDataArrayType::const_iterator mat_id_itr;
-  for (mat_id_itr=d_BCDataArray.begin(); mat_id_itr != d_BCDataArray.end();
-       ++mat_id_itr) {
-    int mat_id = mat_id_itr->first;
-    vector<BCGeomBase*>& vec = d_BCDataArray[mat_id];
-    vector<BCGeomBase*>::const_iterator bcd_itr;
-    for (bcd_itr = vec.begin(); bcd_itr != vec.end(); ++bcd_itr) {
-      delete *bcd_itr;
-    }
-    vec.clear();
-  }
-  d_BCDataArray.clear();
-  
+  // cout << "Calling BCDataArray destructor" << endl;
+
+  // FIXME - possible memory leak?
 }
 
-BCDataArray::BCDataArray(const BCDataArray& mybc)
-{
-  bcDataArrayType::const_iterator mat_id_itr;
-  for (mat_id_itr = mybc.d_BCDataArray.begin(); 
-       mat_id_itr != mybc.d_BCDataArray.end(); ++mat_id_itr) {
-    int mat_id = mat_id_itr->first;
-    const vector<BCGeomBase*>& mybc_vec = mat_id_itr->second;
-    vector<BCGeomBase*>& d_BCDataArray_vec =  d_BCDataArray[mat_id];
-    vector<BCGeomBase*>::const_iterator vec_itr;
-    for (vec_itr = mybc_vec.begin(); vec_itr != mybc_vec.end(); ++vec_itr) {
-      d_BCDataArray_vec.push_back((*vec_itr)->clone());
-    }
-  }
-}
+////////////////////////////////////////////////////////////////////////////////////
 
-BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
+BCDataArray&
+BCDataArray::operator=(const BCDataArray& rhs)
 {
-  if (this == &rhs) 
-    return *this;
-
-  // Delete the lhs
-  bcDataArrayType::const_iterator mat_id_itr;
-  for (mat_id_itr=d_BCDataArray.begin(); mat_id_itr != d_BCDataArray.end();
-       ++mat_id_itr) {
-    int mat_id = mat_id_itr->first;
-    vector<BCGeomBase*>& vec = d_BCDataArray[mat_id];
-    vector<BCGeomBase*>::const_iterator bcd_itr;
-    for (bcd_itr = vec.begin(); bcd_itr != vec.end(); ++bcd_itr)
-        delete *bcd_itr;
-    vec.clear();
-  }
-  d_BCDataArray.clear();
-  // Copy the rhs to the lhs
-  for (mat_id_itr = rhs.d_BCDataArray.begin(); 
-       mat_id_itr != rhs.d_BCDataArray.end(); ++mat_id_itr) {
-    int mat_id = mat_id_itr->first;
-    vector<BCGeomBase*>& d_BCDataArray_vec = d_BCDataArray[mat_id];
-    const vector<BCGeomBase*>& rhs_vec = mat_id_itr->second;
-    vector<BCGeomBase*>::const_iterator vec_itr;
-    for (vec_itr = rhs_vec.begin(); vec_itr != rhs_vec.end(); ++vec_itr) 
-      d_BCDataArray_vec.push_back((*vec_itr)->clone());
-  }
+  throw ProblemSetupException( "Don't use operator= for BCDataArray....", __FILE__, __LINE__ );
   return *this;
 }
 
-BCDataArray* BCDataArray::clone()
-{
-  return scinew BCDataArray(*this);
-
-}
-
-void BCDataArray::determineIteratorLimits(Patch::FaceType face,
-                                          const Patch* patch)
+void
+BCDataArray::determineIteratorLimits(       Patch::FaceType   face,
+                                      const Patch           * patch )
 {
   IntVector lpts,hpts;
   patch->getFaceCells(face,-1,lpts,hpts);
   vector<Point> test_pts;
 
-  for (CellIterator candidatePoints(lpts,hpts); !candidatePoints.done();
-       candidatePoints++) {
+  cout << "BCDataArray::determineIteratorLimits() for " << this << ", f/p: " << face << ", " << patch << "\n";
+  print();
+
+  for (CellIterator candidatePoints(lpts,hpts); !candidatePoints.done(); candidatePoints++) {
     IntVector nodes[8];
     patch->findNodesFromCell(*candidatePoints,nodes);
     Point pts[8];
     Vector p( 0.0, 0.0, 0.0 );
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++) {
       pts[i] = patch->getLevel()->getNodePosition(nodes[i]);
-    if (face == Patch::xminus)
-      p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector()
-           +pts[3].asVector())/4.;
-    if (face == Patch::xplus)
-      p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector()
-           +pts[7].asVector())/4.;
-    if (face == Patch::yminus)
-      p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector()
-           +pts[5].asVector())/4.;
-    if (face == Patch::yplus)
-      p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector()
-           +pts[7].asVector())/4.;
-    if (face == Patch::zminus)
-      p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector()
-           +pts[6].asVector())/4.;
-    if (face == Patch::zplus)
-      p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector()
-           +pts[7].asVector())/4.;
+    }
+
+    if      (face == Patch::xminus) {
+      p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector() + pts[3].asVector())/4.;
+    }
+    else if (face == Patch::xplus) {
+      p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector() + pts[7].asVector())/4.;
+    }
+    else if (face == Patch::yminus) {
+      p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector() + pts[5].asVector())/4.;
+    }
+    else if (face == Patch::yplus) {
+      p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector() + pts[7].asVector())/4.;
+    }
+    else if (face == Patch::zminus) {
+      p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector() + pts[6].asVector())/4.;
+    }
+    else if (face == Patch::zplus) {
+      p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector() + pts[7].asVector())/4.;
+    }
+    else {
+      throw ProblemSetupException( "Invalid face.", __FILE__, __LINE__ );
+    }
 
     test_pts.push_back(Point(p.x(),p.y(),p.z()));
   }
   
   BCDataArray::bcDataArrayType::iterator mat_id_itr;
-  for (mat_id_itr = d_BCDataArray.begin();
-       mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
+  for( mat_id_itr = d_BCDataArray.begin(); mat_id_itr != d_BCDataArray.end(); ++mat_id_itr ) {
     vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
-    for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
-         obj != bc_objects.end(); ++obj) {
-      (*obj)->determineIteratorLimits(face,patch,test_pts);
+
+    cout << "here: " << mat_id_itr->first << "\n";
+
+    for( vector<BCGeomBase*>::iterator iter = bc_objects.begin(); iter != bc_objects.end(); ++iter ) {
+      BCGeomBase * bcgb = *iter;
+      bcgb->determineIteratorLimits( face, patch, test_pts );
+    }
+  }
+} // end determineIteratorLimits()
+
+void
+BCDataArray::addBCGeomBase( BCGeomBase * bc )
+{
+  set<int> materials = bc->getMaterials();
+
+  cout << "BCDataArray::addBCGeomBase:  before adding bc\n";
+  print();
+
+  cout << "Adding this BC:\n";
+  bc->print();
+
+  cout << "going to add these materials:\n";
+  for( set<int>::const_iterator iter = materials.begin(); iter != materials.end(); iter++ ) {
+    cout << *iter << " ";
+  }
+  cout << "\n";
+
+  for( set<int>::const_iterator iter = materials.begin(); iter != materials.end(); iter++ ) {
+    d_BCDataArray[ *iter ].push_back( bc );
+  }
+
+  cout << "BCDataArray::addBCGeomBase:  AFTER adding bc\n";
+  print();
+
+}
+
 #if 0
-      (*obj)->printLimits();
-#endif
-    }
-  }
-
-}
-
-void BCDataArray::addBCData(int mat_id,BCGeomBase* bc)
-{
-  vector<BCGeomBase*>& d_BCDataArray_vec = d_BCDataArray[mat_id];
-  d_BCDataArray_vec.push_back(bc);
-}
-
-void BCDataArray::combineBCGeometryTypes(int mat_id)
-{
-
-  vector<BCGeomBase*>& d_BCDataArray_vec = d_BCDataArray[mat_id];
-  
-  vector<BCGeomBase*> new_bcdata_array;
-  // Look to see if there are duplicate SideBCData types, if so, then
-  // combine them into one (i.e. copy the BCData from the duplicate into
-  // the one that will actually be stored).
-
-  if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-               cmp_type<SideBCData>()) > 1) {
-    BCDA_dbg<< "Have duplicates Before . . ." << endl;
-    for (vector<BCGeomBase*>::const_iterator v_itr = d_BCDataArray_vec.begin();
-         v_itr != d_BCDataArray_vec.end(); ++v_itr) {
-      (*v_itr)->print();
-    }
-    BCDA_dbg<< endl << endl;
-  }
-
-  if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-               cmp_type<SideBCData>()) > 1) {
-    
-    SideBCData* side_bc = scinew SideBCData();
-    for (vector<BCGeomBase*>::const_iterator itr = d_BCDataArray_vec.begin();
-         itr != d_BCDataArray_vec.end(); ++ itr) {
-      if (typeid(*(*itr)) == typeid(SideBCData)) {
-        BCDA_dbg<< "Found SideBCData" << endl;
-        BCData bcd,s_bcd;
-        (*itr)->getBCData(bcd);
-        side_bc->getBCData(s_bcd);
-        s_bcd.combine(bcd);
-        side_bc->addBCData(s_bcd);
-        side_bc->print();
-      } else {
-        new_bcdata_array.push_back((*itr)->clone());
-      }
-      
-    }
-    side_bc->print();
-    new_bcdata_array.push_back(side_bc->clone());
-    delete side_bc;
-    new_bcdata_array.back()->print();
-
-    BCDA_dbg<< "Have duplicates After . . ." << endl;
-    for (vector<BCGeomBase*>::const_iterator v_itr = new_bcdata_array.begin();
-         v_itr != new_bcdata_array.end(); ++v_itr) {
-      (*v_itr)->print();
-    }
-    for_each(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-             delete_object<BCGeomBase>());
-    d_BCDataArray_vec.clear();
-    d_BCDataArray_vec = new_bcdata_array;
-  }
-  
-}
-
-
-void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
+void
+BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 {
   if (d_BCDataArray[mat_id].size() <= 1) {
-    BCDA_dbg<< "One or fewer elements in BCDataArray" << endl << endl;
+    cout << "One or fewer elements in BCDataArray\n\n";
     return;
   }
 
-  vector<BCGeomBase*>& d_BCDataArray_vec = d_BCDataArray[mat_id];
+  vector<BCGeomBase*>& bcDataArray_vec = d_BCDataArray[mat_id];
   
   vector<BCGeomBase*> new_bcdata_array;
   // Look to see if there are duplicate SideBCData types, if so, then
@@ -254,137 +214,172 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 
   vector<BCGeomBase*>::iterator v_itr,nv_itr;
 
-  for (v_itr = d_BCDataArray_vec.begin(); v_itr != d_BCDataArray_vec.end(); 
-       ++v_itr) {
-    BCDA_dbg<< "number of SideBCData = " << 
-      count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-               cmp_type<SideBCData>()) << endl;
+  for( v_itr = bcDataArray_vec.begin(); v_itr != bcDataArray_vec.end(); ++v_itr ) {
+    cout << "number of SideBCData = " << 
+      count_if( bcDataArray_vec.begin(), bcDataArray_vec.end(), cmp_type<SideBCData>() ) << "\n";
   }
 
-
-  if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-               cmp_type<SideBCData>()) > 1) {
-    BCDA_dbg<< "Have duplicates Before . . ." << endl;
-    for (v_itr = d_BCDataArray_vec.begin(); v_itr != d_BCDataArray_vec.end(); 
-         ++v_itr) {
-      BCDA_dbg<< "type of element = " << typeid(*(*v_itr)).name() << endl;
+  if( count_if(bcDataArray_vec.begin(), bcDataArray_vec.end(), cmp_type<SideBCData>()) > 1 ) {
+    cout << "Have duplicates Before...\n";
+    for( v_itr = bcDataArray_vec.begin(); v_itr != bcDataArray_vec.end(); ++v_itr ) {
+      cout << "type of element = " << typeid(*(*v_itr)).name() << endl;
       (*v_itr)->print();
     }
-    BCDA_dbg<< endl << endl;
+    cout << "\n\n";
   }
 
-  // Put the last element in the d_BCDataArray_vec into the new_bcdata_array
+  // Put the last element in the bcDataArray_vec into the new_bcdata_array
   // and delete this element
 
-  BCGeomBase* element = d_BCDataArray_vec.back();
+  BCGeomBase* element = bcDataArray_vec.back();
   BCGeomBase* clone_element = element->clone();
   
   new_bcdata_array.push_back(clone_element);
   delete element;
-  d_BCDataArray_vec.pop_back();
+  bcDataArray_vec.pop_back();
 
-  while (!d_BCDataArray_vec.empty()){
-    element = d_BCDataArray_vec.back();
+  while( !bcDataArray_vec.empty() ) {
+    element = bcDataArray_vec.back();
     bool foundit = false;
-    for (nv_itr = new_bcdata_array.begin(); nv_itr != new_bcdata_array.end(); 
-         ++nv_itr) {
-      if (*(*nv_itr) == *element) {
+    for( nv_itr = new_bcdata_array.begin(); nv_itr != new_bcdata_array.end(); ++nv_itr ) {
+      if( *(*nv_itr) == *element ) {
         foundit = true;
         break;
       }
     }
-    if (foundit) {
-      d_BCDataArray_vec.pop_back();
-      BCData bcd, n_bcd;
-      element->getBCData(bcd);
-      (*nv_itr)->getBCData(n_bcd);
-      n_bcd.combine(bcd);
-      (*nv_itr)->addBCData(n_bcd);
+    if( foundit ) {
+      bcDataArray_vec.pop_back();
+      const BCData & bcd = element->getBC();
+      const BCData & n_bcd = (*nv_itr)->getBC();
+      // n_bcd.combine(bcd);  FIXME
+
+      //      (*nv_itr)->addBC(n_bcd);    FIXME
+
       delete element;
     } else {
       new_bcdata_array.push_back(element->clone());
-      d_BCDataArray_vec.pop_back();
+      bcDataArray_vec.pop_back();
       delete element;
     }
 
   }
 
-  BCDA_dbg<< "size of new_bcdata_array = " << new_bcdata_array.size() << endl;
-  BCDA_dbg<< "size of d_BCDataArray_vec = " << d_BCDataArray_vec.size() << endl;
+  cout << "Size of new_bcdata_array = " << new_bcdata_array.size() << "\n";
+  cout << "Size of bcDataArray_vec = " << bcDataArray_vec.size() << "\n";
 
-  for (nv_itr = new_bcdata_array.begin(); nv_itr != new_bcdata_array.end(); 
-       ++nv_itr) {
+  for( nv_itr = new_bcdata_array.begin(); nv_itr != new_bcdata_array.end(); ++nv_itr ) {
     (*nv_itr)->print();
-    BCDA_dbg<< endl << endl;
+    cout << "\n\n";
   }
 
-  for_each(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-           delete_object<BCGeomBase>());
+  for_each( bcDataArray_vec.begin(), bcDataArray_vec.end(), delete_object<BCGeomBase>() );
 
-  d_BCDataArray_vec.clear();
+  bcDataArray_vec.clear();
 #if 1
-  d_BCDataArray_vec = new_bcdata_array;
+  bcDataArray_vec = new_bcdata_array;
 #endif
 
-}
+} // end combineBCGeometryTypes_NEW()
+#endif
 
 const BoundCondBase* 
-BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
+BCDataArray::getBoundCondData( int mat_id, const string & type, int ichild ) const
 {
-  //  cout << "type = " << type << endl;
-  BCData new_bc,new_bc_all;
-  // Need to check two scenarios -- the given mat_id and the all mat_id (-1)
-  // Check the given mat_id
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  
-  if (itr != d_BCDataArray.end()) {
-    itr->second[ichild]->getBCData(new_bc);
-    bool found_it = new_bc.find(type);
-    if (found_it == true)
-      return new_bc.getBCValues(type);
+  const BoundCondBase * result = NULL;
+
+  BCGeomBase   * child = getChild( mat_id, ichild );
+  const BCData * bcd   = child->getBCData( mat_id );
+
+  if( bcd == NULL ) {
+    bcd = child->getBCData( -1 );
+  }
+
+  result = bcd->getBCValue( type );
+
+  if( result == NULL ) { // see if it is a generic  FIXME is this right? qwerty qwerty qwerty 
+    bcd = child->getBCData( -1 );    
+    result = bcd->getBCValue( type );
+  }
+
+  if( result == NULL ) {
+    const BCData * bcd = child->getBCData( -1 ); // all materials
+    result = bcd->getBCValue( "Auxiliary" );
+  }
+  return result;
+
+
+#if 0
+  bcDataArrayType::const_iterator itr = d_BCDataArray.find( mat_id );
+
+  if( itr == d_BCDataArray.end() ) {
+    // Given material does not have any explicit BCs, so check -1...
+
+    const vector<BCGeomBase*> & bcgbv = itr->second;
+
+    const BCData * bcd = bcgbv[ichild]->getBCData( -1 ); // all materials
+
+    result = bcd->getBCValue( type );
+  }
+  else {
+
+    const vector<BCGeomBase*> & bcgbv = itr->second;  //d_BCDataArray[ mat_id ];
+
+    const BCData * bcd = bcgbv[ ichild ]->getBCData( mat_id );
+
+    if( bcd->exists( type ) ) {
+      return bcd->getBCValue( type );
+    }
     else {
-      found_it = new_bc.find("Auxiliary");
-      if (found_it)
-        return new_bc.getBCValues("Auxiliary");
+      bcd = bcgbv[ ichild ]->getBCData( mat_id );
+      result = bcd->getBCValue( type );
     }
   }
-  // Check the mat_id = "all" case
-  itr = d_BCDataArray.find(-1);
-  if (itr  != d_BCDataArray.end()) {
-    if (ichild < (int)itr->second.size()) {
-      itr->second[ichild]->getBCData(new_bc_all);
-      bool found_it = new_bc_all.find(type);
-      if (found_it == true)
-        return new_bc_all.getBCValues(type);
-      else {
-        found_it = new_bc_all.find("Auxiliary");
-        if (found_it)
-          return new_bc_all.getBCValues("Auxiliary");
-      }
-      return 0;
-    }
+
+  if( result == NULL ) {
+    const BCData * bcd = itr->second[ichild]->getBCData( -1 ); // all materials
+    result = bcd->getBCValue( "Auxiliary" );
   }
-  return 0;
+
+  // FIXME debugging
+  if( result == NULL ) {
+    throw ProblemSetupException( "result is null...", __FILE__, __LINE__ );
+  }
+  // end FIXME debugging
+
+  return result;
+#endif
 }
 
-
-void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
+const
+Iterator &
+BCDataArray::getCellFaceIterator( int mat_id, int ichild, const Patch * patch ) const
 {
+  BCGeomBase * geom = getChild( mat_id, ichild );
+  return geom->getCellFaceIterator( patch );
+#if 0
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
     itr->second[ichild]->getCellFaceIterator(b_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ichild]->getCellFaceIterator(b_ptr);
-  }
+    if (itr != d_BCDataArray.end()) {
+      const BCGeomBase * bcgb = itr->second[ichild];
+      bcgb->print();
 
+      bcgb->getCellFaceIterator( b_ptr );
+    }
+  }
+#endif
 }
 
-
-void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
+const
+Iterator &
+BCDataArray::getNodeFaceIterator( int mat_id, int ichild, const Patch * patch ) const
 {
+  BCGeomBase * geom = getChild( mat_id, ichild );
+  return geom->getNodeFaceIterator( patch );
+#if 0
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
     itr->second[ichild]->getNodeFaceIterator(b_ptr);
@@ -394,48 +389,73 @@ void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int ichild) c
     if (itr != d_BCDataArray.end())
       itr->second[ichild]->getNodeFaceIterator(b_ptr);
   }
+#endif
 }
 
-int BCDataArray::getNumberChildren(int mat_id) const
+int
+BCDataArray::getNumberChildren( int mat_id ) const
 {
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end())
+  bcDataArrayType::const_iterator itr = d_BCDataArray.find( mat_id );
+
+  if( mat_id != -1 && itr != d_BCDataArray.end() ) {
+
+    int num_in_specific_matl = itr->second.size();
+
+    itr = d_BCDataArray.find( -1 );
+    int num_in_generic_matl  = itr->second.size();
+
+    return num_in_generic_matl + num_in_specific_matl;
+  }
+  else {
+    itr = d_BCDataArray.find( -1 );
     return itr->second.size();
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      return itr->second.size();
   }
-  return 0;
 }
 
-BCGeomBase* BCDataArray::getChild(int mat_id,int i) const
+BCGeomBase*
+BCDataArray::getChild( int mat_id, int child_index ) const
 {
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end())
-    return itr->second[i];
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      return itr->second[i];
-  }
-  return 0;
-}
+  bcDataArrayType::const_iterator itr = d_BCDataArray.find( mat_id );
 
-void BCDataArray::print()
-{
-  bcDataArrayType::const_iterator bcda_itr;
-  for (bcda_itr = d_BCDataArray.begin(); bcda_itr != d_BCDataArray.end(); 
-       bcda_itr++) {
-    BCDA_dbg << endl << "mat_id = " << bcda_itr->first << endl;
-    BCDA_dbg<< "Size of BCGeomBase vector = " << bcda_itr->second.size() << endl;
-    for (vector<BCGeomBase*>::const_iterator i = bcda_itr->second.begin();
-         i != bcda_itr->second.end(); ++i) {
-      BCDA_dbg << "BCGeometry Type = " << typeid(*(*i)).name() <<  " "
-           << *i << endl;
-      (*i)->print();
+  if( mat_id == -1 || itr == d_BCDataArray.end() ) { // If mat_id -1 is explicitly asked for, or if the explicit mat_id doesn't exist...
+
+    if( mat_id != -1 ) {
+      itr = d_BCDataArray.find( -1 );
+    }
+
+    return itr->second[ child_index ];
+  }
+  else { 
+
+    // Find the BCGeomBase* in the specified material, but if the 'child_index' is outside of the 
+    // specific materials array, then we need to go into the generic ('all'/-1 material) materials vector.
+
+    int the_size = itr->second.size();
+    if( child_index < the_size ) {
+      return itr->second[ child_index ];
+    }
+    else {
+      itr = d_BCDataArray.find( -1 );
+      return itr->second[ child_index - the_size ];
     }
   }
-        
-  
+}
+
+void
+BCDataArray::print() const
+{
+  bcDataArrayType::const_iterator bcda_itr;
+
+  cout << "BCDataArray (size: " << d_BCDataArray.size() << "):  [" << this << "]\n";
+
+  for( bcda_itr = d_BCDataArray.begin(); bcda_itr != d_BCDataArray.end(); bcda_itr++ ) {
+    cout << "mat_id = " << bcda_itr->first << "\n";
+    cout << "Size of BCGeomBase vector = " << bcda_itr->second.size() << "\n";
+
+    const vector<BCGeomBase*> & bcgbs = bcda_itr->second;
+
+    for( unsigned int pos = 0; pos < bcgbs.size(); ++pos ) {
+      bcgbs[ pos ]->print();
+    }
+  }
 }

@@ -1,3 +1,6 @@
+#ifndef UINTAH_GRID_BCDataArray_H
+#define UINTAH_GRID_BCDataArray_H
+
 /*
  * The MIT License
  *
@@ -22,15 +25,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_GRID_BCDataArray_H
-#define UINTAH_GRID_BCDataArray_H
-
-#include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/Iterator.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 #include <map>
 
@@ -55,119 +55,116 @@ namespace Uintah {
 
 */
 
-  using std::vector;
-  using std::map;
+class BCDataArray {
+public:
 
-   class BCDataArray {
-   public:
+  /// Constructor
+  BCDataArray();
 
-     /// Constructor
-     BCDataArray();
+  /// Copy constructor
+  BCDataArray( const BCDataArray & bc );
 
-     /// Destructor
-     ~BCDataArray();
+  /// Destructor
+  ~BCDataArray();
 
-     /// Copy constructor
-     BCDataArray(const BCDataArray& bc);
+  /// Get the boundary condition data for a given material and a given
+  /// type for a given child.
+  const BoundCondBase* getBoundCondData( int mat_id, const string & type, int ichild ) const;
 
-     /// Assignment operator
-     BCDataArray& operator=(const BCDataArray& bc);
+  /// Determine the iterator limits.
+  void determineIteratorLimits( Patch::FaceType face, const Patch* patch );
 
-     /// Make a clone of self.  Must use delete to free.
-     BCDataArray* clone();
+  /// Add boundary condition data
+  void addBCGeomBase( BCGeomBase * bc );
 
-     /// Get the boundary condition data for a given material and a given
-     /// type for a given child.
-     const BoundCondBase* getBoundCondData(int mat_id,const string type, 
-                                           int ichild) const;
+  /// Combine the duplicate BCGeometryTypes into a single BCGeometryType
+  //  void combineBCGeometryTypes( int mat_id );
+  //  void combineBCGeometryTypes_NEW( int mat_id );
 
-     /// Determine the iterator limits.
-     void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
+  /// Get the cell centered face iterator for the ith face child on mat_id.
+  const Iterator & getCellFaceIterator( int mat_id, int ichild, const Patch * patch ) const;
 
-     /// Add boundary condition data
-     void addBCData(int mat_id,BCGeomBase* bc);
+  /// Get the node centered face iterator for the ith face child on mat_id.
+  const Iterator & getNodeFaceIterator( int mat_id, int ichild, const Patch * patch ) const;
 
-     /// Combine the duplicate BCGeometryTypes into a single BCGeometryType
-     void combineBCGeometryTypes(int mat_id);
-     void combineBCGeometryTypes_NEW(int mat_id);
+  /// Return the number of children in the vector<BCGeomBase*>.
+  int getNumberChildren( int mat_id ) const;
 
-     /// Get the cell centered face iterator for the ith face child on mat_id.
-     void getCellFaceIterator(int mat_id,Iterator& b_ptr, int ichild) const;
+  /// Get the ith child. (0 based)
+  BCGeomBase* getChild( int mat_id, int ichild ) const;
 
-     /// Get the node centered face iterator for the ith face child on mat_id.
-     void getNodeFaceIterator(int mat_id,Iterator& b_ptr, int ichild) const;
-
-     /// Return the number of children in the vector<BCGeomBase*>.
-     int getNumberChildren(int mat_id) const;
-
-     /// Get the ith child.
-     BCGeomBase* getChild(int mat_id,int ichild) const;
-
-     /// Print out the various boundary condition geometry types.
-     void print();
+  /// Print out the various boundary condition geometry types.
+  void print() const;
      
-     /// The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
-     /// mat_id = "0", etc.
-     typedef map<int,vector<BCGeomBase*> > bcDataArrayType;         
-   private:
-     bcDataArrayType d_BCDataArray;
-     friend class Patch;
-     friend class BoundCondReader;
-   };
+private:
+
+  typedef std::map< int, std::vector<BCGeomBase*> > bcDataArrayType;
+
+  /// The d_BCDataArray maps from mat_id to BCGeomBase(s)*.  (-1 is for mat_id = "all", 0 for mat_id = "0", etc.)
+  /// It should be noted that a BCGeomBase can actually hold (in its BCData) BoundCondBases that
+  /// correspond to multiple materials... In this case, the same BCGeomBase may be pointed to multiple
+  /// times in the d_BCDataArray (for each corresonding material)...
+  ///
+  bcDataArrayType d_BCDataArray;
+
+  friend class Patch;
+  friend class BoundCondReader;
 
 
-   // Used for inserting IntVectors into a set.  The standard < operator
-   // for IntVectors is too restrictive.
+  /// Assignment operator - DON'T USE THIS
+  BCDataArray& operator=( const BCDataArray & bc );
 
-   /// Sorts along the x axis
-   struct ltiv_x {
-     bool operator()(const IntVector& i1,const IntVector& i2) {
-       if (i2.x() < i1.x()) return false;
-       if (i1.y() < i2.y()) return true;
-       if (i1.z() < i2.z()) return true;
-       
-       return false;
-     }
-   };
+};
 
-   /// Sorts along the y axis
-   struct ltiv_y {
-     bool operator()(const IntVector& i1,const IntVector& i2) {
-       if (i2.y() < i1.y()) return false;
-       if (i1.z() < i2.z()) return true;
-       if (i1.x() < i2.x()) return true;
 
-       return false;
-     }
-   };
+// Used for inserting IntVectors into a set.  The standard < operator
+// for IntVectors is too restrictive.
 
-   /// Sorts along the z axis
-   struct ltiv_z {
-     bool operator()(const IntVector& i1,const IntVector& i2) {
-       if (i2.z() < i1.z()) return false;
-       if (i1.y() < i2.y()) return true;
-       if (i1.x() < i2.x()) return true;
+/// Sorts along the x axis
+struct ltiv_x {
+  bool operator()(const IntVector& i1,const IntVector& i2) {
+    if (i2.x() < i1.x()) return false;
+    if (i1.y() < i2.y()) return true;
+    if (i1.z() < i2.z()) return true;
 
-       return false;
-     }
-   };
+    return false;
+  }
+};
+
+/// Sorts along the y axis
+struct ltiv_y {
+  bool operator()(const IntVector& i1,const IntVector& i2) {
+    if (i2.y() < i1.y()) return false;
+    if (i1.z() < i2.z()) return true;
+    if (i1.x() < i2.x()) return true;
+
+    return false;
+  }
+};
+
+/// Sorts along the z axis
+struct ltiv_z {
+  bool operator()(const IntVector& i1,const IntVector& i2) {
+    if (i2.z() < i1.z()) return false;
+    if (i1.y() < i2.y()) return true;
+    if (i1.x() < i2.x()) return true;
+
+    return false;
+  }
+};
    
-   /// A less restrictive < operator rather than the built-in one for 
-   /// IntVectors.
-   struct ltiv_xyz {
-     bool operator()(const IntVector& i1,const IntVector& i2) {
-       if (i1.x() < i2.x() && i1.y() < i2.y() && i1.z() < i2.z())
-         return true;
-       else
-         return false;
-     }
-   };
-
+/// A less restrictive < operator rather than the built-in one for 
+/// IntVectors.
+struct ltiv_xyz {
+  bool operator()(const IntVector& i1,const IntVector& i2) {
+    if (i1.x() < i2.x() && i1.y() < i2.y() && i1.z() < i2.z())
+      return true;
+    else
+      return false;
+  }
+};
 
 } // End namespace Uintah
 
 #endif
-
-
-
 

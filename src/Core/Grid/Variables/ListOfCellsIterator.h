@@ -32,6 +32,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
+
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -101,9 +102,10 @@ namespace Uintah {
     inline IntVector begin() const { return listOfCells_.front(); }
 
     /**
-     * Return one past the last element of the iterator
+     * WARNING, this returns __ONE PAST__ the last element of the iterator...
+     * so probably not what you are expecting!!!
      */
-    inline IntVector end() const { return listOfCells_.back(); }
+    inline IntVector end() const { return listOfCells_.back(); } 
     
     /**
      * Return the number of cells in the iterator
@@ -121,13 +123,31 @@ namespace Uintah {
       listOfCells_.push_back(IntVector(INT_MAX,INT_MAX,INT_MAX));
     }
 
-
     /**
      * resets the iterator
      */
     inline void reset()
     {
       index_=0;
+    }
+
+    /**
+     * limits()
+     *    To display some reasonable information about this iterator,
+     *    use this function, NOT begin() and end()!!!!
+     */
+    virtual std::ostream& limits(std::ostream& out) const
+    {
+      if( size() == 0 ) {
+        out << "Unitialized";
+      }
+      else if( size() == 1 ) {
+        out << "Only cell: " << begin();
+      }
+      else {
+        out << "First cell: " << begin() << ", last cell: " << listOfCells_[size()-1];
+      }
+      return out;
     }
 
     protected:
@@ -138,18 +158,11 @@ namespace Uintah {
     ListOfCellsIterator* clone() const
     {
       return scinew ListOfCellsIterator(*this);
-
-    };
+    }
     
     virtual std::ostream& put(std::ostream& out) const
     {
       out << *this;
-      return out;
-    }
-
-    virtual std::ostream& limits(std::ostream& out) const
-    {
-      out << begin() << " " << end();
       return out;
     }
 

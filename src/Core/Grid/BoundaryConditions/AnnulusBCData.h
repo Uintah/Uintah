@@ -33,69 +33,52 @@
 
 namespace Uintah {
 
-  /*!
+/*!
     
-  \class CircleBCData
+\class CircleBCData
   
-  \ brief Defines an annulus geometry for a boundary condition.
+\brief Defines an annulus geometry for a boundary condition.
   
-  \author John A. Schmidt \n
-  Department of Mechanical Engineering \n
-  University of Utah \n
-  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
-
-  */
+\author John A. Schmidt \n
+        Department of Mechanical Engineering \n
+        University of Utah \n
+        Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+*/
   
-  using namespace SCIRun;
+class AnnulusBCData : public BCGeomBase {
 
-  class AnnulusBCData : public BCGeomBase  {
+public:
+  /// Constructor used with a point defining the origin and the radius.
+  AnnulusBCData( const Point & origin, double inRadius, double outRadius, const string & name, const Patch::FaceType & side );
 
-   public:
-    /// Constructor
-    AnnulusBCData();
+  /// Destructor
+  virtual ~AnnulusBCData();
 
-    /// Constructor used with a point defining the origin and the radius.
-    AnnulusBCData(Point& p, double inRadius, double outRadius);
+  virtual bool operator==(const BCGeomBase&) const;
 
-    /// Destructor
-    virtual ~AnnulusBCData();
+  /// Determines if a point is inside the circle
+  bool inside(const Point& p) const;
 
-    virtual bool operator==(const BCGeomBase&) const;
+  /// Print out the boundary condition geometry type.
+  virtual void print( int depth = 0 ) const;
 
-    /// Clone the boundary condition geometry -- allocates memory.
-    AnnulusBCData* clone();
-
-    /// Add the boundary condition data
-    void addBCData(BCData& bc);
-
-    /// Add the old boundary condition data -- no longer used.
-    void addBC(BoundCondBase* bc);
-
-    /// Get the boundary condition data
-    void getBCData(BCData& bc) const;
-
-    /// Determines if a point is inside the circle
-    bool inside(const Point& p) const;
-
-    /// Print out the boundary condition geometry type.
-    virtual void print();
-
-    /// Determine the cell and node centered iterators
-    virtual void determineIteratorLimits(Patch::FaceType face,
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts);
+  /// Determine the cell and node centered iterators
+  virtual void determineIteratorLimits(       Patch::FaceType   face,
+                                        const Patch           * patch, 
+                                              vector<Point>   & test_pts );
     
-  private:
-    BCData d_bc;
-    double d_innerRadius;
-    double d_outerRadius;
-    Point  d_origin;
-  };
+private:
+
+  double d_innerRadius;
+  double d_outerRadius;
+  Point  d_origin;
+
+  /// Constructor - Should not use the default constructor...
+  AnnulusBCData();
+
+};
   
 } // End namespace Uintah
 
 #endif
-
-
-
 

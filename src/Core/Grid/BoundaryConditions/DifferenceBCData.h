@@ -28,82 +28,66 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 
 namespace Uintah {
-  /*!
-    
-  \class DifferenceBCData
+
+/*!
+
+\class DifferenceBCData
   
-  \ brief Stores the difference of two different boundary condition geometries.
-   
-  \author John A. Schmidt \n
-  Department of Mechanical Engineering \n
-  University of Utah \n
-  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+\ brief Stores the difference of two different boundary condition geometries.
 
-  */
+\author John A. Schmidt \n
+Department of Mechanical Engineering \n
+University of Utah \n
+Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+
+*/
   
-  using namespace SCIRun;
+class DifferenceBCData : public BCGeomBase  {
 
-  class DifferenceBCData : public BCGeomBase  {
-   public:
+public:
 
-    /// Default constructor
-    DifferenceBCData();
+  /// Constructor with two boundary condition geometries.  The second 
+  /// argument is subtracted from the first argument.  Note, the new DifferenceBCData
+  /// takes its BoundConds from 'p1'.
+  DifferenceBCData( BCGeomBase * p1, BCGeomBase * p2, const string & name, const Patch::FaceType & side );
 
-    /// Copy constructor
-     DifferenceBCData(const DifferenceBCData& rhs);
+  /// Destructor
+  virtual ~DifferenceBCData();
 
-     /// Assignment operator
-     DifferenceBCData& operator=(const DifferenceBCData& bc);
+  virtual bool operator==(const BCGeomBase&) const;
 
+  /// Determine if a point is inside the object.
+  bool inside(const Point& p) const;
 
-     /// Constructor with two boundary condition geometries.  The second 
-     /// argument is subtracted from the first argument.
-     DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2);
+  /// Print out the boundary condition geometry types.
+  virtual void print( int depth = 0 ) const;
 
-     /// Destructor
-     virtual ~DifferenceBCData();
+  /// Determine the cell and node boundary iterators.
+  virtual void determineIteratorLimits( const Patch::FaceType   face,
+                                        const Patch           * patch, 
+                                        const vector<Point>   & test_pts );
 
-     virtual bool operator==(const BCGeomBase&) const;
+  // Returns a list of all the materials that the BCGeom corresponds to
+  virtual std::set<int> getMaterials() const;
 
-     /// Clone the boundary condition geometry -- allocates memory.
-     DifferenceBCData* clone();
+private:
+  BCGeomBase * d_left;
+  BCGeomBase * d_right;
 
-     /// Get the boundary condition data
-     void getBCData(BCData& bc) const;
+  /// Constructors -- Made private in order to disallow non-initialized circle objects...
+  DifferenceBCData() {}
+  DifferenceBCData( const DifferenceBCData & rhs ) {} // Copy constructor
 
-     /// Add the boundary condition data -- no longer used.
-     void addBCData(BCData& bc);
+  /// Assignment operator - Don't use this.
+  DifferenceBCData& operator=(const DifferenceBCData& bc);
 
-     /// Add the old boundary condition data -- no longer used.
-     void addBC(BoundCondBase* bc);
-
-     /// Determine if a point is inside the object.
-     bool inside(const Point& p) const;
-
-     /// Print out the boundary condition geometry types.
-     virtual void print();
-
-
-     /// Determine the cell and node boundary iterators.
-     virtual void determineIteratorLimits(Patch::FaceType face,
-                                          const Patch* patch, 
-                                          vector<Point>& test_pts);
-
-
-   private:
-     BCGeomBase* left;
-     BCGeomBase* right;
-
-     friend class BCReader;
-   };
+};
 
 } // End namespace Uintah
 
 #endif
-
-
-
 

@@ -148,13 +148,13 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
     throw ProblemSetupException("Cannot find reaction_constants tag", __FILE__, __LINE__);
   }
 
-  react_ps->getWithDefault("f_stoichometric",       d_f_stoic,       -9);  
-  react_ps->getWithDefault("delta_H_combustion",    d_del_h_comb,    -9);  
-  react_ps->getWithDefault("oxidizer_temp_infinity",d_T_oxidizer_inf,-9);
-  react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);    
-  react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);
-  react_ps->getWithDefault("smear_initialDistribution_knob",       
-                            d_smear_initialDistribution_knob,       0);
+  react_ps->getWithDefault( "f_stoichometric",       d_f_stoic,       -9.0 );
+  react_ps->getWithDefault( "delta_H_combustion",    d_del_h_comb,    -9.0 );
+  react_ps->getWithDefault( "oxidizer_temp_infinity",d_T_oxidizer_inf,-9.0 );
+  react_ps->getWithDefault( "initial_fuel_temp",     d_T_fuel_init,   -9.0 );
+  react_ps->getWithDefault( "diffusivity",           d_diffusivity,   -9.0 );
+  react_ps->getWithDefault( "smear_initialDistribution_knob",       
+                                                     d_smear_initialDistribution_knob,  0 );
                             
   if( Floor(d_f_stoic) == -9        ||  Floor(d_del_h_comb) == -9 ||    // bulletproofing
       Floor(d_T_oxidizer_inf) == -9 ||  Floor(d_T_fuel_init) == -9 ) {

@@ -23,29 +23,16 @@
  */
 
 #include <Core/Grid/BoundaryConditions/RectangleBCData.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <iostream>
+
 using namespace SCIRun;
 using namespace Uintah;
-using std::cout;
-using std::endl;
+using namespace std;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-RectangleBCData::RectangleBCData() : BCGeomBase()
-{
-  
-}
-
-RectangleBCData::RectangleBCData(Point& low, Point& up) 
-: BCGeomBase(),
-  d_min(low),
-  d_max(up)
+RectangleBCData::RectangleBCData( const Point & low, const Point & high, const string & name, const Patch::FaceType & side ) :
+  BCGeomBase( name, side ), d_min( low ), d_max( high )
 {
 }
 
@@ -53,11 +40,10 @@ RectangleBCData::~RectangleBCData()
 {
 }
 
-
-bool RectangleBCData::operator==(const BCGeomBase& rhs) const
+bool
+RectangleBCData::operator==(const BCGeomBase& rhs) const
 {
-  const RectangleBCData* p_rhs =
-    dynamic_cast<const RectangleBCData*>(&rhs);
+  const RectangleBCData* p_rhs = dynamic_cast<const RectangleBCData*>(&rhs);
 
   if (p_rhs == NULL)
     return false;
@@ -65,28 +51,8 @@ bool RectangleBCData::operator==(const BCGeomBase& rhs) const
     return (this->d_min == p_rhs->d_min) && (this->d_max == p_rhs->d_max);
 }
 
-RectangleBCData* RectangleBCData::clone()
-{
-  return scinew RectangleBCData(*this);
-}
-
-void RectangleBCData::addBCData(BCData& bc)
-{
-  d_bc = bc;
-}
-
-
-void RectangleBCData::addBC(BoundCondBase* bc)
-{
-  d_bc.setBCValues(bc);
-}
-
-void RectangleBCData::getBCData(BCData& bc) const
-{
-  bc = d_bc;
-}
-
-bool RectangleBCData::inside(const Point &p) const 
+bool
+RectangleBCData::inside(const Point &p) const 
 {
   if(d_min.x() == d_max.x()) {
     if (p.y() <= d_max.y() && p.y() >= d_min.y()
@@ -117,24 +83,25 @@ bool RectangleBCData::inside(const Point &p) const
   return false;
 }
 
-void RectangleBCData::print() 
+void
+RectangleBCData::print( int depth ) const
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  d_bc.print();
+  string indentation( depth*2, ' ' );
+
+  cout << indentation << "RectangleBCData: " << d_name << "\n";
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 2 );
+  }
 }
 
-
-
-void RectangleBCData::determineIteratorLimits(Patch::FaceType face, 
-                                              const Patch* patch, 
-                                              vector<Point>& test_pts)
+void
+RectangleBCData::determineIteratorLimits(       Patch::FaceType   face, 
+                                          const Patch           * patch, 
+                                                vector<Point>   & test_pts )
 {
 #if 0
-  cout << "RectangleBC determineIteratorLimits()" << endl;
+  cout << "RectangleBC determineIteratorLimits()" << endl;  // FIXME DEBUG Statement
 #endif
 
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
-
 }
-
-

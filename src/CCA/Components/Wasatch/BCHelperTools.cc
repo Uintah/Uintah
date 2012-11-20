@@ -412,7 +412,7 @@ namespace Wasatch {
     bc_functor_name="none";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
-      bc_kind =  new_bcs->getBCType__NEW();
+      bc_kind =  new_bcs->getBCType();
       bc_face_name = new_bcs->getBCFaceName();
       bc_functor_name = new_bcs->getFunctorName();
     }

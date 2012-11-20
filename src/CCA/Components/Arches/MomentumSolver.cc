@@ -97,7 +97,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
 
   string conv_scheme;
-  db->getWithDefault("convection_scheme",conv_scheme,"upwind");
+  db->getWithDefault( "convection_scheme", conv_scheme, string("upwind") );
   if (conv_scheme == "upwind"){
     d_central = false;
   }else if (conv_scheme == "central"){

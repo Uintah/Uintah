@@ -31,7 +31,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
   ProblemSpecP db = input_db; 
 
-  db->getWithDefault( "temperature_label", _T_label_name, "temperature" ); 
+  db->getWithDefault( "temperature_label", _T_label_name, string( "temperature" ) ); 
 
   for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != 0; db_model = db_model->findNextBlock( "model" ) ){
 

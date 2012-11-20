@@ -151,7 +151,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
       // set model clipping
       db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
-      db->getWithDefault( "high_clip", d_highModelClip, 999999 );
+      db->getWithDefault( "high_clip", d_highModelClip, 999999.0 );
     }
   }
 

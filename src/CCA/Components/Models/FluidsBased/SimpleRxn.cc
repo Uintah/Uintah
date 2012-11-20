@@ -153,21 +153,21 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
      throw ProblemSetupException("SimpleRxn: Couldn't find constants tag", __FILE__, __LINE__);
    }
     
-  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,    -9);         
+  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,   -9.0);
 
-  const_ps->getWithDefault("rho_air",          d_rho_air,         -9);
-  const_ps->getWithDefault("rho_fuel",         d_rho_fuel,        -9);
-  const_ps->getWithDefault("cv_air",           d_cv_air,          -9);
-  const_ps->getWithDefault("cv_fuel",          d_cv_fuel,         -9);
-  const_ps->getWithDefault("R_air",            d_R_air,           -9);
-  const_ps->getWithDefault("R_fuel",           d_R_fuel,          -9);
-  const_ps->getWithDefault("thermalCond_air",  d_thermalCond_air,  0);
-  const_ps->getWithDefault("thermalCond_fuel", d_thermalCond_fuel, 0);
-  const_ps->getWithDefault("viscosity_air",    d_viscosity_air,    0);
-  const_ps->getWithDefault("viscosity_fuel",   d_viscosity_fuel,   0);
-  const_ps->getWithDefault("diffusivity",      d_scalar->diff_coeff, -9);       
+  const_ps->getWithDefault("rho_air",          d_rho_air,         -9.0);
+  const_ps->getWithDefault("rho_fuel",         d_rho_fuel,        -9.0);
+  const_ps->getWithDefault("cv_air",           d_cv_air,          -9.0);
+  const_ps->getWithDefault("cv_fuel",          d_cv_fuel,         -9.0);
+  const_ps->getWithDefault("R_air",            d_R_air,           -9.0);
+  const_ps->getWithDefault("R_fuel",           d_R_fuel,          -9.0);
+  const_ps->getWithDefault("thermalCond_air",  d_thermalCond_air,  0.0);
+  const_ps->getWithDefault("thermalCond_fuel", d_thermalCond_fuel, 0.0);
+  const_ps->getWithDefault("viscosity_air",    d_viscosity_air,    0.0);
+  const_ps->getWithDefault("viscosity_fuel",   d_viscosity_fuel,   0.0);
+  const_ps->getWithDefault("diffusivity",      d_scalar->diff_coeff, -9.0);       
   const_ps->getWithDefault("initialize_diffusion_knob",       
-                            d_scalar->initialize_diffusion_knob,   0);
+                            d_scalar->initialize_diffusion_knob,   0 );
   
   if( d_scalar->f_stoic == -9 || 
       d_rho_air   == -9  || d_rho_fuel == -9 ||    

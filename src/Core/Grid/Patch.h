@@ -25,30 +25,27 @@
 #ifndef UINTAH_HOMEBREW_Patch_H
 #define UINTAH_HOMEBREW_Patch_H
 
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Ghost.h>
-#include <Core/Grid/Level.h>
+#include <Core/Containers/SuperBox.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/fixedvector.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/Iterator.h>
-
-#include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/SuperBox.h>
+#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Iterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Malloc/Allocator.h>
 
 #undef None
 
-#include   <string>
-#include   <map>
-#include   <iosfwd>
-#include   <vector>
-
-
+#include <string>
+#include <map>
+#include <iosfwd>
+#include <vector>
 
 #if defined( __PGI )
 #  define WARNS_ABOUT_UNREACHABLE_STATEMENTS 1
@@ -121,6 +118,9 @@ WARNING
         numFaces, // 6
         invalidFace
       };
+
+      // Converts "x+" to xminus (0), etc.  Valid input: "x+", "x-", "y+", "y-", "z+", and "z-". 
+      static FaceType stringToFaceType( const string & faceString );
 
       enum VariableBasis {
         NodeBased = Ghost::AroundNodes,
@@ -2038,9 +2038,10 @@ WARNING
      
    }; // end class Patch
    
-   inline Patch::FaceType operator++(Patch::FaceType &face,int)
+   inline Patch::FaceType operator++( Patch::FaceType & face, int )
    {
-    return face=static_cast<Patch::FaceType>(face+1);
+     face = static_cast<Patch::FaceType>( face + 1 );
+     return face;
    }
 
 } // End namespace Uintah

@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -35,31 +35,31 @@
 #include <cstdlib>
 
 using namespace Uintah;
-using std::string;
-using std::map;
+using namespace std;
 
-void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc, 
-                              int& mat_id, const std::string face_label)
-
+// create()
+//     child  - <BCType> problem spec
+//
+BoundCondBase *
+BoundCondFactory::create( const ProblemSpecP & child, const string & face_label )
 {
   map<string,string> bc_attr;
-  child->getAttributes(bc_attr);
+  child->getAttributes( bc_attr );
   
   
   // Check to see if "id" is defined
-  if (bc_attr.find("id") == bc_attr.end()) 
-    SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
+  if (bc_attr.find("id") == bc_attr.end()) {
+    SCI_THROW( ProblemSetupException( "'id' is not specified in the BCType tag", __FILE__, __LINE__ ) );
+  }
   
-  if (bc_attr["id"] != "all"){
+  int matl_id = -1; // -1 == "All Materials"
+
+  if( bc_attr["id"] != "all" ){
     std::istringstream ss(bc_attr["id"]);
-    ss >> mat_id;
-  }else{
-    mat_id = -1;  
+    ss >> matl_id;
   }
 
-  //  std::cout << "mat_id = " << mat_id << std::endl;
-  // Determine whether or not things are a scalar, Vector or a NoValue, i.e.
-  // Symmetry
+  // Determine whether or not things are a scalar, Vector or does not have a value (i.e. Symmetry)
 
   double d_value;
   Vector v_value;
@@ -67,33 +67,41 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   string functor_name = "none";
   
   ProblemSpecP functorPS = child->findBlock( "functor_name" );
-  if (functorPS) child->get( "functor_name", functor_name );
+  if( functorPS ) {
+    child->get( "functor_name", functor_name );
+  }
   
   ProblemSpecP valuePS = child->findBlock( "value" );
   
-  if( valuePS != 0) { // Found <value> tag.
-    child->get( "value", s_value );
-    ProblemSpec::InputType theInputType = child->getInputType(s_value);
+  BoundCondBase * bc = NULL;
 
-    switch (theInputType) {
+  if( valuePS != 0 ) { // Found <value> tag.
+    child->get( "value", s_value );
+    ProblemSpec::InputType theInputType = child->getInputType( s_value );
+
+    switch( theInputType ) {
       case ProblemSpec::NUMBER_TYPE:
         child->get( "value", d_value );
-        bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+        bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name, matl_id );
         break;
       case ProblemSpec::VECTOR_TYPE:
         child->get( "value", v_value );
-        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name );
+        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name, matl_id );
         break;
       case ProblemSpec::STRING_TYPE:
-        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name );
+        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name, matl_id );
         break;
       case ProblemSpec::UNKNOWN_TYPE:
-      default:
-        bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+        SCI_THROW( ProblemSetupException( "Could not determine type of <BCType>'s <value> field... ", __FILE__, __LINE__) );
         break;
     }
-  } else {
-    bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
   }
+
+  if( bc == NULL ) {
+    // Has no <Value>
+    bc = scinew BoundCond<string>( bc_attr["label"], bc_attr["var"], "no value", face_label, functor_name, matl_id );
+  }
+
+  return bc;
 }
 

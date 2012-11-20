@@ -23,66 +23,48 @@
  */
 
 #include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/DifferenceIterator.h>
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <set>
 #include <iostream>
 #include <algorithm>
 
-using std::endl;
-
 using namespace SCIRun;
 using namespace Uintah;
+using namespace std;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
-  : BCGeomBase(), left(p1->clone()), right(p2->clone())
+DifferenceBCData::DifferenceBCData( BCGeomBase * p1, BCGeomBase * p2, const string & name, const Patch::FaceType & side ) :
+  BCGeomBase( name, side ),
+  d_left(  p1 ),
+  d_right( p2 )
 {
-}
+  d_bcs = p1->d_bcs;
 
-
-DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs): BCGeomBase(rhs)
-{
-  left=rhs.left->clone();
-  right=rhs.right->clone();
-}
-
-
-
-DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
-{
-  BCGeomBase::operator=(rhs);
-
-  if (this == &rhs)
-    return *this;
-
-  // Delete the lhs
-  delete right;
-  delete left;
-
-  // Copy the rhs to the lhs
-
-  left = rhs.left->clone();
-  right = rhs.right->clone();
-
-  return *this;
+    cout << "DifferenceBCData(p1, p2, name, side) called for " << name << "\n";
+    cout << "    p1: " << p1->getName() << ", " << p1 << ", " << p1->getSide() << "\n";
+    cout << "    p2: " << p2->getName() << ", " << p2 << ", " << p2->getSide() << "\n";
+    cout << "this: " << this << "\n";
+  
+    print(5);
 }
 
 DifferenceBCData::~DifferenceBCData()
 {
-  delete left;
-  delete right;
+  // FIXME: possible memory leak? (for d_bcs)
 }
 
+DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
+{
+  throw ProblemSetupException( "DifferenceBCData(): Error, don't call operator=.", __FILE__, __LINE__ );
+  return *this;
+}
 
-bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
+bool
+DifferenceBCData::operator==(const BCGeomBase& rhs) const
 {
   const DifferenceBCData* p_rhs = 
     dynamic_cast<const DifferenceBCData*>(&rhs);
@@ -90,132 +72,92 @@ bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
   if (p_rhs == NULL)
     return false;
   else
-    return (this->left == p_rhs->left) && (this->right == p_rhs->right);
-
+    return (this->d_left == p_rhs->d_left) && (this->d_right == p_rhs->d_right);
 }
 
-DifferenceBCData* DifferenceBCData::clone()
+bool
+DifferenceBCData::inside( const Point & p ) const 
 {
-  return scinew DifferenceBCData(*this);
+  return( d_left->inside(p) && !d_right->inside(p) );
 }
 
-void DifferenceBCData::addBCData(BCData& bc)
+void
+DifferenceBCData::print( int depth ) const
 {
+  string indentation( depth*2, ' ' );
+  string indent2( depth*2+2, ' ' );
 
-}
+  cout << indentation << "DifferenceBCData: " << d_name << ", " << this << "\n";
 
-
-void DifferenceBCData::addBC(BoundCondBase* bc)
-{
-
-}
-
-void DifferenceBCData::getBCData(BCData& bc) const
-{
-  left->getBCData(bc);
-}
-
-bool DifferenceBCData::inside(const Point &p) const 
-{
-  return (left->inside(p) && !right->inside(p));
-}
-
-void DifferenceBCData::print()
-{
-#if 1
-  BC_dbg << "Difference Geometry type = " << typeid(this).name() << endl;
-  BC_dbg << "Left" << endl;
-#endif
-  left->print();
-#if 1
-  BC_dbg << "Right" << endl;
-#endif
-  right->print();
-}
-
-void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
-                                               const Patch* patch,
-                                               vector<Point>& test_pts)
-{
-
-#if 0
-  cout << "DifferenceBC determineIteratorLimits() " << patch->getFaceName(face)<< endl;
-#endif
-
-
-  left->determineIteratorLimits(face,patch,test_pts);
-  right->determineIteratorLimits(face,patch,test_pts);
-
-  Iterator left_cell,left_node,right_cell,right_node;
-  left->getCellFaceIterator(left_cell);
-  left->getNodeFaceIterator(left_node);
-  right->getCellFaceIterator(right_cell);
-  right->getNodeFaceIterator(right_node);
-
-  d_cells = DifferenceIterator(left_cell,right_cell);
-  d_nodes = DifferenceIterator(left_node,right_node);
-
-
-#if 0
-#if 0
-  cout << "DifferenceBC determineIteratorLimits()" << endl;
-  cout << "Doing left determineIteratorLimits()" << endl;
-#endif
-  left->determineIteratorLimits(face,patch,test_pts);
-#if 0
-  cout << "Doing right determineIteratorLimits()" << endl;
-#endif
-  right->determineIteratorLimits(face,patch,test_pts);
-
-#if 0
-  cout << "Size of boundary = " << boundary.size() << endl;
-  cout << "Size of nboundary = " << nboundary.size() << endl;
-#endif
-
-  // Need to do the set difference operations for the left and right to get
-  // the boundary and nboundary iterators.
-  vector<IntVector> diff_boundary,   diff_nboundary;
-  vector<IntVector> *left_boundary,  *right_boundary;
-  vector<IntVector> *left_nboundary, *right_nboundary;
-
-  left->getBoundaryIterator(left_boundary);
-  left->getNBoundaryIterator(left_nboundary);
-
-  right->getBoundaryIterator(right_boundary);
-  right->getNBoundaryIterator(right_nboundary);
-
-#if 0
-  cout << "Size of left_boundary = " << left_boundary->size() << endl;
-  cout << "Size of left_nboundary = " << left_nboundary->size() << endl;
-  cout << "Size of right_boundary = " << right_boundary->size() << endl;
-  cout << "Size of right_nboundary = " << right_nboundary->size() << endl;
-#endif
-  
-  for (vector<IntVector>::const_iterator it = left_boundary->begin();
-       it != left_boundary->end(); ++it) {
-    vector<IntVector>::const_iterator result = find(right_boundary->begin(),
-                                                    right_boundary->end(),*it);
-    if (result == right_boundary->end())
-      diff_boundary.push_back(*it);
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 1 );
   }
 
-  for (vector<IntVector>::const_iterator it = left_nboundary->begin();
-       it != left_nboundary->end(); ++it) {
-    vector<IntVector>::const_iterator result = find(right_nboundary->begin(),
-                                                    right_nboundary->end(),*it);
-    if (result == right_nboundary->end())
-      diff_nboundary.push_back(*it);
-  }
+  cout << indent2 << "Left:\n";
 
-  setBoundaryIterator(diff_boundary);
-  setNBoundaryIterator(diff_nboundary);
+  d_left->print( depth + 2 );
 
-#if 0
-  cout << "Size of boundary = " << boundary->size() << endl;
-  cout << "Size of nboundary = " << nboundary->size() << endl;
-#endif
-  
-#endif
+  cout << indent2 << "Right:\n";
+
+  d_right->print( depth + 2 );
 }
 
+void
+DifferenceBCData::determineIteratorLimits( const Patch::FaceType   face,
+                                           const Patch           * patch,
+                                           const vector<Point>   & test_pts )
+{
+  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << " (this: " << this << ")\n";
 
+  map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
+
+  if( iter != d_iteratorLimitsDetermined.end() ) {
+
+    if( iter->second == patch ) {
+      cout << "---warning: determineIteratorLimits called twice on this patch ------------------------------------------\n";
+      cout << "patch: " << patch->getID() << "\n";
+      cout << "face: "  << face << "\n";
+      cout << "---------------------------------------------\n";
+      return;
+      throw ProblemSetupException( "DifferenceBCData()::determineIteratorLimits() called twice on patch/face...", __FILE__, __LINE__ );
+    }
+  }
+
+  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << " (this: " << this << ")\n";
+
+  d_left->determineIteratorLimits(  face, patch, test_pts );
+  d_right->determineIteratorLimits( face, patch, test_pts );
+
+  d_left->determineIteratorLimits(  face, patch, test_pts ); // FIXME: when should this really be called?
+  d_right->determineIteratorLimits( face, patch, test_pts ); // FIXME: when should this really be called?
+
+  const Iterator & left_cell  = d_left->getCellFaceIterator( patch );
+  const Iterator & left_node  = d_left->getNodeFaceIterator( patch );
+  const Iterator & right_cell = d_right->getCellFaceIterator( patch );
+  const Iterator & right_node = d_right->getNodeFaceIterator( patch );
+
+  d_cells[ patch->getID() ] = scinew Iterator( DifferenceIterator( left_cell, right_cell ) );
+  d_nodes[ patch->getID() ] = scinew Iterator( DifferenceIterator( left_node, right_node ) );
+
+  d_iteratorLimitsDetermined[ patch->getID() ] = patch;
+
+  cout << "Difference Limits: " << this << "\n";
+  printLimits();
+}
+
+// Returns a list of all the materials that the BCGeom corresponds to
+set<int>
+DifferenceBCData::getMaterials() const
+{
+  set<int> left_materials, right_materials, the_union;
+
+  left_materials  = d_left->getMaterials();
+  right_materials = d_right->getMaterials();
+
+  the_union.insert( left_materials.begin(), left_materials.end() );
+  the_union.insert( right_materials.begin(), right_materials.end() );
+
+  cout << "DifferenceBCData::getMaterials(): size of union is: " << the_union.size();
+
+  return the_union;
+}

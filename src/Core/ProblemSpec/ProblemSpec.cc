@@ -63,7 +63,7 @@ ProblemSpec::findBlock() const
 }
 
 ProblemSpecP 
-ProblemSpec::findBlock(const string& name) const 
+ProblemSpec::findBlock( const string & name ) const 
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock(string)");
   if (d_node == 0) {
@@ -74,15 +74,31 @@ ProblemSpec::findBlock(const string& name) const
     //    string child_name(to_char_ptr(child->name));
     string child_name((const char *)(child->name));
     if (name == child_name) {
-      xmlNode* dbl_child = child->children;
-      while (dbl_child != 0) {
-        dbl_child = dbl_child->next;
-      }
       return scinew ProblemSpec( child, false );
     }
     child = child->next;
   }
   return 0;
+}
+
+ProblemSpecP 
+ProblemSpec::findLastBlock( const string & name ) const 
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findLastBlock(string)");
+  if (d_node == 0) {
+    return 0;
+  }
+  
+  const xmlNode * result = NULL;
+
+  for( const xmlNode * child = d_node->children; child != NULL; child = child->next ) {
+
+    string child_name( (const char *)(child->name) );
+    if( name == child_name ) {
+      result = child;
+    }
+  }
+  return result ? scinew ProblemSpec( result, false ) : NULL;
 }
 
 ProblemSpecP 
@@ -174,24 +190,23 @@ ProblemSpecP
 ProblemSpec::findTextBlock()
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findTextBlock()");
-   for (xmlNode* child = d_node->children; child != 0;
-        child = child->next) {
-     if (child->type == XML_TEXT_NODE) {
-       return scinew ProblemSpec( child, false );
-      }
-   }
-   return NULL;
+
+  for( xmlNode* child = d_node->children; child != 0; child = child->next ) {
+    if (child->type == XML_TEXT_NODE) {
+      return scinew ProblemSpec( child, false );
+    }
+  }
+  return NULL;
 }
 
 string
 ProblemSpec::getNodeName() const
 {
-  //  return string(to_char_ptr(d_node->name));
-  return string((const char *)(d_node->name));
+  return string( (const char *)(d_node->name) );
 }
 
 short
-ProblemSpec::getNodeType() 
+ProblemSpec::getNodeType() const
 {
   return d_node->type;
 }
@@ -208,7 +223,7 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
 }
 
 void
-ProblemSpec::addComment( string comment )
+ProblemSpec::addComment( const string & comment )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::addComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
@@ -216,7 +231,7 @@ ProblemSpec::addComment( string comment )
 }
 
 ProblemSpecP
-ProblemSpec::makeComment( string comment )
+ProblemSpec::makeComment( const string & comment )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::makeComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
@@ -225,8 +240,8 @@ ProblemSpec::makeComment( string comment )
 
 
 void
-ProblemSpec::replaceChild(ProblemSpecP toreplace, 
-                          ProblemSpecP replaced) 
+ProblemSpec::replaceChild( ProblemSpecP toreplace, 
+                           ProblemSpecP replaced ) 
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::replaceChild()");
   xmlNode* d = xmlReplaceNode(toreplace->d_node, replaced->d_node);
@@ -236,7 +251,7 @@ ProblemSpec::replaceChild(ProblemSpecP toreplace,
 }
 
 void
-ProblemSpec::removeChild(ProblemSpecP child)
+ProblemSpec::removeChild( ProblemSpecP child )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::removeChild()");
   xmlUnlinkNode(child->getNode());
@@ -290,116 +305,99 @@ ProblemSpec::checkForInputError( const string & stringValue,
   } // end switch( type )
 } 
 
-ProblemSpecP
-ProblemSpec::get(const string& name, double &value)
+bool
+ProblemSpec::get( const string & name, double & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+
+  if( success ) {
     checkForInputError( stringValue, FLOAT_TYPE ); 
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
-      ps = 0;
+      success = false;
       //      cout << "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed..." << name << endl;
     }
   }
-          
-  return ps;
+
+  return success;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, unsigned int &value)
+bool
+ProblemSpec::get( const string & name, unsigned int & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get(name, stringValue);
+
+  if( success ) {
     checkForInputError( stringValue, INT_TYPE ); 
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
-      ps = 0;
+      success = false;
     }
   }
           
-  return ps;
-
+  return success;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, int &value)
+bool
+ProblemSpec::get(const string& name, int &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+
+  if( success ) {
     checkForInputError( stringValue, INT_TYPE );
-    istringstream ss(stringValue);
+    istringstream ss( stringValue );
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, int): stringstream failed...\n", name.c_str() );
-      ps = 0;
+      success = false;
     }
   }
 
-  return ps;
+  return success;
 }
 
-
-ProblemSpecP
-ProblemSpec::get(const string& name, long &value)
+bool
+ProblemSpec::get(const string& name, long &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool success = get( name, stringValue );
+
+  if( success ) {
     checkForInputError( stringValue, INT_TYPE );
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, long): stringstream failed...\n", name.c_str() );
-      ps = 0;
+      success = false;
     }
   }
 
-  return ps;
+  return success;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, bool &value)
+bool
+ProblemSpec::get( const string & name, bool & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+
+  if( success ) {
     // Slurp up any spaces that were put in before or after the cmp string.
     istringstream result_stream(stringValue);
     string nospace_cmp;
@@ -419,20 +417,19 @@ ProblemSpec::get(const string& name, bool &value)
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
-  return ps;
+  return success;
 
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, string &value)
+bool
+ProblemSpec::get( const string & name, string & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   // the other gets will call this one to get the string...
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
-    return ps;
+
+  ProblemSpecP node = findBlock( name );
+  if( node == 0 ) {
+    return false;
   }
   else {  // eliminate spaces
     value = node->getNodeValue();
@@ -442,10 +439,10 @@ ProblemSpec::get(const string& name, string &value)
     stringstream in_stream(value);
     vector<string> vs;
     copy( istream_iterator<string>(in_stream),
-          istream_iterator<string>(),back_inserter(vs) );
+          istream_iterator<string>(),
+          back_inserter(vs) );
     string out_string;
-    for (vector<string>::const_iterator it = vs.begin(); it != vs.end();
-         ++it) {
+    for (vector<string>::const_iterator it = vs.begin(); it != vs.end(); ++it) {
       out_string += *it + ' ';
     }
 
@@ -457,31 +454,29 @@ ProblemSpec::get(const string& name, string &value)
     }
     value = out_string;
   }
-  return ps;
+  return true;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, Point &value)
+bool
+ProblemSpec::get( const string & name, Point & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-    Vector v;
-    ProblemSpecP ps = get(name, v);
-    value = Point(v);
-    return ps;
+  Vector v;
+  bool success = get( name, v );
+  if( !success ) return false;
+  value = Point(v);
+  return true;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, Vector &value)
+bool
+ProblemSpec::get( const string & name, Vector & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+
+  if( success ) {
     // Parse out the [num,num,num]
     // Now pull apart the stringValue
     string::size_type i1 = stringValue.find("[");
@@ -502,111 +497,88 @@ ProblemSpec::get(const string& name, Vector &value)
     value.z(atof(z_val.c_str()));   
   }
           
-  return ps;
+  return success;
 }
 
 ProblemSpec::InputType
-ProblemSpec::getInputType(const std::string& stringValue) {
-  std::string validChars(" +-.0123456789eE");
-  string::size_type  pos = stringValue.find_first_not_of(validChars);
-  if (pos != string::npos) {
-    // we either have a string or a vector
+ProblemSpec::getInputType( const string & stringValue )
+{
+  string validChars( " +-.0123456789eE" );
+
+  string::size_type pos = stringValue.find_first_not_of( validChars );
+
+  if( pos != string::npos ) {
+    // We either have a string or a vector...
     if ( stringValue.find_first_of("[") == 0 ) {
-      // this is most likely a vector vector
+      // This is most likely a vector vector...
       return ProblemSpec::VECTOR_TYPE;
-    } else {
-      // we have a string
+    }
+    else {
+      // We most likely have a string...
       return ProblemSpec::STRING_TYPE;
     }
-  } else {
-    // otherwise we have a number
+  }
+  else {
+    // Otherwise we have a number...
     return ProblemSpec::NUMBER_TYPE;
   }
-  return ProblemSpec::UNKNOWN_TYPE;
+  // return ProblemSpec::UNKNOWN_TYPE; This is never reached.
 }
 
-
 // value should probably be empty before calling this...
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<double>& value)
+bool
+ProblemSpec::get( const string & name, vector<double> & value, const int nItems /* = -1 */ ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   vector<string> string_values;
-  if(!this->get(name, string_values)) {
-    return 0;
+  if( !this->get( name, string_values, nItems ) ) {
+    return false;
   }
   
-  for(vector<string>::const_iterator vit(string_values.begin());
-      vit!=string_values.end();vit++) {
+  for( vector<string>::const_iterator vit(string_values.begin()); vit!=string_values.end(); vit++ ) {
     const string v(*vit);
     
     checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atof(v.c_str()) );
   }
   
-  return this;
+  return true;
 }
 
 // value should probably be empty before calling this...
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
+bool
+ProblemSpec::get(const string& name, vector<int>& value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   vector<string> string_values;
-  if(!this->get(name, string_values,nItems)) {
-    return 0;
+  if( !this->get(name, string_values) ) {
+    return false;
   }
   
-  for(vector<string>::const_iterator vit(string_values.begin());
-      vit!=string_values.end();vit++) {
-    const string v(*vit);
-    
-    checkForInputError( v, FLOAT_TYPE );
-    value.push_back( atof(v.c_str()) );
-  }
-  
-  return this;
-}
-
-
-// value should probably be empty before calling this...
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<int>& value)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  vector<string> string_values;
-  if(!this->get(name, string_values)) {
-    return 0;
-  }
-  
-  for(vector<string>::const_iterator vit(string_values.begin());
-      vit!=string_values.end();vit++) {
+  for(vector<string>::const_iterator vit(string_values.begin()); vit!=string_values.end(); vit++ ) {
     const string v(*vit);
     
     checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atoi(v.c_str()) );
   }
   
-  return this;
+  return true;
 } 
 
 // value should probably be empty before calling this...
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<string>& value)
+bool
+ProblemSpec::get( const string & name, vector<string> & value, const int nItems /* = -1 */ ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+  if( success ) {
     istringstream in(stringValue);
-    char c,next;
+    char   c, next;
     string result;
-    while (!in.eof()) {
+    int    counter = 0;
+    while( !in.eof() && counter < nItems ) {
       in >> c;
       if (c == '[' || c == ',' || c == ' ' || c == ']')
         continue;
@@ -619,73 +591,32 @@ ProblemSpec::get(const string& name, vector<string>& value)
       }
     }
   }
-  return ps;
+  return success;
 } 
 
-// value should probably be empty before calling this...
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<string>& value, const int nItems)
+bool
+ProblemSpec::get( const string & name, IntVector & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
-  
+
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
+  bool   success = get( name, stringValue );
+
+  if( success ) {
+    parseIntVector( stringValue, value );
   }
-  else {
-    istringstream in(stringValue);
-    char c,next;
-    string result;
-    int counter = 0;
-    while ( !in.eof() && counter < nItems ) {
-      in >> c;
-      if (c == '[' || c == ',' || c == ' ' || c == ']')
-        continue;
-      next = in.peek();
-      result += c;
-      if (next == ',' ||  next == ' ' || next == ']' || in.eof() ) {
-        // push next string onto stack
-        value.push_back(result);
-        result.erase();
-        counter++;
-      }
-    }
-  }
-  return ps;
+
+  return success;
 }
 
-ProblemSpecP
-ProblemSpec::get(const string& name, IntVector &value)
+bool
+ProblemSpec::get( const string & name, vector<IntVector> & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
 
   string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
-    parseIntVector(stringValue, value);
-  }
-
-  return ps;
-}
-
-ProblemSpecP
-ProblemSpec::get(const string& name, vector<IntVector>& value)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-  ProblemSpecP ps;
-
-  string stringValue;
-  ps = get(name, stringValue);
-  if (ps == 0) {
-    return ps;
-  }
-  else {
+  bool   success = get( name, stringValue );
+  if( success ) {
     istringstream in(stringValue);
     char c;
     bool first_bracket = false;
@@ -727,10 +658,11 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
     }  // end while (!in.eof())
   }
   
-  return ps;
+  return success;
 }
 
-void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
+void
+ProblemSpec::parseIntVector( const string & string_value, IntVector & value ) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   // Parse out the [num,num,num]
@@ -751,11 +683,10 @@ void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
   value.x(atoi(x_val.c_str()));
   value.y(atoi(y_val.c_str()));
   value.z(atoi(z_val.c_str())); 
-
 }
 
 bool
-ProblemSpec::get(int &value)
+ProblemSpec::get(int &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
@@ -766,7 +697,7 @@ ProblemSpec::get(int &value)
 }
 
 bool
-ProblemSpec::get(long &value)
+ProblemSpec::get(long &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
@@ -777,7 +708,7 @@ ProblemSpec::get(long &value)
 }
 
 bool
-ProblemSpec::get(double &value)
+ProblemSpec::get(double &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
@@ -788,7 +719,7 @@ ProblemSpec::get(double &value)
 }
 
 bool
-ProblemSpec::get(string &value)
+ProblemSpec::get(string &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string tmp = getNodeValue();
@@ -801,7 +732,7 @@ ProblemSpec::get(string &value)
 }
 
 bool
-ProblemSpec::get(Vector &value)
+ProblemSpec::get(Vector &value) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
@@ -827,212 +758,110 @@ ProblemSpec::get(Vector &value)
   return true;
 }
 
+// This namespace usage is necessary for the compiler to all this explicit function specialization:
+namespace Uintah { 
 
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            double& value, double defaultVal) 
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value = defaultVal;
-  }
-
-  return ps;
-}
-
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            int& value, int defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value=defaultVal;
-  }
-
-  return ps;
-}
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            bool& value, bool defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value=defaultVal;
-  }
-
-  return ps;
-}
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            string& value, 
-                            const string& defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value = defaultVal;
-  }
-  return ps;
-}
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            IntVector& value, 
-                            const IntVector& defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value = defaultVal;
-  }
-
-  return ps;
-}
-
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            Vector& value, 
-                            const Vector& defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value = defaultVal;
-  }
-
-  return ps;
-}
-
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            Point& value, 
-                            const Point& defaultVal)
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
-
-    //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
-
-    // set default values
-    ps = this;
-    value = defaultVal;
-  }
-
-  return ps;
-}
-
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            vector<double>& value, 
-                            const vector<double>& defaultVal)
+// I'd like to partially specialize this vector<double>/vector<int>, but the compiler doesn't
+// seem to like this... hence the duplication of the code for these two functions...
+template<>
+bool
+ProblemSpec::getWithDefault< vector<double> >( const string         & name, 
+                                                     vector<double> & value, 
+                                               const vector<double> & defaultVal )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   value.clear();
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
+  bool success = get( name, value );
+
+  if( !success ) {
 
     //create xmlNode to add to the tree
-    appendElement(name.c_str(), defaultVal);
+    appendElement( name.c_str(), defaultVal );
 
     // set default values
-    ps = this;
 
     value.clear();
-    int size = static_cast<int>(defaultVal.size());
-    for (int i = 0; i < size; i++)
-      value.push_back(defaultVal[i]);
+    int size = static_cast<int>( defaultVal.size() );
+    for( int i = 0; i < size; i++ ) {
+      value.push_back( defaultVal[i] );
+    }
   }
-
-  return ps;
+  return true;
 }
 
-ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            vector<int>& value, 
-                            const vector<int>& defaultVal)
+template<>
+bool
+ProblemSpec::getWithDefault< vector<int> >( const string      & name, 
+                                                  vector<int> & value, 
+                                            const vector<int> & defaultVal )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   value.clear();
-  ProblemSpecP ps = get(name, value);
-  if (ps == 0) {
+  bool success = get( name, value );
 
-    // add xmlNode to the tree
-    appendElement(name.c_str(), defaultVal);
+  if( !success ) {
+
+    //create xmlNode to add to the tree
+    appendElement( name.c_str(), defaultVal );
+
     // set default values
-    ps = this;
-    value.clear();
-    int size = static_cast<int>(defaultVal.size());
-    for (int i = 0; i < size; i++)
-      value.push_back(defaultVal[i]);
-  }
 
-  return ps;
+    value.clear();
+    int size = static_cast<int>( defaultVal.size() );
+    for( int i = 0; i < size; i++ ) {
+      value.push_back( defaultVal[i] );
+    }
+  }
+  return true;
 }
 
-ProblemSpecP
-ProblemSpec::appendElement(const char* name, const string& value)
+} // end namespace Uintah
+
+template<typename Type>
+bool
+ProblemSpec::getWithDefault( const string & name, 
+                                   Type   & value,
+                             const Type   & defaultVal )
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
+
+  bool success = get( name, value );
+
+  if( !success ) {
+
+    // Create new xmlNode to add to the tree.
+    appendElement( name.c_str(), defaultVal );
+
+    // set default values
+    value = defaultVal;
+  }
+
+  return true;
+}
+
+void
+ProblemSpec::appendElement( const char * name, const string & value )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendElement()");
-  xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
-  return scinew ProblemSpec( newnode, false );
+  xmlNewChild( d_node, 0, BAD_CAST name, BAD_CAST value.c_str() );
 }
 
-//basically to make sure correct overloaded function is called
-ProblemSpecP
-ProblemSpec::appendElement(const char* name, const char* value)
+// Basically to make sure correct overloaded function is called.
+void
+ProblemSpec::appendElement( const char * name, const char * value )
 {
-  return appendElement(name, string(value));
+  return appendElement( name, string(value) );
 }
 
-ProblemSpecP
-ProblemSpec::appendElement(const char* name, int value)
+void
+ProblemSpec::appendElement( const char * name, int value )
 {
   ostringstream val;
   val << value;
-  return appendElement(name, val.str());
+  return appendElement( name, val.str() );
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, long value)
 {
   ostringstream val;
@@ -1040,7 +869,7 @@ ProblemSpec::appendElement(const char* name, long value)
   return appendElement(name, val.str());
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, const IntVector& value)
 {
   ostringstream val;
@@ -1048,7 +877,7 @@ ProblemSpec::appendElement(const char* name, const IntVector& value)
   return appendElement(name, val.str());
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, const Point& value)
 {
 
@@ -1059,26 +888,24 @@ ProblemSpec::appendElement(const char* name, const Point& value)
 
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, const Vector& value)
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", "
        << setprecision(17) << value.z() << ']';
-   return appendElement(name, val.str());
-
+   appendElement(name, val.str());
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, double value )
 {
    ostringstream val;
    val << setprecision(17) << value;
-   return appendElement(name, val.str());
-
+   appendElement( name, val.str() );
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement( const char* name, const vector<double>& value)
 {
    ostringstream val;
@@ -1090,11 +917,10 @@ ProblemSpec::appendElement( const char* name, const vector<double>& value)
      
    }
    val << ']';
-   return appendElement(name, val.str());
-
+   appendElement(name, val.str());
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, const vector<int>& value)
 {
    ostringstream val;
@@ -1106,10 +932,10 @@ ProblemSpec::appendElement(const char* name, const vector<int>& value)
      
    }
    val << ']';
-   return appendElement(name, val.str());
+   appendElement(name, val.str());
 }
 
-ProblemSpecP
+void
 ProblemSpec::appendElement(const char* name, const vector<string >& value)
 {
    ostringstream val;
@@ -1121,18 +947,16 @@ ProblemSpec::appendElement(const char* name, const vector<string >& value)
      
    }
    val << ']';
-   return appendElement(name, val.str());
+   appendElement(name, val.str());
 }
 
-
-
-ProblemSpecP
+void
 ProblemSpec::appendElement( const char* name, bool value )
 {
   if (value)
-    return appendElement(name, string("true"));
+    appendElement(name, string("true"));
   else
-    return appendElement(name, string("false"));
+    appendElement(name, string("false"));
 }
 
 void
@@ -1359,7 +1183,7 @@ ProblemSpec::getNextSibling()
 }
 
 string
-ProblemSpec::getNodeValue() 
+ProblemSpec::getNodeValue() const
 {
   string ret;
   for (xmlNode *child = d_node->children; child != 0;
@@ -1377,7 +1201,7 @@ ProblemSpecP
 ProblemSpec::appendChild( const char *str )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendChild()");
-  xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
+  xmlNode* elt = xmlNewChild( d_node, 0, BAD_CAST str, 0 );
   
   return scinew ProblemSpec( elt, false );
 }
@@ -1400,6 +1224,47 @@ ProblemSpec::output(const char* filename) const
     xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
   }
 }
+
+///////////////////////// begin printDoc() DEBUG function FIXME delete this ///////////////
+
+void
+ProblemSpec::printHelper( xmlNode * node, int depth /* = 0 */ )
+{
+  if( node == NULL ) {
+    return;
+  }
+
+  string indentation( depth*2, ' ' );
+
+  if( node->type == XML_ELEMENT_NODE ) {
+    string name = (char*)node->name;
+
+    cout << indentation << name;
+
+    // Print out any attributes...
+    for( xmlAttr* attr = node->properties; attr != 0; attr = attr->next ) {
+      if (attr->type == XML_ATTRIBUTE_NODE) {
+        cout << " " << attr->name << "=" << (const char *)(attr->children->content);
+      }
+    }
+    cout << "\n";
+  }
+
+  xmlNode * child = node->children;
+
+  while( child != 0 ) {
+
+    if( child->type == XML_ELEMENT_NODE ) {
+      printHelper( child, depth+1 );
+    }
+    else if( child->type == XML_TEXT_NODE ) {
+      cout << indentation << indentation << (const char *)(child->content) << "\n";
+    }
+
+    child = child->next;
+  }
+}
+///////////////////////// end printDoc DEBUG function FIXME delete this ///////////////
 
 void
 ProblemSpec::releaseDocument() 
@@ -1438,5 +1303,16 @@ ProblemSpec::createDocument(const string& name)
 string
 ProblemSpec::getFile() const
 {
-  return (const char *)( d_node->doc->URL );
+  return string( (const char *)( d_node->doc->URL ) );
 }
+
+//////////////////////////////////////////////////////////////////////
+// Explicit Template instantiations:
+
+template bool ProblemSpec::getWithDefault<Vector>   ( const string & name, Vector    & value, const Vector    & defaultVal );
+template bool ProblemSpec::getWithDefault<Point>    ( const string & name, Point     & value, const Point     & defaultVal );
+template bool ProblemSpec::getWithDefault<IntVector>( const string & name, IntVector & value, const IntVector & defaultVal );
+template bool ProblemSpec::getWithDefault<string>   ( const string & name, string    & value, const string    & defaultVal );
+template bool ProblemSpec::getWithDefault<double>   ( const string & name, double    & value, const double    & defaultVal );
+template bool ProblemSpec::getWithDefault<int>      ( const string & name, int       & value, const int       & defaultVal );
+template bool ProblemSpec::getWithDefault<bool>     ( const string & name, bool      & value, const bool      & defaultVal );

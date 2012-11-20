@@ -1206,10 +1206,10 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
       timestepInterval = 0;
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
-    p->getWithDefault("gainThreshold", threshold, 0.05);
-    p->getWithDefault("doSpaceCurve", spaceCurve, true);
-    p->getWithDefault("particleCost",d_particleCost, 2);
-    p->getWithDefault("cellCost",d_cellCost, 1);
+    p->getWithDefault( "gainThreshold", threshold, 0.05 );
+    p->getWithDefault( "doSpaceCurve", spaceCurve, true );
+    p->getWithDefault( "particleCost", d_particleCost, 2.0 );
+    p->getWithDefault( "cellCost",d_cellCost, 1.0 );
    
   }
 

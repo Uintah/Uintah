@@ -925,12 +925,11 @@ int main( int argc, const char* argv[] )
   cout << Dx[0] << " " << Dx[1] << " " << Dx[2] << endl;
   cout << "Period should be approx dx/dt flow direction" << endl;
   
-  //Parse in values;
-  string faceSide;
-  faceSide = getString( gzFp );
-  string faceShape;
-  faceShape = getString( gzFp );
-  
+  // Parse input values:
+  string faceSide  = getString( gzFp );
+  string faceShape = getString( gzFp );
+
+  Patch::FaceType face = Patch::stringToFaceType( faceSide );
   
   vector<double> lower (3); vector<double> upper (3);
   vector<double> origin (3);
@@ -965,8 +964,9 @@ int main( int argc, const char* argv[] )
       charDim = diff[2];
 
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
-    bcGeom = new RectangleBCData(l,u);
-  } else if (faceShape=="circle") {
+    bcGeom = new RectangleBCData( l, u, "DF Rectangle", face );
+  }
+  else if (faceShape=="circle") {
     origin[0] = getDouble(gzFp);
     origin[1] = getDouble(gzFp);
     origin[2] = getDouble(gzFp);
@@ -974,8 +974,9 @@ int main( int argc, const char* argv[] )
     radius = getDouble(gzFp);
     charDim = 2*radius;
     Point p(origin[0], origin[1], origin[2]);
-    bcGeom = new CircleBCData(p, radius);
-  } else if (faceShape=="ellipse") {
+    bcGeom = new CircleBCData( p, radius, "DF Circle", face );
+  }
+  else if (faceShape=="ellipse") {
     origin[0] = getDouble(gzFp);
     origin[1] = getDouble(gzFp);
     origin[2] = getDouble(gzFp);
@@ -985,9 +986,10 @@ int main( int argc, const char* argv[] )
     charDim = 2*minor_radius;
     angle = getDouble(gzFp);
     Point p(origin[0], origin[1], origin[2]);    
-    bcGeom = new EllipseBCData(p, minor_radius, major_radius, faceSide, angle);
+    bcGeom = new EllipseBCData( p, minor_radius, major_radius, angle, faceSide, face );
     cout << "made ellipse" <<endl;
-  } else if (faceShape=="annulus") {
+  }
+  else if (faceShape=="annulus") {
     origin[0] = getDouble(gzFp);
     origin[1] = getDouble(gzFp);
     origin[2] = getDouble(gzFp);
@@ -996,8 +998,9 @@ int main( int argc, const char* argv[] )
     minor_radius = getDouble(gzFp);  
     charDim = major_radius - minor_radius;
     Point p(origin[0], origin[1], origin[2]);
-    bcGeom = new AnnulusBCData(p,minor_radius, major_radius);
-  } else {
+    bcGeom = new AnnulusBCData( p, minor_radius, major_radius, "DF Annulus", face );
+  }
+  else {
     cout << "Specify a valid BC shape" << endl;
     exit(1);
   }

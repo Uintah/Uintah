@@ -82,12 +82,13 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   }
  
   // Discretization information
+
   // new_dw->get(new_den, d_fieldLabels->density>d_densityCPLabel, matlIndex, patch, gn, 0); 
   // new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
-  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
-  db->getWithDefault( "doConv", d_doConv, false);
-  db->getWithDefault( "doDiff", d_doDiff, false);
-  db->getWithDefault( "addSources", d_addSources, true); 
+  db->getWithDefault( "conv_scheme",  d_convScheme,   string("upwind") );
+  db->getWithDefault( "doConv",       d_doConv,       false );
+  db->getWithDefault( "doDiff",       d_doDiff,       false );
+  db->getWithDefault( "addSources",   d_addSources,   true ); 
   
   // algorithmic knobs
   d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 

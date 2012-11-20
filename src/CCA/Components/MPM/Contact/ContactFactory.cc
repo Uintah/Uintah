@@ -60,7 +60,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
         child = child->findNextBlock("contact")) {
      
      std::string con_type;
-     child->getWithDefault("type",con_type, "null");
+     child->getWithDefault( "type", con_type, string("null") );
      
       if (con_type == "null")
         contact_list->add(scinew NullContact(myworld,ss,lb,flag));

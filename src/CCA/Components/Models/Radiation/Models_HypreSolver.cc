@@ -100,8 +100,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   ProblemSpecP db = params->findBlock("LinearSolver");
 
   db->get("solver", d_solverType);
-  db->getWithDefault("preconditioner", d_precondType, "none");
-
+  db->getWithDefault( "preconditioner", d_precondType, string("none") );
   
   //__________________________________
   //  Bulletproofing

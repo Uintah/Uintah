@@ -251,8 +251,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
-  db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
-  db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
+  db->getWithDefault( "turnonMixedModel",    d_mixedModel,               false );
+  db->getWithDefault( "recompileTaskgraph",  d_lab->recompile_taskgraph, false );
 
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
@@ -720,7 +720,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
     if( db_linear_solver ) {
       string d_solverType;
-      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+      db_linear_solver->getWithDefault( "type", d_solverType, string("LU") );
 
       // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work:
       if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {

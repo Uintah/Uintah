@@ -457,17 +457,23 @@ ColdFlow::getState( const ProcessorGroup* pc,
           std::string variable_name = d_allIndepVarNames[i]; 
 
           const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-              variable_name, bound_ptr,
-              nu, child );
+                                                             variable_name, bound_ptr,
+                                                             nu, child );
 
           const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
           if ( new_bcs == 0 ) {
             cout << "Error: For variable named " << variable_name << endl;
+
+            const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex, /* FIXME remove DEBUG */
+                                                               variable_name, bound_ptr,
+                                                               nu, child );
+
+
             throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
           }
 
           double bc_value     = new_bcs->getValue(); 
-          std::string bc_kind = new_bcs->getBCType__NEW(); 
+          std::string bc_kind = new_bcs->getType(); 
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ColdFlow::DIRICHLET); 
@@ -481,7 +487,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // currently assuming a constant value across the mesh. 
           bc_values.push_back( bc_value ); 
 
-          delete bc; 
+          //delete bc;   FIXME... is this right?
 
         }
 

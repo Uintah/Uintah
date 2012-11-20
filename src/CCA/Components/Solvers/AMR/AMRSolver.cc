@@ -81,17 +81,17 @@ AMRSolver::readParameters(ProblemSpecP& params,
       string variable;
       if(param->getAttribute("variable", variable) && variable != varname)
         continue;
-      param->getWithDefault("solver", p->solverTitle, "smg");
-      param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
-      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxiterations", p->maxIterations, 75);
-      param->getWithDefault("npre", p->nPre, 1);
-      param->getWithDefault("npost", p->nPost, 1);
-      param->getWithDefault("skip", p->skip, 0);
-      param->getWithDefault("jump", p->jump, 0);
-      param->getWithDefault("logging", p->logging, 0);
-      param->getWithDefault("outputEquations", p->printSystem,false);
-      found=true;
+      param->getWithDefault( "solver", p->solverTitle, string("smg") );
+      param->getWithDefault( "preconditioner", p->precondTitle, string("diagonal") );
+      param->getWithDefault( "tolerance", p->tolerance, 1.e-10 );
+      param->getWithDefault( "maxiterations", p->maxIterations, 75 );
+      param->getWithDefault( "npre", p->nPre, 1 );
+      param->getWithDefault( "npost", p->nPost, 1 );
+      param->getWithDefault( "skip", p->skip, 0 );
+      param->getWithDefault( "jump", p->jump, 0 );
+      param->getWithDefault( "logging", p->logging, 0 );
+      param->getWithDefault( "outputEquations", p->printSystem, false );
+      found = true;
     }
   }
 
@@ -128,16 +128,16 @@ AMRSolver::readParameters(ProblemSpecP& params,const string& varname)
       string variable;
       if(param->getAttribute("variable", variable) && variable != varname)
         continue;
-      param->getWithDefault("solver", p->solverTitle, "smg");
-      param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
-      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxiterations", p->maxIterations, 75);
-      param->getWithDefault("npre", p->nPre, 1);
-      param->getWithDefault("npost", p->nPost, 1);
-      param->getWithDefault("skip", p->skip, 0);
-      param->getWithDefault("jump", p->jump, 0);
-      param->getWithDefault("logging", p->logging, 0);
-      param->getWithDefault("outputEquations", p->printSystem,false);
+      param->getWithDefault( "solver",          p->solverTitle,   string("smg") );
+      param->getWithDefault( "preconditioner",  p->precondTitle,  string("diagonal") );
+      param->getWithDefault( "tolerance",       p->tolerance,     1.e-10 );
+      param->getWithDefault( "maxiterations",   p->maxIterations, 75 );
+      param->getWithDefault( "npre",            p->nPre,          1 );
+      param->getWithDefault( "npost",           p->nPost,         1 );
+      param->getWithDefault( "skip",            p->skip,          0 );
+      param->getWithDefault( "jump",            p->jump,          0 );
+      param->getWithDefault( "logging",         p->logging,       0 );
+      param->getWithDefault( "outputEquations", p->printSystem,   false );
       found=true;
     }
   }

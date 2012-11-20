@@ -301,11 +301,11 @@ void HyperelasticPlastic::getYieldStressDistribution(ProblemSpecP& ps)
   d_yield.dist   = "constant";
   d_yield.range  = 0.0;  // yield stress = FlowStress +- range 
   d_yield.seed   = 0;    // seed for distribution generator
-  ps->getWithDefault("yield_distrib", d_yield.dist, "constant");
+  ps->getWithDefault("yield_distrib", d_yield.dist, string("constant"));
   //"constant", "uniform", "weibull" or "gauss" not implemented
   if (d_yield.dist == "uniform") {
     ps->require("yield_range", d_yield.range);
-    ps->getWithDefault("yield_seed", d_yield.seed, 0.0);
+    ps->getWithDefault( "yield_seed", d_yield.seed, 0 );
   }
 }
 

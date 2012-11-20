@@ -23,84 +23,171 @@
  */
 
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Grid/Variables/ListOfCellsIterator.h>
-#include <Core/Grid/Variables/GridIterator.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
+#include <Core/Grid/Level.h>
+
 #include <iostream>
 #include <vector>
 
-
 using namespace SCIRun;
 using namespace Uintah;
+using namespace std;
 
+///////////////////////////////////////////////////////////////////////////////
 
-BCGeomBase::BCGeomBase() 
+void
+BCGeomBase::init( const string & name, const Patch::FaceType & side )
 {
-  d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_bcname = "NotSet"; 
+  //  d_cells    = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  //  d_nodes    = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_name     = name;
+  d_faceSide = side;
 }
 
-
-BCGeomBase::BCGeomBase(const BCGeomBase& rhs)
+BCGeomBase::BCGeomBase( const string & name, const Patch::FaceType & side )
 {
-  d_cells=rhs.d_cells;
-  d_nodes=rhs.d_nodes;
-  d_bcname = rhs.d_bcname; 
+  init( name, side );
 }
 
-
-BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
+BCGeomBase::BCGeomBase()
 {
-  if (this == &rhs)
-    return *this;
-
-  d_cells = rhs.d_cells;
-  d_nodes = rhs.d_nodes;
-  d_bcname = rhs.d_bcname; 
-
-  return *this;
+  init();
 }
-
 
 BCGeomBase::~BCGeomBase()
 {
 }
 
-
-void BCGeomBase::getCellFaceIterator(Iterator& b_ptr)
+// Copy constructor
+BCGeomBase::BCGeomBase( const BCGeomBase & rhs )
 {
-  b_ptr = d_cells;
+  throw ProblemSetupException( "BCGeomBase() copy constructor should not be used...", __FILE__, __LINE__ );
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
-void BCGeomBase::getNodeFaceIterator(Iterator& b_ptr)
+BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
 {
-  b_ptr = d_nodes;
+  throw ProblemSetupException( "BCGeomBase::operator= should not be used...", __FILE__, __LINE__ );
+  return *this;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
-void BCGeomBase::determineIteratorLimits(Patch::FaceType face, 
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts)
+const Iterator &
+BCGeomBase::getCellFaceIterator( const Patch * patch ) const
 {
-#if 0
-  cout << "BCGeomBase determineIteratorLimits() " << patch->getFaceName(face)<< endl;
-#endif
+  map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
+
+  if( iter == d_iteratorLimitsDetermined.end() ) {
+    throw ProblemSetupException( "BCGeomBase()::getCellFaceIterator() called before iterators determined!", __FILE__, __LINE__ );
+  }
+
+  // FIXME DEBUG STATEMENTS
+  //  cout <<"BCGeomBase::getCellFaceIterator():\n";
+  //  cout << "d_cells = "; d_cells.limits( cout ); cout << "\n";
+
+  map<int,Iterator*>::const_iterator c_iter = d_cells.find( patch->getID() );
+
+  return *(c_iter->second);
+}
+
+const Iterator &
+BCGeomBase::getNodeFaceIterator( const Patch * patch ) const
+{
+  map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
+
+  if( iter == d_iteratorLimitsDetermined.end() ) {
+    throw ProblemSetupException( "BCGeomBase()::getNodeFaceIterator() called before iterators determined!", __FILE__, __LINE__ );
+  }
+
+  map<int,Iterator*>::const_iterator n_iter = d_cells.find( patch->getID() );
+
+  return *(n_iter->second);
+}
+
+void
+BCGeomBase::addBC( const BoundCondBase * bc ) 
+{
+  BCData * bcdata = d_bcs[ bc->getMatl() ];
+
+  if( bcdata == NULL ) {
+    bcdata = new BCData();
+  }
+
+  bcdata->addBC( bc );
+
+  d_bcs[ bc->getMatl() ] = bcdata;
+}
+
+const BCData *
+BCGeomBase::getBCData( int matl ) const
+{
+
+  map<int,BCData*>::const_iterator itr = d_bcs.find( matl );
+
+  if( itr == d_bcs.end() ) 
+    return NULL;
+  else
+    return itr->second;
+}
+
+set<int>
+BCGeomBase::getMaterials() const
+{
+  set<int> materials;
+
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+
+    materials.insert( itr->first );
+  }
+
+  return materials;
+}
+
+void
+BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
+                                     const Patch           * patch,
+                                     const vector<Point>   & test_pts )
+{
+  // FIXME DEBUG STATEMENTS
+  cout << "BCGeomBase::determineIteratorLimits() for " << patch->getFaceName( face )<< "\n";
+  cout << "     BCGeom name: " << d_name << ", side: " << d_faceSide << " (this: " << this << ")\n";
+  cout << "     patch: " << patch << ", " << patch->getID() << "\n";
+
+  if( d_iteratorLimitsDetermined[ patch->getID() ] != NULL ) {
+
+    // NOTE: we don't (currently) have to check to see if the same face is computed more than once
+    // because for each face there is a separate array of these objects, and thus they are
+    // only determined once...
+
+
+    cout << "FIXME: warning, determineIteratorLimits already called\n";
+    return;
+
+    //throw ProblemSetupException( "BCGeomBase()::determineIteratorLimits() already called...", __FILE__, __LINE__ );
+
+    //   FIXME: Possible that this throw isn't necessary but using it at least for now
+    //          to determine who is making this call...
+    //   throw ProblemSetupException( "BCGeomBase()::determineIteratorLimits() called twice...", __FILE__, __LINE__ );
+  }
+
+  d_iteratorLimitsDetermined[ patch->getID() ] = patch;
 
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
   GridIterator cells(l,h);
 
-
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
   GridIterator nodes(ln,hn);
-
 
   Iterator cell_itr(cells), node_itr(nodes);
 
@@ -126,35 +213,34 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
   }
 
   if (vec_cells.empty()) {
-    d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+    d_cells[ patch->getID() ] = scinew Iterator( GridIterator(IntVector(0,0,0),IntVector(0,0,0)) );
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_cells.begin(); 
-         i != vec_cells.end(); ++i) {
+    for( vector<IntVector>::const_iterator i = vec_cells.begin(); i != vec_cells.end(); ++i ) {
       list_cells.add(*i);
     }
-    d_cells = list_cells;
+
+    cout << "here: id is " << patch->getID() << "\n";
+
+    d_cells[ patch->getID() ] = scinew Iterator( list_cells );
   }
-  if (vec_nodes.empty()) {
-    d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  
+  if( vec_nodes.empty() ) {
+    d_nodes[ patch->getID() ] = scinew Iterator( GridIterator( IntVector(0,0,0),IntVector(0,0,0) ) );
   }
   else {
-    for (vector<IntVector>::const_iterator i = vec_nodes.begin();
-         i != vec_nodes.end(); ++i) {
-      list_nodes.add(*i);
+    for (vector<IntVector>::const_iterator i = vec_nodes.begin(); i != vec_nodes.end(); ++i) {
+      list_nodes.add( *i );
     }
-    d_nodes = list_nodes;
+    d_nodes[ patch->getID() ] = scinew Iterator( list_nodes );
   }
 }
 
-
-
-void BCGeomBase::printLimits() const
+void
+BCGeomBase::printLimits() const
 {
-  using namespace std;
-  cout << endl;
-  cout << "d_cells = " << d_cells.begin() << " " << d_cells.end() << endl;
-  cout << "d_nodes = " << d_nodes.begin() << " " << d_nodes.end() << endl;
-  cout << endl;
+  cout << "FIXME: printlimits() not implemented yet\n";
 
+  //  cout << "d_cells = "; d_cells.limits( cout ); cout << " (this: " << this << ")\n";
+  //  cout << "d_nodes = "; d_nodes.limits( cout ); cout << " (detemined?: " << d_iteratorLimitsDetermined << "\n";
 }

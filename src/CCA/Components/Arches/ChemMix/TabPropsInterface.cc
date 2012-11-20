@@ -434,7 +434,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           }
 
           double bc_value     = new_bcs->getValue(); 
-          std::string bc_kind = new_bcs->getBCType__NEW(); 
+          std::string bc_kind = new_bcs->getBCType(); 
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(TabPropsInterface::DIRICHLET); 

@@ -88,7 +88,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           }
         }
 
-        if (failed){ 
+        if (failed){
           string whichface; 
           if (face == 0)
             whichface = "x-";
@@ -112,7 +112,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           throw ProblemSetupException("Please correct your <BoundaryCondition> section in your input file for this variable", __FILE__,__LINE__); 
         }
 
-        delete bc; 
+        // delete bc?; FIXME
 
       }
     }

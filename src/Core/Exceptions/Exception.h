@@ -36,10 +36,15 @@
 #ifndef Core_Exceptions_Exception_h
 #define Core_Exceptions_Exception_h
 
+//
+// SCI_THROW: See function sci_throw() below and comments in .cc file. This MACRO can be useful
+// for tracking down fatal errors, since the normal exception mechanism will unwind the stack
+// before you can get anything useful out of it.
+//
 #if USE_SCI_THROW
-#define SCI_THROW(exc) do {SCIRun::Exception::sci_throw(exc);throw exc;} while(SCIRun::Exception::alwaysFalse())
+#  define SCI_THROW(exc) do { SCIRun::Exception::sci_throw( exc ); throw exc; } while( SCIRun::Exception::alwaysFalse() )
 #else
-#define SCI_THROW(exc) throw exc
+#  define SCI_THROW(exc) throw exc
 #endif
 
 #include <string>
