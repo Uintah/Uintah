@@ -85,8 +85,8 @@ namespace Wasatch{
     
     Expr::ExpressionBuilder* builder = NULL;
     
-    std::string exprType;
-    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+    //    std::string exprType;
+    //    Uintah::ProblemSpecP valParams = params->get( "value", exprType );
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
@@ -334,8 +334,8 @@ namespace Wasatch{
     
     Expr::ExpressionBuilder* builder = NULL;
     
-    std::string exprType;
-    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+    //std::string exprType;
+    //bool valParams = params->get("value",exprType);
     
     if( params->findBlock("VelocityX") ){
       double amplitude,viscosity;
@@ -417,8 +417,8 @@ namespace Wasatch{
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     Expr::ExpressionBuilder* builder = NULL;
-    std::string exprType;
-    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+    //std::string exprType;
+    //bool valParams = params->get("value",exprType);
     
     if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {
       double coef, MolecularVolume, DiffusionCoefficient;
