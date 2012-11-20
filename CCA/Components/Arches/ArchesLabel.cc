@@ -326,7 +326,6 @@ ArchesLabel::ArchesLabel()
   d_continuityResidualLabel    =  VarLabel::create("continuityResidual",    CC_double);
 
   d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable);
-  d_ReactScalarClippedLabel  =  VarLabel::create("reactScalarClipped",  max_variable);
 
   d_uVelNormLabel  =  VarLabel::create("uVelNorm",  sum_variable);
   d_vVelNormLabel  =  VarLabel::create("vVelNorm",  sum_variable);
@@ -659,7 +658,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_ScalarClippedLabel);
-  VarLabel::destroy(d_ReactScalarClippedLabel);
   VarLabel::destroy(d_uVelNormLabel);
   VarLabel::destroy(d_vVelNormLabel);
   VarLabel::destroy(d_wVelNormLabel);
