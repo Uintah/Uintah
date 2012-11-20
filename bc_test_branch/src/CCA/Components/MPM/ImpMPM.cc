@@ -232,7 +232,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    d_con_type = "null";
    if(child){
-     child->getWithDefault("type",d_con_type, "null");
+     child->getWithDefault( "type", d_con_type, string("null") );
    }
    d_rigid_body = false;
 
@@ -2685,7 +2685,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             const BoundCond<Vector>* bc =
               dynamic_cast<const BoundCond<Vector>*>(vel_bcs);
             if (bc != 0) {
-              if (bc->getBCType__NEW() == "Dirichlet") {
+              if (bc->getType() == "Dirichlet") {
                 for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = bc->getValue();
                   gacceleration[*nbound_ptr] = bc->getValue();
@@ -2703,8 +2703,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               delete bc;
             } else
               delete vel_bcs;
-            const BoundCond<NoValue>* sbc =
-              dynamic_cast<const BoundCond<NoValue>*>(sym_bcs);
+            const BoundCond<string>* sbc = dynamic_cast<const BoundCond<string>*>(sym_bcs);
             if (sbc != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
                 for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {

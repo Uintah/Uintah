@@ -26,7 +26,37 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = ".03683">
+
+      <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+      <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+      <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+      <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+      <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+      <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+
+      <FaceGeometry name="circle" type="circle" direction="x-" 
+                                                origin="0 0 0" radius=".03683" />
+
+      <Face geometry="x- wall" side = "x-">
+        <BCType id = "0" label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+      
+        <BCType id = "all" label = "Temperature" var = "Dirichlet">
+                              <value> 300.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+
+      <Face geometry="circle" side="x-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                             <value> 4000000.0   </value>
         </BCType>
@@ -51,26 +81,13 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-       </Face>
-      <Face side = "x-">
-        <BCType id = "0" label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
-                              <value> [0.0,0.0,0.0] </value>
-        </BCType>
-      
-        <BCType id = "all" label = "Temperature" var = "Dirichlet">
-                              <value> 300.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
       </Face>
-      <Face side = "x+">
+
+
+
+
+
+      <Face geometry="x+ wall" side = "x+">
         <BCType id = "0" label = "Pressure"     var = "Dirichlet">
                               <value> 100000.0   </value>
         </BCType>
@@ -88,10 +105,10 @@
         </BCType>
       </Face>
 
-      <Face side = "y-">
+      <Face geometry="y- wall" side = "y-">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
-       </Face>
+      </Face>
 <!--        <BCType id = "0" label = "Velocity" var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
@@ -112,7 +129,7 @@
         </BCType>
       </Face>                  
 -->
-      <Face side = "y+">
+      <Face geometry="y+ wall" side = "y+">
         <BCType id = "0" label = "Pressure" var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
@@ -130,11 +147,11 @@
         </BCType>
       </Face>
       
-      <Face side = "z-">
+      <Face geometry="z- wall" side = "z-">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>                  
-      <Face side = "z+">
+      <Face  geometry="z+ wall" side = "z+">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>

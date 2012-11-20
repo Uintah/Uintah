@@ -48,15 +48,15 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
       d_bala = true;
       d_drag = false;
       int regime; 
-      vel_db->getWithDefault("kinematic_viscosity",kvisc,1.e-5); 
-      vel_db->getWithDefault("iter", d_totIter, 15); 
-      vel_db->getWithDefault("tol",  d_tol, 1e-15); 
-      vel_db->getWithDefault("rho_ratio",rhoRatio,1000);
-      vel_db->getWithDefault("L",d_L, 1.0);
-      vel_db->getWithDefault("eta", d_eta, 1e-5); 
-      beta = 3. / (2.*rhoRatio + 1.); 
-      vel_db->getWithDefault("regime",regime,1);      
-      vel_db->getWithDefault("min_vel_ratio", d_min_vel_ratio, .1); 
+      vel_db->getWithDefault( "kinematic_viscosity", kvisc, 1.e-5 );
+      vel_db->getWithDefault( "iter", d_totIter, 15 );
+      vel_db->getWithDefault( "tol",  d_tol, 1e-15 );
+      vel_db->getWithDefault( "rho_ratio", rhoRatio, 1000.0 );
+      vel_db->getWithDefault( "L",d_L, 1.0 );
+      vel_db->getWithDefault( "eta", d_eta, 1e-5 );
+      beta = 3. / (2.*rhoRatio + 1.);
+      vel_db->getWithDefault( "regime",regime,1 );
+      vel_db->getWithDefault( "min_vel_ratio", d_min_vel_ratio, .1 ); 
 
       if (regime == 1)
         d_power = 1;

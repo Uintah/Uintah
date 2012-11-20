@@ -1953,7 +1953,10 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
   string * strPtr = new string( full_filename );
 
   d_upsFilename.push_back( strPtr );
-  prob_spec->getNode()->_private = (void*)strPtr;
+
+  xmlNode * tempNode = prob_spec->getNode();
+
+  tempNode->_private = (void*)strPtr;
 
   resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
 

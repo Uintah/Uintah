@@ -29,10 +29,10 @@
 
 namespace SCIRun {
 
-static DebugStream dbg("ProgressiveWarning", true);
+static DebugStream dbg( "ProgressiveWarning", true );
 
-ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-1 */, 
-                                       std::ostream& stream /* =cerr */)
+ProgressiveWarning::ProgressiveWarning( std::string message, int multiplier /* = -1 */, 
+                                        std::ostream& stream /* = cerr */ )
 {
   d_message = message;
   d_multiplier = multiplier;
@@ -50,19 +50,17 @@ ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-
   d_numOccurences = 0;
   d_nextOccurence = 1;
   d_warned = false;
-  
 }
 
-bool ProgressiveWarning::invoke(int numTimes /* =-1*/)
+bool
+ProgressiveWarning::invoke( int numTimes /* = -1 */ )
 {
-  bool warning_printed = false;
   d_numOccurences += numTimes;
   if (d_numOccurences >= d_nextOccurence && (!d_warned || d_multiplier != -1)) {
     d_warned = true;
 
     if (d_multiplier != -1) {
       showWarning();
-      warning_printed = true;
       while (d_nextOccurence <= d_numOccurences)
         d_nextOccurence *= d_multiplier;
     }
@@ -75,12 +73,14 @@ bool ProgressiveWarning::invoke(int numTimes /* =-1*/)
   return false;
 }
 
-void ProgressiveWarning::changeMessage(std::string message)
+void
+ProgressiveWarning::changeMessage( std::string message )
 {
   d_message = message;
 }
 
-void ProgressiveWarning::showWarning()
+void
+ProgressiveWarning::showWarning()
 {
   (*out) << d_message << std::endl;
   (*out) << "  This warning has occurred " << d_numOccurences << " times\n";

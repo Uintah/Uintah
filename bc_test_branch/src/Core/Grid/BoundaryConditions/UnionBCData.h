@@ -28,78 +28,66 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 
 namespace Uintah {
 
- /*!
+/*!
 
-  \class UnionBCData
+\class UnionBCData
 
-  \ brief Stores the union of several different boundary condition geometries.
-  
-  \author John A. Schmidt \n
-  Department of Mechanical Engineering \n
-  University of Utah \n
-  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+\ brief Stores the union of several different boundary condition geometries.
 
-  */
-  using namespace SCIRun;
+\author John A. Schmidt \n
+Department of Mechanical Engineering \n
+University of Utah \n
+Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
 
-   class UnionBCData : public BCGeomBase {
-   public:
-     /// Constructor
-     UnionBCData();
+*/
 
-     /// Copy constructor
-     UnionBCData(const UnionBCData& bc);
 
-     /// Assignment operator
-     UnionBCData& operator=(const UnionBCData& bc);
+class UnionBCData : public BCGeomBase {
+public:
 
-     /// Constructor taking the problem specification
-     UnionBCData(ProblemSpecP& ps);
+  /// Copy constructor - Union of p1 and p2.
+  UnionBCData( std::vector<BCGeomBase*> & children, const string & name, const Patch::FaceType & side );
 
-     /// Destructor
-     virtual ~UnionBCData();
+  /// Destructor
+  virtual ~UnionBCData();
 
-     virtual bool operator==(const BCGeomBase&) const;
+  virtual bool operator==(const BCGeomBase&) const;
 
-     /// Clone the boundary condition -- allocates memory
-     UnionBCData* clone();
-
-     /// Get the boundary condition data
-     void getBCData(BCData& bc) const;
-
-     /// Add the boundary condition data -- no longer used.
-     void addBCData(BCData& bc);
-
-     /// Add the old boundary condition data -- no longer used.
-     void addBC(BoundCondBase* bc);
-
-     /// Add the boundary condition geometry
-     void addBCData(BCGeomBase* bc);
-
-     /// Determines if a point is inside the collection of boundary condition
-     /// geometries.
-     bool inside(const Point& p) const;
+  /// Determines if a point is inside the collection of boundary condition
+  /// geometries.
+  bool inside( const Point & p ) const;
      
-     /// Print out the boundary condition geometry types.
-     virtual void print();
+  /// Print out the boundary condition geometry types.
+  virtual void print( int depth = 0 ) const;
 
-     /// Determine the cell and node boundary iterators.
-     virtual void determineIteratorLimits(Patch::FaceType face,
-                                          const Patch* patch, 
-                                          vector<Point>& test_pts);
-   private:
-     std::vector<BCGeomBase*> child;
-     friend class BoundCondReader;
-   };
+  /// Determine the cell and node boundary iterators.
+  virtual void determineIteratorLimits( const Patch::FaceType   face,
+                                        const Patch           * patch, 
+                                        const vector<Point>   & test_pts );
+
+  // Returns a list of all the materials that the BCGeom corresponds to
+  virtual std::set<int> getMaterials() const;
+
+private:
+
+  std::vector<BCGeomBase*> d_children;
+
+  /// Constructors -- Made private in order to disallow non-initialized Union objects...
+  UnionBCData() {}
+  UnionBCData( const UnionBCData & bc );
+
+
+  /// Assignment operator - don't use this.
+  UnionBCData& operator=( const UnionBCData & bc ) { return *this; }
+
+};
 
 } // End namespace Uintah
 
 #endif
-
-
-
 

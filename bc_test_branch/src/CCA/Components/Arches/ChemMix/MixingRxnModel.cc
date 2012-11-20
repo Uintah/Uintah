@@ -78,7 +78,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
 
   ProblemSpecP db = params; 
 
-  db->getWithDefault("temperature_label_name", _temperature_label_name, "temperature"); 
+  db->getWithDefault( "temperature_label_name", _temperature_label_name, string("temperature") ); 
 
   // create a transform object
   d_has_transform = true; 

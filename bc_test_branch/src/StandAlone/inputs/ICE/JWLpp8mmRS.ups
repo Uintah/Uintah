@@ -14,6 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
+       <max_Timesteps> 150 </max_Timesteps>
        <maxTime>            2.00e-5    </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           2.4e-14    </delt_min>
@@ -25,12 +26,19 @@
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <Grid>
-    <BoundaryConditions>
-      <Face side = "x-">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-">
         <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>
-      <Face side = "x+">
+      <Face geometry="x+ wall" side="x+">
         <BCType id = "all"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -47,11 +55,11 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "y-">
+      <Face geometry="y- wall" side="y-">
         <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>                  
-      <Face side = "y+">
+      <Face geometry="y+ wall" side="y+">
         <BCType id = "all"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -68,11 +76,11 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-      <Face side = "z-">
+      <Face geometry="z- wall" side="z-">
         <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>
-      <Face side = "z+">
+      <Face geometry="z+ wall" side="z+">
         <BCType id = "all"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
@@ -106,6 +114,7 @@
    <DataArchiver>
       <filebase>JWLpp8mmRS.uda</filebase>
       <outputInterval>2.00e-7</outputInterval>
+      <checkpoint interval="0.000001" cycle="2"/>
       <save label="delP_MassX"/>
       <save label="press_CC"/>
       <save label="vol_frac_CC"/>  

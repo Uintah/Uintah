@@ -65,6 +65,9 @@
 #include <sstream>
 #include <stdlib.h>
 
+// FIXME DEBUG remove VERBOSE:
+#undef VERBOSE
+//#define VERBOSE 1
 
 using namespace std;
 using namespace Uintah;
@@ -2139,7 +2142,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 
   // ---- Velocity inlet information ---- 
   std::string input_type; 
-  params->getWithDefault("velocity_type", input_type, "flat");
+  params->getWithDefault( "velocity_type", input_type, string("flat") );
 
   if ( input_type == "flat" ) {
 
@@ -2183,7 +2186,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   } 
 
   // ---- Scalar inlet information --- 
-  params->getWithDefault("scalar_type", input_type, "flat");
+  params->getWithDefault( "scalar_type", input_type, string("flat") );
   if ( input_type == "flat" ) {
 
     double mixfrac;
@@ -2201,7 +2204,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
       streamMixturefraction.d_has_second_mixfrac = true;
     }
 
-    params->getWithDefault("heat_loss", heatloss, 0); 
+    params->getWithDefault( "heat_loss", heatloss, 0.0 );
     streamMixturefraction.d_heatloss = heatloss; 
 
     d_inletScalarType = FlowInlet::SCALAR_FLAT_PROFILE;
@@ -2222,7 +2225,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
-  params->getWithDefault("name",d_inlet_name,"not named"); 
+  params->getWithDefault( "name", d_inlet_name, string("not named") ); 
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
 
   // loop thru all the inlet geometry objects
@@ -2330,7 +2333,7 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
   }
 
   double heatloss; 
-  params->getWithDefault("heat_loss", heatloss, 0); 
+  params->getWithDefault( "heat_loss", heatloss, 0.0 );
   streamMixturefraction.d_heatloss = heatloss; 
 
   double reactscalar;
@@ -2388,7 +2391,7 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   }
 
   double heatloss; 
-  params->getWithDefault("heat_loss", heatloss, 0); 
+  params->getWithDefault( "heat_loss", heatloss, 0.0 );
   streamMixturefraction.d_heatloss = heatloss; 
 
   if (d_calcVariance)
@@ -2712,6 +2715,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           Iterator bound_ptr;
           bool foundIterator = false;
 
+          cout << "1) Boundary name is: " << bc_iter->second.name << "\n";
+
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
@@ -2721,6 +2726,13 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           } 
 
           if ( foundIterator ) {
+
+#if VERBOSE
+            cout << "1) Iterators are:\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
 
             bound_ptr.reset(); 
 
@@ -5440,7 +5452,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
           my_info.mass_flow_rate = 0.0; 
-          found_bc = true; 
+          found_bc = true;
 
         }
 
@@ -5472,11 +5484,11 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
-BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
+BoundaryCondition::cellTypeInit__NEW( const ProcessorGroup *,
+                                      const PatchSubset    * patches,
+                                      const MaterialSubset *,
+                                            DataWarehouse  *,
+                                            DataWarehouse  * new_dw )
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -5497,20 +5509,35 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 
     }
 
-    vector<Patch::FaceType>::const_iterator bf_iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 
-    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
-        bc_iter != d_bc_information.end(); bc_iter++){
+    //// DEBUG ////
+    //
+    vector<Iterator> the_iters;
 
-      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+    cout << "Matl is " << matl_index << ", bc_info: " << d_bc_information.size() << "\n";
+    
+    //
+    //// end DEBUG ////
 
-        //get the face
+    for( BCInfoMap::iterator bc_iter = d_bc_information.begin(); bc_iter != d_bc_information.end(); bc_iter++ ) {
+
+      for( vector<Patch::FaceType>::const_iterator bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++ ) {
+
+        // Get the face:
         Patch::FaceType face = *bf_iter;
 
-        //get the number of children
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+        // Get the number of children:
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren( matl_index ); // Assumed one material
+
+        // DEBUGGING
+        const BCDataArray * temp = patch->getBCDataArray(face);
+        cout << "beg debugging: numChildren: " << numChildren << " for matl: " << matl_index << "\n";
+        temp->print();
+        cout << "end debugging\n";
+        // end debugging
+
 
         for (int child = 0; child < numChildren; child++){
 
@@ -5521,16 +5548,32 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
+          if( bc_iter->second.name == "big circle (real area=0.7744)" ) {
+            cout << "working on big circle\n";
+          }
+
+          cout << "2) Boundary name is: " << bc_iter->second.name << ". Patch: " << patch->getID() << ", face: "
+               << face << ", child: " << child << " (of " << numChildren << ")\n";
+
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
-              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+              getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind );
           } else { 
             foundIterator = 
-              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+              getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind );
           } 
 
           if ( foundIterator ) {
 
+            if( bc_iter->second.name == "big circle (real area=0.7744)" ) {
+              cout << "found iterator for big circle\n";
+            }
+#if VERBOSE
+            cout << "2) Iterators are: (for " << bc_iter->second.name << " - patch: " << patch->getID() << ", face: " << face << ")\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
               cellType[*bound_ptr] = bc_iter->second.type;
@@ -5613,6 +5656,8 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
+          cout << "3) Boundary name is: " << bc_iter->second.name << "\n";
+
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
@@ -5628,6 +5673,12 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+#if VERBOSE
+            cout << "3) Iterators are:\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
             switch (face) {
               case Patch::xminus:
                 dx_1 = Dx.y();
@@ -5713,11 +5764,11 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
-BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
+BoundaryCondition::setupBCInletVelocities__NEW( const ProcessorGroup *,
+                                                const PatchSubset    * patches,
+                                                const MaterialSubset *,
+                                                      DataWarehouse  *,
+                                                      DataWarehouse  * new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -5764,6 +5815,8 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
+          cout << "4) Boundary name is: " << bc_iter->second.name << "\n";
+
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
@@ -5774,6 +5827,12 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+#if VERBOSE
+            cout << "4) Iterators are:\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
             // Notice: 
             // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
             // so as to compute the average velocity.  As a result, we will just use the first iterator: 
@@ -5931,6 +5990,8 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
+          cout << "5) Boundary name is: " << bc_iter->second.name << "\n";
+
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
@@ -5941,6 +6002,12 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+#if VERBOSE
+            cout << "5) Iterators are:\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
             bound_ptr.reset(); 
 
             if ( bc_iter->second.type != VELOCITY_FILE ) { 
@@ -6627,12 +6694,19 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
           string bc_kind = "NotSet";
           Iterator bound_ptr;
 
+          cout << "6) Boundary name is: " << bc_iter->second.name << "\n";
           //ALWAYS a double so no need to check for vectors
           bool foundIterator = 
             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
           if ( foundIterator ) {
 
+#if VERBOSE
+            cout << "6) Iterators are:\n";
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              cout << *bound_ptr << "\n";
+            }
+#endif
             bound_ptr.reset();
             double negsmall = -1.0E-10;
             double possmall =  1.0E-10;

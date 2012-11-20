@@ -49,58 +49,35 @@ namespace Uintah {
 
   */
 
-  using namespace SCIRun;
-  using std::vector;
- 
   class SideBCData : public BCGeomBase {
 
   public:
     /// Constructor
-    SideBCData();
-
+    SideBCData( const string & name, const Patch::FaceType & side );
 
     /// Assignment Operator
-    SideBCData& operator=(const SideBCData& bc);
+    SideBCData& operator=( const SideBCData & bc );
 
     /// Destructor
     virtual ~SideBCData();
 
-    virtual bool operator==(const BCGeomBase&) const;
-
-    /// Clone the boundary condition geometry -- allocates memory.
-    SideBCData* clone();
-
-    /// Get the boundary condition data
-    void getBCData(BCData& bc) const;
-
-    /// Add the boundary condition data
-    void addBCData(BCData& bc);
-
-    /// Add the old boundary condition data -- no longer used.
-    void addBC(BoundCondBase* bc);
+    virtual bool operator==( const BCGeomBase & rhs ) const;
 
     /// Determines if a point is inside -- always returns true.
     bool inside(const Point& p) const;
 
-    /// Print out the boundary condition geometry type.
-    virtual void print();
+    /// Print out the boundary condition geometry type. (Only if debug stream turned on!)
+    virtual void print( int depth = 0 ) const;
 
     /// Determine the cell and node centered iterators
-    virtual void determineIteratorLimits(Patch::FaceType face,
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts);
+    virtual void determineIteratorLimits(       Patch::FaceType   face,
+                                          const Patch           * patch, 
+                                                vector<Point>   & test_pts );
 
-    
-    
   private:
-    BCData d_bc;
-
+    SideBCData() {} // Default constructor should not be used...
   };
   
 } // End namespace Uintah
 
 #endif
-
-
-
-

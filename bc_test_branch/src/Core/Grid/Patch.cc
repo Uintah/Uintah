@@ -23,21 +23,18 @@
  */
 
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NodeIterator.h>
+
 #include <Core/Exceptions/InvalidGrid.h>
-#include <Core/Math/Primes.h>
-#include <Core/Grid/Box.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Core/Containers/StaticArray.h>
-#include <TauProfilerForSCIRun.h>
+#include <Core/Grid/Box.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Primes.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Math/MiscMath.h>
+
+#include <TauProfilerForSCIRun.h>
 
 #include <iostream>
 #include <sstream>
@@ -48,18 +45,16 @@ using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 
-
-Patch::Patch(const Level* level,
-             const IntVector& lowIndex, const IntVector& highIndex,
-             const IntVector& inLowIndex, const IntVector& inHighIndex, 
-             unsigned int levelIndex,  int id)
-  : d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
-    d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
-    d_arrayBCS(0)
+Patch::Patch( const Level* level,
+              const IntVector& lowIndex, const IntVector& highIndex,
+              const IntVector& inLowIndex, const IntVector& inHighIndex, 
+              unsigned int levelIndex,  int id ) :
+  d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
+  d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
+  d_arrayBCS(0)
 {
   
   if(d_id == -1){
@@ -71,26 +66,23 @@ Patch::Patch(const Level* level,
   }
    
   // DON'T call setBCType here     
-  d_patchState.xminus=None;
-  d_patchState.yminus=None;
-  d_patchState.zminus=None;
-  d_patchState.xplus=None;
-  d_patchState.yplus=None;
-  d_patchState.zplus=None;
+  d_patchState.xminus = None;
+  d_patchState.yminus = None;
+  d_patchState.zminus = None;
+  d_patchState.xplus  = None;
+  d_patchState.yplus  = None;
+  d_patchState.zplus  = None;
 
-  
-  //set the level index
-  d_patchState.levelIndex=levelIndex;
-
+  // Set the level index:
+  d_patchState.levelIndex = levelIndex;
 }
 
-Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : 
-      d_lowIndex(realPatch->getCellLowIndex()+virtualOffset),
-      d_highIndex(realPatch->getCellHighIndex()+virtualOffset),
-      d_grid(realPatch->d_grid),
-      d_realPatch(realPatch), d_level_index(realPatch->d_level_index),
-      d_arrayBCS(realPatch->d_arrayBCS)
+Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset) :
+  d_lowIndex(realPatch->getCellLowIndex()+virtualOffset),
+  d_highIndex(realPatch->getCellHighIndex()+virtualOffset),
+  d_grid(realPatch->d_grid),
+  d_realPatch(realPatch), d_level_index(realPatch->d_level_index),
+  d_arrayBCS(realPatch->d_arrayBCS)
 {
   //if(!ids){
   // make the id be -1000 * realPatch id - some first come, first serve index
@@ -123,23 +115,19 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)) {
-    if ( d_arrayBCS)
+  if( d_arrayBCS ) {
+    for( Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face=Patch::nextFace(face) ) {
       delete (*d_arrayBCS)[face];
-  }
-
-  if (d_arrayBCS) {
-    d_arrayBCS->clear();
+    }
     delete d_arrayBCS;
   }
-  
 }
 
 /**
 * Returns the 8 nodes found around the point pos
 */
-void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
+void
+Patch::findCellNodes( const Point& pos, IntVector ni[8] ) const
 {
   Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -158,9 +146,9 @@ void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
 /**
  * Returns the 27 nodes found around the point pos
  */
-void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
+void
+Patch::findCellNodes27( const Point& pos, IntVector ni[27] ) const
 {
-
   cerr << "findCellNodes27 appears to be incorrect.  You are using it at your own risk" << endl;
   Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -194,19 +182,24 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 /**
  * Returns the position of the node idx in domain coordinates.
  */
-Point Patch::nodePosition(const IntVector& idx) const {
+Point
+Patch::nodePosition(const IntVector& idx) const
+{
   return getLevel()->getNodePosition(idx);
 }
 
 /**
  * Returns the position of the cell idx in domain coordinates.
  */
-Point Patch::cellPosition(const IntVector& idx) const {
+Point
+Patch::cellPosition(const IntVector& idx) const
+{
   return getLevel()->getCellPosition(idx);
 }
 
-void Patch::findCellsFromNode( const IntVector& nodeIndex,
-                               IntVector cellIndex[8]) 
+void
+Patch::findCellsFromNode( const IntVector & nodeIndex,
+                                IntVector   cellIndex[8] ) 
 {
    int ix = nodeIndex.x();
    int iy = nodeIndex.y();
@@ -222,8 +215,9 @@ void Patch::findCellsFromNode( const IntVector& nodeIndex,
    cellIndex[7] = IntVector(ix-1, iy-1, iz-1);
 }
 
-void Patch::findNodesFromCell( const IntVector& cellIndex,
-                               IntVector nodeIndex[8])
+void
+Patch::findNodesFromCell( const IntVector & cellIndex,
+                                IntVector   nodeIndex[8] )
 {
    int ix = cellIndex.x();
    int iy = cellIndex.y();
@@ -262,6 +256,32 @@ Patch::performConsistencyCheck() const
     ostringstream msg;
     msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
     SCI_THROW(InvalidGrid( msg.str(),__FILE__,__LINE__ ));
+  }
+}
+
+Patch::FaceType
+Patch::stringToFaceType( const string & faceString )
+{
+  if(      faceString == "x+" ) {
+    return xplus;
+  }
+  else if( faceString == "x-" ) {
+    return xminus;
+  }
+  else if( faceString == "y+" ) {
+    return yplus;
+  }
+  else if( faceString == "y-" ) {
+    return yminus;
+  }
+  else if( faceString == "z+" ) {
+    return zplus;
+  }
+  else if( faceString == "z-" ) {
+    return zminus;
+  }
+  else {
+    throw InvalidValue( "Invalid string input for stringToFaceType: '" + faceString + "'", __FILE__, __LINE__ );
   }
 }
 
@@ -304,19 +324,41 @@ Patch::printPatchBCs(ostream& out) const
 }
 
 void 
-Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
+Patch::setArrayBCValues( Patch::FaceType face, BCDataArray * bcda )
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.
 
-  bc->determineIteratorLimits(face,this);
-  (*d_arrayBCS)[face] = bc->clone();
+  cout << "Patch.cc: setArrayBCValues() for face: " << face << ", id: " << d_id << "\n";
+
+  bcda->determineIteratorLimits( face, this );
+
+  cout << "original bcda: aaaaaaaaaaaa "<< face << " ------------------------------------------------------\n";
+  bcda->print();
+  cout << "AAAAAAAAAAAA------------------------------------------------------\n";
+
+  BCDataArray * new_bcda = scinew BCDataArray( *bcda ); // FIXME... do we really need to copy this?  Why not just use the same one?
+
+  cout << "copy of bcda: bbbbbbbbbbbb "<< face << " ------------------------------------------------------\n";
+  new_bcda->print();
+  cout << "BBBBBBBBBBBB------------------------------------------------------\n";
+
+  (*d_arrayBCS)[face] = new_bcda;
+
+  cout << "Patch.cc: BCs for face " << face << " are:\n";
+  (*d_arrayBCS)[face]->print();
+
+  // FIXME DEBUGGING:
+  //cout << "fyi: d_arrayBCS for " << face << " is " << (*d_arrayBCS)[face] << "\n";
 }  
  
-const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
+const BCDataArray*
+Patch::getBCDataArray( Patch::FaceType face ) const
 {
-  if (d_arrayBCS) {
-    if ((*d_arrayBCS)[face]) {
+  if( d_arrayBCS ) {
+    if( (*d_arrayBCS)[face] ) {
+      // FIXME DEBUGGING:
+      //cout << "FYI: d_arrayBCS for " << face << " is " << (*d_arrayBCS)[face] << "\n";
       return (*d_arrayBCS)[face];
     } else {
       ostringstream msg;
@@ -328,25 +370,34 @@ const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
     SCI_THROW(InternalError("d_arrayBCS has not been allocated",
                             __FILE__, __LINE__));
   }
-
 }
 
-
 const BoundCondBase*
-Patch::getArrayBCValues(Patch::FaceType face,
-                        int mat_id,
-                        const string& type,
-                        Iterator& cell_ptr, 
-                        Iterator& node_ptr,
-                        int child) const
+Patch::getArrayBCValues( Patch::FaceType   face,
+                         int               mat_id,
+                         const string    & type,
+                         Iterator        & cell_ptr, 
+                         Iterator        & node_ptr,
+                         int               child ) const
 {
-  BCDataArray* bcd = (*d_arrayBCS)[face];
-  if (bcd) {
-    bcd->print();
-    const BoundCondBase* bc = bcd->getBoundCondData(mat_id,type,child);
+  //cout << "Patch::getArrayBCValues() called on patch " << d_id << ", face " << face << ", matl: " << mat_id << "\n";
+
+  BCDataArray * b0 = (*d_arrayBCS)[0];
+  BCDataArray * b1 = (*d_arrayBCS)[1];
+  BCDataArray * b2 = (*d_arrayBCS)[2];
+  BCDataArray * b3 = (*d_arrayBCS)[3];
+  BCDataArray * b4 = (*d_arrayBCS)[4];
+  BCDataArray * b5 = (*d_arrayBCS)[5];
+
+  BCDataArray* bcda = (*d_arrayBCS)[face];
+  if (bcda) {
+    // DEBUG print statement FIXME remove
+    //bcda->print();
+    // end debug
+    const BoundCondBase* bc = bcda->getBoundCondData(mat_id,type,child);
     if (bc) {
-      bcd->getCellFaceIterator(mat_id,cell_ptr,child);
-      bcd->getNodeFaceIterator(mat_id,node_ptr,child);
+      cell_ptr = bcda->getCellFaceIterator( mat_id, child, this );
+      node_ptr = bcda->getNodeFaceIterator( mat_id, child, this );
     }
     return bc;
   } else {
@@ -355,37 +406,34 @@ Patch::getArrayBCValues(Patch::FaceType face,
 }
 
 bool 
-Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
-              const string& bc_variable) const
+Patch::haveBC(       FaceType   face,
+                     int        mat_id,
+               const string   & bc_type,
+               const string   & bc_variable ) const
 {
-  BCDataArray* itr = (*d_arrayBCS)[face];
+  BCDataArray* itr = (*d_arrayBCS)[ face ];
 
   if ( itr ) {
-#if 0
-    cout << "Inside haveBC" << endl;
-    ubc->print();
-#endif
-    BCDataArray::bcDataArrayType::const_iterator v_itr;
-    vector<BCGeomBase*>::const_iterator it;
-    
-    v_itr = itr->d_BCDataArray.find(mat_id);
+
+    BCDataArray::bcDataArrayType::const_iterator v_itr = itr->d_BCDataArray.find( mat_id );
+
     if (v_itr != itr->d_BCDataArray.end()) { 
-      for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
-        BCData bc;
-        (*it)->getBCData(bc);
-        bool found_variable = bc.find(bc_type,bc_variable);
-        if (found_variable){
+      for( vector<BCGeomBase*>::const_iterator it = v_itr->second.begin(); it != v_itr->second.end(); ++it ) {
+        const BCData * bc = (*it)->getBCData( mat_id );
+        bool found_variable = bc->exists( bc_type, bc_variable );
+        if( found_variable ) {
           return true;
         }
       }
     } 
+    int all_matls = -1; // -1 is the ID for all materials.
+
     // Check the mat_it = "all" case
-    v_itr = itr->d_BCDataArray.find(-1);
+    v_itr = itr->d_BCDataArray.find( all_matls );
     if (v_itr != itr->d_BCDataArray.end()) {
-      for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
-        BCData bc;
-        (*it)->getBCData(bc);
-        bool found_variable = bc.find(bc_type,bc_variable);
+      for( vector<BCGeomBase*>::const_iterator it = v_itr->second.begin(); it != v_itr->second.end(); ++it ) {
+        const BCData * bcd = (*it)->getBCData( mat_id );
+        bool found_variable = (bcd == NULL) ? false : bcd->exists( bc_type, bc_variable );
         if (found_variable){
           return true;
         }

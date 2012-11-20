@@ -271,7 +271,7 @@ namespace Wasatch{
                      Expr::TagList& velTags )
   {
     std::string xvelname, yvelname, zvelname;
-    Uintah::ProblemSpecP doxvel,doyvel,dozvel;
+    bool doxvel, doyvel, dozvel;
     doxvel = params->get( "X-Velocity", xvelname );
     doyvel = params->get( "Y-Velocity", yvelname );
     dozvel = params->get( "Z-Velocity", zvelname );
@@ -292,8 +292,9 @@ namespace Wasatch{
                 const std::string thisMomDirName)
   {
     std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    Uintah::ProblemSpecP isviscous;
+    bool doxmom, doymom, dozmom;
+    bool isviscous;
+
     isviscous = params->findBlock("Viscosity");
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
@@ -314,7 +315,7 @@ namespace Wasatch{
                           const Expr::Tag thisMomTag )
   {
     std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    bool doxmom, doymom, dozmom;
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
@@ -391,7 +392,7 @@ namespace Wasatch{
     //___________________________________
     // diffusive flux (stress components)
     std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    bool doxmom, doymom, dozmom;
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );

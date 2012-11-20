@@ -30,6 +30,7 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Grid/BoundaryConditions/BCFace.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/Patch.h>
@@ -81,70 +82,48 @@ namespace Uintah {
 
 */
 
-  class BoundCondReader  {
-  public:
+class BoundCondReader  {
+public:
 
-    /// Constructor
-    BoundCondReader();
+  /// Constructor
+  BoundCondReader();
 
-    /// Destructor
-    ~BoundCondReader();
+  /// Destructor
+  ~BoundCondReader();
 
-    void whichPatchFace(const std::string fc, Patch::FaceType& face_side,
-                        int& plusMinusFaces, int& p_dir);
+  /// 
+  /// Read in the boundary conditions given a problem specification, ps.
+  /// Each face is read in and processed using the function 
+  /// createBoundaryConditionFace() which indicates whether the boundary
+  /// condition should be applied on the side, circle, or rectangle region. 
+  /// Then the individual boundary conditions such as Pressure, Density,
+  /// etc. are processed.  The individual boundary conditions for a given
+  /// face may be for several different materials.   Boundary conditions
+  /// are then separated out by material ids.  Following separation, the
+  /// boundary conditions are then combined (combineBCS()) so that any 
+  /// circles and rectangles specified on a face are combined into a union.  
+  /// The union is the subtracted out from the side case using a difference
+  /// boundary condition.
+  /// 
+  void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
 
-    /// Read in the boundary conditions given a problem specification, ps.
-    /// Each face is read in and processed using the function 
-    /// createBoundaryConditionFace() which indicates whether the boundary
-    /// condition should be applied on the side, circle, or rectangle region. 
-    /// Then the individual boundary conditions such as Pressure, Density,
-    /// etc. are processed.  The individual boundary conditions for a given
-    /// face may be for several different materials.   Boundary conditions
-    /// are then separated out by material ids.  Following separation, the
-    /// boundary conditions are then combined (combineBCS()) so that any 
-    /// circles and rectangles specified on a face are combined into a union.  
-    /// The union is the subtracted out from the side case using a difference
-    /// boundary condition.
-    /// 
-    /// 
-
-    void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
-
-    /// Read in the geometric tags: side, circle, and rectangle.  Performs
-    /// error checking if the tag is not present or if the circle and rectangle
-    /// tags are not specified correctly.
-    BCGeomBase* createBoundaryConditionFace(ProblemSpecP& ps,
-                                            const ProblemSpecP& grid_ps,
-                                            Patch::FaceType& face_side);
-
-
-    /// Combine the boundary conditions for a given face into union and 
-    /// difference operations for the face.  Multiple circles and rectangles
-    /// are stored in a union.  The resultant union is then subtracted from
-    /// the side and stored as a difference bc.  This operation only happens
-    /// if there are more than one bc specified for a given face.  
-    void combineBCS();
-
-    void combineBCS_NEW();
+  ////////// FIXME FIXME is this text correct:
+  /// Combine the boundary conditions for a each face into union and 
+  /// difference operations for the face.  Multiple circles and rectangles
+  /// are stored in a union.  The resultant union is then subtracted from
+  /// the side and stored as a difference bc.  This operation only happens
+  /// if there are more than one bc specified for a given face.  
+  ///
+  void combineBCs( std::map<Patch::FaceType, BCFace*> & sides );
     
-    void bulletProofing();
+private:
 
-    ///
-    bool compareBCData(BCGeomBase* b1, BCGeomBase* b2);
+  friend class Level;
+  friend class Patch;
 
-    /// not used
-    const BCDataArray getBCDataArray(Patch::FaceType& face) const;
-
-   private:
-    friend class Level;
-    friend class Patch;
-    std::map<Patch::FaceType,BCDataArray > d_BCReaderData;
-  };
-
-  void print(BCGeomBase* p);
+  std::map< Patch::FaceType, BCDataArray > d_BCReaderData;
+};
 
 } // End namespace Uintah
 
 #endif
-
-

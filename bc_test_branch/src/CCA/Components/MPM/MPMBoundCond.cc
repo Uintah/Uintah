@@ -69,7 +69,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
          const BoundCond<Vector>* bc = 
            dynamic_cast<const BoundCond<Vector>*>(bcb); 
           if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
+            if (bc->getType() == "Dirichlet") {
               Vector bcv = bc->getValue();
               for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){ 
                 IntVector nd = *nbound_ptr;
@@ -83,15 +83,17 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
-            delete bc;
-          } else
-          delete bcb;
+            //delete bc; FIXME
+          }
+          else {
+            //delete bcb; FIXME
+          }
 
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
 
-          if (bcb->getBCType__NEW() == "symmetry") {
+          if (bcb->getType() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
               if(interp_type=="linear"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
@@ -225,9 +227,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               } // cpdi or gimp
             } // zplus/zminus
-            delete bcb;
+            //delete bcb; FIXME
           } else{
-            delete bcb;
+            //delete bcb; FIXME
           }
         }
       }
@@ -263,7 +265,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             dynamic_cast<const BoundCond<double>*>(bcb);
           
           if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
+            if (bc->getType() == "Dirichlet") {
               double bcv = bc->getValue();
               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
@@ -277,7 +279,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
-            if (bc->getBCType__NEW() == "Neumann"){
+            if (bc->getType() == "Neumann"){
               Vector deltax = patch->dCell();
               double dx = -9;
               IntVector off(-9,-9,-9);
@@ -313,10 +315,12 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
-            delete bc;
-          } else
-          delete bcb;
-        }
+            //delete bc; FIXME
+          }
+          else {
+            //delete bcb; FIXME
+          }
+        } 
       }  // child
     } else
       continue;

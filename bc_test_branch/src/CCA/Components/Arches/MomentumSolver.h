@@ -311,7 +311,7 @@ private:
 
         db->getWithDefault( "A", _A, 1.0 ); 
         db->getWithDefault( "B", _B, 1.0 ); 
-        db->getWithDefault( "plane", _plane, "x-y"); 
+        db->getWithDefault( "plane", _plane, string( "x-y" ) ); 
         //valid options are x-y, y-z, z-x
 
       }; 
@@ -500,7 +500,7 @@ private:
       db->getWithDefault( "R",  R_,  0.1 );       
       db->getWithDefault( "U",  U_,  1.0 );             
       db->getWithDefault( "V",  V_,  0.0 );
-      db->getWithDefault( "plane", plane_, "x-y"); 
+      db->getWithDefault( "plane", plane_, std::string( "x-y" ) ); 
       //valid options are x-y, y-z, z-x      
       GR_ = G_/(R_*R_);
     }; 

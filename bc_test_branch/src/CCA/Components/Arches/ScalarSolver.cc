@@ -92,7 +92,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
 
   string conv_scheme;
-  db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
+  db->getWithDefault( "convection_scheme", conv_scheme, string("central-upwind") );
   
   if (conv_scheme == "central-upwind"){
     d_conv_scheme = 0;
@@ -104,7 +104,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   
   string limiter_type;
   if (d_conv_scheme == 1) {
-    db->getWithDefault("limiter_type",limiter_type,"superbee");
+    db->getWithDefault( "limiter_type", limiter_type, string("superbee") );
     if (limiter_type == "minmod"){
       d_limiter_type = -1;
     }else if (limiter_type == "superbee"){
@@ -127,7 +127,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
     string boundary_limiter_type;
     d_boundary_limiter_type = 3;
     if (d_limiter_type < 3) {
-      db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"central-upwind");
+      db->getWithDefault( "boundary_limiter_type", boundary_limiter_type, string("central-upwind") );
       if (boundary_limiter_type == "none") {
             d_boundary_limiter_type = 2;
             cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;

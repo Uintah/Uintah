@@ -28,14 +28,11 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include <Core/Util/Handle.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 namespace Uintah {
-using std::map;
-using std::string;
-using std::vector;
-
 
 /**************************************
 
@@ -68,25 +65,38 @@ WARNING
   public:
     BCData();
     ~BCData();
-    BCData(const BCData&);
-    BCData& operator=(const BCData&);
-    bool operator==(const BCData&);
-    bool operator<(const BCData&) const;
-    void setBCValues(BoundCondBase* bc);
-    const BoundCondBase* getBCValues(const string& type) const;
-    void print() const;
-    bool find(const string& type) const;
-    bool find(const string& bc_type,const string& bc_variable) const;
-    void combine(BCData& from);
-    
-   private:
-      // The map is for the name of the
-    // bc type and then the actual bc data, i.e. 
-    // "Velocity", VelocityBoundCond
-    vector<BoundCondBase*>  d_BCData;
 
+    // Note, all 'bc's added to this BCData must have the same material index. 
+    void addBC( const BoundCondBase * bc );
+
+    const BoundCondBase                     * getBCValue( const std::string & type ) const;
+    const std::vector<const BoundCondBase*>   getBCs() const { return d_BCBs; }
+    int                                       getMatl() const { return d_matl; }
+
+    void print( int depth = 0 ) const;
+
+    bool exists( const std::string & type ) const;
+    bool exists( const std::string & bc_type, const std::string & bc_variable ) const;
+
+    void combine( const BCData & from );
     
+
+    // Used when a BCData is put into a std::set.  
+    bool operator() ( const BCData * a,  const BCData * b ) { return a->d_matl < b->d_matl; }
+
+   private:
+
+    int d_matl;  // -2 = uninitialized... all materials = -1.  All BoundCondBase's must be of the same material.
+
+    std::vector<const BoundCondBase*> d_BCBs;
+    
+    BCData( const BCData & ); // Don't use...  Use a reference, ie:  BCData & new_bcd = BCDataArray->getBCData();
+
+    // Don't call this...
+    BCData& operator=( const BCData & );
+
   };
+
 } // End namespace Uintah
 
 #endif

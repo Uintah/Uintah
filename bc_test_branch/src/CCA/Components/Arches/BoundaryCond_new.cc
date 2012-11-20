@@ -781,3 +781,135 @@ void BoundaryCondition_new::computeFilterVolume( const Patch* patch,
     }
   }
 }
+#if 0
+FIXME delete this section
+<<<<<<< .mine
+
+
+//---------------------------------------------------------------------------
+// Method: Compute the area of the boundary specification
+//---------------------------------------------------------------------------
+void BoundaryCondition_new::sched_computeBCArea( SchedulerP& sched, 
+                                                 const PatchSet* patches, 
+                                                 const MaterialSet* matls )
+{
+  Task* tsk = scinew Task( "BoundaryCondition_new::computeBCArea", this, 
+                           &BoundaryCondition_new::computeBCArea ); 
+
+  sched->addTask( tsk, patches, matls ); 
+
+}
+
+void BoundaryCondition_new::computeBCArea( const ProcessorGroup*, 
+                                           const PatchSubset* patches, 
+                                           const MaterialSubset*, 
+                                           DataWarehouse*, 
+                                           DataWarehouse* new_dw ) 
+{
+
+  for ( int p = 0; p < patches->size(); p++ ) { 
+
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+
+
+    // Dav: it seems that 'indx' should be 'matl', and if this is the case, I'm not sure 
+    //      that calling getDWIndex() is correct...?  FIXME!!!
+
+    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+      
+      Patch::FaceType face = *iter;
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx); //assumed one material
+
+      for (int child = 0; child < numChildren; child++){
+
+        std::string varname = "velocity";
+        std::string bc_kind = ""; 
+        double bc_value; 
+        Iterator bound_ptr;
+
+        bool foundIterator = 
+          getIteratorBCValueBCKind( patch, face, child, varname, indx, bc_value, bound_ptr, bc_kind); 
+
+        if (foundIterator) { 
+
+          std::string bc_name = patch->getBCDataArray(face)->getChild(indx, child)->getName();
+
+          // note we are only computing area if a velocity bc is found. 
+          
+          if ( bc_name == "NotSet" ) {
+            std::ostringstream oerr; 
+            oerr << "Error: All BCs containing velocity must be named. " << endl 
+              << "Please set the name attribute for each <Face> node in <BoundaryConditions>. " << endl;
+            throw ProblemSetupException( oerr.str(), __FILE__, __LINE__ );  
+          }
+       
+          double area = 0.0; 
+
+          switch (face) {
+            case Patch::xminus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.y() * Dx.z(); 
+
+              }
+              break;
+            case Patch::xplus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.y() * Dx.z(); 
+
+              }
+              break;
+#ifdef YDIM
+            case Patch::yminus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.x() * Dx.z(); 
+
+              }
+              break;
+            case Patch::yplus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.x() * Dx.z(); 
+
+              }
+              break;
+#endif
+#ifdef ZDIM
+            case Patch::zminus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.x() * Dx.y(); 
+
+              }
+              break;
+            case Patch::zplus:
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+                area += Dx.x() * Dx.y(); 
+
+              }
+              break;
+#endif
+            default: 
+              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+              break; 
+          } // end switch statement
+        } // found boundary object
+      } // iterator over children
+    } // iterator over faces
+  }
+}
+
+=======
+>>>>>>> .r49572
+#endif

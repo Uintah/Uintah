@@ -210,7 +210,7 @@ using SCIRun::Mutex;
      private:
        //! returns a ProblemSpecP reading the xml file xmlName.
        //! You will need to that you need to call ProblemSpec::releaseDocument
-       ProblemSpecP loadDocument(std::string xmlName);     
+       ProblemSpecP loadDocument( const std::string & xmlName );
 
        //! creates the uda directory with a trailing version suffix
        void makeVersionedDir();

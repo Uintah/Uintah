@@ -78,7 +78,7 @@ ImpMPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->getWithDefault("delT_decrease_factor",
                               d_delT_decrease_factor, .6);
   mpm_flag_ps->getWithDefault("delT_increase_factor",
-                              d_delT_increase_factor, 2);
+                              d_delT_increase_factor, 2.0 );
   
   mpm_flag_ps->get("solver",d_solver_type);
   mpm_flag_ps->get("temperature_solve",d_temp_solve);

@@ -132,14 +132,14 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );             // if true, at least one virtual radiometer exists
-  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );               // view angle of the radiometer in degrees
+  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180.0 );             // view angle of the radiometer in degrees
   rmcrt_ps->getWithDefault( "VROrientation"  ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
   rmcrt_ps->getWithDefault( "NoOfFluxRays" ,    _NoOfFluxRays,     1000 );             // number of rays per cell for computation of boundary fluxes
-  rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
+  rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0.0 );              // scattering coefficient
+  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1.0 );              // absorption coefficient specific to Bench4
   rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                       // ignore applying boundary conditions
   rmcrt_ps->getWithDefault( "allowReflect"   ,  _allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  _solveDivQ,        true );             // Allow for solving of divQ for flow cells.

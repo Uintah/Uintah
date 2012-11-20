@@ -97,12 +97,12 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
     proc0cout << "Smagorinsky type model will be used to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
 
-    db->getWithDefault("mixture_fraction_label",d_mix_frac_label_name, "scalarSP"); 
+    db->getWithDefault( "mixture_fraction_label", d_mix_frac_label_name, string("scalarSP") ); 
     d_mf_label = VarLabel::find( d_mix_frac_label_name );
-    proc0cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
+    proc0cout << "Using " << *d_mf_label << " to compute scalar variance.\n";
     
-    proc0cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
-    proc0cout << "by this model. Possibly high variance values would be generated" << endl;
+    proc0cout << "WARNING! Scalar filtering for variance limit is not supported\n";
+    proc0cout << "by this model. Possibly high variance values would be generated\n";
   }
 
   // actually, Shmidt number, not Prandtl number

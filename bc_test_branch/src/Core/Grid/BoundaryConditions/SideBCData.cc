@@ -24,38 +24,27 @@
 
 #include <Core/Grid/BoundaryConditions/SideBCData.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
-using std::endl;
-
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-SideBCData::SideBCData() 
+SideBCData::SideBCData( const string & name, const Patch::FaceType & side ) :
+  BCGeomBase( name, side )
 {
-  d_cells=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_nodes=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_bcname = "NotSet"; 
 }
-
 
 SideBCData::~SideBCData()
 {
 }
 
-bool SideBCData::operator==(const BCGeomBase& rhs) const
+bool
+SideBCData::operator==(const BCGeomBase& rhs) const
 {
-  const SideBCData* p_rhs = 
-    dynamic_cast<const SideBCData*>(&rhs);
+  const SideBCData* p_rhs = dynamic_cast<const SideBCData*>(&rhs);
 
   if (p_rhs == NULL)
     return false;
@@ -63,77 +52,42 @@ bool SideBCData::operator==(const BCGeomBase& rhs) const
     return true;
 }
 
-SideBCData* SideBCData::clone()
-{
-  return scinew SideBCData(*this);
-
-}
-void SideBCData::addBCData(BCData& bc)
-{
-  d_bc = bc;
-}
-
-void SideBCData::addBC(BoundCondBase* bc)
-{
-  d_bc.setBCValues(bc);
-}
-
-
-void SideBCData::getBCData(BCData& bc) const
-{
-  bc = d_bc;
-}
-
-bool SideBCData::inside(const Point &p) const 
+bool
+SideBCData::inside( const Point & p ) const 
 {
   return true;
 }
 
-void SideBCData::print()
+void
+SideBCData::print( int depth ) const
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  d_bc.print();
+  string indentation( depth*2, ' ' );
+
+  cout << indentation << "SideBCData Geom Piece: " << d_name << " [" << this << "]\n";
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 2 );
+  }
 }
 
-
-void SideBCData::determineIteratorLimits(Patch::FaceType face, 
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts)
+void
+SideBCData::determineIteratorLimits(       Patch::FaceType   face, 
+                                     const Patch           * patch, 
+                                           vector<Point>   & test_pts )
 {
-#if 0
-  cout << "SideBC determineIteratorLimits() " << patch->getFaceName(face)<<  endl;
-#endif
-
+  int patchID = patch->getID();
 
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
-  d_cells = GridIterator(l,h);
-
-#if 0
-  cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
-       << d_cells->end() << endl;
-#endif
-
+  d_cells[ patchID ] = scinew Iterator( GridIterator( l, h ) );
 
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
-  d_nodes = GridIterator(ln,hn);
+  d_nodes[ patchID ] = scinew Iterator( GridIterator( ln, hn ) );
 
+  d_iteratorLimitsDetermined[ patchID ] = patch;
 
-#if 0
-  cout << "d_nodes->begin() = " << d_nodes->begin() << " d_nodes->end() = " 
-       << d_nodes->end() << endl;
-#endif
-
-  //  Iterator iii(d_cells);
-
-#if 0
-  cout << "Iterator output . . . " << endl;
-  for (Iterator ii(d_cells); !ii.done(); ii++) {
-    cout << ii << endl;
-  }
-#endif
-  
+  // DEBUG FIXME REMOVE:
+  //cout << "Side Limits:\n";
+  //printLimits();
 }
-
 

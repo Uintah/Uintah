@@ -31,12 +31,18 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
-#include <vector>
-#include <typeinfo>
-#include <iterator>
 
+#include <iostream>
+#include <iterator>
+#include <typeinfo>
+#include <set>
+#include <vector>
 
 namespace Uintah {
+
+  // Forward declarations:
+  class UnionBCData; 
+  class DifferenceBCData;
 
   /*!
 
@@ -51,92 +57,73 @@ namespace Uintah {
 
   */
 
-  using SCIRun::IntVector;
-  using SCIRun::Point;
-  using std::vector;
-   
-
   class BCGeomBase {
   public:
 
-    /// Constructor
-    BCGeomBase();
-
-    /// Copy constructor
-    BCGeomBase(const BCGeomBase& rhs);
-
-    /// Assignment operator
-    BCGeomBase& operator=(const BCGeomBase& rhs);
-
     /// Destructor
-    virtual ~BCGeomBase();    
+    virtual ~BCGeomBase();
 
     /// Equality test
-    virtual bool operator==(const BCGeomBase&) const = 0;
+    virtual bool operator==( const BCGeomBase& ) const = 0;
 
-    /// Make a clone
-    virtual BCGeomBase* clone() = 0;
+    void addBC( const BoundCondBase* bc );
 
-    /// Get the boundary condition data
-    virtual void getBCData(BCData& bc) const = 0;
+    /// Get the boundary condition data for the given 'material'
+    const BCData * getBCData( int material ) const;
 
-    /// For old boundary conditions
-    virtual void addBCData(BCData& bc)  = 0;
+    const Iterator & getCellFaceIterator( const Patch * patch ) const;
 
-    /// For old boundary conditions
-    virtual void addBC(BoundCondBase* bc)  = 0;
-
-    void getCellFaceIterator(Iterator& b_ptr);
-
-    void getNodeFaceIterator(Iterator& b_ptr);
-
+    const Iterator & getNodeFaceIterator( const Patch * patch ) const;
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
-    virtual bool inside(const Point& p) const = 0;
+    virtual bool inside( const Point& p ) const = 0;
 
-    /// Print out the type of boundary condition -- debugging
-    virtual void print() = 0;
+    /// Print out info about the boundary condition (Mostly for debugging.)
+    virtual void print( int depth = 0 ) const = 0;
 
     /// Determine the cell centered boundary and node centered boundary
     /// iterators.
-    virtual void determineIteratorLimits(Patch::FaceType face, 
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts);
+    virtual void determineIteratorLimits( const Patch::FaceType      face,
+                                          const Patch              * patch,
+                                          const std::vector<Point> & test_pts );
     
     /// Print out the iterators for the boundary.
     void printLimits() const;
 
-    /// Get the name for this boundary specification
-    string getBCName(){ return d_bcname; }; 
-    void setBCName( std::string bcname ){ d_bcname = bcname; }; 
+    const string &          getName() const { return d_name; }
+
+    const Patch::FaceType & getSide() const { return d_faceSide; }
+
+    // Returns a list of all the materials that the BCGeom corresponds to
+    virtual std::set<int>   getMaterials() const;
 
   protected:
-    Iterator d_cells;
-    Iterator d_nodes;
-    string d_bcname; 
 
-  };
+    std::map<int,BCData*>      d_bcs;   // Indexed by material id: the int. (-1 is for all materials)
+    std::map<int,Iterator*>    d_cells; // Indexed by patch id (the int).
+    std::map<int,Iterator*>    d_nodes; // Indexed by patch id (the int).
+    string                     d_name;
+    Patch::FaceType            d_faceSide;
 
-  template<class T> class cmp_type {
-    public:
-    bool operator()(const BCGeomBase* p) {
-      return (typeid(T) == typeid(*p));
-    }
-  };
+    std::map<int,const Patch*> d_iteratorLimitsDetermined; // Indexed by patch id (the int).  (If the patch* is non-NULL, limits have been determined.)
 
-  template<class T> class not_type {
-    public:
-    bool operator()(const BCGeomBase* p) {
-      return (typeid(T) != typeid(*p));
-    }
-  };
+    /// These constructors are protected as they shouldn't be used directly...
+    //
+    BCGeomBase( const string & name, const Patch::FaceType & side );
+    BCGeomBase();
+    BCGeomBase( const BCGeomBase& rhs ); // Copy constructor
 
-  template<typename T> class delete_object {
-  public:
-    void operator() (T* ptr) {
-      delete ptr;
-    }
+    /// Assignment operator - This should not be used. 
+    BCGeomBase& operator=( const BCGeomBase& rhs );
+
+  private:
+    // Helper function for constructors.
+    void init( const string & name = "NotSet", const Patch::FaceType & side = Patch::invalidFace );
+
+    friend class UnionBCData;
+    friend class DifferenceBCData;
+
   };
 
 } // End namespace Uintah

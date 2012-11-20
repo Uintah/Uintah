@@ -1577,13 +1577,13 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
       timestepInterval = 0;
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
-    p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "patchFactor");
-    p->getWithDefault("cellCost", d_cellCost, 1);
-    p->getWithDefault("extraCellCost", d_extraCellCost, 1);
-    p->getWithDefault("particleCost", d_particleCost, 1.25);
-    p->getWithDefault("patchCost", d_patchCost, 16);
-    p->getWithDefault("gainThreshold", threshold, 0.05);
-    p->getWithDefault("doSpaceCurve", spaceCurve, true);
+    p->getWithDefault( "dynamicAlgorithm", dynamicAlgo, string("patchFactor") );
+    p->getWithDefault( "cellCost", d_cellCost, 1.0 );
+    p->getWithDefault( "extraCellCost", d_extraCellCost, 1.0 );
+    p->getWithDefault( "particleCost", d_particleCost, 1.25 );
+    p->getWithDefault( "patchCost", d_patchCost, 16.0 );
+    p->getWithDefault( "gainThreshold", threshold, 0.05 );
+    p->getWithDefault( "doSpaceCurve", spaceCurve, true );
 
     p->getWithDefault("hasParticles", d_collectParticles, false);
     

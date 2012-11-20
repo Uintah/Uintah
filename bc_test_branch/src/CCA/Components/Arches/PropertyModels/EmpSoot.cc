@@ -64,10 +64,10 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
   } 
 
-  db->getWithDefault( "density_label", _den_label_name, "density"); 
-  db->getWithDefault( "absorption_label", _absorp_label_name, "absorpIN"); 
-  db->getWithDefault( "temperature_label", _T_label_name, "temperature"); 
-  db->getWithDefault( "mixture_fraction_label", _f_label_name, "mixture_fraction"); 
+  db->getWithDefault( "density_label", _den_label_name, string("density") );
+  db->getWithDefault( "absorption_label", _absorp_label_name, string("absorpIN") );
+  db->getWithDefault( "temperature_label", _T_label_name, string("temperature") );
+  db->getWithDefault( "mixture_fraction_label", _f_label_name, string("mixture_fraction") );
 
   db->getWithDefault( "soot_density", _rho_soot, 1950.0); 
   db->getWithDefault( "E_cr", _E_cr, 1.0 ); 

@@ -24,6 +24,10 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 
+#include <iostream>
+
+using namespace std;
+
 namespace Uintah {
 
 //______________________________________________________________________
@@ -32,7 +36,8 @@ namespace Uintah {
 //    of the input file and verifies that each (variable)          
 //    has a boundary conditions specified.                         
 //______________________________________________________________________
-void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls)
+void
+is_BC_specified( const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls )
 {
   // search the BoundaryConditions problem spec
   // determine if variable bcs have been specified
@@ -139,14 +144,170 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   }
 }
 
+//______________________________________________________________________
+//  getIteratorBCValueBCKind() --
+//
+//______________________________________________________________________
+
+template<>
+bool
+getIteratorBCValueBCKind<string>( const Patch           * patch, 
+                                  const Patch::FaceType   face,
+                                  const int               child,
+                                  const string          & desc,
+                                  const int               mat_id,
+                                        string          & bc_value,
+                                        Iterator        & bound_ptr,
+                                        string          & bc_kind )
+{
+  bc_value = "No Value";
+  bc_kind  = "NotSet";
+
+  bool foundBC = false;
+  //__________________________________
+  // Symmetry
+
+  const BCDataArray   * bcda = patch->getBCDataArray( face );
+  const BoundCondBase * bc   = bcda->getBoundCondData( mat_id, "Symmetric", child );
+  string test = bc->getType();
+
+  if (test == "symmetry") {
+    bc_kind  = "symmetry";
+    foundBC = true;
+  }
+  
+  //__________________________________
+  //  Now deteriming the iterator
+  if( foundBC ){
+    // For this face find the iterator
+    const Iterator & bound_ptr = bcda->getCellFaceIterator( mat_id, child, patch );
+    
+    // bulletproofing
+    if( bound_ptr.done() ) {  // size of the iterator is 0
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+template <class T>
+bool
+getIteratorBCValueBCKind( const Patch           * patch, 
+                          const Patch::FaceType   face,
+                          const int               child,
+                          const string          & desc,
+                          const int               mat_id,
+                                T               & bc_value,
+                                Iterator        & bound_ptr,
+                                string          & bc_kind )
+{ 
+  bc_value = T( -9 );
+  bc_kind  = "NotSet";
+
+  bool foundBC = false;
+
+  //__________________________________
+  //  Any variable with zero Neumann BC
+  if (desc == "zeroNeumann" ){
+    bc_kind = "zeroNeumann";
+    bc_value = T(0.0);
+    foundBC = true;
+  }
+  
+  const BCDataArray* bcda = patch->getBCDataArray( face );
+
+  if( desc == "x-face" )
+    {
+      cout << "handle x-face BC\n";
+    }
+  else if( desc == "Density" )
+    {
+      cout << "handle Density BC\n";
+    }
+
+  //__________________________________
+  // Non-symmetric BCs:
+  //  - find the bc_value and kind
+  if( !foundBC ){
+    const BoundCondBase * bc = bcda->getBoundCondData( mat_id, desc, child );
+    const BoundCond<T>  * new_bcs = dynamic_cast< const BoundCond<T>* >( bc );
+
+    if (new_bcs != 0) {
+      bc_value = new_bcs->getValue();
+      bc_kind  = new_bcs->getType();
+      foundBC = true;
+    }
+  }
+  
+  //__________________________________
+  // Symmetry
+  if( !foundBC ){
+    const BoundCondBase * bc = bcda->getBoundCondData( mat_id, "Symmetric", child );
+    string test = bc->getType();
+
+    if (test == "symmetry") {
+      bc_kind  = "symmetry";
+      bc_value = T(0.0);
+      foundBC = true;
+    }
+  }
+  
+  //__________________________________
+  //  Now deteriming the iterator
+  if( foundBC ){
+
+    bound_ptr = bcda->getCellFaceIterator( mat_id, child, patch );
+    
+    // bulletproofing
+    if (bound_ptr.done()){  // size of the iterator is 0
+      return false;
+    }
+    return true;
+  }
+  return false;
+}  
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Explicit Template Instantiations
+
+template bool getIteratorBCValueBCKind<string>( const Patch           * patch, 
+                                                const Patch::FaceType   face,
+                                                const int               child,
+                                                const string          & desc,
+                                                const int               mat_id,
+                                                string                & bc_value,
+                                                Iterator              & bound_ptr,
+                                                string                & bc_kind );
+
+template bool getIteratorBCValueBCKind<double>( const Patch           * patch, 
+                                                const Patch::FaceType   face,
+                                                const int               child,
+                                                const string          & desc,
+                                                const int               mat_id,
+                                                double                & bc_value,
+                                                Iterator              & bound_ptr,
+                                                string                & bc_kind );
+
+template bool getIteratorBCValueBCKind<Vector>( const Patch           * patch, 
+                                                const Patch::FaceType   face,
+                                                const int               child,
+                                                const string          & desc,
+                                                const int               mat_id,
+                                                Vector                & bc_value,
+                                                Iterator              & bound_ptr,
+                                                string                & bc_kind );
+// End Explicit Template Instantiations
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 void
-getBCKind( const Patch* patch, 
-           const Patch::FaceType face,
-           const int child,
-           const string& desc,
-           const int mat_id,
-           std::string& bc_kind, 
-           std::string& face_label)
+getBCKind( const Patch           * patch, 
+           const Patch::FaceType   face,
+           const int               child,
+           const string          & desc,
+           const int               mat_id,
+           string                & bc_kind, 
+           string                & face_label )
 { 
   bc_kind = "NotSet";
 
@@ -159,10 +320,11 @@ getBCKind( const Patch* patch,
   bc = bcd->getBoundCondData( mat_id, desc, child);
 
   if (bc != 0) {
-    bc_kind  = bc->getBCType__NEW();
+    bc_kind  = bc->getType();
     face_label = bc->getBCFaceName(); 
-    delete bc;
+    // FIXME do I need to do this: delete bc;
   }
 }  
 
 } // uintah namespace
+

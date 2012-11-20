@@ -247,16 +247,8 @@ RadiationDriver::problemSetup(GridP& grid,
   d_matl_G= d_sharedState->parseAndLookupMaterial(db, "radiatingGas");
 
   string absSolid("");
-  ProblemSpecP abs_ps = db->get("absorbingSolid",absSolid);
+  d_hasAbsorbingSolid = db->get( "absorbingSolid", absSolid );
 
-  if (abs_ps){
-    d_hasAbsorbingSolid = true;
-  }else{
-    d_hasAbsorbingSolid = false;
-  }
-  
-  
-  
   //__________________________________
   // absorbing solid
   //  db->getWithDefault("absorbingSolid",d_hasAbsorbingSolid, false);
@@ -296,8 +288,8 @@ RadiationDriver::problemSetup(GridP& grid,
   }
  
   // how often radiation calculations are performed 
-  db->getWithDefault("calcFreq",     d_radCalcFreq,     999999);  
-  db->getWithDefault("calcInterval", d_radCalc_interval,999999);
+  db->getWithDefault( "calcFreq",     d_radCalcFreq,      999999 );
+  db->getWithDefault( "calcInterval", d_radCalc_interval, 999999.0 );
   d_radCalc_nextTime = d_radCalc_interval;
   if(d_radCalcFreq == 999999 && d_radCalc_interval == 999999){
     ostringstream warn;
@@ -308,7 +300,7 @@ RadiationDriver::problemSetup(GridP& grid,
 
 
   // use ICE or Table density and temperature
-  db->getWithDefault("table_or_ice_temp_density",d_table_or_ice_temp_density,"ice"); 
+  db->getWithDefault( "table_or_ice_temp_density", d_table_or_ice_temp_density, string("ice") ); 
   if(d_table_or_ice_temp_density != "ice" && d_table_or_ice_temp_density != "table"){
     ostringstream warn;
     warn<<"ERROR\n Radiation: If you must specify either ice/table in <table_or_ice_temp_density>\n";

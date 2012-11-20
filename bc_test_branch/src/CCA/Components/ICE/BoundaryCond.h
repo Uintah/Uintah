@@ -46,9 +46,9 @@
 
 namespace Uintah {
 
-static DebugStream BC_dbg(  "ICE_BC_DBG", false);
-static DebugStream cout_BC_CC("ICE_BC_CC", false);
-static DebugStream cout_BC_FC("ICE_BC_FC", false);
+static DebugStream BC_dbg(     "ICE_BC_DBG", false );
+static DebugStream cout_BC_CC( "ICE_BC_CC",  false );
+static DebugStream cout_BC_FC( "ICE_BC_FC",  false );
 
   class DataWarehouse;
  

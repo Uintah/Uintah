@@ -118,7 +118,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
   std::string mixture_fraction_name;
-  db->getWithDefault("mixture_fraction_label", mixture_fraction_name, "scalarSP");
+  db->getWithDefault( "mixture_fraction_label", mixture_fraction_name, string("scalarSP") );
   d_mf_label = VarLabel::find(mixture_fraction_name); 
   d_denRef = d_physicalConsts->getRefPoint();
   d_reactingFlow = true;

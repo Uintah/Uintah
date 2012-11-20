@@ -24,35 +24,27 @@
 
 #include <Core/Grid/BoundaryConditions/EllipseBCData.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
 #include <iostream>
 
 using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-EllipseBCData::EllipseBCData() : BCGeomBase()
-{}
-
-EllipseBCData::EllipseBCData(Point& p, double minorRadius,double majorRadius, const std::string face, double angleDegrees)
-  : BCGeomBase(), d_origin(p), 
-    d_minorRadius(minorRadius), 
-    d_majorRadius(majorRadius),  
-    d_angleDegrees(angleDegrees),
-    d_face(face)
+EllipseBCData::EllipseBCData( const Point           & origin,
+                                    double            minorRadius,
+                                    double            majorRadius,
+                                    double            angleDegrees,
+                              const string          & name,
+                              const Patch::FaceType & side ) :
+  BCGeomBase( name, side ), d_origin( origin ), d_minorRadius( minorRadius ), d_majorRadius( majorRadius ), d_angleDegrees( angleDegrees )
 {}
 
 EllipseBCData::~EllipseBCData()
 {}
 
-
-bool EllipseBCData::operator==(const BCGeomBase& rhs) const
+bool
+EllipseBCData::operator==(const BCGeomBase& rhs) const
 {
   const EllipseBCData* p_rhs = 
     dynamic_cast<const EllipseBCData*>(&rhs);
@@ -63,102 +55,82 @@ bool EllipseBCData::operator==(const BCGeomBase& rhs) const
     return (this->d_minorRadius  == p_rhs->d_minorRadius  ) &&
            (this->d_majorRadius  == p_rhs->d_majorRadius  ) &&
            (this->d_origin       == p_rhs->d_origin       ) &&
-           (this->d_face         == p_rhs->d_face         ) &&
            (this->d_angleDegrees == p_rhs->d_angleDegrees );
 }
 
-EllipseBCData* EllipseBCData::clone()
-{
-  return scinew EllipseBCData(*this);
-}
-
-void EllipseBCData::addBCData(BCData& bc) 
-{
-  d_bc = bc;
-}
-
-
-void EllipseBCData::addBC(BoundCondBase* bc) 
-{
-  d_bc.setBCValues(bc);
-}
-
-void EllipseBCData::getBCData(BCData& bc) const 
-{
-  bc = d_bc;
-}
-
-bool EllipseBCData::inside(const Point &p) const 
+bool
+EllipseBCData::inside( const Point & pt ) const 
 {
   Point f1 (d_origin);
   Point f2 (d_origin);
-  const double pi = 3.141592653589793;
-  const double angleRad = d_angleDegrees*pi/180.0;
+
+  const double angleRad = d_angleDegrees*M_PI/180.0;
   double ellipseFormula =0.0;
   const double focalDistance = sqrt(d_majorRadius*d_majorRadius - d_minorRadius*d_minorRadius);
 
-  if (d_face=="x-") {        
+  if( d_faceSide == Patch::xminus ) {
     f1.y(d_origin.y() + focalDistance*cos(angleRad));
     f1.z(d_origin.z() - focalDistance*sin(angleRad));    
     f2.y(d_origin.y() - focalDistance*cos(angleRad));
     f2.z(d_origin.z() + focalDistance*sin(angleRad));    
   } 
   
-  else if (d_face=="x+") {
+  else if( d_faceSide == Patch::xplus ) {
     f1.y(d_origin.y() - focalDistance*cos(angleRad));
     f1.z(d_origin.z() - focalDistance*sin(angleRad));    
     f2.y(d_origin.y() + focalDistance*cos(angleRad));
     f2.z(d_origin.z() + focalDistance*sin(angleRad));        
   } 
   
-  else if (d_face=="y-") {
+  else if( d_faceSide == Patch::yminus ) {
     f1.x(d_origin.x() - focalDistance*sin(angleRad));
     f1.z(d_origin.z() + focalDistance*cos(angleRad));    
     f2.x(d_origin.x() + focalDistance*sin(angleRad));
     f2.z(d_origin.z() - focalDistance*cos(angleRad));    
   } 
   
-  else if (d_face=="y+") {
+  else if( d_faceSide == Patch::yplus ) {
     f1.x(d_origin.x() + focalDistance*sin(angleRad));
     f1.z(d_origin.z() + focalDistance*cos(angleRad));    
     f2.x(d_origin.x() - focalDistance*sin(angleRad));
     f2.z(d_origin.z() - focalDistance*cos(angleRad));    
   }
   
-  else if (d_face=="z-") {
+  else if( d_faceSide == Patch::zminus ) {
     f1.x(d_origin.x() + focalDistance*cos(angleRad));
     f1.y(d_origin.y() - focalDistance*sin(angleRad));    
     f2.x(d_origin.x() - focalDistance*cos(angleRad));
     f2.y(d_origin.y() + focalDistance*sin(angleRad));    
   } 
   
-  else if (d_face=="z+") {
+  else if( d_faceSide == Patch::zplus ) {
     f1.x(d_origin.x() + focalDistance*cos(angleRad));
     f1.y(d_origin.y() + focalDistance*sin(angleRad));    
     f2.x(d_origin.x() - focalDistance*cos(angleRad));
     f2.y(d_origin.y() - focalDistance*sin(angleRad));        
   }
   
-  Vector diff1 = p - f1;
-  Vector diff2 = p - f2;
+  Vector diff1 = pt - f1;
+  Vector diff2 = pt - f2;
   ellipseFormula = diff1.length() + diff2.length() - 2.0*d_majorRadius;  
   return (ellipseFormula <= 0.0);
 }
 
-void EllipseBCData::print()
+void
+EllipseBCData::print( int depth ) const
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  d_bc.print();
+  string indentation( depth, ' ' );
+  cout << indentation << "EllipseBCData\n";
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 2 );
+  }
 }
 
-void EllipseBCData::determineIteratorLimits(Patch::FaceType face, 
-                                           const Patch* patch, 
-                                           vector<Point>& test_pts)
+void
+EllipseBCData::determineIteratorLimits(       Patch::FaceType   face, 
+                                        const Patch           * patch, 
+                                              vector<Point>   & test_pts )
 {
-#if 0
-  cout << "Ellipse determineIteratorLimits()" << endl;
-#endif
-
-  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+  BCGeomBase::determineIteratorLimits( face, patch, test_pts );
 }
 

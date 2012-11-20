@@ -1058,12 +1058,13 @@ ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
   if (type == Dep::ConstantValue) {
     stringstream ss;
     ss << constantValue;
-    ProblemSpecP cv_ps = ps->appendElement("constantValue",ss.str());
-    cv_ps->setAttribute("name",name);
+
+    ps->appendElement( "constantValue", ss.str() );
+    ps->findLastBlock( "constantValue" )->setAttribute( "name", name );
   }
   if (type == Dep::DerivedValue) {
-    ProblemSpecP dv_ps = ps->appendElement("derivedValue",expr_string);
-    dv_ps->setAttribute("name",name);
+    ps->appendElement( "derivedValue", expr_string );
+    ps->findLastBlock( "derivedValue" )->setAttribute( "name", name );
   }
 }
 

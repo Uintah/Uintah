@@ -129,9 +129,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
   
  
   if (db) {
-    db->getWithDefault("ordinates",d_sn,2);
-    db->require("opl",d_opl);
-    db->getWithDefault("property_model",prop_model,"radcoef");
+    db->getWithDefault( "ordinates", d_sn, 2 );
+    db->require( "opl", d_opl );
+    db->getWithDefault( "property_model", prop_model, string("radcoef") );
   }
   else {
     d_sn=6;

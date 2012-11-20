@@ -60,7 +60,7 @@ void
 RadHypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
-  db->getWithDefault("ksptype", d_kspType, "gmres");
+  db->getWithDefault( "ksptype", d_kspType, string("gmres") );
 
   if (d_kspType == "smg")
     d_kspType = "1";
@@ -70,7 +70,7 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
   else
   if (d_kspType == "gmres"){
     d_kspFix = "gmres";
-    db->getWithDefault("pctype", d_pcType, "jacobi");
+    db->getWithDefault( "pctype", d_pcType, string("jacobi") );
     if (d_pcType == "smg")
       d_kspType = "3";
     else
@@ -83,7 +83,7 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
   else
   if (d_kspType == "cg"){
     d_kspFix = "cg";
-    db->getWithDefault("pctype", d_pcType, "pfmg");
+    db->getWithDefault( "pctype", d_pcType, string("pfmg") );
     if (d_pcType == "smg")
         d_kspType = "6";
     else

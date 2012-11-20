@@ -141,7 +141,7 @@ namespace Wasatch{
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
-      dvarParams->getWithDefault( "type", fieldType, "SVOL" );
+      dvarParams->getWithDefault( "type", fieldType, std::string("SVOL") );
 
       switch( get_field_type(fieldType) ){
       case SVOL: {

@@ -33,63 +33,51 @@
 
 namespace Uintah {
 
-  /*!
+/*!
 
-  \class RectangleBCData
+\class RectangleBCData
   
-  \ brief Defines a rectangular geometry for a boundary condition.
+\brief Defines a rectangular geometry for a boundary condition.
   
-  \author John A. Schmidt \n
-  Department of Mechanical Engineering \n
-  University of Utah \n
-  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
+\author John A. Schmidt \n
+Department of Mechanical Engineering \n
+University of Utah \n
+Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
 
-  */
+*/
   
-  using namespace SCIRun;
-
-  class RectangleBCData : public BCGeomBase  {
+class RectangleBCData : public BCGeomBase  {
     
-  public:
-    /// Constructor
-    RectangleBCData();
+public:
 
-    /// Constructor used with a point defining the lower and upper corners 
-    /// of the rectangle.
-    RectangleBCData(Point& low, Point& up);
+  /// Constructor used with a point defining the lower and upper corners 
+  /// of the rectangle.
+  RectangleBCData( const Point & low, const Point & up, const string & name, const Patch::FaceType & side );
 
-    /// Destructor
-    virtual ~RectangleBCData();
+  /// Destructor
+  virtual ~RectangleBCData();
 
-    virtual bool operator==(const BCGeomBase&) const;
+  virtual bool operator==(const BCGeomBase&) const;
 
-    /// Clone the boundary condition geometry -- allocates memory.
-    RectangleBCData* clone();
+  /// Determines if a point is inside the rectangle.
+  bool inside( const Point & p ) const;
 
-    /// Add the boundary condition data
-    void addBCData(BCData& bc);
+  /// Print out the boundary condition geometry type.
+  virtual void print( int depth = 0 ) const;
 
-    /// Add the old boundary condition data -- no longer used.
-    void addBC(BoundCondBase* bc);
-
-    /// Get the boundary condition data
-    void getBCData(BCData& bc) const;
-
-    /// Determines if a point is inside the rectangle.
-    bool inside(const Point& p) const;
-
-    /// Print out the boundary condition geometry type.
-    virtual void print();
-
-    /// Determine the cell and node centered iterators
-    virtual void determineIteratorLimits(Patch::FaceType face,
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts);
+  /// Determine the cell and node centered iterators
+  virtual void determineIteratorLimits(       Patch::FaceType   face,
+                                        const Patch           * patch, 
+                                              vector<Point>   & test_pts );
     
-  private:
-    BCData d_bc;
-    Point d_min,d_max;
-  };
+private:
+
+  Point d_min,d_max;
+
+  /// Constructor -- Made private in order to disallow non-initialized Rectangle objects...
+  RectangleBCData();
+
+};
   
 } // End namespace Uintah
 

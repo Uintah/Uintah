@@ -115,7 +115,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
     db->require("opl",d_opl);
-    db->getWithDefault("property_model",d_prop_model,"radcoef");
+    db->getWithDefault( "property_model", d_prop_model, string("radcoef") );
     db->getWithDefault("spherical_harmonics",d_SHRadiationCalc,false);
     db->getWithDefault("test_problem",test_problems,false);
     if (test_problems) 
@@ -179,7 +179,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   computeOrdinatesOPL();
 
   string linear_sol;
-  db->getWithDefault("linear_solver",linear_sol,"petsc");
+  db->getWithDefault("linear_solver", linear_sol, string("petsc") );
 
   if (linear_sol == "petsc") d_linearSolver = scinew Models_PetscSolver(d_myworld);
 #ifdef HAVE_HYPRE

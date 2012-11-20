@@ -23,199 +23,148 @@
  */
 
 #include <Core/Grid/BoundaryConditions/UnionBCData.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/UnionIterator.h>
-#include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <algorithm>
 
 using namespace std;
-
 using namespace SCIRun;
 using namespace Uintah;
 
-// export SCI_DEBUG="BC_dbg:+"
-static DebugStream BC_dbg("BC_dbg",false);
-
-UnionBCData::UnionBCData() : BCGeomBase()
+UnionBCData::UnionBCData( std::vector<BCGeomBase*> & children, const string & name, const Patch::FaceType & side ) :
+  BCGeomBase( name, side )
 {
+  if( children.size() <= 1 ) {
+    throw ProblemSetupException( "UnionBCData(): Size of children must be 2 or larger.", __FILE__, __LINE__ );
+  }
+
+  d_bcs = children[0]->d_bcs;
+
+  for( unsigned int pos = 0; pos < children.size(); ++pos ) {
+    d_children.push_back( children[ pos ] );
+  }  
+}
+
+UnionBCData::UnionBCData( const UnionBCData & mybc) :
+  BCGeomBase( mybc )
+{
+  throw ProblemSetupException( "UnionBCData(): Don't call copy constructor...", __FILE__, __LINE__ );
 }
 
 UnionBCData::~UnionBCData()
 {
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
-       bc != child.end(); ++bc)
-    delete (*bc);
-  
-  child.clear();
+  // FIXME possible memory leak... 
 }
 
-
-UnionBCData::UnionBCData(const UnionBCData& mybc): BCGeomBase(mybc)
-{
-
-  vector<BCGeomBase*>::const_iterator itr;
-  for (itr=mybc.child.begin(); itr != mybc.child.end(); ++itr)
-    child.push_back((*itr)->clone());
-  
-}
-
-UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
-{
-  BCGeomBase::operator=(rhs);
-
-  if (this == &rhs)
-    return *this;
-
-  // Delete the lhs
-  vector<BCGeomBase*>::const_iterator itr;
-  for(itr=child.begin(); itr != child.end();++itr)
-    delete *itr;
-
-  child.clear();
-  
-  // copy the rhs to the lhs
-  for (itr=rhs.child.begin(); itr != rhs.child.end();++itr)
-    child.push_back((*itr)->clone());
-  
-  return *this;
-}
-
-
-bool UnionBCData::operator==(const BCGeomBase& rhs) const
+bool
+UnionBCData::operator==(const BCGeomBase& rhs) const
 {
   const UnionBCData* p_rhs = 
     dynamic_cast<const UnionBCData*>(&rhs);
 
-  if (p_rhs == NULL)
+  if (p_rhs == NULL) {
     return false;
-  else {
-    if (this->child.size() != p_rhs->child.size())
-      return false;
-
-    return equal(this->child.begin(),this->child.end(),p_rhs->child.begin());
   }
-
+  else {
+    if (this->d_children.size() != p_rhs->d_children.size()) {
+      return false;
+    }
+    return equal( this->d_children.begin(), this->d_children.end(), p_rhs->d_children.begin() );
+  }
 }
 
-UnionBCData* UnionBCData::clone()
+bool
+UnionBCData::inside( const Point & p ) const 
 {
-  return scinew UnionBCData(*this);
-
-}
-
-void UnionBCData::addBCData(BCData& bc)
-{
-}
-
-void UnionBCData::addBC(BoundCondBase* bc)
-{
-  
-}
-
-void UnionBCData::addBCData(BCGeomBase* bc)
-{
-  child.push_back(bc);
-}
-
-void UnionBCData::getBCData(BCData& bc) const
-{
-  child[0]->getBCData(bc);
-}
-
-bool UnionBCData::inside(const Point &p) const 
-{
-  for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
-       ++i){
+  for( vector<BCGeomBase*>::const_iterator i = d_children.begin(); i != d_children.end(); ++i ) {
     if ((*i)->inside(p))
       return true;
   }
   return false;
 }
 
-void UnionBCData::print()
+void
+UnionBCData::print( int depth ) const
 {
-  BC_dbg << "Geometry type = " << typeid(this).name() << endl;
-  for (vector<BCGeomBase*>::const_iterator i = child.begin(); i != child.end();
-       ++i)
-    (*i)->print();
+  string indentation( depth*2, ' ' );
 
+  cout << indentation << "UnionBCData: " << d_name << "\n";
+
+  for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
+    itr->second->print( depth + 2 );
+  }
+
+  for( vector<BCGeomBase*>::const_iterator i = d_children.begin(); i != d_children.end(); ++i ) {
+    (*i)->print( depth + 2 );
+  }
 }
 
-
-void UnionBCData::determineIteratorLimits(Patch::FaceType face, 
-                                          const Patch* patch, 
-                                          vector<Point>& test_pts)
+void
+UnionBCData::determineIteratorLimits( const Patch::FaceType   face, 
+                                      const Patch           * patch, 
+                                      const vector<Point>   & test_pts )
 {
-#if 0
-  cout << "UnionBC determineIteratorLimits()" << endl;
-#endif
+  cout << "UnionBCData::determineIteratorLimits() " << d_name << " (this: " << this << ")\n";
 
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
-       bc != child.end(); ++bc) {
-    (*bc)->determineIteratorLimits(face,patch,test_pts);
+  map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
+
+  if( iter != d_iteratorLimitsDetermined.end() ) {
+
+    if( iter->second == patch ) {
+      cout << "----warning: determineIteratorLimits called twice-----------------------------------------\n";
+      cout << "patch: " << patch << "\n";
+      cout << "face: "  << face << "\n";
+      cout << "---------------------------------------------\n";
+      return;
+      throw ProblemSetupException( "DifferenceBCData()::determineIteratorLimits() called twice on patch/face...", __FILE__, __LINE__ );
+    }
+  }
+
+  for( vector<BCGeomBase*>::const_iterator bc = d_children.begin(); bc != d_children.end(); ++bc ) {
+    (*bc)->determineIteratorLimits( face, patch, test_pts );
   }
   
   UnionIterator cells,nodes;
 
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
-       bc != child.end(); ++bc) {
-    Iterator cell_itr,node_itr;
-    (*bc)->getCellFaceIterator(cell_itr);
-    (*bc)->getNodeFaceIterator(node_itr);
+  for( vector<BCGeomBase*>::const_iterator bc = d_children.begin(); bc != d_children.end(); ++bc ) {
+
+    const Iterator & cell_itr = (*bc)->getCellFaceIterator( patch );
+    const Iterator & node_itr = (*bc)->getNodeFaceIterator( patch );
+
     Iterator base_ci(cells),base_ni(nodes);
+
     cells = UnionIterator(base_ci,cell_itr);
     nodes = UnionIterator(base_ni,node_itr);
   }
 
-  d_cells = UnionIterator(cells);   
-  d_nodes = UnionIterator(nodes); 
+  d_cells[ patch->getID() ] = scinew Iterator( UnionIterator(cells) );
+  d_nodes[ patch->getID() ] = scinew Iterator( UnionIterator(nodes) );
 
+  d_iteratorLimitsDetermined[ patch->getID() ] = patch;
 
-#if 0
-  IntVector l,h;
-  patch->getFaceCells(face,0,l,h);
-
-  vector<IntVector> b,nb;
-  vector<Point>::iterator pts;
-  pts = test_pts.begin();
-  for (CellIterator bound(l,h); !bound.done(); bound++,pts++) 
-    if (inside(*pts))
-      b.push_back(*bound);
-
-  setBoundaryIterator(b);
-#if 0
-  cout << "Size of boundary = " << boundary.size() << endl;
-#endif
-  // Need to determine the boundary iterators for each separate bc.
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();  
-       bc != child.end(); ++bc) {
-    pts = test_pts.begin();
-    vector<IntVector> boundary_itr;
-    for (CellIterator bound(l,h); !bound.done(); bound++, pts++) 
-      if ( (*bc)->inside(*pts))
-        boundary_itr.push_back(*bound);
-#if 0
-    cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
-#endif
-    (*bc)->setBoundaryIterator(boundary_itr);
-  }
-    
-  IntVector ln,hn;
-  patch->getFaceNodes(face,0,ln,hn);
-  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
-    Point p = patch->getLevel()->getNodePosition(*bound);
-    if (inside(p)) 
-      nb.push_back(*bound);
-  }
-  
-  setNBoundaryIterator(nb);
-
-#endif
-
+  cout << "Union Limits:\n";
+  printLimits();
 }
 
+// Returns a list of all the materials that the BCGeom corresponds to
+set<int>
+UnionBCData::getMaterials() const
+{
+  set<int> the_union;
+
+  for( unsigned int pos = 0; pos < d_children.size(); pos++ ) {
+
+    const set<int> & child_materials = d_children[pos]->getMaterials();
+
+    the_union.insert( child_materials.begin(), child_materials.end() );
+  }
+
+  cout << "UnionBCData::getMaterials(): size of union is: " << the_union.size();
+
+  return the_union;
+}

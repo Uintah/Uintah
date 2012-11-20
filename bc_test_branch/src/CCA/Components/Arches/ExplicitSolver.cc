@@ -261,7 +261,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
     if(!db_mmsblock->getAttribute("whichMMS",d_mms))
       d_mms="constantMMS";
 
-    db_mmsblock->getWithDefault("mmsErrorType",d_mmsErrorType,"L2");
+    db_mmsblock->getWithDefault( "mmsErrorType", d_mmsErrorType, string("L2") );
 
     if (d_mms == "constantMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("constantMMS");

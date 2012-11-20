@@ -98,11 +98,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
-  db->getWithDefault( "co2_label", _co2_label_name, "CO2" ); 
-  db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
-  db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
-  db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
-  db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
+  db->getWithDefault( "co2_label", _co2_label_name, string("CO2") ); 
+  db->getWithDefault( "h2o_label", _h2o_label_name, string("H2O") ); 
+  db->getWithDefault( "T_label", _T_label_name, string("temperature") ); 
+  db->getWithDefault( "abskp_label", _abskp_label_name, string("new_abskp") ); 
+  db->getWithDefault( "soot_label",  _soot_label_name, string("sootFVIN") ); 
 
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
   proc0cout << "   -> calculation frequency: " << _radiation_calc_freq << endl;

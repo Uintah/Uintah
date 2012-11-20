@@ -226,7 +226,11 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_enthalpy_name = "enthalpySP"; 
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable") ){ 
     if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable")->findBlock("enthalpy_label")){ 
-      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable")->getWithDefault("enthalpy_label",d_enthalpy_name,"enthalpySP"); 
+      db->getRootNode()->
+        findBlock("CFD")->
+        findBlock("ARCHES")->
+        findBlock("Properties")->
+        findBlock("ClassicTable")->getWithDefault( "enthalpy_label", d_enthalpy_name, string("enthalpySP") );
     }
   } 
   
