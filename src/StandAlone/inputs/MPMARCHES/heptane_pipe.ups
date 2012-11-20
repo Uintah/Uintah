@@ -357,6 +357,10 @@
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
 
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+
       </ExplicitSolver>
     </ARCHES>
 
