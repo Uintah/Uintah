@@ -225,7 +225,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27 || flags->d_8or27==64){
+  } else if(flags->d_8or27==27 || flags->d_8or27==64 || flags->d_8or27==18){
     NGP=2;
     NGN=2;
   }
@@ -1626,7 +1626,7 @@ void SerialMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
                 &SerialMPM::computeParticleScaleFactor);
 
   t->requires(Task::OldDW, lb->pSizeLabel,  Ghost::None);
-  t->computes(lb->pScaleFactorLabel);
+  t->computes(lb->pScaleFactorLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -4652,15 +4652,17 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
 
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Matrix3> pScaleFactor;
-      old_dw->get(           psize,        lb->pSizeLabel,                 pset);
-      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel,  pset);
+      old_dw->get(psize,                   lb->pSizeLabel,                pset);
+      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
       if(dataArchiver->isOutputTimestep()){
         Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = (psize[idx]*Matrix3(dx[0],0,0,0,dx[1],0,0,0,dx[2]));
+          pScaleFactor[idx] = (psize[idx]*Matrix3(dx[0],0,0,
+                                                  0,dx[1],0,
+                                                  0,0,dx[2]));
 
         } // for particles
       } // isOutputTimestep

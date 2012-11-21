@@ -41,7 +41,7 @@ ABSKP::~ABSKP( )
 //---------------------------------------------------------------------------
 void ABSKP::problemSetup( const ProblemSpecP& inputdb )
 {
-  ProblemSpecP db = inputdb; 
+//  ProblemSpecP db = inputdb; 
 }
 
 //---------------------------------------------------------------------------

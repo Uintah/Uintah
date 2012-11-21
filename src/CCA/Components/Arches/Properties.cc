@@ -1702,13 +1702,14 @@ Properties::computeDenRefArray(const ProcessorGroup*,
 void 
 Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
                                  const MaterialSet* matls,
-                                 const TimeIntegratorLabel* timelabels)
+                                 const TimeIntegratorLabel* timelabels, 
+                                 const bool calcScalar )
 {
   string taskname =  "Properties::averageRKProps" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &Properties::averageRKProps,
-                          timelabels);
+                          timelabels, calcScalar);
                           
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
@@ -1744,7 +1745,8 @@ Properties::averageRKProps(const ProcessorGroup*,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           const TimeIntegratorLabel* timelabels)
+                           const TimeIntegratorLabel* timelabels, 
+                           const bool calcScalar )
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1823,40 +1825,44 @@ Properties::averageRKProps(const ProcessorGroup*,
             }
 
             bool average_failed = false;
-            if (d_inverse_density_average) {
-              new_scalar[currCell] = (factor_old*old_scalar[currCell] +
-                                      factor_new*new_scalar[currCell])/factor_divide;
-            }
-            else {
-              new_scalar[currCell] = (factor_old*old_density[currCell]*
-                                      old_scalar[currCell] + factor_new*new_density[currCell]*
-                                      new_scalar[currCell])/(factor_divide*predicted_density);
-            }
-            // Following lines to fix density delay problem for helium.
-            // One would also need to edit fortran/explicit.F to use it.
-            //            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
-            //            (new_scalar)[currCell] = (new_scalar)[currCell]*0.133/(
-            //              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
-            if (new_scalar[currCell] > 1.0) {
-              if (new_scalar[currCell] < 1.0 + epsilon) {
-                new_scalar[currCell] = 1.0;
+            if ( calcScalar ){ 
+              if (d_inverse_density_average) {
+                new_scalar[currCell] = (factor_old*old_scalar[currCell] +
+                                        factor_new*new_scalar[currCell])/factor_divide;
               }
               else {
-                cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-                new_scalar[currCell] = fe_scalar[currCell];
-                average_failed = true;
+                new_scalar[currCell] = (factor_old*old_density[currCell]*
+                                        old_scalar[currCell] + factor_new*new_density[currCell]*
+                                        new_scalar[currCell])/(factor_divide*predicted_density);
               }
-            }
-            else if (new_scalar[currCell] < 0.0) {
-              if (new_scalar[currCell] > - epsilon) {
-                new_scalar[currCell] = 0.0;
+              // Following lines to fix density delay problem for helium.
+              // One would also need to edit fortran/explicit.F to use it.
+              //            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
+              //            (new_scalar)[currCell] = (new_scalar)[currCell]*0.133/(
+              //              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
+              if (new_scalar[currCell] > 1.0) {
+                if (new_scalar[currCell] < 1.0 + epsilon) {
+                  new_scalar[currCell] = 1.0;
+                }
+                else {
+                  cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                  new_scalar[currCell] = fe_scalar[currCell];
+                  average_failed = true;
+                }
               }
-              else {
-                cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-                new_scalar[currCell] = fe_scalar[currCell];
-                average_failed = true;
+              else if (new_scalar[currCell] < 0.0) {
+                if (new_scalar[currCell] > - epsilon) {
+                  new_scalar[currCell] = 0.0;
+                }
+                else {
+                  cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                  new_scalar[currCell] = fe_scalar[currCell];
+                  average_failed = true;
+                }
               }
-            }
+            } else { 
+              new_scalar[currCell] = 0.0;
+            } 
             
             if( d_calcEnthalpy ) {
               if( !average_failed ) {

@@ -1,4 +1,4 @@
-function [] = wasatch_calculate_order_of_accuracy(varname,fieldtype,figure_title,outpuf_file_name)
+function [] = wasatch_calculate_temporal_order_of_accuracy(varname,fieldtype,figure_title,outpuf_file_name)
 
 format long
 plot_style;

@@ -219,12 +219,11 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // not sure, do we need to reduce and put in datawarehouse
   if (db->findBlock("ExplicitSolver")){
-    if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
+    if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")){
       d_calcScalar = true;
       db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->getWithDefault("initial_value",d_init_mix_frac,0.0);
+    }
   }
-  if (!d_calcScalar)
-    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
 
   if (db->findBlock("set_initial_condition")) {
     d_set_initial_condition = true;
@@ -1107,9 +1106,7 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_pressureIntermLabel);
     }
 
-    if (d_calcScalar){
-      tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
-    }
+    tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
 
     if (d_calcVariance) {
       tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarVar
@@ -1138,9 +1135,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_viscosityCTSLabel);
     tsk->computes(d_lab->d_turbViscosLabel); 
     if (d_dynScalarModel) {
-      if (d_calcScalar){
-        tsk->computes(d_lab->d_scalarDiffusivityLabel);
-      }
+      tsk->computes(d_lab->d_scalarDiffusivityLabel);
       if (d_calcEnthalpy){
         tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
       }
@@ -1377,9 +1372,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
     new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch); 
     if (d_dynScalarModel) {
-      if (d_calcScalar){
-        new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
-      }
+      new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
       if (d_calcEnthalpy){
         new_dw->allocateAndPut(enthalpyDiffusivity,   d_lab->d_enthalpyDiffusivityLabel,   indx, patch);
       }
@@ -1398,9 +1391,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     turb_viscosity.initialize(0.0); 
 
     if (d_dynScalarModel) {
-      if (d_calcScalar){
-        scalarDiffusivity.initialize(visVal/0.4);
-      }
+      scalarDiffusivity.initialize(visVal/0.4);
       if (d_calcEnthalpy){
         enthalpyDiffusivity.initialize(visVal/0.4);
       }
