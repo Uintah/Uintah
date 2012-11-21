@@ -77,8 +77,8 @@ namespace Uintah {
       class PropertyCalculatorBase { 
 
         public: 
-          PropertyCalculatorBase() {} 
-          virtual ~PropertyCalculatorBase() {}
+          PropertyCalculatorBase() {}; 
+          virtual ~PropertyCalculatorBase(){};
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
           virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
@@ -89,8 +89,8 @@ namespace Uintah {
       class RadPropsInterface : public PropertyCalculatorBase  { 
 
         public: 
-          RadPropsInterface() {}
-          ~RadPropsInterface() {}
+          RadPropsInterface() {};
+          ~RadPropsInterface() {};
           
           //__________________________________
           //
@@ -110,14 +110,16 @@ namespace Uintah {
               }  
 
               //allocate gray gas object: 
-              //_gg_radprops = scinew GreyGas( species ); 
+              _gg_radprops = scinew GreyGas( species ); 
 
             } else { 
 
               throw InvalidValue( "Error: Only grey gas properties are available at this time.",__FILE__,__LINE__);
 
             }
-              
+
+            //need smarter return? 
+            return true; 
             
           };
           
@@ -140,7 +142,7 @@ namespace Uintah {
             std::vector<double> molFrac; 
             double T        = 298; 
 
-            //_gg_radprops->mixture_coeffs( planckCff, rossCff, effCff, mixMoleFrac, TMix );
+            _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, molFrac, T );
 
             
 
@@ -148,7 +150,7 @@ namespace Uintah {
 
         private: 
 
-          //AbsCoeffGas::GreyGas* _gg_radprops; 
+          GreyGas* _gg_radprops; 
       }; 
 #endif
       //______________________________________________________________________
@@ -156,8 +158,8 @@ namespace Uintah {
       class ConstantProperties : public PropertyCalculatorBase  { 
 
         public: 
-          ConstantProperties() {}
-          ~ConstantProperties() {}
+          ConstantProperties() {};
+          ~ConstantProperties() {};
           
           //__________________________________
           //
@@ -189,8 +191,8 @@ namespace Uintah {
           BurnsChriston() {
             _notSetMin = Point(SHRT_MAX, SHRT_MAX, SHRT_MAX);
             _notSetMax = Point(SHRT_MIN, SHRT_MIN, SHRT_MIN);
-          }
-          ~BurnsChriston() {}
+          };
+          ~BurnsChriston() {};
           
           //__________________________________
           //
