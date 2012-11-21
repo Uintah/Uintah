@@ -28,58 +28,34 @@
 # Makefile fragment for this subdirectory 
 
 
-# include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR  := CCA/Components
+SRCDIR	:= CCA/Components/MD
 
-# The following variables are used by the Fake* scripts... please
-# do not modify...
-#
-
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH := $(SRCDIR)/Wasatch
-endif
-
-ifeq ($(BUILD_MPM),yes)
-  MPM      := $(SRCDIR)/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE := $(SRCDIR)/MPMICE
-  endif
-endif
-ifeq ($(BUILD_ICE),yes)
-  ICE      := $(SRCDIR)/ICE
-endif
-ifeq ($(BUILD_ARCHES),yes)
-  ARCHES   := $(SRCDIR)/Arches
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES := $(SRCDIR)/MPMArches
-  endif
-endif
-ifeq ($(BUILD_MD),yes)
-  MD      := $(SRCDIR)/MD
-endif
+SRCS += $(SRCDIR)/MD.cc        \
+        $(SRCDIR)/MDLabel.cc  \
 
 SUBDIRS := \
-        $(SRCDIR)/DataArchiver \
-        $(SRCDIR)/Examples \
-        $(SRCDIR)/Models \
-        $(SRCDIR)/LoadBalancers \
-        $(SRCDIR)/Schedulers \
-        $(SRCDIR)/Regridder \
-        $(SRCDIR)/SimulationController \
-        $(MPM)            \
-        $(MD)             \
-        $(ICE)            \
-        $(MPMICE)         \
-        $(ARCHES)         \
-        $(MPMARCHES)      \
-        $(WASATCH)        \
-        $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PatchCombiner \
-        $(SRCDIR)/Solvers \
-        $(SRCDIR)/SwitchingCriteria \
-        $(SRCDIR)/OnTheFlyAnalysis \
-        $(SRCDIR)/Parent
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
+PSELIBS := \
+	CCA/Components/OnTheFlyAnalysis \
+	CCA/Ports           \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
+	Core/GeometryPiece  \
+	Core/Grid           \
+	Core/Labels         \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Thread         \
+	Core/Util           
+
+LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
+	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
+
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

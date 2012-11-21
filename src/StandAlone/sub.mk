@@ -58,6 +58,10 @@ ifeq ($(BUILD_MPM),yes)
   endif
 endif
 
+ifeq ($(BUILD_MD),yes)
+  MD_LIB            = CCA/Components/MD
+endif
+
 ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
 endif
@@ -88,6 +92,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
     $(ARCHES_SUB_LIBS)                  \
     $(MPMARCHES_LIB)                    \
     $(MPM_LIB)                          \
+    $(MD_LIB)                           \
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
