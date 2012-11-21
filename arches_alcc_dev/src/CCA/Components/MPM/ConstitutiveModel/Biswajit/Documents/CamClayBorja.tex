@@ -1,0 +1,686 @@
+\documentclass[twoside,10pt,a4paper]{article}
+\input{macros.tex}
+
+% For adding "DRAFT" to each page uncomment the following
+% --------
+\usepackage{eso-pic}
+\makeatletter
+\AddToShipoutPicture{%
+  \setlength{\@tempdimb}{.5\paperwidth}%
+  \setlength{\@tempdimc}{.5\paperheight}%
+  \setlength{\unitlength}{1pt}%
+  \put(\strip@pt\@tempdimb,\strip@pt\@tempdimc){%
+    \makebox(0,0){\rotatebox{45}{\textcolor[gray]{0.9}%
+      {\fontsize{6cm}{6cm}\selectfont{DRAFT}}}}%
+  }%
+}
+\makeatother
+% --------
+
+\begin{document}
+\DeclareGraphicsExtensions{.jpg,.pdf}
+
+\title{Cam-Clay model based on Borja et al. 1997}
+\author{Biswajit Banerjee}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+Introduce the equations and how they differ from Fossum-Brannon.
+
+\section{Quantities that are needed in a Uintah implementation}
+\subsection{Elasticity}
+The elastic strain energy density in Borja's model has the form
+\[
+  W(\Ve^e_v,\Ve^e_s) = W_\Tvol(\Ve^e_v) + W_\Tdev(\Ve^e_v, Ve^e_s)
+\]
+where
+\[
+   \Bal
+    W_\Tvol(\Ve^e_v) & = -p_0\kappatilde\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \\
+    W_\Tdev(\Ve^e_v,\Ve^e_s) & =  \tfrac{3}{2}\,\mu\,(\Ve^e_s)^2
+   \Eal
+\]
+where $\Ve^e_{v0}$ is the volumetric strain corresponding to a mean normal compressive stress $p_0$ 
+(tension positive), $\kappatilde$ is the elastic compressibility index, and the shear modulus is given by
+\[
+  \mu = \mu_0 + \frac{\alpha}{\kappatilde}\,W_\Tvol(\Ve^e_v) 
+      = \mu_0 - \alpha p_0\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+      = \mu_0 - \mu_\Tvol\,.
+\]
+The parameter $\alpha$ determines the extent of coupling between the volumetric and deviatoric 
+responses.  For consistency with isotropic elasticity, Rebecca Brannon suggests that $\alpha = 0$ (citation?). 
+
+The stress invariants $p$ and $q$ are defined as
+\[
+  \Bal
+    p &= \Partial{W}{\Ve^e_v} = p_0\left[1 + \tfrac{3}{2}\,\frac{\alpha}{\kappatilde}\,(\Ve^e_s)^2\right]
+         \exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+       = p_0\,\beta\,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \\
+    q &= \Partial{W}{\Ve^e_s} = 3\left[\mu_0 - \alpha p_0\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+         \right]\Ve^e_s  = 3\mu\,\Ve^e_s\,.
+  \Eal
+\]
+The derivatives of the stress invariants are
+\[
+  \Bal
+    \Partial{p}{\Ve^e_v} & = -\frac{p_0}{\kappatilde}
+         \left[1 + \tfrac{3}{2}\,\frac{\alpha}{\kappatilde}\,(\Ve^e_s)^2\right]
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) 
+        = -\frac{p}{\kappatilde} \\
+    \Partial{p}{\Ve^e_s} & = \Partial{q}{\Ve^e_v} = \frac{3\alpha p_0 \Ve^e_s}{\kappatilde}
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) = \frac{3\alpha p}{\beta \kappatilde}\,\Ve^e_s 
+         = \frac{3\mu_\Tvol}{\kappatilde}\,\Ve^e_s\\
+    \Partial{q}{\Ve^e_s} & = 3 \left[\mu_0 - \alpha p_0
+         \,\exp\left(-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right) \right] = 3 \mu\,.
+  \Eal
+\]
+
+\subsection{Plasticity}
+For plasticity we use a Cam-Clay yield function of the form
+\[
+   f = \left(\frac{q}{M}\right)^2 + p(p-p_c) 
+\]
+where $M$ is the slope of the critical state line and the consolidation pressure $p_c$ is an internal variable that 
+evolves according to 
+\[
+   \frac{1}{p_c}\,\Deriv{p_c}{t} = \frac{1}{\lambdatilde - \kappatilde}\,\Deriv{\Ve^p_v}{t} \,.
+\]
+The derivatives of $f$ that are of interest are
+\[
+   \Bal
+     \Partial{f}{p} & = 2p - p_c \\
+     \Partial{f}{q} & = \frac{2q}{M^2} \,.
+   \Eal
+\]
+If we integrate the equation for $p_c$ from $t_{n}$ to $t_{n+1}$, we can show that
+\[
+   (p_c)_{n+1} = (p_c)_n \exp\left[\frac{(\Ve_v^e)_\Trial - (\Ve_v^e)_{n+1}}{\lambdatilde - \kappatilde}\right] \,.
+\]
+The derivative of $p_c$ that is of interest is
+\[
+   \Partial{p_c}{(\Ve_v^e)_{n+1}} = -\frac{(p_c)_n}{\lambdatilde-\kappatilde}\,\exp\left[\frac{(\Ve^e_v)_\Trial - (\Ve_v^e)_{n+1}}{\lambdatilde-\kappatilde}\right] \,.
+\]
+
+\section{Why these quantities are needed: stress update based Rich Reguiero's notes}
+The volumetric and deviatoric components of the elastic strain $\Beps^e$ are defined
+as follows:
+\[
+   \BeT^e = \Beps^e - \tfrac{1}{3}\Ve^e_v\,\Bone = \Beps^e - \tfrac{1}{3}\Tr(\Beps^e)\,\Bone
+   \quad \Tand \quad
+   \Ve^e_s = \sqrt{\tfrac{2}{3}}\Norm{\BeT^e}{}  = \sqrt{\tfrac{2}{3}}\sqrt{\BeT^e:\BeT^e} \,.
+\]
+The stress tensor is decomposed into a volumetric and a deviatoric component
+\[
+   \Bsig = p\,\Bone + \sqrt{\tfrac{2}{3}}\, q\, \BnT \quad \text{with} \quad
+   \BnT = \cfrac{\BeT^e}{\Norm{\BeT^e}{}} = \sqrt{\tfrac{2}{3}}\, \cfrac{\BeT^e}{\Ve^e_s} \,.
+\]
+The models used to determine $p$ and $q$ are
+\[
+  \Bal
+    p &= p_0\beta\exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right] \quad \text{with} \quad
+     \beta = 1 + \tfrac{3}{2}\,\frac{\alpha}{\kappatilde}\,(\Ve^e_s)^2 \\
+    q &= 3\mu\Ve^e_s \,.
+  \Eal
+\]
+The strains are updated using
+\[
+  \Beps^e = \Beps^e_{\rm trial} - \Delta\gamma\,\Partial{f}{\Bsig}
+  \quad \text{where} \quad \Beps^e_{\rm trial} = \Beps^e_n + \Delta\Beps
+     = \Beps^e_n + (\Beps - \Beps_n) \,.
+\]
+
+{\footnotesize
+{\bf Remark 1:}  The interface with MPMICE, among other things in Uintah, requires the 
+computation of the quantity $dp/dJ$.  Since $J$ does not appear in the above equation we
+proceed as explained below.
+\[
+  \Bal
+   J & = \det(\BF) = \det(\Bone + \GradX{\Bu}) = \det(\Bone + \Beps) \\
+     & = 1 + \Tr\Beps + \Half\left[(\Tr\Beps)^2 - \Tr(\Beps^2)\right] + \det(\Beps) \,.
+     & = 1 + \Ve_v + \Half\left[\Ve_v^2 - \Tr(\Beps^2)\right] + \det(\Beps) \,.
+  \Eal
+\]
+Also,
+\[
+   J = \frac{\rho_0}{\rho} = \frac{V}{V_0} \quad \Tand \quad
+   \Ve_v = \frac{V-V_0}{V_0} = \frac{V}{V_0} - 1 = J - 1 \,.
+\]
+We use the relation $J = 1 + \Ve_v$ while keeping in mind that this is {\em true only for
+infinitesimal strains and plastic incompressibility} for which 
+$\Ve_v^2$, $\Tr(\Beps^2)$, and $\det(\Beps)$ are zero.  Under these conditions
+\[
+   \Partial{p}{J} = \Partial{p}{\Ve_v}\,\Partial{\Ve_v}{J} = \Partial{p}{\Ve_v} \quad \Tand 
+   \quad
+   \Partial{p}{\rho} = \Partial{p}{\Ve_v}\,\Partial{\Ve_v}{J}\,\Partial{J}{\rho} 
+      = -\frac{J}{\rho}\,\Partial{p}{\Ve_v} \,.
+\]
+
+{\bf Remark 2:} MPMICE also needs the density at a given pressure.  For the Borja model, with
+$\Ve_v = J-1 = \rho_0/\rho -1$, we have
+\[
+  \rho = \rho_0\left[1 + \Ve_{v0} + \kappatilde\ln\left(\frac{p}{p_0\beta}\right)\right]^{-1}\,.
+\]
+
+{\bf Remark 3:}  The quantity $q$ is related to the deviatoric part of the Cauchy stress, $\BsT$
+as follows:
+\[
+   q = \sqrt{3J_2} \quad \text{where} \quad J_2 = \Half\,\BsT:\BsT \,.
+\]
+The shear modulus relates the deviatoric stress $\BsT$ to the deviatoric strain $\BeT^e$.  We
+assume a relation of the form
+\[
+   \BsT = 2\mu\BeT^e \,.
+\]
+Note that the above relation assumes a linear elastic type behavior.  Then we get the Borja 
+shear model:
+\[
+  q = \sqrt{\tfrac{3}{2}\,\BsT:\BsT} = \sqrt{\tfrac{3}{2}}\,(2\mu)\,\sqrt{\BeT^e:\BeT^e}
+     = \sqrt{\tfrac{3}{2}}\,(2\mu)\,\sqrt{\tfrac{3}{2}}\,\Ve^e_s = 3\mu\Ve^e_s \,.
+\]
+}
+
+
+
+\subsection{Elastic-plastic stress update}
+For elasto-plasticity we start with a yield function of the form
+\[
+   f = \left(\frac{q}{M}\right)^2 + p(p-p_c) \le 0 
+   \quad \text{where} \quad
+  \frac{1}{p_c}\,\Deriv{p_c}{t} = \frac{1}{\lambdatilde- \kappatilde}\,\Deriv{\Ve_v^p}{t} \,.
+\]
+Integrating the ODE for $p_c$ with the initial condition $p_c(t_n) = (p_c)_n$, at $t = t_{n+1}$, 
+\[
+   (p_c)_{n+1} = (p_c)_n \exp\left[\frac{(\Ve_v^p)_{n+1} - (\Ve_v^p)_n}{\lambdatilde - \kappatilde}\right] \,.
+\]
+From the additive decomposition of the strain into elastic and plastic parts, and if the elastic trial 
+strain is defined as 
+\[
+   (\Ve_v^e)_\Trial := (\Ve_v^e)_n + \Delta\Ve_v
+\]
+we have
+\[
+   \Ve_v^p = \Ve_v - \Ve_v^e \quad \implies \quad
+   (\Ve_v^p)_{n+1} - (\Ve_v^p)_n = (\Ve_v)_{n+1} - (\Ve_v^e)_{n+1} - (\Ve_v)_{n} + (\Ve_v^e)_{n} 
+                               = \Delta\Ve_v + (\Ve_v^e)_{n} - (\Ve_v^e)_{n+1} 
+                               = (\Ve_v^e)_\Trial - (\Ve_v^e)_{n+1} \,.
+\]
+Therefore we can write
+\[
+   (p_c)_{n+1} = (p_c)_n \exp\left[\frac{(\Ve_v^e)_\Trial - (\Ve_v^e)_{n+1}}{\lambdatilde - \kappatilde}\right] \,.
+\]
+The flow rule is assumed to be given by
+\[
+   \Partial{\Beps^p}{t} = \gamma\,\Partial{f}{\Bsig} \,.
+\]
+Integration of the PDE with backward Euler gives
+\[
+  \Beps^p_{n+1} = \Beps^p_n + \Delta t\,\gamma_{n+1}\,\left[\Partial{f}{\Bsig}\right]_{n+1} 
+             = \Beps^p_n + \Delta\gamma\,\left[\Partial{f}{\Bsig}\right]_{n+1} \,.
+\]
+This equation can be expressed in terms of the trial elastic strain as follows.
+\[
+  \Beps_{n+1}-\Beps^e_{n+1} = \Beps_n - \Beps^e_n + \Delta\gamma\,\left[\Partial{f}{\Bsig}\right]_{n+1} 
+\]
+or
+\[
+  \Beps^e_{n+1} = \Delta\Beps + \Beps^e_n - \Delta\gamma\,\left[\Partial{f}{\Bsig}\right]_{n+1} 
+             = \Beps^e_\Trial - \Delta\gamma\,\left[\Partial{f}{\Bsig}\right]_{n+1} \,.
+\]
+In terms of the volumetric and deviatoric components
+\[
+  (\Ve_v^e)_{n+1} = \Tr(\Beps^e_{n+1}) = \Tr(\Beps^e_\Trial) - \Delta\gamma\,\Tr\left[\Partial{f}{\Bsig}\right]_{n+1} = (\Ve_v^e)_\Trial - \Delta\gamma\,\Tr\left[\Partial{f}{\Bsig}\right]_{n+1} 
+\]
+and
+\[
+  \BeT^e_{n+1} = \BeT^e_\Trial - \Delta\gamma\,\left[\left(\Partial{f}{\Bsig}\right)_{n+1}
+      - \tfrac{1}{3}\,\Tr\left(\Partial{f}{\Bsig}\right)_{n+1}\Bone\right] \,.
+\]
+With $\BsT = \Bsig - p\Bone$, we have
+\[
+  \Partial{f}{\Bsig} = \Partial{f}{\BsT}:\Partial{\BsT}{\Bsig} + \Partial{f}{p}\,\Partial{p}{\Bsig}
+    = \Partial{f}{\BsT}:[\SfI^{(s)} - \tfrac{1}{3}\,\Bone\otimes\Bone] 
+      + \Partial{f}{p}\,\Bone
+    = \Partial{f}{\BsT} - \tfrac{1}{3}\,\Tr\left[\Partial{f}{\BsT}\right]\Bone
+      + \Partial{f}{p}\,\Bone
+\]
+and
+\[
+  \tfrac{1}{3}\,\Tr\left[\Partial{f}{\Bsig}\right]\Bone = 
+    \tfrac{1}{3}\left(\Tr\left[\Partial{f}{\BsT}\right] - \Tr\left[\Partial{f}{\BsT}\right]
+      + 3\Partial{f}{p}\right)\Bone  =  \Partial{f}{p}\,\Bone \,.
+\]
+
+{\footnotesize
+{\bf Remark 4:}  Note that, because $\Bsig = \Bsig(p, q, p_c)$ the 
+chain rule should contain a contribution from $p_c$:
+\[
+  \Partial{f}{\Bsig} = \Partial{f}{q}\,\Partial{q}{\Bsig} + \Partial{f}{p}\,\Partial{p}{\Bsig}
+                       + \Partial{f}{p_c}\,\Partial{p_c}{\Bsig} \,.
+\]
+However, the Borja implementation does not consider that extra term.  Also note that for the present model
+\[
+  \Bsig = \Bsig(p(\Ve^e_v,\Ve^e_s,\Ve^p_v, \Ve^p_s), \BsT(\Ve^e_v, \Ve^e_s, \Ve^p_v,\Ve^p_s), p_c(\Ve^p_v))
+\]
+}
+
+Therefore, for situations where $\Tr(\partial f/\partial \BsT) = \Bzero$, we have
+\[
+  \Partial{f}{\Bsig} - \tfrac{1}{3}\,\Tr\left[\Partial{f}{\Bsig}\right]\Bone = 
+     \Partial{f}{\BsT} - \tfrac{1}{3}\,\Tr\left[\Partial{f}{\BsT}\right]\Bone =
+     \Partial{f}{\BsT} \,.
+\]
+The deviatoric strain update can be written as
+\[
+  \BeT^e_{n+1} = \BeT^e_\Trial - \Delta\gamma\,\left(\Partial{f}{\BsT}\right)_{n+1} 
+\]
+and the shear invariant update is
+\[
+  (\Ve_s^e)_{n+1} = \sqrt{\tfrac{2}{3}}\,
+  \sqrt{\BeT^e_{n+1}:\BeT^e_{n+1}}
+  = \sqrt{\tfrac{2}{3}}\,\sqrt{\BeT^e_\Trial:\BeT^e_\Trial 
+     - 2\Delta\gamma\,\left[\Partial{f}{\BsT}\right]_{n+1}:\BeT^e_\Trial
+     + (\Delta\gamma)^2\left[\Partial{f}{\BsT}\right]_{n+1}:\left[\Partial{f}{\BsT}\right]_{n+1}}
+\]
+The derivative of $f$ can be found using the chain rule (for smooth $f$):
+\[
+   \Partial{f}{\Bsig} = \Partial{f}{p}\,\Partial{p}{\Bsig} + \Partial{f}{q}\,\Partial{q}{\Bsig}
+     = (2p - p_c)\,\Partial{p}{\Bsig} + \frac{2q}{M^2}\,\Partial{q}{\Bsig} \,.
+\]
+Now, with $p = 1/3\,\Tr(\Bsig)$ and $q = \sqrt{3/2\,\Bs:\Bs}$, we have
+\[
+  \Bal
+   \Partial{p}{\Bsig} & = \Partial{}{\Bsig}\left[\tfrac{1}{3}\,\Tr(\Bsig)\right] = \tfrac{1}{3}\,\Bone \\
+   \Partial{q}{\Bsig} & = \Partial{}{\Bsig}\left[\sqrt{\tfrac{3}{2}\,\BsT:\BsT}\right]
+     = \sqrt{\tfrac{3}{2}}\,\frac{1}{\sqrt{\BsT:\BsT}}\,\Partial{\BsT}{\Bsig}:\BsT
+     = \sqrt{\tfrac{3}{2}}\,\frac{1}{\Norm{\BsT}{}}\,\left[\SfI^{(s)}-\tfrac{1}{3}\Bone\otimes\Bone\right]:\BsT
+     = \sqrt{\tfrac{3}{2}}\,\frac{\BsT}{\Norm{\BsT}{}}\,.
+  \Eal
+\]
+Therefore,
+\[
+   \Partial{f}{\Bsig} = \frac{2p - p_c}{3}\,\Bone + \sqrt{\tfrac{3}{2}}\,\frac{2q}{M^2}\,\frac{\BsT}{\Norm{\BsT}{}} \,.
+\]
+Recall that
+\[
+   \Bsig = p\,\Bone + \sqrt{\tfrac{2}{3}}\, q\, \BnT = p\,\Bone + \BsT \,.
+\]
+Therefore,
+\[
+   \BsT = \sqrt{\tfrac{2}{3}}\,q\,\BnT 
+   \quad \Tand \quad
+   \Norm{\BsT}{} = \sqrt{\BsT:\BsT} = \sqrt{\tfrac{2}{3}\,q^2\,\BnT:\BnT} = 
+     \sqrt{\tfrac{2}{3}\,q^2\,\frac{\BeT^e:\BeT^e}{\Norm{\BeT^e}{}^2}}
+     = \sqrt{\tfrac{2}{3}\,q^2} = \sqrt{\tfrac{2}{3}}\,q \,.
+\]
+So we can write
+\Beq
+   \Partial{f}{\Bsig} = \frac{2p - p_c}{3}\,\Bone + \sqrt{\tfrac{3}{2}}\,\frac{2q}{M^2}\,\BnT \,.
+\Eeq
+Using the above relation we have
+\[
+   \Partial{f}{p} = \tfrac{1}{3}\,\Tr\left[\Partial{f}{\Bsig}\right] = 2p-p_c 
+   \quad \Tand \quad
+   \Partial{f}{\BsT}  = \Partial{f}{\Bsig} - \Partial{f}{p}\Bone
+                      = \sqrt{\tfrac{3}{2}}\,\frac{2q}{M^2}\,\BnT \,.
+\]
+The strain updates can now be written as
+\[
+  \Bal
+  (\Ve_v^e)_{n+1} & =  (\Ve_v^e)_\Trial - \Delta\gamma\,[2p_{n+1} - (p_c)_{n+1}] \\
+  \BeT^e_{n+1} & = \BeT^e_\Trial - \sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)
+           \BnT_{n+1}  \\
+  (\Ve_s^e)_{n+1} & = 
+    \sqrt{\tfrac{2}{3}}\,\sqrt{\BeT^e_\Trial:\BeT^e_\Trial 
+     - \sqrt{6}\,(\Delta\gamma)^2\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)\BnT_{n+1}:\BeT^e_\Trial
+     + \tfrac{3}{2}\,(\Delta\gamma)^4\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)^2 } \,.
+  \Eal
+\]
+From the second equation above,
+\[
+  \BnT_{n+1}:\BeT^e_\Trial = 
+   \BnT_{n+1}:\BeT^e_{n+1} + \sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)
+           \BnT_{n+1}:\BnT_{n+1} = 
+   \frac{\BeT^e_{n+1}:\BeT^e_{n+1}}{\Norm{\BeT^e_{n+1}}{}} + 
+      \sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right) =
+   \Norm{\BeT^e_{n+1}}{} + 
+      \sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right) \,.
+\]
+Also notice that
+\[
+  \BeT^e_\Trial:\BeT^e_\Trial = \BeT^e_{n+1}:\BeT^e_{n+1} + 2\,\sqrt{\tfrac{3}{2}}\,\Delta\gamma\,
+     \left(\frac{2q_{n+1}}{M^2_{n+1}}\right)\BeT^e_{n+1}:\BnT_{n+1} +
+     \left[\sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)\right]^2
+\]
+or,
+\[
+  \Norm{\BeT^e_\Trial}{}^2 = \left[\Norm{\BeT^e_{n+1}}{} + \sqrt{\tfrac{3}{2}}\,\Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)\right]^2 \,.
+\]
+Therefore,
+\[
+  \BnT_{n+1}:\BeT^e_\Trial = \Norm{\BeT^e_\Trial}{} 
+\]
+and we have
+\[
+  (\Ve_s^e)_{n+1} = 
+    \sqrt{\tfrac{2}{3}}\,\sqrt{\Norm{\BeT^e_\Trial}{}^2
+     - \sqrt{6}\,(\Delta\gamma)^2\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)\Norm{\BeT^e_\Trial}{}
+     + \tfrac{3}{2}\,(\Delta\gamma)^4\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right)^2 } 
+    = \sqrt{\tfrac{2}{3}}\,\Norm{\BeT^e_\Trial}{} - \Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right) \,.
+\]
+The elastic strain can therefore be updated using
+\[
+  \Bal 
+    (\Ve_v^e)_{n+1} & =  (\Ve_v^e)_\Trial - \Delta\gamma\,[2p_{n+1} - (p_c)_{n+1}] \\
+    (\Ve_s^e)_{n+1} & =  (\Ve_s^e)_\Trial - \Delta\gamma\,\left(\frac{2q_{n+1}}{M^2_{n+1}}\right) \,.
+  \Eal 
+\]
+The consistency condition is needed to close the above equations
+\[
+   f = \left(\frac{q_{n+1}}{M}\right)^2 + p_{n+1}[p_{n+1}-(p_c)_{n+1}] = 0  \,.
+\]
+The unknowns are $(\Ve_v^e)_{n+1}$, $(\Ve_s^e)_{n+1}$ and $\Delta\gamma$.  Note that we can express
+the three equations as
+\Beq
+  \Bal 
+    (\Ve_v^e)_{n+1} & =  (\Ve_v^e)_\Trial - \Delta\gamma\,\left[\Partial{f}{p}\right]_{n+1} \\
+    (\Ve_s^e)_{n+1} & =  (\Ve_s^e)_\Trial - \Delta\gamma\,\left[\Partial{f}{q}\right]_{n+1} \\
+    f_{n+1} & = 0 \,.
+  \Eal 
+\Eeq
+
+\subsection{Newton iterations}
+The three nonlinear equations in the three unknowns can be solved using Newton iterations
+for smooth yield functions.  Let us define the residual as
+\[
+   \Mr(\Mx) = \begin{bmatrix} 
+    (\Ve_v^e)_{n+1} -  (\Ve_v^e)_\Trial + \Delta\gamma\,\left[\Partial{f}{p}\right]_{n+1} \\
+    (\Ve_s^e)_{n+1} -  (\Ve_s^e)_\Trial + \Delta\gamma\,\left[\Partial{f}{q}\right]_{n+1} \\
+    f_{n+1} \end{bmatrix} =: \begin{bmatrix} r_1 \\ r_2 \\ r_3 \end{bmatrix}
+   \quad \text{where} \quad
+   \Mx = \begin{bmatrix} (\Ve_v^e)_{n+1} \\ (\Ve_s^e)_{n+1} \\ f_{n+1} \end{bmatrix} 
+        =: \begin{bmatrix} x_1 \\ x_2 \\ x_3 \end{bmatrix} \,.
+\]
+The Newton root finding algorithm is :
+\begin{algorithm}
+  \begin{algorithmic}
+    \REQUIRE $\Mx^0$
+    \STATE $k \leftarrow 0$
+    \WHILE {$\Mr(\Mx^k) \ne 0$}
+      \STATE $\Mx^{k+1} \Leftarrow \Mx^k - \left[\left(\Partial{\Mr}{\Mx}\right)^{-1}\right]_{\Mx^k}\cdot
+              \Mr(\Mx^k)$
+      \STATE $k \leftarrow k+1$
+    \ENDWHILE
+  \end{algorithmic}
+\end{algorithm}
+
+To code the algorithm we have to find the derivatives of the residual with respect to the primary variables.
+Let's do the terms one by one.  For the first row,
+\[
+  \Bal
+  \Partial{r_1}{x_1} & = \Partial{}{\Ve_v^e}\left[\Ve_v^e -  (\Ve_v^e)_\Trial + \Delta\gamma\,(2p-p_c)\right] 
+     = 1 + \Delta\gamma\left(2\Partial{p}{\Ve_v^e} - \Partial{p_c}{\Ve_v^e}\right) \\
+  \Partial{r_1}{x_2} & = \Partial{}{\Ve_s^e}\left[\Ve_v^e -  (\Ve_v^e)_\Trial + \Delta\gamma\,(2p-p_c)\right] 
+     = 2\Delta\gamma\,\Partial{p}{\Ve_s^e}\\
+  \Partial{r_1}{x_3} & = \Partial{}{\Delta\gamma}\left[\Ve_v^e -  (\Ve_v^e)_\Trial + \Delta\gamma\,(2p-p_c)\right]
+     = 2p - p_c = \Partial{f}{p}
+  \Eal
+\]
+where
+\[
+  \Bal
+   \Partial{p}{\Ve_v^e} & = -\frac{p_0\,\beta}{\kappatilde}\,\exp\left[-\frac{\Ve_v^e - \Ve_{v0}^e}{\kappatilde}\right] = \frac{p}{\kappatilde} \quad, \quad
+   \Partial{p_c}{\Ve_v^e} = \frac{(p_c)_n}{\kappatilde-\lambdatilde}\,\exp\left[\frac{\Ve_v^e - (\Ve_{v}^e)_\Trial}{\kappatilde-\lambdatilde}\right] \quad \Tand \\
+   \Partial{p}{\Ve_s^e} & = \frac{3\,p_0\,\alpha\,\Ve_s^e}{\kappatilde}\,\exp\left[-\frac{\Ve_v^e - \Ve_{v0}^e}{\kappatilde}\right] \,.
+  \Eal
+\]
+For the second row,
+\[
+  \Bal
+  \Partial{r_2}{x_1} & = \Partial{}{\Ve_v^e}\left[\Ve_s^e -  (\Ve_s^e)_\Trial + \Delta\gamma\,\frac{2q}{M^2}\right] 
+     = \frac{2\Delta\gamma}{M^2}\,\Partial{q}{\Ve_v^e} \\
+  \Partial{r_2}{x_2} & = \Partial{}{\Ve_s^e}\left[\Ve_s^e -  (\Ve_s^e)_\Trial + \Delta\gamma\,\frac{2q}{M^2}\right] 
+     = 1 + \frac{2\Delta\gamma}{M^2}\,\Partial{q}{\Ve_s^e}\\
+  \Partial{r_2}{x_3} & = \Partial{}{\Delta\gamma}\left[\Ve_s^e -  (\Ve_s^e)_\Trial + \Delta\gamma\,\frac{2q}{M^2}\right]
+     = \frac{2q}{M^2} = \Partial{f}{q}
+  \Eal
+\]
+where
+\[
+  \Partial{q}{\Ve_v^e} = -\frac{3p_0\,\alpha\,\Ve_s^e}{\kappatilde}\,\exp\left[-\frac{\Ve_v^e - \Ve_{v0}^e}{\kappatilde}\right] = \Partial{p}{\Ve_s^e}
+  \quad \Tand \quad 
+  \Partial{q}{\Ve_s^e} = 3\mu_0 + 3p_0\,\alpha\,\exp\left[-\frac{\Ve_v^e - \Ve_{v0}^e}{\kappatilde}\right] = 3\mu \,.
+\]
+For the third row, 
+\[
+  \Bal
+  \Partial{r_3}{x_1} & = \Partial{}{\Ve_v^e}\left[\frac{q^2}{M^2} + p\,(p - p_c)\right]
+     = \frac{2q}{M^2}\,\Partial{q}{\Ve_v^e} + (2p - p_c)\,\Partial{p}{\Ve_v^e} - p\,\Partial{p_c}{\Ve_v^e} 
+     = \Partial{f}{q}\,\Partial{q}{\Ve_v^e} + \Partial{f}{p}\,\Partial{p}{\Ve_v^e} - p\,\Partial{p_c}{\Ve_v^e} \\
+  \Partial{r_3}{x_2} & = \Partial{}{\Ve_s^e}\left[\frac{q^2}{M^2} + p\,(p - p_c)\right]
+     = \frac{2q}{M^2}\,\Partial{q}{\Ve_s^e} + (2p - p_c)\,\Partial{p}{\Ve_s^e} 
+     = \Partial{f}{q}\,\Partial{q}{\Ve_s^e} + \Partial{f}{p}\,\Partial{p}{\Ve_s^e} \\
+  \Partial{r_3}{x_3} & = \Partial{}{\Delta\gamma}\left[\frac{q^2}{M^2} + p\,(p - p_c)\right]
+     =  0 \,.
+  \Eal
+\]
+We have to invert a matrix in the Newton iteration process.  Let us see whether we can make this 
+quicker to do.  The Jacobian matrix has the form
+\[
+  \Partial{\Mr}{\Mx} = \begin{bmatrix}\Partial{r_1}{x_1} & \Partial{r_1}{x_2} & \Partial{r_1}{x_3} \\
+     \Partial{r_2}{x_1} & \Partial{r_2}{x_2} & \Partial{r_2}{x_3} \\
+     \Partial{r_3}{x_1} & \Partial{r_3}{x_2} & \Partial{r_3}{x_3} \end{bmatrix} 
+     = \begin{bmatrix} \MAmat & \MBmat \\ \MCmat & 0 \end{bmatrix}
+\]
+where
+\[
+  \MAmat = \begin{bmatrix}\Partial{r_1}{x_1} & \Partial{r_1}{x_2} \\
+                       \Partial{r_2}{x_1} & \Partial{r_2}{x_2} \end{bmatrix} \,,\quad
+  \MBmat = \begin{bmatrix}\Partial{r_1}{x_3} \\ \Partial{r_2}{x_3} \end{bmatrix} \,,\quad \Tand \quad
+  \MCmat = \begin{bmatrix}\Partial{r_3}{x_1} & \Partial{r_3}{x_2} \end{bmatrix} \,.
+\]
+We can also break up the $\Mx$ and $\Mr$ matrices:
+\[
+  \Delta\Mx = \Mx^{k+1}-\Mx^k = \begin{bmatrix} \Delta\Mx^{vs} \\ \Delta x_3 \end{bmatrix} \,, \quad
+  \Mr = \begin{bmatrix} \Mr^{vs} \\ r_3 \end{bmatrix}
+  \quad \text{where} \quad \Mr^{vs} = \begin{bmatrix} r_1 \\ r_2 \end{bmatrix}  
+   \quad \Tand \quad \Delta\Mx^{vs} = \begin{bmatrix}\Delta x_1 \\\Delta x_2 \end{bmatrix}  \,.
+\]
+Then
+\[
+  \begin{bmatrix} \Delta\Mx^{vs} \\ \Delta x_3 \end{bmatrix} 
+   = - \begin{bmatrix} \MAmat & \MBmat \\ \MCmat & 0 \end{bmatrix}^{-1} 
+                    \begin{bmatrix} \Mr^{vs} \\ r_3 \end{bmatrix} 
+  \quad \implies \quad 
+   \begin{bmatrix} \MAmat & \MBmat \\ \MCmat & 0 \end{bmatrix} 
+  \begin{bmatrix} \Delta\Mx^{vs} \\ \Delta x_3 \end{bmatrix}  = 
+                    -\begin{bmatrix} \Mr^{vs} \\ r_3 \end{bmatrix} 
+\]
+or
+\[
+   \MAmat\,\Delta\Mx^{vs} + \MBmat\,\Delta x_3 = -\Mr^{vs} \quad \Tand \quad
+   \MCmat\,\Delta\Mx^{vs} = -r_3 \,.
+\]
+From the first equation above,
+\[
+  \Delta\Mx^{vs} = -\MAmat^{-1}\,\Mr^{vs} - \MAmat^{-1}\,\MBmat\,\Delta x_3 \,.
+\]
+Plugging in the second equation gives
+\[
+   r_3 = \MCmat\,\MAmat^{-1}\,\Mr^{vs} + \MCmat\,\MAmat^{-1}\,\MBmat\,\Delta x_3 \,.
+\]
+Rearranging,
+\[
+  \Delta x_3 = x_3^{k+1} - x_3^k = \frac{-\MCmat\,\MAmat^{-1}\,\Mr^{vs} + r_3}{\MCmat\,\MAmat^{-1}\,\MBmat} \,.
+\]
+Using the above result,
+\[
+  \Delta\Mx^{vs} = -\MAmat^{-1}\,\Mr^{vs} - \MAmat^{-1}\,\MBmat\,\left(\frac{-\MCmat\,\MAmat^{-1}\,\Mr^{vs} + r_3}{\MCmat\,\MAmat^{-1}\,\MBmat}\right) \,.
+\]
+We therefore have to invert only a $2 \times 2 $ matrix.
+
+\subsection{Tangent calculation: elastic}
+We want to find the derivative of the stress with respect to the strain:
+\Beq
+   \Partial{\Bsig}{\Beps} = \Bone\otimes\Partial{p}{\Beps} + 
+      \sqrt{\tfrac{2}{3}}\,\BnT\otimes\Partial{q}{\Beps} + 
+      \sqrt{\tfrac{2}{3}}\,q\,\Partial{\BnT}{\Beps}  \,.
+\Eeq
+For the first term above,
+\[
+   \Partial{p}{\Beps} = p_0\,\exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\Partial{\beta}{\Beps}
+      - p_0\,\frac{\beta}{\kappatilde}\,
+        \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\Partial{\Ve^e_v}{\Beps} 
+     = p_0\,\exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\left(\Partial{\beta}{\Beps} -
+            \frac{\beta}{\kappatilde}\,\Partial{\Ve^e_v}{\Beps} \right) \,.
+\]
+Now,
+\[
+   \Partial{\beta}{\Beps} = \frac{3\alpha}{\kappatilde}\,\Ve^e_s\,\Partial{\Ve^e_s}{\Beps} \,.
+\]
+Therefore, 
+\[
+  \Partial{p}{\Beps} = \frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\left(3\alpha\,\Ve^e_s\Partial{\Ve^e_s}{\Beps} -
+            \beta\,\Partial{\Ve^e_v}{\Beps} \right) \,.
+\]
+We now have to figure out the other derivatives in the above expression.  First,
+\[
+  \Partial{\Ve^e_s}{\Beps} = \sqrt{\tfrac{2}{3}}\,\frac{1}{\sqrt{\BeT^e:\BeT^e}}\,\Partial{\BeT^e}{\Beps}:\BeT^e =
+     \sqrt{\tfrac{2}{3}}\,\frac{1}{\Norm{\BeT^e}{}}\,
+     \left(\Partial{\Beps^e}{\Beps} - \tfrac{1}{3}\Bone\otimes\Partial{\Ve^e_v}{\Beps} \right):\BeT^e\,.
+\]
+For the special situation where all the strain is elastic, $\Beps = \Beps^e$, and (see Wikipedia 
+article on tensor derivatives)
+\[
+  \Partial{\Beps^e}{\Beps} = \Partial{\Beps}{\Beps} = \SfI^{(s)} \quad \Tand \quad
+  \Partial{\Ve^e_v}{\Beps} = \Partial{\Ve_v}{\Beps} = \Bone \,.
+\]
+That gives us
+\[
+  \Partial{\Ve^e_s}{\Beps} = \sqrt{\tfrac{2}{3}}\,\frac{1}{\Norm{\BeT^e}{}}\,
+     \left(\SfI^{(s)} - \tfrac{1}{3}\Bone\otimes\Bone \right):\BeT^e
+   = \sqrt{\tfrac{2}{3}}\,\frac{1}{\Norm{\BeT^e}{}}\,
+     \left[\BeT^e - \tfrac{1}{3}\Tr(\BeT^e)\Bone\right] \,.
+\]
+But $\Tr(\BeT^e)=0$ because this is the deviatoric part of the strain and we have
+\[
+  \boxed{
+  \Partial{\Ve^e_s}{\Beps} = \sqrt{\tfrac{2}{3}}\,\frac{\BeT^e}{\Norm{\BeT^e}{}} = \sqrt{\tfrac{2}{3}}\,\BnT 
+  }
+  \quad \Tand \quad
+  \boxed{
+  \Partial{\Ve^e_v}{\Beps} = \Bone \,.
+  }
+\]
+Using these, we get
+\Beq
+  \Partial{p}{\Beps} = \frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\left(\sqrt{6}\,\alpha\,\Ve^e_s\,\BnT -
+            \beta\,\Bone \right) \,.
+\Eeq
+The derivative of $q$ with respect to $\Beps$ can be calculated in a similar way, i.e.,
+\[
+  \Partial{q}{\Beps} = 3\mu\,\Partial{\Ve^e_s}{\Beps} + 3\Ve^e_s\,\Partial{\mu}{\Beps}
+   = 3\mu\,\Partial{\Ve^e_s}{\Beps} - 3\frac{p_0}{\kappatilde}\,\alpha\,\Ve^e_s\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\,\Partial{\Ve^e_v}{\Beps} \,.
+\]
+Using the expressions in the boxes above, 
+\Beq
+  \Partial{q}{\Beps} = \sqrt{6}\,\mu\,\BnT - 3\frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\,\alpha\,\Ve^e_s\,\Bone \,.
+\Eeq
+Also,
+\[
+   \Partial{\BnT}{\Beps} = \sqrt{\tfrac{2}{3}}\,\left[\frac{1}{\Ve^e_s}\,\Partial{\BeT^e}{\Beps}
+     - \frac{1}{(\Ve^e_s)^2}\,\BeT^e\otimes\Partial{\Ve^e_s}{\Beps}\right] \,.
+\]
+Using the previously derived expression, we have
+\[
+   \Partial{\BnT}{\Beps} = \sqrt{\tfrac{2}{3}}\,\frac{1}{\Ve^e_s}\,\left[
+        \SfI^{(s)} - \tfrac{1}{3}\,\Bone\otimes\Bone
+     - \sqrt{\tfrac{2}{3}}\,\frac{1}{\Ve^e_s}\,\frac{\BeT^e\otimes\BeT^e}{\Norm{\BeT^e}{}}\right] 
+\]
+or
+\Beq
+   \Partial{\BnT}{\Beps} = \sqrt{\tfrac{2}{3}}\,\frac{1}{\Ve^e_s}\,\left[
+        \SfI^{(s)} - \tfrac{1}{3}\,\Bone\otimes\Bone - \BnT\otimes\BnT\right] \,.
+\Eeq
+Plugging the expressions for these derivatives in the original equation, we get
+\[
+  \Bal
+   \Partial{\Bsig}{\Beps} & = \frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]
+      \left(\sqrt{6}\,\alpha\,\Ve^e_s\,\Bone\otimes\BnT - \beta\,\Bone\otimes\Bone \right) + 
+      2\mu\,\BnT\otimes\BnT - \sqrt{6}\frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\,\alpha\,\Ve^e_s\,\BnT\otimes\Bone +\\
+      & \qquad \qquad \tfrac{2}{3}\,\frac{q}{\Ve^e_s}\,\left[
+        \SfI^{(s)} - \tfrac{1}{3}\,\Bone\otimes\Bone - \BnT\otimes\BnT\right] \,.
+  \Eal
+\]
+Reorganizing,
+\Beq
+  \boxed{
+  \Bal
+   \Partial{\Bsig}{\Beps} & = \frac{\sqrt{6}\,p_0\,\alpha\,\Ve^e_s}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right](\Bone\otimes\Bn + \Bn\otimes\Bone) - 
+      \left(\frac{p_0\beta}{\kappatilde}\, \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]
+       +\tfrac{2}{9}\,\frac{q}{\Ve_s^e}\right) \Bone\otimes\Bone + \\
+     & \qquad \qquad 2\left(\mu - \tfrac{1}{3}\,\frac{q}{\Ve^e_s}\right)\,\BnT\otimes\BnT 
+           + \tfrac{2}{3}\,\frac{q}{\Ve^e_s}\,\SfI^{(s)}\,.
+  \Eal
+  }
+\Eeq
+
+\subsection{Tangent calculation: elastic-plastic}
+From the previous section recall that 
+\[
+   \Partial{\Bsig}{\Beps} = \Bone\otimes\Partial{p}{\Beps} + 
+      \sqrt{\tfrac{2}{3}}\,\BnT\otimes\Partial{q}{\Beps} + 
+      \sqrt{\tfrac{2}{3}}\,q\,\Partial{\BnT}{\Beps}  
+\]
+where
+\[
+  \Bal
+  \Partial{p}{\Beps} & = \frac{p_0}{\kappatilde}\,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\left(3\alpha\,\Ve^e_s\Partial{\Ve^e_s}{\Beps} -
+            \beta\,\Partial{\Ve^e_v}{\Beps} \right) \,,\qquad
+  \Partial{q}{\Beps}  = 3\mu\,\Partial{\Ve^e_s}{\Beps} - 3\frac{p_0}{\kappatilde}\,\alpha\,\Ve^e_s \,
+      \exp\left[-\frac{\Ve^e_v - \Ve^e_{v0}}{\kappatilde}\right]\,\Partial{\Ve^e_v}{\Beps} \quad \Tand \\
+   \Partial{\BnT}{\Beps} & = \sqrt{\tfrac{2}{3}}\,\left[\frac{1}{\Ve^e_s}\,\Partial{\BeT^e}{\Beps}
+     - \frac{1}{(\Ve^e_s)^2}\,\BeT^e\otimes\Partial{\Ve^e_s}{\Beps}\right] \,.
+  \Eal
+\]
+The total strain is equal to the elastic strain for the purely elastic case and the tangent is relatively
+straightforward to calculate.  For the elastic-plastic case we have
+\[
+   \Beps^e_{n+1} = \Beps^e_\Trial - \Delta\gamma\left[\Partial{f}{\Bsig}\right]_{n+1} \,.
+\]
+Dropping the subscript $n+1$ for convenience, we have
+\[
+   \Partial{\Beps^e}{\Beps} = \Partial{\Beps^e_\Trial}{\Beps} 
+     - \Partial{f}{\Bsig}\otimes\Partial{\Delta\gamma}{\Beps}
+     - \Delta\gamma\,\Partial{}{\Beps}\left[\Partial{f}{\Bsig}\right]
+     = \SfI^{(s)}
+     - \left[\frac{2p-p_c}{3}\,\Bone + \sqrt{\tfrac{3}{2}}\,\frac{2q}{M^2}\,\BnT\right]
+       \otimes\Partial{\Delta\gamma}{\Beps}
+     - \Delta\gamma\,\Partial{}{\Beps}
+     \left[\frac{2p-p_c}{3}\,\Bone + \sqrt{\tfrac{3}{2}}\,\frac{2q}{M^2}\,\BnT\right] \,.
+\]
+
+
+%\begin{figure}[htb!]
+%  \centering
+%  %\includegraphics[width=0.4\linewidth]{./FIGS/SimpleBurnWithoutPressCC.png}
+%  %\includegraphics[width=0.4\linewidth]{./FIGS/SimpleBurnWithPressCC.png}
+%  \caption{Simulation of an explosion in a half space overlaid by a thin layer with a
+%           simple burn model and compressible neo-Hookean behavior.  There is no apparent
+%           fast moving shock wave in the material because the speed of sound in the half space
+%           is low.  Movies of this simulation can be found in the Dropbox folder
+%           SoilWithLayerSimpleBurn2D.}
+%  \label{fig:SimpleBurn}
+%\end{figure}
+
+
+\end{document}

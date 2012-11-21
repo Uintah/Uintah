@@ -1,0 +1,35 @@
+#_____________________________________________________________________.
+#      pscp_driver
+#   07/26/00
+# This is a gmake file that does parallel scp of .uda data.  It pushes
+# from the machine you're currently on to the REMOTEDIR on LOGIN.
+# usage
+#_____________________________________________________________________.
+
+FILES      := $(shell cat $(PSCP_FILES))
+TAR_FILES  := $(wildcard *.tar)
+          
+SRCS =   $(shell for i in $(FILES) ; do \
+              echo $$i ;\
+          done) 
+          
+DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
+
+all: $(STAMP_DIR)/stamp $(DESTS)
+	@echo "Blowing away the list of transferred files as they have all been sent..."
+	rm -rf $(STAMP_DIR)
+
+$(STAMP_DIR)/stamp:
+	mkdir $@
+
+$(STAMP_DIR)/stamp/./checkpoints/% : 
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+	@echo "sending checkpoints/`basename $@`"
+	@${TAR} zcBf - checkpoints/`basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && gunzip |tar xBf -"
+	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
+
+$(STAMP_DIR)/stamp/% : 
+	@echo "sending `basename $@`"
+	@${TAR} zcBf - `basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && gunzip |tar xBf -"
+	@touch $(STAMP_DIR)/stamp/`basename $@`
+

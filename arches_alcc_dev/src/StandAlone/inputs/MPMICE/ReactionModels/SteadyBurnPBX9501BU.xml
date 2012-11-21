@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+    <!-- Parameters from: Ward, Son Brewster paper -->
+    -->
+    <Model type="Steady_Burn">
+      <fromMaterial>         hmx_grains    </fromMaterial>
+      <toMaterial>           product      </toMaterial>
+
+      <IdealGasConst>        83.14        </IdealGasConst>
+      <PreExpCondPh>         1.637e9     </PreExpCondPh>
+      <ActEnergyCondPh>      1.76e6       </ActEnergyCondPh>
+      <PreExpGasPh>          1.6e-12       </PreExpGasPh>
+      <CondPhaseHeat>        4.0e-3        </CondPhaseHeat>
+      <GasPhaseHeat>         3.018e-2      </GasPhaseHeat>
+      <HeatConductGasPh>     7.0e-9         </HeatConductGasPh>
+      <HeatConductCondPh>    2.0e-7          </HeatConductCondPh>
+      <SpecificHeatBoth>     1.4e-5        </SpecificHeatBoth>
+      <MoleWeightGasPh>      3.42e7       </MoleWeightGasPh>
+      <BoundaryParticles>    3            </BoundaryParticles>
+      <ThresholdPressure>    0.50000        </ThresholdPressure>
+      <IgnitionTemp>         550.0        </IgnitionTemp>
+
+      <useInductionTime>      true         </useInductionTime>
+      <ActivationTemperature>       17900        </ActivationTemperature>
+      <ArrheniusConstant>         2.83e5      </ArrheniusConstant>
+      <T0>         550      </T0>
+    </Model>
+
+</Uintah_Include>

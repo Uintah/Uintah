@@ -1,0 +1,1994 @@
+\input{latexmacros.tex}
+\title{Material Models and the Uintah Computational Framework}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+This document deals with some features of Uintah and some material models 
+for solids that have been implemented in the Uintah Computational Framework 
+(for use with the Material Point Method).  The approach taken has been to 
+separate the stress-strain relations from the numerical stress update 
+algorithms as far as possible.  A moderate rotation/small strain 
+hypoelastic-plastic stress update algorithm is discussed and the manner in 
+which plasticity flow rules, damage models and equations of state
+fit into the stress update algorithms are shown.
+
+\section{Load Curves}
+It is often more convenient to apply a specified load at the MPM particles.
+The load may be a function of time.  Such a load versus time curve is called
+a {\bf load curve}.
+
+In Uintah, the load curve infrastructure is available for general use
+(and not only for particles).  However, it has been implemented only for
+a special case of pressure loading.
+
+We invoke the load curve in the \verb|<MPM>| section of the input file
+using  \verb|<use_load_curves> true </use_load_curves>|.  The default value 
+is \verb|<use_load_curves> false </use_load_curves>|.
+
+In Uintah, a load curve infrastructure is implemented in the file
+\verb|.../MPM/PhysicalBC/LoadCurve.h|.  This file is essentially a templated
+structure that has the following private data
+\begin{verbatim}
+  // Load curve information 
+  std::vector<double> d_time;
+  std::vector<T> d_load;
+  int d_id;
+\end{verbatim}
+The variable \verb|d_id| is the load curve ID, \verb|d_time| is the time,
+and \verb|d_load| is the load.  Note that the load can have any form - scalar,
+vector, matrix, etc.
+
+In our current implementation, the actual specification of the load curve 
+information is in the \verb|<PhysicalBC>| section of the input file.  The
+implementation is limited in that it applies only to pressure boundary 
+conditions for some special geometries (the implementation is in 
+\verb|.../MPM/PhysicalBC/PressureBC.cc|).  However, the load curve template can
+be used in other, more general, contexts.
+
+A sample input file specification of a pressure load curve is shown below.
+In this case, a pressure is applied to the inside and outside of a cylinder.
+The pressure is ramped up from 0 to 1 GPa on the inside and from 0 to 0.1 MPa
+on the outside over a time of 10 microsecs. 
+\begin{verbatim}
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "inner cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           0.5             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 1.0e9 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           1.0             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 101325.0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+\end{verbatim}
+The complete input file can be found in \verb|Uintah/StandAlone/inputs/MPM/thickCylinderMPM.ups|.
+
+\section{Stress Update Algorithms}
+The hypoelastic-plastic stress update is based on an additive
+decomposition of the rate of deformation tensor into elastic
+and plastic parts while the hyperelastic-plastic stress update
+is based on a multiplicative decomposition of the elastic and 
+plastic deformation gradients.  Incompressibility is assumed
+for plastic deformations.  The volumetric response is therefore
+determined either by a bulk modulus and the trace of the rate
+of deformation tensor or using an equation of state.  The 
+deviatoric response is determined either by an elastic constitutive 
+equation or using a plastic flow rule in combination with a 
+yield condition. 
+  
+The material models that can be varied in these stress update approaches
+are (not all are applicable to both hypo- and hyperelastic formulations
+nor is the list exhaustive):
+\begin{enumerate}
+    \item The elasticity model, for example, 
+      \begin{itemize}
+        \item Isotropic linear elastic model. 
+        \item Anisotropic linear elastic models.
+        \item Isotropic nonlinear elastic models.
+        \item Anisotropic nonlinear elastic models.
+      \end{itemize}
+    \item Isotropic hardening or Kinematic hardening using a 
+          back stress evolution rule, for example,
+      \begin{itemize}
+        \item Ziegler evolution rule   .
+      \end{itemize}
+    \item The flow rule and hardening/softening law, for example,
+      \begin{itemize} 
+        \item Perfect plasticity/power law hardening plasticity.
+        \item Johnson-Cook plasticity .
+        \item Mechanical Threshold Stress (MTS) plasticity .
+        \item Anand plasticity .
+      \end{itemize} 
+    \item The yield condition, for example,
+      \begin{itemize} 
+        \item von Mises yield condition.
+        \item Drucker-Prager yield condition.
+        \item Mohr-Coulomb yield condition.
+      \end{itemize} 
+    \item A continuum or nonlocal damage model with damage evolution
+          given by, for example, 
+      \begin{itemize}
+        \item Johnson-Cook damage model.
+        \item Gurson-Needleman-Tvergaard model.
+        \item Sandia damage model.
+      \end{itemize}
+    \item An equation of state to determine the pressure (or 
+          volumetric response), for example, 
+      \begin{itemize}
+        \item Mie-Gruneisen equation of state.
+      \end{itemize}
+\end{enumerate}
+  
+The currently implemented stress update algorithms in the Uintah
+Computational Framework do not allow for arbitrary elasticity models,
+kinematic hardening, arbitrary yield conditions and continuum or 
+nonlocal damage (however the a damage parameter is updated and 
+used in the erosion algorithm).  The models that can be varied
+are the flow rule models, damage variable evolution models and the
+equation of state models.
+
+Note that there are no checks in the Unitah Computational Framework
+to prevent users from mixing and matching inappropriate models.
+
+This section describes the current implementation of the hypoelastic-
+plastic model.  The stress update algorithm is a slightly modified 
+version of the approach taken by 
+Nemat-Nasser et al. (1991,1992)~\cite{Nemat91,Nemat92}, Wang (1994)~\cite{Wang94}, 
+Maudlin (1996)~\cite{Maudlin96}, and Zocher et al. (2000)~\cite{Zocher00}.  
+
+\subsection{Simplified theory for hypoelastic-plasticity}
+A simplified version of the theory behind the stress update algorithm
+(in the contex of von Mises plasticity) is given below.
+
+  Following ~\cite{Maudlin96}, the rotated spatial rate of deformation 
+  tensor ($\Bd$) is decomposed into an elastic part ($\Bd^e$) and a 
+  plastic part ($\Bd^p$)
+  \begin{equation}
+     \Bd = \Bd^e + \Bd^p
+  \end{equation}
+  If we assume plastic incompressibility ($\Tr{(\Bd^p)} = 0$), we get
+  \begin{equation}
+     \Beta = \Beta^e + \Beta^p
+  \end{equation}
+  where $\Beta$, $\Beta^e$, and $\Beta^p$ are the deviatoric parts of $\Bd$,
+  $\Bd^e$, and $\Bd^p$, respectively.  For isotropic materials, the hypoelastic
+  constitutive equation for deviatoric stress is
+  \begin{equation}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
+  \end{equation}
+  where $\Bs$ is the deviatoric part of the stress tensor and $\mu$ is the
+  shear modulus.  We assume that the flow stress obeys the Huber-von Mises
+  yield condition
+  \begin{equation}
+    f := \sqrt{\frac{3}{2}}\norm{\Bs} - \sigma_y \le 0  ~~\text{or,}~~
+    F := \frac{3}{2} \Bs:\Bs - \sigma_y^2 \le 0 
+  \end{equation}
+  where $\sigma_y$ is the flow stress.  Assuming an associated flow rule,
+  and noting that $\Bd^p = \Beta^p$, we have
+  \begin{equation}
+    \Beta^p = \Bd^p = \lambda\Partial{f}{\Bsig} 
+                    = \Lambda\Partial{F}{\Bsig} = 3\Lambda\Bs
+  \end{equation}
+  where $\Bsig$ is the stress.  Let $\Bu$ be a tensor proportional to the 
+  plastic straining direction, and define $\gamma$ as
+  \begin{equation}
+    \Bu = \sqrt{3} \frac{\Bs}{\norm{\Bs}}; \quad
+    \gamma := \sqrt{3}\Lambda\norm{\Bs}  \quad \Longrightarrow
+    \gamma\Bu = 3\Lambda\Bs
+  \end{equation}
+  Therefore, we have
+  \begin{equation} \label{eq:stresseqn}
+    \Beta^p = \gamma\Bu; \quad  
+    \dot{\Bs} = 2\mu(\Beta - \gamma\Bu)
+  \end{equation}
+  From the consistency condition, if we assume that the deviatoric stress
+  remains constant over a timestep, we get 
+  \begin{equation}
+    \gamma = \frac{\Bs:\Beta}{\Bs:\Bu}
+  \end{equation}
+  which provides an initial estimate of the plastic strain-rate.  To obtain
+  a semi-implicit update of the stress using equation (\ref{eq:stresseqn}), we
+  define
+  \begin{equation}\label{eq:taueqn}
+    \tau^2 := \frac{3}{2} \Bs:\Bs = \sigma_y^2
+  \end{equation}
+  Taking a time derivative of equation (\ref{eq:taueqn}) gives us
+  \begin{equation}\label{eq:taudot}
+    \sqrt{2} \dot{\tau} = \sqrt{3} \frac{\Bs:\dot{\Bs}}{\norm{\Bs}}
+  \end{equation}
+  Plugging equation (\ref{eq:taudot}) into equation (\ref{eq:stresseqn})$_2$
+  we get
+  \begin{equation}\label{eq:tau}
+    \dot{\tau} = \sqrt{2}\mu(\Bu:\Beta - \gamma\Bu:\Bu)
+               = \sqrt{2} \mu (d - 3\gamma)
+  \end{equation} 
+  where $d = \Bu:\Beta$.  If the initial estimate of the plastic strain-rate
+  is that all of the deviatoric strain-rate is plastic, then we get an 
+  approximation to $\gamma$, and the corresponding error 
+  ($\gamma_{\text{er}}$) given by
+  \begin{equation}\label{eq:gammaer}
+    \gamma_{\text{approx}} = \frac{d}{3}; \quad
+    \gamma_{\text{er}} = \gamma_{\text{approx}} - \gamma = \frac{d}{3} - \gamma
+  \end{equation}
+  The incremental form of the above equation is
+  \begin{equation}\label{eq:delgamma}
+    \Delta\gamma = \frac{d^*\Delta t}{3} - \Delta\gamma_{\text{er}}
+  \end{equation}
+  Integrating equation (\ref{eq:tau}) from time $t_n$ to time $t_{n+1} = 
+  t_n + \Delta t$, and using equation (\ref{eq:delgamma}) we get
+  \begin{equation}\label{eq:taun}
+    \tau_{n+1} = \tau_n + \sqrt{2}\mu(d^*\Delta t - 3\Delta\gamma)
+               = \tau_n + 3\sqrt{2}\mu\Delta\gamma_{\text{er}}
+  \end{equation}
+  where $d^*$ is the average value of $d$ over the timestep.
+  Solving for $\Delta\gamma_{\text{er}}$ gives
+  \begin{equation}\label{eq:delgammaer}
+    \Delta\gamma_{\text{er}} = \cfrac{\tau_{n+1} - \tau_n}{3\sqrt{2}\mu}
+      = \cfrac{\sqrt{2}\sigma_y - \sqrt{3}\norm{\Bs_n}}{6\mu}
+  \end{equation}
+  The direction of the total strain-rate ($\Bu^{\eta}$) and the
+  direction of the plastic strain-rate ($\Bu^s$) are given by 
+  \begin{equation}
+    \Bu^{\eta} = \frac{\Beta}{\norm{\Beta}} ; \quad
+    \Bu^{s} = \frac{\Bs}{\norm{\Bs}} 
+  \end{equation}
+  Let $\theta$ be the fraction of the time increment that sees elastic
+  straining.  Then
+  \begin{equation}\label{eq:theta}
+    \theta = \frac{d^* - 3\gamma_n}{d^*}
+  \end{equation}
+  where $\gamma_n = d_n/3$ is the value of $\gamma$ at the beginning of the 
+  timestep.  We also assume that 
+  \begin{equation}\label{eq:dstar}
+    d^* = \sqrt{3}\Beta:[(1-\theta)\Bu^{\eta} + \frac{\theta}{2}
+              (\Bu^{\eta}+\Bu^{s})]
+  \end{equation}
+  Plugging equation (\ref{eq:theta}) into equation (\ref{eq:dstar}) we get
+  a quadratic equation that can be solved for $d^*$ as follows
+  \begin{equation}
+    \frac{2}{\sqrt{3}} (d^*)^2 - (\Beta:\Bu^s + \norm{\Beta}) d^*
+       + 3\gamma_n (\Beta:\Bu^s - \norm{\Beta}) = 0
+  \end{equation}
+  The real positive root of the above quadratic equation is taken as the
+  estimate for $d$.  The value of $\Delta\gamma$ can now be calculated
+  using equations (\ref{eq:delgamma}) and (\ref{eq:delgammaer}).  A
+  semi-implicit estimate of the deviatoric stress can be obtained at this
+  stage by integrating equation (\ref{eq:stresseqn})$_2$
+  \begin{align}
+    \tilde{\Bs}_{n+1} & = \Bs_n + 2\mu\left(\eta\Delta t  - \sqrt{3}\Delta\gamma
+         \cfrac{\tilde{\Bs}_{n+1}}{\norm{\Bs_{n+1}}}\right) \\
+     & = \Bs_n + 2\mu\left(\eta\Delta t  - \frac{3}{\sqrt{2}}\Delta\gamma
+         \cfrac{\tilde{\Bs}_{n+1}}{\sigma_y}\right)
+  \end{align}
+  Solving for $\tilde{\Bs}_{n+1}$, we get
+  \begin{equation}
+    \tilde{\Bs}_{n+1} = \cfrac{\Bs_{n+1}^{\text{trial}}}
+           {1 + 3\sqrt{2}\mu\cfrac{\Delta\gamma}{\sigma_y}}
+  \end{equation}
+  where $\Bs_{n+1}^{\text{trial}} = \Bs_n + 2\mu\Delta t\Beta$.
+  A final radial return adjustment is used to move the stress to the yield
+  surface 
+  \begin{equation}
+    \Bs_{n+1} = \sqrt{\frac{2}{3}}\sigma_y \cfrac{\tilde{\Bs}_{n+1}}
+                {\norm{\tilde{\Bs}_{n+1}}}
+  \end{equation}
+  A pathological situation arises if $\gamma_n = \Bu_n:\Beta_n$ is less
+  than or equal to zero or 
+  $\Delta\gamma_{\text{er}} \ge \frac{d^*}{3} \Delta t $.  
+  This can occur is the rate of plastic deformation
+  is small compared to the rate of elastic deformation or if the timestep
+  size is too small (see~\cite{Nemat92}).  In such situations, we use a
+  locally implicit stress update that uses Newton iterations (as
+  discussed in \cite{Simo98}, page 124) to compute $\tilde{\Bs}$.
+
+\subsection{Models}
+  Below are some of the strain-rate, strain, and temperature dependent models 
+  for metals that are implemented in Uintah.
+
+\subsection{Equation of State Models}
+The elastic-plastic stress update assumes that the volumetric part of the 
+Cauchy stress can be calculated using an equation of state.  There are 
+three equations of state that are implemented in Uintah.  These are
+\begin{enumerate}
+    \item A default hypoelastic equation of state.
+    \item A neo-Hookean equation of state.    
+    \item A Mie-Gruneisen type equation of state.
+\end{enumerate}
+
+\paragraph{Default hypoelastic equation of state}
+In this case we assume that the stress rate is given by
+\Beq
+    \dot{\Bsig} = \lambda~\Tr(\Bd^e)~\Bone + 2~\mu~\Bd^e
+\Eeq
+where $\Bsig$ is the Cauchy stress, $\Bd^e$ is the elastic part of
+the rate of deformation, and $\lambda, \mu$ are constants.
+
+If $\Beta^e$ is the deviatoric part of $\Bd^e$ then we can write
+\Beq
+    \dot{\Bsig} = \left(\lambda + \frac{2}{3}~\mu\right)~\Tr(\Bd^e)~\Bone + 
+        2~\mu~\Beta^e = \kappa~\Tr(\Bd^e)~\Bone + 2~\mu~\Beta^e ~.
+\Eeq
+If we split $\Bsig$ into a volumetric and a deviatoric part, i.e.,
+$\Bsig = p~\Bone + \Bs$ and take the time derivative to get
+$\dot{\Bsig} = \dot{p}~\Bone + \dot{\Bs}$ then
+\Beq
+    \dot{p} = \kappa~\Tr(\Bd^e) ~.
+\Eeq
+In addition we assume that $\Bd = \Bd^e + \Bd^p$.  If we also assume that 
+the plastic volume change is negligible, we can then write that
+\Beq
+    \dot{p} = \kappa~\Tr(\Bd) ~.
+\Eeq
+This is the equation that is used to calculate the pressure $p$ in the 
+default hypoelastic equation of state, i.e.,
+\Beq
+    \boxed{
+    p_{n+1} = p_n + \kappa~\Tr(\Bd_{n+1})~\Delta t ~.
+    }
+\Eeq
+To get the derivative of $p$ with respect to $J$, where $J = \det(\BF)$,
+we note that
+\Beq
+    \dot{p} = \Partial{p}{J}~\dot{J} = \Partial{p}{J}~J~\Tr(\Bd) ~.
+\Eeq
+Therefore,
+\Beq
+    \boxed{
+    \Partial{p}{J} = \cfrac{\kappa}{J} ~.
+    }
+\Eeq
+
+This model is invoked in Uintah using
+\begin{verbatim}
+  <equation_of_state type="default_hypo">
+  </equation_of_state>
+\end{verbatim}
+The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/DefaultHypoElasticEOS.cc|.
+
+\paragraph{Default hyperelastic equation of state}
+In this model the pressure is computed using the relation
+\begin{equation}
+  p = \Half~\kappa~\left(J^e - \cfrac{1}{J^e}\right)
+\end{equation}
+where $\kappa$ is the bulk modulus and $J^e$ is determinant of the elastic 
+part of the deformation gradient.
+
+We can also compute
+\begin{equation}
+  \Deriv{p}{J} = \Half~\kappa~\left(1 + \cfrac{1}{(J^e)^2}\right) ~.
+\end{equation}
+
+This model is invoked in Uintah using
+\begin{verbatim}
+  <equation_of_state type="default_hyper">
+  </equation_of_state>
+\end{verbatim}
+The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/HyperElasticEOS.cc|.  If an EOS is not specified then this model is the {\bf default}.
+
+\paragraph{Mie-Gruneisen equation of state}
+The pressure ($p$) is calculated using a Mie-Gr{\"u}neisen equation of state 
+of the form (\cite{Wilkins99,Zocher00})
+\begin{equation} \label{eq:EOSMG_upd}
+  \boxed{
+  p_{n+1} =  - \frac{\rho_0~C_0^2~(1 - J^e_{n+1})
+           [1 - \Gamma_0 (1 - J^e_{n+1})/2]}
+           {[1 - S_{\alpha}(1 - J^e_{n+1})]^2} - \Gamma_0~e_{n+1} 
+  ~;~~~ J^e := \det{\BF^e} 
+  }
+\end{equation}
+where $C_0$ is the bulk speed of sound, $\rho_0$ is the initial mass density,
+$\Gamma_0$ is the Gr{\"u}neisen's gamma at the reference state,
+$S_{\alpha} = dU_s/dU_p$ is a linear Hugoniot slope coefficient,
+$U_s$ is the shock wave velocity, $U_p$ is the particle velocity, and
+$e$ is the internal energy density (per unit reference volume), $\BF^e$ is
+the elastic part of the deformation gradient.  For isochoric plasticity,
+\begin{equation*}
+  J^e = J = \det(\BF) = \cfrac{\rho_0}{\rho} ~.
+\end{equation*}
+  The internal energy is computed using
+  \begin{equation}
+    E = \frac{1}{V_0} \int C_v dT \approx \frac{C_v (T-T_0)}{V_0}
+  \end{equation}
+  where $V_0 = 1/\rho_0$ is the reference specific volume at temperature 
+  $T = T_0$, and $C_v$ is the specific heat at constant volume.
+
+Also,
+\Beq
+  \boxed{
+  \Partial{p}{J^e} = 
+  \cfrac{\rho_0~C_0^2~[1 + (S_{\alpha}-\Gamma_0)~(1-J^e)]}
+        {[1-S_{\alpha}~(1-J^e)]^3} - \Gamma_0~\Partial{e}{J^e}.
+  }
+\Eeq
+We neglect the $\Partial{e}{J^e}$ term in our calculations.
+
+This model is invoked in Uintah using
+\begin{verbatim}
+  <equation_of_state type="mie_gruneisen">
+    <C_0>5386</C_0>
+    <Gamma_0>1.99</Gamma_0>
+    <S_alpha>1.339</S_alpha>
+  </equation_of_state>
+\end{verbatim}
+The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOS.cc|.
+
+\subsubsection{Melting Temperature}
+  \paragraph{Default model}
+  The default model is to use a constant melting temperature.  This model
+  is invoked using
+  \begin{verbatim}  
+      <melting_temp_model type="constant_Tm">
+      </melting_temp_model>
+  \end{verbatim}  
+  
+  \paragraph{SCG melt model}
+  We use a pressure dependent relation to determine the melting 
+  temperature ($T_m$).  The Steinberg-Cochran-Guinan (SCG) melt model 
+  (\cite{Steinberg80}) has been used for our simulations of copper.  
+  This model is based on a modified Lindemann law and has the form
+  \begin{equation} \label{eq:TmSCG}
+    T_m(\rho) = T_{m0} \exp\left[2a\left(1-\frac{1}{\eta}\right)\right]
+              \eta^{2(\Gamma_0-a-1/3)}; \quad
+    \eta = \frac{\rho}{\rho_0}
+  \end{equation}
+  where $T_{m0}$ is the melt temperature at $\eta = 1$, 
+  $a$ is the coefficient of the first order volume correction to 
+  Gr{\"u}neisen's gamma ($\Gamma_0$).  
+
+  This model is invoked with
+  \begin{verbatim}
+    <melting_temp_model type="scg_Tm">
+      <T_m0> 2310.0 </T_m0>
+      <Gamma_0> 3.0 </Gamma_0>
+      <a> 1.67 </a>
+    </melting_temp_model>
+  \end{verbatim}
+
+  \paragraph{BPS melt model}
+  An alternative melting relation that is based on dislocation-mediated
+  phase transitions - the Burakovsky-Preston-Silbar (BPS) model
+  (\cite{Burakovsky00}) can also be used.  This model has been used to 
+  determine the melt temperature for 4340 steel.  The BPS model has the form
+  \begin{align}
+    T_m(p) & = T_m(0)
+      \left[\cfrac{1}{\eta} + 
+            \cfrac{1}{\eta^{4/3}}~\cfrac{\mu_0^{'}}{\mu_0}~p\right]~; 
+    \quad
+    \eta = \left(1 + \cfrac{K_0^{'}}{K_0}~p\right)^{1/K_0^{'}} 
+    \label{eq:TmBPS}\\
+    T_m(0) & = \cfrac{\kappa\lambda\mu_0~v_{WS}}{8\pi\ln(z-1)~k_b}
+               \ln\left(\cfrac{\alpha^2}{4~b^2\rho_c(T_m)}\right)
+  \end{align}
+  where $p$ is the pressure, $\eta = \rho/\rho_0$ is the compression, 
+  $\mu_0$ is the shear modulus at room temperature and zero pressure, 
+  $\mu_0^{'} = \partial\mu/\partial p$ is the derivative of the shear modulus 
+  at zero pressure, $K_0$ is the bulk modulus at room temperature and
+  zero pressure, $K_0^{'} = \partial K/\partial p$ is the derivative of the 
+  bulk modulus at zero pressure, $\kappa$ is a constant, $\lambda = b^3/v_{WS}$
+  where $b$ is the magnitude of the Burgers' vector, $v_{WS}$ is the 
+  Wigner-Seitz volume, $z$ is the coordination number, $\alpha$ is a 
+  constant, $\rho_c(T_m)$ is the critical density of dislocations, and
+  $k_b$ is the Boltzmann constant.
+
+  This model is invoked with
+  \begin{verbatim}
+    <melting_temp_model type="bps_Tm">
+      <B0> 137e9 </B0>
+      <dB_dp0> 5.48 <dB_dp0>
+      <G0> 47.7e9 <G0>
+      <dG_dp0> 1.4 <dG_dp0>
+      <kappa> 1.25 <kappa>
+      <z> 12 <z>
+      <b2rhoTm> 0.64 <b2rhoTm>
+      <alpha> 2.9 <alpha>
+      <lambda> 1.41 <lambda>
+      <a> 3.6147e-9<a>
+      <v_ws_a3_factor> 1/4 <v_ws_a3_factor>
+      <Boltzmann_Constant> <Boltzmann_Constant>
+    </melting_temp_model>
+  \end{verbatim}
+
+  \subsubsection{Shear Modulus} \label{sec:ModelShear}
+  Three models for the shear modulus ($\mu$) have been tested in our 
+  simulations.  The first has been associated with the Mechanical 
+  Threshold Stress (MTS) model and we call it the MTS shear model.
+  The second is the model used by Steinberg-Cochran-Guinan and we call
+  it the SCG shear model while the third is a model developed by 
+  Nadal and Le Poac that we call the NP shear model.
+
+  \paragraph{Default model}
+  The default model gives a constant shear modulus.  The model is 
+  invoked using
+  \begin{verbatim}
+    <shear_modulus_model type="constant_shear">
+    </shear_modulus_model>
+  \end{verbatim}
+
+  \paragraph{MTS Shear Modulus Model}
+  The simplest model is of the form suggested by \cite{Varshni70} 
+  (\cite{Chen96})
+  \begin{equation} \label{eq:MTSShear}
+    \mu(T) = \mu_0 - \frac{D}{exp(T_0/T) - 1}
+  \end{equation}
+  where $\mu_0$ is the shear modulus at 0K, and $D, T_0$ are material
+  constants. 
+
+  The model is invoked using
+  \begin{verbatim}
+    <shear_modulus_model type="mts_shear">
+      <mu_0>28.0e9</mu_0>
+      <D>4.50e9</D>
+      <T_0>294</T_0>
+    </shear_modulus_model>
+  \end{verbatim}
+
+  \paragraph{SCG Shear Modulus Model}
+  The Steinberg-Cochran-Guinan (SCG) shear modulus 
+  model (\cite{Steinberg80,Zocher00}) is pressure dependent and
+  has the form
+  \begin{equation} \label{eq:SCGShear}
+    \mu(p,T) = \mu_0 + \Partial{\mu}{p} \frac{p}{\eta^{1/3}} +
+         \Partial{\mu}{T}(T - 300) ; \quad
+    \eta = \rho/\rho_0
+  \end{equation}
+  where, $\mu_0$ is the shear modulus at the reference state($T$ = 300 K, 
+  $p$ = 0, $\eta$ = 1), $p$ is the pressure, and $T$ is the temperature.
+  When the temperature is above $T_m$, the shear modulus is instantaneously
+  set to zero in this model.
+
+  The model is invoked using
+  \begin{verbatim}
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 81.8e9 </mu_0>
+    <A> 20.6e-12 </A>
+    <B> 0.16e-3 </B>
+  </shear_modulus_model>
+  \end{verbatim}
+
+  \paragraph{NP Shear Modulus Model}
+  A modified version of the SCG model has been developed by 
+  \cite{Nadal03} that attempts to capture the sudden drop in the
+  shear modulus close to the melting temperature in a smooth manner.
+  The Nadal-LePoac (NP) shear modulus model has the form
+  \begin{equation} \label{eq:NPShear}
+    \mu(p,T) = \frac{1}{\mathcal{J}(\That)}
+      \left[
+        \left(\mu_0 + \Partial{\mu}{p} \cfrac{p}{\eta^{1/3}} \right)
+        (1 - \That) + \frac{\rho}{Cm}~k_b~T\right]; \quad
+    C := \cfrac{(6\pi^2)^{2/3}}{3} f^2
+  \end{equation}
+  where
+  \begin{equation}
+    \mathcal{J}(\That) := 1 + \exp\left[-\cfrac{1+1/\zeta}
+        {1+\zeta/(1-\That)}\right] \quad
+       \text{for} \quad \That:=\frac{T}{T_m}\in[0,1+\zeta],
+  \end{equation}
+  $\mu_0$ is the shear modulus at 0 K and ambient pressure, $\zeta$ is
+  a material parameter, $k_b$ is the Boltzmann constant, $m$ is the atomic
+  mass, and $f$ is the Lindemann constant.
+
+  The model is invoked using
+  \begin{verbatim}
+    <shear_modulus_model type="np_shear">
+      <mu_0>26.5e9</mu_0>
+      <zeta>0.04</zeta>
+      <slope_mu_p_over_mu0>65.0e-12</slope_mu_p_over_mu0>
+      <C> 0.047 </C>
+      <m> 26.98 </m>
+    </shear_modulus_model>
+  \end{verbatim}
+  
+  \paragraph{PTW Shear model}
+  The PTW shear model is a simplified version of the SCG shear model.
+  The inputs can be found in \verb|.../MPM/ConstitutiveModel/PlasticityModel/PTWShear.h|.
+
+  \subsubsection{Flow Stress}
+  We have explored five temperature and strain rate dependent 
+  models that can be used to compute the flow stress:
+  \begin{enumerate}
+    \item the Johnson-Cook (JC) model 
+    \item the Steinberg-Cochran-Guinan-Lund (SCG) model. 
+    \item the Zerilli-Armstrong (ZA) model.
+    \item the Mechanical Threshold Stress (MTS) model. 
+    \item the Preston-Tonks-Wallace (PTW) model.
+  \end{enumerate}
+
+  \paragraph{JC Flow Stress Model}
+  The Johnson-Cook (JC) model (\cite{Johnson83}) is purely empirical and gives 
+  the following relation for the flow stress ($\sigma_y$) 
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+    \left[A + B (\Ep)^n\right]\left[1 + C \ln(\Epdot{}^{*})\right]
+    \left[1 - (T^*)^m\right]
+  \end{equation}
+  where $\Ep$ is the equivalent plastic strain, $\Epdot{}$ is the 
+  plastic strain rate, A, B, C, n, m are material constants, 
+  \begin{equation}
+    \Epdot{}^{*} = \cfrac{\Epdot{}}{\Epdot{0}}; \quad
+    T^* = \cfrac{(T-T_0)}{(T_m-T_0)}~,
+  \end{equation}
+  $\Epdot{0}$ is a user defined plastic strain rate, 
+  $T_0$ is a reference temperature, and $T_m$ is the melt temperature.  
+  For conditions where $T^* < 0$, we assume that $m = 1$.
+
+  The inputs for this model are
+  \begin{verbatim}
+  <plasticity_model type="johnson_cook">
+    <A>792.0e6</A>
+    <B>510.0e6</B>
+    <C>0.014</C>
+    <n>0.26</n>
+    <m>1.03</m>
+    <T_r>298.0</T_r>
+    <T_m>1793.0</T_m>
+    <epdot_0>1.0</epdot_0>
+  </plasticity_model>
+  \end{verbatim}
+
+  \paragraph{SCG Flow Stress Model}
+  The Steinberg-Cochran-Guinan-Lund (SCG) model is a semi-empirical model
+  that was developed by \cite{Steinberg80} for high strain rate 
+  situations and extended to low strain rates and bcc materials by
+  \cite{Steinberg89}.  The flow stress in this model is given by
+  \begin{equation}\label{eq:SCGL}
+    \sigma_y(\Ep,\Epdot{},T) = 
+     \left[\sigma_a f(\Ep) + \sigma_t (\Epdot{}, T)\right]
+     \frac{\mu(p,T)}{\mu_0} 
+  \end{equation}
+  where $\sigma_a$ is the athermal component of the flow stress,
+  $f(\Ep)$ is a function that represents strain hardening,
+  $\sigma_t$ is the thermally activated component of the flow stress,
+  $\mu(p,T)$ is the shear modulus, and $\mu_0$ is the shear modulus 
+  at standard temperature and pressure.  The strain hardening function
+  has the form
+  \begin{equation}
+    f(\Ep) = [1 + \beta(\Ep + \Epi)]^n ; \quad
+    \sigma_a f(\Ep) \le \sigma_{\text{max}}
+  \end{equation}
+  where $\beta, n$ are work hardening parameters, and $\Epi$ is the 
+  initial equivalent plastic strain.  The thermal component $\sigma_t$
+  is computed using a bisection algorithm from the following equation (based 
+  on the work of \cite{Hoge77})
+  \begin{equation}
+    \Epdot{} = \left[\frac{1}{C_1}\exp\left[\frac{2U_k}{k_b~T}
+      \left(1 - \frac{\sigma_t}{\sigma_p}\right)^2\right] + 
+      \frac{C_2}{\sigma_t}\right]^{-1}; \quad
+    \sigma_t \le \sigma_p
+  \end{equation}
+  where $2 U_k$ is the energy to form a kink-pair in a dislocation segment
+  of length $L_d$, $k_b$ is the Boltzmann constant, $\sigma_p$ is the Peierls
+  stress. The constants $C_1, C_2$ are given by the relations
+  \begin{equation}
+    C_1 := \frac{\rho_d L_d a b^2 \nu}{2 w^2}; \quad
+    C_2 := \frac{D}{\rho_d b^2}
+  \end{equation}
+  where $\rho_d$ is the dislocation density, $L_d$ is the length of a 
+  dislocation segment, $a$ is the distance between Peierls valleys, 
+  $b$ is the magnitude of the Burgers' vector, $\nu$ is the Debye frequency,
+  $w$ is the width of a kink loop, and $D$ is the drag coefficient.
+
+  The inputs for this model are of the form
+  \begin{verbatim}
+    <plasticity_model type="steinberg_cochran_guinan">
+      <mu_0> 81.8e9 </mu_0>
+      <sigma_0> 1.15e9 </sigma_0>
+      <Y_max> 0.25e9 </Y_max>
+      <beta> 2.0 </beta>
+      <n> 0.50 </n>
+      <A> 20.6e-12 </A>
+      <B> 0.16e-3 </B>
+      <T_m0> 2310.0 </T_m0>
+      <Gamma_0> 3.0 </Gamma_0>
+      <a> 1.67 </a>
+      <epsilon_p0> 0.0 </epsilon_p0>
+    </plasticity_model>
+  \end{verbatim}
+
+  \paragraph{ZA Flow Stress Model}
+  The Zerilli-Armstrong (ZA) model (\cite{Zerilli87,Zerilli93,Zerilli04}) 
+  is based on simplified dislocation mechanics.  The general form of the
+  equation for the flow stress is
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+      \sigma_a + B\exp(-\beta(\Epdot{}) T) + 
+                           B_0\sqrt{\Ep}\exp(-\alpha(\Epdot{}) T)
+  \end{equation}
+  where $\sigma_a$ is the athermal component of the flow stress given by
+  \begin{equation}
+    \sigma_a := \sigma_g + \frac{k_h}{\sqrt{l}} + K\Ep^n,
+  \end{equation}
+  $\sigma_g$ is the contribution due to solutes and initial dislocation
+  density, $k_h$ is the microstructural stress intensity, $l$ is the 
+  average grain diameter, $K$ is zero for fcc materials, 
+  $B, B_0$ are material constants.  The functional forms of the exponents 
+  $\alpha$ and $\beta$ are 
+  \begin{equation}
+    \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
+    \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
+  \end{equation}
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters that
+  depend on the type of material (fcc, bcc, hcp, alloys).  The Zerilli-Armstrong
+  model has been modified by \cite{Abed05} for better performance at high 
+  temperatures.  However, we have not used the modified equations in our
+  computations.
+
+  The inputs for this model are of the form
+  \begin{verbatim}
+    <bcc_or_fcc> fcc </bcc_or_fcc>
+    <c2> </c2>
+    <c3> </c3>
+    <c4> </c4>
+    <n> </n>
+  \end{verbatim}
+
+  \paragraph{MTS Flow Stress Model}
+  The Mechanical Threshold Stress (MTS) model 
+  (\cite{Follans88,Goto00a,Kocks01})  
+  gives the following form for the flow stress
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+      \sigma_a + (S_i \sigma_i + S_e \sigma_e)\frac{\mu(p,T)}{\mu_0} 
+  \end{equation}
+  where $\sigma_a$ is the athermal component of mechanical threshold stress,
+  $\mu_0$ is the shear modulus at 0 K and ambient pressure, 
+  $\sigma_i$ is the component of the flow stress due to intrinsic barriers 
+  to thermally activated dislocation motion and dislocation-dislocation 
+  interactions, $\sigma_e$ is the component of the flow stress due to 
+  microstructural evolution with increasing deformation (strain hardening), 
+  ($S_i, S_e$) are temperature and strain rate dependent scaling factors.  The
+  scaling factors take the Arrhenius form
+  \begin{align}
+    S_i & = \left[1 - \left(\frac{k_b~T}{g_{0i}b^3\mu(p,T)}
+    \ln\frac{\Epdot{0i}}{\Epdot{}}\right)^{1/q_i}
+    \right]^{1/p_i} \\
+    S_e & = \left[1 - \left(\frac{k_b~T}{g_{0e}b^3\mu(p,T)}
+    \ln\frac{\Epdot{0e}}{\Epdot{}}\right)^{1/q_e}
+    \right]^{1/p_e}
+  \end{align}
+  where $k_b$ is the Boltzmann constant, $b$ is the magnitude of the Burgers' 
+  vector, ($g_{0i}, g_{0e}$) are normalized activation energies, 
+  ($\Epdot{0i}, \Epdot{0e}$) are constant reference strain rates, and
+  ($q_i, p_i, q_e, p_e$) are constants.  The strain hardening component
+  of the mechanical threshold stress ($\sigma_e$) is given by a
+  modified Voce law
+  \begin{equation}\label{eq:MTSsige}
+    \frac{d\sigma_e}{d\Ep} = \theta(\sigma_e)
+  \end{equation}
+  where
+  \begin{align}
+    \theta(\sigma_e) & = 
+       \theta_0 [ 1 - F(\sigma_e)] + \theta_{IV} F(\sigma_e) \\
+    \theta_0 & = a_0 + a_1 \ln \Epdot{} + a_2 \sqrt{\Epdot{}} - a_3 T \\
+    F(\sigma_e) & = 
+      \cfrac{\tanh\left(\alpha \cfrac{\sigma_e}{\sigma_{es}}\right)}
+      {\tanh(\alpha)}\\
+    \ln(\cfrac{\sigma_{es}}{\sigma_{0es}}) & =
+    \left(\frac{kT}{g_{0es} b^3 \mu(p,T)}\right)
+    \ln\left(\cfrac{\Epdot{}}{\Epdot{0es}}\right)
+  \end{align}
+  and $\theta_0$ is the hardening due to dislocation accumulation, 
+  $\theta_{IV}$ is the contribution due to stage-IV hardening,
+  ($a_0, a_1, a_2, a_3, \alpha$) are constants,
+  $\sigma_{es}$ is the stress at zero strain hardening rate, 
+  $\sigma_{0es}$ is the saturation threshold stress for deformation at 0 K,
+  $g_{0es}$ is a constant, and $\Epdot{0es}$ is the maximum strain rate.  Note
+  that the maximum strain rate is usually limited to about $10^7$/s.
+
+  The inputs for this model are of the form
+  \begin{verbatim}
+    <plasticity_model type="mts_model">
+      <sigma_a>363.7e6</sigma_a>
+      <mu_0>28.0e9</mu_0>
+      <D>4.50e9</D>
+      <T_0>294</T_0>
+      <koverbcubed>0.823e6</koverbcubed>
+      <g_0i>0.0</g_0i>
+      <g_0e>0.71</g_0e>
+      <edot_0i>0.0</edot_0i>
+      <edot_0e>2.79e9</edot_0e>
+      <p_i>0.0</p_i>
+      <q_i>0.0</q_i>
+      <p_e>1.0</p_e>
+      <q_e>2.0</q_e>
+      <sigma_i>0.0</sigma_i>
+      <a_0>211.8e6</a_0>
+      <a_1>0.0</a_1>
+      <a_2>0.0</a_2>
+      <a_3>0.0</a_3>
+      <theta_IV>0.0</theta_IV>
+      <alpha>2</alpha>
+      <edot_es0>3.42e8</edot_es0>
+      <g_0es>0.15</g_0es>
+      <sigma_es0>1679.3e6</sigma_es0>
+    </plasticity_model>
+  \end{verbatim}
+
+  \paragraph{PTW Flow Stress Model}
+  The Preston-Tonks-Wallace (PTW) model (\cite{Preston03}) attempts to 
+  provide a model for the flow stress for extreme strain rates 
+  (up to $10^{11}$/s) and temperatures up to melt.  The flow stress is
+  given by
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+       \begin{cases}
+         2\left[\tau_s + \alpha\ln\left[1 - \varphi
+          \exp\left(-\beta-\cfrac{\theta\Ep}{\alpha\varphi}\right)\right]\right]
+         \mu(p,T) & \text{thermal regime} \\
+         2\tau_s\mu(p,T) & \text{shock regime}
+       \end{cases}
+  \end{equation}
+  with 
+  \begin{equation}
+    \alpha := \frac{s_0 - \tau_y}{d}; \quad
+    \beta := \frac{\tau_s - \tau_y}{\alpha}; \quad
+    \varphi := \exp(\beta) - 1
+  \end{equation}
+  where $\tau_s$ is a normalized work-hardening saturation stress,
+  $s_0$ is the value of $\tau_s$ at 0K,
+  $\tau_y$ is a normalized yield stress, $\theta$ is the hardening constant
+  in the Voce hardening law, and $d$ is a dimensionless material
+  parameter that modifies the Voce hardening law.  The saturation stress
+  and the yield stress are given by
+  \begin{align}
+    \tau_s & = \max\left\{s_0 - (s_0 - s_{\infty})
+       \erf\left[\kappa
+         \That\ln\left(\cfrac{\gamma\Xidot}{\Epdot{}}\right)\right],
+       s_0\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{s_1}\right\} \\
+    \tau_y & = \max\left\{y_0 - (y_0 - y_{\infty})
+       \erf\left[\kappa
+         \That\ln\left(\cfrac{\gamma\Xidot}{\Epdot{}}\right)\right],
+       \min\left\{
+         y_1\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{y_2}, 
+         s_0\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{s_1}\right\}\right\} 
+  \end{align}
+  where $s_{\infty}$ is the value of $\tau_s$ close to the melt temperature,
+  ($y_0, y_{\infty}$) are the values of $\tau_y$ at 0K and close to melt,
+  respectively, $(\kappa, \gamma)$ are material constants, $\That = T/T_m$,
+  ($s_1, y_1, y_2$) are material parameters for the high strain rate
+  regime, and
+  \begin{equation}
+    \Xidot = \frac{1}{2}\left(\cfrac{4\pi\rho}{3M}\right)^{1/3}
+             \left(\cfrac{\mu(p,T)}{\rho}\right)^{1/2}
+  \end{equation}
+  where $\rho$ is the density, and $M$ is the atomic mass.
+
+  The inputs for this model are of the form
+  \begin{verbatim}
+    <plasticity_model type="preston_tonks_wallace">
+      <theta> 0.025 </theta>
+      <p> 2.0 </p>
+      <s0> 0.0085 </s0>
+      <sinf> 0.00055 </sinf>
+      <kappa> 0.11 </kappa>
+      <gamma> 0.00001 </gamma>
+      <y0> 0.0001 </y0>
+      <yinf> 0.0001 </yinf>
+      <y1> 0.094 </y1>
+      <y2> 0.575 </y2>
+      <beta> 0.25 </beta>
+      <M> 63.54 </M>
+      <G0> 518e8 </G0>
+      <alpha> 0.20 </alpha>
+      <alphap> 0.20 </alphap>
+    </plasticity_model>
+  \end{verbatim}
+
+  \subsubsection{Adiabatic Heating and Specific Heat}
+  A part of the plastic work done is converted into heat and used to update the 
+  temperature of a particle.  The increase in temperature ($\Delta T$) due to 
+  an increment in plastic strain ($\Delta\epsilon_p$) is given by the equation
+  \begin{equation}
+    \Delta T = \cfrac{\chi\sigma_y}{\rho C_p} \Delta \epsilon_p
+  \end{equation}
+  where $\chi$ is the Taylor-Quinney coefficient, and $C_p$ is the specific
+  heat.  The value of the Taylor-Quinney coefficient is taken to be 0.9
+  in all our simulations (see \cite{Ravi01} for more details on the 
+  variation of $\chi$ with strain and strain rate).
+
+  The Taylor-Quinney coefficient is taken as input in the ElasticPlastic model
+  using the tags
+  \begin{verbatim}
+    <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
+  \end{verbatim}
+
+  \paragraph{Default specific heat model}
+  The default model returns a constant specific heat and is invoked using
+  \begin{verbatim}
+    <specific_heat_model type="constant_Cp">
+    </specific_heat_model>
+  \end{verbatim}
+
+  \paragraph{Specific heat model for copper}
+  The specific heat model for copper is of the form
+  \Beq
+    Cp = 
+    \begin{cases}
+      A_0~T^3 - B_0~T^2 + C_0~T - D_0 & \text{if} ~~T < T_0 \\
+      A_1~T + B_1 & \text{if} ~~T \ge T_0 ~.
+    \end{cases}
+  \Eeq
+  The model is invoked using
+  \begin{verbatim}
+  <specific_heat_model type = "copper_Cp"> </specific_heat_model>
+  \end{verbatim}
+
+  \paragraph{Specific heat model for steel}
+  A relation for the dependence of $C_p$ upon temperature is
+  used for the steel (\cite{Lederman74}).
+  \begin{align}
+    C_p & = \begin{cases}
+            A_1 + B_1~t + C_1~|t|^{-\alpha} & \text{if}~~ T < T_c \\
+            A_2 + B_2~t + C_2~t^{-\alpha^{'}} & \text{if}~~ T > T_c 
+          \end{cases} \label{eq:CpSteel}\\
+    t & = \cfrac{T}{T_c} - 1 
+  \end{align}
+  where $T_c$ is the critical temperature at which the phase transformation
+  from the $\alpha$ to the $\gamma$ phase takes place, and $A_1, A_2, B_1, B_2,
+  \alpha, \alpha^{'}$ are constants.
+
+  The model is invoked using
+  \begin{verbatim}
+  <specific_heat_model type = "steel_Cp"> </specific_heat_model>
+  \end{verbatim}
+
+  The heat generated at a material point is conducted away at the end of a 
+  time step using the transient heat equation.  The effect of conduction on
+  material point temperature is negligible (but non-zero) for the high 
+  strain-rate problems simulated using Uintah.
+
+\subsection{Adding new models}
+  In the parallel implementation of the stress update algorithm, sockets have 
+  been added to allow for the incorporation of a variety of plasticity, damage, 
+  yield, and bifurcation models without requiring any change in the stress 
+  update code.  The algorithm is shown in Algorithm~\ref{algo1}.  The
+  equation of state, plasticity model, yield condition, damage model, and
+  the stability criterion are all polymorphic objects created using a 
+  factory idiom in C++~(\cite{Coplien92}).
+  \begin{table}[p]
+    \caption{Stress Update Algorithm} \label{algo1}
+    \vspace{12pt}
+    \begin{tabbing}
+    \quad \=\quad \=\quad \=\quad \=\quad \kill
+    {\bf Persistent}:Initial moduli, temperature, porosity, \\
+      \>\>        scalar damage, equation of state, plasticity model, \\
+      \>\>        yield condition, stability criterion, damage model\\
+    {\bf Temporary}:Particle state at time $t$ \\
+    {\bf Output:} Particle state at time $t+\Delta t$\\ \\
+
+    {\bf For} {\it all the patches in the domain}\\
+      \> Read the particle data and initialize updated data storage\\
+      \> {\bf For} {\it all the particles in the patch}\\ 
+      \>\>   Compute the velocity gradient and the rate of deformation tensor\\ 
+      \>\>   Compute the deformation gradient and the rotation tensor\\
+      \>\>   Rotate the Cauchy stress and the rate of deformation tensor \\
+      \>\>\> to the material configuration\\
+      \>\>   Compute the current shear modulus and melting temperature\\
+      \>\>   Compute the pressure using the equation of state,  \\
+      \>\>\>  update the hydrostatic stress, and  \\
+      \>\>\>  compute the trial deviatoric stress\\
+      \>\>   Compute the flow stress using the plasticity model\\
+      \>\>   Evaluate the yield function\\
+      \>\>   {\bf If} {\it particle is elastic} \\
+      \>\>\>     Update the elastic deviatoric stress from the trial stress\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf Else} \\
+      \>\>\>     Compute the elastic-plastic deviatoric stress\\
+      \>\>\>     Compute updated porosity, scalar damage, and \\
+      \>\>\>\>       temperature increase due to plastic work\\
+      \>\>\>     Compute elastic-plastic tangent modulus and 
+                     evaluate stability condition\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf End If} \\
+      \>\>  {\bf If} 
+             {\it Temperature $>$ Melt Temperature} or 
+             {\it Porosity $>$ Critical Porosity} or
+             {\it Unstable}\\
+      \>\>\>       Tag particle as failed\\
+      \>\>  {\bf End If} \\
+      \>\> Convert failed particles into a material with a different 
+           velocity field \\
+      \> {\bf End For} \\
+    {\bf End For}
+    \end{tabbing}
+  \end{table}
+      
+Addition of a new model requires the following steps (the example below is only
+for the flow stress model but the same idea applies to other models) :
+\begin{enumerate}
+    \item Creation of a new class that encapsulates the plasticity 
+    model.  The template for this class can be copied from the
+    existing plasticity models.  The data that is unique to 
+    the new model are specified in the form of 
+    \begin{itemize}
+      \item A structure containing the constants for the plasticity
+            model.
+      \item Particle variables that specify the variables that 
+            evolve in the plasticity model.
+    \end{itemize}
+    \item The implementation of the plasticity model involves the
+    following steps.
+    \begin{itemize}
+      \item Reading the input file for the model constants in the
+            constructor.
+      \item Adding the variables that evolve in the plasticity model
+            appropriately to the task graph.
+      \item Adding the appropriate flow stress calculation method.
+    \end{itemize}
+    \item The \verb+PlasticityModelFactory+ is then modified so that
+          it recognizes the added plasticity model.
+\end{enumerate}
+
+\subsection{Damage Models and Failure}
+Only the Johnson-Cook damage evolution rule has been added to the 
+DamageModelFactory so far.  The damage model framework is designed 
+to be similar to the plasticity model framework.  New models can
+be added using the approach described in the previous section.
+
+  A particle is tagged as ``failed'' when its temperature is greater than the
+  melting point of the material at the applied pressure.  An additional
+  condition for failure is when the porosity of a particle increases beyond a
+  critical limit and the strain exceeds the fracture strain of the material.  
+  Another condition for failure is when a material bifurcation 
+  condition such as the Drucker stability postulate is satisfied.  Upon failure,
+  a particle is either removed from the computation by setting the stress to
+  zero or is converted into a material with a different velocity field 
+  which interacts with the remaining particles via contact.  Either approach
+  leads to the simulation of a newly created surface.  More details of the
+  approach can be found in ~\cite{Banerjee04a,Banerjee04c,Banerjee05}.
+
+  \subsubsection{Yield conditions}
+  When failure is to be simulated we can use the Gurson-Tvergaard-Needleman
+  yield condition instead of the von Mises condition.
+
+  \paragraph{The von Mises yield condition}
+  The von Mises yield condition is the default and is invoked using the tags
+  \begin{verbatim}
+    <yield_condition type="vonMises">
+    </yield_condition>
+  \end{verbatim}
+
+  \paragraph{The Gurson-Tvergaard-Needleman (GTN) yield condition}
+  The Gurson-Tvergaard-Needleman (GTN) yield 
+  condition~\cite{Gurson77,Tver84} depends on porosity.  An associated 
+  flow rule is used to determine the plastic rate parameter in either case.
+  The GTN yield condition can be written as
+  \begin{equation}
+    \Phi = \left(\frac{\sigma_{eq}}{\sigma_f}\right)^2 +
+    2 q_1 f_* \cosh \left(q_2 \frac{Tr(\sigma)}{2\sigma_f}\right) -
+    (1+q_3 f_*^2) = 0
+  \end{equation}
+  where $q_1,q_2,q_3$ are material constants and $f_*$ is the porosity 
+  (damage) function given by
+  \begin{equation}
+    f* = 
+    \begin{cases}
+      f & \text{for}~~ f \le f_c,\\ 
+      f_c + k (f - f_c) & \text{for}~~ f > f_c 
+    \end{cases}
+  \end{equation}
+  where $k$ is a constant and $f$ is the porosity (void volume fraction).  The 
+  flow stress in the matrix material is computed using either of the two 
+  plasticity models discussed earlier.  Note that the flow stress in the matrix 
+  material also remains on the undamaged matrix yield surface and uses an 
+  associated flow rule.
+
+  This yield condition is invoked using
+  \begin{verbatim}
+    <yield_condition type="gurson">
+      <q1> 1.5 </q1>
+      <q2> 1.0 </q2>
+      <q3> 2.25 </q3>
+      <k> 4.0 </k>
+      <f_c> 0.05 </f_c>
+    </yield_condition>
+  \end{verbatim}
+
+  \subsubsection{Porosity model}
+  The evolution of porosity is calculated as the sum of the rate of growth 
+  and the rate of nucleation~\cite{Ramaswamy98a}.  The rate of growth of
+  porosity and the void nucleation rate are given by the following equations
+  ~\cite{Chu80}
+  \begin{align}
+    \dot{f} &= \dot{f}_{\text{nucl}} + \dot{f}_{\text{grow}} \\
+    \dot{f}_{\text{grow}} & = (1-f) \text{Tr}(\BD_p) \\
+    \dot{f}_{\text{nucl}} & = \cfrac{f_n}{(s_n \sqrt{2\pi})}
+            \exp\left[-\Half \cfrac{(\epsilon_p - \epsilon_n)^2}{s_n^2}\right]
+            \dot{\epsilon}_p
+  \end{align}
+  where $\BD_p$ is the rate of plastic deformation tensor, $f_n$ is the volume 
+  fraction of void nucleating particles , $\epsilon_n$ is the mean of the 
+  distribution of nucleation strains, and $s_n$ is the standard 
+  deviation of the distribution.
+
+  The inputs tags for porosity are of the form
+  \begin{verbatim}
+    <evolve_porosity> true </evolve_porosity>
+    <initial_mean_porosity>         0.005 </initial_mean_porosity>
+    <initial_std_porosity>          0.001 </initial_std_porosity>
+    <critical_porosity>             0.3   </critical_porosity>
+    <frac_nucleation>               0.1   </frac_nucleation>
+    <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+    <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+    <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+  \end{verbatim}
+
+  \subsubsection{Damage model}
+  After the stress state has been determined on the basis of the yield condition
+  and the associated flow rule, a scalar damage state in each material point can
+  be calculated using the Johnson-Cook model ~\cite{Johnson85}.  
+  The Johnson-Cook model has an explicit dependence on temperature, plastic
+  strain, ans strain rate.
+
+  The damage evolution rule for the Johnson-Cook damage model can be written as
+  \begin{equation}
+    \dot{D} = \cfrac{\dot{\epsilon_p}}{\epsilon_p^f} ~;~~
+    \epsilon_p^f = 
+      \left[D_1 + D_2 \exp \left(\cfrac{D_3}{3} \sigma^*\right)\right]
+      \left[1+ D_4 \ln(\dot{\epsilon_p}^*)\right]
+      \left[1+D_5 T^*\right]~;~~
+    \sigma^*= \cfrac{\text{Tr}(\Bsig)}{\sigma_{eq}}~;~~
+  \end{equation}
+  where $D$ is the damage variable which has a value of 0 for virgin material
+  and a value of 1 at fracture, $\epsilon_p^f$ is the fracture strain, 
+  $D_1, D_2, D_3, D_4, D_5$ are constants, $\Bsig$ is the Cauchy stress, and
+  $T^*$ is the scaled temperature as in the Johnson-Cook plasticity model.
+
+  The input tags for the damage model are :
+  \begin{verbatim}
+    <damage_model type="johnson_cook">
+      <D1>0.05</D1>
+      <D2>3.44</D2>
+      <D3>-2.12</D3>
+      <D4>0.002</D4>
+      <D5>0.61</D5>
+    </damage_model>
+  \end{verbatim}
+
+  An initial damage distribution can be created using the following tags
+  \begin{verbatim}
+    <evolve_damage>                 true  </evolve_damage>
+    <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+    <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
+    <critical_scalar_damage>        1.0   </critical_scalar_damage>
+    <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+  \end{verbatim}
+
+  \subsection{Erosion algorithm}
+  Under normal conditions, the heat generated at a material point is conducted 
+  away at the end of a time step using the heat equation.  If special adiabatic 
+  conditions apply (such as in impact problems), the heat is accumulated at a 
+  material point and is not conducted to the surrounding particles.  This 
+  localized heating can be used to determine whether a material point has
+  melted.
+
+  The determination of whether a particle has failed can be made on the 
+  basis of either or all of the following conditions:
+  \begin{itemize}
+    \item The particle temperature exceeds the melting temperature.
+    \item The TEPLA-F fracture condition~\cite{Johnson88} is satisfied.
+       This condition can be written as
+       \begin{equation}
+         (f/f_c)^2 + (\epsilon_p/\epsilon_p^f)^2 = 1
+       \end{equation}
+       where $f$ is the current porosity, $f_c$ is the maximum 
+       allowable porosity, $\epsilon_p$ is the current plastic strain, and
+       $\epsilon_p^f$ is the plastic strain at fracture.
+    \item An alternative to ad-hoc damage criteria is to use the concept of 
+       bifurcation to determine whether a particle has failed or not.  Two
+       stability criteria have been explored in this paper - the Drucker
+       stability postulate~\cite{Drucker59} and the loss of hyperbolicity
+       criterion (using the determinant of the acoustic tensor)
+       \cite{Rudnicki75,Perzyna98}.  
+  \end{itemize}
+
+  The simplest criterion that can be used is the Drucker stability postulate 
+  \cite{Drucker59} which states that time rate of change of the rate of 
+  work done by a material cannot be negative.  Therefore, the material is 
+  assumed to become unstable (and a particle fails) when
+  \begin{equation}
+    \dot\Bsig:\BD^p \le 0
+  \end{equation}
+
+  Another stability criterion that is less restrictive is the acoustic
+  tensor criterion which states that the material loses stability if the 
+  determinant of the acoustic tensor changes sign~\cite{Rudnicki75,Perzyna98}.  
+  Determination of the acoustic tensor requires a search for a normal vector 
+  around the material point and is therefore computationally expensive.  A 
+  simplification of this criterion is a check which assumes that the direction 
+  of instability lies in the plane of the maximum and minimum principal 
+  stress~\cite{Becker02}.  In this approach, we assume that the strain is 
+  localized in a band with normal $\Bn$, and the magnitude of the velocity 
+  difference across the band is $\Bg$.  Then the bifurcation condition 
+  leads to the relation 
+  \begin{equation} 
+    R_{ij} g_{j} = 0 ~;~~~
+    R_{ij} = M_{ikjl} n_k n_l + M_{ilkj} n_k n_l - \sigma_{ik} n_j n_k
+  \end{equation} 
+  where $M_{ijkl}$ are the components of the co-rotational tangent
+  modulus tensor and $\sigma_{ij}$ are the components of the co-rotational 
+  stress tensor.  If $\det(R_{ij}) \le 0 $, then $g_j$ can be arbitrary and 
+  there is a possibility of strain localization.  If this condition for 
+  loss of hyperbolicity is met,  then a particle deforms in an unstable 
+  manner and failure can be assumed to have occurred at that particle.  
+  We use a combination of these criteria to simulate failure.
+
+  Since the material in the container may unload locally after fracture, the 
+  hypoelastic-plastic stress update may not work accurately under certain 
+  circumstances.  An improvement would be to use a hyperelastic-plastic stress 
+  update algorithm.  Also, the plasticity models are temperature dependent.
+  Hence there is the issue of severe mesh dependence due to change of the
+  governing equations from hyperbolic to elliptic in the softening regime
+  ~\cite{Hill75,Bazant85,Tver90}.  Viscoplastic stress update models or 
+  nonlocal/gradient plasticity models~\cite{Ramaswamy98,Hao00} can be used 
+  to eliminate some of these effects and are currently under investigation. 
+
+  The tags used to control the erosion algorithm are in two places.  
+  In the \verb|<MPM> </MPM>| section the following flags can be set
+  \begin{verbatim}
+    <erosion algorithm = "ZeroStress"/>
+    <create_new_particles>           false      </create_new_particles>
+    <manual_new_material>            false      </manual_new_material>
+  \end{verbatim}
+  If the erosion algorithm is \verb|"none"| then no particle failure is done.
+
+  In the \verb|<constitutive_model type="elastic_plastic">| section, the 
+  following flags can be set
+  \begin{verbatim}
+    <evolve_porosity>               true  </evolve_porosity>
+    <evolve_damage>                 true  </evolve_damage>
+    <do_melting>                    true  </do_melting>
+    <useModifiedEOS>                true  </useModifiedEOS>
+    <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
+    <check_max_stress_failure>      false </check_max_stress_failure>
+    <critical_stress>              12.0e9 </critical_stress>
+  \end{verbatim}
+
+\subsection{Implementation}
+The elastic response is assumed to be isotropic.  The material
+constants that are taken as input for the elastic response are the
+bulk and shear modulus.  The flow rule is determined from the input
+and the appropriate plasticity model is created using the 
+\verb+PlasticityModelFactory+ class.  The damage evolution rule
+is determined from the input and a damage model is created using
+the \verb+DamageModelFactory+ class.  The equation of state 
+that is used to determine the pressure is also determined from the
+input.  The equation of state model is created using the 
+\verb+MPMEquationOfStateFactory+ class.
+
+In addition, a damage evolution variable ($D$) is stored at each time 
+step (this need not be the case and will be transfered to the 
+damage models in the future).  The left stretch and rotation are 
+updated incrementally at each
+time step (instead of performing a polar decomposition) and the 
+rotation tensor is used to rotate the Cauchy stress and rate of deformation
+to the material coordinates at each time step (instead of using a 
+objective stress rate formulation).  
+
+Any evolution variables for the plasticity model, damage model or the
+equation of state are specified in the class that encapsulates the 
+particular model.  
+
+The flow stress is calculated from the plasticity model using a 
+function call of the form
+\begin{verbatim}
+    double flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
+                                                        pTemperature[idx],
+                                                        delT, d_tol, matl, idx);
+\end{verbatim}
+A number of plasticity models can be evaluated using the inputs in the
+\verb+computeFlowStress+ call.  The variable \verb+d_plasticity+ is
+polymorphic and can represent any of the plasticity models that can be
+created by the plasticity model factory.  The plastic evolution variables
+are updated using a polymorphic function along the lines of
+\verb+computeFlowStress+.
+
+The equation of state is used to calculate the hydrostatic stress using
+a function call of the form
+\begin{verbatim}
+    Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, 
+                                              tensorF_new, tensorD, 
+                                              tensorP, pTemperature[idx], 
+                                              rho_cur, delT);
+\end{verbatim}
+
+Similarly, the damage model is called using a function of the type
+\begin{verbatim}
+    double damage = d_damage->computeScalarDamage(tensorEta, tensorS, 
+                                                  pTemperature[idx],
+                                                  delT, matl, d_tol, 
+                                                  pDamage[idx]);
+\end{verbatim}
+
+Therefore, the plasticity, damage and equation of state models are 
+easily be inserted into any other type of stress update algorithm 
+without any change being needed in them as can be seen in the 
+hyperelastic-plastic stress update algorithm discussed below.
+
+  \section{Example Input Files}
+  \subsection{Hypoelastic-plastic model}
+  An example of the portion of an input file that specifies a copper body
+  with a hypoelastic stress update, Johnson-Cook plasticity model,
+  Johnson-Cook Damage Model and Mie-Gruneisen Equation of State is shown 
+  below.
+  \begin{verbatim}
+  <material>
+
+    <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
+    <constitutive_model type="hypoelastic_plastic">
+      <tolerance>5.0e-10</tolerance>
+      <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/MieGruneisenEOSAnnCopper.xml"/>
+    </constitutive_model>
+
+    <burn type = "null" />
+    <velocity_field>1</velocity_field>
+
+    <geom_object>
+      <cylinder label = "Cylinder">
+        <bottom>[0.0,0.0,0.0]</bottom>
+        <top>[0.0,2.54e-2,0.0]</top>
+        <radius>0.762e-2</radius>
+      </cylinder>
+      <res>[3,3,3]</res>
+      <velocity>[0.0,-208.0,0.0]</velocity>
+      <temperature>294</temperature>
+    </geom_object>
+
+  </material>
+  \end{verbatim}
+
+  The general material constants for copper are in the file 
+  \verb+MaterialConstAnnCopper.xml+.  The contents are shown below
+  \begin{verbatim}
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <density>8930.0</density>
+    <toughness>10.e6</toughness>
+    <thermal_conductivity>1.0</thermal_conductivity>
+    <specific_heat>383</specific_heat>
+    <room_temp>294.0</room_temp>
+    <melt_temp>1356.0</melt_temp>
+  </Uintah_Include>
+  \end{verbatim}
+
+  The elastic properties are in the file \verb+IsotropicElasticAnnCopper.xml+.
+  The contents of this file are shown below.
+  \begin{verbatim}
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <shear_modulus>45.45e9</shear_modulus>
+    <bulk_modulus>136.35e9</bulk_modulus>
+  </Uintah_Include>
+  \end{verbatim}
+  
+  The constants for the Johnson-Cook plasticity model are in the file
+  \verb+JohnsonCookPlasticAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{verbatim}
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <plasticity_model type="johnson_cook">
+      <A>89.6e6</A>
+      <B>292.0e6</B>
+      <C>0.025</C>
+      <n>0.31</n>
+      <m>1.09</m>
+    </plasticity_model>
+  </Uintah_Include>
+  \end{verbatim}
+
+  The constants for the Johnson-Cook damage model are in the file
+  \verb+JohnsonCookDamageAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{verbatim}
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <damage_model type="johnson_cook">
+      <D1>0.54</D1>
+      <D2>4.89</D2>
+      <D3>-3.03</D3>
+      <D4>0.014</D4>
+      <D5>1.12</D5>
+    </damage_model>
+  </Uintah_Include>
+  \end{verbatim}
+
+  The constants for the Mie-Gruneisen model (as implemented in the 
+  Uintah Computational Framework) are in the file
+  \verb+MieGruneisenEOSAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{verbatim}
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <equation_of_state type="mie_gruneisen">
+      <C_0>3940</C_0>
+      <Gamma_0>2.02</Gamma_0>
+      <S_alpha>1.489</S_alpha>
+    </equation_of_state>
+  </Uintah_Include>
+  \end{verbatim}
+
+  As can be seen from the input file, any other plasticity model, damage
+  model and equation of state can be used to replace the Johnson-Cook
+  and Mie-Gruneisen models without any extra effort (provided the models
+  have been implemented and the data exist).
+
+  The material data can easily be taken from a material database or specified
+  for a new material in an input file kept at a centralized location.  At this
+  stage material data for a range of materials is kept in the directory
+  \verb|.../Uintah/StandAlone/inputs/MPM/MaterialData|.
+
+  \subsection{Elastic-plastic model}
+  The \verb|<constitutive_model type="elastic_plastic">| model is more stable
+  (and also more general)
+  than the \verb|<constitutive_model type="hypoelastic_plastic">| model.  A
+  sample input file for this model is shown below.
+  \begin{verbatim}
+  <MPM>
+    <do_grid_reset> false </do_grid_reset>
+    <time_integrator>explicit</time_integrator>
+    <boundary_traction_faces>[zminus,zplus]</boundary_traction_faces> 
+    <dynamic>true</dynamic>
+    <solver>simple</solver>
+    <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
+    <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
+    <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
+    <interpolator>linear</interpolator>
+    <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
+    <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
+    <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
+    <artificial_viscosity> true </artificial_viscosity>
+    <accumulate_strain_energy> true </accumulate_strain_energy>
+    <use_load_curves> false </use_load_curves>
+    <turn_on_adiabatic_heating>   false    </turn_on_adiabatic_heating>
+    <do_contact_friction_heating> false    </do_contact_friction_heating>
+    <create_new_particles>        false    </create_new_particles>
+    <erosion algorithm = "none"/>
+  </MPM>
+
+  <MaterialProperties>
+    <MPM>
+      <material name = "OFHCCu">
+        <density>              8930.0 </density>
+        <thermal_conductivity> 386.0  </thermal_conductivity>
+        <specific_heat>        414.0  </specific_heat>
+        <room_temp>            294.0  </room_temp>
+        <melt_temp>            1356.0 </melt_temp>
+        <constitutive_model type="elastic_plastic">
+          <isothermal>                    false   </isothermal>
+          <tolerance>                     1.0e-12 </tolerance>
+          <do_melting>                    false   </do_melting>
+          <evolve_porosity>               false   </evolve_porosity>
+          <evolve_damage>                 false   </evolve_damage>
+          <check_TEPLA_failure_criterion> false   </check_TEPLA_failure_criterion>
+          <check_max_stress_failure>      false   </check_max_stress_failure>
+          <initial_material_temperature>  696.0   </initial_material_temperature>
+          
+          <shear_modulus>           46.0e9  </shear_modulus>
+          <bulk_modulus>            129.0e9 </bulk_modulus>
+          <coeff_thermal_expansion> 1.76e-5 </coeff_thermal_expansion>
+          <taylor_quinney_coeff>    0.9     </taylor_quinney_coeff>
+          <critical_stress>         129.0e9 </critical_stress>
+
+          <equation_of_state type = "mie_gruneisen">
+            <C_0>     3940  </C_0>
+            <Gamma_0> 2.02  </Gamma_0>
+            <S_alpha> 1.489 </S_alpha>
+          </equation_of_state>
+          
+          <plasticity_model type="mts_model">
+            <sigma_a>40.0e6</sigma_a>
+            <mu_0>47.7e9</mu_0>
+            <D>3.0e9</D>
+            <T_0>180</T_0>
+            <koverbcubed>0.823e6</koverbcubed>
+            <g_0i>0.0</g_0i>
+            <g_0e>1.6</g_0e>
+            <edot_0i>0.0</edot_0i>
+            <edot_0e>1.0e7</edot_0e>
+            <p_i>0.0</p_i>
+            <q_i>0.0</q_i>
+            <p_e>0.666667</p_e>
+            <q_e>1.0</q_e>
+            <sigma_i>0.0</sigma_i>
+            <a_0>2390.0e6</a_0>
+            <a_1>12.0e6</a_1>
+            <a_2>1.696e6</a_2>
+            <a_3>0.0</a_3>
+            <theta_IV>0.0</theta_IV>
+            <alpha>2</alpha>
+            <edot_es0>1.0e7</edot_es0>
+            <g_0es>0.2625</g_0es>
+            <sigma_es0>770.0e6</sigma_es0>
+          </plasticity_model>
+
+          <shear_modulus_model type="mts_shear">
+            <mu_0>47.7e9</mu_0>
+            <D>3.0e9</D>
+            <T_0>180</T_0>
+          </shear_modulus_model>
+
+          <melting_temp_model type = "constant_Tm">
+          </melting_temp_model>
+
+          <yield_condition type = "vonMises">
+          </yield_condition>
+
+          <stability_check type = "none">
+          </stability_check>
+
+          <damage_model type = "hancock_mackenzie">
+            <D0> 0.0001 </D0>
+            <Dc> 0.7    </Dc>
+          </damage_model>
+          
+          <compute_specfic_heat> false </compute_specfic_heat>
+          <specific_heat_model type="constant_Cp">
+          </specific_heat_model>
+          
+        </constitutive_model>
+        <geom_object>
+          <box label = "box">
+            <min>[0.0,    0.0,    0.0]</min>
+            <max>[1.0e-2, 1.0e-2, 1.0e-2]</max>
+          </box>
+          <res>[1,1,1]</res>
+          <velocity>[0.0, 0.0, 0.0]</velocity>
+          <temperature>696</temperature>
+        </geom_object>
+      </material>
+
+    </MPM>
+  </MaterialProperties>
+  \end{verbatim}
+
+  \subsubsection{An exploding ring experiment}
+  The follwing shows the complete input file for an expanding ring test.
+  \begin{verbatim}
+
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+    <!-- First crack at the tuna can problem -->
+
+   <Meta>
+       <title>Pressurization of a container via burning w/o fracture</title>
+   </Meta>&gt;    
+   <SimulationComponent>
+     <type> mpmice </type>
+   </SimulationComponent>
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <max_Timesteps>   99999          </max_Timesteps>>
+       <maxTime>             2.00e-2    </maxTime>
+       <initTime>            0.0        </initTime>
+       <delt_min>            1.0e-12    </delt_min>
+       <delt_max>            1.0        </delt_max>
+       <delt_init>           2.1e-8     </delt_init>
+       <timestep_multiplier> 0.5        </timestep_multiplier>
+   </Time>    
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value>  0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [ -0.08636, -0.08636, -0.0016933] </lower>
+              <upper>        [ 0.08636, 0.08636, 0.0016933]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [2,2,1]    </patches>
+              <resolution>   [102, 102, 1]                 </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>explodeRFull.uda</filebase>
+      <outputTimestepInterval> 20 </outputTimestepInterval>
+      <save label = "rho_CC"/>
+      <save label = "press_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "g.mass"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.temperature"/>
+      <save label = "p.porosity"/>
+      <save label = "p.particleID"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.damage" material = "0"/>
+      <save label = "p.plasticStrain" material = "0"/>
+      <save label = "p.strainRate" material = "0"/>
+      <save label = "g.stressFS"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "delP_MassX"/>
+      <save label = "p.localized"/>
+      <checkpoint cycle = "2" timestepInterval = "20"/>
+   </DataArchiver>
+
+   <Debug>
+   </Debug>
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.5</cfl>
+       <CanAddICEMaterial>true</CanAddICEMaterial>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+      <time_integrator>                explicit   </time_integrator>
+      <nodes8or27>                     27         </nodes8or27>
+      <minimum_particle_mass>          3.e-12     </minimum_particle_mass>
+      <maximum_particle_velocity>      1.e3       </maximum_particle_velocity>
+      <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+      <artificial_viscosity>           true       </artificial_viscosity>
+      <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
+      <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
+      <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
+      <accumulate_strain_energy>       false      </accumulate_strain_energy>
+      <use_load_curves>                false      </use_load_curves>
+      <create_new_particles>           false      </create_new_particles>
+      <manual_new_material>            false      </manual_new_material>
+      <DoThermalExpansion>             false      </DoThermalExpansion>
+      <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
+      <erosion algorithm = "ZeroStress"/>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "Steel Ring">
+           <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
+           <constitutive_model type="elastic_plastic">
+             <isothermal>                    false </isothermal>
+             <tolerance>                  1.0e-10  </tolerance>
+             <evolve_porosity>               true  </evolve_porosity>
+             <evolve_damage>                 true  </evolve_damage>
+             <compute_specific_heat>         true  </compute_specific_heat>
+             <do_melting>                    true  </do_melting>
+             <useModifiedEOS>                true  </useModifiedEOS>
+             <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
+             <initial_material_temperature>  600.0 </initial_material_temperature>
+             <taylor_quinney_coeff>          0.9   </taylor_quinney_coeff>
+             <check_max_stress_failure>      false </check_max_stress_failure>
+             <critical_stress>              12.0e9 </critical_stress>
+
+             <!-- Warning: you must copy link this input file into your -->
+             <!-- sus directory or these paths won't work.              -->
+
+             <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/MieGrunEOS4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
+             <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
+             <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
+             <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
+             <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+             <specific_heat_model type="steel_Cp"> </specific_heat_model>
+
+             <initial_mean_porosity>         0.005 </initial_mean_porosity>
+             <initial_std_porosity>          0.001 </initial_std_porosity>
+             <critical_porosity>             0.3   </critical_porosity>
+             <frac_nucleation>               0.1   </frac_nucleation>
+             <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+             <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+             <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+
+             <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+             <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
+             <critical_scalar_damage>        1.0   </critical_scalar_damage>
+             <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+           </constitutive_model>                                      
+       
+                <geom_object>
+                   <difference>
+                    <cylinder label = "outer cylinder">
+                     <bottom>           [0.0,0.0,-.05715]   </bottom>
+                     <top>              [0.0,0.0, .05715]   </top>
+                     <radius>           0.05715            </radius>
+                   </cylinder>
+                   <cylinder label = "inner cylinder">
+                     <bottom>           [0.0,0.0,-.0508]   </bottom>
+                     <top>              [0.0,0.0, .0508]   </top>
+                     <radius>           0.0508             </radius>
+                   </cylinder>
+                   </difference>
+                 <res>                 [2,2,2]         </res>
+                 <velocity>            [0.0,0.0,0.0]   </velocity>
+                 <temperature>         600             </temperature>
+                </geom_object>
+         </material>
+         <material name = "reactant">
+             <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
+             <constitutive_model type = "visco_scram">
+               <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
+               <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
+               <randomize_parameters>          false </randomize_parameters>
+               <use_time_temperature_equation> true  </use_time_temperature_equation>
+               <useObjectiveRate>              true  </useObjectiveRate>
+               <useModifiedEOS>                true  </useModifiedEOS>
+             </constitutive_model>
+                <geom_object>
+                   <difference>
+                     <cylinder label = "inner cylinder"> </cylinder>
+                     <cylinder label = "inner hole">
+                       <bottom>           [0.0,0.0,-.0508]   </bottom>
+                       <top>              [0.0,0.0, .0508]   </top>
+                       <radius>           0.01             </radius>
+                     </cylinder>
+                  </difference>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         440.0           </temperature>
+                </geom_object>
+         </material>
+
+            <contact>
+              <type>approach</type>
+              <materials>              [0,1]         </materials>
+              <mu> 0.0 </mu>
+            </contact>
+            <thermal_contact>
+            </thermal_contact>
+      </MPM>
+
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity>          0.0            </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity>
+           <specific_heat>              716.0          </specific_heat>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+             <difference>
+                  <box>
+                    <min>           [-0.254,-0.254,-0.254] </min>
+                    <max>           [ 0.254, 0.254, 0.254] </max>
+                  </box>
+                 <cylinder label = "outer cylinder"> </cylinder>
+               </difference>
+             <cylinder label="inner hole"> </cylinder>
+             <res>                      [2,2,2]        </res>
+             <velocity>           [0.0,0.0,0.0]       </velocity>
+             <!--
+             <temperature>        300.0               </temperature>
+             <density>    1.1792946927374306000e+00   </density>
+             -->
+             <temperature>        400.0               </temperature>
+             <density>            0.884471019553073   </density>
+             <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+      <exchange_properties>  
+         <exchange_coefficients>
+              <momentum>  [0, 1e15, 1e15]     </momentum>
+              <heat>      [0, 1e10, 1e10]     </heat>
+        </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <AddMaterialProperties>  
+      <ICE>
+         <material name = "product">
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity>          0.0            </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity>
+           <specific_heat>              716.0          </specific_heat>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+                  <box>
+                    <min>           [ 1.0, 1.0, 1.0] </min>
+                    <max>           [ 2.0, 2.0, 2.0] </max>
+                  </box>
+             <res>                      [2,2,2]        </res>
+             <velocity>           [0.0,0.0,0.0]       </velocity>
+             <temperature>        300.0               </temperature>
+             <density>    1.1792946927374306000e+00   </density>
+             <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+      </ICE>
+
+      <exchange_properties>
+         <exchange_coefficients>
+              <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
+              <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>
+              <!--
+              <heat>      [0, 1, 1, 1, 1, 1]     </heat>
+              -->
+        </exchange_coefficients>
+      </exchange_properties>
+    </AddMaterialProperties>
+
+
+    <Models>
+      <Model type="Simple_Burn">
+        <Active>       false        </Active>
+        <fromMaterial> reactant     </fromMaterial>
+        <toMaterial>   product      </toMaterial>
+        <ThresholdTemp>       450.0 </ThresholdTemp>
+        <ThresholdPressure> 50000.0 </ThresholdPressure>
+        <Enthalpy>        2000000.0 </Enthalpy>
+        <BurnCoeff>            75.3 </BurnCoeff>
+        <refPressure>      101325.0 </refPressure>
+      </Model>
+    </Models>
+
+
+</Uintah_specification>
+  \end{verbatim}
+
+The PBS script used to run this test  is
+\begin{verbatim}
+
+#
+# ASK PBS TO SEND YOU AN EMAIL ON CERTAIN EVENTS: (a)bort (b)egin (e)nd (n)ever
+#
+# (User May Change)
+
+#PBS -m abe
+
+#
+# SET THE NAME OF THE JOB:
+#
+# (User May Change)
+
+#PBS -N ExplodeRing
+
+#
+# SET THE QUEUE IN WHICH TO RUN THE JOB.
+#      (Note, there is currently only one queue, so you should never change this field.)
+
+#PBS -q defaultq
+
+#
+# SET THE RESOURCES (# NODES, TIME) REQESTED FROM THE BATCH SCHEDULER:
+#   - select: <# nodes>,ncpus=2,walltime=<time>
+#     - walltime: walltime before PBS kills our job.
+#               [[hours:]minutes:]seconds[.milliseconds]
+#               Examples:
+#                 walltime=60      (60 seconds)
+#                 walltime=10:00   (10 minutes)
+#                 walltime=5:00:00 (5 hours)
+#
+# (User May Change)
+
+#PBS -l select=2:ncpus=2,walltime=24:00
+
+#
+# START UP LAM
+
+cd $PBS_O_WORKDIR
+lamboot
+
+# [place your command here] >& ${PBS_O_WORKDIR}/output.${PBS_JOBID}
+mpirun -np 4 ../sus_opt explodeRFull.ups >& output.${PBS_JOBID}
+
+#
+# REMEMBER, IF YOU ARE RUNNING TWO SERIAL JOBS, YOU NEED A:
+# wait
+
+#
+# STOP LAM
+
+lamhalt -v
+exit
+\end{verbatim}
+
+  \bibliographystyle{unsrt}
+  \bibliography{Bibliography}
+
+\end{document}

@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+    <Meta>
+        <title>Axis aligned MMS</title>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+
+    <Time>
+        <maxTime>0.02</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-6</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.2</timestep_multiplier>
+        <max_Timesteps>100000</max_Timesteps>
+        <end_on_max_time_exactly>true</end_on_max_time_exactly>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+        <do_grid_reset>true</do_grid_reset>
+        <RunMMSProblem>AxisAligned</RunMMSProblem>
+    </MPM>
+    <DataArchiver>
+        <filebase>AA_MMS.uda</filebase>
+        <outputInterval>0.0005</outputInterval>
+        <save label="p.x"></save>
+        <save label="p.volume"></save>
+        <save label="p.displacement"></save>
+        <save label="g.mass"></save>
+        <!--<checkpoint cycle = "2" timestepInterval = "2"/>-->
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="Piston">
+                <density>1.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="cnh_mms">
+                    <bulk_modulus>8333</bulk_modulus>
+                    <shear_modulus>3846</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0.0]</velocity>
+                    <temperature>0</temperature>
+                    <box label="block">
+                        <min>[0.0,0.0,0.0] </min>
+                        <max>[1.0,1.0,1.0]</max>
+                    </box>
+                </geom_object>
+            </material>
+            <contact>
+                <type>null</type>
+                <materials>[1,2,3]</materials>
+            </contact>
+        </MPM>
+    </MaterialProperties>
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[0.0,0.0,0.0]</lower>
+                <upper>[1.0,1.0,1.0]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[1,1,1]</patches>
+                <resolution>[16,16,16]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

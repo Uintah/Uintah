@@ -1,0 +1,28 @@
+#!/bin/bash
+#______________________________________________________________________
+#  This script takes a folder of exectime.* files and summarizes them so 
+#  the user can see what task is taking the most time.  Below is an example:
+#
+#  Processors=768
+#  Task:lineExtract::doAnalysis 1661.3 2167.781864
+#  Task:ICE::implicitPressureSolve 834.03 898.061664
+#  Task:Hypre:Matrix 767.076 768.174537
+#  Task:particleExtract::doAnalysis 190.183 381.251922
+#  Task:Relocate::relocateParticles 30.3722 102.867239
+#  Task:ICE::advectAndAdvanceInTime 26.5182 38.782531
+#  Task:ICE::setupRHS 23.1352 32.746978
+#  Task:ICE::addExchangeContributionToFCVel 9.67137 13.826766
+#  Task:MPMICE::computeEquilibrationPressure 7.2525 10.368830
+#
+#  To output the exectime files set the environmental variable 
+#     SCI_DEBUG ExecTimes:+
+#
+#            -- The Ghost of Justin
+#______________________________________________________________________
+
+count=`ls -1 exectimes.* | wc -l`
+echo "Processors=$count"
+
+cat exectimes.* > .exectimes.tmp
+cat .exectimes.tmp | awk -v count=$count -- 'BEGIN {total=0} {a[$4]+=$3; total+=$3; if (max[$4] < $3) max[$4]=$3} END {print "Total time="total/count; for (i in a) print i,a[i]/count,max[i]}' | sort -g -k 2 -r
+rm -f .exectimes.tmp

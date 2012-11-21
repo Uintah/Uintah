@@ -1,0 +1,134 @@
+#!/bin/bash
+#______________________________________________________________________
+# run:  This shell script
+#         - runs a component's test
+# environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $WEBLOG $LOCAL_OR_NIGHTLY_TEST $WHICH_TEST
+
+mode=$1
+componentTest=$2
+failed=0
+
+#__________________________________
+# bulletproof the inputs
+if [ "$BUILDROOT" = "" -o "$PARALLELISM" = "" -o "$OS" = "" -o "$COMMON_GROUP"  = "" ]; then
+  echo "ERROR:run  One of the environmental variables (BUILDROOT, PARALLELISM, OS, COMMON_GROUP) has not been set"
+  exit -1
+fi
+
+is_dbg="no"
+if [ "$mode" = "dbg" ]; then
+  is_dbg="yes"
+fi
+
+#__________________________________
+# create the do<component>tests  python script
+cd "${BUILDROOT}/${mode}"
+doTestScript="do${componentTest}tests"
+echo "#!/bin/tcsh"                                         > "$doTestScript"
+echo "setenv PATH $PATH"                                   >> "$doTestScript"
+echo "setenv OS $OS"                                       >> "$doTestScript"
+echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
+echo "setenv SCI_MALLOC_ENABLED $is_dbg"                   >> "$doTestScript"
+
+echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+
+/bin/chmod a+x "$doTestScript"
+
+#__________________________________
+# run the python script that contains all
+# tests for that component
+rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
+"$doTestScript" > comp.log  2>&1
+retval=$?
+
+mv comp.log "${componentTest}.log"
+cat "${componentTest}.log" >> summary_log
+cat "${componentTest}.log" >> "$HTMLLOG"
+
+#__________________________________
+# Find plots that were generated for this component and copy them to the 
+# public.html directory. Add a link to the web page and create a separate 
+# web page for the plots
+
+plot_HTML_dir=`dirname ${HTMLLOG}`
+plot_HTML_dir="$plot_HTML_dir/Plots"
+
+compDir="$componentTest-results"
+
+#__________________________________
+# high water memory plots:
+nFound=`find $compDir -name "memHistory.png" | wc -l`
+
+if [ $nFound -gt 0 ]; then
+
+  # remove previous plots and copy plots to the public directory
+  /bin/rm -rf $plot_HTML_dir/Memory/$compDir >&/dev/null
+  find $compDir -name "memHistory.png" -print0 | cpio -pmd0 $plot_HTML_dir/Memory/ >&/dev/null
+
+  # create a separate web page for memory usage
+  memory_html="$plot_HTML_dir/Memory/$compDir/memoryPlots.html"
+  
+  #create link to memory_html on main web page
+  echo "<a href = \"Plots/Memory/$compDir/memoryPlots.html\">High water memory usage plots</a>" >> $HTMLLOG
+  
+  echo "<HTML><HEAD><TITLE> $componentTest High Water Memory</TITLE></HEAD><BODY><pre>" > $memory_html
+  echo " $componentTest high water memory usage" >> $memory_html
+  
+  # print out the links to the plots to the memory_html web page
+  #This is what you want:
+  #  <a href = hotBlob2mat/memHistory.png> hotBlob2mat</a>
+  # The find command prints out too much of the path so we prune it with sed
+  find $compDir -name "memHistory.png" -printf "<a href = %p> %h</a>\n"  | sed s/"$compDir\/"//g ->> $memory_html
+
+  echo "</pre></BODY></HTML>" >> $memory_html
+fi
+
+
+#__________________________________
+# simulation run time plots:
+nFound=`find $compDir -name "simRunTimeHistory.png" | wc -l`
+
+if [ $nFound -gt 0 ]; then
+
+  # remove previous plots and copy plots to the public directory
+  /bin/rm -rf $plot_HTML_dir/simRunTime/$compDir >&/dev/null
+  find $compDir -name "simRunTimeHistory.png" -print0 | cpio -pmd0 $plot_HTML_dir/simRunTime/ >&/dev/null
+
+  # create a separate web page for Performance 
+  runTime_html="$plot_HTML_dir/simRunTime/$compDir/simRunTimePlots.html"
+  
+  #create link to runTime_html on main web page
+  echo "<a href = \"Plots/simRunTime/$compDir/simRunTimePlots.html\">Simulation Run Time plots</a>" >> $HTMLLOG
+  
+  echo "<HTML><HEAD><TITLE> $componentTest Simulation Run Time</TITLE></HEAD><BODY><pre>" > $runTime_html
+  echo " $componentTest Simulation run time" >> $runTime_html
+  
+  # print out the links to the plots to the memory_html web page
+  #This is what you want:
+  #  <a href = hotBlob2mat/simRunTimeHistory.png> hotBlob2mat</a>
+  # The find command prints out too much of the path so we prune it with sed
+  find $compDir -name "simRunTimeHistory.png" -printf "<a href = %p> %h</a>\n"  | sed s/"$compDir\/"//g ->> $runTime_html
+
+  echo "</pre></BODY></HTML>" >> $runTime_html
+fi
+
+cd TestScripts
+
+#__________________________________
+# 
+if [ $retval = "0" ]; then
+  echo "Passed: ${componentTest}-${mode} tests! "
+
+elif [ $retval = "3" ]; then
+  echo "Skipped: ${componentTest}-$mode tests"
+else
+  echo "Failed: ${componentTest}-${mode} tests"
+  if [ -f "${BUILDROOT}/${mode}/${componentTest}-short.log" ]; then
+    cat "${BUILDROOT}/${mode}/${componentTest}-short.log"
+  fi
+  failed=1
+fi
+
+exit $failed

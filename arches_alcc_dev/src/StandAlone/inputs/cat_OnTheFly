@@ -1,0 +1,67 @@
+#!/bin/csh -f
+
+if( $#argv != 2 ) then
+  echo " ERROR: "
+  echo " usage:  cat_OnTheFly  <uda>  <master_uda>"
+  echo " This script concatenates the <uda>/<line>/L-*/i_j_k_ files to a master uda" 
+  exit
+endif
+
+set uda        = "$argv[1]"
+set master_uda = "$argv[2]" 
+set here       = `pwd`
+
+if( ! -e $uda || ! -e $master_uda ) then
+  echo " usage:  cat_on_the_fly  <uda> <master_uda>"
+  echo " The directory $uda or $master_uda does not exist, now exiting"
+  exit
+endif
+
+echo "working on $uda"
+
+# find all of the lines with i_j_k files in them
+# Substitute @@@ for " " in each name and directory
+cd $uda
+set these = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%p\n" | sed s/"\ "/"@@@"/g`)
+set dirs  = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%h\n" | sed s/"\ "/"@@@"/g`)
+cd "$here/$master_uda"
+
+# make the directory structure in the master uda
+foreach i ( $dirs[*]:q )
+  set X = `echo $i | sed s/"@@@"/"\ "/g`
+  if( ! -e "$X" ) then
+    mkdir -p "$X"
+    echo "now creating the directory $X"
+  endif
+end 
+
+cd $here
+
+# concatenate each of the $uda/dat files to $master_uda/dat
+foreach i ( $these[*]:q )
+  set X = `echo $i | sed s/"@@@"/"\ "/g`
+  
+  if( -e "$uda/$X" ) then
+  
+    echo " Now concatenating $uda/$X"
+    
+    if (-e "$master_uda/$X" ) then
+      cp -fp "$master_uda/$X" "$master_uda/$X.tmp"
+    endif
+    
+    cat "$uda/$X" >> "$master_uda/$X.tmp"
+    
+    # remove the header from the temporary file
+    set header = `head -n1 "$master_uda/$X.tmp"`
+    sed -i /"X_CC"/d "$master_uda/$X.tmp"
+    
+    # now reconstruct the file and remove duplicate lines
+    # sort the file by time
+    echo $header > "$master_uda/$X"
+    sort -k4 -g "$master_uda/$X.tmp"|uniq >> "$master_uda/$X"
+
+    /bin/rm "$master_uda/$X.tmp"
+  endif
+end
+
+exit

@@ -1,0 +1,343 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: -->
+<Uintah_specification>
+
+   <Meta>
+        <title>Granular Compaction Test Problem</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+        <maxTime>.06</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.000014</delt_min>
+        <delt_max>0.0014</delt_max>
+        <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>10grains.uda</filebase>
+        <outputInterval>.01</outputInterval>
+        <save label = "KineticEnergy"/>
+        <save label = "TotalMass"/>
+        <save label = "StrainEnergy"/>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.temperature"/>
+        <save label = "g.mass"/>
+        <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "0.02"/>
+   </DataArchiver>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+        <MPM>
+            <material name = "Piston">
+                <density>1.9e8</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e6</bulk_modulus>
+                    <shear_modulus>7.2e6</shear_modulus>
+                    <yield_stress>.27e6</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <geom_object>
+                    <box label = "Piston">
+                        <min>[0.0005,0.0005,0.009]</min>
+                        <max>[0.0095,0.0095,0.0095]</max>
+                    </box>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,-.01]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.9e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain1">
+                        <origin>[0.00225,0.00225,0.00225]</origin>
+                        <radius> 0.00225 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.91e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain2">
+                        <origin>[0.0025,0.0075,0.0025]</origin>
+                        <radius> 0.0025 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.92e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain3">
+                        <origin>[0.0075,0.005,0.0025]</origin>
+                        <radius> 0.0025 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.93e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain4">
+                        <origin>[0.004,0.0045,0.006]</origin>
+                        <radius> 0.002 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.94e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain5">
+                        <origin>[0.0055,0.00125,0.00425]</origin>
+                        <radius> 0.00125 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.95e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain6">
+                        <origin>[0.0075,0.0075,0.007]</origin>
+                        <radius> 0.002 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.96e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain7">
+                        <origin>[0.0075,0.002,0.007]</origin>
+                        <radius> 0.002 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.97e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain8">
+                        <origin>[0.0015,0.0015,0.0075]</origin>
+                        <radius> 0.0015 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.98e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain9">
+                        <origin>[0.00125,0.00675,0.00775]</origin>
+                        <radius> 0.00125 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <material name = "HMX">
+                <density>1.99e6</density>
+                <constitutive_model type="comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                    <sphere label = "grain10">
+                        <origin>[0.00375,0.0085,0.0065]</origin>
+                        <radius> 0.0015 </radius>
+                    </sphere>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0,0.0,0]</velocity>
+                <temperature>300</temperature>
+                </geom_object>
+            </material>
+
+            <contact>
+              <type>friction</type>
+              <materials>[0,1,2,3,4,5,6,7,8,9,10]</materials>
+              <mu> .5 </mu>
+            </contact>
+
+        </MPM>
+
+    </MaterialProperties>
+        
+    <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[0.0,0.0,0.0]</lower>
+                <upper>[0.01,0.01,0.01]</upper>
+                <resolution>[40,40,40]</resolution>
+                <patches>[2,2,2]</patches>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+          </Face>
+         <Face side = "y-">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "y+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "z-">
+            <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                 <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+         <Face side = "z+">
+            <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+        </BoundaryConditions>
+    </Grid>
+
+    
+</Uintah_specification>
+

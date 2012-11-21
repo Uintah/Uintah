@@ -1,0 +1,324 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+
+   <Meta>
+       <title>First attempt Vocal Fold Air FSI using MPMICE</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+   <Time>
+        <maxTime>  1.0    </maxTime>
+        <initTime> 0.0    </initTime>
+        <delt_min> 1.e-9  </delt_min>
+        <delt_max> 1.e-1  </delt_max>
+        <delt_init> 1.e-8 </delt_init>
+        <max_Timesteps> 200000  </max_Timesteps>
+        <max_delt_increase>  1.0 </max_delt_increase>
+        <timestep_multiplier>0.5 </timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>VocalFold-VF.uda</filebase>
+       <outputInterval>.0001</outputInterval>
+       <compression>gzip</compression> 
+       <outputDoubleAsFloat/>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.stress"/>
+       <save label = "p.color"/>
+       <save label = "p.displacement"/>
+       <save label = "p.velocity"/>
+       <save label = "g.stressFS"/>
+       <save label = "g.mass"/>
+<!--   <save label = "p.stretch"/>  -->
+       <save label = "vol_frac_CC"/>
+       <save label = "rho_CC"/>
+       <save label = "temp_CC"/>
+       <save label = "delP_Dilatate"/>
+       <save label = "vel_CC"/>
+       <save label = "sp_vol_CC"/>
+       <save label = "press_CC"/>
+       <checkpoint cycle = "2" interval = "0.0001"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>                   gimp       </interpolator>
+       <use_load_curves>false</use_load_curves>
+       <do_grid_reset>true</do_grid_reset>
+       <testForNegTemps_mpm>false</testForNegTemps_mpm>
+       <withColor>  true </withColor>
+    </MPM>
+    <CFD>
+       <cfl>0.25</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+                                                                                
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+                                                                                
+              <tolerance>1.e-8    </tolerance>
+                                                                                
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+                                                                                
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+      </ICE>
+    </CFD>
+                                                                                
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325.0  </reference_pressure>  <!-- how is this used in mpmice -->
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e3</density>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>  15000.0 </bulk_modulus>
+                    <shear_modulus> 1500.0  </shear_modulus>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <difference>
+                 <tri label = "vocalFold_L">
+                   <name>inputs/MPMICE/complex_MPM_geometries/VF_L.0</name>
+                 </tri>
+                 <box label = "diff_color_L">
+                     <min>           [.0,  .008,.0]      </min>
+                     <max>           [.005,.012,.00025]  </max>
+                 </box>
+                </difference>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature>  300.       </temperature>
+                <color>        -1         </color>
+              </geom_object>
+              <geom_object>
+                <box label = "diff_color_L"> </box>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature>  300.       </temperature>
+                <color>         1         </color>
+              </geom_object>
+           </material>
+           <material>
+              <density>1.e3</density>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>  15000.0 </bulk_modulus>
+                    <shear_modulus> 1500.0  </shear_modulus>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <difference>
+                 <tri label = "vocalFold_R"> 
+                   <name>inputs/MPMICE/complex_MPM_geometries/VF_R.0</name>
+                 </tri>
+                  <box label = "diff_color_R">
+                      <min>           [.015,.008,.0]       </min>
+                      <max>           [.02,  .012,.00025]  </max>
+                  </box>
+                </difference>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature> 300.        </temperature>
+                <color>        1          </color>
+              </geom_object>
+              <geom_object>
+                <box label = "diff_color_R"> </box>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature>  300.       </temperature>
+                <color>         -1        </color>
+              </geom_object>
+           </material>
+
+           <contact>
+             <type>approach</type>  
+             <materials>[0,1]</materials>
+             <mu> .0 </mu>
+           </contact>
+       </MPM>
+
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                    </EOS>
+           <dynamic_viscosity>          0.0e-5         </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity> <!-- this should be nonzero eventually -->
+           <specific_heat>              716.0          </specific_heat>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+              <difference>
+               <box label = "surrounding">
+                    <min>           [-1.0,-1.0,-1.0]    </min>
+                    <max>           [ 3.0, 3.0, 1.0]    </max>
+               </box>
+               <union>
+                <tri label = "vocalFold_L"> </tri>
+                <tri label = "vocalFold_R"> </tri>
+               </union>
+              </difference>
+             <res>                [2,2,1]              </res>
+             <velocity>           [0.0,0.0,0.0]        </velocity>
+             <temperature>        300.0                </temperature>
+             <density>    1.1792946927374306000e+00    </density>
+             <pressure>           101325.0             </pressure>  
+           </geom_object>
+         </material>
+       </ICE>
+
+       <exchange_properties>
+          <exchange_coefficients>
+             <momentum>           [0,1e15,1e15]    </momentum>
+             <heat>               [0,1e15,1e15]    </heat>
+          </exchange_coefficients>
+        </exchange_properties>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+        <Face side = "x-">
+          <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+          </BCType>
+          <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "x+">
+          <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+          </BCType>
+          <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face circle = "y-" origin = "0.01 0.0 0.0" radius = ".01">
+          <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 102125.0   </value> <!-- setting p=Pressure_atm(Pa) + 800Pa at Inlet -->
+          </BCType>
+          <BCType id = "2" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "2" label = "Temperature"  var = "Dirichlet">
+                              <value> 300.0  </value>
+          </BCType>
+          <BCType id = "2" label = "Density"      var = "Dirichlet">
+                              <value>  1.1792946927374306  </value>
+          </BCType>
+        </Face>
+        <Face side = "y-">
+          <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value> <!-- setting p=Pressure_atm(Pa) + 800Pa at Inlet -->
+          </BCType>
+          <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" label = "Temperature"  var = "Dirichlet">
+                              <value> 300.0  </value>
+          </BCType>
+          <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value>  0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "y+">
+          <BCType id = "0" var = "Dirichlet" label = "Pressure" >
+                              <value> 101325.0   </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+
+       </BoundaryConditions>
+       <Level>
+           <Box label = "throat">
+              <lower>       [0.0,  0.0, 0.0]      </lower>
+              <upper>       [0.02,0.06,0.00025]  </upper>
+              <extraCells>  [1,1,1]               </extraCells>
+              <patches>     [1,2,1]               </patches>
+           </Box>
+<!--
+           <Box label = "mouth">
+              <lower>       [0.00, 0.04,0.00]     </lower>
+              <upper>       [0.02,0.06,0.00025]  </upper>
+              <extraCells>  [1,1,1]               </extraCells>
+              <patches>     [1,1,1]               </patches>
+           </Box>
+           <Box label = "left cheek">
+              <lower>       [-0.02,0.04,0.00]    </lower>
+              <upper>       [ 0.00, 0.06,0.00025] </upper>
+              <extraCells>  [1,1,1]               </extraCells>
+              <patches>     [1,1,1]               </patches>
+           </Box>
+           <Box label = "right cheek">
+              <lower>       [ 0.02,0.04,0.00]    </lower>
+              <upper>       [ 0.04,0.06,0.00025] </upper>
+              <extraCells>  [1,1,1]               </extraCells>
+              <patches>     [1,1,1]               </patches>
+           </Box>
+-->
+           <spacing>[.00025,.00025,.00025]</spacing>
+       </Level>
+    </Grid>
+
+    <PhysicalBC>
+       <MPM> </MPM>
+    </PhysicalBC>
+</Uintah_specification>
+

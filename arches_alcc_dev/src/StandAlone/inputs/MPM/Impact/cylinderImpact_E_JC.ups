@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+<!-- Steel Cylinder, Hypoelastic stress update, Johnson Cook Plasticity Model,
+     Johnson Cook Damage Model, Default Hypoelastic Equation of State -->
+
+   <Meta>
+       <title>Cylinder Impact - Case E </title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.0e-16</delt_min>
+       <delt_max>1.0e-5</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>cylinderImpact_E_JC.uda</filebase>
+       <outputInterval>5.0e-7</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.mass"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.plasticStrain"/>
+       <save label = "p.damage"/>
+       <save label = "g.mass"/>
+       <save label = "g.volume"/>
+       <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "2.0e-6"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+        <interpolator>linear</interpolator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e9</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>12.e12</G>
+                 <K>32.e12</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "Rigid Wall">
+                     <min>[0.0,-0.2e-2,0.0]</min>
+                     <max>[1.2e-2,-0.01e-2,1.2e-2]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+           <material>
+                <include href="../MaterialData/MaterialConst4340Steel.xml"/>
+              <constitutive_model type="elastic_plastic_hp">
+                   <tolerance>1.0e-10</tolerance>
+                   <include href="../MaterialData/IsotropicElastic4340Steel.xml"/>
+          <include href="../MaterialData/VonMisesYield.xml"/>
+          <include href="../MaterialData/NoStabilityCheck.xml"/>
+                   <include href="../MaterialData/JohnsonCookPlastic4340Steel.xml"/>
+                   <include href="../MaterialData/JohnsonCookDamage4340Steel.xml"/>
+                   <include href="../MaterialData/DefaultHypoEOS.xml"/>
+               </constitutive_model>
+              <geom_object>
+                  <cylinder label = "Cylinder">
+                      <bottom>[0.0,0.0,0.0]</bottom>
+                      <top>[0.0,2.54e-2,0.0]</top>
+                      <radius>0.762e-2</radius>
+                  </cylinder>
+                  <res>[3,3,3]</res>
+                  <velocity>[0.0,-208.0,0.0]</velocity>
+                  <temperature>294</temperature>
+               </geom_object>
+           </material>
+           <contact>
+             <type>rigid</type>
+              <materials>[0]</materials>
+             <direction>[0,1,0]</direction>
+              <stop_time>999999.9</stop_time>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,-0.2e-2,0.0]</lower>
+              <upper>[1.2e-2,3.2e-2,1.2e-2]</upper>
+               <resolution>[12,17,12]</resolution>
+<!--
+              <extraCells>[1,1,1]</extraCells>
+              <patches>[1,2,1]</patches>
+-->
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+             <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+             <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>                  
+           <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "z+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+           </BCType>
+           </Face>                 
+       </BoundaryConditions>
+    </Grid>
+
+    
+</Uintah_specification>
+
