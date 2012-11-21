@@ -506,7 +506,7 @@ SCI_ARG_ENABLE(ray-scatter,
   [ray_scatter=${ray_scatter=''}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
+                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
 SCI_ARG_ENABLE(exename,
@@ -1004,18 +1004,21 @@ fi
 BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
+BUILD_MD=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
 USE_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
+DEF_MD=""
 DEF_MODELS_RADIATION=""
 DEF_WASATCH=""
 
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
+if test "$USE_MD"  = no; then BUILD_MD=no; DEF_MD="#define NO_MD"; fi
 if test "$USE_MODELS_RADIATION" = no; then BUILD_MODELS_RADIATION=no; DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"; fi
 if test "$with_fortran" = no; then 
             BUILD_ARCHES=no;
@@ -1029,10 +1032,12 @@ fi
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
+AC_SUBST(BUILD_MD)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_MD)
 AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
