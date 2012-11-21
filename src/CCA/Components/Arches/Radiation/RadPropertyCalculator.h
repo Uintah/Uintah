@@ -110,7 +110,7 @@ namespace Uintah {
               }  
 
               //allocate gray gas object: 
-              _gg_radprops = scinew GreyGas( species ); 
+              //_gg_radprops = scinew GreyGas( species ); 
 
             } else { 
 
@@ -140,7 +140,7 @@ namespace Uintah {
             std::vector<double> molFrac; 
             double T        = 298; 
 
-            _gg_radprops->mixture_coeffs( planckCff, rossCff, effCff, mixMoleFrac, TMix );
+            //_gg_radprops->mixture_coeffs( planckCff, rossCff, effCff, mixMoleFrac, TMix );
 
             
 
@@ -148,7 +148,7 @@ namespace Uintah {
 
         private: 
 
-          AbsCoeffGas::GreyGas* _gg_radprops; 
+          //AbsCoeffGas::GreyGas* _gg_radprops; 
       }; 
 #endif
       //______________________________________________________________________
