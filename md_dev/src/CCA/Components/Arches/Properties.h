@@ -141,7 +141,8 @@ public:
   void sched_averageRKProps(SchedulerP&, 
                             const PatchSet* patches,
                             const MaterialSet* matls,
-                            const TimeIntegratorLabel* timelabels);
+                            const TimeIntegratorLabel* timelabels, 
+                            const bool calcScalar );
 
   void sched_saveTempDensity(SchedulerP&, 
                             const PatchSet* patches,
@@ -247,7 +248,8 @@ private:
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
+                      const TimeIntegratorLabel* timelabels, 
+                      const bool calcScalar);
 
   void saveTempDensity(const ProcessorGroup*,
                       const PatchSubset* patches,

@@ -136,13 +136,6 @@ public:
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule dummy solve (data copy) for first time step of MPMArches
-  // to overcome scheduler limitation on getting pset from old_dw
-
-  void sched_dummySolve(SchedulerP& sched,
-                        const PatchSet* patches,
-                        const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the interpolation of velocities from Face Centered Variables
@@ -211,6 +204,13 @@ public:
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels);
 
+  /** @brief This is a temporary function to allow us to avoid having to specify 
+   * <MixtureFractionSolver> in the input file. **/ 
+  void sched_allocateDummyScalar( SchedulerP& sched, 
+                                   const PatchSet* patches, 
+                                   const MaterialSet* matls, 
+                                   int timesubstep );
+
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
   }
@@ -258,15 +258,6 @@ private:
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
 
-  ///////////////////////////////////////////////////////////////////////
-  // actual data copy for first time step of MPMArches to overcome
-  // scheduler limitation on getting pset from old_dw
-
-  void dummySolve(const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////
   // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
@@ -363,6 +354,13 @@ private:
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
+
+  void allocateDummyScalar(const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           int timesubstep );
 
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };

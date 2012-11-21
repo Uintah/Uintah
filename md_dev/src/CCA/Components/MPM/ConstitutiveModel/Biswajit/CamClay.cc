@@ -69,12 +69,15 @@ using namespace Uintah;
 
 
 //__________________________________
-//  To turn on debug flags
-//  csh/tcsh : setenv SCI_DEBUG "CamClay:+".....
-//  bash     : export SCI_DEBUG="CamClay:+" )
+//  To turn on debug flags use, e.g.,
+//  csh/tcsh : setenv SCI_DEBUG "CamClay:+,CamClayDefGrad:+,CamClayStrain:+".....
+//  bash     : export SCI_DEBUG="CamClay:+,CamClayDefGrad:+,CamClayConv:+" )
 //  default is OFF
 
 static DebugStream cout_CC("CamClay",false);
+static DebugStream cout_CC_Conv("CamClayConv",false);
+static DebugStream cout_CC_F("CamClayDefGrad",false);
+static DebugStream cout_CC_Eps("CamClayStrain",false);
 
 CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -478,12 +481,27 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
       // Update the deformation gradient tensor to its time n+1 value.
-      // *TO DO* Compute defGradInc more accurately using previous timestep velGrad
-      //         and mid point rule
-      Matrix3 defGradInc = velGrad*delT + one;
-      Matrix3 defGrad_new = defGradInc*pDefGrad[idx];
+      // Improve upon first order estimate of deformation gradient
+      // Update the deformation gradient using subcycling
+      double Lnorm_dt = velGrad.Norm()*delT;
+      int num_scs = max(1, 2*((int) Lnorm_dt));
+      if (num_scs > 1000){
+        cout << "NUM_SCS = " << num_scs << endl;
+      }
+
+      double dtsc = delT/(double (num_scs));
+      Matrix3 defGrad_new = pDefGrad[idx];
+      Matrix3 defGradInc = one + velGrad*dtsc;
+      for(int n=0;n<num_scs;n++){
+        defGrad_new = defGradInc*defGrad_new;
+      }
+
       pDefGrad_new[idx] = defGrad_new;
       double J_new = defGrad_new.Determinant();
+
+      if (cout_CC_F.active()) {
+        cout_CC_F << "CamClay: idx = " << idx << " F_old = " << pDefGrad[idx] << " F_new = " << defGrad_new << " L = " << velGrad << endl;
+      }
 
       // Check 1: Check for negative Jacobian (determinant of deformation gradient)
       if (!(J_new > 0.0)) {
@@ -524,8 +542,10 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       double strain_elast_dev_n_norm = strain_elast_dev_n.Norm();
       double strain_elast_s_n = sqrtTwoThird*strain_elast_dev_n_norm;
       
-      //cout << "idx = " << idx 
-      //     << " t_n: eps_v_e = " << strain_elast_v_n << " eps_s_e = " << strain_elast_s_n << endl;
+      if (cout_CC_Eps.active()) {
+        cout_CC_Eps << "CamClay: idx = " << idx 
+                << " t_n: eps_v_e = " << strain_elast_v_n << " eps_s_e = " << strain_elast_s_n << endl;
+      }
 
       // Compute strain increment from rotationally corrected rate of deformation
       // (Forward Euler)
@@ -710,7 +730,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
                strain_elast_s = strain_elast_s_k;
             }
             delgamma = delgamma_k + deldelgamma;
-            if (delgamma < 0.0) delgamma = delgamma_k;
+            //if (delgamma < 0.0) delgamma = delgamma_k;
         
             state->epse_v = strain_elast_v;
             state->epse_s = strain_elast_s;
@@ -771,27 +791,29 @@ CamClay::computeStressTensor(const PatchSubset* patches,
             rs = strain_elast_s - strain_elast_s_tr + delgamma*dfdq;
             rf = fyield;
 
-            if (cout_CC.active()) {
-            if (idx == 9) {
-              cout_CC << "idx = " << idx << " k = " << klocal  
+            if (cout_CC_Conv.active()) {
+              if (idx == 14811) {
+                cout_CC_Conv << "idx = " << idx << " k = " << klocal  
                         << " rv = " << rv << " rs = " << rs << " rf = " << rf << " rf_old = " << rf_old 
                         << " fmax = " << fmax << endl;
-              cout_CC << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
+                cout_CC_Conv << " rtolv = " << rtolv << " rtols = " << rtols << " rtolf = " << rtolf 
                         << " tolr = " << tolr << " tolf = " << tolf << endl;
-              cout_CC << " pqpc = [" << p << " " << q << " " << pc << "]" 
+                cout_CC_Conv << " pqpc = [" << p << " " << q << " " << pc << "]" 
                         << " pqpc_old = [" << p_old << " " << q_old << " " << pc_old << "]" 
                         << " fold = " << f_old << endl;
-              cout_CC << " epsv = " << strain_elast_v << " epss = " << strain_elast_s << " f = " << fyield << endl;
-            }
-            }
-            if ((fabs(rf) > fabs(rf_old)) || (rf < 0.0 && fabs(rf-rf_old) > fmax)) {
-              //std::cout << "idx = " << idx << " rf = " << rf << " rf_old = " << rf_old << endl;
-              do_line_search = true;
-              delvoldev[0] *= 0.5;
-              delvoldev[1] *= 0.5;
-              deldelgamma *= 0.5;
-            } else {
-              do_line_search = false;
+                cout_CC_Conv << " epsv = " << strain_elast_v << " epss = " << strain_elast_s << " f = " << fyield << endl;
+              }
+            } 
+            if (fabs(rf/rf_old) > 1.0e-2) {
+              if ((fabs(rf) > fabs(rf_old)) || (rf < 0.0 && fabs(rf-rf_old) > fmax)) {
+                //std::cout << "idx = " << idx << " rf = " << rf << " rf_old = " << rf_old << endl;
+                do_line_search = true;
+                delvoldev[0] *= 0.5;
+                delvoldev[1] *= 0.5;
+                deldelgamma *= 0.5;
+              } else {
+                do_line_search = false;
+              }
             }
           } while (do_line_search);
 
@@ -822,16 +844,18 @@ CamClay::computeStressTensor(const PatchSubset* patches,
             desc << "J_new = " << J_new << endl;
             throw ConvergenceFailure(desc.str(), iter_break, rtolf, tolf, __FILE__, __LINE__);
           }
-          //if (idx == 18) {
-          //  Matrix3 eps_e = nn*(sqrtThreeTwo*strain_elast_s) + one*(strain_elast_v/3.0);
-          //  Matrix3 eps_p = strain_elast_tr - eps_e;
-          //  double eps_v_p = eps_p.Trace();
-          //  std::cout << "idx = " << idx << " k = " << klocal << endl
-          //            << " eps_v_e = " << strain_elast_v << " eps_v_p = " << eps_v_p
-          //            << " eps_s_e = " << strain_elast_s << endl
-          //            << " f_n+1 = " << fyield <<  " pqpc = [" << p << " " << q << " " << pc <<"]" 
-          //            << " rtolf = " << rtolf << " tolf = " << tolf << endl;
-          //} 
+          if (cout_CC_Eps.active()) {
+            if (idx == 14811) {
+              Matrix3 eps_e = nn*(sqrtThreeTwo*strain_elast_s) + one*(strain_elast_v/3.0);
+              Matrix3 eps_p = strain_elast_tr - eps_e;
+              double eps_v_p = eps_p.Trace();
+              cout_CC_Eps << "idx = " << idx << " k = " << klocal << endl
+                      << " eps_v_e = " << strain_elast_v << " eps_v_p = " << eps_v_p
+                      << " eps_s_e = " << strain_elast_s << endl
+                      << " f_n+1 = " << fyield <<  " pqpc = [" << p << " " << q << " " << pc <<"]" 
+                      << " rtolf = " << rtolf << " tolf = " << tolf << endl;
+            } 
+          }
 
         } // End of Newton-Raphson while
 
