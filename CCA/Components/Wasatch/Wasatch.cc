@@ -47,6 +47,7 @@
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
 #include <spatialops/ThreadPool.h>
+#include <spatialops/FieldExpressions.h>
 #endif
 
 //-- ExprLib includes --//
@@ -191,6 +192,28 @@ namespace Wasatch{
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
     
+    // Multithreading in ExprLib and SpatialOps
+    if( wasatchParams_->findBlock("SpatialOpsThreads") ){
+#    ifdef ENABLE_THREADS
+      int spatialOpsThreads=0;
+      wasatchParams_->get( "SpatialOpsThreads", spatialOpsThreads );
+      SpatialOps::set_nebo_hard_thread_count(NTHREADS);
+      SpatialOps::set_nebo_soft_thread_count( spatialOpsThreads );
+#    else
+      throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
+#    endif
+    }
+    if( wasatchParams_->findBlock("ExprLibThreads") ){
+#    ifdef ENABLE_THREADS
+      int exprLibThreads=0;
+      wasatchParams_->get( "ExprLibThreads", exprLibThreads );
+      SpatialOps::ThreadPoolResourceManager::self().resize( SpatialOps::ThreadPool::self(), NTHREADS );
+      SpatialOps::ThreadPoolResourceManager::self().resize_active( SpatialOps::ThreadPool::self(), exprLibThreads );
+#    else
+      throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
+#    endif
+    }
+
     // disallow specification of extraCells
     {
       std::ostringstream msg;
