@@ -82,9 +82,6 @@ class ExplicitSolver: public NonlinearSolver {
 
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Solver initialized with all input data
   ExplicitSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
                  Properties* props,
@@ -98,27 +95,13 @@ public:
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for ExplicitSolver.
   virtual ~ExplicitSolver();
 
-
-  // GROUP: Problem Setup :
-  ///////////////////////////////////////////////////////////////////////
-  // Set up the problem specification database
+  /** @brief Input file interface. **/ 
   virtual void problemSetup(const ProblemSpecP& input_db,
                             SimulationStateP& state);
 
-  // GROUP: Schedule Action :
-  ///////////////////////////////////////////////////////////////////////
-  // Solve the nonlinear system. (also does some actual computations)
-  // The code returns 0 if there are no errors and
-  // 1 if there is a nonlinear failure.
-  //    [in]
-  //        documentation here
-  //    [out]
-  //        documentation here
+  /** @brief Solve the nonlinear system. (also does some actual computations) **/
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched
 #                             ifdef WASATCH_IN_ARCHES
@@ -128,29 +111,27 @@ public:
                              );
 
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the Initialization of non linear solver
-  //    [in]
-  //        data User data needed for solve
+  /** @brief Sets the initial guess for several variables **/ 
   void sched_setInitialGuess(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the interpolation of velocities from Face Centered Variables
-  //    to a Cell Centered Vector
-  //    [in]
+  /** @brief Interpolates face centered vars to cell centered **/ 
   void sched_interpolateFromFCToCC(SchedulerP&,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels);
 
-  // GROUP: Action Computations :
-  void sched_printTotalKE(SchedulerP& sched,
-                          const PatchSet* patches,
-                          const MaterialSet* matls,
-                          const TimeIntegratorLabel* timelabels);
+  /** @brief Compute the kinetic energy of the system **/ 
+  void sched_computeKE( SchedulerP& sched, 
+                        const PatchSet* patches, 
+                        const MaterialSet* matls ); 
+
+  /** @brief Print the reduced kinetic energy values to the screen output **/  
+  void sched_printTotalKE( SchedulerP& sched,
+                           const PatchSet* patches,
+                           const MaterialSet* matls );
 
   void sched_updatePressure(SchedulerP& sched,
                           const PatchSet* patches,
@@ -276,12 +257,18 @@ private:
                         DataWarehouse* new_dw,
                         const TimeIntegratorLabel* timelabels);
 
+  void computeKE( const ProcessorGroup* ,
+                  const PatchSubset* patches,
+                  const MaterialSubset*,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw ); 
+
+
   void printTotalKE(const ProcessorGroup* ,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
-                    DataWarehouse* new_dw,
-                    const TimeIntegratorLabel* timelabels);
+                    DataWarehouse* new_dw );
 
   void updatePressure(const ProcessorGroup* ,
                       const PatchSubset* patches,
@@ -426,8 +413,6 @@ private:
   // sine mms
   double amp;
 
-  bool d_carbon_balance_es;
-  bool d_sulfur_balance_es;
   int d_numSourceBoundaries;
   
   //DQMOM
@@ -440,6 +425,9 @@ private:
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
   EfficiencyCalculator* d_eff_calculator; 
+
+  //Diagnostics
+  bool d_printTotalKE; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

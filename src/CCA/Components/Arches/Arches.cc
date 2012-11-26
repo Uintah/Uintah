@@ -1098,6 +1098,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_areaFractionFZLabel);
 #endif
     tsk->computes(d_lab->d_densityGuessLabel);
+  	tsk->computes(d_lab->d_totalKineticEnergyLabel); 
+  	tsk->computes(d_lab->d_kineticEnergyLabel); 
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -1259,6 +1261,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     vmomBoundarySrc.initialize(0.0);
     wmomBoundarySrc.initialize(0.0);
 
+    CCVariable<double> ke; 
+    new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
+    ke.initialize(0.0); 
+    new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel ); 
 
     // Variables for mms analysis
     if (d_doMMS){

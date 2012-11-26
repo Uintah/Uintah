@@ -101,7 +101,6 @@ namespace Uintah {
     const VarLabel* ref_pressure;
     const VarLabel* pressure_out;
     const VarLabel* pressure_guess;
-    const VarLabel* tke_out;
     const VarLabel* flowIN; 
     const VarLabel* flowOUT;
     const VarLabel* denAccum;
@@ -145,7 +144,6 @@ namespace Uintah {
       time_multiplier          = -9;
       time_position_multiplier_after_average    = -9;
       time_position_multiplier_before_average   = -9;
-      tke_out                  =  NULL;
       ummsExactSol             =  NULL;
       ummsLnError              =  NULL;
       vmmsExactSol             =  NULL;
@@ -179,7 +177,6 @@ namespace Uintah {
       ( time_multiplier          == -9 )    ||
       ( time_position_multiplier_after_average    == -9 ) ||
       ( time_position_multiplier_before_average   == -9 ) ||
-      ( tke_out                  ==  NULL ) ||
       ( ummsExactSol             ==  NULL ) ||
       ( ummsLnError              ==  NULL ) ||
       ( vmmsExactSol             ==  NULL ) ||
@@ -229,7 +226,6 @@ namespace Uintah {
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             time_multiplier          =  1.0;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  true;
@@ -266,7 +262,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  true;
@@ -303,7 +298,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyPredLabel;
             ummsExactSol             =  lab->d_totalummsExactSolPredLabel;
             ummsLnError              =  lab->d_totalummsLnErrorPredLabel;
             use_old_values           =  true;
@@ -339,7 +333,6 @@ namespace Uintah {
             time_multiplier          =  0.5;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyPredLabel;
             ummsExactSol             =  lab->d_totalummsExactSolPredLabel;
             ummsLnError              =  lab->d_totalummsLnErrorPredLabel;
             use_old_values           =  true;
@@ -376,7 +369,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 2.0;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  false;
@@ -413,7 +405,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  true;
@@ -450,7 +441,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.5;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  false;
@@ -487,7 +477,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 0.5;
             time_position_multiplier_before_average = 2.0;
-            tke_out                  =  lab->d_totalKineticEnergyIntermLabel;
             ummsExactSol             =  lab->d_totalummsExactSolIntermLabel;
             ummsLnError              =  lab->d_totalummsLnErrorIntermLabel;
             use_old_values           =  false;
@@ -524,7 +513,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyPredLabel;
             ummsExactSol             =  lab->d_totalummsExactSolPredLabel;
             ummsLnError              =  lab->d_totalummsLnErrorPredLabel;
             use_old_values           =  true;
@@ -561,7 +549,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyIntermLabel;
             ummsExactSol             =  lab->d_totalummsExactSolIntermLabel;
             ummsLnError              =  lab->d_totalummsLnErrorIntermLabel;
             use_old_values           =  true;
@@ -598,7 +585,6 @@ namespace Uintah {
             time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
-            tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  true;

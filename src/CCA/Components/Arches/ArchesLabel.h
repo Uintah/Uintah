@@ -375,8 +375,6 @@ namespace Uintah {
       // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
-      const VarLabel* d_totalKineticEnergyPredLabel;
-      const VarLabel* d_totalKineticEnergyIntermLabel;
       
       // scalar mms Ln error
       const VarLabel* d_smmsLnErrorLabel;

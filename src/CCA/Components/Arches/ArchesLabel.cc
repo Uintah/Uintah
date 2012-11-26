@@ -344,8 +344,6 @@ ArchesLabel::ArchesLabel()
 // kinetic energy
   d_kineticEnergyLabel             =  VarLabel::create("kineticEnergy",             CC_double);
   d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable);
-  d_totalKineticEnergyPredLabel    =  VarLabel::create("totalKineticEnergyPred",    sum_variable);
-  d_totalKineticEnergyIntermLabel  =  VarLabel::create("totalKineticEnergyInterm",  sum_variable);
 
 // scalar mms and gradP Ln error
 // ** warning...the L2 error here is not complete
@@ -677,8 +675,6 @@ ArchesLabel::~ArchesLabel()
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 
-  VarLabel::destroy(d_totalKineticEnergyPredLabel); 
-  VarLabel::destroy(d_totalKineticEnergyIntermLabel); 
 // mass balance labels for RK
   VarLabel::destroy(d_totalflowINPredLabel);
   VarLabel::destroy(d_totalflowOUTPredLabel);
