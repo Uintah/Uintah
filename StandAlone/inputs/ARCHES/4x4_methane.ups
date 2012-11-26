@@ -290,11 +290,16 @@
       </TransportEqns>
 
       <PropertyModels> 
-        <model label="heat_loss" type="heat_loss" initialization="constant">
-          <constant>0.0</constant>
+        <model label="heat_loss" type="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-        <model label="soot" type="empirical_soot" initialization="constant"> 
+        <model label="soot" type="empirical_soot"> 
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
           <carbon_content_fuel>.75</carbon_content_fuel> 
           <carbon_content_ox>0.0</carbon_content_ox>
           <C1>0.1</C1>
