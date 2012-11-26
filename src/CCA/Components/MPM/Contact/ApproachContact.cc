@@ -167,7 +167,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
-               Vector G(d_S[k].x(),d_S[k].y(),d_S[k].z()/px[idx].x());
+               Vector G(d_S[k].x(),d_S[k].y(),0.0);
                gsurfnorm[m][ni[k]] += rho * G;
              }
            }
@@ -182,7 +182,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
              if (patch->containsNode(ni[k])){
                Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                            d_S[k].z()*oodx[2]);
-//               gsurfnorm[m][ni[k]] += pmass[idx] * d_S[k];
                gsurfnorm[m][ni[k]] += pmass[idx] * grad;
 
              }
