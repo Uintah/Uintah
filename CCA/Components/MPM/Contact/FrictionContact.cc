@@ -170,7 +170,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
            for(int k = 0; k < flag->d_8or27; k++) {
              if (patch->containsNode(ni[k])){
-               Vector G(d_S[k].x(),d_S[k].y(),d_S[k].z()/px[idx].x());
+               Vector G(d_S[k].x(),d_S[k].y(),0.0);
                gsurfnorm[m][ni[k]] += rho * G;
              }
            }
