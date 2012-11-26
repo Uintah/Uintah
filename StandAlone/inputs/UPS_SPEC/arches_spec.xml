@@ -462,6 +462,7 @@
 
         <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
         <variable_dt                    spec="REQUIRED BOOLEAN" />
+        <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
