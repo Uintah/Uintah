@@ -327,11 +327,6 @@ ArchesLabel::ArchesLabel()
 
   d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable);
 
-  d_uVelNormLabel  =  VarLabel::create("uVelNorm",  sum_variable);
-  d_vVelNormLabel  =  VarLabel::create("vVelNorm",  sum_variable);
-  d_wVelNormLabel  =  VarLabel::create("wVelNorm",  sum_variable);
-  d_rhoNormLabel   =  VarLabel::create("rhoNorm",   sum_variable);
-
   d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable);
   d_negativeDensityGuessPred_label       =  VarLabel::create("negativeDensityGuessPred",       sum_variable);
   d_negativeDensityGuessInterm_label     =  VarLabel::create("negativeDensityGuessInterm",     sum_variable);
@@ -656,10 +651,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_ScalarClippedLabel);
-  VarLabel::destroy(d_uVelNormLabel);
-  VarLabel::destroy(d_vVelNormLabel);
-  VarLabel::destroy(d_wVelNormLabel);
-  VarLabel::destroy(d_rhoNormLabel);
 
 // label for odt model
   //VarLabel::destroy(d_odtDataLabel);
