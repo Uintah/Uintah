@@ -253,7 +253,7 @@
 
         <Sources>
           <src label="divQ" type="do_radiation">
-            <calc_frequency>1</calc_frequency>
+            <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
             <DORadiationModel>
               <opl>3.0</opl>
