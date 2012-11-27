@@ -75,7 +75,7 @@ NIGHTLYTESTS = [
    ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
    ("masssource_con_den"          , "verify_masssource/source_channel_conden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
-   ("masssource_coal_DQMOM"       , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
+   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
@@ -104,9 +104,9 @@ LOCALTESTS = [
    ("yminus_scalar_test"         , "ScalarTests/yminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"         , "ScalarTests/zminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"]) ,
-   ("masssource_con_den"         , "verify_masssource/source_channel_conden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
-   ("masssource_var_den"         , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
-   ("masssource_coal_DQMOM"      , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
+   ("source_channel_conden"      , "verify_masssource/source_channel_conden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("source_channel_varden"      , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
 #__________________________________
