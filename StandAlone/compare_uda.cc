@@ -961,13 +961,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::Matrix3:
       return scinew
         SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
-        
-#if 0 
-    // Need support for Stencil7       
     case Uintah::TypeDescription::Stencil7:
       return scinew
         SpecificFieldComparator<CCVariable<Stencil7>, CellIterator>(iter);
-#endif
     default:
       cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
