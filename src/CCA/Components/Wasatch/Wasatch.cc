@@ -193,24 +193,26 @@ namespace Wasatch{
     wasatchParams_ = params->findBlock("Wasatch");
     
     // Multithreading in ExprLib and SpatialOps
-    if( wasatchParams_->findBlock("SpatialOpsThreads") ){
+    if( wasatchParams_->findBlock("FieldParallelThreadCount") ){
 #    ifdef ENABLE_THREADS
       int spatialOpsThreads=0;
-      wasatchParams_->get( "SpatialOpsThreads", spatialOpsThreads );
+      wasatchParams_->get( "FieldParallelThreadCount", spatialOpsThreads );
       SpatialOps::set_hard_thread_count(NTHREADS);
       SpatialOps::set_soft_thread_count( spatialOpsThreads );
+      proc0cout << "-> Wasatch is running with " << spatialOpsThreads << " data-parallel threads (SpatialOps)" << std::endl;
 #    else
-      throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
+      proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
     }
-    if( wasatchParams_->findBlock("ExprLibThreads") ){
+    if( wasatchParams_->findBlock("TaskParallelThreadCount") ){
 #    ifdef ENABLE_THREADS
       int exprLibThreads=0;
-      wasatchParams_->get( "ExprLibThreads", exprLibThreads );
+      wasatchParams_->get( "TaskParallelThreadCount", exprLibThreads );
       Expr::set_hard_thread_count( NTHREADS );
       Expr::set_soft_thread_count( exprLibThreads );
+      proc0cout << "-> Wasatch is running with " << exprLibThreads << " task-parallel threads (ExprLib)" << std::endl;
 #    else
-      throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
+      proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
     }
 
@@ -304,21 +306,6 @@ namespace Wasatch{
 
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
     if (!wasatchParams) return;
-
-    // threaded execution
-#   ifdef ENABLE_THREADS
-    {
-      using namespace SpatialOps;
-      int nThreadExprLib=1, nThreadNebo=0;
-      if( wasatchParams->findBlock("TaskParallelThreadCount") )
-        wasatchParams->get("TaskParallelThreadCount", nThreadExprLib );
-      if( wasatchParams->findBlock("FieldParallelThreadCount") )
-        wasatchParams->get("FieldParallelThreadCount", nThreadNebo );
-      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-      tprm.resize_active( ThreadPool::self(),     std::max(1,nThreadExprLib) );
-      tprm.resize_active( ThreadPoolFIFO::self(), std::max(0,nThreadNebo   ) );
-    }
-#   endif
 
     //
     // Material
