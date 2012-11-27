@@ -46,8 +46,8 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
-#include <spatialops/ThreadPool.h>
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/SpatialOpsTools.h>
+#include <expression/SchedulerBase.h>
 #endif
 
 //-- ExprLib includes --//
@@ -197,8 +197,8 @@ namespace Wasatch{
 #    ifdef ENABLE_THREADS
       int spatialOpsThreads=0;
       wasatchParams_->get( "SpatialOpsThreads", spatialOpsThreads );
-      SpatialOps::set_nebo_hard_thread_count(NTHREADS);
-      SpatialOps::set_nebo_soft_thread_count( spatialOpsThreads );
+      SpatialOps::set_hard_thread_count(NTHREADS);
+      SpatialOps::set_soft_thread_count( spatialOpsThreads );
 #    else
       throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
 #    endif
@@ -207,8 +207,8 @@ namespace Wasatch{
 #    ifdef ENABLE_THREADS
       int exprLibThreads=0;
       wasatchParams_->get( "ExprLibThreads", exprLibThreads );
-      SpatialOps::ThreadPoolResourceManager::self().resize( SpatialOps::ThreadPool::self(), NTHREADS );
-      SpatialOps::ThreadPoolResourceManager::self().resize_active( SpatialOps::ThreadPool::self(), exprLibThreads );
+      Expr::set_hard_thread_count( NTHREADS );
+      Expr::set_soft_thread_count( exprLibThreads );
 #    else
       throw Uintah::InternalError("Wasatch: cannot specify thread counts unless SpatialOps is built with multithreading", __FILE__, __LINE__);
 #    endif
