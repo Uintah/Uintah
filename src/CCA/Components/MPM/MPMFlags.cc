@@ -325,7 +325,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
   // Get the size of the vectors associated with the interpolator
-  d_8or27=interpolator->size();
+  d_8or27=d_interpolator->size();
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
 
