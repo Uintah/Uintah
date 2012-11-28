@@ -105,7 +105,7 @@
             <min>[0.0,-2.0e-2,0.0]</min>
             <max>[3.0e-2,0.0e-2,3.0e-2]</max>
           </box>
-          <res>[2,2,2]</res>
+          <res>[2,2,1]</res>
           <velocity>[0.0,0.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
@@ -148,7 +148,7 @@
               <top_radius>0.5e-2</top_radius>
             </cone>
           </union>
-          <res>[2,2,2]</res>
+          <res>[2,2,1]</res>
           <velocity>[0.0,-800.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
