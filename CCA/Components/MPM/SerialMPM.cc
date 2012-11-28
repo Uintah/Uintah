@@ -1348,9 +1348,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
-  if(interp_type=="cpgimp"){
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel,      gnone);
-  }
   t->modifies(lb->pVolumeLabel_preReloc);
 
   if(flags->d_with_ice){
@@ -1487,9 +1484,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
-  if(interp_type=="cpgimp"){
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel,      gnone);
-  }
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -2027,13 +2021,12 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       }
     }
     else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
-          || interp_type=="cpdi" || interp_type=="cpgimp")
+          || interp_type=="cpdi")
                           && (num_extra_cells+periodic)!=IntVector(1,1,1)){
         ostringstream msg;
         msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
             << " or <interpolator>3rdorderBS</interpolator> \n"
             << " or <interpolator>cpdi</interpolator> \n"
-            << " or <interpolator>cpgimp</interpolator> \n"
             << " you must also use extraCells and/or periodicBCs such\n"
             << " the sum of the two is [1,1,1].\n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
@@ -2301,7 +2294,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
             //gnumnearparticles[node] += 1.0;
-            //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+            //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
         if (flags->d_useCBDI && pLoadCurveID[idx]>0) {
@@ -2841,6 +2834,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                          psize[idx],pFOld[idx]);
+
           stressvol  = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
   
@@ -2848,9 +2842,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           double IFr=0.,IFz=0.;
           for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
-               IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
+              IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
                     d_S[k].y()*oodx[1]*stresspress(0,1) +
-                      S[k]*stresspress(2,2)/px[idx].x();
+                    S[k]*stresspress(2,2)/px[idx].x();
+                    //d_S[k].z()*stresspress(2,2);
               IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
                   + d_S[k].y()*oodx[1]*stresspress(1,1);
               internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];
@@ -3862,18 +3857,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         partvoldef += pvolume[idx];
       }
 
-      if(interp_type == "cpgimp"){
-       old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
-       for(ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          psizeNew[idx]=Matrix3(
-                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
-                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
-                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
-       }
-      }
-
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
       // Also delete particles whose mass is too small (due to combustion)
@@ -4247,19 +4230,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
       }
-
-      if(interp_type == "cpgimp"){
-       old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
-       for(ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          psizeNew[idx]=Matrix3(
-                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
-                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
-                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
-       }
-      }
-
 
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
