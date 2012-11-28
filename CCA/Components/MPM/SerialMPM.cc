@@ -1328,8 +1328,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
-  string interp_type = flags->d_interpolator_type;
-
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
@@ -1467,8 +1465,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
 
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdateMom2",
                       this, &SerialMPM::interpolateToParticlesAndUpdateMom2);
-
-  string interp_type = flags->d_interpolator_type;
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
@@ -2387,8 +2383,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    string interp_type = flags->d_interpolator_type;
-
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<NCVariable<Vector> > gext_force(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
@@ -2725,10 +2719,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
     string interp_type = flags->d_interpolator_type;
-
-
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
@@ -2901,7 +2892,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       } // faces
       
-      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
@@ -3671,7 +3661,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -3945,7 +3934,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -4080,7 +4068,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -4656,8 +4643,6 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-
-    string interp_type = flags->d_interpolator_type;
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gnone = Ghost::None;
