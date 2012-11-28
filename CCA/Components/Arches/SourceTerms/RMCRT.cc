@@ -244,12 +244,32 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
                            &RMCRT_Radiation::radProperties, time_sub_step ); 
                            
   printSchedule(level,dbg, "RMCRT_Radiation::sched_radProperties");
+	std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from radprops
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel ); 
+	  for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+	  	
+	  	const VarLabel* label = VarLabel::find(*iter);
+	  	_species_varlabels.push_back(label); 
+
+	  	if ( label != 0 ){ 
+	  		tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+	  	} else { 
+      	throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+	  	}
+	  }
   } else {  
     tsk->modifies( _abskgLabel );
+		for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin(); 
+				iter != _species_varlabels.end(); iter++ ){ 
+			tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+		} 
   }
+
+
+
+
   sched->addTask( tsk, level->eachPatch(), _matlSet ); 
 }
 
@@ -259,25 +279,37 @@ void
 RMCRT_Radiation::radProperties( const ProcessorGroup* ,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* ,
+                                DataWarehouse* old_dw,
                                 DataWarehouse* new_dw, 
                                 const int time_sub_step )
 {
   for (int p=0; p < patches->size(); p++){
 
+		std::vector<constCCVariable<double> > species; 
+
     const Patch* patch = patches->get(p);
+
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
 
+		DataWarehouse* which_dw; 
     CCVariable<double> abskg; 
-    CCVariable<double> temp;
     if ( time_sub_step == 0 ) { 
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
+			which_dw = old_dw; 
     } else { 
       new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
+			which_dw = new_dw; 
     }
+
+		for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin(); 
+				iter != _species_varlabels.end(); iter++ ){ 
+			constCCVariable<double> var; 
+			which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
+			species.push_back( var ); 
+		}
     
     // compute absorption coefficient via RadPropertyCalulator
-    _prop_calculator->compute( patch, abskg );
+    _prop_calculator->compute( patch, species, abskg );
     
     // abskg boundary conditions are set in setBoundaryCondition()
   }
