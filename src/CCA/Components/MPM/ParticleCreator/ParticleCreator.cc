@@ -622,8 +622,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
           affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
   Matrix3 size(1./((double) ppc.x()),0.,0.,
-              0.,1./((double) ppc.y()),0.,
-              0.,0.,1./((double) ppc.z()));
+               0.,1./((double) ppc.y()),0.,
+               0.,0.,1./((double) ppc.z()));
   size=affineTrans_A*size;
 
 /*
@@ -646,43 +646,42 @@ ParticleCreator::initializeParticle(const Patch* patch,
 */
 
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
-//MMS
- string mms_type = d_flags->d_mms_type;
- if(!mms_type.empty()) {
-	MMS MMSObject;
-	MMSObject.initializeParticleForMMS(position,pvelocity,psize,pdisp,pmass,
-						pvolume,p,dxcc,size,patch,d_flags,i);
- }  else {
-	  position[i] = p;
-	  if(d_flags->d_axisymmetric){
-	    // assume unit radian extent in the circumferential direction
-	    pvolume[i]  = p.x()*(size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
-	  } else {
-	    // standard voxel volume
-	    pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
-	  }
 
-	  psize[i]    = size;
+  //MMS
+  string mms_type = d_flags->d_mms_type;
+  if(!mms_type.empty()) {
+    MMS MMSObject;
+    MMSObject.initializeParticleForMMS(position,pvelocity,psize,pdisp,pmass,
+                                       pvolume,p,dxcc,size,patch,d_flags,i);
+  }  else {
+    position[i] = p;
+     if(d_flags->d_axisymmetric){
+      // assume unit radian extent in the circumferential direction
+      pvolume[i] = p.x()*
+                   (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
+     } else {
+     // standard voxel volume
+     pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
+    }
 
-	  pvelocity[i]    = (*obj)->getInitialData_Vector("velocity");
+    psize[i]      = size;
+    pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
 
-	  double vol_frac_CC = 1.0;
-	  try {
-	    if((*obj)->getInitialData_double("volumeFraction") == -1.0)
-	    {    
-	      vol_frac_CC = 1.0;
-	      pmass[i]        = matl->getInitialDensity()*pvolume[i];
-	    } else {
-	      vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
-	      pmass[i]        = matl->getInitialDensity()*pvolume[i]*vol_frac_CC;
-	    }
-	  } catch (...)
-	  {
-	    vol_frac_CC = 1.0;       
-	    pmass[i]        = matl->getInitialDensity()*pvolume[i];
-	  }
-	  pdisp[i]        = Vector(0.,0.,0.);
-}
+    double vol_frac_CC = 1.0;
+    try {
+     if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
+      vol_frac_CC = 1.0;
+      pmass[i]      = matl->getInitialDensity()*pvolume[i];
+     } else {
+      vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
+      pmass[i]      = matl->getInitialDensity()*pvolume[i]*vol_frac_CC;
+     }
+    } catch (...) {
+      vol_frac_CC = 1.0;       
+      pmass[i]      = matl->getInitialDensity()*pvolume[i];
+    }
+    pdisp[i]        = Vector(0.,0.,0.);
+  }
   
   if(d_with_color){
     pcolor[i] = (*obj)->getInitialData_double("color");
