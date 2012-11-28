@@ -288,34 +288,25 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   if(d_interpolator_type=="linear"){
     d_interpolator = scinew LinearInterpolator();
-    d_8or27 = 8;
   } else if(d_interpolator_type=="gimp"){
     if(d_axisymmetric){
       d_interpolator = scinew AxiGIMPInterpolator();
-      d_8or27 = 18;
     } else{
       d_interpolator = scinew GIMPInterpolator();
-      d_8or27 = 27;
     }
   } else if(d_interpolator_type=="cpgimp"){
     d_interpolator = scinew GIMPInterpolator();
-    d_8or27 = 27;
   } else if(d_interpolator_type=="3rdorderBS"){
     d_interpolator = scinew TOBSplineInterpolator();
-    d_8or27 = 27;
   } else if(d_interpolator_type=="4thorderBS"){
     d_interpolator = scinew BSplineInterpolator();
-    d_8or27 = 64;
   } else if(d_interpolator_type=="cpdi"){
     if(d_axisymmetric){
       d_interpolator = scinew axiCpdiInterpolator();
-      d_8or27 = 32;
     } else{
       d_interpolator = scinew cpdiInterpolator();
-      d_8or27 = 64;
     }
   } else if(d_interpolator_type=="fastcpdi"){
-    d_8or27 = 27;
     if(d_axisymmetric){
       d_interpolator = scinew fastAxiCpdiInterpolator();
     } else{
@@ -333,6 +324,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
          << "4thorderBS\n"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
+  // Get the size of the vectors associated with the interpolator
+  d_8or27=interpolator->size();
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
 
