@@ -108,7 +108,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   if(flag->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flag->d_8or27==27 || flag->d_8or27==64){
+  } else{
     NGP=2;
     NGN=2;
   }

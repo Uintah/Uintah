@@ -307,11 +307,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_interpolator = scinew BSplineInterpolator();
     d_8or27 = 64;
   } else if(d_interpolator_type=="cpdi"){
-    d_8or27 = 64;
     if(d_axisymmetric){
       d_interpolator = scinew axiCpdiInterpolator();
+      d_8or27 = 32;
     } else{
       d_interpolator = scinew cpdiInterpolator();
+      d_8or27 = 64;
     }
   } else if(d_interpolator_type=="fastcpdi"){
     d_8or27 = 27;

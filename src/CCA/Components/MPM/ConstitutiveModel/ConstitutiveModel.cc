@@ -51,7 +51,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
-  } else if(flag->d_8or27==27 || flag->d_8or27==64 || flag->d_8or27==18){ 
+  } else{ 
     NGN=2;
   }
 }
