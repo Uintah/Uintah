@@ -2822,11 +2822,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
              iter++){
           particleIndex idx = *iter;
 
-      
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                          psize[idx],pFOld[idx]);
 
-          stressvol  = pstress[idx]*pvol[idx];
+          stressvol   = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
   
           // r is the x direction, z (axial) is the y direction
@@ -2835,8 +2834,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             if(patch->containsNode(ni[k])){
               IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
                     d_S[k].y()*oodx[1]*stresspress(0,1) +
-                    S[k]*stresspress(2,2)/px[idx].x();
-                    //d_S[k].z()*stresspress(2,2);
+                    d_S[k].z()*stresspress(2,2);
               IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
                   + d_S[k].y()*oodx[1]*stresspress(1,1);
               internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];

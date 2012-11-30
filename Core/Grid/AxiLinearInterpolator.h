@@ -22,33 +22,44 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef AXI_GIMP_INTERPOLATOR_H
-#define AXI_GIMP_INTERPOLATOR_H
+#ifndef AXI_LINEAR_INTERPOLATOR_H
+#define AXI_LINEAR_INTERPOLATOR_H
 
+#include <Core/Math/MiscMath.h>
 #include <Core/Grid/ParticleInterpolator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <vector>
 
 namespace Uintah {
 
-  class Patch;
+  using namespace SCIRun;
+  using std::vector;
 
-  class AxiGIMPInterpolator : public ParticleInterpolator {
+  class AxiLinearInterpolator : public ParticleInterpolator {
     
   public:
     
-    AxiGIMPInterpolator();
-    AxiGIMPInterpolator(const Patch* patch);
-    virtual ~AxiGIMPInterpolator();
+    AxiLinearInterpolator();
+    AxiLinearInterpolator(const Patch* patch);
+    virtual ~AxiLinearInterpolator();
     
-    virtual AxiGIMPInterpolator* clone(const Patch*);
-    
-    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
-                                    vector<double>& S, const Matrix3& size,
-                                    const Matrix3& defgrad);
+    virtual AxiLinearInterpolator* clone(const Patch*);
+
+    virtual void findCellAndWeights(const Point& p,
+                                    vector<IntVector>& ni, 
+				         vector<double>& S,
+                                     const Matrix3& size, 
+                                     const Matrix3& defgrad);
+                                
     virtual void findCellAndShapeDerivatives(const Point& pos,
-                                             vector<IntVector>& ni,
-                                             vector<Vector>& d_S,
-                                             const Matrix3& size,
+					          vector<IntVector>& ni,
+					          vector<Vector>& d_S,
+					          const Matrix3& size, 
                                              const Matrix3& defgrad);
+                                        
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                        vector<IntVector>& ni,
                                                        vector<double>& S,
@@ -56,11 +67,10 @@ namespace Uintah {
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
     virtual int size();
-    
+
   private:
     const Patch* d_patch;
     int d_size;
-    
   };
 }
 
