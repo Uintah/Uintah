@@ -339,26 +339,23 @@ void axiCpdiInterpolator::findCellAndWeightsAndShapeDerivatives(
     S[i85] = S[i81];
     S[i86] = S[i82];
     S[i87] = S[i83];
-
+ 
+    double r = pos.x();
     d_S[i8][0]  = alpha[i][0]*phi[0];
     d_S[i8][1]  = alpha[i][1]*phi[0];
-//    d_S[i8][2]  = alpha[i][2]*phi[0];
-    d_S[i8][2]  = 0.0;
+    d_S[i8][2]  = S[i8]/r;
 
     d_S[i81][0] = alpha[i][0]*phi[1];
     d_S[i81][1] = alpha[i][1]*phi[1];
-//    d_S[i81][2] = alpha[i][2]*phi[1];
-    d_S[i81][2] = 0.0;
+    d_S[i81][2] = S[i81]/r;
 
     d_S[i82][0] = alpha[i][0]*phi[2];
     d_S[i82][1] = alpha[i][1]*phi[2];
-//    d_S[i82][2] = alpha[i][2]*phi[2];
-    d_S[i82][2] = 0.0;
+    d_S[i82][2] = S[i82]/r;
 
     d_S[i83][0] = alpha[i][0]*phi[3];
     d_S[i83][1] = alpha[i][1]*phi[3];
-//    d_S[i83][2] = alpha[i][2]*phi[3];
-    d_S[i83][2] = 0.0;
+    d_S[i83][2] = S[i83]/r;
 
     d_S[i84] = d_S[i8];
     d_S[i85] = d_S[i81];

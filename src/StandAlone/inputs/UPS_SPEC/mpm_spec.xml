@@ -28,7 +28,7 @@
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
-      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, fastcpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>

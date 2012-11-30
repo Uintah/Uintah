@@ -26,12 +26,13 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/AxiLinearInterpolator.h>
 #include <Core/Grid/GIMPInterpolator.h>
 #include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
-#include <Core/Grid/fastCpdiInterpolator.h>
-#include <Core/Grid/fastAxiCpdiInterpolator.h>
+//#include <Core/Grid/fastCpdiInterpolator.h>
+//#include <Core/Grid/fastAxiCpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -172,7 +173,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, cpgimp, 3rdorderBS, cpdi, fastcpdi" << endl;
+     cerr << "linear, gimp, 3rdorderBS, cpdi" << endl;
     exit(1);
   }
 
@@ -287,38 +288,57 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   delete d_interpolator;
 
   if(d_interpolator_type=="linear"){
-    d_interpolator = scinew LinearInterpolator();
+    if(d_axisymmetric){
+      d_interpolator = scinew AxiLinearInterpolator();
+    } else{
+      d_interpolator = scinew LinearInterpolator();
+    }
   } else if(d_interpolator_type=="gimp"){
     if(d_axisymmetric){
       d_interpolator = scinew AxiGIMPInterpolator();
     } else{
       d_interpolator = scinew GIMPInterpolator();
     }
-  } else if(d_interpolator_type=="cpgimp"){
-    d_interpolator = scinew GIMPInterpolator();
   } else if(d_interpolator_type=="3rdorderBS"){
-    d_interpolator = scinew TOBSplineInterpolator();
+    if(!d_axisymmetric){
+      d_interpolator = scinew TOBSplineInterpolator();
+    } else{
+      ostringstream warn;
+      warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
+           << "Can't be used with axisymmetry at this time \n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
   } else if(d_interpolator_type=="4thorderBS"){
-    d_interpolator = scinew BSplineInterpolator();
+    if(!d_axisymmetric){
+      d_interpolator = scinew BSplineInterpolator();
+    } else{
+      ostringstream warn;
+      warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
+           << "Can't be used with axisymmetry at this time \n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
   } else if(d_interpolator_type=="cpdi"){
     if(d_axisymmetric){
       d_interpolator = scinew axiCpdiInterpolator();
     } else{
       d_interpolator = scinew cpdiInterpolator();
     }
-  } else if(d_interpolator_type=="fastcpdi"){
+  }
+#if 0
+ else if(d_interpolator_type=="fastcpdi"){
     if(d_axisymmetric){
       d_interpolator = scinew fastAxiCpdiInterpolator();
     } else{
       d_interpolator = scinew fastCpdiInterpolator();
     }
-  }else{
+  }
+#endif
+else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
          << "Valid options are: \n"
          << "linear\n"
          << "gimp\n"
-         << "cpgimp\n"
          << "cpdi\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
