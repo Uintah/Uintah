@@ -56,7 +56,7 @@ NIGHTLYTESTS = [
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Darwin" , ["doesTestRun"])     , 
    ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
-#   ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
+   ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_2"                , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_3"                , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
