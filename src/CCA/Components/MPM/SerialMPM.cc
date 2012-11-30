@@ -2016,15 +2016,18 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
     }
-    else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
+    else if(((interp_type=="gimp" || interp_type=="3rdorderBS" 
           || interp_type=="cpdi")
-                          && (num_extra_cells+periodic)!=IntVector(1,1,1)){
+                          && ((num_extra_cells+periodic)!=IntVector(1,1,1)
+                          && ((num_extra_cells+periodic)!=IntVector(1,1,0) 
+                          && flags->d_axisymmetric)))){
         ostringstream msg;
         msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
             << " or <interpolator>3rdorderBS</interpolator> \n"
             << " or <interpolator>cpdi</interpolator> \n"
             << " you must also use extraCells and/or periodicBCs such\n"
-            << " the sum of the two is [1,1,1].\n";
+            << " the sum of the two is [1,1,1].\n"
+            << " If using axisymmetry, the sum of the two can be [1,1,0].\n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
 
