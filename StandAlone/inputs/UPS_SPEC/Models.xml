@@ -10,8 +10,6 @@
       <randomSeed             spec="OPTIONAL BOOLEAN"/>
       <Temperature            spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
       <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>
-      <sigmaScat              spec="OPTIONAL DOUBLE  'positive'"/>
-      <abskgBench4            spec="OPTIONAL DOUBLE  'positive'"/>
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
       <Slice                  spec="OPTIONAL DOUBLE"/>
@@ -25,11 +23,6 @@
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
       <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>
-      <NoOfFluxRays           spec="OPTIONAL INTEGER 'positive'"/>
-      <shouldSetBCs           spec="OPTIONAL BOOLEAN"/>
-      <allowReflect           spec="OPTIONAL BOOLEAN"/>
-      <solveDivQ              spec="OPTIONAL BOOLEAN"/>
-      <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
            
       <algorithm                spec="OPTIONAL NO_DATA" 
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
@@ -38,7 +31,7 @@
         <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
         
         <ROI_extents            spec="OPTIONAL NO_DATA"
-                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+                                   attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
     
           <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
           <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
@@ -54,7 +47,7 @@
     <!--__________________________________-->
     <!--  Models used by ICE & MPMICE     -->
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, ZeroOrder, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1, SolidReactionModel, MesoBurn'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, ZeroOrder, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1, SolidReactionModel'" >
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp ZeroOrder Simple_Burn DDT0 SolidReactionModel" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp ZeroOrder Thomsen_Hartka_water Tillotson" />
@@ -81,7 +74,7 @@
         <fromMaterial         spec="OPTIONAL STRING" />           
         <toMaterial           spec="OPTIONAL STRING" />           
         <D                    spec="REQUIRED DOUBLE 'positive'"/>  
-        <E0                   spec="REQUIRED DOUBLE 'positive'"/>
+        <E0                    spec="REQUIRED DOUBLE 'positive'"/>
         <starting_location    spec="REQUIRED VECTOR" />           
         <react_mixed_cells    spec="REQUIRED BOOLEAN"/>              
         <direction_if_plane   spec="REQUIRED VECTOR"/>            
@@ -112,7 +105,6 @@
         </scalar>
       </SimpleRxn>
      
-      <AfterMelting           spec="OPTIONAL BOOLEAN" />
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
       <BoundaryParticles      spec="OPTIONAL INTEGER" />
       <BurnCoeff              spec="OPTIONAL DOUBLE" />
@@ -121,7 +113,6 @@
       <CondPhaseHeat          spec="OPTIONAL DOUBLE" />
       <CondUnsteadyCoef       spec="OPTIONAL DOUBLE" />
       <CrackVolThreshold      spec="OPTIONAL DOUBLE" />
-      <Cv                     spec="OPTIONAL DOUBLE" />
       
       <Enthalpy               spec="OPTIONAL DOUBLE" />
       <fromMaterial           spec="OPTIONAL STRING" />
@@ -132,7 +123,6 @@
       <HeatConductCondPh      spec="OPTIONAL DOUBLE" />
       <IdealGasConst          spec="OPTIONAL DOUBLE" />
       <IgnitionTemp           spec="OPTIONAL DOUBLE" />
-      <k                      spec="OPTIONAL DOUBLE" />
       
       <material               spec="OPTIONAL STRING" />
       <MoleWeightGasPh        spec="OPTIONAL DOUBLE" />
@@ -215,7 +205,6 @@
       
       
       <SpecificHeatBoth       spec="OPTIONAL DOUBLE" />
-      <Ta                     spec="OPTIONAL DOUBLE" />
       <table                  spec="OPTIONAL NO_DATA" 
                                 attribute1="name REQUIRED STRING 'adiabatic'"
                                 attribute2="type REQUIRED STRING 'Arches'" >
@@ -241,6 +230,14 @@
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <useCrackModel          spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
       <useZeroOrderRate       spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
+     
+     <!-- Inputs for ignition time  to delay burn propagation-->
+     <useInductionTime        spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>
+     <IgnitionConst           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+     <PressureShift           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+     <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+     <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+     
      
       <IandG                  spec="OPTIONAL NO_DATA">
         <fromMaterial         spec="REQUIRED STRING" />
