@@ -23,6 +23,7 @@
  */
 
 
+
 #ifndef Packages_Uintah_CCA_Components_Models_DDT1_h
 #define Packages_Uintah_CCA_Components_Models_DDT1_h
 
@@ -49,7 +50,8 @@ GENERAL INFORMATION
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   
+   Copyright (C) 2000 SCI Group
+
 KEYWORDS
    "DDT1" "JWL++" "Reactive Flow Model" "WSB"
 
@@ -138,16 +140,30 @@ WARNING
                        DataWarehouse*, 
                        const ModelInfo*);
       
-    double computeBurnedMass(double To, double& Ts,  double P, double Vc,
-                             double surfArea, double delT, double solidMass);
+    double computeBurnedMass(double To, 
+                             double& Ts,  
+                             double P, 
+                             double Vc,
+                             double surfArea, 
+                             double delT, 
+                             double solidMass);
+    
+    double computeInductionAngle(IntVector *nodeIdx, 
+                                  constNCVariable<double> &rctMass_NC, 
+                                  constNCVariable<double> &NC_CCweight, 
+                                  Vector &dx, 
+                                  double& cos_theta, 
+                                  double& theta,
+                                  Point hotcellCord, 
+                                  Point cellCord);  
       
     DDT1(const DDT1&);
     DDT1& operator=(const DDT1&);
 
       
     // Simple Burn
-    const VarLabel* detLocalToLabel; // diagnostic labels
-    const VarLabel* onSurfaceLabel; // diagnostic labels
+    const VarLabel* detLocalToLabel;        // diagnostic labels
+    const VarLabel* onSurfaceLabel;         // diagnostic labels
     const VarLabel* surfaceTempLabel;
     const VarLabel* totalMassBurnedLabel;
     const VarLabel* totalHeatReleasedLabel;
@@ -155,15 +171,17 @@ WARNING
     const VarLabel* crackedEnoughLabel;   
     const VarLabel* TsLabel;
     const VarLabel* numPPCLabel;
+    const VarLabel* burningTypeLabel;
+    
     // JWL++
     const VarLabel* reactedFractionLabel;   // diagnostic labels
-    const VarLabel* delFLabel;   // diagnostic labels
+    const VarLabel* delFLabel;              // diagnostic labels
     const VarLabel* totalMassConvertedLabel;
     const VarLabel* detonatingLabel;
     const VarLabel* inductionTimeLabel;
     const VarLabel* countTimeLabel;
     const VarLabel* BurningCriteriaLabel;
-
+    enum typeofBurning{ NOTDEFINED, WARMINGUP, CONDUCTIVE, CONVECTIVE, ONSURFACE };
 
     const VarLabel* pCrackRadiusLabel;
     
@@ -183,7 +201,7 @@ WARNING
 
     string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
-    bool d_useZeroOrderRate;
+    bool   d_useZeroOrderRate;
     double d_G;
     double d_b;
     double d_E0;
@@ -191,7 +209,7 @@ WARNING
     double d_threshold_volFrac;
 
     // Cracking Model
-    bool d_useCrackModel;
+    bool   d_useCrackModel;
     double d_Gcrack;            // Crack Burning Rate Constant
     double d_nCrack;            // Crack Burning Pressure Exponent
     double d_crackVolThreshold; // for cracking
@@ -211,6 +229,13 @@ WARNING
     double d_thresholdPress_SB; /*Threshold Press for burning */
     double ignitionTemp;        /* IgnitionTemp  */
     
+    //Induction Model
+    bool   d_useInductionTime;
+    double d_IC; /* Ignition time constant                           IgnitionConst */
+    double d_Fb; /* Preexponential for suface flame spread equation  PreexpoConst */
+    double d_Fc; /* exponent term for suface flame spread equaiton   ExponentialConst */
+    double d_PS; /* P0 for surface flame spread equation             PressureShift */  
+      
     double MIN_MASS_IN_A_CELL;
     
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */

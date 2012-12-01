@@ -32,6 +32,7 @@
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="tempIN"/>
+    <save label="abskgIN"/>
     <save label="co2IN"/>
     <save label="enthalpySP"/>
     <save label="sootFVIN"/>

@@ -294,7 +294,7 @@ namespace Uintah {
               velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
             }
           }
-          velGrad(2,2) += gvel.x()*S[k]/px.x();
+          velGrad(2,2) += gvel.x()*d_S[k].z();
         }
      };
 

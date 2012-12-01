@@ -568,6 +568,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux, d_boundFluxLabel, d_matl, patch );
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector origin = *iter;
+        boundFlux[origin].p = 0.0;
+        boundFlux[origin].w = 0.0;
+        boundFlux[origin].e = 0.0;
+        boundFlux[origin].s = 0.0;
+        boundFlux[origin].n = 0.0;
+        boundFlux[origin].b = 0.0;
+        boundFlux[origin].t = 0.0;
+      }
    }
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
