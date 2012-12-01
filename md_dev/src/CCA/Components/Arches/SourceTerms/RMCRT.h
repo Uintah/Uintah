@@ -166,6 +166,8 @@ private:
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
 
+	std::vector<const VarLabel*> _species_varlabels; 
+
 }; // end RMCRT
 } // end namespace Uintah
 #endif

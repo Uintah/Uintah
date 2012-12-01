@@ -131,12 +131,12 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     which_dw->get(   vars->hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
     which_dw->get(   vars->hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
 
-    std::vector<WallModelDriver::HTModelBase>::iterator iter; 
+    std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
     //loop over all HT models
     for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
 
-      iter->computeHT( patch, vars );
+      (*iter)->computeHT( patch, vars );
 
     }
   }
