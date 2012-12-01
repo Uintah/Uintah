@@ -225,10 +225,14 @@ namespace Wasatch{
       for( Uintah::ProblemSpecP level = grid->findBlock("Level");
            level != 0;
            level = grid->findNextBlock("Level") ){
+        
+        Uintah::IntVector periodicDirs;
+        level->get("periodic", periodicDirs);
+        isPeriodic = isPeriodic || (periodicDirs.x() == 1 || periodicDirs.y() == 1 || periodicDirs.z() == 1);
+
         for( Uintah::ProblemSpecP box = level->findBlock("Box");
              box != 0;
              box = level->findNextBlock("Box") ){
-          isPeriodic = level->findBlock("periodic");
           // note that a [0,0,0] specification gets added by default,
           // so we will check to ensure that something other than
           // [0,0,0] has not been specified.
