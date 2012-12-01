@@ -161,7 +161,6 @@ run \
   -DBoost_DIR=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
-  -DCMAKE_CXX_LINK_FLAGS=\"-lpthread -lz\" \
   .."
 
 run "make -j4 install"
@@ -187,6 +186,7 @@ run \
 "cmake \
   $DEBUG \
   -DRadProps_ENABLE_TESTING=OFF \
+  -DBoost_DIR=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
