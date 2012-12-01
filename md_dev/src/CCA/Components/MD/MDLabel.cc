@@ -72,23 +72,23 @@ MDLabel::~MDLabel()
   // vector quantities
   VarLabel::destroy(pXLabel);
   VarLabel::destroy(pXLabel_preReloc);
-  VarLabel::destroy (pForceLabel);
-  VarLabel::destroy (pForceLabel_preReloc);
-  VarLabel::destroy (pAccelLabel);
-  VarLabel::destroy (pAccelLabel_preReloc);
+  VarLabel::destroy(pForceLabel);
+  VarLabel::destroy(pForceLabel_preReloc);
+  VarLabel::destroy(pAccelLabel);
+  VarLabel::destroy(pAccelLabel_preReloc);
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
 
   // scalars
-  VarLabel::destroy (pEnergyLabel);
-  VarLabel::destroy (pEnergyLabel_preReloc);
+  VarLabel::destroy(pEnergyLabel);
+  VarLabel::destroy(pEnergyLabel_preReloc);
   VarLabel::destroy(pMassLabel);
   VarLabel::destroy(pMassLabel_preReloc);
-  VarLabel::destroy (pChargeLabel);
-  VarLabel::destroy (pChargeLabel_preReloc);
+  VarLabel::destroy(pChargeLabel);
+  VarLabel::destroy(pChargeLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
 
   // reduction variables
-  VarLabel::destroy (vdwEnergyLabel);
+  VarLabel::destroy(vdwEnergyLabel);
 }

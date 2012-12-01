@@ -22,49 +22,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef TRANSFORMATION_3D_H
+#define TRANSFORMATION_3D_H
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+
+#include <vector>
+#include <list>
 
 namespace Uintah {
 
-class VarLabel;
+using SCIRun::Vector;
+using SCIRun::IntVector;
 
-class MDLabel {
+template<class T> class Transformation3D {
 
   public:
+    Transformation3D();
 
-    MDLabel();
+    ~Transformation3D();
 
-    ~MDLabel();
-
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
-
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
-
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
-
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
 
 };
 

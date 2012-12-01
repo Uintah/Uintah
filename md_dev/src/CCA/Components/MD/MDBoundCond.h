@@ -22,52 +22,40 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef UINTAH_MD_BOUND_COND_H
+#define UINTAH_MD_BOUND_COND_H
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
 
-class VarLabel;
+using namespace SCIRun;
 
-class MDLabel {
+class MDBoundCond {
 
   public:
 
-    MDLabel();
+    MDBoundCond();
 
-    ~MDLabel();
+    ~MDBoundCond();
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
+    void setBoundaryCondition(const Patch* patch,
+                              int matID,
+                              const string& type,
+                              NCVariable<Vector>& variable,
+                              string interp_type = "linear");
 
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
+    void setBoundaryCondition(const Patch* patch,
+                              int matID,
+                              const string& type,
+                              NCVariable<double>& variable,
+                              string interp_type = "linear");
 
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
-
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
 
 };
 
-}  // End namespace Uintah
+}
 
 #endif

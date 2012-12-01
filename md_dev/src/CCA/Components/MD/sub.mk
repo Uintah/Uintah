@@ -32,8 +32,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR	:= CCA/Components/MD
 
-SRCS += $(SRCDIR)/MD.cc        \
-        $(SRCDIR)/MDLabel.cc  \
+SRCS += $(SRCDIR)/MD.cc                \
+        $(SRCDIR)/MDLabel.cc           \
+        $(SRCDIR)/SPMEGrid.cc          \
+        $(SRCDIR)/SPMEGridMap.cc       \
+        $(SRCDIR)/SPMEGridPoint.cc     \
+        $(SRCDIR)/SPMEMapPoint.cc      \
+        $(SRCDIR)/Transformation3D.cc  \
+        $(SRCDIR)/MDBoundCond.cc
 
 SUBDIRS := \
 

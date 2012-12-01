@@ -22,49 +22,55 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef UINTAH_SPME_MAP_POINT_H
+#define UINTAH_SPME_MAP_POINT_H
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+
+#include <vector>
+#include <list>
 
 namespace Uintah {
 
-class VarLabel;
+using SCIRun::Vector;
+using SCIRun::IntVector;
 
-class MDLabel {
+template<class T> class SPMEMapPoint {
 
   public:
+    SPMEMapPoint();
 
-    MDLabel();
+    ~SPMEMapPoint();
 
-    ~MDLabel();
+    inline const double GetParticleCharge() const
+    {
+      // TODO Figure out what charge is
+//      return Particle->Charge();
+      return this->globalParticleSubset;
+    }
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
+    inline const double ChargeWeight() const
+    {
+      return this->d_chargeWeight;
+    }
 
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
+    inline void setParticleCharge(double charge)
+    {
 
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
+    }
 
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
+    // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle
+    ParticleSubset& globalParticleSubset;
+    double d_chargeWeight;
+    Vector d_forceGRadient;
 
 };
 

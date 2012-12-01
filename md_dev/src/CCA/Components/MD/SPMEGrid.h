@@ -22,49 +22,40 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef UINTAH_SPME_GRID_H
+#define UINTAH_SPME_GRID_H
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Array3.h>
+
+#include <vector>
+#include <list>
 
 namespace Uintah {
 
-class VarLabel;
+using SCIRun::Vector;
+using SCIRun::IntVector;
 
-class MDLabel {
+template<class T> class SPMEGrid {
 
   public:
+    SPMEGrid();
 
-    MDLabel();
+    ~SPMEGrid();
 
-    ~MDLabel();
+    void fft_realToFourier();
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
+    void fft_fourierToReal();
 
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
+    void calculateCharge();
 
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
-
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
+    IntVector d_gridExtents;
+    Array3<double> d_charge;
+    Array3<Vector> d_field;
 
 };
 

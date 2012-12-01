@@ -2,7 +2,7 @@
 
  The MIT License
 
- Copyright (c) 2012 The University of Utah
+ Copyright (c) 1997-2012 The University of Utah
 
  License for the specific language governing rights and limitations under
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,116 +31,158 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/SPMEGrid.h>
+#include <CCA/Components/MD/SPMEGridMap.h>
+#include <CCA/Components/MD/SPMEMapPoint.h>
+#include <CCA/Components/MD/Transformation3D.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <complex>
 
 namespace Uintah {
 
-  class SimpleMaterial;
-  class ExamplesLabel;
+class SimpleMaterial;
 
-  class MD : public UintahParallelComponent, public SimulationInterface {
+class MD : public UintahParallelComponent, public SimulationInterface {
 
-    public:
-      MD(const ProcessorGroup* myworld);
+  public:
+    MD(const ProcessorGroup* myworld);
 
-      virtual ~MD();
+    virtual ~MD();
 
-      virtual void problemSetup(const ProblemSpecP& params,
-                                const ProblemSpecP& restart_prob_spec,
-                                GridP& grid,
-                                SimulationStateP&);
+    virtual void problemSetup(const ProblemSpecP& params,
+                              const ProblemSpecP& restart_prob_spec,
+                              GridP& grid,
+                              SimulationStateP&);
 
-      virtual void scheduleInitialize(const LevelP& level,
-                                      SchedulerP& sched);
+    virtual void scheduleInitialize(const LevelP& level,
+                                    SchedulerP& sched);
 
-      virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                                 SchedulerP&);
+    virtual void scheduleComputeStableTimestep(const LevelP& level,
+                                               SchedulerP&);
 
-      virtual void scheduleTimeAdvance(const LevelP& level,
-                                       SchedulerP&);
+    virtual void scheduleTimeAdvance(const LevelP& level,
+                                     SchedulerP&);
 
-    protected:
+    virtual void scheduleSPME();
 
-      void scheduleCalculateNonBondedForces(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls);
+  protected:
 
-      void scheduleUpdatePosition(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
+    void scheduleCalculateNonBondedForces(SchedulerP& sched,
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls);
 
-    private:
+    void scheduleUpdatePosition(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls);
 
-      inline bool containsAtom(const IntVector &l,
-                               const IntVector &h,
-                               const Point &p)
-      {
-        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
-      }
+  private:
 
-      void generateNeighborList();
+    inline bool containsAtom(const IntVector &l,
+                             const IntVector &h,
+                             const Point &p)
+    {
+      return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
+    }
 
-      void extractCoordinates();
+    void generateNeighborList();
 
-      bool isNeighbor(const Point* atom1,
-                      const Point* atom2);
+    std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+                                         const Transformation3D<std::complex<double> >& invertSpace);
 
-      void initialize(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw);
+    void extractCoordinates();
 
-      void computeStableTimestep(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+    bool isNeighbor(const Point* atom1,
+                    const Point* atom2);
 
-      void calculateNonBondedForces(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+    void initialize(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
-      void updatePosition(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+    void computeStableTimestep(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
-      MDLabel* lb;
-      SimulationStateP d_sharedState_;
-      SimpleMaterial* mymat_;
-      double delt_;
+    vector<double> generateMVector(int Points,
+                                   int Shift,
+                                   int Max);
 
-      std::vector<std::vector<const VarLabel*> > d_particleState;
-      std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
+    vector<std::complex<double> > generateBVector(const int& points,
+                                                  const vector<double>& M,
+                                                  const int& max,
+                                                  const int& splineOrder,
+                                                  const vector<double>& splineCoeff);
 
-      // fields specific to non-bonded interaction (LJ Potential)
-      string coordinateFile_;
-      unsigned int numAtoms_;
-      double cutoffRadius_;  // the short ranged cut off distances (in Angstroms)
-      Vector box_;  // the size of simulation
-      double R12_;  // this is the v.d.w. repulsive parameter
-      double R6_;  // this is the v.d.w. attractive parameter
+    void calculateStaticGrids(const SPMEGrid<std::complex<double> >& localSPMEGrid,
+                              const ParticleSubset& system,
+                              SPMEGrid<std::complex<double> >& fB,
+                              SPMEGrid<std::complex<double> >& fC,
+                              SPMEGrid<std::complex<double> >& stressPreMult);
 
-      // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      std::vector<Point> atomList;
-      std::vector<vector<int> > neighborList;
+    void solveSPMECharge();
 
-      // copy constructor and operator=
-      MD(const MD&);
-      MD& operator=(const MD&);
-  };
+    SPMEGridMap<double> createSPMEChargeMap(const SPMEGrid<std::complex<double> >& SPMEGlobalGrid,
+                                            const Patch& CurrentPatch,
+                                            const ParticleSubset& globalParticleSubset);
+
+    void spmeMapChargeToGrid(SPMEGrid<std::complex<double> >& LocalGridCopy,
+                             const SPMEGridMap<std::complex<double> >& LocalGridMap,
+                             const Patch& CurrentPatch);
+
+    SPMEGrid<double> fC(const IntVector& GridExtents,
+                        const ParticleSubset& globalParticleSubset);
+
+    SPMEGrid<std::complex<double> > fB(const IntVector& GridExtents,
+                                       const ParticleSubset& globalParticleSubset);
+
+    void calculateNonBondedForces(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+    void updatePosition(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    MDLabel* lb;
+    SimulationStateP d_sharedState_;
+    SimpleMaterial* mymat_;
+    double delt_;
+
+    std::vector<std::vector<const VarLabel*> > d_particleState;
+    std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
+
+    // fields specific to non-bonded interaction (LJ Potential)
+    string coordinateFile_;
+    unsigned int numAtoms_;
+    double cutoffRadius_;  // the short ranged cut off distances (in Angstroms)
+    Vector box_;  // the size of simulation
+    double R12_;  // this is the v.d.w. repulsive parameter
+    double R6_;  // this is the v.d.w. attractive parameter
+
+    // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
+    std::vector<Point> atomList;
+    std::vector<vector<int> > neighborList;
+
+    // copy constructor and operator=
+    MD(const MD&);
+    MD& operator=(const MD&);
+};
 }
 
 #endif
