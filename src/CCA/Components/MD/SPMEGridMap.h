@@ -22,49 +22,44 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef UINTAH_SPME_GRID_MAP_H
+#define UINTAH_SPME_GRID_MAP_H
+
+#include <CCA/Components/MD/SPMEGridPoint.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+
+#include <vector>
+#include <list>
+#include <complex>
 
 namespace Uintah {
 
-class VarLabel;
+using SCIRun::Vector;
+using SCIRun::IntVector;
 
-class MDLabel {
+template<class T> class SPMEGridMap {
 
   public:
+    SPMEGridMap();
 
-    MDLabel();
+    ~SPMEGridMap();
 
-    ~MDLabel();
+    double mapChargeFromAtoms();
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
+    void mapChargeFromAtoms(constCCVariable<std::complex<double> >& atoms);
 
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
+    void mapForceToAtoms(const constCCVariable<std::complex<double> >& atoms);
 
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
+    SPMEGridPoint<std::complex<double> >& addMapPoint();
 
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
+    vector<double> list;
 
 };
 

@@ -22,49 +22,49 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#ifndef UINTAH_SPME_GRID_POINT_H
+#define UINTAH_SPME_GRID_POINT_H
+
+#include <CCA/Components/MD/SPMEMapPoint.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+
+#include <vector>
+#include <list>
+#include <complex>
 
 namespace Uintah {
 
-class VarLabel;
+using SCIRun::Vector;
+using SCIRun::IntVector;
 
-class MDLabel {
+template<class T> class SPMEGridPoint {
 
   public:
+    SPMEGridPoint();
 
-    MDLabel();
+    ~SPMEGridPoint();
 
-    ~MDLabel();
+    void mapChargeToAtoms();
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
+    void mapForceToAtoms();
 
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
+    void mapChargeFromAtoms();
 
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
+    void addMapPoint(ParticleVariable<double>& pv,
+                     const double& weight,
+                     const Vector& gradient);
 
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
+  private:
+    double d_gridPointCharge;
+    double d_totalChargeContributionWeight;
+    double d_totalChargeCoefficientWeight;
+    Vector d_field;
+    std::vector<SPMEMapPoint<double> > d_mappedAtoms;
 
 };
 

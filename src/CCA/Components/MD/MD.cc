@@ -2,7 +2,7 @@
 
  The MIT License
 
- Copyright (c) 2012 The University of Utah
+ Copyright (c) 1997-2012 The University of Utah
 
  License for the specific language governing rights and limitations under
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -26,6 +26,7 @@
  */
 
 #include <CCA/Components/MD/MD.h>
+#include <CCA/Components/MD/SPMEGrid.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -34,6 +35,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
@@ -43,6 +45,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <complex>
 
 using namespace Uintah;
 
@@ -130,8 +133,8 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, d_particleState_preReloc, lb->pXLabel, d_particleState, lb->pParticleIDLabel,
-                                    matls);
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, d_particleState_preReloc, lb->pXLabel, d_particleState,
+                                    lb->pParticleIDLabel, matls);
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
@@ -216,6 +219,65 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   }
 }
 
+void MD::scheduleSPME()
+{
+  // Global "driver" routine:
+  //  Variables prepended with f exist only in fourier space,
+  //  variables prepended with r exist only in real space, otherwise they may be either.
+
+  // Extract needed values from the system description
+  IntVector SPMEGridExtents;
+  Matrix3 InverseCell;
+  double SystemVolume;
+
+  SPMEGridExtents = MD_System->GetSPMEGridExtents();
+  InverseCell = MD_System->GetUnitCellInverse();
+  SystemVolume = MD_System->GetUnitCellVolume();
+
+  // Extract needed values from the local subgrid
+  IntVector LocalGridExtents, LocalGridOffset;
+
+  LocalGridExtents = PatchLocalGrid->GetGridExtents();
+  LocalGridOffset = PatchLocalGrid->GetGlobalOffset();
+
+  SimpleGrid fStressPre, fTheta;
+  // These should persist through mapping from global to local system; One global map should be kept and only change
+  //   the box or grid points change.
+  IntVector LocalGridExtents, LocalGridOffset;
+
+  // Initialize some things we'll need repeatedly
+  // Generate the local vectors of m_i
+  vector<double> M1(LocalGridExtents.x()), M2(LocalGridExtents.y()), M3(LocalGridExtents.z());
+
+  M1 = GenerateMVector(LocalGridExtents.x(), LocalGridOffset.x(), SPMEGridExtents.x());
+  M2 = GenerateMVector(LocalGridExtents.y(), LocalGridOffset.y(), SPMEGridExtents.y());
+  M3 = GenerateMVector(LocalGridExtents.z(), LocalGridOffset.z(), SPMEGridExtents.z());
+  if (NewBox) {  // Box dimensions have changed, we need to update B and C
+    SimpleGrid fBGrid, fCGrid;
+    CalculateStaticGrids(LocalGridExtents, MD_System, fBGrid, fCGrid, fStressPre);
+    fThetaRecip = fBGrid * fCGrid;  // Multiply per point
+  }
+  MapLocalGrid (LocalGridMap);
+
+  bool converged = false;  // Calculate at least once
+  while (!converged) {  // Iterate over this subset until convergence is reached
+    Q.MapCharges(LocalGrid, LocalGridMap);
+    Q.Transform(RealToFourier);
+
+    Matrix3 StressTensor_Local;  // Accumulate local -> global
+    double Energy_Local;  // Accumulate local -> global
+    Q.CalculateEnergyAndStress(Energy_Local, StressTensorLocal, StressPre, ThetaRecip);  // Q^ = Q^*B*C by the end of this
+    Q.Transform(FourierToReal);
+    // Q.CalculatePolarization(CurrentPolarizationGrid,OldPolarizationGrid);
+    // Check polarization convergence
+    converged = true;
+    if (polarizable) {
+      converged = CheckConvergence(CurrentPolarizationGrid, OldPolarizationGrid);
+    }
+  }
+  Q.ExtractForces(LocalGridMap, ParticleList);   // Map the forces back onto the particles;
+}
+
 void MD::extractCoordinates()
 {
   std::ifstream inputFile;
@@ -272,6 +334,32 @@ void MD::generateNeighborList()
       }
     }
   }
+}
+
+vector<Point> MD::calcReducedCoords(const vector<Point>& localRealCoordinates,
+                                    const Transformation3D& Invert_Space)
+{
+
+  vector<Point> localReducedCoords;
+
+  if (!Orthorhombic)  // bool Orthorhombic; true if simulation cell is orthorhombic, false if it's generic
+    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
+      CoordType s;        // Fractional coordinates; 3 - vector
+      s = ParticleList[Index].GetCoordinates();   // Get non-ghost particle coordinates for this cell
+      s *= InverseBox;       // For generic coordinate systems; InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
+      Local_ReducedCoords.push_back(s);   // Reduced non-ghost particle coordinates for this cell
+    }
+  else
+    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
+      CoordType s;        // Fractional coordinates; 3-vector
+      s = ParticleList[Index].GetCoordinates();   // Get non-ghost particle coordinates for this cell
+      s(0) *= Invert_Space(0, 0);
+      s(1) *= Invert_Space(1, 1);
+      s(2) *= Invert_Space(2, 2);                // 6 Less multiplications and additions than generic above
+      Local_ReducedCoords.push_back(s);         // Reduced non-ghost particle coordinates for this cell
+    }
+
+  return Local_ReducedCoords;
 }
 
 bool MD::isNeighbor(const Point* atom1,
@@ -369,6 +457,451 @@ void MD::initialize(const ProcessorGroup* /* pg */,
     }
     new_dw->put(sum_vartype(0.0), lb->vdwEnergyLabel);
   }
+}
+
+vector<double> MD::generateMVector(int Points,
+                                   int Shift,
+                                   int Max)
+{
+  vector<double> M(Points);
+  int HalfMax = Max / 2;
+
+  for (size_t m = 0; m < Points; ++m) {
+    M[m] = m + Shift;
+    if (M[m] > HalfMax)
+      M[m] -= Max;
+  }
+  return M;
+}
+
+vector<std::complex<double> > MD::generateBVector(const int& points,
+                                                  const vector<double>& M,
+                                                  const int& max,
+                                                  const int& splineOrder,
+                                                  const vector<double>& splineCoeff)
+{
+  double PI = acos(-1.0);
+  double OrderM12PI = (splineOrder - 1) * 2.0 * PI;
+
+  vector<complex<double>> b(points);
+  for (size_t Ind = 0; Ind < points; ++Ind) {
+    double k = M[Ind] / max;
+    complex<double> Numerator = complex(cos(OrderM12PI * k), sin(OrderM12PI * k));
+    complex<double> Denominator;
+    for (size_t p = 0; p < splineOrder - 1; ++p) {
+      Denominator += splineCoeff[p] * complex(cos(OrderM12PI * k1 * p), sin(OrderM12PI * k1 * p));
+    }
+    b[Ind] = Numerator / Denominator;
+  }
+  return b;
+}
+
+void MD::calculateStaticGrids(const SubGrid& LocalGrid,
+                              const System_Reference& MD_System,
+                              SimpleGrid& fB,
+                              SimpleGrid& fC,
+                              SimpleGrid& StressPreMult)
+{
+  Matrix3 InverseUnitCell;
+  double Ewald_Beta;
+  IntVector GridExtents, SubGridOffset, K;
+
+  IntVector HalfGrid = GridExtents / 2;
+
+  InverseUnitCell = MD_System->CellInverse();
+  EwaldBeta = MD_System->EwaldDampingCoefficient();
+
+  GridExtents = LocalGrid->GetExtents();          // Extents of the local subgrid
+  SubGridOffset = LocalGrid->GetOffsetVector();     // Offset needed to map local subgrid into global grid
+  K = LocalGrid->GetGlobalExtent();     // Global grid size (K1,K2,K3)
+
+  vector<double> M1, M2, M3;
+  // Generate vectors of m_i/K_i
+
+  M1 = GenerateMVector(GridExtents.x(), SubGridOffset.x(), K.x());
+  M2 = GenerateMVector(GridExtents.y(), SubGridOffset.y(), K.y());
+  M3 = GenerateMVector(GridExtents.z(), SubGridOffset.z(), K.z());
+
+  vector<double> OrdinalSpline(SplineOrder - 1);
+  OrdinalSpline = GenerateOrdinalSpline(SplineOrder);
+
+  vector<complex<double>> b1, b2, b3;
+  // Generate vectors of b_i (=exp(i*2*Pi*(n-1)m_i/K_i)*sum_(k=0..p-2)M_n(k+1)exp(2*Pi*k*m_i/K_i)
+
+  b1 = GeneratebVector(GridExtents.x(), M1, K.x(), SplineOrder, OrdinalSpline);
+  b2 = GeneratebVector(GridExtents.y(), M1, K.y(), SplineOrder, OrdinalSpline);
+  b3 = GeneratebVector(GridExtents.z(), M1, K.z(), SplineOrder, OrdinalSpline);
+
+  // Use previously calculated vectors to calculate our grids
+  double PI, PI2, InvBeta2, VolFactor
+
+  PI = acos(-1.0);
+  PI2 = PI * PI;
+  InvBeta2 = 1.0 / (Ewald_Beta * Ewald_Beta);
+  VolFactor = 1.0 / (PI * MD_System->GetVolume());
+
+  for (size_t kX = 0; kX < GridExtents.x(); ++kX) {
+    for (size_t kY = 0; kY < GridExtents.y(); ++kY) {
+      for (size_t kZ = 0; kZ < GridExtents.z(); ++kZ) {
+
+        fB[kX][kY][kZ] = norm(b1[kX]) * norm(b2[kY]) * norm(b3[kZ]);  // Calculate B
+
+        if (kX != kY != kZ != 0) {  // Calculate C and stress premultiplication factor
+          Vector m(M1[kX], M2[kY], M3[kZ]), M;
+          double M2, Factor;
+
+          M = m * InverseUnitCell;
+          M2 = M.length2();
+          Factor = PI2 * M2 * InvBeta2;
+
+          fC[kX][kY][kZ] = VolFactor * exp(-Factor) / M2;
+          StressPreMult[kX][kY][kZ] = 2 * (1 + Factor) / M2;
+        }
+      }
+    }
+  }
+  fC[0][0][0] = 0.0;
+  StressPremult[0][0][0] = 0.0;  // Exceptional values
+}
+
+void MD::solveSPMECharge()
+{
+  // Outside of iterations, map particle positions to grid charge contributions -
+  SPMEGridMap CurrentPatchGridMap = createSPMEChargeMap(CurrentSPMEGrid, Current_Patch, MD_System);
+
+  // Iterative procedure would begin here
+  CurrentPatchGridMap.MapAllCharges(CurrentSPMEGrid, Current_Patch);  // Maps the charges from particles to the SPME_Grid
+  CurrentSPMEGrid.RealToFourier();
+  Energy_Recip = CurrentSPMEGrid.CalculateEnergy(ThetaRecip);  // Q*F(B.C)
+
+//  Data types
+//    SPME_Grid:          Contains just the necessary information for the SPME routine;  Grid points, grid extent, charge per point, energy(?)
+//    (Global)            Global, must rectify it through all processors before and after FFT routine and within polarizability iteration
+//                        Also contains global system information about SPME (MeshPointLimits, SplineOrder, etc...)
+//
+//    SPME_Grid_Map:      Local data structure, one per patch.  Has a vector of map data per grid point, projected from the particles in the system.
+//    (Local, PerPatch)   This constitutes a potential race condition (Adding to the same grid point data map from multiple particles in the same patch).
+//                        Data structure extends over all the grid points belonging to the local patch, plus some extension of "ghost" points dealing with
+//                        particles which map to points outside the spatial boundary of the current patch.
+//                        Contains:  particle charge maps, offset (to register with global spatial grid)
+//
+//    ParticleIterator:   Some type of iterator through the particles local to the patch.
+//    (Local, PerPatch)
+//
+//    SystemReference:    System data for MD simulations; contains things like the Cell matrix which codifies the size of the entire simulation cell, the
+//    (Global)            inverse cell matrix.
+}
+
+SPMEGrid MD::SPME_Initialize(const IntVector& EwaldMeshLimits,
+                             const Matrix3D& CellInverse,
+                             const Matrix3D& Cell,
+                             const double& EwaldScale,
+                             const int& SplineOrder)
+{
+  IntVector K, HalfK;
+  K = EwaldMeshLimits;
+  HalfK = K / 2;
+
+  Vector KInverse = 1.0 / K;
+
+  double PiSquared = PI * PI;
+  double InvBetaSquared = 1.0 / (EwaldScale * EwaldScale);
+
+  SPME_Grid B, C;
+  // Calculate the C array
+  if (Orthorhombic) {
+    double CellVolume, As1, As2, As3;
+    CellVolume = Cell(0, 0) * Cell(1, 1) * Cell(2, 2);
+    As1 = CellInverse(0, 0);
+    As2 = CellInverse(1, 1);
+    As3 = CellInverse(2, 2);
+
+    double CPreFactor = 1.0 / (PI * CellVolume);
+
+    for (int l1 = 0; l1 <= HalfK[0]; ++l1) {
+      double m1 = l1 * As1;
+      double m1OverK1 = m1 * KInverse[0];
+      double MSquared = m1 * m1;
+      for (int l2 = 0; l2 <= HalfK[1]; ++l2) {
+        double m2 = l2 * As2;
+        double m2OverK2 = m2 * KInverse[1];
+        MSquared += m2 * m2;
+        for (int l3 = 0; l3 <= HalfK[2]; ++l3) {
+          double m3 = l3 * As3;
+          double m3OverK3 = m3 * KInverse[3];
+          MSquared += m3 * m3;
+
+          double C = CPreFactor * exp(-PiSquared * MSquared * InvBetaSquared) / MSquared;
+        }
+      }
+    }
+  }
+
+  Vector& A1, A2, A3;
+  A1 = Cell.ExtractRow(0);  // Assumes the vectors in Cell are stored in rows
+  A2 = Cell.ExtractRow(1);
+  A3 = Cell.ExtractRow(2);
+
+  Vector& As1, As2, As3;
+  As1 = Cell.ExtractCol(0);  // Assumes the vectors in CellInverse are stored in columns
+  As2 = Cell.ExtractCol(1);
+  As3 = Cell.ExtractCol(2);
+
+  double CellVolume = (A1.Cross(A2)).Dot(A3);
+  // C(m1,m2,m3) = (1/PI*V)*(exp(-PI^2*M^2/Beta^2)/M^2)
+
+  double CPreFactor = 1.0 / (PI * CellVolume);
+
+  int K1 = EwaldMeshLimits[0];
+  int HalfK1 = K1 / 2;
+  int K2 = EwaldMeshLimits[1];
+  int HalfK2 = K2 / 2;
+  int K3 = EwaldMeshLimits[2];
+  int HalfK3 = K3 / 2;
+
+  SPME_Grid FieldGrid;
+  double PiSquared = PI * PI;
+  double OneOverBeta2 = 1.0 / (EwaldScale * EwaldScale);
+
+  // Orthorhombic
+  if (Orthorhombic) {
+    for (int m1 = 0; m1 <= HalfK1; ++m1) {
+      for (int m2 = 0; m2 <= HalfK2; ++m2) {
+        for (int m3 = 0; m3 <= HalfK3; ++m3) {
+          double MSquared = m1 * As1 * m1 * As2 + m2 * As2 * m2 * As2 + m3 * As3 * m3 * As3;
+          FieldGrid[m1][m2][m3] = CPreFactor * exp(-PiSquared * MSquared * OneOverBeta2) / MSquared;
+        }
+      }
+    }
+  }
+
+}
+
+template<class T>
+SPMEGridMap MD::createSPMEChargeMap<T>(const SPMEGrid& SPMEGlobalGrid,
+                                       const Patch& CurrentPatch,
+                                       const SystemReference& SystemData)
+{
+  // Note:  SubGridOffset maps the offset of the current patch's subgrid to the global grid numbering scheme.
+  //        For example, a patch that iterated from global grid point 3,4,5 to 7,8,9 would have a SubGridOffset
+  //        of:  {3,4,5}.
+
+  IntVector EwaldMeshLimits = SPME_GlobalGrid->GetMeshLimits();
+  IntVector SplineOrder = SPME_GlobalGrid->GetSplineOrder();
+
+  Vector PatchOffset = CurrentPatch->SpatialOffset();
+  Vector PatchExtent = CurrentPatch->SpatialExtent();  // HighCorner-LowCorner, where HighCorner is the max(X,Y,Z) of the subspace, LowCorner is
+                                                       //   min(X,Y,Z)
+
+  ParticleIterator ParticleList = CurrentPatch->ParticleVector();
+
+  Matrix3 CellInverse = SystemData->CellInverse();
+
+  Vector InverseMeshLimits = 1.0 / EwaldMeshLimits;
+
+  IntVector SubGridIndexOffset, SubGridIndexExtent;
+  {
+    // Contain these temp variables
+    Vector TempOffset = PatchOffset * CellInverse;
+    Vector TempExtent = PatchExtent * CellInverse;
+
+    for (size_t Ind = 0; Ind < 3; ++Ind) {
+      SubGridIndexOffset = floor(TempOffset[Ind] * static_cast<double>(EwaldMeshLimits[Ind]));  // Generate index offset to map local grid to global
+      SubGridIndexExtent = floor(TempExtent[Ind] * static_cast<double>(EwaldMeshLimits[Ind]));  // Generate index count to determine # grid points inside patch
+                                                                                                //   not including ghost grid points
+    }
+  }
+  SPME_Grid_Map LocalGrid[SubGridIndexExtent[0] + SplineOrder][SubGridIndexExtent[1] + SplineOrder][SubGridIndexExtent[2]
+                                                                                                    + SplineOrder];
+  // 3D array of Vector<SPME_Map> type, messy data structure.  Suggestions?
+  // Goal here is to create a sub-grid which maps to the patch local + extended "ghost" grid points, and to save the particle to grid charge mapping coefficients
+  // so that we don't have to re-generate them again.  This step is essentially necessary every time step, or every time the global "Solve SPME Charge" routine
+  // is done.
+
+  int Global_Shift = 0;
+  if (SystemData->Orthorhombic()) {  //  Take a few calculation shortcuts to save some matrix multiplication.  Worth it?  Not sure..
+    Vector InverseGridMapping = EwaldMeshLimits * CellInverse;  // Orthorhomibc, so CellInverse is diagonal and we can pre-multiply
+    for (ParticlePointer = ParticleList.begin(); ParticlePointer != ParticleList.end(); ++ParticlePointer) {
+      Vector U_Current = ParticlePointer->GetCoordinateVector();                          // Extract coordinate vector from particle
+      U_Current *= InverseGridMapping;                                                        // Convert to reduced coordinates
+      IntVector CellIndex;
+      for (size_t Ind = 0; Ind < 3; ++Ind) {
+        CellIndex[Ind] = floor(U_Current[Ind]) - SubGridIndexOffset[Ind] + Global_Shift;
+      }  // Vector floor + shift by element
+
+      vector<Vector> Coeff_Array(SplineOrder), Deriv_Array(SplineOrder);
+      CalculateSpline(U_Current, Coeff_Array, Deriv_Array, SplineOrder);
+      for (int IndX = 0; IndX < SplineOrder; ++IndX) {
+        for (int IndY = 0; IndY < SplineOrder; ++IndY) {
+          for (int IndZ = 0; IndZ < SplineOrder; ++IndZ) {
+            double Coefficient = Coeff_Array[IndX].x * Coeff_Array[IndY].y * Coeff_Array[IndZ].z;  // Calculate appropriate coefficient
+            Vector Gradient(Deriv_Array[IndX].x, Deriv_Array[IndY].y, Deriv_Array[IndZ].z);  // Extract appropriate derivative vector
+            (LocalGrid[CellIndex.x + IndX][CellIndex.y + IndY][CellIndex.z + IndZ]).AddMapPoint(ParticlePointer->GetGlobalHandle(),
+                                                                                                Coefficient, Gradient);
+          }
+        }
+      }
+    }
+  } else {
+    for (ParticlePointer = ParticleList.begin(); ParticlePointer != ParticleList.end(); ++ParticlePointer) {
+      Vector U_Current = ParticlePointer->GetCOordinateVector();  // Extract coordinate vector from particle
+      U_Current *= CellInverse;                                    // Full matrix multiplication to get (X,Y,Z) for non-orthorhombic
+      for (size_t Ind = 0; Ind < 3; ++Ind) {
+        U_Current[Ind] *= EwaldMeshLimits[Ind];
+      }
+      for (size_t Ind = 0; Ind < 3; ++Ind) {
+        CellIndex[Ind] = floor(U_Current[Ind]) + Global_Shift;
+      }    // Vector floor + shift by element
+
+      vector<Vector> Coeff_Array(SplineOrder), Deriv_Array(SplineOrder);
+      CalculateSpline(U_Current, Coeff_Array, Deriv_Array, SplineOrder);
+      for (int IndX = 0; IndX < SplineOrder; ++IndX) {
+        for (int IndY = 0; IndY < SplineOrder; ++IndY) {
+          for (int IndZ = 0; IndZ < SplineOrder; ++IndZ) {
+            double Coefficient = Coeff_Array[IndX].x * Coeff_Array[IndY].y * Coeff_Array[IndZ].z;  // Calculate appropriate coefficient
+            Vector Gradient(Deriv_Array[IndX].x, Deriv_Array[IndY].y, Deriv_Array[IndZ].z);  // Extract appropriate derivative vector
+            (LocalGrid[CellIndex.x + IndX][CellIndex.y + IndY][CellIndex.z + IndZ]).AddMapPoint(ParticlePointer->GetGlobalHandle(),
+                                                                                                Coefficient, Gradient);
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+void MD::spmeMapChargeToGrid(SPMEGrid<std::complex<double> >& LocalGridCopy,
+                             const SPMEGridMap& LocalGridMap,
+                             const Patch& CurrentPatch)
+{
+  IntVector Extent = LocalGridMap.GetLocalExtents();  // Total number of grid points on the local grid including ghost points (X,Y,Z)
+  IntVector Initial = Extent + LocalGridMap.GetLocalShift();  // Offset of lowest index points in LOCAL coordinate system.
+                                                              //  e.g. for SplineOrder = N, indexing from -N/2 to X + N/2 would have a shift of N/2 and an extent
+                                                              //       of X+N, indexing from 0 to N would have a shift of 0 and an extent of X+N
+
+  ParticleIterator ParticleList = CurrentPatch->ParticleVector();
+
+  for (size_t X = Initial[0]; X < Extent[0]; ++X) {
+    for (size_t Y = Initial[1]; Y < Extent[1]; ++Y) {
+      for (size_t Z = Initial[2]; Z < Extent[2]; ++Z) {
+        (LocalGridCopy[X][Y][Z]).IncrementGridCharge((LocalGridMap[X][Y][Z]).MapChargeFromAtoms(ParticleList));
+      }
+    }
+  }
+}
+
+SPMEGrid MD::fC(const IntVector& GridExtents,
+                const System_Reference& MD_System)
+{
+  Matrix3 InverseCell;
+  SimpleGrid<double> C(GridExtents.x, GridExtents.y, GridExtents.z);
+  double Ewald_Beta;
+
+  InverseCell = MD_System->CellInverse();
+  Ewald_Beta = MD_System->GetEwaldBeta();
+
+  IntVector HalfGrid = GridExtents / 2;
+
+  double PI = acos(-1.0);
+  double PI2 = PI * PI;
+  double InvBeta2 = 1.0 / (Ewald_Beta * Ewald_Beta);
+
+  double VolFactor = 1.0 / (PI * MD_System->GetVolume());
+
+  Vector M;
+  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
+    M[0] = m1;
+    if (m1 > HalfGrid.x())
+      M[0] -= GridExtents.x();
+    for (size_t m2 = 0; m2 < GridExtents.y(); ++m2) {
+      M[1] = m2;
+      if (m2 > HalfGrid.y())
+        M[1] -= GridExtents.y();
+      for (size_t m3 = 0; m3 < GridExtents.z(); ++m3) {
+        M[2] = m3;
+        if (m3 > HalfGrid.z())
+          M[2] -= GridExtents.z();
+        // Calculate C point values
+        if (!(m1 == 0) && !(m2 == 0) && !(m3 == 0)) {  // Discount C(0,0,0)
+          double TempM = M * InverseCell;
+          double M2 = TempM.length2(TempM);
+          double Val = VolFactor * exp(-PI2 * M2 * InvBeta2) / M2;
+          C[m1][m2][m3] = Val;
+        }
+      }
+    }
+  }
+  C[m1][m2][m3] = 0.0;
+  return C;
+}
+
+SPMEGrid MD::fB(const IntVector& GridExtents,
+                const System_Reference& MD_System)
+{
+  Matrix3 InverseCell;
+  SimpleGrid B(GridExtents.x(), GridExtents.y(), GridExtents, z());
+
+  InverseCell = MD_System->CellInverse();
+  IntVector HalfGrid = GridExtents / 2;
+  Vector InverseGrid = 1.0 / GridExtents;
+
+  double PI = acos(-1.0);
+  double OrderM12PI = 2.0 * PI * (SplineOrder - 1);
+
+  vector<complex<double> > b1(GridExtents.x()), b2(GridExtents.y()), b3(GridExtents.z());
+  vector<complex<double> > OrdinalSpline(SplineOrder - 1);
+
+  OrdinalSpline = CalculateOrdinalSpline(SplineOrder - 1, SplineOrder);  // Calculates Mn(0)..Mn(n-1)
+
+  // Calculate k_i = m_i/K_i
+  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
+    double kX = m1;
+    if (m1 > HalfGrid.x())
+      kX = m1 - GridExtents.x();
+    kX /= GridExtents.x();
+    complex<double> num = complex(cos(OrderM12PI * kX), sin(OrderM12PI * kX));
+    complex<double> denom = OrdinalSpline[0];  //
+    for (size_t k = 1; k < SplineOrder - 1; ++k) {
+      denom += OrdinalSpline[k] * complex(cos(OrderM12PI * kX * k), sin(OrderM12PI * kX * k));
+    }
+    b1[m1] = num / denom;
+  }
+
+  for (size_t m2 = 0; m2 < GridExtents.y(); ++m2) {
+    double kY = m2;
+    if (m2 > HalfGrid.y())
+      kY = m2 - GridExtents.y();
+    kY /= GridExtents.y();
+    complex<double> num = complex(cos(OrderM12PI * kY), sin(OrderM12PI * kY));
+    complex<double> denom = OrdinalSpline[0];  //
+    for (size_t k = 1; k < SplineOrder - 1; ++k) {
+      denom += OrdinalSpline[k] * complex(cos(OrderM12PI * kY * k), sin(OrderM12PI * kY * k));
+    }
+    b2[m2] = num / denom;
+  }
+
+  for (size_t m3 = 0; m3 < GridExtents.z(); ++m3) {
+    double kZ = m3;
+    if (m3 > HalfGrid.z())
+      kZ = m3 - GridExtents.y();
+    kZ /= GridExtents.y();
+    complex<double> num = complex(cos(OrderM12PI * kZ), sin(OrderM12PI * kZ));
+    complex<double> denom = OrdinalSpline[0];  //
+    for (size_t k = 1; k < SplineOrder - 1; ++k) {
+      denom += OrdinalSpline[k] * complex(cos(OrderM12PI * kZ * k), sin(OrderM12PI * kZ * k));
+    }
+    b3[m3] = num / denom;
+  }
+
+  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
+    for (size_t m2 = 0; m2 < GridExtents.x(); ++m2) {
+      for (size_t m3 = 0; m3 < GridExtents.x(); ++m3) {
+        // Calculate B point values
+        B[m1][m2][m3] = norm(b1[m1]) * norm(b2[m2]) * norm(b3[m3]);
+      }
+    }
+  }
+
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,

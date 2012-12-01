@@ -22,52 +22,35 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_LABEL_H
-#define UINTAH_MD_LABEL_H
+#include <CCA/Components/MD/SPMEGrid.h>
+#include <Core/Math/UintahMiscMath.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Math/MiscMath.h>
 
-namespace Uintah {
+#include <iostream>
 
-class VarLabel;
+#include <sci_values.h>
 
-class MDLabel {
+using namespace Uintah;
+using namespace SCIRun;
 
-  public:
+template<class T>
+void SPMEGrid<T>::fft_realToFourier()
+{
 
-    MDLabel();
+}
 
-    ~MDLabel();
+template<class T>
+void SPMEGrid<T>::fft_fourierToReal()
+{
+}
 
-    // vector quantities
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
-
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
-
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
-
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
-
-    // reduction variables
-    const VarLabel* vdwEnergyLabel;
-
-};
-
-}  // End namespace Uintah
-
-#endif
+template<class T>
+void SPMEGrid<T>::calculateCharge()
+{
+//  int NumMappedAtoms = MappedAtoms.size();
+//  double GridPointCharge = 0.0;
+//  for (int Atom = 0; Atom < NumMappedAtoms; ++Atom) {
+//    GridPointCharge += MappedAtoms[Atom].GetParticleCharge() * MappedAtoms[Atom].ChargeWeight();
+//  }
+}
