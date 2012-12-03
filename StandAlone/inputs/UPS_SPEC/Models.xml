@@ -29,6 +29,7 @@
       <shouldSetBCs           spec="OPTIONAL BOOLEAN"/>
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>
+      <applyFilter            spec="OPTIONAL BOOLEAN"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
            
       <algorithm                spec="OPTIONAL NO_DATA" 

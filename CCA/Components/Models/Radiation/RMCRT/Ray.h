@@ -209,6 +209,7 @@ namespace Uintah{
       bool _CCRays;
       bool _onOff_SetBCs;                // switch for setting boundary conditions                    
       bool _isDbgOn;
+      bool _applyFilter;                 // Allow for filtering of boundFlux and divQ results
       
       enum ROI_algo{fixed, dynamic, patch_based};
       ROI_algo  _whichROI_algo;
@@ -232,7 +233,9 @@ namespace Uintah{
       const VarLabel* d_cellTypeLabel; 
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
+      const VarLabel* d_divQFiltLabel;
       const VarLabel* d_boundFluxLabel;
+      const VarLabel* d_boundFluxFiltLabel;
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
