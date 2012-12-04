@@ -384,7 +384,6 @@ Ray::initProperties( const ProcessorGroup* pc,
       
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter; 
-        //temp[c] = 1000 * abskg[c] * 1000 * abskg[c]; incorrect
         temp[c] = 1000 * abskg[c];
 
       }
@@ -735,8 +734,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //__________________________________
           //  Compute VRFlux
           VRFlux[origin] = sumProjI * sldAngl/_NoRadRays;
-          //cout <<  VRFlux[origin] << endl;
-          
         } // end of VR extents
       } // end if _virtRad
     } // end VR cell iterator
@@ -1017,7 +1014,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
-      //cout << divQ[origin] << endl;
       //} // end quick debug testing
     }  // end cell iterator
 
@@ -1266,7 +1262,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
        int Nx = pHigh[0] - pLow[0];
        if (i==Nx/2 && k==Nx/2){
      */
-      //if(i==20 && j==20){
       
       
 /*`==========TESTING==========*/
@@ -1627,71 +1622,55 @@ bool Ray::has_a_boundary(const IntVector &c,
                          vector<int> &boundaryFaces){
 
   IntVector adjacentCell = c;
+  bool hasBoundary = false;
 
-  // Loop over the different wall types and check the 6 adjacent cells to see if any of them are boundaries
- // for (int i=0; i<nWallTypes; ++i){
+  adjacentCell = c;
+  adjacentCell[0] = c[0] - 1; // west
 
-    //  !! In the future, this fuction can be made more efficient. Rather than
-    // resetting adjacentCell to c each time, I can do something like
-    // adjacentCell[0] += 2 for the east face for instance.  It's easier
-    // to make coding mistakes that way, so leaving it as is for now.
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(0);
+    hasBoundary = true;
+  }
 
-    bool hasBoundary = false;
+  adjacentCell[0] += 2; // east
 
-    adjacentCell = c;
-    adjacentCell[0] = c[0] - 1; // west
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(1);
+    hasBoundary = true;
+  }
 
+  adjacentCell[0] -= 1;
+  adjacentCell[1] = c[1] - 1; // south
 
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(0);
-      hasBoundary = true;
-    }
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(2);
+    hasBoundary = true;
+  }
 
-    adjacentCell = c;
-    adjacentCell[0] = c[0] + 1; // east
+  adjacentCell[1] += 2; // north
 
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(1);
-      hasBoundary = true;
-    }
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(3);
+    hasBoundary = true;
+  }
 
-    adjacentCell = c;
-    adjacentCell[1] = c[1] - 1; // south
+  adjacentCell[1] -= 1;
+  adjacentCell[2] = c[2] - 1; // bottom
 
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(2);
-      hasBoundary = true;
-    }
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(4);
+    hasBoundary = true;
+  }
 
-    adjacentCell = c;
-    adjacentCell[1] = c[1] + 1; // north
+  adjacentCell[2] += 2; // top
 
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(3);
-      hasBoundary = true;
-    }
-
-    adjacentCell = c;
-    adjacentCell[2] = c[2] - 1; // bottom
-
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(4);
-      hasBoundary = true;
-    }
-
-    adjacentCell = c;
-    adjacentCell[2] = c[2] + 1; // top
-
-    if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-      boundaryFaces.push_back(5);
-      hasBoundary = true;
-    }
-
-  //} // end loop over wall types.
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+    boundaryFaces.push_back(5);
+    hasBoundary = true;
+  }
 
 // if none of the above returned true, then the current cell must not be adjacent to a wall
 return (hasBoundary);
-
 }
 
 
@@ -2238,19 +2217,12 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
    // Determine the length at which scattering will occur
-   // CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
+   // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
    double scatLength = -log(_mTwister->randDblExc() ) / scatCoeff;
    double curLength = 0;
    #endif
 
    //+++++++Begin ray tracing+++++++++++++++++++
-
-   // Vector temp_direction = direction_vector;   // Used for reflections
-
-   //save the direction vector so that it can get modified by...
-   //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
-   //the domain after it was updated following the first switch statement.
-
    int nReflect = 0; // Number of reflections that a ray has undergone
    //Threshold while loop
    while (intensity > _Threshold){
@@ -2301,33 +2273,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        ray_location[1] = ray_location[1] + (disMin  / inv_direction_vector[1]);
        ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
 
-    /*   if(disMin>2){ // THIS IS A GOOD DEBUG TEST FOR RAY MARCHING IN SCATTERING
-
-         cout << "=============================" << endl;
-         cout << "tMax calculation" << endl;
-         cout << "====================" << endl;
-
-         if(tMaxX > 1 && tMaxY >1 && tMaxZ > 1){
-         if(tMaxX >18) cout << "tMaxX" << tMaxX << endl;
-         if(tMaxY >18) cout << "tMaxY" << tMaxY << endl;
-         if(tMaxZ >18) cout << "tMaxZ" << tMaxZ << endl;
-         }
-
-         cout << "cur: " << cur << endl;
-         cout << "sign: " << sign[0] << "  " << sign[1] << "  "  << sign[2] << endl;
-         cout << "ray location: " << ray_location << endl;
-         cout << "inv_dir_vector: " << inv_direction_vector << endl;
-         cout << "DyDxs: " << DyDxRatio << "  " <<  DzDxRatio << endl;
-       }
-*/
-
        in_domain = containsCell(domainLo, domainHi, cur, face);
-
-       //__________________________________
-       //  Update the ray location
-       //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
-       //ray_location_prev = ray_location;
-       //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
 
        // The running total of alpha*length
        double optical_thickness_prev = optical_thickness;
@@ -2350,16 +2296,6 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          scatLength = -log(_mTwister->randDblExc() ) / scatCoeff; 
          //store old step
          int stepOld = step[face];
-         // I commented out the following section because ray_location is now
-         // being updated with every step, not just at scattering events. It
-         // wasn't working the way I had it below, which is why I changed.
-         // But for efficiency, it would be nice to get the following lines working,
-         // and only update ray_location when we need it for scattering.
-         // get location of scattering event
-         //ray_location[0] = ray_location[0] + (curLength  / inv_direction_vector[0]);
-         //ray_location[1] = ray_location[1] + (curLength  / inv_direction_vector[1]);
-         //ray_location[2] = ray_location[2] + (curLength  / inv_direction_vector[2]);
-         //cout << "ray location at scattering event: " << ray_location << endl;
 
          // Get new direction (below is isotropic scatteirng)
          double plusMinus_one = 2 * _mTwister->randDblExc() - 1;
@@ -2404,7 +2340,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
          // At a scattering event, one of the tMax's will be zero since the ray location will lie on
          //  a cell face.  We must set this value to the appropriate tDelta, else the ray will 
-         // erroneously step immdeiately in the face direction.
+         // erroneously step immediately in the face direction.
          if(0 == tMaxX){
            tMaxX = tDeltaX;
          }
@@ -2432,7 +2368,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
      // for DOM comparisons, we don't allow for reflections, so 
      // when a ray reaches the end of the domain, we force it to terminate. 
-     if(!_allowReflect) intensity = 0; //9-21
+     if(!_allowReflect) intensity = 0; //9-21-12
                                             
      //__________________________________
      //  Reflections
