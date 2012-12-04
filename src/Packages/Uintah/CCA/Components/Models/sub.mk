@@ -84,7 +84,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 ######################################################
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 ifneq ($(HAVE_PETSC),)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
