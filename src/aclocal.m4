@@ -679,8 +679,8 @@ if test "$9" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a && test ! -e $6/$i.lib; then
-     AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
+    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.dylib && test ! -e $6/lib$i.a && test ! -e $6/$i.lib; then
+     AC_MSG_ERROR(Specifically requested $1 library file '$6/lib$i' (.so .dylib or .a) was not found)
     fi
   done
 fi

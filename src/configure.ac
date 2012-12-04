@@ -71,7 +71,7 @@
 ##  initialize configure 
 AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.61
+##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -79,7 +79,7 @@ AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.67)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -2232,7 +2232,6 @@ else
     BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
     _x_inc_dir="/usr/X11R6/include"
   fi
-
 
   SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
                $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
@@ -4735,6 +4734,9 @@ if test "$with_glew"; then
     _sci_optional=specific
   fi 
 fi
+
+# Glew requires X11, so let it know where to find X11.
+_sci_inc="$INC_X_H $_sci_inc"
 
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/wglew.h,
