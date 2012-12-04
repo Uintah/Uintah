@@ -563,26 +563,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
 
     CCVariable<double> divQ;
-    CCVariable<double> divQFilt;
     CCVariable<double> VRFlux;
     CCVariable<Stencil7> boundFlux;
-    CCVariable<Stencil7> boundFluxFilt;
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
-      old_dw->getModifiable( divQFilt,     d_divQFiltLabel,      d_matl, patch );
       old_dw->getModifiable( VRFlux,       d_VRFluxLabel,        d_matl, patch );
       old_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-      old_dw->getModifiable( boundFluxFilt,d_boundFluxFiltLabel, d_matl, patch );
     }else{
       new_dw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
       divQ.initialize( 0.0 ); 
-      new_dw->allocateAndPut( divQFilt,  d_divQFiltLabel,  d_matl, patch );
-      divQFilt.initialize( 0.0 );
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
-      new_dw->allocateAndPut( boundFluxFilt,d_boundFluxLabel, d_matl, patch );
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
@@ -593,17 +586,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         boundFlux[origin].n = 0.0;
         boundFlux[origin].b = 0.0;
         boundFlux[origin].t = 0.0;
-
-        boundFluxFilt[origin].p = 0.0;
-        boundFluxFilt[origin].w = 0.0;
-        boundFluxFilt[origin].e = 0.0;
-        boundFluxFilt[origin].s = 0.0;
-        boundFluxFilt[origin].n = 0.0;
-        boundFluxFilt[origin].b = 0.0;
-        boundFluxFilt[origin].t = 0.0;
-
       }
-
    }
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
@@ -1016,45 +999,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
       //} // end quick debug testing
     }  // end cell iterator
-
-     if(_applyFilter){
-       double start2 =clock();
-
-       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-         IntVector origin = *iter;
-         // if(!boundFlux.p[origin])  // Only filter cells that don't have a boundary face
-
-         int i = origin.x();
-         int j = origin.y();
-         int k = origin.z();
-
-         // if (i>=113 && i<=115 && j>=233 && j<=235 && k>=0 && k<=227 ){ // 3x3 extrusion test in z direction
-
-         // box filter of origin plus 6 adjacent cells
-         divQFilt[origin] = (divQ[origin]
-                           + divQ[IntVector(i-1,j,k)] + divQ[IntVector(i+1,j,k)]
-                           + divQ[IntVector(i,j-1,k)] + divQ[IntVector(i,j+1,k)]
-                           + divQ[IntVector(i,j,k-1)] + divQ[IntVector(i,j,k+1)]) / 7;
-
-         // 3D box filter, filter width=3
-         /* divQFilt[origin] = (  divQ[IntVector(i-1,j-1,k-1)] + divQ[IntVector(i,j-1,k-1)] + divQ[IntVector(i+1,j-1,k-1)]
-                             + divQ[IntVector(i-1,j,k-1)]   + divQ[IntVector(i,j,k-1)]   + divQ[IntVector(i+1,j,k-1)]
-                             + divQ[IntVector(i-1,j+1,k-1)] + divQ[IntVector(i,j+1,k-1)] + divQ[IntVector(i+1,j+1,k-1)]
-                             + divQ[IntVector(i-1,j-1,k)]   + divQ[IntVector(i,j-1,k)]   + divQ[IntVector(i+1,j-1,k)]
-                             + divQ[IntVector(i-1,j,k)]     + divQ[IntVector(i,j,k)]     + divQ[IntVector(i+1,j,k)]
-                             + divQ[IntVector(i-1,j+1,k)]   + divQ[IntVector(i,j+1,k)]   + divQ[IntVector(i+1,j+1,k)]
-                             + divQ[IntVector(i-1,j-1,k+1)] + divQ[IntVector(i,j-1,k+1)] + divQ[IntVector(i+1,j-1,k+1)]
-                             + divQ[IntVector(i-1,j,k+1)]   + divQ[IntVector(i,j,k+1)]   + divQ[IntVector(i+1,j,k+1)]
-                             + divQ[IntVector(i-1,j+1,k+1)] + divQ[IntVector(i,j+1,k+1)] + divQ[IntVector(i+1,j+1,k+1)]) / 27;
-         */
-
-       //} // end 3x3 extrusion test
-
-       }// end cell iterator for divQFilter
-       double end2 =clock();
-       cout << "Filter Used "<< (end2-start2) * 1000000 / CLOCKS_PER_SEC<< " microseconds of CPU time. \n" << endl;// Convert time to ms
-     }// end if(_applyFilter)
-
   } // end of if(_solveDivQ)
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
@@ -2391,6 +2335,108 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      }  // if reflection
    }  // threshold while loop.
 } // end of updateSumI function
+
+
+//---------------------------------------------------------------------------
+//
+//---------------------------------------------------------------------------
+void
+Ray::sched_filter( const LevelP& level,
+                    SchedulerP& sched,
+                    Task::WhichDW which_divQ_dw,
+                    const bool includeEC,
+                    bool modifies_divQFilt )
+{
+  std::string taskname = "Ray::filter";
+  Task* tsk= scinew Task( taskname, this, &Ray::filter, which_divQ_dw, includeEC, modifies_divQFilt );
+
+  printSchedule(level,dbg,taskname);
+
+  tsk->requires( which_divQ_dw, d_divQLabel, Ghost::None, 0 );
+  tsk->requires( which_divQ_dw, d_boundFluxLabel, Ghost::None, 0 );
+  tsk->computes(                d_divQFiltLabel);
+  tsk->computes(                d_boundFluxFiltLabel);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//---------------------------------------------------------------------------
+// Filter divQ values.  In future will also filter boundFlux
+//---------------------------------------------------------------------------
+void
+Ray::filter( const ProcessorGroup*,
+              const PatchSubset* patches,
+              const MaterialSubset*,
+              DataWarehouse* old_dw,
+              DataWarehouse* new_dw,
+              Task::WhichDW which_divQ_dw,
+              const bool includeEC,
+              bool modifies_divQFilt)
+{
+
+
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing Ray::filt");
+
+    constCCVariable<double> divQ;
+    CCVariable<double>      divQFilt;
+    constCCVariable<Stencil7> boundFlux;
+    constCCVariable<Stencil7> boundFluxFilt;
+
+    DataWarehouse* divQ_dw = new_dw->getOtherDataWarehouse(which_divQ_dw);
+    divQ_dw->get(divQ,               d_divQLabel,        d_matl, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(divQFilt, d_divQLabel,        d_matl, patch);
+    divQ_dw->get(boundFlux,          d_boundFluxLabel,   d_matl, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch);
+
+    if( modifies_divQFilt ){
+       old_dw->getModifiable( divQFilt,     d_divQFiltLabel,      d_matl, patch );
+     }else{
+       new_dw->allocateAndPut( divQFilt,  d_divQFiltLabel,  d_matl, patch );
+       divQFilt.initialize( 0.0 );
+     }
+
+    // set the cell iterator
+    CellIterator iter = patch->getCellIterator();
+    if(includeEC){
+      iter = patch->getExtraCellIterator();
+    }
+
+    for (;!iter.done();iter++){
+      const IntVector& c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
+
+      // if (i>=113 && i<=115 && j>=233 && j<=235 && k>=0 && k<=227 ){ // 3x3 extrusion test in z direction
+
+      // box filter of origin plus 6 adjacent cells
+      divQFilt[c] = (divQ[c]
+                        + divQ[IntVector(i-1,j,k)] + divQ[IntVector(i+1,j,k)]
+                        + divQ[IntVector(i,j-1,k)] + divQ[IntVector(i,j+1,k)]
+                        + divQ[IntVector(i,j,k-1)] + divQ[IntVector(i,j,k+1)]) / 7;
+
+      // 3D box filter, filter width=3
+      /* divQFilt[c] = (  divQ[IntVector(i-1,j-1,k-1)] + divQ[IntVector(i,j-1,k-1)] + divQ[IntVector(i+1,j-1,k-1)]
+                          + divQ[IntVector(i-1,j,k-1)]   + divQ[IntVector(i,j,k-1)]   + divQ[IntVector(i+1,j,k-1)]
+                          + divQ[IntVector(i-1,j+1,k-1)] + divQ[IntVector(i,j+1,k-1)] + divQ[IntVector(i+1,j+1,k-1)]
+                          + divQ[IntVector(i-1,j-1,k)]   + divQ[IntVector(i,j-1,k)]   + divQ[IntVector(i+1,j-1,k)]
+                          + divQ[IntVector(i-1,j,k)]     + divQ[IntVector(i,j,k)]     + divQ[IntVector(i+1,j,k)]
+                          + divQ[IntVector(i-1,j+1,k)]   + divQ[IntVector(i,j+1,k)]   + divQ[IntVector(i+1,j+1,k)]
+                          + divQ[IntVector(i-1,j-1,k+1)] + divQ[IntVector(i,j-1,k+1)] + divQ[IntVector(i+1,j-1,k+1)]
+                          + divQ[IntVector(i-1,j,k+1)]   + divQ[IntVector(i,j,k+1)]   + divQ[IntVector(i+1,j,k+1)]
+                          + divQ[IntVector(i-1,j+1,k+1)] + divQ[IntVector(i,j+1,k+1)] + divQ[IntVector(i+1,j+1,k+1)]) / 27;
+      */
+
+    //} // end 3x3 extrusion test
+    }
+  }
+}
+
+
+
 
 
 

@@ -94,6 +94,15 @@ namespace Uintah{
                           Task::WhichDW temp_dw,
                           const bool includeEC = true);
 
+
+      /** @brief Schedule filtering of q and divQ */
+      void sched_filter( const LevelP& level,
+                          SchedulerP& sched,
+                          Task::WhichDW which_divQ_dw,
+                          const bool includeEC = true,
+                          bool modifies_divQFilt = false);
+
+
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
                                  SchedulerP& sched );
@@ -304,6 +313,16 @@ namespace Uintah{
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
+
+      //----------------------------------------
+      void filter( const ProcessorGroup* pc,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+                    Task::WhichDW which_divQ_dw,
+                    const bool includeEC,
+                    bool modifies_divQFilt);
 
       //__________________________________
       inline bool containsCell(const IntVector &low, 
