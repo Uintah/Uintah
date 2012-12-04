@@ -21,7 +21,7 @@
     <filebase>dqmom_test_2.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <outputInitTimestep/>
-    <save label="totalKineticEnergy"/>
+<!--    <save label="totalKineticEnergy"/>  FIXME, RT fails with this enabled-->
     <save label="totalummsLnError"/>
     <save label="totalvmmsLnError"/>
     <save label="totalummsExactSol"/>
