@@ -14,7 +14,6 @@
       <abskgBench4            spec="OPTIONAL DOUBLE  'positive'"/>
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
-      <Slice                  spec="OPTIONAL DOUBLE"/>
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
       <benchmark              spec="OPTIONAL INTEGER 'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>

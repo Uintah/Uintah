@@ -1251,7 +1251,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         direction[2] = plusMinus_one;
         
 /*`==========TESTING==========*/
-        direction = Vector(0,1,0);                   // Debug:: shoot ray in 1 directon
+ //       direction = Vector(0,1,0);                   // Debug:: shoot ray in 1 directon
 /*===========TESTING==========`*/
         
         Vector inv_direction = Vector(1.0)/direction;
