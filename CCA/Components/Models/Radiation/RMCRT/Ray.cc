@@ -2282,19 +2282,6 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
          tMax_prev = 0;
 
-         // At a scattering event, one of the tMax's will be zero since the ray location will lie on
-         //  a cell face.  We must set this value to the appropriate tDelta, else the ray will 
-         // erroneously step immediately in the face direction.
-         if(0 == tMaxX){
-           tMaxX = tDeltaX;
-         }
-         else if( 0 == tMaxY){
-           tMaxY = tDeltaY;
-         }
-         else if (0 == tMaxZ){
-           tMaxZ = tDeltaZ;
-         }
-
          curLength = 0;  // allow for multiple scattering events per ray
          if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
