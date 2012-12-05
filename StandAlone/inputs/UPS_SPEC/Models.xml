@@ -241,7 +241,6 @@
       <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <useCrackModel          spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
-      <useZeroOrderRate       spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
     
       <!-- Inputs for ignition time  to delay burn propagation-->
       <useInductionTime        spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>

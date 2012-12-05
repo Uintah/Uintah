@@ -201,7 +201,6 @@ WARNING
 
     string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
-    bool   d_useZeroOrderRate;
     double d_G;
     double d_b;
     double d_E0;
