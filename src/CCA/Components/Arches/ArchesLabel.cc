@@ -504,6 +504,10 @@ ArchesLabel::~ArchesLabel()
 
   if (d_symTensorMatl->removeReference())
     delete d_symTensorMatl;
+ for( ArchesLabel::MomentMap::iterator iMoment = DQMOMMoments.begin();
+       iMoment != DQMOMMoments.end(); ++iMoment ) {
+  VarLabel::destroy(iMoment->second); 
+ }
 
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
