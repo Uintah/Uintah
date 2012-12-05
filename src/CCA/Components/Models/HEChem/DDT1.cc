@@ -182,7 +182,6 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   d_params->require("IgnitionTemp",      ignitionTemp);
   d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
   d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
-  d_params->getWithDefault("useZeroOrderRate", d_useZeroOrderRate, false); 
   d_params->getWithDefault("useInductionTime", d_useInductionTime, false);
   
 // Required for ignition time delay for burning propagation
@@ -275,7 +274,6 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("BoundaryParticles", BP);
   model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
   model_ps->appendElement("IgnitionTemp",      ignitionTemp);
-  model_ps->appendElement("useZeroOrderRate",  d_useZeroOrderRate);
  
   model_ps->appendElement("IgnitionConst",     d_IC );
   model_ps->appendElement("PressureShift",     d_PS );
@@ -1139,17 +1137,11 @@ void DDT1::computeModelSources(const ProcessorGroup*,
         if(detonating[c] == 1){ 
 
           Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
-          // use a simple 0-order rate model
-          if(d_useZeroOrderRate) {
-            if(Fr[c] >= 0. && Fr[c] < 1.0){
-              delF[c] = d_G*pow(press_CC[c], d_b);
-            }
-          } else { // Use the JWL++ model for explosion
-            if(Fr[c] >= 0. && Fr[c] < .99){
-              delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
-            }
+         // Use the JWL++ model for explosion
+          if(Fr[c] >= 0. && Fr[c] < .99){
+            delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
           }
-
+          
           delF[c]*=delT;
 
           double rctMass    = rctRho[c]  * cell_vol;
