@@ -243,15 +243,15 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, shared_state);
         factory.register_source_term( src_name, srcBuilder );
 
-			} else if ( src_type == "do_radiation" ) {
+      } else if ( src_type == "do_radiation" ) {
+      
+        SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
+        factory.register_source_term( src_name, srcBuilder );
 
-				SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
-				factory.register_source_term( src_name, srcBuilder );
+      } else if ( src_type == "rmcrt_radiation" ) {
 
-			} else if ( src_type == "rmcrt_radiation" ) {
-
-				SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
-				factory.register_source_term( src_name, srcBuilder );
+        SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
+        factory.register_source_term( src_name, srcBuilder );
       
       } else if ( src_type == "wasatch_expr" ) {
           
