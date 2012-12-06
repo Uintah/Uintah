@@ -53,7 +53,6 @@ NIGHTLYTESTS = [
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
@@ -103,7 +102,6 @@ LOCALTESTS = [
   ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                                 \
   ("channel-flow-symmetry-bc",                 "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                            \
   ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       \
-  ("turb-lid-driven-cavity-3D-VREMAN",    "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                \
   ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),         \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
