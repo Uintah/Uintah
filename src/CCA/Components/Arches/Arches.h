@@ -136,7 +136,7 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Arches constructor
-  Arches(const ProcessorGroup* myworld);
+  Arches(const ProcessorGroup* myworld, const bool doAMR);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -200,6 +200,15 @@ public:
                                 SchedulerP& );
   virtual void sched_scalarInit( const LevelP& level,
                                  SchedulerP& sched );
+                                 
+  //__________________________________
+  //  Multi-level/AMR 
+  virtual void scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
+                               Uintah::SchedulerP&   /*sched*/);
+
+  virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
+                                       Uintah::SchedulerP& /*scheduler*/,
+                                       bool, bool);
 
   // GROUP: Access Functions :
   ///////////////////////////////////////////////////////////////////////
@@ -402,6 +411,7 @@ private:
   bool d_doingRestart;
   bool d_newBC_on_Restart;
   bool d_do_dummy_solve; 
+  bool d_doAMR;
 
 
 }; // end class Arches

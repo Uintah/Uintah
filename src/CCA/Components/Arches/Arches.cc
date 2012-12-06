@@ -129,7 +129,7 @@ const int Arches::NDIM = 3;
 // ****************************************************************************
 // Actual constructor for Arches
 // ****************************************************************************
-Arches::Arches(const ProcessorGroup* myworld) :
+Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   UintahParallelComponent(myworld)
 # ifdef WASATCH_IN_ARCHES
   , d_wasatch( new Wasatch::Wasatch(myworld) )
@@ -158,6 +158,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_doMMS                          =  false;
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
+  d_doAMR                          = doAMR;
 }
 
 // ****************************************************************************
@@ -514,14 +515,11 @@ Arches::problemSetup(const ProblemSpecP& params,
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );
 
-                                //Add any table lookup species to the table lookup list:
-                                std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();
-                                for ( std::vector<std::string>::iterator iter = tbl_lookup.begin();
-                                                iter != tbl_lookup.end(); ++iter ){
-
-                                        d_lab->add_species( *iter );
-
-                                }
+        //Add any table lookup species to the table lookup list:                                      
+        std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
+        for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); iter != tbl_lookup.end(); ++iter ){                                           
+          d_lab->add_species( *iter );
+        }                                                                                             
       }
     }
 
@@ -870,6 +868,18 @@ Arches::problemSetup(const ProblemSpecP& params,
     //look for an set any tabulated bc's
     eqn->extraProblemSetup( db ); 
   }
+  
+  //__________________________________
+  //  bulletproofing
+  if(d_doAMR && !sharedState->isLockstepAMR()){
+    ostringstream msg;
+    msg << "\n ERROR: You must add \n"
+        << " <useLockStep> true </useLockStep> \n"
+        << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES and AMR. \n"; 
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
+  
+  
 
 }
 
@@ -1098,8 +1108,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_areaFractionFZLabel);
 #endif
     tsk->computes(d_lab->d_densityGuessLabel);
-  	tsk->computes(d_lab->d_totalKineticEnergyLabel); 
-  	tsk->computes(d_lab->d_kineticEnergyLabel); 
+    tsk->computes(d_lab->d_totalKineticEnergyLabel); 
+    tsk->computes(d_lab->d_kineticEnergyLabel); 
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -3044,3 +3054,19 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
     }
   }
 }
+
+//______________________________________________________________________
+// STUB FUNCTIONS
+ void Arches::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
+                          Uintah::SchedulerP& /*sched*/)
+ {
+   // do nothing for now
+ }
+
+ void Arches::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
+                                  Uintah::SchedulerP& /*scheduler*/,
+                                  bool, bool)
+ {
+   // do nothing for now
+ }
+//------------------------------------------------------------------
