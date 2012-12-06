@@ -210,14 +210,14 @@ void GPUSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
                                       DataWarehouse* new_dw) {
 
   int matl = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Do time steps
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -243,9 +243,9 @@ void GPUSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
     int zhigh = h.z();
     int yhigh = h.y();
     int xhigh = h.x();
-    int ghostLayers = 1;
-    int ystride = yhigh + ghostLayers;
-    int xstride = xhigh + ghostLayers;
+    int numGhostCells = 1;
+    int ystride = yhigh + numGhostCells;
+    int xstride = xhigh + numGhostCells;
 
 //    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
 
@@ -285,14 +285,14 @@ void GPUSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
                                       DataWarehouse* new_dw) {
 
   int matl = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Do time steps
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -352,22 +352,13 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* new_dw,
                                       int device) {
 
-  // setup for driver API kernel launch
-  CUresult   cuErrVal;
-  CUmodule   cuModule;
-  CUfunction gpuSchedulerTestKernel;
-
-  // initialize the driver API
-  CUDA_DRV_SAFE_CALL( cuErrVal = cuInit(0) )
-
-  // set the CUDA device and context
   CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
   // get a handle on the GPU scheduler to query for device and host pointers, etc
   GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
 
   // Do time steps
-  int NGC = 1;
+  int numGhostCells = 1;
   int matl = 0;
 
   // requisite pointers
@@ -403,7 +394,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
     int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
     int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
-    dim3 gridDim(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
+    dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
 
     int tpbX = 8;
     int tpbY = 8;
@@ -411,15 +402,16 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 dimBlock(tpbX, tpbY, tpbZ); // block dimensions (threads per block)
 
     // setup and launch kernel
-    void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &NGC, &d_phi, &d_newphi };
-    string ptxpath = string(PTX_DIR_PATH)+"/GPUSchedulerTestKernel.ptx";
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&gpuSchedulerTestKernel, cuModule, "gpuSchedulerTestKernel") );
     cudaStream_t* stream = sched->getCudaStream(device);
-
-    // launch the kernel
-    cuErrVal = cuLaunchKernel(gpuSchedulerTestKernel, gridDim.x, gridDim.y, gridDim.z,
-                              dimBlock.x, dimBlock.y, dimBlock.z, 0, *stream, kernelParms, 0);
+    launchGPUSchedulerTestKernel(dimGrid,
+                                 dimBlock,
+                                 stream,
+                                 domainLow,
+                                 domainHigh,
+                                 domainSize,
+                                 numGhostCells,
+                                 d_phi,
+                                 d_newphi);
 
     // get the results back to the host
     cudaEvent_t* event = sched->getCudaEvent(device);

@@ -21,6 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <sci_defs/cuda_defs.h>
 
 #ifdef __cplusplus
@@ -36,20 +37,16 @@ extern "C" {
 // @param ghostLayers the number of layers of ghost cells
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
-// @param residual the residual calculated by this individual kernel
-__global__ void poissonGPU1Kernel(uint3 domainLow,
-                                  uint3 domainHigh,
-                                  uint3 domainSize,
-                                  int numGhostCells,
-                                  double* phi,
-                                  double* newphi,
-                                  double* residual)
-{
-
+__global__ void unifiedSchedulerTestKernel(uint3 domainLow,
+                                           uint3 domainHigh,
+                                           uint3 domainSize,
+                                           int NGC,
+                                           double *phi,
+                                           double *newphi) {
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
-  
+
   // Get the size of the data block in which the variables reside.
   //  This is essentially the stride in the index calculations.
   int dx = domainSize.x;
@@ -59,7 +56,7 @@ __global__ void poissonGPU1Kernel(uint3 domainLow,
   //  the algorithm is allowed to stream along the z direction
   //  applying the stencil to a line of cells.  The z direction
   //  is streamed because it allows access of x and y elements
-  //  that are close to one another which should allow coalesced 
+  //  that are close to one another which should allow coalesced
   //  memory accesses.
   if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
     for (int k = domainLow.z; k < domainHigh.z; k++) {
@@ -67,40 +64,35 @@ __global__ void poissonGPU1Kernel(uint3 domainLow,
       // (a * B * C) + (b * C) + (c * 1)
       int idx = INDEX3D(dx,dy,i,j,k);
 
-      newphi[idx] = (1. / 6) 
-                  * (phi[INDEX3D(dx,dy, (i-1), j, k)] 
+      newphi[idx] = (1. / 6)
+                  * (phi[INDEX3D(dx,dy, (i-1), j, k)]
                    + phi[INDEX3D(dx,dy, (i+1), j, k)]
                    + phi[INDEX3D(dx,dy, i, (j-1), k)]
                    + phi[INDEX3D(dx,dy, i, (j+1), k)]
-                   + phi[INDEX3D(dx,dy, i, j, (k-1))] 
+                   + phi[INDEX3D(dx,dy, i, j, (k-1))]
                    + phi[INDEX3D(dx,dy, i, j, (k+1))]);
-
-      // TODO Finish residual calculation using atomics
     }
   }
 }
 
-void launchPoisson1Kernel(dim3 dimGrid,
-                          dim3 dimBlock,
-                          uint3 domainLow,
-                          uint3 domainHigh,
-                          uint3 domainSize,
-                          int numGhostCells,
-                          double* d_phi,
-                          double* d_newphi,
-                          double* residual)
+void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
+                                      dim3 dimBlock,
+                                      cudaStream_t* stream,
+                                      uint3 domainLow,
+                                      uint3 domainHigh,
+                                      uint3 domainSize,
+                                      int numGhostCells,
+                                      double* d_phi,
+                                      double* d_newphi)
 {
-
-  poissonGPU1Kernel<<< dimGrid, dimBlock >>>(domainLow,
-                                             domainHigh,
-                                             domainSize,
-                                             numGhostCells,
-                                             d_phi,
-                                             d_newphi,
-                                             residual);
+  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(domainLow,
+                                                                  domainHigh,
+                                                                  domainSize,
+                                                                  numGhostCells,
+                                                                  d_phi,
+                                                                  d_newphi);
 }
 
 #ifdef __cplusplus
 }
 #endif
-

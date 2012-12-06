@@ -4063,9 +4063,6 @@ if test "$sci_required_cuda" = "yes"; then
   HAVE_CUDA_H=""
   INC_CUDA_H=""
   CUDA_LIB_DIR=""
-  NVCCEXT=""
-  NVCC_MODULE_FLAGS=""
-  DEF_PTXDIR_ABS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -4082,7 +4079,10 @@ if test "$sci_required_cuda" = "yes"; then
 # code to compile and test various system GPU/CUDA properties
 # (these files, etc are deleted after tests)
 #------------------------------------------------------------------------------
-# test CUDA and CUDA_SDK libraries and headers
+# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
+# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
+
+# test CUDA libraries and headers
   cat > cuda_conf_test.cu << EOF
 #include <stdlib.h>
 #include <stdio.h>
@@ -4121,12 +4121,12 @@ int main(int argc, char **argv) {
 		printf("a:%d = %f\n", i, *(results+i));
 	}
 
-  cudaFree(dev_a);
-  cudaFree(dev_results);
-  free(a);
-  free(results);
+    cudaFree(dev_a);
+    cudaFree(dev_results);
+    free(a);
+    free(results);
 
-	cudaDeviceReset();
+  cudaDeviceReset();
 
 	return 1;
 }
@@ -4164,8 +4164,6 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
-#echo "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
-#echo "DEF_PTXDIR_ABS    = " $DEF_PTXDIR_ABS
 #echo
 
 fi #end sci_required_cuda
@@ -4179,9 +4177,6 @@ AC_SUBST(CUDA_LIB_FLAG)
 AC_SUBST(NVCC_CFLAGS)
 AC_SUBST(NVCC_CXXFLAGS)
 AC_SUBST(NVCC_LIBS)
-AC_SUBST(NVCCEXT)
-AC_SUBST(NVCC_MODULE_FLAGS)
-AC_SUBST(DEF_PTXDIR_ABS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
