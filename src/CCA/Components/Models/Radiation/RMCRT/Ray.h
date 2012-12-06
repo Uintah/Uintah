@@ -36,6 +36,34 @@
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#include <curand.h>
+#include <curand_kernel.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void launchRayTraceKernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          cudaStream_t* stream,
+                          const uint3 patchLo,
+                          const uint3 patchHi,
+                          const uint3 patchSize,
+                          const uint3 domainLo,
+                          const uint3 domainHi,
+                          const double3 cellSpacing,
+                          double* device_abskg,
+                          double* device_sigmaT4,
+                          double* device_divQ,
+                          bool virtRad,
+                          bool isSeedRandom,
+                          bool ccRays,
+                          int numRays,
+                          double viewAngle,
+                          double threshold,
+                          curandState* globalDevStates);
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 #include <iostream>
