@@ -22,58 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_SPME_MAP_POINT_H
-#define UINTAH_SPME_MAP_POINT_H
-
-#include <Core/Geometry/Vector.h>
+#include <CCA/Components/MD/MapPoint.h>
+#include <Core/Math/UintahMiscMath.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Math/MiscMath.h>
 
-#include <vector>
-#include <list>
+#include <iostream>
 
-namespace Uintah {
+#include <sci_values.h>
 
-using SCIRun::Vector;
-using SCIRun::IntVector;
+using namespace Uintah;
+using namespace SCIRun;
 
-template<class T> class SPMEMapPoint {
-
-  public:
-    SPMEMapPoint();
-
-    ~SPMEMapPoint();
-
-    inline const double GetParticleCharge() const
-    {
-      // TODO Figure out what charge is
-//      return Particle->Charge();
-      return this->globalParticleSubset;
-    }
-
-    inline const double ChargeWeight() const
-    {
-      return this->d_chargeWeight;
-    }
-
-    inline void setParticleCharge(double charge)
-    {
-
-    }
-
-  private:
-    // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle
-    ParticleSubset& globalParticleSubset;
-    double d_chargeWeight;
-    Vector d_forceGRadient;
-
-};
-
-}  // End namespace Uintah
-
-#endif

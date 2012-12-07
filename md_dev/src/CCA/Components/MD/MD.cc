@@ -27,6 +27,8 @@
 
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/SPMEGrid.h>
+#include <CCA/Components/MD/SPMEGridMap.h>
+#include <CCA/Components/MD/Transformation3D.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -219,7 +221,9 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   }
 }
 
-void MD::scheduleSPME()
+void MD::scheduleSPME(SchedulerP& sched,
+                      const Patch* patch,
+                      const MaterialSet* matls)
 {
   // Global "driver" routine:
   //  Variables prepended with f exist only in fourier space,
@@ -230,31 +234,42 @@ void MD::scheduleSPME()
   Matrix3 InverseCell;
   double SystemVolume;
 
-  SPMEGridExtents = MD_System->GetSPMEGridExtents();
-  InverseCell = MD_System->GetUnitCellInverse();
-  SystemVolume = MD_System->GetUnitCellVolume();
+  const Level* level = patch->getLevel();
+
+  // Determine the size of the domain.
+//  SPMEGridExtents = MD_System->GetSPMEGridExtents();
+  IntVector gridLo, gridHi;
+  IntVector gridLo_EC, gridHi_EC;
+  level->findInteriorCellIndexRange(gridLo, gridHi);     // excluding extraCells
+  level->findCellIndexRange(gridLo_EC, gridHi_EC);       // including extraCells
+  SPMEGridExtents = gridHi - gridLo;
+
+  // TODO - figure this out??
+//  InverseCell = MD_System->GetUnitCellInverse();
+//  SystemVolume = MD_System->GetUnitCellVolume();
 
   // Extract needed values from the local subgrid
-  IntVector LocalGridExtents, LocalGridOffset;
-
-  LocalGridExtents = PatchLocalGrid->GetGridExtents();
-  LocalGridOffset = PatchLocalGrid->GetGlobalOffset();
-
-  SimpleGrid fStressPre, fTheta;
   // These should persist through mapping from global to local system; One global map should be kept and only change
   //   the box or grid points change.
-  IntVector LocalGridExtents, LocalGridOffset;
+  IntVector patchLoIdx, patchHiIdx, LocalGridOffset;
+  int numGhostCells = 0;
+  patchLoIdx = patch->getCellLowIndex(numGhostCells);
+  patchHiIdx = patch->getCellHighIndex(numGhostCells);
+  IntVector patchExtents = patchHiIdx - patchHiIdx;
+//  LocalGridOffset = PatchLocalGrid->GetGlobalOffset();
+
+  SPMEGrid<std::complex<double> > fStressPre, fTheta;
 
   // Initialize some things we'll need repeatedly
   // Generate the local vectors of m_i
-  vector<double> M1(LocalGridExtents.x()), M2(LocalGridExtents.y()), M3(LocalGridExtents.z());
+  vector<double> M1(patchExtents.x()), M2(patchExtents.y()), M3(patchExtents.z());
 
-  M1 = GenerateMVector(LocalGridExtents.x(), LocalGridOffset.x(), SPMEGridExtents.x());
-  M2 = GenerateMVector(LocalGridExtents.y(), LocalGridOffset.y(), SPMEGridExtents.y());
-  M3 = GenerateMVector(LocalGridExtents.z(), LocalGridOffset.z(), SPMEGridExtents.z());
+  M1 = GenerateMVector(patchExtents.x(), LocalGridOffset.x(), SPMEGridExtents.x());
+  M2 = GenerateMVector(patchExtents.y(), LocalGridOffset.y(), SPMEGridExtents.y());
+  M3 = GenerateMVector(patchExtents.z(), LocalGridOffset.z(), SPMEGridExtents.z());
   if (NewBox) {  // Box dimensions have changed, we need to update B and C
     SimpleGrid fBGrid, fCGrid;
-    CalculateStaticGrids(LocalGridExtents, MD_System, fBGrid, fCGrid, fStressPre);
+    calculateStaticGrids(patchLo, MD_System, fBGrid, fCGrid, fStressPre);
     fThetaRecip = fBGrid * fCGrid;  // Multiply per point
   }
   MapLocalGrid (LocalGridMap);
@@ -336,28 +351,28 @@ void MD::generateNeighborList()
   }
 }
 
-vector<Point> MD::calcReducedCoords(const vector<Point>& localRealCoordinates,
-                                    const Transformation3D& Invert_Space)
+std::vector<Point> MD::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+                                         const Transformation3D<std::complex<double> >& invertSpace)
 {
 
   vector<Point> localReducedCoords;
 
   if (!Orthorhombic)  // bool Orthorhombic; true if simulation cell is orthorhombic, false if it's generic
-    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
-      CoordType s;        // Fractional coordinates; 3 - vector
-      s = ParticleList[Index].GetCoordinates();   // Get non-ghost particle coordinates for this cell
-      s *= InverseBox;       // For generic coordinate systems; InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
-      Local_ReducedCoords.push_back(s);   // Reduced non-ghost particle coordinates for this cell
-    }
-  else
+  for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
+    CoordType s;        // Fractional coordinates; 3 - vector
+    s = ParticleList[Index].GetCoordinates();// Get non-ghost particle coordinates for this cell
+    s *= InverseBox;// For generic coordinate systems; InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
+    Local_ReducedCoords.push_back(s);// Reduced non-ghost particle coordinates for this cell
+  } else {
     for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
       CoordType s;        // Fractional coordinates; 3-vector
-      s = ParticleList[Index].GetCoordinates();   // Get non-ghost particle coordinates for this cell
+      s = ParticleList[Index].GetCoordinates();// Get non-ghost particle coordinates for this cell
       s(0) *= Invert_Space(0, 0);
       s(1) *= Invert_Space(1, 1);
-      s(2) *= Invert_Space(2, 2);                // 6 Less multiplications and additions than generic above
-      Local_ReducedCoords.push_back(s);         // Reduced non-ghost particle coordinates for this cell
+      s(2) *= Invert_Space(2, 2);// 6 Less multiplications and additions than generic above
+      Local_ReducedCoords.push_back(s);// Reduced non-ghost particle coordinates for this cell
     }
+  }
 
   return Local_ReducedCoords;
 }
@@ -496,11 +511,11 @@ vector<std::complex<double> > MD::generateBVector(const int& points,
   return b;
 }
 
-void MD::calculateStaticGrids(const SubGrid& LocalGrid,
-                              const System_Reference& MD_System,
-                              SimpleGrid& fB,
-                              SimpleGrid& fC,
-                              SimpleGrid& StressPreMult)
+void MD::calculateStaticGrids(const SPMEGrid<std::complex<double> >& localSPMEGrid,
+                              const ParticleSubset& system,
+                              SPMEGrid<std::complex<double> >& fB,
+                              SPMEGrid<std::complex<double> >& fC,
+                              SPMEGrid<std::complex<double> >& stressPreMult)
 {
   Matrix3 InverseUnitCell;
   double Ewald_Beta;
@@ -525,7 +540,7 @@ void MD::calculateStaticGrids(const SubGrid& LocalGrid,
   vector<double> OrdinalSpline(SplineOrder - 1);
   OrdinalSpline = GenerateOrdinalSpline(SplineOrder);
 
-  vector<complex<double>> b1, b2, b3;
+  vector<complex<double> > b1, b2, b3;
   // Generate vectors of b_i (=exp(i*2*Pi*(n-1)m_i/K_i)*sum_(k=0..p-2)M_n(k+1)exp(2*Pi*k*m_i/K_i)
 
   b1 = GeneratebVector(GridExtents.x(), M1, K.x(), SplineOrder, OrdinalSpline);
@@ -674,13 +689,13 @@ SPMEGrid MD::SPME_Initialize(const IntVector& EwaldMeshLimits,
       }
     }
   }
-
+  return NULL
 }
 
 template<class T>
-SPMEGridMap MD::createSPMEChargeMap<T>(const SPMEGrid& SPMEGlobalGrid,
-                                       const Patch& CurrentPatch,
-                                       const SystemReference& SystemData)
+SPMEGridMap<std::complex<double> > MD::createSPMEChargeMap<std::complex<double> >(const SPMEGrid<std::complex<double> >& SPMEGlobalGrid,
+                                                                                  const Patch& CurrentPatch,
+                                                                                  const SystemReference& SystemData)
 {
   // Note:  SubGridOffset maps the offset of the current patch's subgrid to the global grid numbering scheme.
   //        For example, a patch that iterated from global grid point 3,4,5 to 7,8,9 would have a SubGridOffset
@@ -770,8 +785,11 @@ SPMEGridMap MD::createSPMEChargeMap<T>(const SPMEGrid& SPMEGlobalGrid,
   return null;
 }
 
+//void MD::spmeMapChargeToGrid(SPMEGrid<std::complex<double> >& LocalGridCopy,
+//                             const SPMEGridMap& LocalGridMap,
+//                             const Patch& CurrentPatch)
 void MD::spmeMapChargeToGrid(SPMEGrid<std::complex<double> >& LocalGridCopy,
-                             const SPMEGridMap& LocalGridMap,
+                             const SPMEGridMap<std::complex<double> >& LocalGridMap,
                              const Patch& CurrentPatch)
 {
   IntVector Extent = LocalGridMap.GetLocalExtents();  // Total number of grid points on the local grid including ghost points (X,Y,Z)

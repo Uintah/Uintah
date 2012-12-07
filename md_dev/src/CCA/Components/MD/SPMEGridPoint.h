@@ -25,7 +25,7 @@
 #ifndef UINTAH_SPME_GRID_POINT_H
 #define UINTAH_SPME_GRID_POINT_H
 
-#include <CCA/Components/MD/SPMEMapPoint.h>
+#include <CCA/Components/MD/MapPoint.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
@@ -64,7 +64,7 @@ template<class T> class SPMEGridPoint {
     double d_totalChargeContributionWeight;
     double d_totalChargeCoefficientWeight;
     Vector d_field;
-    std::vector<SPMEMapPoint<double> > d_mappedAtoms;
+    std::vector<MapPoint<double> > d_mappedAtoms;
 
 };
 
