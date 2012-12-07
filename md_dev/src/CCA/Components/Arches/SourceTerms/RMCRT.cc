@@ -95,7 +95,6 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
     throw ProblemSetupException("ERROR:  RMCRT_radiation only works if calc_on_all_RKstes = false", __FILE__, __LINE__);
   }
   
-  
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
   if (!rmcrt_ps){
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
@@ -178,7 +177,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   } 
  
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
-  printSchedule(level,dbg,"sched_computeSource: main task");
+  printSchedule(level,dbg,"RMCRT_Radiation::sched_computeSource");
   
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
@@ -244,32 +243,28 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
                            &RMCRT_Radiation::radProperties, time_sub_step ); 
                            
   printSchedule(level,dbg, "RMCRT_Radiation::sched_radProperties");
-	std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from radprops
+  std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from radprops
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel ); 
-	  for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-	  	
-	  	const VarLabel* label = VarLabel::find(*iter);
-	  	_species_varlabels.push_back(label); 
+    for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
 
-	  	if ( label != 0 ){ 
-	  		tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
-	  	} else { 
-      	throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
-	  	}
-	  }
+      const VarLabel* label = VarLabel::find(*iter);
+      _species_varlabels.push_back(label); 
+
+      if ( label != 0 ){ 
+        tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+      } else { 
+        throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+      }
+    }
   } else {  
     tsk->modifies( _abskgLabel );
-		for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin(); 
-				iter != _species_varlabels.end(); iter++ ){ 
-			tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
-		} 
+    for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+    } 
   }
-
-
-
-
+  
   sched->addTask( tsk, level->eachPatch(), _matlSet ); 
 }
 
@@ -284,29 +279,27 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
                                 const int time_sub_step )
 {
   for (int p=0; p < patches->size(); p++){
-
-		std::vector<constCCVariable<double> > species; 
+    std::vector<constCCVariable<double> > species; 
 
     const Patch* patch = patches->get(p);
 
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
 
-		DataWarehouse* which_dw; 
+    DataWarehouse* which_dw; 
     CCVariable<double> abskg; 
     if ( time_sub_step == 0 ) { 
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
-			which_dw = old_dw; 
+      which_dw = old_dw; 
     } else { 
       new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
-			which_dw = new_dw; 
+      which_dw = new_dw; 
     }
 
-		for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin(); 
-				iter != _species_varlabels.end(); iter++ ){ 
-			constCCVariable<double> var; 
-			which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
-			species.push_back( var ); 
-		}
+    for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+      constCCVariable<double> var; 
+      which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
+      species.push_back( var ); 
+    }
     
     // compute absorption coefficient via RadPropertyCalulator
     _prop_calculator->compute( patch, species, abskg );

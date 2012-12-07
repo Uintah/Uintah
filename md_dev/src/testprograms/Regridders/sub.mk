@@ -46,13 +46,15 @@ else # Non-static build
         Core/Geometry            \
         Core/Grid                \
         Core/Math                \
+        Core/ProblemSpec	 \
         Core/Util
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)
 else
-  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) 
+  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
+	  $(XML2_LIBRARY) $(Z_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -25,6 +25,8 @@
 #define RAY_GPU_CUH
 
 #include <sci_defs/cuda_defs.h>
+#include <curand.h>
+#include <curand_kernel.h>
 
 #ifdef __cplusplus
 extern "C" {

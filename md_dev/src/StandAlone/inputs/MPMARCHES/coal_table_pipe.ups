@@ -289,6 +289,7 @@
 
       <PropertyModels>
         <model type="heat_loss" label="heat_loss">
+          <enthalpy_label>enthalpy</enthalpy_label>
           <initialization type="constant">
             <constant>0</constant> 
           </initialization>
