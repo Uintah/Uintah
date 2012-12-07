@@ -44,6 +44,7 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                                \
@@ -94,6 +95,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("turb-lid-driven-cavity-3D-VREMAN",           "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                \

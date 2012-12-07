@@ -36,7 +36,7 @@
           <initialization               spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant'">
 
-            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant"/>
+            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
 
           </initialization>
 
@@ -115,7 +115,7 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
 
           <!-- Heat loss --> 
-          <enthalpy_label               spec="OPTIONAL STRING"
+          <enthalpy_label               spec="REQUIRED STRING"
                                         need_applies_to="type heat_loss"/>  <!-- point to the enthalpy transport equation... optional because you can choose constant value--> 
           <adiabatic_enthalpy_label     spec="OPTIONAL STRING"
                                         need_applies_to="type heat_loss"/>  <!-- point to the tabulated adiabatic enthalpy, default = "adiabaticenthalpy" --> 
@@ -254,7 +254,7 @@
                                         attribute1="transport_label REQUIRED STRING">
               <var                      spec="MULTIPLE NO_DATA"   
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+                                        attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
         </ColdFlow>
@@ -314,7 +314,7 @@
                                         attribute1="transport_label REQUIRED STRING">
               <var                      spec="MULTIPLE NO_DATA"   
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+                                        attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
         </ClassicTable>
@@ -748,6 +748,7 @@
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
+              <applyFilter               spec="OPTIONAL BOOLEAN"/>
              
  
               <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">

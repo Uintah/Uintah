@@ -56,6 +56,8 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
       _noisy_heat_loss = true;
     } 
   }
+
+  commonProblemSetup( inputdb ); 
 }
 
 //---------------------------------------------------------------------------
@@ -270,7 +272,6 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
     CCVariable<double> prop; 
 
     new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-    prop.initialize(0.0); 
 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 

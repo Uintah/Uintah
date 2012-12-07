@@ -47,14 +47,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       Task::WhichDW which_sigmaT4_dw,
                       Task::WhichDW which_celltype_dw)
 {
-  // setup for driver API kernel launch
-  CUresult   cuErrVal;
-  CUmodule   cuModule;
-  CUfunction rayTraceKernel;
-
-  // initialize the driver API
-  CUDA_DRV_SAFE_CALL( cuErrVal = cuInit(0) )
-
   // set the CUDA device and context
   CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
 
@@ -119,18 +111,11 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
     CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
 
-    // setup and launch kernel
-    void *kernelParms[] = { (void*)(&patchLo), (void*)(&patchHi), (void*)(&patchSize), (void*)(&domainLo), (void*)(&domainHi),
-                            (void*)(&cellSpacing), &d_absk, &d_sigmaT4, &d_divQ, &_virtRad, &_isSeedRandom, &_CCRays,
-                            &_NoOfRays, &_viewAng, &_Threshold, &globalDevStates };
-    string ptxpath = string(PTX_DIR_PATH)+"/RayGPUKernel.ptx";
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&rayTraceKernel, cuModule, "rayTraceKernel") );
+    // set up and launch kernel
     cudaStream_t* stream = _scheduler->getCudaStream(device);
-
-    // launch the kernel
-    cuErrVal = cuLaunchKernel(rayTraceKernel, dimGrid.x, dimGrid.y, dimGrid.z,
-                              dimBlock.x, dimBlock.y, dimBlock.z, 0, *stream, kernelParms, 0);
+    launchRayTraceKernel(dimGrid, dimBlock, stream, patchLo, patchHi, patchSize, domainLo, domainHi, cellSpacing, d_absk, d_sigmaT4,
+                         d_divQ, this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_NoOfRays, this->_viewAng,
+                         this->_Threshold, globalDevStates);
 
     // get updated divQ back into host memory
     cudaEvent_t* event = _scheduler->getCudaEvent(device);
