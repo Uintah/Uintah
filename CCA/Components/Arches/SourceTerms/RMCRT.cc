@@ -177,7 +177,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   } 
  
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
-  printSchedule(level,dbg,"sched_computeSource: main task");
+  printSchedule(level,dbg,"RMCRT_Radiation::sched_computeSource");
   
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
