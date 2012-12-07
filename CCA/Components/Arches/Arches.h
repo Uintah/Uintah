@@ -411,6 +411,10 @@ private:
   bool d_doingRestart;
   bool d_newBC_on_Restart;
   bool d_do_dummy_solve; 
+  
+  //__________________________________
+  //  Multi-level related
+  int d_archesLevelIndex;
   bool d_doAMR;
 
 
