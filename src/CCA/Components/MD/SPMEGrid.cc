@@ -34,23 +34,3 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-template<class T>
-void SPMEGrid<T>::fft_realToFourier()
-{
-
-}
-
-template<class T>
-void SPMEGrid<T>::fft_fourierToReal()
-{
-}
-
-template<class T>
-void SPMEGrid<T>::calculateCharge()
-{
-//  int NumMappedAtoms = MappedAtoms.size();
-//  double GridPointCharge = 0.0;
-//  for (int Atom = 0; Atom < NumMappedAtoms; ++Atom) {
-//    GridPointCharge += MappedAtoms[Atom].GetParticleCharge() * MappedAtoms[Atom].ChargeWeight();
-//  }
-}

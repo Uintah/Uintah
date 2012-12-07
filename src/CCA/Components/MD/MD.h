@@ -33,7 +33,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SPMEGrid.h>
 #include <CCA/Components/MD/SPMEGridMap.h>
-#include <CCA/Components/MD/SPMEMapPoint.h>
+#include <CCA/Components/MD/MapPoint.h>
 #include <CCA/Components/MD/Transformation3D.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -72,7 +72,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     virtual void scheduleTimeAdvance(const LevelP& level,
                                      SchedulerP&);
 
-    virtual void scheduleSPME();
+    virtual void scheduleSPME(SchedulerP& sched,
+                              const Patch* patch,
+                              const MaterialSet* matls);
 
   protected:
 
