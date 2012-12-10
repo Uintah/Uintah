@@ -1330,6 +1330,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             // next cell index and position
             cur[dir]  = cur[dir] + step[dir];
             Point pos = level->getCellPosition(cur);
+            Vector dx_prev = level->dCell();  //  Used to compute coarsenRatio
+
             
             //__________________________________
             // Logic for moving between levels
@@ -1359,6 +1361,38 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
             }
             
+            //__________________________________
+            // Account for uniqueness of first step after reaching a new level
+            disMin        = (tMax[dir] - tMax_prev);
+            tMax_prev     = tMax[dir];
+            tMax[dir]     = tMax[dir] + tDelta[L][dir];
+
+            Vector dx = level->dCell();
+
+
+            IntVector coarsenRatio = IntVector(1,1,1);
+            coarsenRatio[0] = dx[0]/dx_prev[0];
+            coarsenRatio[1] = dx[1]/dx_prev[1];
+            coarsenRatio[2] = dx[2]/dx_prev[2];
+
+            // Update DyDx and DzDx ratios in the event that coarsening is not uniform in each dir.
+            DyDx[L] = dx.y() / dx.x();
+            DzDx[L] = dx.z() / dx.x();
+            Dx[L] = dx;
+
+            Vector lineup;
+            for (int ii=0; ii<3; ii++){
+              if (sign[ii]) {
+                lineup[ii] = cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 );
+              }
+
+              else {
+                 lineup[ii] = cur[ii] % coarsenRatio[ii];
+              }
+            }
+            tMax += lineup * tDelta[L];
+
+
             //__________________________________
             //  update marching variables
             disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
