@@ -16,7 +16,6 @@
 
 namespace Uintah {
 
-class ArchesLabel; 
 class MixingRxnModel; 
 class BoundaryCondition_new {
 
@@ -32,7 +31,7 @@ public:
   typedef std::map< std::string, double  > DoubleMap; 
   typedef std::map< std::string, DoubleMap > MapDoubleMap;
 
-  BoundaryCondition_new(const ArchesLabel* fieldLabels);
+  BoundaryCondition_new(const int matl_id);
 
   ~BoundaryCondition_new();
   /** @brief Interface for the input file and set constants */ 
@@ -89,7 +88,7 @@ public:
 private: 
  
   //variables
-  const ArchesLabel* d_fieldLabels;
+	const int d_matl_id; 
 
   LabelMap           areaMap;
   MapDoubleMap       _tabVarsMap;
