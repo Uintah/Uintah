@@ -268,63 +268,6 @@ void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
-void ViscoTransIsoHyper::allocateCMDataAddRequires(Task* task,
-                                              const MPMMaterial* matl ,
-                                              const PatchSet* patches,
-                                              MPMLabel* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Add requires local to this model
-  task->requires(Task::NewDW,pFailureLabel_preReloc,    matlset, Ghost::None);
-  task->requires(Task::NewDW,pStretchLabel_preReloc,    matlset, Ghost::None);
-  task->requires(Task::NewDW,pElasticStressLabel_preReloc,matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory1Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory2Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory3Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory4Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory5Label_preReloc,   matlset, Ghost::None);
-  task->requires(Task::NewDW,pHistory6Label_preReloc,   matlset, Ghost::None);
-}
-
-
-void ViscoTransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
-                                      ParticleSubset* addset,
-       map<const VarLabel*, ParticleVariableBase*>* newState,
-                                      ParticleSubset* delset,
-                                      DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be
-  // deleted to the particle to be added.
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-
-  // Copy the data local to this constitutive model from the particles to
-  // be deleted to the particles to be added
-  ParticleVariable<double> stretch,fail;
-  constParticleVariable<double> o_stretch,o_fail;
-
-  new_dw->allocateTemporary(stretch,            addset);
-  new_dw->allocateTemporary(fail,               addset);
-
-  new_dw->get(o_stretch,     pStretchLabel_preReloc,                  delset);
-  new_dw->get(o_fail,        pFailureLabel_preReloc,                  delset);
-
-  ParticleSubset::iterator o,n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    stretch[*n] = o_stretch[*o];
-    fail[*n] = o_fail[*o];
-  }
-  (*newState)[pStretchLabel]=stretch.clone();
-  (*newState)[pFailureLabel]=fail.clone();
-}
-
 void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
                                      std::vector<const VarLabel*>& to)
 //____________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES

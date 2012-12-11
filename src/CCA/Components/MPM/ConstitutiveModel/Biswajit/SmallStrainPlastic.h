@@ -269,23 +269,6 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*, 
-                                   ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
     void scheduleCheckNeedAddMPMMaterial(Task* task,
                                          const MPMMaterial* matl,
                                          const PatchSet* patches) const;

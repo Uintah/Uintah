@@ -204,20 +204,6 @@ namespace Uintah {
     // destructor
     virtual ~HyperelasticPlastic();
     
-    
-    // Initialization Functions //
-    //////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*,
-                                   ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-    
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-    
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,

@@ -105,12 +105,6 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
 
-  virtual void addMaterial(const ProblemSpecP& params,
-                           GridP& grid,
-                           SimulationStateP&);
-
-  virtual void scheduleInitializeAddedMaterial(const LevelP& level, SchedulerP&);
-
   virtual void restartInitialize();
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
@@ -472,15 +466,6 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-  void scheduleAddNewParticles(SchedulerP&, const PatchSet*,const MaterialSet*);
-
-  void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
-                                         const MaterialSet*);
-
-  void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
-                                       const PatchSet* patches,
-                                       const MaterialSet*);
-
   virtual void scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP&, 
                                                            const PatchSet*,
                                                            const MaterialSet*);
@@ -525,25 +510,6 @@ protected:
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  void checkNeedAddMPMMaterial(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-  void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                      const LevelP& level,
-                                      const MaterialSet*);
-  
-  
-  void setNeedAddMaterialFlag(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse*);
-  
   bool needRecompile(double time, double dt,
                      const GridP& grid);
 

@@ -122,36 +122,6 @@ if(!mms_type.empty()) {
   	}
 }
 
-void CNH_MMS::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-}
-
-
-void CNH_MMS::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*,
-                                    ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-}
-
 void CNH_MMS::addParticleState(std::vector<const VarLabel*>& ,
                                    std::vector<const VarLabel*>& )
 {
@@ -339,8 +309,8 @@ void CNH_MMS::carryForward(const PatchSubset* patches,
 }
 
 void CNH_MMS::addComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* patches) const
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -413,28 +383,6 @@ double CNH_MMS::getCompressibility()
   return 1.0/d_initialData.Bulk;
 }
 
-
 namespace Uintah {
   
-#if 0
-  static MPI_Datatype makeMPI_CMData()
-  {
-    ASSERTEQ(sizeof(CNH_MMS::StateData), sizeof(double)*0);
-    MPI_Datatype mpitype;
-    MPI_Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
-    return mpitype;
-  }
-  
-  const TypeDescription* fun_getTypeDescription(CNH_MMS::StateData*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-                                  "CNH_MMS::StateData", 
-                                  true, &makeMPI_CMData);
-    }
-    return td;
-  }
-#endif
 } // End namespace Uintah

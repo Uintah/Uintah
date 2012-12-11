@@ -117,33 +117,6 @@ namespace Uintah {
                                         const bool recursion,
                                         const bool SchedParent) const;
 
-    virtual void scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                 const MPMMaterial* matl,
-                                                 const PatchSet* patches) const;
-
-    // Determine if addition of an acceptor material is needed
-    virtual void checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
-
-    /////////////////////////////////////////////////////////////////
-    /*! Add particle conversion related requires to the task graph */
-    /////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    /////////////////////////////////////////////////////////////////
-    /*! Copy the data from the particle to be deleted to the particle
-        to be added */
-    /////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                          map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw) = 0;
-
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to) = 0;
 
@@ -446,24 +419,6 @@ namespace Uintah {
                                 const MaterialSubset* matlset,
                                 const PatchSet* patches) const;
 
-    /////////////////////////////////////////////////////////////////
-    /*! Particle conversion related requires common to all constitutive 
-        models that do explicit time stepping : called by 
-        allocateCMDataAddRequires */
-    /////////////////////////////////////////////////////////////////
-    void addSharedRForConvertExplicit(Task* task,
-                                      const MaterialSubset* matlset,
-                                      const PatchSet* ) const;
-
-    /////////////////////////////////////////////////////////////////
-    /*! Copy the data common to all constitutive models from the 
-        particle to be deleted to the particle to be added. 
-        Called by allocateCMDataAdd */
-    /////////////////////////////////////////////////////////////////
-    void copyDelToAddSetForConvertExplicit(DataWarehouse* new_dw,
-                                           ParticleSubset* delset,
-                                           ParticleSubset* addset,
-           map<const VarLabel*, ParticleVariableBase*>* newState);
 
     /////////////////////////////////////////////////////////////////
     /*! Carry forward the data common to all constitutive models 
