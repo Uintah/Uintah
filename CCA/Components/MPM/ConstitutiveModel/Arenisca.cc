@@ -295,19 +295,6 @@ void Arenisca::initializeCMData(const Patch* patch,
 #endif
 }
 
-//T2D: remove function?
-void Arenisca::allocateCMDataAdd(DataWarehouse* new_dw,
-                                         ParticleSubset* addset,
-          map<const VarLabel*, ParticleVariableBase*>* newState,
-                                         ParticleSubset* delset,
-                                         DataWarehouse* old_dw)
-{
-  //Needed by ConstitutiveModelFactory.cc:116
-  #ifdef JC_USE_BB_STATE_UPDATE
-    d_intvar->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-  #endif
-}
-
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void Arenisca::computeStableTimestep(const Patch* patch,
