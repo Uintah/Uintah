@@ -153,7 +153,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [21,21,21]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -209,7 +209,7 @@
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
                 <abskg>             999        </abskg>
-                <NoOfRays>          25         </NoOfRays>
+                <NoOfRays>          5          </NoOfRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
