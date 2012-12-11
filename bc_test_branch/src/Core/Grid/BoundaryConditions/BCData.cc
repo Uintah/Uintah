@@ -172,14 +172,15 @@ BCData::combine( const BCData & from )
 void
 BCData::print( int depth ) const
 {
-  static bool verbose = true; // FIXME debugging helper var 
 
-  string indentation( depth*2, ' ' );
-  string indent2( (depth+1)*2, ' ' );
-  
-  cout << indentation << "BCData for matl " << d_matl << ", contains " << d_BCBs.size() << " BoundCondBases) [" << this << "]:\n";
+  static bool verbose = false; // FIXME debugging helper var 
 
   if( verbose ) { // FIXME debugging output
+    string indentation( depth*2, ' ' );
+    string indent2( (depth+1)*2, ' ' );
+  
+    cout << indentation << "BCData for matl " << d_matl << ", contains " << d_BCBs.size() << " BoundCondBases) [" << this << "]:\n";
+
     for( unsigned int pos = 0; pos < d_BCBs.size(); pos++ ) {
       const BoundCondBase * bcb = d_BCBs[ pos ];
       cout << indent2 << "BC = " << bcb->getVariable() << ", type = " << bcb->getType() << ", matl = " << bcb->getMatl() << "\n";

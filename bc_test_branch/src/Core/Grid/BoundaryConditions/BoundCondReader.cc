@@ -625,18 +625,20 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
     }
     bcGeom->print(0); // DEBUG FIXME - remove
 
+    // FIXME - old stuff follows that most likely can be removed:
+    //
     // Add the Auxillary boundary condition type
-    set<int> materials;
-
+    // set<int> materials;
+    //
     //    const vector<BoundCondBase*> the_bcs = bcGeom->getBCData().getBCs();
-
+    //
     //    for( vector<BoundCondBase*>::const_iterator iter = the_bcs.begin(); iter != the_bcs.end(); ++iter ) {
     //      materials.insert( (*iter)->getMatl() );
     //    }
-
+    //
     //    for( set<int>::const_iterator iter = materials.begin(); iter != materials.end(); iter++ ) {
-
     //      int matl_id = *iter;
+    //
 
     BoundCondBase* bc = scinew BoundCond<string>( "Auxiliary", "no type", "no value", face_label, "no_functor", -1 );
 
@@ -684,17 +686,44 @@ BoundCondReader::combineBCs( map<Patch::FaceType, BCFace*> & sides )
 
     cout << "Here: size of geoms: " << geoms.size() << "\n";
 
+    set<int> materials;
+
     for( unsigned int pos = 0; pos < geoms.size(); pos++ ) {
 
       geoms[pos]->print(0); // DEBUG FIXME - remove
 
+      /////////////////////////////////////////////////////////////////////////
+      // 
+      // If there is only one one material, then eliminate the '-1' category.
+      // Note, the 'BCDataArray::getBoundCondData()' must also be updated so
+      // that a request for material '-1' will return the real material.
+      // So record with materials are actually used here, so that after this
+      // loop we can take the appropriate action.
+
+      const set<int> geom_matls = geoms[ pos ]->getMaterials();
+      materials.insert( geom_matls.begin(), geom_matls.end() );
+      
       d_BCReaderData[ faceIdx ].addBCGeomBase( geoms[ pos ] );
+    }
+
+    // FIXME: debug statement:
+    cout << "Number of materials is " << materials.size() << "\n";
+
+    if( materials.size() == 2 ) {
+      // If size is 2 then there is -1 and one other #.  Remove the -1.  If size
+      // is 1, then there is only -1, so we are good.  If size is greater then 2,
+      // then we need -1 and the other materials.
+      
+      // FIXME: debug statement:
+      cout << "Removing -1 material.\n";
+      d_BCReaderData[ faceIdx ].removeGenericMaterial();
     }
 
     cout << "---- begin --------------------------------------------------\n";
     cout << "d_BCReaderData[ " << faceIdx << " ] is:\n";
     d_BCReaderData[faceIdx].print();
     cout << "---- end --------------------------------------------------\n";
+
   }
 } // end combineBCS
 

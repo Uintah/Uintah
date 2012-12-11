@@ -38,8 +38,15 @@
   </DataArchiver>
 
   <Grid>
-    <BoundaryConditions>
-      <Face side="x-" name="inlet">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-"> <!-- inlet -->
         <BCType id="all" label="x- wall" var="WallBC">
           <value>0</value>
         </BCType>
@@ -57,7 +64,7 @@
           <value> 1. </value>
         </BCType>
       </Face>
-      <Face side="x+" name="inlet">
+      <Face geometry="x+ wall" side="x+">
         <BCType id="all" label="x+ wall" var="WallBC">
           <value>0</value>
         </BCType>
@@ -75,7 +82,7 @@
           <value> 1. </value>
         </BCType>
       </Face>
-      <Face side="y-" name="inlet">
+      <Face geometry="y- wall" side="y-">
         <BCType id="all" label="y- wall" var="WallBC">
           <value>0</value>
         </BCType>
@@ -93,7 +100,7 @@
           <value> 1. </value>
         </BCType>
       </Face>
-      <Face side="y+" name="inlet">
+      <Face geometry="y+ wall" side="y+">
         <BCType id="all" label="y+ wall" var="WallBC">
           <value>0</value>
         </BCType>
@@ -111,7 +118,7 @@
           <value> 1. </value>
         </BCType>
       </Face>
-      <Face side="z-" name="inlet">
+      <Face geometry="z- wall" side="z-">
         <BCType id="all" label="z- wall" var="WallBC">
           <value>0</value>
         </BCType>
@@ -129,7 +136,7 @@
           <value> 1. </value>
         </BCType>
       </Face>
-      <Face side="z+" name="inlet">
+      <Face geometry="z+ wall" side="z+">
         <BCType id="all" label="z+ wall" var="WallBC">
           <value>0</value>
         </BCType>

@@ -113,8 +113,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>JWLpp8mmRS.uda</filebase>
-      <outputInterval>2.00e-7</outputInterval>
       <checkpoint interval="0.000001" cycle="2"/>
+      <outputInterval>2.00e-7</outputInterval>
       <save label="delP_MassX"/>
       <save label="press_CC"/>
       <save label="vol_frac_CC"/>  

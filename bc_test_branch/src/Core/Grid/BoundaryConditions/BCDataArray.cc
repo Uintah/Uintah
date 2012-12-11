@@ -169,6 +169,12 @@ BCDataArray::determineIteratorLimits(       Patch::FaceType   face,
 } // end determineIteratorLimits()
 
 void
+BCDataArray::removeGenericMaterial()
+{
+  d_BCDataArray.erase( -1 );
+}
+
+void
 BCDataArray::addBCGeomBase( BCGeomBase * bc )
 {
   set<int> materials = bc->getMaterials();
@@ -401,13 +407,24 @@ BCDataArray::getNumberChildren( int mat_id ) const
 
     int num_in_specific_matl = itr->second.size();
 
+    int num_in_generic_matl  = 0;
+
     itr = d_BCDataArray.find( -1 );
-    int num_in_generic_matl  = itr->second.size();
+    if( itr != d_BCDataArray.end() ) {
+      num_in_generic_matl  = itr->second.size();
+    }
 
     return num_in_generic_matl + num_in_specific_matl;
   }
   else {
     itr = d_BCDataArray.find( -1 );
+
+    if( itr == d_BCDataArray.end() ) {
+      // FIXME this is a hack, at least for right now.  If the 'all' (-1) material doesn't exist, then 
+      // look in the other materials for the -1 piece.
+      itr = d_BCDataArray.begin();
+    }
+
     return itr->second.size();
   }
 }
@@ -415,28 +432,49 @@ BCDataArray::getNumberChildren( int mat_id ) const
 BCGeomBase*
 BCDataArray::getChild( int mat_id, int child_index ) const
 {
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find( mat_id );
-
-  if( mat_id == -1 || itr == d_BCDataArray.end() ) { // If mat_id -1 is explicitly asked for, or if the explicit mat_id doesn't exist...
-
-    if( mat_id != -1 ) {
-      itr = d_BCDataArray.find( -1 );
-    }
-
-    return itr->second[ child_index ];
+  cout << "getChild() called for mat_id: " << mat_id << " and child_index: " << child_index << "\n";  // FIXME debug statement, remove.
+  if( mat_id >= (int)d_BCDataArray.size() ) {
+    cout << "mat_id is too big...\n";
   }
-  else { 
 
-    // Find the BCGeomBase* in the specified material, but if the 'child_index' is outside of the 
-    // specific materials array, then we need to go into the generic ('all'/-1 material) materials vector.
+  print();
 
-    int the_size = itr->second.size();
-    if( child_index < the_size ) {
+  if( mat_id == -1 || ( mat_id >= (int)d_BCDataArray.size() ) ) {
+
+    if( d_BCDataArray.size() == 1 ) { 
+      // In this case, material id -1 does not exist, but there is only one material, so return in:
+      bcDataArrayType::const_iterator   iter = d_BCDataArray.begin();
+      const vector<BCGeomBase*>       & vbcg = iter->second;
+      int                               the_size = vbcg.size();
+
+      return d_BCDataArray.begin()->second[ child_index ];
+    }
+    else {
+      return d_BCDataArray.find( -1 )->second[ child_index ];
+    }
+  }
+  else {
+    
+    bcDataArrayType::const_iterator itr = d_BCDataArray.find( mat_id );
+
+    // Find the BCGeomBase* in the specified material, but if the
+    // 'child_index' is outside of the specific materials array (or
+    // mat_id doesn't exist (only -1 exists)), then we need to go into
+    // the generic ('all'/-1 material) materials vector.
+
+    if( itr == d_BCDataArray.end() ) {
+      itr = d_BCDataArray.find( -1 );
       return itr->second[ child_index ];
     }
     else {
-      itr = d_BCDataArray.find( -1 );
-      return itr->second[ child_index - the_size ];
+
+      int the_size = itr->second.size();
+      if( child_index < the_size ) {
+        return itr->second[ child_index ];
+      }
+      else {
+        return itr->second[ child_index - the_size ];
+      }
     }
   }
 }
