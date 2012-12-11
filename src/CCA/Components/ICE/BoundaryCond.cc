@@ -553,17 +553,18 @@ void HydrostaticPressureAdjustment(CCVariable<double>& press_CC,
 /* --------------------------------------------------------------------- 
  Function~  setBC-- (pressure)
  ---------------------------------------------------------------------  */
-void setBC(CCVariable<double>& press_CC,
-           StaticArray<CCVariable<double> >& rho_micro_tmp,   //or placeHolder
-           StaticArray<constCCVariable<double> >& sp_vol_CC,  //or placeHolder
-           const int surroundingMatl_indx,
-           const string& which_Var,
-           const string& kind, 
-           const Patch* patch,
-           SimulationStateP& sharedState, 
-           const int mat_id,
-           DataWarehouse* new_dw,
-           customBC_var_basket* custom_BC_basket)
+void
+setBC( CCVariable<double>                    & press_CC,
+       StaticArray<CCVariable<double> >      & rho_micro_tmp,       // or placeHolder
+       StaticArray<constCCVariable<double> > & sp_vol_CC,           // or placeHolder
+       const int                               surroundingMatl_indx,
+       const string                          & which_Var,
+       const string                          & kind, 
+       const Patch                           * patch,
+       SimulationStateP                      & sharedState, 
+       const int                               mat_id,
+       DataWarehouse                         * new_dw,
+       customBC_var_basket                   * custom_BC_basket )
 {
   if(patch->hasBoundaryFaces() == false){
     return;
@@ -623,6 +624,8 @@ void setBC(CCVariable<double>& press_CC,
    
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    cout << "numChildren is " << numChildren << " for mat_id: " << mat_id << "\n"; // FIXME DEBUG statment, remove
 
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
@@ -767,6 +770,10 @@ void setBC(CCVariable<double>& var_CC,
     //    temp->print();
     //    cout << "end ice debug stuff\n";
     // end testing FIXME DEBUG delete
+
+    if( mat_id == 1 ) {
+      cout << "mat id is 1\n"; // FIXME debug statement, remove this
+    }
 
     int numChildren = patch->getBCDataArray( face )->getNumberChildren( mat_id );
 

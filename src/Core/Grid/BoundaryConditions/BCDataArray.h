@@ -74,6 +74,9 @@ public:
   /// Determine the iterator limits.
   void determineIteratorLimits( Patch::FaceType face, const Patch* patch );
 
+  // Remove the '-1' (all) material (when it is not needed).
+  void removeGenericMaterial();
+
   /// Add boundary condition data
   void addBCGeomBase( BCGeomBase * bc );
 

@@ -37,8 +37,15 @@
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
     <!--____________________________________________________________________-->
     <Grid>
-    <BoundaryConditions>
-      <Face side = "x-">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0 </value>
         </BCType>
@@ -55,7 +62,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
-      <Face side = "x+">
+      <Face geometry="x+ wall" side="x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0 </value>
         </BCType>
@@ -72,7 +79,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
-      <Face side = "y-">
+      <Face geometry="y- wall" side="y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0 </value>
         </BCType>
@@ -89,7 +96,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
-      <Face side = "y+">
+      <Face geometry="y+ wall" side="y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0 </value>
         </BCType>
@@ -106,11 +113,11 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
-      <Face side = "z-">
+      <Face geometry="z- wall" side="z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <Face side = "z+">
+      <Face geometry="z+ wall" side="z+">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
