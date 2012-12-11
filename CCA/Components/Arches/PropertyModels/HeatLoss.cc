@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/Properties.h>
 
 using namespace Uintah; 
@@ -14,6 +15,8 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
   _before_table_lookup = true; 
 
   _constant_heat_loss = false; 
+
+  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
 
 }
 
@@ -208,6 +211,11 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 		  	prop[c] = hl;
 
       }
+
+      //Apply boundary conditions
+      _boundary_condition->setScalarValueBC( 0, patch, prop, _prop_name ); 
+
+
       if ( _noisy_heat_loss ) { 
        
         if ( oob_up || oob_dn ) {  

@@ -57,7 +57,7 @@ using namespace Uintah;
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels ); 
+  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
  
 }
 
