@@ -1363,7 +1363,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             //__________________________________
             // Account for uniqueness of first step after reaching a new level
-            disMin        = (tMax[dir] - tMax_prev);
+
+            //__________________________________
+            //  update marching variables
+            disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
             tMax_prev     = tMax[dir];
             tMax[dir]     = tMax[dir] + tDelta[L][dir];
 
@@ -1391,13 +1394,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               }
             }
             tMax += lineup * tDelta[L];
-
-
-            //__________________________________
-            //  update marching variables
-            disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
-            tMax_prev     = tMax[dir];
-            tMax[dir]     = tMax[dir] + tDelta[L][dir];
             
             in_domain = domain_BB.inside(pos); 
 
@@ -1452,7 +1448,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_NoOfRays) );
-      
+
       dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_NoOfRays) << endl;
        // } // end quick debug testing
     }  // end cell iterator
