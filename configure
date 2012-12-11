@@ -1632,7 +1632,7 @@ Optional Features:
                           Output ellapsed wall-times
 --ray-scatter           Turn on ray scattering in Arches
 --enable-gencode        Specify compute capability for GPU code generation
-                          (allowable values: 12, 13, 20, 21, 31)
+                          (allowable values: 20, 21, 30, 35)
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -44405,11 +44405,18 @@ for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
-if test "$debug" = "yes"; then
-  NVCC_CXXFLAGS="-g $NVCC_CXXFLAGS $_sci_includes"
+if test "$debug" != "no"; then
+  NVCC_CXXFLAGS="-g -G -O0 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
+
+cuda_x64=""
+if test "$enable_64bit" = "yes"; then
+  cuda_x64="-m64"
+fi
+NVCC_CXXFLAGS="$cuda_x64 $NVCC_CXXFLAGS $_sci_includes"
+
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
 # check that the CUDA compiler works

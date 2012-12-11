@@ -310,7 +310,7 @@ SCI_ARG_WITH(cuda,
                  Use the CUDA installation in DIR),
   [with_cuda="$withval"
    sci_required_cuda=yes],
-  [with_cuda=""])  
+  [with_cuda=""])
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -506,7 +506,7 @@ SCI_ARG_ENABLE(ray-scatter,
   [ray_scatter=${ray_scatter=''}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
+                 Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
 SCI_ARG_ENABLE(exename,
