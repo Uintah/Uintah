@@ -16,6 +16,18 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
                                        "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+liddrivencavity3Dperf_ups = modUPS( the_dir, \
+                                       "lid-driven-cavity-3D-Re1000.ups", \
+                                       ["<max_Timesteps> 300 </max_Timesteps>"])
+liddrivencavity3Dvremanperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-VREMAN.ups", \
+                                       ["<max_Timesteps> 300 </max_Timesteps>"])
+liddrivencavity3Dsmagorinskyperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-SMAGORINSKY.ups", \
+                                       ["<max_Timesteps> 300 </max_Timesteps>"])
+liddrivencavity3Dwaleperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-WALE.ups", \
+                                       ["<max_Timesteps> 300 </max_Timesteps>"])
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -44,10 +56,10 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("turb-lid-driven-cavity-3D-WALE_perf",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),               \
-  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("turb-lid-driven-cavity-3D-VREMAN_perf",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),           \
-  ("lid-driven-cavity-3D-Re1000_perf",   "lid-driven-cavity-3D-Re1000.ups",   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),                 \
+  ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),               \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
+  ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),           \
+  ("lid-driven-cavity-3D-Re1000_perf",   liddrivencavity3Dperf_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),                 \
   ("scalability-test_perf",              "scalability-test.ups",              1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),                 \
   ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
@@ -100,6 +112,10 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),               \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
+  ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),           \
+  ("lid-driven-cavity-3D-Re1000_perf",   liddrivencavity3Dperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),                 \
   ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
