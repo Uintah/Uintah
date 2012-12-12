@@ -1942,7 +1942,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 }
 
 void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
-    CopyType type)
+                                      CopyType type)
 {
   std::vector<cudaStream_t*>* dtaskStreams;
   std::vector<cudaStream_t*>::iterator iter;
@@ -1961,7 +1961,7 @@ void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
-    CopyType type)
+                                     CopyType type)
 {
   std::vector<cudaEvent_t*>* dtaskEvents;
   std::vector<cudaEvent_t*>::iterator iter;
