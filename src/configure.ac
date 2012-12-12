@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.68)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -3293,6 +3293,7 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
+AC_LANG([C++])
 if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
@@ -3395,6 +3396,7 @@ AC_SUBST(INC_PETSC_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
+AC_LANG([C])
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
