@@ -32,13 +32,13 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-template<class T>
+template<typename T>
 SimpleGrid<T>::SimpleGrid()
 {
 
 }
 
-template<class T>
+template<typename T>
 SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const IntVector& offset,
                           const int numGhostCells) :
@@ -47,13 +47,13 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
 
 }
 
-template<class T>
+template<typename T>
 SimpleGrid<T>::~SimpleGrid()
 {
 
 }
 
-template<class T>
+template<typename T>
 bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 {
   if ((this->d_gridExtents != gridIn.d_gridExtents) || (this->d_gridOffset != gridIn.d_gridOffset)
@@ -66,7 +66,7 @@ bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
   }
 }
 
-template<class T>
+template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
@@ -80,7 +80,7 @@ SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
   return sg;
 }
 
-template<class T>
+template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
@@ -94,7 +94,7 @@ SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
   return sg;
 }
 
-template<class T>
+template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
@@ -110,13 +110,13 @@ SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 
 // ------------------------------------------------------------------
 
-template<class T>
+template<typename T>
 SimpleGrid<T>& SimpleGrid<T>::operator-()
 {
 
 }
 
-template<class T>
+template<typename T>
 std::ostream& SimpleGrid<T>::print(std::ostream& out) const
 {
   out << "Extent, [x,y,z]: " << this->d_gridExtents;
@@ -125,7 +125,7 @@ std::ostream& SimpleGrid<T>::print(std::ostream& out) const
   return out;
 }
 
-template<class T>
+template<typename T>
 std::ostream& operator<<(std::ostream& out,
                          const Uintah::SimpleGrid<T>& sg)
 {
