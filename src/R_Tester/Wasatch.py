@@ -112,10 +112,6 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),               \
-  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),           \
-  ("lid-driven-cavity-3D-Re1000_perf",   liddrivencavity3Dperf_ups,   8,  "All",  ["no_uda_comparison","no_restart","do_performance_test"] ),                 \
   ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
