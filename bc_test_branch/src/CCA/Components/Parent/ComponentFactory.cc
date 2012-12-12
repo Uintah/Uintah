@@ -155,14 +155,14 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     //if( !Uintah::Parallel::usingMPI() ) {
     //  throw ProblemSetupException("You must be using MPI when running an arches problem!", __FILE__, __LINE__);
     //}
-    return scinew Arches(world);
+    return scinew Arches(world,doAMR);
   } 
 #else
   turned_off_options += "ARCHES ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(world);
+    return scinew MPMArches(world, doAMR);
   } 
 #else
   turned_off_options += "MPMARCHES ";

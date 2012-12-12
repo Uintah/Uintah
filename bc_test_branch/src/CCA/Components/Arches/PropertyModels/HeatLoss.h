@@ -26,6 +26,8 @@
 
 namespace Uintah{ 
 
+class BoundaryCondition_new; 
+
 class HeatLoss : public PropertyModelBase {
 
 public: 
@@ -78,6 +80,8 @@ private:
   std::string _enthalpy_label_name; 
   std::string _adiab_h_label_name; 
   std::string _sen_h_label_name; 
+
+  BoundaryCondition_new* _boundary_condition; 
 
   const VarLabel* _enthalpy_label; 
   const VarLabel* _adiab_h_label; 

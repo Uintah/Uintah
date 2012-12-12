@@ -44,6 +44,10 @@ void printTask( const PatchSubset   * patches,
                 const Patch         * patch,
                 SCIRun::DebugStream & dbg,
                 const string        & where );
+                
+void printTask( const PatchSubset   * patches,
+                SCIRun::DebugStream & dbg,
+                const string        & where );
 
 void printTask( const Patch         * patch,
                 SCIRun::DebugStream & dbg,

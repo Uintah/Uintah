@@ -87,6 +87,8 @@ public:
     long_type,
     long64_type,
     Short27,   // for Fracture
+    Stencil4,
+    Stencil7,
     Unknown,
     Other
   };

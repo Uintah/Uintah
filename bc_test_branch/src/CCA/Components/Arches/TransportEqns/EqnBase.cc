@@ -17,7 +17,7 @@ b_stepUsesCellLocation(false), b_stepUsesPhysicalLocation(false),
 d_constant_init(0.0), d_step_dir("x"), d_step_start(0.0), d_step_end(0.0), d_step_cellstart(0), d_step_cellend(0), d_step_value(0.0), 
 d_use_constant_D(false)
 {
-  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
+  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
   d_disc = scinew Discretization_new(); 
   _using_new_intrusion = false; 
 	_table_init = false; 

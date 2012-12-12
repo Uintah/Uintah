@@ -31,6 +31,24 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
+#include <sci_defs/cuda_defs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+void launchPoisson1Kernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          uint3 domainLow,
+                          uint3 domainHigh,
+                          uint3 domainSize,
+                          int numGhostCells,
+                          double* phi,
+                          double* newphi,
+                          double* residual);
+#ifdef __cplusplus
+}
+#endif
+
+
 namespace Uintah {
   class SimpleMaterial;
 
@@ -58,10 +76,13 @@ KEYWORDS
 
 DESCRIPTION
    A GPU version of the single material Poisson1 problem. This
-   does not use GPU task scheduling provided by the GPUThreadedMPIScheduler,
-   but simply embeds the setup and invocation of the timeAdvance() kernel
-   within a CPU task. This is the original proof-of-concept example for
-   Uintah's GPU scheduler.
+   test component simply embeds the setup and invocation of the
+   timeAdvance() kernel within a CPU task, meaning it does not
+   use GPU task scheduling and the infrasctructure is unaware of
+   any on-node GPUs
+
+   This is the original proof-of-concept example and motivation for
+   Uintah's GPU task scheduler.
   
 WARNING
    None
