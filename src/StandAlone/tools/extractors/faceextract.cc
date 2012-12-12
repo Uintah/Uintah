@@ -668,9 +668,7 @@ int main(int argc, char** argv)
       break;
     case Uintah::TypeDescription::Vector:
       break;
-    case Uintah::TypeDescription::Other:
-      if (subtype->getName() == "Stencil7") {
-      }
+    case Uintah::TypeDescription::Stencil7:
       // don't break on else - flow to the error statement
     case Uintah::TypeDescription::Matrix3:
     case Uintah::TypeDescription::bool_type:

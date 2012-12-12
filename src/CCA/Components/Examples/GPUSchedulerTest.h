@@ -30,6 +30,23 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
+#include <sci_defs/cuda_defs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+void launchGPUSchedulerTestKernel(dim3 dimGrid,
+                                  dim3 dimBlock,
+                                  cudaStream_t* stream,
+                                  uint3 domainLow,
+                                  uint3 domainHigh,
+                                  uint3 domainSize,
+                                  int ghostLayers,
+                                  double* d_phi,
+                                  double* d_newphi);
+#ifdef __cplusplus
+}
+#endif
+
 namespace Uintah {
 
   class SimpleMaterial;

@@ -35,6 +35,7 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 
 // includes for Uintah
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
@@ -56,7 +57,7 @@ using namespace Uintah;
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels ); 
+  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
  
 }
 
@@ -84,7 +85,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
 #if 0
 FIXME delete the following section
-<<<<<<< .mine
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
   db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, string("enthalpySP") ); 
  
@@ -149,8 +149,6 @@ FIXME delete the following section
       } 
     } 
   }
-=======
->>>>>>> .r49572
 #endif
   
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
@@ -602,20 +600,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         // look to make sure every variable has a BC set:
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+
           std::string variable_name = d_allIndepVarNames[i]; 
+          string face_name; 
+          string bc_kind="NotSet"; 
+          double bc_value = 0.0; 
+          bool foundIterator = "false"; 
 
-          const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-              variable_name, bound_ptr,
-              nu, child );
+          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
-          const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
-          if ( new_bcs == 0 ) {
-            cout << "Error: For variable named " << variable_name << endl;
-            throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
-          }
-
-          double bc_value     = new_bcs->getValue();
-          std::string bc_kind = new_bcs->getType(); 
+          // The template parameter needs to be generalized here to handle strings, etc...
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ClassicTableInterface::DIRICHLET); 
@@ -629,8 +625,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
-
-          delete bc; 
 
         }
 
@@ -736,26 +730,26 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         //correct for solid wall temperatures
         //Q: do we want to do this here? 
         std::string T_name = "SolidWallTemperature"; 
+        string face_name; 
+        string bc_kind="NotSet"; 
+        double bc_value = 0.0; 
+        bool foundIterator = "false"; 
+        getBCKind( patch, face, child, T_name, matlIndex, bc_kind, face_name ); 
 
-        const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-            T_name, bound_ptr,
-            nu, child );
+        if ( bc_kind == "Dirichlet" || bc_kind == "Neumann" ) { 
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, T_name, matlIndex, bc_value, bound_ptr ); 
+          //it is possible that this wasn't even set for a face, thus we can't really do 
+          // any error checking here. 
+        }
 
         const DepVarMap::iterator iter = depend_storage.find(_temperature_label_name); 
 
-        const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
-
-        delete bc; 
-
-        if ( new_bcs != 0 ) {
+        if ( foundIterator ) {
 
           if ( iter == depend_storage.end() ) { 
             throw InternalError("Error: SolidWallTemperature was specified in the <BoundaryCondition> section yet I could not find a temperature variable (default label=temperature). Consider setting/checking <temperature_label_name> in the input file. " ,__FILE__,__LINE__);
           } 
-
-          // if new_bcs == 0, then it assumes you intelligently set the temperature some other way. 
-          double bc_value     = new_bcs->getValue();
-          std::string bc_kind = new_bcs->getType(); 
 
           double dx = 0.0;
           double the_sign = 1.0; 

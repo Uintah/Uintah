@@ -10068,6 +10068,12 @@
             <constant>0.0</constant>
           </initialization>
         </model>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+          <constant>0</constant>
+          </initialization>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
       </PropertyModels>
       
       <Coal_Properties>
@@ -10093,8 +10099,8 @@
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
-          <initialization type="constant">
-            <constant>0.0</constant>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
           <src label="divQ"/>
           <src label = "heat_source"/>
@@ -10136,7 +10142,7 @@
 
         <Sources>
           <src label="divQ" type="do_radiation">
-            <calc_frequency>100</calc_frequency>
+            <calc_frequency>40</calc_frequency>
             <DORadiationModel>
               <opl>2.5</opl>
               <LinearSolver type="hypre">
@@ -10501,16 +10507,16 @@
                 <p4>[1.45,3.5,2.00]</p4>
               </parallelepiped>
               <parallelepiped label="toppara1">
-                <p1>[8.89,0.0,3.00]</p1>
-                <p2>[8.89,0.0,3.75]</p2>
-                <p3>[9.96,0.0,2.05]</p3>
-                <p4>[8.89,3.5,3.00]</p4>
+                <p1>[8.8,0.0,3.00]</p1>
+                <p2>[8.8,0.0,3.75]</p2>
+                <p3>[9.9,0.0,2.05]</p3>
+                <p4>[8.8,3.5,3.00]</p4>
               </parallelepiped>
               <parallelepiped label="toppara2">
-                <p1>[9.96,0.0,2.05]</p1>
-                <p2>[9.96,0.0,3.00]</p2>
+                <p1>[9.9,0.0,2.05]</p1>
+                <p2>[9.9,0.0,3.00]</p2>
                 <p3>[11.0,0.0,3.00]</p3>
-                <p4>[9.96,3.5,2.05]</p4>
+                <p4>[9.9,3.5,2.05]</p4>
               </parallelepiped>
 
             </geom_object>

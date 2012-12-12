@@ -46,7 +46,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = scinew TypeDescription(TypeDescription::Stencil7,
                                   "Stencil7", true, 
                                   &makeMPI_Stencil7);
     }

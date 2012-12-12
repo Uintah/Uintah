@@ -359,10 +359,6 @@ namespace Uintah {
       const VarLabel* d_continuityResidualLabel;
 
       const VarLabel* d_ScalarClippedLabel;
-      const VarLabel* d_uVelNormLabel;
-      const VarLabel* d_vVelNormLabel;
-      const VarLabel* d_wVelNormLabel;
-      const VarLabel* d_rhoNormLabel;
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
@@ -375,8 +371,6 @@ namespace Uintah {
       // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
-      const VarLabel* d_totalKineticEnergyPredLabel;
-      const VarLabel* d_totalKineticEnergyIntermLabel;
       
       // scalar mms Ln error
       const VarLabel* d_smmsLnErrorLabel;

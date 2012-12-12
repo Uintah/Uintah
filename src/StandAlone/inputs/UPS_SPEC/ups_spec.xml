@@ -749,6 +749,8 @@
                             attribute1="before_comm OPTIONAL BOOLEAN"
                             attribute2="before_exec OPTIONAL BOOLEAN"
                             attribute3="after_exec  OPTIONAL BOOLEAN" />
+      <task               spec="MULTIPLE NO_DATA"
+                            attribute1="name REQUIRED STRING" />
     </VarTracker>
   </Scheduler>
 

@@ -119,6 +119,7 @@ ExplicitSolver(ArchesLabel* label,
   d_scalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
+  d_printTotalKE = false; 
 }
 
 // ****************************************************************************
@@ -147,6 +148,11 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
+
+  if ( db->findBlock( "print_total_ke" ) ){ 
+    d_printTotalKE = true; 
+  }
+
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld,
@@ -178,6 +184,19 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   std::string t_order; 
   ProblemSpecP db_time_int = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator");
   db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
+
+
+  ProblemSpecP db_vars  = params_root->findBlock("DataArchiver");
+  for (ProblemSpecP db_dv = db_vars->findBlock("save"); 
+        db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+
+    std::string var_name; 
+    db_dv->getAttribute( "label", var_name );
+
+    if ( var_name == "kineticEnergy" || var_name == "totalKineticEnergy" ){
+      d_printTotalKE = true;
+    }
+  }
 
   //translate order to the older code: 
   if ( t_order == "first" ){ 
@@ -697,8 +716,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level]);
 
 
-    sched_printTotalKE(sched, patches, matls,
-                       d_timeIntegratorLabels[curr_level]);
+
     if ((curr_level==0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
        sched_saveFECopies(sched, patches, matls,
                                        d_timeIntegratorLabels[curr_level]);
@@ -706,6 +724,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
 
+  }
+
+  if ( d_printTotalKE ){ 
+   sched_computeKE( sched, patches, matls ); 
+   sched_printTotalKE( sched, patches, matls );
   }
 
   return(0);
@@ -859,19 +882,16 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_CCVelocityLabel);
-      tsk->computes(d_lab->d_kineticEnergyLabel);
       tsk->computes(d_lab->d_velocityDivergenceLabel);
       tsk->computes(d_lab->d_velDivResidualLabel);
       tsk->computes(d_lab->d_continuityResidualLabel);
     }
     else {
       tsk->modifies(d_lab->d_CCVelocityLabel);
-      tsk->modifies(d_lab->d_kineticEnergyLabel);
       tsk->modifies(d_lab->d_velocityDivergenceLabel);
       tsk->modifies(d_lab->d_velDivResidualLabel);
       tsk->modifies(d_lab->d_continuityResidualLabel);
     }
-    tsk->computes(timelabels->tke_out);
 
     sched->addTask(tsk, patches, matls);
   }
@@ -932,7 +952,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     CCVariable<Vector> CCVel;
-    CCVariable<double> kineticEnergy;
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -953,35 +972,29 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
 
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(drhodt,  d_lab->d_filterdrhodtLabel,  indx, patch, gn, 0);
-    new_dw->get(density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
-    new_dw->get(div_constraint,
-                         d_lab->d_divConstraintLabel, indx, patch, gn, 0);
+    new_dw->get(newUVel        , d_lab->d_uVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(newVVel        , d_lab->d_vVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(newWVel        , d_lab->d_wVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(drhodt         , d_lab->d_filterdrhodtLabel  , indx , patch , gn  , 0);
+    new_dw->get(density        , d_lab->d_densityCPLabel     , indx , patch , gac , 1);
+    new_dw->get(div_constraint , d_lab->d_divConstraintLabel , indx , patch , gn  , 0);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
-      new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,     indx, patch);
       new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
       new_dw->allocateAndPut(div_residual,  d_lab->d_velDivResidualLabel,    indx, patch);
       new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
     }
     else {
       new_dw->getModifiable(newCCVel,       d_lab->d_CCVelocityLabel,      indx, patch);
-      new_dw->getModifiable(kineticEnergy,  d_lab->d_kineticEnergyLabel,      indx, patch);
       new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
       new_dw->getModifiable(div_residual,   d_lab->d_velDivResidualLabel,     indx, patch);
       new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
-    kineticEnergy.initialize(0.0);
     divergence.initialize(0.0);
     div_residual.initialize(0.0);
     residual.initialize(0.0);
-
-    double total_kin_energy = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -1000,13 +1013,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
+
         }
       }
     }
@@ -1027,13 +1034,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idxU]*newUVel[idxU]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1053,13 +1053,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1079,13 +1072,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idxV]*newVVel[idxV]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1105,13 +1091,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1131,13 +1110,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idxW]*newWVel[idxW])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1157,20 +1129,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idx];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idxW]*newWVel[idxW])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-                for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+        for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 
           IntVector idx(ii,jj,kk);
           IntVector idxU(ii+1,jj,kk);
@@ -1194,10 +1159,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                           (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
                            0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
                           drhodt[idx]/vol;
-                }
+        }
       }
     }
-    new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out);
   }
 }
 
@@ -1522,36 +1486,33 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 void
-ExplicitSolver::sched_printTotalKE(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   const MaterialSet* matls,
-                                   const TimeIntegratorLabel* timelabels)
+ExplicitSolver::sched_printTotalKE( SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls )
+                                   
 {
-  string taskname =  "ExplicitSolver::printTotalKE" +
-                     timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname,
-                          this, &ExplicitSolver::printTotalKE,
-                          timelabels);
+  string taskname =  "ExplicitSolver::printTotalKE";
+  Task* tsk = scinew Task( taskname,
+                           this, &ExplicitSolver::printTotalKE );
 
-  tsk->requires(Task::NewDW, timelabels->tke_out);
+  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
   sched->addTask(tsk, patches, matls);
 }
 //______________________________________________________________________
 void
-ExplicitSolver::printTotalKE(const ProcessorGroup* ,
-                             const PatchSubset* ,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels)
+ExplicitSolver::printTotalKE( const ProcessorGroup* ,
+                              const PatchSubset* ,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw )
 {
+
   sum_vartype tke;
-  new_dw->get(tke, timelabels->tke_out);
+  new_dw->get( tke, d_lab->d_totalKineticEnergyLabel ); 
   double total_kin_energy = tke;
-  int me = d_myworld->myrank();
-  if (me == 0){
-     cerr << "Total kinetic energy " <<  total_kin_energy << endl;
-  }
+
+  proc0cout << "Total kinetic energy: " << tke << std::endl;
+
 }
 
 //****************************************************************************
@@ -2742,6 +2703,70 @@ void ExplicitSolver::setInitVelConditionInterface( const Patch* patch,
   d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel );
 
 }
+
+void ExplicitSolver::sched_computeKE( SchedulerP& sched, 
+                                       const PatchSet* patches, 
+                                       const MaterialSet* matls )
+{
+  string taskname = "ExplicitSolver::computeKE"; 
+  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::computeKE ); 
+  
+  tsk->computes(d_lab->d_totalKineticEnergyLabel); 
+  tsk->computes(d_lab->d_kineticEnergyLabel); 
+
+  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+
+  sched->addTask( tsk, patches, matls ); 
+
+}
+
+void ExplicitSolver::computeKE( const ProcessorGroup* pc,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw )
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    constSFCXVariable<double> u; 
+    constSFCYVariable<double> v; 
+    constSFCZVariable<double> w; 
+    CCVariable<double> ke; 
+
+    new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
+    ke.initialize(0.0);
+    new_dw->get( u, d_lab->d_uVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->get( v, d_lab->d_vVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->get( w, d_lab->d_wVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+
+    double max_ke = 0.0; 
+    double sum_ke = 0.0; 
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+
+      IntVector c = *iter; 
+
+      ke[c] = 0.5 * ( u[c]*u[c] + v[c]*v[c] + w[c]*w[c] ); 
+
+      if ( ke[c] > max_ke ){ 
+        max_ke = ke[c]; 
+      } 
+
+      sum_ke += ke[c]; 
+
+    }
+
+    new_dw->put(sum_vartype(sum_ke), d_lab->d_totalKineticEnergyLabel);
+
+  }
+}
+
 
 void 
 ExplicitSolver::sched_allocateDummyScalar( SchedulerP& sched, 

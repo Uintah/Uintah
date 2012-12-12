@@ -624,7 +624,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   short_cmd = command.replace(susdir+'/','')
 
   print "Command Line: %s %s" % (short_cmd, susinput)
-  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
+  rc = system("env > sus.log.txt; %s %s >> sus.log.txt 2>&1" % (command, susinput))
   
   # was an exception thrown
   exception = system("grep -q 'Caught exception' sus.log.txt");

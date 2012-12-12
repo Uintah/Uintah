@@ -79,7 +79,7 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   vel_db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, false ); 
 
-  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
+  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
 //---------------------------------------------------------------------------

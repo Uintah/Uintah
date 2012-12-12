@@ -115,6 +115,9 @@ WARNING
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
+                     
+    void areGridsEqual( const GridP& uda_grid, 
+                        const GridP& grid );
 
    protected:
     const ProcessorGroup* d_myworld;

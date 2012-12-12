@@ -1,4 +1,3 @@
-#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
@@ -22,8 +21,8 @@
 using namespace std;
 using namespace Uintah;
 
-BoundaryCondition_new::BoundaryCondition_new(const ArchesLabel* fieldLabels):
-  d_fieldLabels(fieldLabels)
+BoundaryCondition_new::BoundaryCondition_new( const int matl_id):
+  d_matl_id(matl_id)
 {
 } 
 
@@ -290,7 +289,6 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
   Vector Dx = patch->dCell(); 
 
   int archIndex = 0; 
-  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -298,7 +296,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
     //get the face direction
     IntVector insideCellDir = patch->faceDirection(face);
     //get the number of children
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id); //assumed one material
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
 
     for (int child = 0; child < numChildren; child++){
 
@@ -309,15 +307,15 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
       Iterator bound_ptr;
       string bc_kind = "NotSet"; 
       string face_name; 
-      getBCKind( patch, face, child, varname, mat_id, bc_kind, face_name ); 
+      getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
 
       bool foundIterator = "false"; 
       if ( bc_kind == "Dirichlet" || bc_kind == "Neumann" ) { 
         foundIterator = 
-          getIteratorBCValue<double>( patch, face, child, varname, mat_id, bc_value, bound_ptr ); 
+          getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
       } else if ( bc_kind == "Tabulated" ){
         foundIterator = 
-          getIteratorBCValue<std::string>( patch, face, child, varname, mat_id, bc_s_value, bound_ptr ); 
+          getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
       } 
 
       if (foundIterator) {
@@ -423,7 +421,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   Vector Dx = patch->dCell(); 
 
   int archIndex = 0; 
-  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -431,7 +428,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
     //get the face direction
     IntVector insideCellDir = patch->faceDirection(face);
     //get the number of children
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id); //assumed one material
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
 
     for (int child = 0; child < numChildren; child++){
       Vector bc_value = Vector(0.0, 0.0, 0.0);
@@ -439,7 +436,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
       Iterator bound_ptr;
 
       bool foundIterator = 
-        getIteratorBCValueBCKind( patch, face, child, varname, mat_id, bc_value, bound_ptr, bc_kind); 
+        getIteratorBCValueBCKind( patch, face, child, varname, d_matl_id, bc_value, bound_ptr, bc_kind); 
 
       double X,Y,Z; 
 
@@ -524,7 +521,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   Vector Dx = patch->dCell(); 
 
   int archIndex = 0; 
-  int mat_id = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -532,7 +528,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
     //get the face direction
     IntVector insideCellDir = patch->faceDirection(face);
     //get the number of children
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id); //assumed one material
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
 
     for (int child = 0; child < numChildren; child++){
       Vector bc_value = Vector(0.0, 0.0, 0.0);
@@ -540,7 +536,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
       Iterator bound_ptr;
 
       bool foundIterator = 
-        getIteratorBCValueBCKind( patch, face, child, varname, mat_id, bc_value, bound_ptr, bc_kind); 
+        getIteratorBCValueBCKind( patch, face, child, varname, d_matl_id, bc_value, bound_ptr, bc_kind); 
 
       double X,Y,Z; 
 

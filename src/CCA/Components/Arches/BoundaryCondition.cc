@@ -183,7 +183,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   int total_cellTypes = 100;
 
-  d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
+  d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
   if(db.get_rep()==0)
   {

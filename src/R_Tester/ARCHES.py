@@ -40,6 +40,9 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
+#  massource_con_den: a constant density cold channel flow with a constant mass source. used to test mass conservation for pressure solver (with mass source terms)
+#  massource_var_den: a two-fluid mixing cold channel flow with a constant mass source, used to test mass conservation for pressure solver (with mass source terms)
+#  massource_coal_DQMOM: a coal reacting channel flow with a constant mass source term (or with coal mass source term), used to test mass conservation for pressure solver
 
 UNUSED_TESTS = []
 NIGHTLYTESTS = [
@@ -69,12 +72,15 @@ NIGHTLYTESTS = [
    ("xminus_scalar_test"          , "ScalarTests/xminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"          , "ScalarTests/yminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"          , "ScalarTests/zminus_scalar_test.ups"          , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
-   ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"])
+   ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
+   ("masssource_con_den"          , "verify_masssource/source_channel_conden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
+#   ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
    ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
    ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) , 
    ("helium_RT"                  , "helium_RT.ups"                               , 1.1 , "All"   , ["exactComparison"]) , 
@@ -97,7 +103,10 @@ LOCALTESTS = [
    ("xminus_scalar_test"         , "ScalarTests/xminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yminus_scalar_test"         , "ScalarTests/yminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zminus_scalar_test"         , "ScalarTests/zminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
-   ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"])
+   ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"]) ,
+   ("source_channel_conden"      , "verify_masssource/source_channel_conden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("source_channel_varden"      , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
 #__________________________________
