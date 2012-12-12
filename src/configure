@@ -43743,7 +43743,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 6 : $_sci_lib
 ## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
+## arg 9 : optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -43760,8 +43760,8 @@ if test 9 != 9; then
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for HYPRE libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for HYPRE libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for HYPRE libraries and headers (optional)" >&5
+$as_echo_n "checking for HYPRE libraries and headers (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -43769,9 +43769,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -43904,7 +43904,7 @@ $as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... 
    done
 fi
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -44062,7 +44062,7 @@ eval INC_HYPRE_H=''
 eval HAVE_HYPRE_H="no"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-if test "$_sci_optional" != "optional"; then
+if test "optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -44101,7 +44101,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" HYPRE.h; do
@@ -44138,6 +44138,7 @@ _sci_includes=''
 ##
 ## END of SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
 ##
+
 
 
    if test "$HAVE_HYPRE" != "yes"; then
@@ -44182,7 +44183,7 @@ _sci_includes=''
 ## arg 6 : $_sci_lib
 ## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
+## arg 9 : optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -44199,8 +44200,8 @@ if test 9 != 9; then
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for HYPRE libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for HYPRE libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for HYPRE libraries and headers (optional)" >&5
+$as_echo_n "checking for HYPRE libraries and headers (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -44208,9 +44209,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -44343,7 +44344,7 @@ $as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... 
    done
 fi
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -44501,7 +44502,7 @@ eval INC_HYPRE_H=''
 eval HAVE_HYPRE_H="no"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-if test "$_sci_optional" != "optional"; then
+if test "optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -44540,7 +44541,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" HYPRE.h; do
