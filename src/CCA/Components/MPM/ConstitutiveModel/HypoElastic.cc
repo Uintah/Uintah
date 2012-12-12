@@ -414,9 +414,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
        
       // This is the (updated) Cauchy stress
-      pstress_new[idx] = Matrix3(0.0);
-//      pstress_new[idx] = pstress[idx] + 
-//                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
+      pstress_new[idx] = pstress[idx] + 
+                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
