@@ -528,10 +528,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator nu;
         Iterator bound_ptr; 
 
-        std::vector<ClassicTableInterface::BoundaryType> which_bc;
         std::vector<double> bc_values;
 
         // look to make sure every variable has a BC set:
+        // stuff the bc values into a container for use later
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
           std::string variable_name = d_allIndepVarNames[i]; 
@@ -546,15 +546,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           foundIterator = 
             getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
 
-          if ( bc_kind == "Dirichlet" ) {
-            which_bc.push_back(ClassicTableInterface::DIRICHLET); 
-          } else if (bc_kind == "Neumann" ) { 
-            which_bc.push_back(ClassicTableInterface::NEUMANN); 
-          } else if (bc_kind == "FromFile") { 
-            which_bc.push_back(ClassicTableInterface::FROMFILE);
+          if ( foundIterator ) { 
+            bc_values.push_back( bc_value ); 
           } else { 
-            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-          }
+            throw InvalidValue( "Error: Boundary condition not found for: "+variable_name, __FILE__, __LINE__ ); 
+          } 
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
@@ -570,32 +566,16 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           // again loop over iv's and fill iv vector
           for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
-            switch (which_bc[i]) { 
+            iv.push_back( 0.5 * ( indep_storage[i][c] + indep_storage[i][cp1]) );
 
-              case ClassicTableInterface::DIRICHLET:
-                iv.push_back( bc_values[i] );
-                break; 
-
-              case ClassicTableInterface::NEUMANN:
-                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
-                break; 
-
-              case ClassicTableInterface::FROMFILE: 
-                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
-                break; 
-
-              default: 
-                throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-
-            }
           }
 
           double total_inert_f = 0.0; 
           for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
               inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-            double inert_f = inert_iter->second.var[c];
-            total_inert_f += inert_f; 
+            total_inert_f += 0.5 * ( inert_iter->second.var[c] + inert_iter->second.var[cp1] );
+
           }
 
           if ( d_does_post_mixing && d_has_transform ) { 
