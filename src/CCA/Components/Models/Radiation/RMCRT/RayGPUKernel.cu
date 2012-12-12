@@ -329,7 +329,7 @@ __device__ double randDblExcDevice(curandState* globalState)
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__host__ __device__ unsigned int hashDevice(unsigned int a)
+__device__ unsigned int hashDevice(unsigned int a)
 {
     a = (a+0x7ed55d16) + (a<<12);
     a = (a^0xc761c23c) ^ (a>>19);
