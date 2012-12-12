@@ -63,11 +63,13 @@ public:
     const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
     x_    = &phifm.field_ref( indepVarTag_    );
   }
+
   void evaluate();
+
 private:
-  const FieldT* x_;
+  const FieldT*   x_;
   const Expr::Tag indepVarTag_;
-  const double x0_, phic_, R_, n_;
+  const double    x0_, phic_, R_, n_;
 };
 
 // ###################################################################
