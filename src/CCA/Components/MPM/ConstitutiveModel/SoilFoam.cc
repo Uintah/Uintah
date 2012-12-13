@@ -204,44 +204,6 @@ SoilFoam::initializeCMData(const Patch* patch,
 
 }
 
-///////////////////////////////////////////////////////////////////////////
-/*! Allocate data required during the conversion of failed particles 
-    from one material to another */
-///////////////////////////////////////////////////////////////////////////
-void 
-SoilFoam::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches ,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Allocate other variables used in the conversion process
-
-}
-
-
-void SoilFoam::allocateCMDataAdd(DataWarehouse* new_dw,
-                                         ParticleSubset* addset,
-          map<const VarLabel*, ParticleVariableBase*>* newState,
-                                         ParticleSubset* delset,
-                                         DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-}
-
-
 void SoilFoam::computeStableTimestep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)

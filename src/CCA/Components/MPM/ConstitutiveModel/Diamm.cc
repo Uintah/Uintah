@@ -239,51 +239,6 @@ void Diamm::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-void Diamm::allocateCMDataAddRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-  // Add requires local to this model
-  for(int i=0;i<d_NINSV;i++){
-    task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
-  }
-}
-
-
-void Diamm::allocateCMDataAdd(DataWarehouse* new_dw,
-                                ParticleSubset* addset,
-                                map<const VarLabel*,
-                                ParticleVariableBase*>* newState,
-                                ParticleSubset* delset,
-                                DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be
-  // deleted to the particle to be added.
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
-  StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
-
-  for(int i=0;i<d_NINSV;i++){
-    new_dw->allocateTemporary(ISVs[i], addset);
-    new_dw->get(o_ISVs[i],ISVLabels_preReloc[i], delset);
-
-    ParticleSubset::iterator o,n = addset->begin();
-    for (o=delset->begin(); o != delset->end(); o++, n++) {
-      ISVs[i][*n] = o_ISVs[i][*n];
-    }
-    (*newState)[ISVLabels[i]]=ISVs[i].clone();
-  }
-}
-
 void Diamm::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
 {

@@ -587,8 +587,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleAddNewParticles(             sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleConvertLocalizedParticles(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
 
@@ -616,15 +614,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
      }
    }
 
-   if(d_mpm->flags->d_canAddMPMMaterial){
-     //  This checks to see if the model on THIS patch says that it's
-     //  time to add a new material
-     d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
-
-     //  This one checks to see if the model on ANY patch says that it's
-     //  time to add a new material
-     d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
-   }
 } // end scheduleTimeAdvance()
 
 

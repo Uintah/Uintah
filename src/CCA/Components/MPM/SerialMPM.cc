@@ -214,18 +214,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
 
-  if(flags->d_canAddMPMMaterial){
-    cout << "Addition of new material for particle failure is possible"<< endl; 
-    if(!flags->d_addNewMaterial){
-      throw ProblemSetupException("To use material addition, one must specify manual_add_material==true in the input file.",
-                                  __FILE__, __LINE__);
-    }
-  }
-  
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27 || flags->d_8or27==64 || flags->d_8or27==18){
+  } else{
     NGP=2;
     NGN=2;
   }
@@ -273,28 +265,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
    
   if (d_switchCriteria) {
      d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
-  }
-}
-
-void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
-                            SimulationStateP& sharedState)
-{
-  // For adding materials mid-Simulation
-  d_recompile = true;
-  ProblemSpecP mat_ps =  
-    prob_spec->findBlockWithAttribute("MaterialProperties","add");
-
-  string attr = "";
-  mat_ps->getAttribute("add",attr);
-  
-  if (attr == "true") {
-    ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-         ps = ps->findNextBlock("material") ) {
-      //Create and register as an MPM material
-      MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState, flags);
-      sharedState->registerMPMMaterial(mat);
-    }
   }
 }
 
@@ -432,61 +402,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
 }
-
-void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
-                                                SchedulerP& sched)
-{
-  const PatchSet* patches = level->eachPatch();
-  printSchedule(patches,cout_doing,"MPM::scheduleInitializeAddedMaterial");
-
-  Task* t = scinew Task("SerialMPM::actuallyInitializeAddedMaterial",
-                  this, &SerialMPM::actuallyInitializeAddedMaterial);
-                                                                                
-  int numALLMatls = d_sharedState->getNumMatls();
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
-  MaterialSubset* add_matl = scinew MaterialSubset();
-  cout << "Added Material = " << numALLMatls-1 << endl;
-  add_matl->add(numALLMatls-1);
-  add_matl->addReference();
-  
-  t->computes(d_sharedState->get_delt_label(),level.get_rep());
-                                                                                
-  t->computes(lb->partCountLabel,          add_matl);
-  t->computes(lb->pXLabel,                 add_matl);
-  t->computes(lb->pDispLabel,              add_matl);
-  t->computes(lb->pMassLabel,              add_matl);
-  t->computes(lb->pVolumeLabel,            add_matl);
-  t->computes(lb->pTemperatureLabel,       add_matl);
-  t->computes(lb->pTempPreviousLabel,      add_matl); // for thermal stress 
-  t->computes(lb->pdTdtLabel,              add_matl);
-  t->computes(lb->pVelocityLabel,          add_matl);
-  t->computes(lb->pExternalForceLabel,     add_matl);
-  t->computes(lb->pParticleIDLabel,        add_matl);
-  t->computes(lb->pDeformationMeasureLabel,add_matl);
-  t->computes(lb->pStressLabel,            add_matl);
-  t->computes(lb->pSizeLabel,              add_matl);
-  t->computes(lb->pFiberDirLabel,          add_matl);
-  if(!flags->d_doGridReset){
-    t->computes(lb->gDisplacementLabel);
-  }
-  
-
-  if (flags->d_reductionVars->accStrainEnergy) {
-    // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
-  }
-
-  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(numMPMMatls-1);
-  ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-  cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-
-  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
-
-  // The task will have a reference to add_matl
-  if (add_matl->removeReference())
-    delete add_matl; // shouln't happen, but...
-}
-
 
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
@@ -652,12 +567,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
   if(flags->d_useCohesiveZones){
-
-
     scheduleUpdateCohesiveZones(          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
-
     scheduleAddCohesiveZoneForces(        sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
@@ -679,8 +591,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
-  scheduleAddNewParticles(                sched, patches, matls);
-  scheduleConvertLocalizedParticles(      sched, patches, matls);
   if(!flags->d_use_momentum_form){
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
@@ -695,16 +605,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInsertParticles(                    sched, patches, matls);
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
-  }
-
-  if(flags->d_canAddMPMMaterial){
-    //  This checks to see if the model on THIS patch says that it's
-    //  time to add a new material
-    scheduleCheckNeedAddMPMMaterial(         sched, patches, matls);
-                                                                                
-    //  This one checks to see if the model on ANY patch says that it's
-    //  time to add a new material
-    scheduleSetNeedAddMaterialFlag(         sched, level,   matls);
   }
 
   if(d_analysisModules.size() != 0){
@@ -1221,92 +1121,6 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-//if  manual_new_material==false, DON't do this task OR
-//if  create_new_particles==true, DON'T do this task
-  if (!flags->d_addNewMaterial || flags->d_createNewParticles) return;
-
-//if  manual__new_material==true, DO this task OR
-//if  create_new_particles==false, DO this task
-
-  printSchedule(patches,cout_doing,"MPM::scheduleAddNewParticles");
-  Task* t=scinew Task("MPM::addNewParticles", this, 
-                      &SerialMPM::addNewParticles);
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
-    cm->addRequiresDamageParameter(t, mpm_matl, patches);
-  }
-
-  sched->addTask(t, patches, matls);
-}
-
-
-void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-//if  create_new_particles==false, DON't do this task OR
-//if  manual_create_new_matl==true, DON'T do this task
-  if (!flags->d_createNewParticles || flags->d_addNewMaterial) return;
-
-//if  create_new_particles==true, DO this task OR
-//if  manual_create_new_matl==false, DO this task 
-  printSchedule(patches,cout_doing,"MPM::scheduleConvertLocalizedParticles");
-  Task* t=scinew Task("MPM::convertLocalizedParticles", this, 
-                      &SerialMPM::convertLocalizedParticles);
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  if (cout_convert.active())
-    cout_convert << "MPM:scheduleConvertLocalizedParticles : numMatls = " << numMatls << endl;
-
-  for(int m = 0; m < numMatls; m+=2){
-
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    if (cout_convert.active())
-      cout_convert << " Material = " << m << " mpm_matl = " <<mpm_matl<< endl;
-
-    mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
-                                                                 patches);
-    if (cout_convert.active())
-      cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    if (cout_convert.active())
-      cout_convert << "   cm = " << cm << endl;
-
-    cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
-
-    if (cout_convert.active())
-      cout_convert << "   Done cm->allocateCMDataAddRequires = " << endl;
-
-    cm->addRequiresDamageParameter(t, mpm_matl, patches);
-
-    if (cout_convert.active())
-      cout_convert << "   Done cm->addRequiresDamageParameter = " << endl;
-
-  }
-
-  sched->addTask(t, patches, matls);
-}
-
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
@@ -1328,8 +1142,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
-  string interp_type = flags->d_interpolator_type;
-
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
@@ -1348,9 +1160,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
-  if(interp_type=="cpgimp"){
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel,      gnone);
-  }
   t->modifies(lb->pVolumeLabel_preReloc);
 
   if(flags->d_with_ice){
@@ -1471,8 +1280,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdateMom2",
                       this, &SerialMPM::interpolateToParticlesAndUpdateMom2);
 
-  string interp_type = flags->d_interpolator_type;
-
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gac   = Ghost::AroundCells;
@@ -1487,9 +1294,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
-  if(interp_type=="cpgimp"){
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel,      gnone);
-  }
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -2026,16 +1830,18 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
     }
-    else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
-          || interp_type=="cpdi" || interp_type=="cpgimp")
-                          && (num_extra_cells+periodic)!=IntVector(1,1,1)){
+    else if(((interp_type=="gimp" || interp_type=="3rdorderBS" 
+          || interp_type=="cpdi")
+                          && ((num_extra_cells+periodic)!=IntVector(1,1,1)
+                          && ((num_extra_cells+periodic)!=IntVector(1,1,0) 
+                          && flags->d_axisymmetric)))){
         ostringstream msg;
         msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
             << " or <interpolator>3rdorderBS</interpolator> \n"
             << " or <interpolator>cpdi</interpolator> \n"
-            << " or <interpolator>cpgimp</interpolator> \n"
             << " you must also use extraCells and/or periodicBCs such\n"
-            << " the sum of the two is [1,1,1].\n";
+            << " the sum of the two is [1,1,1].\n"
+            << " If using axisymmetry, the sum of the two can be [1,1,0].\n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
 
@@ -2301,7 +2107,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
             //gnumnearparticles[node] += 1.0;
-            //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+            //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
         if (flags->d_useCBDI && pLoadCurveID[idx]>0) {
@@ -2393,8 +2199,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-
-    string interp_type = flags->d_interpolator_type;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<NCVariable<Vector> > gext_force(numMPMMatls);
@@ -2732,10 +2536,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
     string interp_type = flags->d_interpolator_type;
-
-
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
@@ -2838,19 +2639,19 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
              iter++){
           particleIndex idx = *iter;
 
-      
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                          psize[idx],pFOld[idx]);
-          stressvol  = pstress[idx]*pvol[idx];
+
+          stressvol   = pstress[idx]*pvol[idx];
           stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
   
           // r is the x direction, z (axial) is the y direction
           double IFr=0.,IFz=0.;
           for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
-               IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
+              IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
                     d_S[k].y()*oodx[1]*stresspress(0,1) +
-                      S[k]*stresspress(2,2)/px[idx].x();
+                    d_S[k].z()*stresspress(2,2);
               IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
                   + d_S[k].y()*oodx[1]*stresspress(1,1);
               internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];
@@ -2906,7 +2707,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       } // faces
       
-      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
@@ -3384,284 +3184,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   }  // patch loop
 }
 
-void SerialMPM::addNewParticles(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* ,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
-{
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing addNewParticles");
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    // Find the mpm material that the void particles are going to change
-    // into.
-    MPMMaterial* null_matl = 0;
-    int null_dwi = -1;
-    for (int void_matl = 0; void_matl < numMPMMatls; void_matl++) {
-      null_dwi = d_sharedState->getMPMMaterial(void_matl)->nullGeomObject();
-
-      if (cout_dbg.active())
-        cout_dbg << "Null DWI = " << null_dwi << endl;
-
-      if (null_dwi != -1) {
-        null_matl = d_sharedState->getMPMMaterial(void_matl);
-        null_dwi = null_matl->getDWIndex();
-        break;
-      }
-    }
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      if (dwi == null_dwi)
-        continue;
-
-      ParticleVariable<int> damage;
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      new_dw->allocateTemporary(damage,pset);
-      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
-           iter++) 
-        damage[*iter] = 0;
-
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-      
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch,damage,dwi,
-                                                           old_dw,new_dw);
-
-      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
-           iter++) {
-        if (damage[*iter]) {
-
-          if (cout_dbg.active())
-            cout_dbg << "damage[" << *iter << "]=" << damage[*iter] << endl;
-
-          delset->addParticle(*iter);
-        }
-      }
-
-      // Find the mpm material that corresponds to the void particles.
-      // Will probably be the same type as the deleted ones, but have
-      // different parameters.
-
-      int numparticles = delset->numParticles();
-
-      if (cout_dbg.active())
-        cout_dbg << "Num Failed Particles = " << numparticles << endl;
-
-      if (numparticles != 0) {
-
-        if (cout_dbg.active())
-          cout_dbg << "Deleted " << numparticles << " particles" << endl;
-
-        ParticleCreator* particle_creator = null_matl->getParticleCreator();
-        ParticleSubset* addset = scinew ParticleSubset(numparticles,null_dwi,patch);
-
-        if (cout_dbg.active()) {
-          cout_dbg << "Address of delset = " << delset << endl;
-          cout_dbg << "Address of pset = " << pset << endl;
-          cout_dbg << "Address of addset = " << addset << endl;
-        }
-
-        
-        map<const VarLabel*, ParticleVariableBase*>* newState
-          = scinew map<const VarLabel*, ParticleVariableBase*>;
-
-        if (cout_dbg.active()) {
-          cout_dbg << "Address of newState = " << newState << endl;
-          cout_dbg << "Null Material" << endl;
-        }
-
-        //vector<const VarLabel* > particle_labels = 
-        //  particle_creator->returnParticleState();
-
-        //printParticleLabels(particle_labels, old_dw, null_dwi,patch);
-
-        if (cout_dbg.active())
-          cout_dbg << "MPM Material" << endl;
-
-        //vector<const VarLabel* > mpm_particle_labels = 
-        //  mpm_matl->getParticleCreator()->returnParticleState();
-        //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
-
-        particle_creator->allocateVariablesAdd(new_dw,addset,newState,
-                                               delset,old_dw);
-        
-        // Need to do the constitutive models particle variables;
-        
-        null_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw,addset,
-                                                             newState,delset,
-                                                             old_dw);
-
-        // Need to carry forward the cellNAPID for each time step;
-        // Move the particle variable declarations in ParticleCreator.h to one
-        // of the functions to save on memory;
-
-        if (cout_dbg.active()){
-          cout_dbg << "addset num particles = " << addset->numParticles()
-                   << " for material " << addset->getMatlIndex() << endl;
-        }
-
-        new_dw->addParticles(patch,null_dwi,newState);
-
-        if (cout_dbg.active())
-           cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
-
-        new_dw->deleteParticles(delset);
-        
-      } else
-        delete delset;
-    }
-  }
-  
-}
-
-/* Convert the localized particles of material "i" into particles of 
-   material "i+1" */
-void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* ,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
-{
-  // This function is called only when the "createNewParticles" flag is on.
-  // When this flag is on, every second material is a copy of the previous
-  // material and is used the material into which particles of the previous
-  // material are converted.
-  for (int p = 0; p<patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing convertLocalizedParticles");
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-
-    if (cout_convert.active()) {
-      cout_convert << "MPM::convertLocalizeParticles:: on patch"
-           << patch->getID() << " numMPMMaterials = " << numMPMMatls
-           << endl;
-    }
-
-    for(int m = 0; m < numMPMMatls; m+=2){
-
-      if (cout_convert.active())
-        cout_convert << " material # = " << m << endl;
-
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      if (cout_convert.active()) {
-        cout_convert << " mpm_matl* = " << mpm_matl
-                     << " dwi = " << dwi << " pset* = " << pset << endl;
-      }
-
-
-      ParticleVariable<int> isLocalized;
-
-      //old_dw->allocateTemporary(isLocalized, pset);
-      new_dw->allocateTemporary(isLocalized, pset);
-
-      ParticleSubset::iterator iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
-
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-      
-      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
-                                                           dwi, old_dw,new_dw);
-
-      if (cout_convert.active())
-        cout_convert << " Got Damage Parameter" << endl;
-
-
-      iter = pset->begin(); 
-      for (; iter != pset->end(); iter++) {
-        if (isLocalized[*iter]) {
-
-          if (cout_convert.active())
-            cout_convert << "damage[" << *iter << "]="
-                         << isLocalized[*iter] << endl;
-          delset->addParticle(*iter);
-        }
-      }
-
-      if (cout_convert.active())
-       cout_convert << " Created Delset ";
-
-
-      int numparticles = delset->numParticles();
-
-      if (cout_convert.active())
-        cout_convert << " numparticles = " << numparticles << endl;
-
-
-      if (numparticles != 0) {
-
-        if (cout_convert.active()) {
-          cout_convert << " Converting " 
-                       << numparticles << " particles of material " 
-                       <<  m  << " into particles of material " << (m+1) 
-                       << " in patch " << p << endl;
-        }
-
-
-        MPMMaterial* conv_matl = d_sharedState->getMPMMaterial(m+1);
-        int conv_dwi = conv_matl->getDWIndex();
-      
-        ParticleCreator* particle_creator = conv_matl->getParticleCreator();
-        ParticleSubset* addset = scinew ParticleSubset(numparticles, conv_dwi, patch);
-        
-        map<const VarLabel*, ParticleVariableBase*>* newState
-          = scinew map<const VarLabel*, ParticleVariableBase*>;
-
-        if (cout_convert.active())
-          cout_convert << "New Material" << endl;
-
-        //vector<const VarLabel* > particle_labels = 
-        //  particle_creator->returnParticleState();
-        //printParticleLabels(particle_labels, old_dw, conv_dwi,patch);
-
-        if (cout_convert.active())
-          cout_convert << "MPM Material" << endl;
-
-        //vector<const VarLabel* > mpm_particle_labels = 
-        //  mpm_matl->getParticleCreator()->returnParticleState();
-        //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
-
-        particle_creator->allocateVariablesAdd(new_dw, addset, newState,
-                                               delset, old_dw);
-        
-        conv_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw, addset,
-                                                             newState, delset,
-                                                             old_dw);
-
-        if (cout_convert.active()) {
-          cout_convert << "addset num particles = " << addset->numParticles()
-                       << " for material " << addset->getMatlIndex() << endl;
-        }
-
-        new_dw->addParticles(patch, conv_dwi, newState);
-        new_dw->deleteParticles(delset);
-        
-        //delete addset;
-      } 
-      else delete delset;
-    }
-
-    if (cout_convert.active()) {
-      cout_convert <<"Done convertLocalizedParticles on patch " 
-                   << patch->getID() << "\t MPM"<< endl;
-    }
-
-  }
-
-  if (cout_convert.active())
-    cout_convert << "Completed convertLocalizedParticles " << endl;
-
-  
-}
-
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                 const PatchSubset* patches,
                                                 const MaterialSubset* ,
@@ -3676,7 +3198,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -3862,18 +3383,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         partvoldef += pvolume[idx];
       }
 
-      if(interp_type == "cpgimp"){
-       old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
-       for(ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          psizeNew[idx]=Matrix3(
-                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
-                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
-                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
-       }
-      }
-
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
       // Also delete particles whose mass is too small (due to combustion)
@@ -3962,7 +3471,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -4097,7 +3605,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    string interp_type = flags->d_interpolator_type;
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -4247,19 +3754,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
       }
-
-      if(interp_type == "cpgimp"){
-       old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
-       for(ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          psizeNew[idx]=Matrix3(
-                       psize[idx](0,0)*(pFNew[idx](0,0)/pFOld[idx](0,0)),0.,0.,
-                       0.,psize[idx](1,1)*(pFNew[idx](1,1)/pFOld[idx](1,1)),0.,
-                       0.,0.,psize[idx](2,2)*(pFNew[idx](2,2)/pFOld[idx](2,2)));
-       }
-      }
-
 
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
@@ -4687,8 +4181,6 @@ void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    string interp_type = flags->d_interpolator_type;
-
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < numMatls; m++){
@@ -5007,70 +4499,6 @@ SerialMPM::refine(const ProcessorGroup*,
   }
 
 } // end refine()
-
-void SerialMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
-{
-  printSchedule(patches,cout_doing,"MPM::scheduleCheckNeedAddMPMMaterial");
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
-                        this, &SerialMPM::checkNeedAddMPMMaterial);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->scheduleCheckNeedAddMPMMaterial(t, mpm_matl, patches);
-  }
-
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* ,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
-{
- // printSchedule(patches,cout_doing,"MPM::checkNeedAddMPMMaterial");
-  
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->checkNeedAddMPMMaterial(patches, mpm_matl, old_dw, new_dw);
-  }
-}
-
-void SerialMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
-                                               const LevelP& level,
-                                               const MaterialSet* all_matls)
-{
-  printSchedule(level,cout_doing,"MPM::scheduleSetNeedAddMaterialFlag");
-
-  Task* t= scinew Task("SerialMPM::setNeedAddMaterialFlag",
-               this, &SerialMPM::setNeedAddMaterialFlag);
-  t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);
-  sched->addTask(t, level->eachPatch(), all_matls);
-}
-
-void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
-                                       const PatchSubset* ,
-                                       const MaterialSubset* ,
-                                       DataWarehouse* ,
-                                       DataWarehouse* new_dw)
-{
-    sum_vartype need_add_flag;
-    new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
-
-    if(need_add_flag < -0.1){
-      d_sharedState->setNeedAddMaterial(-99);
-      flags->d_canAddMPMMaterial=false;
-      cout << "MPM setting NAM to -99" << endl;
-    }
-    else{
-      d_sharedState->setNeedAddMaterial(0);
-    }
-}
 
 bool SerialMPM::needRecompile(double , double , const GridP& )
 {

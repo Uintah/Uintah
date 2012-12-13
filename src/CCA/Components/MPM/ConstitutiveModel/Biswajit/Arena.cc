@@ -241,31 +241,6 @@ void Arena::initializeCMData(const Patch* patch,
   d_intvar->initializeInternalVariable(pset, new_dw);
 }
 
-void Arena::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches ,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Add requires local to this model
-  d_intvar->allocateCMDataAddRequires(task, matl, patches, lb);
-}
-
-void Arena::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*, ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* old_dw)
-{
-  // Initialize the data for the internal variable model
-  d_intvar->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-}
-
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void Arena::computeStableTimestep(const Patch* patch,

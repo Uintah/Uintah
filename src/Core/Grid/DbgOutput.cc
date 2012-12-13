@@ -74,6 +74,20 @@ void printTask(const PatchSubset* patches,
 }
 //__________________________________
 //
+void printTask(const PatchSubset* patches,
+               SCIRun::DebugStream& dbg,
+               const string& where)
+{
+  if (dbg.active()){
+    dbg << Uintah::Parallel::getMPIRank() << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << "  \tL-"
+        << getLevel(patches)->getIndex()<< endl;
+  }  
+}
+//__________________________________
+//
 void printTask(const Patch* patch,
                SCIRun::DebugStream& dbg,
                const string& where)

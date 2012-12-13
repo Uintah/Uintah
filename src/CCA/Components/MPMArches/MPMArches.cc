@@ -82,7 +82,7 @@ using namespace std;
 #undef RIGID_MPM
 // #define RIGID_MPM
 
-  MPMArches::MPMArches(const ProcessorGroup* myworld)
+  MPMArches::MPMArches(const ProcessorGroup* myworld, const bool doAMR)
 : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
@@ -92,7 +92,7 @@ using namespace std;
 #else
   d_mpm      = scinew SerialMPM(myworld);
 #endif
-  d_arches      = scinew Arches(myworld);
+  d_arches      = scinew Arches(myworld, doAMR);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
   d_doingRestart = false; 

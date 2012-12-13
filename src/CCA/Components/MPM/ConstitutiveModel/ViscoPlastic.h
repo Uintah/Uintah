@@ -253,38 +253,6 @@ namespace Uintah {
                                     DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*, 
-                                   ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    void scheduleCheckNeedAddMPMMaterial(Task* task,
-                                         const MPMMaterial* matl,
-                                         const PatchSet* patches) const;
-                                                                                
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief initialize  each particle's constitutive model data */
     ////////////////////////////////////////////////////////////////////////
     virtual void addParticleState(std::vector<const VarLabel*>& from,

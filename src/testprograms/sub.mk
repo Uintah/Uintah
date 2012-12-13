@@ -63,6 +63,7 @@ else # Non-static build
         testprograms/TestSuite               \
         testprograms/TestMatrix3             \
         Core/Util                            \
+        Core/ProblemSpec		     \
         testprograms/TestConsecutiveRangeSet \
         testprograms/TestRangeTree           \
         testprograms/TestBoxGrouper \
@@ -74,7 +75,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+          $(TEEM_LIBRARY) $(PNG_LIBRARY) $(XML2_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

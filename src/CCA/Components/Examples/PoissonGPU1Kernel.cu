@@ -40,10 +40,11 @@ extern "C" {
 __global__ void poissonGPU1Kernel(uint3 domainLow,
                                   uint3 domainHigh,
                                   uint3 domainSize,
-                                  int ghostLayers,
-                                  double *phi,
-                                  double *newphi,
-                                  double *residual) {
+                                  int numGhostCells,
+                                  double* phi,
+                                  double* newphi,
+                                  double* residual)
+{
 
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -77,6 +78,26 @@ __global__ void poissonGPU1Kernel(uint3 domainLow,
       // TODO Finish residual calculation using atomics
     }
   }
+}
+
+void launchPoisson1Kernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          uint3 domainLow,
+                          uint3 domainHigh,
+                          uint3 domainSize,
+                          int numGhostCells,
+                          double* d_phi,
+                          double* d_newphi,
+                          double* residual)
+{
+
+  poissonGPU1Kernel<<< dimGrid, dimBlock >>>(domainLow,
+                                             domainHigh,
+                                             domainSize,
+                                             numGhostCells,
+                                             d_phi,
+                                             d_newphi,
+                                             residual);
 }
 
 #ifdef __cplusplus

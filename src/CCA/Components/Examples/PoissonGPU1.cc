@@ -160,14 +160,14 @@ void PoissonGPU1::timeAdvanceCPU(const ProcessorGroup*,
                                  DataWarehouse* new_dw)
 {
   int matl = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Do time steps
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
 
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
     NCVariable<double> newphi;
 
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -210,14 +210,14 @@ void PoissonGPU1::timeAdvance1DP(const ProcessorGroup*,
                                  DataWarehouse* new_dw) {
 
   int matl = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Do time steps
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -243,9 +243,9 @@ void PoissonGPU1::timeAdvance1DP(const ProcessorGroup*,
     int zhigh = h.z();
     int yhigh = h.y();
     int xhigh = h.x();
-    int ghostLayers = 1;
-    int ystride = yhigh + ghostLayers;
-    int xstride = xhigh + ghostLayers;
+    int numGhostCells = 1;
+    int ystride = yhigh + numGhostCells;
+    int xstride = xhigh + numGhostCells;
 
     cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
 
@@ -285,14 +285,14 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
                                  DataWarehouse* new_dw) {
 
   int matl = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Do time steps
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -352,7 +352,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   int matl = 0;
   int previousPatchSize = 0; // this is to see if we need to reallocate between computations
   int size = 0;
-  int ghostLayers = 1;
+  int numGhostCells = 1;
 
   // Device and host memory pointers
   double* phi_host;
@@ -361,14 +361,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   double* newphi_device;
   double* residual_host;
   double* residual_device;
-
-  // setup for driver API kernel launch
-  CUresult   cuErrVal;
-  CUmodule   cuModule;
-  CUfunction poissonGPU1Kernel;
-
-  // initialize the driver API
-  CUDA_DRV_SAFE_CALL( cuErrVal = cuInit(0) );
 
   // Use the device with the highest number of multiprocessors (default is device(0))
   int num_devices, device;
@@ -398,7 +390,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, numGhostCells);
 
     // newphi will be the result after each timestep
     NCVariable<double> newphi;
@@ -457,22 +449,8 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     //  as each of these (x,y) threads streams through the z direction.
     dim3 dimBlock(8, 8, 1); // block dimensions (threads per block)
 
-    // Setup kernel parameters and launch via driver API
-    void *kernelParms[] = { &domainLow, &domainHigh, &domainSize, &ghostLayers, &phi_device, &newphi_device, &residual_device };
-    string ptxpath = string(PTX_DIR_PATH)+"/PoissonGPU1Kernel.ptx";
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleLoad(&cuModule, ptxpath.c_str()) );
-    CUDA_DRV_SAFE_CALL( cuErrVal = cuModuleGetFunction(&poissonGPU1Kernel, cuModule, "poissonGPU1Kernel") );
-    cuErrVal =  cuLaunchKernel(poissonGPU1Kernel,
-                               dimGrid.x,
-                               dimGrid.y,
-                               dimGrid.z,
-                               dimBlock.x,
-                               dimBlock.y,
-                               dimBlock.z,
-                               sizeof(double),
-                               NULL,
-                               kernelParms,
-                               0);
+    // Launch Kernel
+    launchPoisson1Kernel(dimGrid, dimBlock, domainLow, domainHigh, domainSize, numGhostCells, phi_device, newphi_device, residual_device);
 
     // Kernel error checking
     cudaError_t error = cudaPeekAtLastError();

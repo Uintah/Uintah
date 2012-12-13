@@ -172,65 +172,6 @@ void HypoElastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
-void HypoElastic::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Add requires local to this model
-  Ghost::GhostType  gnone = Ghost::None;
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->pDispGradsLabel_preReloc, matlset, gnone);
-    task->requires(Task::NewDW, lb->pStrainEnergyDensityLabel_preReloc,
-                   matlset, gnone);
-  }
-}
-
-
-void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-     map<const VarLabel*, ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  if (flag->d_fracture) {
-    ParticleVariable<Matrix3> pdispGrads;
-    constParticleVariable<Matrix3> o_dispGrads;
-    ParticleVariable<double>  pstrainEnergyDensity;
-    constParticleVariable<double>  o_strainEnergyDensity;
-    // for J-Integral
-    new_dw->allocateTemporary(pdispGrads, addset);
-    new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
-    new_dw->allocateTemporary(pstrainEnergyDensity,addset);
-    new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
-                delset);
-
-    ParticleSubset::iterator o, n = addset->begin();
-    for (o=delset->begin(); o != delset->end(); o++, n++) {
-      pdispGrads[*n] = o_dispGrads[*o];
-      pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-    }
-
-    (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
-    (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
-  }
-}
-
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
@@ -936,27 +877,5 @@ double HypoElastic::getCompressibility()
 
 
 namespace Uintah {
-
-#if 0
-static MPI_Datatype makeMPI_CMData()
-{
-   ASSERTEQ(sizeof(HypoElastic::StateData), sizeof(double)*2);
-   MPI_Datatype mpitype;
-   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(HypoElastic::StateData*)
-{
-   static TypeDescription* td = 0;
-   if(!td){
-      td = scinew
-        TypeDescription(TypeDescription::Other,
-                        "HypoElastic::StateData", true, &makeMPI_CMData);
-   }
-   return td;
-}
-#endif
 
 } // End namespace Uintah
