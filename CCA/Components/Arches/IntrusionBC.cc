@@ -441,7 +441,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         } // ... end of face iterator ... 
       } 
     }
-  printIntrusionInformation(); 
   }
 }
 
@@ -490,7 +489,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         // now loop through all 6 directions 
         for ( int idir = 0; idir < 6; idir++ ){ 
 
-          if ( iter->second.directions[idir] != 1 ) { 
+          if ( iter->second.directions[idir] == 1 ) { 
 
             int vel_index = _iHelp[idir]; 
             IntVector c = IntVector(0,0,0); 
@@ -501,6 +500,8 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         } 
       }  // if mass flow rate option has been selected
     }    // intrusion loop 
+    // Boundary conditions should be all setup at this point so print a summary for the user: 
+    printIntrusionInformation(); 
   }      // patch loop
 }
 
