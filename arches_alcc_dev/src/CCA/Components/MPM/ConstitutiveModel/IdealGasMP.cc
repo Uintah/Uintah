@@ -96,35 +96,6 @@ void IdealGasMP::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-void IdealGasMP::allocateCMDataAddRequires(Task* task,
-                                           const MPMMaterial* matl ,
-                                           const PatchSet* patches,
-                                           MPMLabel* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-}
-
-void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-    map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-}
-
-
 void IdealGasMP::addParticleState(std::vector<const VarLabel*>& ,
                                    std::vector<const VarLabel*>& )
 {

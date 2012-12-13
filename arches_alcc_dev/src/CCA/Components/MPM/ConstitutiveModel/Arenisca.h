@@ -157,13 +157,6 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
@@ -194,8 +187,4 @@ namespace Uintah {
   };
 } // End namespace Uintah
 
-
 #endif  // __ARENISCA_H__
-
-
-

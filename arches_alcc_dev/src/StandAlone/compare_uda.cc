@@ -44,6 +44,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
@@ -223,6 +224,17 @@ bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
   return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance);
 }
 
+
+bool compare(Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance)
+{ 
+  return compare(a.p, b.p, abs_tolerance, rel_tolerance)  &&
+         compare(a.n, b.n, abs_tolerance, rel_tolerance)  &&
+         compare(a.s, b.s, abs_tolerance, rel_tolerance)  &&
+         compare(a.e, b.e, abs_tolerance, rel_tolerance)  &&
+         compare(a.w, b.w, abs_tolerance, rel_tolerance)  &&
+         compare(a.t, b.t, abs_tolerance, rel_tolerance)  &&
+         compare(a.b, b.b, abs_tolerance, rel_tolerance);
+}
 bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
              double rel_tolerance)
 {
@@ -949,6 +961,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::Matrix3:
       return scinew
         SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
+    case Uintah::TypeDescription::Stencil7:
+      return scinew
+        SpecificFieldComparator<CCVariable<Stencil7>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);

@@ -91,7 +91,7 @@ using namespace SCIRun;
 
 class MPMArches : public UintahParallelComponent, public SimulationInterface {
 public:
-  MPMArches(const ProcessorGroup* myworld);
+  MPMArches(const ProcessorGroup* myworld, const bool doAMR);
   virtual ~MPMArches();
 
   // Read inputs from ups file for MPMArches case

@@ -16,7 +16,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1        </max_Timesteps>
+    <max_Timesteps> 5        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -80,7 +80,7 @@
       <Box label = "0">                              
         <lower>      [0,0,0]      </lower>            
         <upper>      [1, 1, 1]    </upper>            
-        <resolution> [32,32,1]    </resolution>
+        <resolution> [16,16,16]    </resolution>
         <patches>    [1,1,1]      </patches>
         <extraCells> [1,1,1]      </extraCells>
       </Box>                                         
@@ -89,20 +89,22 @@
       <Box label = "1">                              
         <lower>      [0,0,0]      </lower>          
         <upper>      [1, 1, 1]    </upper>          
-        <resolution> [64,64,1]    </resolution>     
-        <patches>    [2,2,1]      </patches>      
+        <resolution> [32,32,32]    </resolution>     
+        <patches>    [2,2,2]      </patches>      
         <extraCells> [1,1,1]      </extraCells>       
       </Box>                                         
     </Level>
+  <!--
     <Level>
       <Box label = "2">                              
         <lower>      [0,0,0]      </lower>          
         <upper>      [1, 1, 1]    </upper>          
-        <resolution> [128,128,1]  </resolution>     
+        <resolution> [64,64,64]  </resolution>     
         <patches>    [4,4,1]      </patches>      
         <extraCells> [1,1,1]      </extraCells>       
       </Box>                                        
     </Level>
+  -->
   </Grid>
   <!--__________________________________-->
   <AMR>
@@ -131,7 +133,7 @@
     <randomSeed>        false      </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
-    <NoOfRays>          1          </NoOfRays>
+    <NoOfRays>          5          </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>

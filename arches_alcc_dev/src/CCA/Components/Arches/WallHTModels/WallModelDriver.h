@@ -110,7 +110,7 @@ namespace Uintah{
 
       SimulationStateP& _shared_state; 
 
-      std::vector<HTModelBase> _all_ht_models; 
+      std::vector<HTModelBase*> _all_ht_models; 
 
       int _matl_index; 
 

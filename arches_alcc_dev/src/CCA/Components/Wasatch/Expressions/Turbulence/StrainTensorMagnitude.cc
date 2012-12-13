@@ -448,29 +448,23 @@ evaluate()
   SpatFldPtr<SVolField> a33 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
   
   
-  //  if (!doX_) {
   *a11 <<= 0.0;
   *a12 <<= 0.0;
   *a13 <<= 0.0;
   *a21 <<= 0.0;
   *a31 <<= 0.0;
-  //  }
-  
-  //  if (!doY_) {
+
   *a21 <<= 0.0;
   *a22 <<= 0.0;
   *a23 <<= 0.0;
   *a12 <<= 0.0;
   *a32 <<= 0.0;
-  //  }
-  
-  //  if (!doZ_) {
+
   *a31 <<= 0.0;
   *a32 <<= 0.0;
   *a33 <<= 0.0;
   *a23 <<= 0.0;
   *a13 <<= 0.0;
-  //  }
   
   
   // du fields
@@ -478,29 +472,29 @@ evaluate()
   if (doY_) dvdyOp_->apply_to_field( *vel2_, *a22 ); // dvdy
   if (doZ_) dwdzOp_->apply_to_field( *vel3_, *a33 ); // dwdz
   
-  //if (doX_ && doY_) {
+  if (doX_ && doY_) {
     dudyOp_->apply_to_field( *vel1_, *xyfield );   // du/dy
     xyInterpOp_->apply_to_field( *xyfield, *a21);  // interpolate to scalar cells
     
     dvdxOp_->apply_to_field( *vel2_, *yxfield );   // dv/dx
     yxInterpOp_->apply_to_field( *yxfield, *a12);  // interpolate to scalar cells
-  //}
+  }
   
-  //if (doX_ && doZ_) {
+  if (doX_ && doZ_) {
     dudzOp_->apply_to_field( *vel1_, *xzfield );   // du/dz
     xzInterpOp_->apply_to_field( *xzfield, *a31);  // interpolate to scalar cells
     
     dwdxOp_->apply_to_field( *vel3_, *zxfield );   // dw/dx
     zxInterpOp_->apply_to_field( *zxfield, *a13);  // interpolate to scalar cells
-  //}
+  }
   
-  //if (doY_ && doZ_) {
+  if (doY_ && doZ_) {
     dvdzOp_->apply_to_field( *vel2_, *yzfield );   // dv/dz
     yzInterpOp_->apply_to_field( *yzfield, *a32);  // interpolate to scalar cells
     
     dwdyOp_->apply_to_field( *vel3_, *zyfield );   // dw/dy
     zyInterpOp_->apply_to_field( *zyfield, *a23);  // interpolate to scalar cells
-  //}
+  }
   
   SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
   SpatFldPtr<SVolField> b12 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
@@ -512,29 +506,24 @@ evaluate()
   SpatFldPtr<SVolField> b32 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
   SpatFldPtr<SVolField> b33 = SpatialFieldStore::get<SVolField>( VremanTsrMag );
   
-  //  if (!doX_) {
+
   *b11 <<= 0.0;
   *b12 <<= 0.0;
   *b13 <<= 0.0;
   *b21 <<= 0.0;
   *b31 <<= 0.0;
-  //  }
-  
-  //  if (!doY_) {
+
   *b21 <<= 0.0;
   *b22 <<= 0.0;
   *b23 <<= 0.0;
   *b12 <<= 0.0;
   *b32 <<= 0.0;
-  //  }
-  
-  //  if (!doZ_) {
+
   *b31 <<= 0.0;
   *b32 <<= 0.0;
   *b33 <<= 0.0;
   *b23 <<= 0.0;
   *b13 <<= 0.0;
-  //  }
   
   *b11 <<= *a11 * *a11 + *a21 * *a21 + *a31 * *a31;
   *b12 <<= *a11 * *a12 + *a21 * *a22 + *a31 * *a32;

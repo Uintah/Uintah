@@ -46,7 +46,8 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
-#include <spatialops/ThreadPool.h>
+#include <spatialops/SpatialOpsTools.h>
+#include <expression/SchedulerBase.h>
 #endif
 
 //-- ExprLib includes --//
@@ -191,6 +192,30 @@ namespace Wasatch{
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
     
+    // Multithreading in ExprLib and SpatialOps
+    if( wasatchParams_->findBlock("FieldParallelThreadCount") ){
+#    ifdef ENABLE_THREADS
+      int spatialOpsThreads=0;
+      wasatchParams_->get( "FieldParallelThreadCount", spatialOpsThreads );
+      SpatialOps::set_hard_thread_count(NTHREADS);
+      SpatialOps::set_soft_thread_count( spatialOpsThreads );
+      proc0cout << "-> Wasatch is running with " << spatialOpsThreads << " data-parallel threads (SpatialOps)" << std::endl;
+#    else
+      proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
+#    endif
+    }
+    if( wasatchParams_->findBlock("TaskParallelThreadCount") ){
+#    ifdef ENABLE_THREADS
+      int exprLibThreads=0;
+      wasatchParams_->get( "TaskParallelThreadCount", exprLibThreads );
+      Expr::set_hard_thread_count( NTHREADS );
+      Expr::set_soft_thread_count( exprLibThreads );
+      proc0cout << "-> Wasatch is running with " << exprLibThreads << " task-parallel threads (ExprLib)" << std::endl;
+#    else
+      proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
+#    endif
+    }
+
     // disallow specification of extraCells
     {
       std::ostringstream msg;
@@ -200,10 +225,14 @@ namespace Wasatch{
       for( Uintah::ProblemSpecP level = grid->findBlock("Level");
            level != 0;
            level = grid->findNextBlock("Level") ){
+        
+        Uintah::IntVector periodicDirs;
+        level->get("periodic", periodicDirs);
+        isPeriodic = isPeriodic || (periodicDirs.x() == 1 || periodicDirs.y() == 1 || periodicDirs.z() == 1);
+
         for( Uintah::ProblemSpecP box = level->findBlock("Box");
              box != 0;
              box = level->findNextBlock("Box") ){
-          isPeriodic = level->findBlock("periodic");
           // note that a [0,0,0] specification gets added by default,
           // so we will check to ensure that something other than
           // [0,0,0] has not been specified.
@@ -281,21 +310,6 @@ namespace Wasatch{
 
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
     if (!wasatchParams) return;
-
-    // threaded execution
-#   ifdef ENABLE_THREADS
-    {
-      using namespace SpatialOps;
-      int nThreadExprLib=1, nThreadNebo=0;
-      if( wasatchParams->findBlock("TaskParallelThreadCount") )
-        wasatchParams->get("TaskParallelThreadCount", nThreadExprLib );
-      if( wasatchParams->findBlock("FieldParallelThreadCount") )
-        wasatchParams->get("FieldParallelThreadCount", nThreadNebo );
-      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
-      tprm.resize_active( ThreadPool::self(),     std::max(1,nThreadExprLib) );
-      tprm.resize_active( ThreadPoolFIFO::self(), std::max(0,nThreadNebo   ) );
-    }
-#   endif
 
     //
     // Material

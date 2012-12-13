@@ -76,6 +76,9 @@ namespace Uintah{
       /** @brief Interface to input file */
       void problemSetup( const ProblemSpecP& params ); 
 
+      /** @brief Print out a summary of the intrusions **/ 
+      void printIntrusionInformation(); 
+
       /** @brief Computes the boundary area for the non-wall portion */
       void sched_computeBCArea( SchedulerP& sched, 
                                 const PatchSet* patches, 

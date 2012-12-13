@@ -29,6 +29,7 @@ from helpers.runSusTests import runSusTests
 #______________________________________________________________________
 NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"])
@@ -36,6 +37,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
 
 # Tests that are run during local regression testing
 LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1 , "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]), 

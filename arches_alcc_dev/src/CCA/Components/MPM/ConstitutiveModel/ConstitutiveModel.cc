@@ -51,7 +51,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
-  } else if(flag->d_8or27==27 || flag->d_8or27==64 || flag->d_8or27==18){ 
+  } else{ 
     NGN=2;
   }
 }
@@ -126,13 +126,6 @@ ConstitutiveModel::addComputesAndRequires(Task*,
   throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);  
 }
 
-void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task* task, 
-                                                        const MPMMaterial*,
-                                                        const PatchSet*) const
-{
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-
 void 
 ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
                                               const MaterialSubset* matlset,
@@ -194,17 +187,6 @@ ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
   throw InternalError("Stub Task: ConstitutiveModel::computeStressTensorImplicit ", __FILE__, __LINE__);
 }
 
-void ConstitutiveModel::checkNeedAddMPMMaterial(const PatchSubset*,
-                                                const MPMMaterial*,
-                                                DataWarehouse* new_dw,
-                                                DataWarehouse*)
-{
-  double need_add=0.;
-                                                                                
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
-}
-
-
 void 
 ConstitutiveModel::carryForward(const PatchSubset*,
                                 const MPMMaterial*,
@@ -247,60 +229,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
     pStress_new[idx] = Zero;
     p_q[idx]=0.;
   }
-}
-
-void 
-ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
-                                             const PatchSet*,
-                                             MPMLabel*) const
-{
-  throw InternalError("Stub Task: ConstitutiveModel::allocateCMDataAddRequires ", __FILE__, __LINE__);
-}
-
-void 
-ConstitutiveModel::addSharedRForConvertExplicit(Task* task,
-                                                const MaterialSubset* mset,
-                                                const PatchSet*) const
-{
-  Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW,lb->pdTdtLabel_preReloc,              mset,gnone);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,mset,gnone);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,            mset,gnone);
-}
-
-void
-ConstitutiveModel::copyDelToAddSetForConvertExplicit(DataWarehouse* new_dw,
-                                                     ParticleSubset* delset,
-                                                     ParticleSubset* addset,
-                                                     map<const VarLabel*, ParticleVariableBase*>* newState)
-{
-  constParticleVariable<double>  pIntHeatRate_del;
-  constParticleVariable<Matrix3> pDefGrad_del;
-  constParticleVariable<Matrix3> pStress_del;
-
-  new_dw->get(pIntHeatRate_del, lb->pdTdtLabel_preReloc,               delset);
-  new_dw->get(pDefGrad_del,     lb->pDeformationMeasureLabel_preReloc, delset);
-  new_dw->get(pStress_del,      lb->pStressLabel_preReloc,             delset);
-
-  ParticleVariable<double>  pIntHeatRate_add;
-  ParticleVariable<Matrix3> pDefGrad_add;
-  ParticleVariable<Matrix3> pStress_add;
-
-  new_dw->allocateTemporary(pIntHeatRate_add, addset);
-  new_dw->allocateTemporary(pDefGrad_add,     addset);
-  new_dw->allocateTemporary(pStress_add,      addset);
-
-  ParticleSubset::iterator del = delset->begin();
-  ParticleSubset::iterator add = addset->begin();
-  for (; del != delset->end(); del++, add++) {
-    pIntHeatRate_add[*add] = pIntHeatRate_del[*del];
-    pDefGrad_add[*add] = pDefGrad_del[*del];
-    pStress_add[*add]  = pStress_del[*del];
-  }
-
-  (*newState)[lb->pdTdtLabel] = pIntHeatRate_add.clone();
-  (*newState)[lb->pDeformationMeasureLabel] = pDefGrad_add.clone();
-  (*newState)[lb->pStressLabel] = pStress_add.clone();
 }
 
 void 

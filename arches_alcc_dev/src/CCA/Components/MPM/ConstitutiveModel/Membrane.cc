@@ -147,53 +147,6 @@ void Membrane::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
-void Membrane::allocateCMDataAddRequires(Task* task,
-                                         const MPMMaterial* matl,
-                                         const PatchSet* patches,
-                                         MPMLabel* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Add requires local to this model
-  Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW,defGradInPlaneLabel_preReloc, matlset, gnone);
-}
-
-
-void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
-                                 ParticleSubset* addset,
-  map<const VarLabel*, ParticleVariableBase*>* newState,
-                                 ParticleSubset* delset,
-                                 DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  ParticleVariable<Matrix3> defGradIP;
-  constParticleVariable<Matrix3> o_defGradIP;
-
-  new_dw->allocateTemporary(defGradIP,addset);
-  new_dw->get(o_defGradIP,defGradInPlaneLabel_preReloc,delset);
-
-  ParticleSubset::iterator o,n=addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    defGradIP[*n] = o_defGradIP[*o];
-  }
-
-  (*newState)[defGradInPlaneLabel]=defGradIP.clone();
-}
-
-
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {

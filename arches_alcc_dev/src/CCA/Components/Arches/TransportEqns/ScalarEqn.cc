@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -10,6 +11,7 @@
 
 using namespace std;
 using namespace Uintah;
+static DebugStream dbg("ARCHES", false);
 
 //---------------------------------------------------------------------------
 // Builder:
@@ -227,6 +229,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 void 
 ScalarEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 {
+  printSchedule(level,dbg,"ScalarEqn::sched_cleanUp");
+  
   string taskname = "ScalarEqn::cleanUp";
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::cleanUp);
 
@@ -241,7 +245,7 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw )
 {
-
+  printTask(patches,dbg,"ScalarEqn::cleanUp");
   //Set the initialization flag for the source label to false.
   SourceTermFactory& factory = SourceTermFactory::self(); 
   for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
@@ -258,8 +262,9 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
 void
 ScalarEqn::sched_evalTransportEqn( const LevelP& level, 
                                    SchedulerP& sched, int timeSubStep )
-{
-
+{ 
+  printSchedule(level,dbg,"ScalarEqn::sched_evalTransportEqn");
+  
   if (timeSubStep == 0)
     sched_initializeVariables( level, sched );
 
@@ -279,6 +284,8 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
 void 
 ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
+  printSchedule(level,dbg,"ScalarEqn::sched_initializeVariables");
+  
   string taskname = "ScalarEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
@@ -317,7 +324,7 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
   //patch loop
   for (int p=0; p < patches->size(); p++){
-
+    
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -379,13 +386,12 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
   // This scheduler only calls other schedulers
   SourceTermFactory& factory = SourceTermFactory::self(); 
   for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
- 
+
     SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-   
-    temp_src.sched_computeSource( level, sched, timeSubStep ); 
 
+    printSchedule(level,dbg,"ScalarEqn::sched_computeSources " + *iter );
+    temp_src.sched_computeSource( level, sched, timeSubStep );
   }
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation. 
@@ -396,7 +402,8 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   string taskname = "ScalarEqn::buildTransportEqn"; 
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
-
+  printSchedule(level,dbg,taskname);
+  
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
@@ -560,8 +567,9 @@ void
 ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "ScalarEqn::solveTransportEqn";
-
+  
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep);
+  printSchedule(level,dbg, taskname);
 
   //New
   tsk->modifies(d_transportVarLabel);
@@ -643,7 +651,8 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
   string taskname = "ScalarEqn::timeAve";
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::timeAve, timeSubStep);
-
+  printSchedule(level,dbg, taskname);
+ 
   //New
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel);

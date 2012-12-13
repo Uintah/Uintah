@@ -102,11 +102,13 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       std::string name; 
       db_intrusion->getAttribute("label", name);
       intrusion.name = name; 
+      intrusion.velocity = Vector(0,0,0); 
 
       // set up velocity:
       ProblemSpecP db_velocity = db_intrusion->findBlock("velocity"); 
       intrusion.has_velocity_model = false; 
       intrusion.mass_flow_rate = 0.0; 
+      intrusion.velocity_inlet_generator = 0; 
 
       if ( db_velocity ){ 
 
@@ -411,6 +413,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
           IntVector c = *i; 
+          iv.clear(); 
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){ 
 
@@ -486,7 +489,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         // now loop through all 6 directions 
         for ( int idir = 0; idir < 6; idir++ ){ 
 
-          if ( iter->second.directions[idir] != 1 ) { 
+          if ( iter->second.directions[idir] == 1 ) { 
 
             int vel_index = _iHelp[idir]; 
             IntVector c = IntVector(0,0,0); 
@@ -497,6 +500,8 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         } 
       }  // if mass flow rate option has been selected
     }    // intrusion loop 
+    // Boundary conditions should be all setup at this point so print a summary for the user: 
+    printIntrusionInformation(); 
   }      // patch loop
 }
 
@@ -676,6 +681,39 @@ IntrusionBC::setCellType( const ProcessorGroup*,
     }   // intrusion loop 
   }     // patch loop
 } 
+
+void 
+IntrusionBC::printIntrusionInformation(){
+
+  proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
+  for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+
+    if ( iter->second.type == SIMPLE_WALL ){ 
+      proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+
+    } else if ( iter->second.type == INLET ){ 
+      proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
+      IntVector c(0,0,0); 
+      Vector U = iter->second.velocity_inlet_generator->get_velocity(c); 
+      proc0cout << "   Velocity = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+      proc0cout << "   m_dot    = "  << iter->second.mass_flow_rate << std::endl;
+      proc0cout << "   density  = "  << iter->second.density << std::endl;
+      proc0cout << "   scalar information " << std::endl;
+      for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
+          i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
+  
+        proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
+        
+      } 
+
+    } 
+    proc0cout << "   solid T  = "  << iter->second.temperature << std::endl;
+
+    proc0cout << " \n";
+
+  }
+  proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
+}
 
 //_________________________________________
 void 

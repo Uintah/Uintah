@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.68)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -310,7 +310,7 @@ SCI_ARG_WITH(cuda,
                  Use the CUDA installation in DIR),
   [with_cuda="$withval"
    sci_required_cuda=yes],
-  [with_cuda=""])  
+  [with_cuda=""])
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -506,7 +506,7 @@ SCI_ARG_ENABLE(ray-scatter,
   [ray_scatter=${ray_scatter=''}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
+                 Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
 SCI_ARG_ENABLE(exename,
@@ -3206,6 +3206,11 @@ if test "$sci_required_mpi" = "yes"; then
                       SCI_TRY_LINK(MPI,5. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich pmpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
+                   # try mpi again with mpi_mt
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,6. mpi_mt library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpi_mt  $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+                   fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
                    fi
@@ -3288,6 +3293,7 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
+AC_LANG([C++])
 if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
@@ -3390,6 +3396,7 @@ AC_SUBST(INC_PETSC_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
+AC_LANG([C])
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -4008,11 +4015,20 @@ else
    #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
    AC_LANG([C++])
    SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            optional)
+
+   if test "$HAVE_HYPRE" != "yes"; then
+      SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                             HYPRE,
                             $_sci_lib,
                             $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
-                            $_sci_optional)
+                            optional)
+   fi
    AC_LANG([C])
 
    if test "$HAVE_HYPRE" = "yes" ; then
@@ -4058,9 +4074,6 @@ if test "$sci_required_cuda" = "yes"; then
   HAVE_CUDA_H=""
   INC_CUDA_H=""
   CUDA_LIB_DIR=""
-  NVCCEXT=""
-  NVCC_MODULE_FLAGS=""
-  DEF_PTXDIR_ABS=""
 
   # all the -L's
   CUDA_LIB_DIR_FLAG=""
@@ -4077,7 +4090,10 @@ if test "$sci_required_cuda" = "yes"; then
 # code to compile and test various system GPU/CUDA properties
 # (these files, etc are deleted after tests)
 #------------------------------------------------------------------------------
-# test CUDA and CUDA_SDK libraries and headers
+# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
+# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
+
+# test CUDA libraries and headers
   cat > cuda_conf_test.cu << EOF
 #include <stdlib.h>
 #include <stdio.h>
@@ -4116,12 +4132,12 @@ int main(int argc, char **argv) {
 		printf("a:%d = %f\n", i, *(results+i));
 	}
 
-  cudaFree(dev_a);
-  cudaFree(dev_results);
-  free(a);
-  free(results);
+    cudaFree(dev_a);
+    cudaFree(dev_results);
+    free(a);
+    free(results);
 
-	cudaDeviceReset();
+  cudaDeviceReset();
 
 	return 1;
 }
@@ -4159,8 +4175,6 @@ echo
 #echo "LDFLAGS           = " $LDFLAGS
 #echo "CFLAGS            = " $CFLAGS
 #echo "CXXFLAGS          = " $CXXFLAGS
-#echo "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
-#echo "DEF_PTXDIR_ABS    = " $DEF_PTXDIR_ABS
 #echo
 
 fi #end sci_required_cuda
@@ -4174,9 +4188,6 @@ AC_SUBST(CUDA_LIB_FLAG)
 AC_SUBST(NVCC_CFLAGS)
 AC_SUBST(NVCC_CXXFLAGS)
 AC_SUBST(NVCC_LIBS)
-AC_SUBST(NVCCEXT)
-AC_SUBST(NVCC_MODULE_FLAGS)
-AC_SUBST(DEF_PTXDIR_ABS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
