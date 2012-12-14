@@ -453,3 +453,8 @@ void SimulationState::setDimensionality(bool x, bool y, bool z)
     }
   }
 }
+
+void SimulationState::setUnifiedScheduler(UnifiedScheduler* sched)
+{
+  this->gpuDW = sched;
+}

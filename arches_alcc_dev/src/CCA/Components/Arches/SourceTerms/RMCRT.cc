@@ -140,7 +140,12 @@ RMCRT_Radiation::extraSetup()
   _tempLabel = _labels->getVarlabelByRole("temperature");
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
 
-  _RMCRT = scinew Ray(); 
+#ifdef HAVE_CUDA
+  _RMCRT = scinew Ray(_sharedState->getUnifiedScheduler());
+#else
+  _RMCRT = scinew Ray();
+#endif
+
   _RMCRT->registerVarLabels(_matl, 
                             _abskgLabel,
                             _absorpLabel,
