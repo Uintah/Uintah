@@ -454,7 +454,10 @@ void SimulationState::setDimensionality(bool x, bool y, bool z)
   }
 }
 
+#ifdef HAVE_CUDA
 void SimulationState::setUnifiedScheduler(UnifiedScheduler* sched)
 {
   this->gpuDW = sched;
 }
+#endif
+
