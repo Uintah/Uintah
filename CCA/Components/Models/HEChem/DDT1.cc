@@ -705,7 +705,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
       IntVector c = *iter;
       if (rctVolFrac[c] > 1e-10){ //only look at cells with reactant
         // Detonation model For explosions
-        if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
+        if (press_CC[c] > d_threshold_press_JWL && numPPC[c] > 0){
 
           detonating[c] = 1;   // Flag for detonating 
 
@@ -1138,7 +1138,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
           Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
          // Use the JWL++ model for explosion
-          if(Fr[c] >= 0. && Fr[c] < .99){
+          if(Fr[c] >= 0. && Fr[c] < 1.0){
             delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
           }
           
