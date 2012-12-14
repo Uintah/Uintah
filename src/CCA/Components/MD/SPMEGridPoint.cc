@@ -78,7 +78,18 @@ void SPMEGridPoint<T>::addMapPoint(ParticleVariable<double>& pv,
                                    const double& weight,
                                    const Vector& gradient)
 {
-  SPMEMapPoint<double> newMapPoint(pv, weight, gradient);
+  MapPoint<double> newMapPoint(pv, weight, gradient);
   d_mappedAtoms.push_back(newMapPoint);
+}
+
+template<class T>
+double SPMEGridPoint<T>::calculateCharge()
+{
+  int numMappedAtoms = d_mappedAtoms.size();
+  double gridPointCharge = 0.0;
+  for (int atom = 0; atom < numMappedAtoms; ++atom) {
+    gridPointCharge += d_mappedAtoms[atom].getParticleCharge() * d_mappedAtoms[atom].chargeWeight();
+  }
+  return gridPointCharge;
 }
 

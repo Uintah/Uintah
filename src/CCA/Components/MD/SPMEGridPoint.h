@@ -45,26 +45,62 @@ using SCIRun::IntVector;
 template<class T> class SPMEGridPoint {
 
   public:
+
+    /**
+     * @brief
+     * @param
+     */
     SPMEGridPoint();
 
+    /**
+     * @brief
+     * @param
+     */
     ~SPMEGridPoint();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void mapChargeToAtoms();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void mapForceToAtoms();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void mapChargeFromAtoms();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void addMapPoint(ParticleVariable<double>& pv,
                      const double& weight,
                      const Vector& gradient);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    double calculateCharge();
+
   private:
-    double d_gridPointCharge;
-    double d_totalChargeContributionWeight;
-    double d_totalChargeCoefficientWeight;
-    Vector d_field;
-    std::vector<MapPoint<double> > d_mappedAtoms;
+    double d_gridPointCharge;                     //!<
+    double d_totalChargeContributionWeight;       //!<
+    double d_totalChargeCoefficientWeight;        //!<
+    Vector d_field;                               //!<
+    std::vector<MapPoint<double> > d_mappedAtoms; //!<
 
 };
 

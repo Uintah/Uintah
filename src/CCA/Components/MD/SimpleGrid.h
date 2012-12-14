@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_SIMPLE_GRID_H
-#define UINTAH_MD_SIMPLE_GRID_H
+#ifndef UINTAH_MD_SIMPLEGRID_H
+#define UINTAH_MD_SIMPLEGRID_H
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Containers/Array3.h>
@@ -44,9 +44,9 @@ class Patch;
  *  @author Alan Humphrey and Justin Hooper
  *  @date   December, 2012
  *
- *  @brief A lightweight representation of the local grid and supporting operationsto hold charge for the SPME routine.
+ *  @brief A lightweight representation of the local grid and supporting operations involved in the SPME routine.
  *
- *  @param T The data type for this SimpleGrid. Should be double or std::complex<double>>
+ *  @param T The data type for this SimpleGrid. Should be double, std::complex<double>> or a std::vector of these
  */
 template<typename T> class SimpleGrid {
 
@@ -169,7 +169,6 @@ template<typename T> class SimpleGrid {
      *              as the specified SimpleGrid, flase otherwise.
      */
     bool verifyRegistration(SimpleGrid<T>& gridIn);
-
 
     //-------------------------------------------------------------------------------------
     // Beware high expense temporary creation; meta-template.

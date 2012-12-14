@@ -22,14 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_SPME_GRID_H
-#define UINTAH_MD_SPME_GRID_H
+#ifndef UINTAH_MD_SPMEGRID_H
+#define UINTAH_MD_SPMEGRID_H
 
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/MapPoint.h>
-#include <Core/Datatypes/Matrix.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Array3.h>
@@ -39,44 +38,101 @@
 
 namespace Uintah {
 
-class Matrix;
+using Uintah::Matrix3;
 
-typedef SimpleGrid<std::complex<double > > cdGrid;
+typedef SimpleGrid<std::complex<double> > cdGrid;
 
+/**
+ *  @class SPMEGrid
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper
+ *  @date   December, 2012
+ *
+ *  @brief
+ *
+ *  @param T The data type for this SPMEGrid. Should be double or std::complex<double>>.
+ */
 template<class T> class SPMEGrid {
 
-    public:
-      // Functions to take care of mapping from point to grid and back again
-      SPMEGrid& mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap, const ParticleSubset& globalParticleList);
+  public:
 
-      SPMEGrid& mapForceFromGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap, ParticleSubset& globalParticleList) const;
+    /**
+     * @brief Map points (charges) onto the underlying grid.
+     * @param
+     * @return
+     */
+    SPMEGrid<T>& mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap,
+                                 const ParticleSubset& globalParticleList);
 
-      SPMEGrid& multiplyInPlace(const cdGrid& GridIn) { Q *= GridIn; FieldValid=false; return *this; }; // Multiply Q * GridIn
+    /**
+     * @brief Map forces from grid back to points.
+     * @param
+     * @return
+     */
+    SPMEGrid<T>& mapForceFromGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap,
+                                  ParticleSubset& globalParticleList) const;
 
-      double calculateEnergyAndStress(const vector<double>& M1,
+    /**
+     * @brief Multiply Q with the specified SimpleGrid.
+     * @param gridIn The multiplier
+     * @return SPMEGrid<T>& The result (*this) of the in-place multiplication.
+     */
+    inline SPMEGrid<T>& multiplyInPlace(const cdGrid& gridIn)
+    {
+      Q *= gridIn;
+      d_fieldValid = false;
+      return *this;
+    }
+
+    /**
+     * @brief Calculates local energy of charge grid.
+     * @param
+     * @param
+     * @param
+     * @param
+     * @param
+     * @param
+     * @return
+     */
+    double calculateEnergyAndStress(const vector<double>& M1,
                                     const vector<double>& M2,
                                     const vector<double>& M3,
-                                    Matrix StressTensor,
-                                    const cdGrid& StressPrefactor, const cdGrid& ThetaRecip); // Returns local energy of charge grid;
+                                    Matrix3 stressTensor,
+                                    const cdGrid& stressPrefactor,
+                                    const cdGrid& thetaRecip);
 
-      SPMEGrid& CalculateField();  // if (FieldValid == false) { calculate field grid; set FieldValid == true; return *this; }
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    SPMEGrid<T>& calculateField();  // if (FieldValid == false) { calculate field grid; set FieldValid == true; return *this; }
 
-      SPMEGrid& inPlaceFFT_RealToFourier(/*Data for FFT routine goes here */); // Transforms Q from real to fourier space;
-      SPMEGrid& inPlaceFFT_FourierToReal(/*Data for FFT routine goes here */); // Transforms Q' from fourier to real space;
+    /**
+     * @brief Transforms 'Q' from real to fourier space
+     * @param
+     * @return
+     */
+    SPMEGrid<T>& inPlaceFFT_RealToFourier(/*Data for FFTW3 routine goes here */);
 
-    private:
-        IntVector          Extent; // See below
-        IntVector          Offset; // See below
-        cdGrid             Q;
-        SimpleGrid<Vector> Field;
-        bool FieldValid; // =false;
-        // Alan - Must deal with ghosts here in the same way as in SimpleGrid;  Alternatively we can get rid of extent/offset for SPME_Grid
-        //        entirely and pass through extent/offset calls to the underlying SimpleGrid data type.  If we do this, then we need to ensure
-        //        registration of Q and Field extent/offset on construction.  This probably isn't a bad idea, since ideally we will construct
-        //        an SPME_Grid instance with either Q set and Field zero'ed out, or both Q and Field zero'd out, so we can just construct
-        //        Field as a subprocess of constructing the SPME_Grid object by extracting the relevant data from the Q grid and passing it to
-        //        Field's constructor.  This is just more complex construction than I'm used to, so I'm not going to even take a stab at that here.
+    /**
+     * @brief Transforms 'Q' from fourier to real space
+     * @param
+     * @return
+     */
+    SPMEGrid<T>& inPlaceFFT_FourierToReal(/*Data for FFTW3 routine goes here */);
 
+  private:
+    cdGrid Q;                    //!<
+    SimpleGrid<Vector> d_field;  //!<
+    bool d_fieldValid;           //!< =false;
+
+    // Alan - Must deal with ghosts here in the same way as in SimpleGrid;  Alternatively we can get rid of extent/offset for SPME_Grid
+    //        entirely and pass through extent/offset calls to the underlying SimpleGrid data type.  If we do this, then we need to ensure
+    //        registration of Q and Field extent/offset on construction.  This probably isn't a bad idea, since ideally we will construct
+    //        an SPME_Grid instance with either Q set and Field zero'ed out, or both Q and Field zero'd out, so we can just construct
+    //        Field as a subprocess of constructing the SPME_Grid object by extracting the relevant data from the Q grid and passing it to
+    //        Field's constructor.  This is just more complex construction than I'm used to, so I'm not going to even take a stab at that here.
 
 };
 

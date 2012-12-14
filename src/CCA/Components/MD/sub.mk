@@ -34,9 +34,11 @@ SRCDIR	:= CCA/Components/MD
 
 SRCS += $(SRCDIR)/MD.cc                \
         $(SRCDIR)/MDLabel.cc           \
-        $(SRCDIR)/SimpleGrid.cc    \
-        $(SRCDIR)/SPMEGrid.cc     \
-        $(SRCDIR)/MapPoint.cc      \
+        $(SRCDIR)/Electrostatics.cc    \
+        $(SRCDIR)/MDSystem.cc          \
+        $(SRCDIR)/SimpleGrid.cc        \
+        $(SRCDIR)/SPMEGrid.cc          \
+        $(SRCDIR)/MapPoint.cc          \
         $(SRCDIR)/SPMEGridMap.cc       \
         $(SRCDIR)/SPMEGridPoint.cc     \
         $(SRCDIR)/Transformation3D.cc  \

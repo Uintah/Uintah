@@ -22,11 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_MAP_POINT_H
-#define UINTAH_MD_MAP_POINT_H
+#ifndef UINTAH_MD_MAPPOINT_H
+#define UINTAH_MD_MAPPOINT_H
 
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Array3.h>
@@ -35,13 +34,22 @@
 #include <Core/Grid/Variables/CellIterator.h>
 
 #include <vector>
-#include <list>
 
 namespace Uintah {
 
 using SCIRun::Vector;
 using SCIRun::IntVector;
 
+/**
+ *  @class MapPoint
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper
+ *  @date   December, 2012
+ *
+ *  @brief
+ *
+ *  @param
+ */
 template<class T> class MapPoint {
 
   public:

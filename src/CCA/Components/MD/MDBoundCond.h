@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_BOUND_COND_H
-#define UINTAH_MD_BOUND_COND_H
+#ifndef UINTAH_MD_BOUNDCOND_H
+#define UINTAH_MD_BOUNDCOND_H
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -32,6 +32,16 @@ namespace Uintah {
 
 using namespace SCIRun;
 
+/**
+ *  @class MDDoundCond
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper
+ *  @date   December, 2012
+ *
+ *  @brief
+ *
+ *  @param
+ */
 class MDBoundCond {
 
   public:
