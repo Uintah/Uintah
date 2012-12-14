@@ -828,26 +828,26 @@ private:
   string d_enthalpy_name; 
   const VarLabel* d_enthalpy_label; 
 
-  IntVector d_ijk_den_ref;                ///< Reference density location
+  IntVector d_ijk_den_ref;                      ///< Reference density location
 
-  IndexMap d_depVarIndexMap;               ///< Reference to the integer location of the variable
-  mutable CrowdMonitor depVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
-  IndexMap d_enthalpyVarIndexMap;          ///< Referece to the integer location of variables for heat loss calculation
+  IndexMap d_depVarIndexMap;                    ///< Reference to the integer location of the variable
+  IndexMap d_enthalpyVarIndexMap;               ///< Reference to the integer location of variables for heat loss calculation
+  mutable CrowdMonitor depVarIndexMapLock;      ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
+  mutable CrowdMonitor enthalpyVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_enthalpyVarIndexMap
 
-  std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
-  std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
+  std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
+  std::vector<string> d_allDepVarUnits;         ///< Units for the dependent variables
 
-  vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+  vector<string> d_allUserDepVarNames;          ///< Vector storing all independent variable names requested in input file
 
   BoundaryCondition_new* _boundary_condition; 
 
   void checkForConstants( const string & inputfile );
 
   //previous Arches specific variables: 
-  std::vector<std::vector<double> > i1; 
-  std::vector <std::vector <double> > table;
-	
-  std::vector <std::vector <double> > indep_headers;
+  std::vector <std::vector<double> > i1;
+  std::vector <std::vector<double> > table;
+  std::vector <std::vector<double> > indep_headers;
 
   /// A dependent variable wrapper
   struct ADepVar {
