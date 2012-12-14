@@ -55,7 +55,8 @@ using namespace Uintah;
 // Default Constructor 
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels ), depVarIndexMapLock("ARCHES d_depVarIndexMap lock")
+  MixingRxnModel( labels, MAlabels ), depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
+  enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
 {
   _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
@@ -111,7 +112,8 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   cout_tabledbg << " Creating the independent variable map " << endl;
 
-  for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
+  size_t numIvVarNames = d_allIndepVarNames.size();
+  for ( unsigned int i = 0; i < numIvVarNames; ++i ){
 
     //put the right labels in the label map
     string var_name = d_allIndepVarNames[i];  
@@ -316,7 +318,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
-    for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+    int size = (int)d_allIndepVarNames.size();
+    for ( int i = 0; i < size; i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
 
@@ -880,14 +883,18 @@ ClassicTableInterface::getIndexInfo()
     std::string name = i->first; 
     int index = findIndex( name ); 
 
-    depVarIndexMapLock.writeLock();
-    IndexMap::iterator iter = d_depVarIndexMap.find( name );   
+    depVarIndexMapLock.readLock();
+    IndexMap::iterator iter = d_depVarIndexMap.find( name );
+    depVarIndexMapLock.readUnlock();
+
     // Only insert variable if it isn't already there. 
     if ( iter == d_depVarIndexMap.end() ) {
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
+
+      depVarIndexMapLock.writeLock();
       iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
+      depVarIndexMapLock.writeUnlock();
     }
-    depVarIndexMapLock.writeUnlock();
   }
 }
 
@@ -895,6 +902,7 @@ ClassicTableInterface::getIndexInfo()
   void 
 ClassicTableInterface::getEnthalpyIndexInfo()
 {
+  enthalpyVarIndexMapLock.writeLock();
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
   int index = findIndex( "sensibleenthalpy" ); 
 
@@ -906,6 +914,7 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 
   index = findIndex( "density" ); 
   d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
+  enthalpyVarIndexMapLock.writeUnlock();
 }
 
 //-------------------------------------

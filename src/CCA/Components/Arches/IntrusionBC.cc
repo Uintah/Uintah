@@ -15,7 +15,8 @@ using namespace Uintah;
 
 //_________________________________________
 IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
-  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL)
+  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL),bc_face_iterator_lock("ARCHES bc_face_iterator lock"),
+  interior_cell_iterator_lock("ARCHES interior_cell_iterator lock")
 {
   // helper for the intvector direction 
   _dHelp.push_back( IntVector(-1,0,0) ); 
@@ -521,6 +522,7 @@ IntrusionBC::sched_setCellType( SchedulerP& sched,
   }
   sched->addTask(tsk, patches, matls); 
 }
+
 void 
 IntrusionBC::setCellType( const ProcessorGroup*, 
                           const PatchSubset* patches, 
