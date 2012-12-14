@@ -24,12 +24,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _MAlab(MAlab), 
   _bc(bc), 
   _my_world(my_world)
-{
-
-  // NOTE: This boundary condition here is bogus.  Passing it for 
-  // now until the boundary condition reference can be stripped out of 
-  // the radiation model. 
-  
+{  
   _label_sched_init = false; 
   
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
@@ -54,13 +49,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   //__________________________________
   //  define the materialSet
   int archIndex = 0;
-  _matl = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  
-  _matlSet = scinew MaterialSet();
-  vector<int> m;
-  m.push_back(_matl);
-  _matlSet->addAll(m);
-  _matlSet->addReference();
+  _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
 }
 //______________________________________________________________________
 //
@@ -139,7 +128,7 @@ RMCRT_Radiation::extraSetup()
 { 
   _tempLabel = _labels->getVarlabelByRole("temperature");
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
-
+  
 #ifdef HAVE_CUDA
   _RMCRT = scinew Ray(_sharedState->getUnifiedScheduler());
 #else
@@ -169,9 +158,22 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                                       SchedulerP& sched, 
                                       int timeSubStep )
 {
+  GridP grid = level->getGrid();
+  
+#if 0
+  //__________________________________
+  //  Multi-level related
+  
+  int archesLevelIndex = grid->numLevels()-1; // this is the finest level
+  
+  if(level->getIndex() != archesLevelIndex){  // only schedule once
+    return;
+  }
+#endif
   if(level->getIndex() > 0){  // only schedule once
     return;
   }
+
 
   int timestep = _sharedState->getCurrentTopLevelTimeStep();
   if ( timestep%_radiation_calc_freq != 0 ) {  // is it the right timestep
@@ -184,7 +186,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
   printSchedule(level,dbg,"RMCRT_Radiation::sched_computeSource");
   
-  GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
   bool modifies_divQ     =false;
   bool includeExtraCells = false;  // domain for sigmaT4 computation
@@ -314,43 +315,56 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-RMCRT_Radiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+RMCRT_Radiation::sched_initialize( const LevelP& level, 
+                                   SchedulerP& sched )
 {
-  string taskname = "RMCRT_Radiation::dummyInit"; 
+  _matlSet = _shared_state->allArchesMaterials();
 
-  Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::dummyInit);
+#if 0
+  string taskname = "RMCRT_Radiation::initialize"; 
+
+  Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
   printSchedule(level,dbg,taskname);
 
   tsk->computes( _src_label  );
-  tsk->computes( _tempLabel );
   tsk->computes( _abskgLabel );
   tsk->computes( _sigmaT4Label );
 
   sched->addTask(tsk, level->eachPatch(), _matlSet);
+
+  
+  //__________________________________
+  // cellType initialization
+  const PatchSet* patches = level->eachPatch();
+  if ( _bc->isUsingNewBC() ) {
+    _bc->sched_cellTypeInit__NEW( sched, patches, _matlSet );
+  } else {
+    _bc->sched_cellTypeInit(sched, patches, _matlSet);
+  }
+ #endif
+
 }
 //______________________________________________________________________
 //
 void 
-RMCRT_Radiation::dummyInit( const ProcessorGroup*,
-                      const PatchSubset* patches, 
-                      const MaterialSubset*, 
-                      DataWarehouse* , 
-                      DataWarehouse* new_dw )
+RMCRT_Radiation::initialize( const ProcessorGroup*,
+                             const PatchSubset* patches, 
+                             const MaterialSubset*, 
+                             DataWarehouse* , 
+                             DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::dummyInit");
+    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
 
     CCVariable<double> divQ;
-    CCVariable<double> temp;
     CCVariable<double> abskg;
     CCVariable<double> sigmaT4;
     
-    new_dw->allocateAndPut( temp,     _tempLabel,    _matl, patch );
     new_dw->allocateAndPut( abskg,    _abskgLabel,    _matl, patch );
     new_dw->allocateAndPut( divQ,     _src_label,     _matl, patch );
     new_dw->allocateAndPut( sigmaT4,  _sigmaT4Label,  _matl, patch );
@@ -360,8 +374,7 @@ RMCRT_Radiation::dummyInit( const ProcessorGroup*,
     abskg.initialize( 0. );
     
      // set boundary conditions 
-    _RMCRT->setBC(temp,   _tempLabel->getName(),  patch, _matl);
-    _RMCRT->setBC(abskg,  _abskgLabel->getName(), patch, _matl);
+    _RMCRT->setBC(abskg,  _abskgLabel->getName(), patch, _matl);    
   }
 }
 
