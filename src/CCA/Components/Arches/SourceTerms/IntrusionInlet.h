@@ -65,12 +65,12 @@ namespace Uintah{
             DataWarehouse* old_dw, 
             DataWarehouse* new_dw, 
             int timeSubStep );
-        void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-        void dummyInit( const ProcessorGroup* pc, 
-            const PatchSubset* patches, 
-            const MaterialSubset* matls, 
-            DataWarehouse* old_dw, 
-            DataWarehouse* new_dw );
+        void sched_initialize( const LevelP& level, SchedulerP& sched );
+        void initialize( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw );
 
         class Builder
           : public SourceTermBase::Builder { 
@@ -332,14 +332,14 @@ namespace Uintah{
     }
 
   //---------------------------------------------------------------------------
-  // Method: Schedule dummy initialization
+  // Method: Schedule initialization
   //---------------------------------------------------------------------------
   template <typename sT>
-    void IntrusionInlet<sT>::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+    void IntrusionInlet<sT>::sched_initialize( const LevelP& level, SchedulerP& sched )
     {
-      string taskname = "IntrusionInlet::dummyInit"; 
+      string taskname = "IntrusionInlet::initialize"; 
 
-      Task* tsk = scinew Task(taskname, this, &IntrusionInlet::dummyInit);
+      Task* tsk = scinew Task(taskname, this, &IntrusionInlet::initialize);
 
       tsk->computes(_src_label);
 
@@ -354,7 +354,7 @@ namespace Uintah{
 
     }
   template <typename sT>
-    void IntrusionInlet<sT>::dummyInit( const ProcessorGroup* pc, 
+    void IntrusionInlet<sT>::initialize( const ProcessorGroup* pc, 
         const PatchSubset* patches, 
         const MaterialSubset* matls, 
         DataWarehouse* old_dw, 

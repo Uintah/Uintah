@@ -333,14 +333,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-WestbrookDryer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+WestbrookDryer::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "WestbrookDryer::dummyInit"; 
+  string taskname = "WestbrookDryer::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::initialize);
 
   tsk->computes(_src_label);
 
@@ -352,11 +352,11 @@ WestbrookDryer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-WestbrookDryer::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+WestbrookDryer::initialize( const ProcessorGroup* pc, 
+                            const PatchSubset* patches, 
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

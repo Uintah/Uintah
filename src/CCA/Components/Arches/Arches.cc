@@ -1982,29 +1982,19 @@ Arches::sched_scalarInit( const LevelP& level,
     tsk->computes( tempVar );
     tsk->computes( oldtempVar );
   }
-
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
-
-    SourceTermBase* src = isrc->second;
-    string src_name = isrc->first;
-    const VarLabel* srcVarLabel = src->getSrcLabel();
-    tsk->computes( srcVarLabel );
-
-    vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels();
-
-    for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
-      tsk->computes( *iexsrc );
-    }
-
-
-  }
-
+  
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
+  //__________________________________
+  //  initialize src terms
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+    SourceTermBase* src = isrc->second;
+    src->sched_initialize(level, sched);
+  }
 }
 
 //______________________________________________________________________
@@ -2050,32 +2040,6 @@ Arches::scalarInit( const ProcessorGroup* ,
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, phi );
 
-    }
-
-    // DQMOM sources are not stored in this factory but rather by the DQMOMEqn itself
-    // so the DQMOM source initialization is performed in DQMOMinit.
-    SourceTermFactory& srcFactory = SourceTermFactory::self();
-    SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-    for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
-      SourceTermBase* src = isrc->second;
-      string src_name = isrc->first;
-
-      proc0cout << " found a source: " << src_name << endl;
-
-      const VarLabel* srcVarLabel = src->getSrcLabel();
-      vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels();
-
-      CCVariable<double> tempSource;
-
-      new_dw->allocateAndPut( tempSource, srcVarLabel, matlIndex, patch );
-
-      tempSource.initialize(0.0);
-
-      for (vector<const VarLabel*>::iterator iexsrc = extraLocalLabels.begin(); iexsrc != extraLocalLabels.end(); iexsrc++){
-        CCVariable<double> extraVar;
-        new_dw->allocateAndPut( extraVar, *iexsrc, matlIndex, patch );
-        extraVar.initialize(0.0);
-      }
     }
   }
   proc0cout << endl;

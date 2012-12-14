@@ -71,14 +71,14 @@ public:
                       DataWarehouse* , 
                       int timeSubStep );
   
-  void sched_dummyInit( const LevelP& level, 
-                        SchedulerP& sched );
+  void sched_initialize( const LevelP& level, 
+                         SchedulerP& sched );
   
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   //______________________________________________________________________
   class Builder
@@ -136,7 +136,7 @@ private:
   //
   int _radiation_calc_freq;
   int _matl;
-  MaterialSet* _matlSet;
+  const MaterialSet* _matlSet;
   
 
   bool _all_rk; 
