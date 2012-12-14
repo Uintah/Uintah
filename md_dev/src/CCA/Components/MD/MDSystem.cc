@@ -22,44 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_TRANSFORMATION3D_H
-#define UINTAH_MD_TRANSFORMATION3D_H
-
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Variables/Array3.h>
+#include <CCA/Components/MD/MDSystem.h>
+#include <Core/Math/UintahMiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 
-#include <vector>
+#include <iostream>
 
-namespace Uintah {
+#include <sci_values.h>
 
-using SCIRun::Vector;
-using SCIRun::IntVector;
+using namespace Uintah;
+using namespace SCIRun;
 
-/**
- *  @class Transformation3D
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   December, 2012
- *
- *  @brief
- *
- *  @param
- */
-template<class T> class Transformation3D {
+MDSystem::MDSystem()
+{
 
-  public:
-    Transformation3D();
+}
 
-    ~Transformation3D();
+MDSystem::~MDSystem()
+{
 
-  private:
-
-};
-
-}  // End namespace Uintah
-
-#endif
+}

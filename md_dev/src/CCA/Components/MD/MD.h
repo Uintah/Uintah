@@ -31,6 +31,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/SPMEGrid.h>
 #include <CCA/Components/MD/SPMEGridMap.h>
 #include <CCA/Components/MD/MapPoint.h>
@@ -54,136 +55,206 @@ class SimpleMaterial;
 class MD : public UintahParallelComponent, public SimulationInterface {
 
   public:
+
+    /**
+     * @brief
+     * @param
+     */
     MD(const ProcessorGroup* myworld);
 
+    /**
+     * @brief
+     * @param
+     */
     virtual ~MD();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP&);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     virtual void scheduleInitialize(const LevelP& level,
                                     SchedulerP& sched);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     virtual void scheduleComputeStableTimestep(const LevelP& level,
                                                SchedulerP&);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     virtual void scheduleTimeAdvance(const LevelP& level,
                                      SchedulerP&);
 
-    virtual void scheduleSPME(SchedulerP& sched,
-                              const Patch* patch,
-                              const MaterialSet* matls);
-
   protected:
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void scheduleCalculateNonBondedForces(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void schedulePerformSPME(SchedulerP& sched,
+                             const PatchSet* patched,
+                             const MaterialSet* matls);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void scheduleUpdatePosition(SchedulerP& sched,
                                 const PatchSet* patches,
                                 const MaterialSet* matls);
 
   private:
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void performSPME(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline bool containsAtom(const IntVector &l,
                              const IntVector &h,
-                             const Point &p)
+                             const Point &p) const
     {
       return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void generateNeighborList();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                          const Transformation3D<std::complex<double> >& invertSpace);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void extractCoordinates();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     bool isNeighbor(const Point* atom1,
                     const Point* atom2);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void initialize(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void computeStableTimestep(const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
 
-    vector<double> generateMVector(int Points,
-                                   int Shift,
-                                   int Max);
-
-    vector<std::complex<double> > generateBVector(const int& points,
-                                                  const vector<double>& M,
-                                                  const int& max,
-                                                  const int& splineOrder,
-                                                  const vector<double>& splineCoeff);
-
-    void calculateStaticGrids(const SPMEGrid<std::complex<double> >& localSPMEGrid,
-                              const ParticleSubset& system,
-                              SPMEGrid<std::complex<double> >& fB,
-                              SPMEGrid<std::complex<double> >& fC,
-                              SPMEGrid<std::complex<double> >& stressPreMult);
-
-    void solveSPMECharge();
-
-    SPMEGridMap<double> createSPMEChargeMap(const SPMEGrid<std::complex<double> >& SPMEGlobalGrid,
-                                            const Patch& CurrentPatch,
-                                            const ParticleSubset& globalParticleSubset);
-
-    void spmeMapChargeToGrid(SPMEGrid<std::complex<double> >& LocalGridCopy,
-                             const SPMEGridMap<std::complex<double> >& LocalGridMap,
-                             const Patch& CurrentPatch);
-
-    SPMEGrid<double> fC(const IntVector& GridExtents,
-                        const ParticleSubset& globalParticleSubset);
-
-    SPMEGrid<std::complex<double> > fB(const IntVector& GridExtents,
-                                       const ParticleSubset& globalParticleSubset);
-
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void calculateNonBondedForces(const ProcessorGroup* pg,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void updatePosition(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);
 
-    MDLabel* lb;
-    SimulationStateP d_sharedState_;
-    SimpleMaterial* mymat_;
+    MDLabel* lb;                     //!<
+    SimulationStateP d_sharedState_; //!<
+    SimpleMaterial* mymat_;          //!<
     double delt_;
 
-    std::vector<std::vector<const VarLabel*> > d_particleState;
-    std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
+    std::vector<std::vector<const VarLabel*> > d_particleState;           //!<
+    std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;  //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
-    string coordinateFile_;
-    unsigned int numAtoms_;
-    double cutoffRadius_;  // the short ranged cut off distances (in Angstroms)
-    Vector box_;  // the size of simulation
-    double R12_;  // this is the v.d.w. repulsive parameter
-    double R6_;  // this is the v.d.w. attractive parameter
+    string coordinateFile_;  //!<
+    unsigned int numAtoms_;  //!<
+    double cutoffRadius_;    //!< The short ranged cut off distances (in Angstroms)
+    Vector box_;             //!< The size of simulation
+    double R12_;             //!< This is the v.d.w. repulsive parameter
+    double R6_;              //!< This is the v.d.w. attractive parameter
 
     // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-    std::vector<Point> atomList;
-    std::vector<vector<int> > neighborList;
+    std::vector<Point> atomList;             //!<
+    std::vector<vector<int> > neighborList;  //!<
+
+    Electrostatics* elctrostatics;           //!<
 
     // copy constructor and operator=
-    MD(const MD&);
-    MD& operator=(const MD&);
+    MD(const MD&);                           //!<
+    MD& operator=(const MD&);                //!<
 };
 }
 

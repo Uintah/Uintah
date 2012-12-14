@@ -22,15 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_TRANSFORMATION3D_H
-#define UINTAH_MD_TRANSFORMATION3D_H
+#ifndef UINTAH_MD_MDSYSTEM_H
+#define UINTAH_MD_MDSYSTEM_H
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
 
 #include <vector>
 
@@ -40,7 +38,7 @@ using SCIRun::Vector;
 using SCIRun::IntVector;
 
 /**
- *  @class Transformation3D
+ *  @class MDSystem
  *  @ingroup MD
  *  @author Alan Humphrey and Justin Hooper
  *  @date   December, 2012
@@ -49,12 +47,12 @@ using SCIRun::IntVector;
  *
  *  @param
  */
-template<class T> class Transformation3D {
+class MDSystem {
 
   public:
-    Transformation3D();
+    MDSystem();
 
-    ~Transformation3D();
+    ~MDSystem();
 
   private:
 
