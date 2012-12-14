@@ -31,6 +31,7 @@
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
 
 #include   <string>
@@ -83,6 +84,7 @@ class MPMArchesLabel;
 class TimeIntegratorLabel; 
 class BoundaryCondition_new; 
 class MixingRxnModel;
+
 class ClassicTableInterface : public MixingRxnModel {
 
 public:
@@ -828,8 +830,9 @@ private:
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
-  IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
+  IndexMap d_depVarIndexMap;               ///< Reference to the integer location of the variable
+  mutable CrowdMonitor depVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
+  IndexMap d_enthalpyVarIndexMap;          ///< Referece to the integer location of variables for heat loss calculation
 
   std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
   std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 

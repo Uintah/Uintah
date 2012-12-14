@@ -55,10 +55,9 @@ using namespace Uintah;
 // Default Constructor 
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels )
+  MixingRxnModel( labels, MAlabels ), depVarIndexMapLock("ARCHES d_depVarIndexMap lock")
 {
   _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
- 
 }
 
 //--------------------------------------------------------------------------- 
@@ -881,14 +880,14 @@ ClassicTableInterface::getIndexInfo()
     std::string name = i->first; 
     int index = findIndex( name ); 
 
+    depVarIndexMapLock.writeLock();
     IndexMap::iterator iter = d_depVarIndexMap.find( name );   
     // Only insert variable if it isn't already there. 
     if ( iter == d_depVarIndexMap.end() ) {
-
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
       iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
-
     }
+    depVarIndexMapLock.writeUnlock();
   }
 }
 
