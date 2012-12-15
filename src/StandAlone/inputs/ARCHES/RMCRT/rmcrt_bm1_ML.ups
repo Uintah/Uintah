@@ -27,17 +27,11 @@
     <filebase>rmcrt_bm1_ML.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="uVelocitySPBC"  levels = "2"/>
-    <save label="vVelocitySPBC"  levels = "2"/>
-    <save label="wVelocitySPBC"  levels = "2"/>
-    <save label="mixture_f"      levels = "2"/>
-<!--    <save label="divQ"/>
-    <save label="abskg"/>
-    <save label="temperature"/>
-    <save label="sigmaT4"/>
-    <save label="cellType"/>
-    <save label = "boundFlux" /> -->
-
+    <save label="divQ" />
+    <save label="abskg" />
+    <save label="sigmaT4" />
+    <save label="cellType" />
+    
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -155,20 +149,20 @@
     </BoundaryConditions>
 
     <Level>
-      <Box label = "0">                              
+      <Box label = "0">           <!-- coarse Level -->                     
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [20,20,20]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
     </Level>
     
     <Level>
-      <Box label = "0">                              
+      <Box label = "1">           <!-- fine Level -->                               
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [40,40,40]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -227,26 +221,30 @@
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-<!--          <src label="divQ"/>  -->
+          <src label="divQ"/>
         </Eqn>
-<!--
+
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
             <RMCRT>
-                <randomSeed>         false     </randomSeed>
+                <randomSeed>        false     </randomSeed>
                 <abskg>             999        </abskg>
                 <NoOfRays>          25         </NoOfRays>
                 <Threshold>         0.05       </Threshold>
-                <solveBoundaryFlux> true       </solveBoundaryFlux>
+                <solveBoundaryFlux> false       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-                <property_calculator type="burns_christon">
-             
-                </property_calculator>
+                
+                <property_calculator type="burns_christon"/>   
+                
+                <!-- compute rmcrt on coarse level -->
+                <algorithm type='RMCRT_coarseLevel'>
+                  <orderOfInterpolation>  1    </orderOfInterpolation>
+                </algorithm>
+                
             </RMCRT>
           </src>
        </Sources> 
--->
       </TransportEqns>
 
       <Turbulence model="smagorinsky">

@@ -760,6 +760,24 @@
                   <mix_mol_w_label       spec="OPTIONAL STRING"/> <!-- default is "mixture_molecular_weight" --> 
                 </grey_gas>
               </property_calculator> 
+              
+
+              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+                                    
+                <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+                <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+        
+                <ROI_extents            spec="OPTIONAL NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+    
+                  <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          
+                  <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                </ROI_extents>
+              </algorithm>
+              
             </RMCRT>
 
             
