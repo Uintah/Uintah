@@ -212,11 +212,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
   printSchedule(level,dbg,"RMCRT_Radiation::sched_computeSource");
 
+
+  // common flags
   bool modifies_divQ     = false;
-  bool includeExtraCells = false;  // domain for sigmaT4 computation
-  
-  Task::WhichDW temp_dw = Task::OldDW;
-  
+  const bool includeExtraCells = false;  // domain for sigmaT4 computation
+
   if (timeSubStep == 0 && !_label_sched_init) {
     modifies_divQ  = false;
   } else {
@@ -224,11 +224,52 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   }
   
   //______________________________________________________________________
+  //   D A T A   O N I O N   A P P R O A C H
+  if( _whichAlgo == dataOnion ){
+    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    Task::WhichDW temp_dw = Task::OldDW;
+    
+    // modify Radiative properties on the finest level
+    // compute Radiative properties and sigmaT4 on the finest level
+    sched_radProperties( fineLevel, sched, timeSubStep );
+    
+    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
+ 
+    _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
+        
+    // coarsen data to the coarser levels.  
+    // do it in reverse order
+    Task::WhichDW notUsed = Task::OldDW;
+    const bool backoutTemp = true;
+    
+    for (int l = maxLevels - 2; l >= 0; l--) {
+      const LevelP& level = grid->getLevel(l);
+      const bool modifies_abskg   = false;
+      const bool modifies_sigmaT4 = false;
+      _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
+      _RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
+    }
+    
+    //__________________________________
+    //  compute the extents of the rmcrt region of interest
+    //  on the finest level
+    _RMCRT->sched_ROI_Extents( fineLevel, sched );
+    
+    Task::WhichDW abskg_dw   = Task::NewDW;
+    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    bool modifies_divQ       = false;
+    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
+  }
+  
+  
+  
+  //______________________________________________________________________
   //   2 - L E V E L   A P P R O A C H
   //  RMCRT is performed on the coarse level
   // and the results are interpolated to the fine (arches) level
   if( _whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    Task::WhichDW temp_dw = Task::OldDW;
    
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );
