@@ -134,9 +134,10 @@ private:
 
   //__________________________________
   //
-  int _radiation_calc_freq;
-  int _matl;
-  const MaterialSet* _matlSet;
+  int     _radiation_calc_freq;
+
+  int     _matl;
+  MaterialSet* _matlSet;
   
 
   bool _all_rk; 
@@ -165,8 +166,7 @@ private:
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
-
-	std::vector<const VarLabel*> _species_varlabels; 
+  std::vector<const VarLabel*> _species_varlabels; 
 
 }; // end RMCRT
 } // end namespace Uintah
