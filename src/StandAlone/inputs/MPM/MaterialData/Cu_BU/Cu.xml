@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Aluminum -->
+<!-- Copper -->
 <Uintah_Include>
     <include href="MaterialData/Cu_BU/MaterialConstOFHCCopper.xml"/>
     <constitutive_model type="elastic_plastic">
