@@ -537,7 +537,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
           std::string variable_name = d_allIndepVarNames[i]; 
-          string face_name; 
+          string face_name="no name"; 
           string bc_kind="NotSet"; 
           double bc_value = 0.0; 
           bool foundIterator = "false"; 
@@ -550,8 +550,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           if ( foundIterator ) { 
             bc_values.push_back( bc_value ); 
-          } else { 
-            throw InvalidValue( "Error: Boundary condition not found for: "+variable_name, __FILE__, __LINE__ ); 
           } 
 
           // currently assuming a constant value across the boundary
