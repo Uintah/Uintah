@@ -135,9 +135,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBO
   }
   fclose( fp );
 
-
-
-  const char * lib = "/Users/cam/code/uintah/reader_latest/lib/libStandAlone_tools_uda2vis.dylib";
+  const char * lib = "@UINTAH_UDA_TO_VIS_LIB@";
   //<ctc> part of the secret of bundling udaReader with VisIt... 
   //const char * lib = "@executable_path/../lib/uintah/libStandAlone_tools_uda2vis.dylib";
 
