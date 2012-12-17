@@ -531,7 +531,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator bound_ptr; 
 
         std::vector<double> bc_values;
-        int iv_counter = 0; 
+        unsigned int iv_counter = 0; 
 
         // look to make sure every variable has a BC set:
         // stuff the bc values into a container for use later
