@@ -3,7 +3,7 @@
 <Uintah_specification>
 
   <Meta>
-      <title>Arenisca_Verification_Test_03c_Isotropic_Kinematic_Hardening</title>
+      <title>Arenisca_Verification_Test_03b_Uniaxial_Strain_With_Isotropic_Hardening</title>
       <!--   See Arenisca user manual (sv://csm-slb) for verification test documentation -->
   </Meta>
 
@@ -18,7 +18,7 @@
   </Time>
 
   <DataArchiver>
-      <filebase>AreniscaTest_03c_IsotropicKinematicHardening.uda</filebase>
+      <filebase>AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.uda</filebase>
       <outputInterval>0.001</outputInterval>
       <save label = "p.x"/>
       <save label = "p.color"/>
@@ -70,8 +70,8 @@
         <constitutive_model type="Arenisca">
             <B0>10000</B0>
             <G0>3750</G0>
-            <hardening_modulus>0.0</hardening_modulus> 				<!-- <hardening_modulus>760.0</hardening_modulus> -->
-            <kinematic_hardening_constant> 30.0 </kinematic_hardening_constant>  <!-- <kinematic_hardening_constant> 30.0 </kinematic_hardening_constant> -->
+            <hardening_modulus>760.0</hardening_modulus>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
             <FSLOPE> 1e-10 </FSLOPE>
             <FSLOPE_p> 1e-10 </FSLOPE_p>
             <PEAKI1> 35.355339059327378e10 </PEAKI1>
