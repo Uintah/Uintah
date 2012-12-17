@@ -346,7 +346,7 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator=(const SimpleGrid<T>& sg)
     {
-      d_charges = sg.d_charges;
+      d_charges.copy(sg.d_charges);          // SCIRun::Array3 assignment operator is private, use copy() method
       d_gridExtents = sg.d_gridExtents;
       d_gridOffset = sg.d_gridOffset;
       d_numGhostCells = sg.d_numGhostCells;
@@ -363,7 +363,9 @@ template<typename T> class SimpleGrid {
      */
     std::ostream& print(std::ostream& out) const;
 
+
   private:
+
     SCIRun::Array3<T> d_charges;  //!< Grid cell values - can be double or std::complex<double>>
     IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
     IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
