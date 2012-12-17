@@ -529,21 +529,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         std::vector<double> iv; 
         Iterator nu;
         Iterator bound_ptr; 
-        bound_ptr.reset(); 
 
         std::vector<double> bc_values;
+        int iv_counter = 0; 
 
         // look to make sure every variable has a BC set:
         // stuff the bc values into a container for use later
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
           std::string variable_name = d_allIndepVarNames[i]; 
-          string face_name="no name"; 
           string bc_kind="NotSet"; 
           double bc_value = 0.0; 
           bool foundIterator = "false"; 
-
-          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
           // The template parameter needs to be generalized here to handle strings, etc...
           foundIterator = 
@@ -551,12 +548,17 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           if ( foundIterator ) { 
             bc_values.push_back( bc_value ); 
+            iv_counter++; 
           } 
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
 
         }
+
+        if ( iv_counter != d_allIndepVarNames.size() ){ 
+          throw InvalidValue( "Error: Could not assemble iv vector for face: "+face, __FILE__, __LINE__); 
+        } 
 
         // now use the last bound_ptr to loop over all boundary cells: 
         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
