@@ -529,6 +529,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         std::vector<double> iv; 
         Iterator nu;
         Iterator bound_ptr; 
+        bound_ptr.reset(); 
 
         std::vector<double> bc_values;
 
