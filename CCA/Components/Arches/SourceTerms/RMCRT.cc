@@ -387,14 +387,7 @@ void
 RMCRT_Radiation::sched_initialize( const LevelP& level, 
                                    SchedulerP& sched )
 {
-   
 
-
-  
-
-  string taskname = "RMCRT_Radiation::sched_initialize"; 
-
-  Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
   
   // HACK This should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
@@ -405,6 +398,9 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   for (int L=0; L< maxLevels; ++L){
   
     if( L != archesLevelIndex ){
+    
+      string taskname = "RMCRT_Radiation::sched_initialize"; 
+      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 
       LevelP level = grid->getLevel(L);
       printSchedule(level,dbg,taskname);
