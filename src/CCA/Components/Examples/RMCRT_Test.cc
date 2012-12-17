@@ -306,7 +306,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   int maxLevels = level->getGrid()->numLevels();
   
   // move data to the new_dw for simplicity
-  for (int l = 0; l <= maxLevels-1; l++) {
+  for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
     d_RMCRT->sched_CarryForward (level, sched, d_colorLabel);
@@ -318,7 +318,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //   D A T A   O N I O N   A P P R O A C H
   if( d_whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* finestPatches = fineLevel->eachPatch();
     Task::WhichDW temp_dw = Task::NewDW;
     
     // modify Radiative properties on the finest level
@@ -348,7 +347,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     Task::WhichDW abskg_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw = Task::NewDW;
-    bool modifies_divQ       = false;
+    const bool modifies_divQ = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
   }
   
@@ -358,7 +357,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // and the results are interpolated to the fine level
   if( d_whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* finestPatches = fineLevel->eachPatch();
     Task::WhichDW temp_dw = Task::NewDW;
    
     // modify Radiative properties on the finest level
@@ -366,20 +364,21 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
     
-    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
-    
-    
-    for (int l = 0; l <= maxLevels-1; l++) {
+    for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = true;
       const bool modifies_sigmaT4 = false;
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
       
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4); 
+    
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
-        bool modifies_divQ       = false;
+        const bool modifies_divQ  = false;
+        const bool backoutTemp    = true;
+        
+        d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
     }
