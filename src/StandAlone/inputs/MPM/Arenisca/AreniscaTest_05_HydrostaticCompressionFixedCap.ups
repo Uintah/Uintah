@@ -50,7 +50,7 @@
     <UseMomentumForm>              false      </UseMomentumForm>
     <withColor>                    true       </withColor>
     <UsePrescribedDeformation>     true       </UsePrescribedDeformation>
-    <PrescribedDeformationFile>   inputs/MPM/Arenisca/verifAreniscaTest_05_PrescribedDeformation.inp </PrescribedDeformationFile>
+    <PrescribedDeformationFile>   inputs/MPM/Arenisca/AreniscaTest_05_PrescribedDeformation.inp </PrescribedDeformationFile>
     <erosion algorithm = "none"/>
   </MPM>
 
