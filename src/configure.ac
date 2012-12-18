@@ -58,7 +58,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
