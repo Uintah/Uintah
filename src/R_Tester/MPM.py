@@ -66,7 +66,9 @@ NIGHTLYTESTS = [
                   #("AreniscaTest_07_HydrostaticCompressionCapEvolution",    "./Arenisca/AreniscaTest_07_HydrostaticCompressionCapEvolution.ups",    1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_08_LoadingUnloading",                      "./Arenisca/AreniscaTest_08_LoadingUnloading.ups",                      1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_09_FluidFilledPoreSpace",                  "./Arenisca/AreniscaTest_09_FluidFilledPoreSpace.ups",                  1,  "Linux", ["exactComparison"] ),                              
-                  
+                  #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "Linux", ["exactComparison"] ),                   
+                  #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "Linux", ["exactComparison"] ),                    
+
                   #----------  Darwin Tests ---------  #
                   ("disks_complex",                       "disks_complex.ups",                       4,  "Darwin", ["doesTestRun"]    ),     
                   ("heatcond2mat",                        "heatcond2mat.ups",                        1,  "Darwin", ["doesTestRun"]    ),     
@@ -93,7 +95,8 @@ NIGHTLYTESTS = [
                   #("AreniscaTest_07_HydrostaticCompressionCapEvolution",    "./Arenisca/AreniscaTest_07_HydrostaticCompressionCapEvolution.ups",    1,  "Darwin", ["exactComparison"] ),
                   #("AreniscaTest_08_LoadingUnloading",                      "./Arenisca/AreniscaTest_08_LoadingUnloading.ups",                      1,  "Darwin", ["exactComparison"] ),
                   #("AreniscaTest_09_FluidFilledPoreSpace",                  "./Arenisca/AreniscaTest_09_FluidFilledPoreSpace.ups",                  1,  "Darwin", ["exactComparison"] ),                  
-
+                  #("AreniscaTest_10_PureIsochoricStrainRates",              "./Arenisca/AreniscaTest_10_PureIsochoricStrainRates.ups",              1,  "Darwin", ["exactComparison"] ), 
+                  #("AreniscaTest_11_UniaxialStrainJ2plasticity",            "./Arenisca/AreniscaTest_11_UniaxialStrainJ2plasticity.ups",            1,  "Darwin", ["exactComparison"] ),                   
             ]
               
 # Tests that are run during local regression testing              
