@@ -34,10 +34,8 @@
     <save label="heat_loss"/>
     <save label="areaFraction"/>
 
-    <!-- properties --> 
-    <save label="soot"/>
-    <save label="absorpIN"/>
-    <save label="new_abskg"/>
+    <!-- radiation properties --> 
+    <save label="abskg"/>
 
     <!-- table look ups --> 
     <save label="density"     table_lookup="true"/>
@@ -45,6 +43,9 @@
     <save label="CO2"         table_lookup="true"/>
     <save label="CO"          table_lookup="true"/>
     <save label="H2O"         table_lookup="true"/>
+    <save label="mixture_molecular_weight" table_lookup="true"/>
+    <save label="OH"          table_lookup="true"/>
+    <save label="NO"          table_lookup="true"/>
     <save label="divQ"/>
 
     <checkpoint cycle="2" interval="0.01"/>

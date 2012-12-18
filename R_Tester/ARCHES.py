@@ -80,7 +80,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-#   ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
+   ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
    ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
    ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) , 
    ("helium_RT"                  , "helium_RT.ups"                               , 1.1 , "All"   , ["exactComparison"]) , 
