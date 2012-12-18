@@ -556,11 +556,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
 
-        }
+          if ( i == d_allIndepVarNames.size() - 1 ){ 
+            if ( iv_counter != d_allIndepVarNames.size() ){ 
+              throw InvalidValue( "Error: Could not assemble iv vector for face: "+face, __FILE__, __LINE__); 
+            } 
+          } 
 
-        if ( iv_counter != d_allIndepVarNames.size() ){ 
-          throw InvalidValue( "Error: Could not assemble iv vector for face: "+face, __FILE__, __LINE__); 
-        } 
+        }
 
         // now use the last bound_ptr to loop over all boundary cells: 
         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
