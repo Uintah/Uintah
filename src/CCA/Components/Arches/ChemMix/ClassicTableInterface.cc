@@ -191,6 +191,8 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   } 
   //**** END HACKISHNESS ***
+  //setting varlabels to roles:
+  d_lab->setVarlabelToRole( "temperature", "temperature" );
 }
 
 void ClassicTableInterface::tableMatching(){ 

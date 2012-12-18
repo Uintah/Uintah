@@ -726,6 +726,7 @@
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
               <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
+              <opl                       spec="OPTIONAL DOUBLE  'positive'"/>
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
