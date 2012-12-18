@@ -20,11 +20,6 @@
     <filebase>methaneFireWContainer.uda</filebase>
     <outputInterval>0.1</outputInterval>
 <!-- reduction variables -->
-    <save label="uvwout"/>
-    <save label="totalflowIN"/>
-    <save label="totalflowOUT"/>
-    <save label="denAccum"/>
-    <save label="netflowOUTBC"/>
     <save label="totalKineticEnergy"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
