@@ -155,7 +155,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Warnings and bulletproofing
 
 #ifndef RAY_SCATTER
-  cout<< "sigmaScat: " << _sigmaScat << endl;
+  proc0cout<< "sigmaScat: " << _sigmaScat << endl;
   if(_sigmaScat>0){
     ostringstream warn;
     warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
