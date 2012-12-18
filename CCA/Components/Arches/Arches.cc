@@ -1714,7 +1714,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
   
 #ifdef WASATCH_IN_ARCHES

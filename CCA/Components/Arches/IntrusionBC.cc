@@ -708,12 +708,6 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
                                         DataWarehouse* new_dw )
 {
 
-  int p = 0; 
-  const Patch* patch = patches->get(p); 
-  const int patchID = patch->getID(); 
-  int archIndex = 0; 
-  int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
-
   proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
   for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
 
