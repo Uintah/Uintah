@@ -57,14 +57,14 @@ template<class T> class MapPoint {
 
     ~MapPoint();
 
-    inline const double GetParticleCharge() const
+    inline const double getParticleCharge() const
     {
       // TODO Figure out what charge is
 //      return Particle->Charge();
-      return this->globalParticleSubset;
+//      return this->globalParticleSubset;
     }
 
-    inline const double ChargeWeight() const
+    inline const double getChargeWeight() const
     {
       return this->d_chargeWeight;
     }
@@ -73,6 +73,7 @@ template<class T> class MapPoint {
     {
 
     }
+
 
   private:
     // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle

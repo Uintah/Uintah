@@ -49,7 +49,7 @@ Electrostatics::~Electrostatics()
 
 }
 
-void Electrostatics::performSPME(MDSystem& system,
+void Electrostatics::performSPME(const MDSystem& system,
                                  const PatchSet* patches)
 {
 //  // Extract necessary information from system object
@@ -115,29 +115,32 @@ void Electrostatics::performSPME(MDSystem& system,
 //  return;
 }
 
-SPMEGrid Electrostatics::initializeSPME(const IntVector& ewaldMeshLimits,
-                                        const Matrix3& cellInverse,
-                                        const Matrix3& cell,
-                                        const double& ewaldScale,
-                                        const int& splineOrder)
+SPMEGrid<double> Electrostatics::initializeSPME(const MDSystem& system,
+                                                const IntVector& ewaldMeshLimits,
+                                                const Matrix3& cellInverse,
+                                                const Matrix3& cell,
+                                                const double& ewaldScale,
+                                                int splineOrder)
 {
   IntVector K, HalfK;
-  K = EwaldMeshLimits;
-  HalfK = K / 2;
+  K = ewaldMeshLimits;
+  HalfK = K / IntVector(2, 2, 2);
 
-  Vector KInverse = 1.0 / K;
+  Vector KInverse = Vector(1.0, 1.0, 1.0) / K.asVector();
 
+  double PI = acos(-1.0);
   double PiSquared = PI * PI;
-  double InvBetaSquared = 1.0 / (EwaldScale * EwaldScale);
+  double InvBetaSquared = 1.0 / (ewaldScale * ewaldScale);
 
-  SPME_Grid B, C;
+  SPMEGrid<double> B, C;
+
   // Calculate the C array
-  if (Orthorhombic) {
+  if (system.isOrthorhombic()) {
     double CellVolume, As1, As2, As3;
-    CellVolume = Cell(0, 0) * Cell(1, 1) * Cell(2, 2);
-    As1 = CellInverse(0, 0);
-    As2 = CellInverse(1, 1);
-    As3 = CellInverse(2, 2);
+    CellVolume = cell(0, 0) * cell(1, 1) * cell(2, 2);
+    As1 = cellInverse(0, 0);
+    As2 = cellInverse(1, 1);
+    As3 = cellInverse(2, 2);
 
     double CPreFactor = 1.0 / (PI * CellVolume);
 
@@ -160,48 +163,46 @@ SPMEGrid Electrostatics::initializeSPME(const IntVector& ewaldMeshLimits,
     }
   }
 
-  Vector& A1, A2, A3;
-  A1 = Cell.ExtractRow(0);  // Assumes the vectors in Cell are stored in rows
-  A2 = Cell.ExtractRow(1);
-  A3 = Cell.ExtractRow(2);
+  // Assumes the vectors in cell are stored in rows
+  Vector A1(cell(0, 0), cell(0, 1), cell(0, 2));
+  Vector A2(cell(1, 0), cell(1, 1), cell(1, 2));
+  Vector A3(cell(2, 0), cell(2, 1), cell(2, 2));
 
-  Vector& As1, As2, As3;
-  As1 = Cell.ExtractCol(0);  // Assumes the vectors in CellInverse are stored in columns
-  As2 = Cell.ExtractCol(1);
-  As3 = Cell.ExtractCol(2);
+  // Assumes the vectors in CellInverse are stored in columns
+  Vector AS1(cell(0, 0), cell(1, 0), cell(2, 0));
+  Vector AS2(cell(0, 1), cell(1, 1), cell(2, 1));
+  Vector AS3(cell(0, 2), cell(1, 2), cell(2, 2));
 
-  double CellVolume = (A1.Cross(A2)).Dot(A3);
   // C(m1,m2,m3) = (1/PI*V)*(exp(-PI^2*M^2/Beta^2)/M^2)
+  double cellVolume = Dot(Cross(A1, A2), A3);
+  double CPreFactor = 1.0 / (PI * cellVolume);
 
-  double CPreFactor = 1.0 / (PI * CellVolume);
+  int K1 = ewaldMeshLimits[0];
+  int halfK1 = K1 / 2;
+  int K2 = ewaldMeshLimits[1];
+  int halfK2 = K2 / 2;
+  int K3 = ewaldMeshLimits[2];
+  int halfK3 = K3 / 2;
 
-  int K1 = EwaldMeshLimits[0];
-  int HalfK1 = K1 / 2;
-  int K2 = EwaldMeshLimits[1];
-  int HalfK2 = K2 / 2;
-  int K3 = EwaldMeshLimits[2];
-  int HalfK3 = K3 / 2;
-
-  SPME_Grid FieldGrid;
-  double PiSquared = PI * PI;
-  double OneOverBeta2 = 1.0 / (EwaldScale * EwaldScale);
+  SPMEGrid<double> fieldGrid;
+  double OneOverBeta2 = 1.0 / (ewaldScale * ewaldScale);
 
   // Orthorhombic
-  if (Orthorhombic) {
-    for (int m1 = 0; m1 <= HalfK1; ++m1) {
-      for (int m2 = 0; m2 <= HalfK2; ++m2) {
-        for (int m3 = 0; m3 <= HalfK3; ++m3) {
-          double MSquared = m1 * As1 * m1 * As2 + m2 * As2 * m2 * As2 + m3 * As3 * m3 * As3;
-          FieldGrid[m1][m2][m3] = CPreFactor * exp(-PiSquared * MSquared * OneOverBeta2) / MSquared;
+  if (system.isOrthorhombic()) {
+    for (int m1 = 0; m1 <= halfK1; ++m1) {
+      for (int m2 = 0; m2 <= halfK2; ++m2) {
+        for (int m3 = 0; m3 <= halfK3; ++m3) {
+          double MSquared = m1 * AS1 * m1 * AS1 + m2 * AS2 * m2 * AS2 + m3 * AS3 * m3 * AS3;
+          fieldGrid((double)m1, (double)m2, (double)m3) = CPreFactor * exp(-PiSquared * MSquared * OneOverBeta2) / MSquared;
         }
       }
     }
   }
-return NULL
+  return fieldGrid;
 }
 
-SPMEGridMap<double> Electrostatics::createChargeGridMap(SPMEGrid<std::complex<double> >& grid,
-                                                        MDSystem& system,
+SPMEGridMap<double> Electrostatics::createChargeGridMap(const SPMEGrid<std::complex<double> >& grid,
+                                                        const MDSystem& system,
                                                         const Patch* patch)
 {
 //  // Note:  SubGridOffset maps the offset of the current patch's subgrid to the global grid numbering scheme.
@@ -359,163 +360,179 @@ void Electrostatics::calculateStaticGrids(const IntVector& gridExtents,
 //    StressPremult[0][0][0]=0.0;  // Exceptional values
 }
 
-std::vector<Point> Electroststics::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+std::vector<Point> Electrostatics::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                                      const Transformation3D<std::complex<double> >& invertSpace)
 {
-
-  vector < Point > localReducedCoords;
-
-  if (!Orthorhombic)  // bool Orthorhombic; true if simulation cell is orthorhombic, false if it's generic
-    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
-      CoordType s;        // Fractional coordinates; 3 - vector
-      s = ParticleList[Index].GetCoordinates();        // Get non-ghost particle coordinates for this cell
-      s *= InverseBox;       // For generic coordinate systems; InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
-      Local_ReducedCoords.push_back(s);        // Reduced non-ghost particle coordinates for this cell
-    }
-  else {
-    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
-      CoordType s;        // Fractional coordinates; 3-vector
-      s = ParticleList[Index].GetCoordinates();        // Get non-ghost particle coordinates for this cell
-      s(0) *= Invert_Space(0, 0);
-      s(1) *= Invert_Space(1, 1);
-      s(2) *= Invert_Space(2, 2);        // 6 Less multiplications and additions than generic above
-      Local_ReducedCoords.push_back(s);        // Reduced non-ghost particle coordinates for this cell
-    }
-  }
-
-  return Local_ReducedCoords;
+//  vector < Point > localReducedCoords;
+//
+//  if (!Orthorhombic)  // bool Orthorhombic; true if simulation cell is orthorhombic, false if it's generic
+//    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
+//      CoordType s;        // Fractional coordinates; 3 - vector
+//      s = ParticleList[Index].GetCoordinates();        // Get non-ghost particle coordinates for this cell
+//      s *= InverseBox;       // For generic coordinate systems; InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
+//      Local_ReducedCoords.push_back(s);        // Reduced non-ghost particle coordinates for this cell
+//    }
+//  else {
+//    for (size_t Index = 0; Index < NumParticlesInCell; ++Index) {
+//      CoordType s;        // Fractional coordinates; 3-vector
+//      s = ParticleList[Index].GetCoordinates();        // Get non-ghost particle coordinates for this cell
+//      s(0) *= Invert_Space(0, 0);
+//      s(1) *= Invert_Space(1, 1);
+//      s(2) *= Invert_Space(2, 2);        // 6 Less multiplications and additions than generic above
+//      Local_ReducedCoords.push_back(s);        // Reduced non-ghost particle coordinates for this cell
+//    }
+//  }
+//
+//  return Local_ReducedCoords;
 }
+
 SimpleGrid<double> Electrostatics::fC(const IntVector& gridExtents,
                                       const MDSystem& system)
 {
-  Matrix3 InverseCell;
-  SimpleGrid<double> C;  //C(gridExtents);
-  double ewaldBeta, inverseCell;
+  SimpleGrid<double> C;  // C(gridExtents);
+  Matrix3 inverseCell;
+  double ewaldBeta;
 
-  inverseCell = system.cellInverse();
+  inverseCell = system.getCellInverse();
   ewaldBeta = system.getEwaldBeta();
 
-  IntVector HalfGrid = gridExtents / IntVector(2, 2, 2);
+  IntVector halfGrid = gridExtents / IntVector(2, 2, 2);
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
-  double InvBeta2 = 1.0 / (Ewald_Beta * Ewald_Beta);
-
-  double VolFactor = 1.0 / (PI * MDSystem->getVolume());
+  double invBeta2 = 1.0 / (ewaldBeta * ewaldBeta);
+  double volFactor = 1.0 / (PI * system.getVolume());
 
   Vector M;
-  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
+  int extentX = gridExtents.x();
+  for (int m1 = 0; m1 < extentX; ++m1) {
     M[0] = m1;
-    if (m1 > HalfGrid.x())
-      M[0] -= GridExtents.x();
-    for (size_t m2 = 0; m2 < GridExtents.y(); ++m2) {
+    if (m1 > halfGrid.x()) {
+      M[0] -= gridExtents.x();
+    }
+    int extentY = gridExtents.y();
+    for (int m2 = 0; m2 < extentY; ++m2) {
       M[1] = m2;
-      if (m2 > HalfGrid.y())
-        M[1] -= GridExtents.y();
-      for (size_t m3 = 0; m3 < GridExtents.z(); ++m3) {
+      if (m2 > halfGrid.y()) {
+        M[1] -= gridExtents.y();
+      }
+      int extentZ = gridExtents.z();
+      for (int m3 = 0; m3 < extentZ; ++m3) {
         M[2] = m3;
-        if (m3 > HalfGrid.z())
-          M[2] -= GridExtents.z();
+        if (m3 > halfGrid.z()) {
+          M[2] -= gridExtents.z();
+        }
         // Calculate C point values
-        if (!(m1 == 0) && !(m2 == 0) && !(m3 == 0)) {  // Discount C(0,0,0)
-          double TempM = M * InverseCell;
-          double M2 = TempM.length2(TempM);
-          double Val = VolFactor * exp(-PI2 * M2 * InvBeta2) / M2;
-          C[m1][m2][m3] = Val;
+        if ((m1 != 0) && (m2 != 0) && (m3 != 0)) {  // Discount C(0,0,0)
+          double tempM = M * inverseCell;
+          double M2 = tempM.length2(tempM);
+          double val = volFactor * exp(-PI2 * M2 * invBeta2) / M2;
+          C(m1, m2, m3) = val;
         }
       }
     }
   }
-  C[m1][m2][m3] = 0.0;
   return C;
 }
 
 SimpleGrid<std::complex<double> > Electrostatics::fB(const IntVector& gridExtents,
-                                                     const MDSystem& system)
+                                                     const MDSystem& system,
+                                                     int splineOrder)
 {
   Matrix3 InverseCell;
-//  SimpleGrid<std::complex<double> > B(GridExtents.x(), GridExtents.y(), GridExtents, z());
+  SimpleGrid<std::complex<double> > B;
 
-  InverseCell = system->CellInverse();
-  IntVector HalfGrid = GridExtents / 2;
-  Vector InverseGrid = 1.0 / GridExtents;
+  InverseCell = system.getCellInverse();
+  IntVector halfGrid = gridExtents / IntVector(2, 2, 2);
+  Vector inverseGrid = Vector(1.0, 1.0, 1.0) / gridExtents;
 
   double PI = acos(-1.0);
-  double OrderM12PI = 2.0 * PI * (SplineOrder - 1);
+  double orderM12PI = 2.0 * PI * (splineOrder - 1);
 
-  vector<complex<double> > b1(GridExtents.x()), b2(GridExtents.y()), b3(GridExtents.z());
-  vector<complex<double> > OrdinalSpline(SplineOrder - 1);
+  vector<std::complex<double> > b1(gridExtents.x()), b2(gridExtents.y()), b3(gridExtents.z());
+  vector<std::complex<double> > ordinalSpline(splineOrder - 1);
 
-  OrdinalSpline = CalculateOrdinalSpline(SplineOrder - 1, SplineOrder);  // Calculates Mn(0)..Mn(n-1)
+  // Calculates Mn(0)..Mn(n-1)
+  ordinalSpline = calculateOrdinalSpline(splineOrder - 1, splineOrder);
 
   // Calculate k_i = m_i/K_i
-  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
+  for (int m1 = 0; m1 < gridExtents.x(); ++m1) {
     double kX = m1;
-    if (m1 > HalfGrid.x())
-      kX = m1 - GridExtents.x();
-    kX /= GridExtents.x();
-    complex<double> num = complex(cos(OrderM12PI * kX), sin(OrderM12PI * kX));
-    complex<double> denom = OrdinalSpline[0];  //
-    for (size_t k = 1; k < SplineOrder - 1; ++k) {
-      denom += OrdinalSpline[k] * complex(cos(OrderM12PI * kX * k), sin(OrderM12PI * kX * k));
+    if (m1 > halfGrid.x()) {
+      kX = m1 - gridExtents.x();
+    }
+    kX /= gridExtents.x();
+    std::complex<double> num = std::complex<double>(cos(orderM12PI * kX), sin(orderM12PI * kX));
+    std::complex<double> denom = ordinalSpline[0];  //
+    for (int k = 1; k < splineOrder - 1; ++k) {
+      denom += ordinalSpline[k] * std::complex<double>(cos(orderM12PI * kX * k), sin(orderM12PI * kX * k));
     }
     b1[m1] = num / denom;
   }
 
-  for (size_t m2 = 0; m2 < GridExtents.y(); ++m2) {
+  for (int m2 = 0; m2 < gridExtents.y(); ++m2) {
     double kY = m2;
-    if (m2 > HalfGrid.y())
-      kY = m2 - GridExtents.y();
-    kY /= GridExtents.y();
-    std::complex<double> num = complex(cos(OrderM12PI * kY), sin(OrderM12PI * kY));
-    std::complex<double> denom = OrdinalSpline[0];  //
-    for (size_t k = 1; k < SplineOrder - 1; ++k) {
-      denom += OrdinalSpline[k] * complex(cos(OrderM12PI * kY * k), sin(OrderM12PI * kY * k));
+    if (m2 > halfGrid.y()) {
+      kY = m2 - gridExtents.y();
+    }
+    kY /= gridExtents.y();
+    std::complex<double> num = std::complex<double>(cos(orderM12PI * kY), sin(orderM12PI * kY));
+    std::complex<double> denom = ordinalSpline[0];  //
+    for (int k = 1; k < splineOrder - 1; ++k) {
+      denom += ordinalSpline[k] * std::complex<double>(cos(orderM12PI * kY * k), sin(orderM12PI * kY * k));
     }
     b2[m2] = num / denom;
   }
 
-  for (size_t m3 = 0; m3 < GridExtents.z(); ++m3) {
+  for (int m3 = 0; m3 < gridExtents.z(); ++m3) {
     double kZ = m3;
-    if (m3 > HalfGrid.z())
-      kZ = m3 - GridExtents.y();
-    kZ /= GridExtents.y();
-    std::complex<double> num = complex(cos(OrderM12PI * kZ), sin(OrderM12PI * kZ));
-    std::complex<double> denom = OrdinalSpline[0];  //
-    for (size_t k = 1; k < SplineOrder - 1; ++k) {
-      denom += OrdinalSpline[k] * std::complex<double>(cos(OrderM12PI * kZ * k), sin(OrderM12PI * kZ * k));
+    if (m3 > halfGrid.z()) {
+      kZ = m3 - gridExtents.y();
+    }
+    kZ /= gridExtents.y();
+    std::complex<double> num = std::complex<double>(cos(orderM12PI * kZ), sin(orderM12PI * kZ));
+    std::complex<double> denom = ordinalSpline[0];  //
+    for (int k = 1; k < splineOrder - 1; ++k) {
+      denom += ordinalSpline[k] * std::complex<double>(cos(orderM12PI * kZ * k), sin(orderM12PI * kZ * k));
     }
     b3[m3] = num / denom;
   }
 
-  for (size_t m1 = 0; m1 < GridExtents.x(); ++m1) {
-    for (size_t m2 = 0; m2 < GridExtents.x(); ++m2) {
-      for (size_t m3 = 0; m3 < GridExtents.x(); ++m3) {
-        // Calculate B point values
-        B[m1][m2][m3] = norm(b1[m1]) * norm(b2[m2]) * norm(b3[m3]);
+  // Calculate B point values
+  for (int m1 = 0; m1 < gridExtents.x(); ++m1) {
+    for (int m2 = 0; m2 < gridExtents.x(); ++m2) {
+      for (int m3 = 0; m3 < gridExtents.x(); ++m3) {
+        B(m1, m2, m3) = norm(b1[m1]) * norm(b2[m2]) * norm(b3[m3]);
       }
     }
   }
 }
 
-std::vector<std::complex<double> > GeneratebVector(const int& points,
-                                                   const std::vector<double>& M,
-                                                   const int& max,
-                                                   const int& splineOrder,
-                                                   const std::vector<double>& splineCoeff)
+vector<std::complex<double> > Electrostatics::calculateOrdinalSpline(int orderMinusOnesplineOrder,
+                                                                     int splineOrder)
+{
+
+}
+
+std::vector<std::complex<double> > Electrostatics::generateBVector(int points,
+                                                                   const std::vector<double>& M,
+                                                                   int max,
+                                                                   int splineOrder,
+                                                                   const std::vector<double>& splineCoeff)
 {
   double PI = acos(-1.0);
-  double OrderM12PI = (splineOrder - 1) * 2.0 * PI;
+  double orderM12PI = (splineOrder - 1) * 2.0 * PI;
 
   std::vector<std::complex<double> > b(points);
   for (int idx = 0; idx < points; ++idx) {
     double k = M[idx] / max;
-    std::complex<double> Numerator = std::complex<double>(cos(OrderM12PI * k), sin(OrderM12PI * k));
-    std::complex<double> Denominator;
+    std::complex<double> numerator = std::complex<double>(cos(orderM12PI * k), sin(orderM12PI * k));
+    std::complex<double> denominator;
     for (int p = 0; p < splineOrder - 1; ++p) {
-      Denominator += splineCoeff[p] * std::complex<double>(cos(OrderM12PI * k1 * p), sin(OrderM12PI * k1 * p));
+//      double k1 = M[idx] / max;
+      denominator += splineCoeff[p] * std::complex<double>(cos(orderM12PI * k1 * p), sin(orderM12PI * k1 * p));
     }
-    b[idx] = Numerator / Denominator;
+    b[idx] = numerator / denominator;
   }
   return b;
 }

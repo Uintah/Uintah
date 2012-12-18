@@ -50,11 +50,65 @@ using SCIRun::IntVector;
 class MDSystem {
 
   public:
+
+    /**
+     * @brief
+     * @param
+     */
     MDSystem();
 
+    /**
+     * @brief
+     * @param
+     */
     ~MDSystem();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline Matrix3 getCellInverse() const
+    {
+      return this->cellInverse;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline double getEwaldBeta() const
+    {
+      return this->ewaldBeta;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline double getVolume() const
+    {
+      return this->volume;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline bool isOrthorhombic() const
+    {
+      return this->orthorhombic;
+    }
+
   private:
+
+    Matrix3 cellInverse;  //!<
+    bool orthorhombic;    //!<
+    double ewaldBeta;     //!< The Ewald damping coefficient
+    double volume;        //!<
 
 };
 
