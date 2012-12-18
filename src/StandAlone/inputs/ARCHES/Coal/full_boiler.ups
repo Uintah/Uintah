@@ -9595,7 +9595,7 @@
         <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>
 <!--NOT_ADIABATIC/-->
-          <inputfile>../ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
           <hl_scalar_init>0.87</hl_scalar_init>
           <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
         </ClassicTable>
