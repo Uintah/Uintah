@@ -97,7 +97,7 @@
       <save label="countTime"/>
       <save label="inductionTime"/>
       
-      <checkpoint cycle = "2" timestepInterval = "1000"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->

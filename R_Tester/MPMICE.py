@@ -37,8 +37,8 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
                    ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint","no_dbg"]),\
                    ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"]), \
                    ("DDT1ConvectiveBurning", "DDT1ConvectiveBurning.ups", 1.1,"Linux", ["exactComparison"]),    \
-                   ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison"]),    \
-                   ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison"])
+                   ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \
+                   ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
     	       ]
 
 #
@@ -52,8 +52,8 @@ LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Lin
                  ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
                  ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),   \
                  ("DDT1ConvectiveBurning", "DDT1ConvectiveBurning.ups", 1.1,"Linux", ["exactComparison"]),   \
-                 ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison"]),   \
-                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison"])
+                 ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
+                 ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
     	       ]
 
 #__________________________________
