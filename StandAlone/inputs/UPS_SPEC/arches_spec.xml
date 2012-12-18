@@ -785,8 +785,8 @@
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
-            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor --> 
-            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature --> 
+            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor. Use same units as listed in Turns. --> 
+            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature. Use same units as listed in Turns. --> 
             <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
