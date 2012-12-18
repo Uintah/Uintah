@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
 
 #include <sci_values.h>
@@ -39,16 +38,22 @@ SimpleGrid<T>::SimpleGrid()
 }
 
 template<typename T>
-SimpleGrid<T>::SimpleGrid(const IntVector& extents,
-                          const IntVector& offset,
-                          const int numGhostCells) :
-    d_gridExtents(extents), d_gridOffset(extents), d_numGhostCells(numGhostCells)
+SimpleGrid<T>::~SimpleGrid()
 {
 
 }
 
 template<typename T>
-SimpleGrid<T>::~SimpleGrid()
+SimpleGrid<T>::SimpleGrid(const IntVector& extents,
+                          const IntVector& offset,
+                          const int numGhostCells) :
+    d_gridExtents(extents), d_gridOffset(extents), d_numGhostCells(numGhostCells)
+{
+  d_charges(extents.x(), extents.y(), extents.z());
+}
+
+template<typename T>
+SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 {
 
 }

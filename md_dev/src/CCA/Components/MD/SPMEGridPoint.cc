@@ -54,8 +54,8 @@ void SPMEGridPoint<T>::mapChargeFromAtoms()
   double gridPointCharge = 0.0;
   double chargeCoefficeintWeight = 0.0;
   for (unsigned int idx = 0; idx < NumMappedAtoms; ++idx) {
-    double weight = d_mappedAtoms[idx].ChargeWeight();
-    gridPointCharge += weight * d_mappedAtoms[idx].GetParticleCharge();
+    double weight = d_mappedAtoms[idx].getChargeWeight();
+    gridPointCharge += weight * d_mappedAtoms[idx].getParticleCharge();
     chargeCoefficeintWeight += weight;
   }
 }
@@ -66,8 +66,8 @@ void SPMEGridPoint<T>::mapChargeToAtoms()
   unsigned int NumMappedAtoms = d_mappedAtoms.size();
   double InverseChargeWeight = 1.0 / d_totalChargeCoefficientWeight;
   for (unsigned int idx = 0; idx < NumMappedAtoms; ++idx) {
-    double AtomCharge = d_mappedAtoms[idx].GetParticleCharge();
-    double AtomWeight = d_mappedAtoms[idx].ChargeWeight();
+    double AtomCharge = d_mappedAtoms[idx].getParticleCharge();
+    double AtomWeight = d_mappedAtoms[idx].getChargeWeight();
     AtomCharge += (AtomWeight * InverseChargeWeight) * d_gridPointCharge;  // Add to the current atom charge the contribution at the grid point from this atom
     d_mappedAtoms[idx].setParticleCharge(AtomCharge);
   }
@@ -88,7 +88,7 @@ double SPMEGridPoint<T>::calculateCharge()
   int numMappedAtoms = d_mappedAtoms.size();
   double gridPointCharge = 0.0;
   for (int atom = 0; atom < numMappedAtoms; ++atom) {
-    gridPointCharge += d_mappedAtoms[atom].getParticleCharge() * d_mappedAtoms[atom].chargeWeight();
+    gridPointCharge += d_mappedAtoms[atom].getParticleCharge() * d_mappedAtoms[atom].getChargeWeight();
   }
   return gridPointCharge;
 }

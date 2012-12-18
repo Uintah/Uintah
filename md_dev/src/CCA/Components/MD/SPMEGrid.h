@@ -122,6 +122,34 @@ template<class T> class SPMEGrid {
      */
     SPMEGrid<T>& inPlaceFFT_FourierToReal(/*Data for FFTW3 routine goes here */);
 
+   /**
+    * @brief Pass through indexing of Value array.
+    * @param x The x component of the 3D cell index.
+    * @param y The y component of the 3D cell index.
+    * @param z The z component of the 3D cell index.
+    * @return T& A reference to the value at index [x,y,z] in this SimpleGrid.
+    */
+   inline Vector operator()(const int& x,
+                        const int& y,
+                        const int& z)
+   {
+     return this->d_field(x,y,z);
+   }
+
+   /**
+    * @brief Pass through indexing of Value array.
+    * @param x The x component of the 3D cell index.
+    * @param y The y component of the 3D cell index.
+    * @param z The z component of the 3D cell index.
+    * @return T The value at index [x,y,z] in this SimpleGrid.
+    */
+   inline Vector operator()(const int& x,
+                       const int& y,
+                       const int& z) const
+   {
+     return this->d_field(x, y, z);
+   }
+
   private:
     cdGrid Q;                    //!<
     SimpleGrid<Vector> d_field;  //!<

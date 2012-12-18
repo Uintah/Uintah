@@ -35,8 +35,6 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
 
 #include <vector>
 #include <complex>
@@ -72,29 +70,30 @@ class Electrostatics {
      */
     ~Electrostatics();
 
+    SPMEGrid<double> initializeSPME(const MDSystem& system,
+                                    const IntVector& ewaldMeshLimits,
+                                    const Matrix3& cellInverse,
+                                    const Matrix3& cell,
+                                    const double& ewaldScale,
+                                    int splineOrder);
+
     /**
      * @brief
      * @param
      * @return
      */
-    void performSPME(MDSystem& system,
+    void performSPME(const MDSystem& system,
                      const PatchSet* patches);
 
   private:
 
-    SPMEGrid<double> initializeSPME(const IntVector& ewaldMeshLimits,
-                                    const Matrix3& cellInverse,
-                                    const Matrix3& cell,
-                                    const double& ewaldScale,
-                                    const int& splineOrder);
-
     /**
      * @brief
      * @param
      * @return
      */
-    SPMEGridMap<double> createChargeGridMap(SPMEGrid<std::complex<double> >& grid,
-                                            MDSystem& system,
+    SPMEGridMap<double> createChargeGridMap(const SPMEGrid<std::complex<double> >& grid,
+                                            const MDSystem& system,
                                             const Patch* patch);
 
     /**
@@ -134,18 +133,27 @@ class Electrostatics {
      * @return
      */
     SimpleGrid<std::complex<double> > fB(const IntVector& gridExtents,
-                                         const MDSystem& system);
+                                         const MDSystem& system,
+                                         int splineOrder);
 
     /**
      * @brief
      * @param
      * @return
      */
-    vector<std::complex<double> > generateBVector(const int& points,
-                                                  const vector<double>& M,
-                                                  const int& max,
-                                                  const int& splineOrder,
-                                                  const vector<double>& splineCoeff);
+    vector<std::complex<double> > calculateOrdinalSpline(int orderMinusOne,
+                                                         int splineOrder);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    vector<std::complex<double> > generateBVector(int points,
+                                                  const std::vector<double>& M,
+                                                  int max,
+                                                  int splineOrder,
+                                                  const std::vector<double>& splineCoeff);
 
     /**
      * @brief

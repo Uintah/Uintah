@@ -58,6 +58,11 @@ template<typename T> class SimpleGrid {
     SimpleGrid();
 
     /**
+     * @brief Destructor
+     */
+    virtual ~SimpleGrid();
+
+    /**
      * @brief 3 argument constructor.
      * @param extents The extents, or total number of cells this SimpleGrid will contain.
      * @param offset The offset for the first point in the patch in reference to the global grid.
@@ -68,9 +73,18 @@ template<typename T> class SimpleGrid {
                const int numGhostCells);
 
     /**
-     * @brief Destructor
+     * @brief Copy constructor.
+     * @param copy A reference to the SimpleGrid to copy.
      */
-    virtual ~SimpleGrid();
+    SimpleGrid(const SimpleGrid& copy);
+
+    /**
+     *
+     */
+    inline SCIRun::Array3<double> getCharges() const
+    {
+      return this->d_charges;
+    }
 
     /**
      * @brief Returns the extents of this SimpleGrid.
@@ -344,12 +358,12 @@ template<typename T> class SimpleGrid {
      * @param sg The assignee.
      * @return SimpleGrid<T>& The result of the assignment (*this).
      */
-    inline SimpleGrid<T>& operator=(const SimpleGrid<T>& sg)
+    inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
     {
-      d_charges.copy(sg.d_charges);          // SCIRun::Array3 assignment operator is private, use copy() method
-      d_gridExtents = sg.d_gridExtents;
-      d_gridOffset = sg.d_gridOffset;
-      d_numGhostCells = sg.d_numGhostCells;
+      d_charges.copy(copy.getCharges());          // SCIRun::Array3 assignment operator is private, use copy() method
+      d_gridExtents = copy.d_gridExtents;
+      d_gridOffset = copy.d_gridOffset;
+      d_numGhostCells = copy.d_numGhostCells;
       return *this;
     }
 
