@@ -501,8 +501,6 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         } 
       }  // if mass flow rate option has been selected
     }    // intrusion loop 
-    // Boundary conditions should be all setup at this point so print a summary for the user: 
-    printIntrusionInformation(); 
   }      // patch loop
 }
 
@@ -684,11 +682,44 @@ IntrusionBC::setCellType( const ProcessorGroup*,
   }     // patch loop
 } 
 
+//_________________________________________
 void 
-IntrusionBC::printIntrusionInformation(){
+IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched, 
+                                              const PatchSet* patches, 
+                                              const MaterialSet* matls )
+{
+
+  Task* tsk = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation); 
+
+  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
+
+    tsk->requires( Task::NewDW, i->second.bc_area ); 
+
+  } 
+
+  sched->addTask(tsk, patches, matls); 
+
+}
+void 
+IntrusionBC::printIntrusionInformation( const ProcessorGroup*, 
+                                        const PatchSubset* patches, 
+                                        const MaterialSubset* matls, 
+                                        DataWarehouse* old_dw, 
+                                        DataWarehouse* new_dw )
+{
+
+  int p = 0; 
+  const Patch* patch = patches->get(p); 
+  const int patchID = patch->getID(); 
+  int archIndex = 0; 
+  int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
   proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
   for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+
+    sum_vartype area_var; 
+    new_dw->get( area_var, iter->second.bc_area ); 
+    double area = area_var; 
 
     if ( iter->second.type == SIMPLE_WALL ){ 
       proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
@@ -697,9 +728,14 @@ IntrusionBC::printIntrusionInformation(){
       proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
       IntVector c(0,0,0); 
       Vector U = iter->second.velocity_inlet_generator->get_velocity(c); 
-      proc0cout << "   Velocity = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
-      proc0cout << "   m_dot    = "  << iter->second.mass_flow_rate << std::endl;
+      if ( iter->second.mass_flow_rate < 1e-16 ) { 
+        proc0cout << "              U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+      } else { 
+        proc0cout << "    m_dot(set)  = "  << iter->second.mass_flow_rate << std::endl;
+        proc0cout << "    resultant U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+      }
       proc0cout << "   density  = "  << iter->second.density << std::endl;
+      proc0cout << " inlet area = "  << area << std::endl;
       proc0cout << "   scalar information " << std::endl;
       for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
           i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 

@@ -76,9 +76,6 @@ namespace Uintah{
       /** @brief Interface to input file */
       void problemSetup( const ProblemSpecP& params ); 
 
-      /** @brief Print out a summary of the intrusions **/ 
-      void printIntrusionInformation(); 
-
       /** @brief Computes the boundary area for the non-wall portion */
       void sched_computeBCArea( SchedulerP& sched, 
                                 const PatchSet* patches, 
@@ -111,6 +108,17 @@ namespace Uintah{
                           const MaterialSubset* matls, 
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw ); 
+
+      /** @brief Print a summary of the intrusion information **/ 
+      void sched_printIntrusionInformation( SchedulerP& sched, 
+                                            const PatchSet* patches, 
+                                            const MaterialSet* matls );
+
+      void printIntrusionInformation( const ProcessorGroup*, 
+                                        const PatchSubset* patches, 
+                                        const MaterialSubset* matls, 
+                                        DataWarehouse* old_dw, 
+                                        DataWarehouse* new_dw );
 
       /** @brief Sets the cell type, volume and area fractions @ boundaries */
       void sched_setCellType( SchedulerP& sched, 

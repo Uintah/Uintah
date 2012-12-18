@@ -6939,6 +6939,7 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
     _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
     _intrusionBC->sched_computeProperties( sched, patches, matls ); 
     _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_printIntrusionInformation( sched, patches, matls ); 
   }
 
 }
