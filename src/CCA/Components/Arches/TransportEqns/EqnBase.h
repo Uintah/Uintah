@@ -170,6 +170,7 @@ public:
     _using_new_intrusion = using_new_intrusions; 
   };
 
+  /** @brief Set a reference to the mix/rxn table **/ 
   inline void set_table( MixingRxnModel* table ){
   	_table = table; 	
   }; 
