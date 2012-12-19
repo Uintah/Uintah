@@ -45,3 +45,13 @@ MDSystem::~MDSystem()
 
 }
 
+MDSystem::MDSystem(double _ewaldBeta,
+                   double _volume,
+                   double _pressure,
+                   double _temperature,
+                   bool _orthorhombic) :
+    ewaldBeta(_ewaldBeta), volume(_volume), pressure(_pressure), temperature(_temperature), orthorhombic(_orthorhombic)
+{
+
+}
+

@@ -52,16 +52,26 @@ class MDSystem {
   public:
 
     /**
-     * @brief
+     * @brief Default constructor
      * @param
      */
     MDSystem();
 
     /**
-     * @brief
+     * @brief Default destructor
      * @param
      */
     ~MDSystem();
+
+    /**
+     * @brief Default constructor
+     * @param _ewaldBeta The Ewald damping coefficient.
+     * @param _volume The initial MD system volume.
+     * @param _pressure The initial MD system pressure.
+     * @param _temperature The initial MD system temperature.
+     * @param _orthorhombic Whether of not the MD system is using orthorhombic coordinates.
+     */
+    MDSystem(double _ewaldBeta, double _volume, double _pressure, double _temperature, bool _orthorhombic);
 
     /**
      * @brief
@@ -78,9 +88,29 @@ class MDSystem {
      * @param
      * @return
      */
+    inline void setCellInverse(Matrix3 _cellInverse)
+    {
+      this->cellInverse = _cellInverse;
+    }
+
+    /**
+     * @brief Returns the damping coefficient for this MD system.
+     * @param None
+     * @return double The damping coefficient for this MD system.
+     */
     inline double getEwaldBeta() const
     {
       return this->ewaldBeta;
+    }
+
+    /**
+     * @brief Sets the damping coefficient for this MD system.
+     * @param _ewaldBeta The new damping coefficient.
+     * @return None
+     */
+    inline void setEwaldBeta(double _ewaldBeta)
+    {
+      this->ewaldBeta = _ewaldBeta;
     }
 
     /**
@@ -98,17 +128,80 @@ class MDSystem {
      * @param
      * @return
      */
+    inline void setVolume(double _volume)
+    {
+      this->volume = _volume;
+    }
+
+    /**
+     * @brief
+     * @param  None
+     * @return
+     */
+    inline bool getPressure() const
+    {
+      return this->pressure;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline void setPressure(double _pressure)
+    {
+      this->pressure = _pressure;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline bool getTemperature() const
+    {
+      return this->temperature;
+    }
+
+    /**
+     * @brief Sets the temperature for this MD system.
+     * @param
+     * @return
+     */
+    inline void setTemperature(double _temperature)
+    {
+      this->temperature = _temperature;
+    }
+
+
+    /**
+     * @brief
+     * @param None
+     * @return
+     */
     inline bool isOrthorhombic() const
     {
       return this->orthorhombic;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline void setOrthorhombic(bool _value)
+    {
+      this->orthorhombic = _value;
+    }
+
   private:
 
     Matrix3 cellInverse;  //!<
-    bool orthorhombic;    //!<
     double ewaldBeta;     //!< The Ewald damping coefficient
-    double volume;        //!<
+    double volume;        //!< Total MD system volume
+    double pressure;      //!< Total MD system pressure
+    double temperature;   //!< Total MD system temperature
+    bool orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
 
 };
 
