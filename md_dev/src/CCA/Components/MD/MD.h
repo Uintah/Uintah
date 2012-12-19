@@ -102,7 +102,25 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     virtual void scheduleTimeAdvance(const LevelP& level,
                                      SchedulerP&);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    enum IntegratorType {
+      Explicit, Implicit,
+    };
+
   protected:
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void scheduleSetGridBoundaryConditions(SchedulerP&,
+                                           const PatchSet*,
+                                           const MaterialSet* matls);
 
     /**
      * @brief
@@ -112,6 +130,15 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     void scheduleCalculateNonBondedForces(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void scheduleInterpolateChargesToGrid(SchedulerP&,
+                                          const PatchSet*,
+                                          const MaterialSet*);
 
     /**
      * @brief
@@ -138,11 +165,66 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
+    void initialize(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void computeStableTimestep(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void interpolateChargesToGrid(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void performSPME(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void calculateNonBondedForces(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void updatePosition(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -186,54 +268,11 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     bool isNeighbor(const Point* atom1,
                     const Point* atom2);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void initialize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void computeStableTimestep(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void calculateNonBondedForces(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void updatePosition(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
-
     MDLabel* lb;                     //!<
-    SimulationStateP d_sharedState_; //!<
+    SimulationStateP d_sharedState_;  //!<
     SimpleMaterial* mymat_;          //!<
-    double delt_;
+    IntegratorType d_integrator;     //!<
+    double delt_;                    //!<
 
     std::vector<std::vector<const VarLabel*> > d_particleState;           //!<
     std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;  //!<
