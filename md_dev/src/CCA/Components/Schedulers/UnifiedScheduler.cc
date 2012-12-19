@@ -219,6 +219,9 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   if (affinity.active()) {
     Thread::self()->set_affinity(0);  // bind main thread to cpu 0
   }
+#ifdef HAVE_CUDA
+  state->setUnifiedScheduler(this);
+#endif
 }
 
 SchedulerP UnifiedScheduler::createSubScheduler()
@@ -1942,7 +1945,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 }
 
 void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
-    CopyType type)
+                                      CopyType type)
 {
   std::vector<cudaStream_t*>* dtaskStreams;
   std::vector<cudaStream_t*>::iterator iter;
@@ -1961,7 +1964,7 @@ void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
-    CopyType type)
+                                     CopyType type)
 {
   std::vector<cudaEvent_t*>* dtaskEvents;
   std::vector<cudaEvent_t*>::iterator iter;

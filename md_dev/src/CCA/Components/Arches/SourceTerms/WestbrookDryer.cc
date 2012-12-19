@@ -64,13 +64,11 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("temperature_label", d_T_label, "temperature");          // The name of the mixture fraction label
   db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
   db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
-  db->require("equil_fraction_label", d_ceq_label);                           // The name of the secondary mixture fraciton label
-  db->require("cstar_for_strip_label", d_cstar_strip_label);                  // The name of the C* mixture fraction used for the stripping calc. 
-  db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
+  db->require("c_fraction_label", d_ceq_label);                               // The name of the secondary mixture fraciton label
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
 
   if ( db->findBlock("temperature_clip") ){ 
-    db->getWithDefault("temperature_clip", d_T_clip, 10000);                    // [K], Turns off the rate below this T.
+    db->getWithDefault("temperature_clip", d_T_clip, 10000);                 // [K], Turns off the rate below this T.
     _use_T_clip = true;
   }
   if ( db->findBlock("flammability_limit") ){ 
@@ -90,7 +88,6 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   } 
 
   // add for table lookup
-  _field_labels->add_species( d_mw_label ); 
   _field_labels->add_species( d_o2_label ); 
   _field_labels->add_species( d_rho_label ); 
   _field_labels->add_species( d_T_label ); 
@@ -129,10 +126,8 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   Task* tsk = scinew Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
 
   _temperatureLabel   = VarLabel::find( d_T_label );
-  _mixMWLabel         = VarLabel::find( d_mw_label );
   _denLabel           = VarLabel::find( d_rho_label );
   _CstarMassFracLabel = VarLabel::find( d_cstar_label );
-  _CstarStripLabel    = VarLabel::find( d_cstar_strip_label ); 
   _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
   _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
   if ( _use_flam_limits ){ 
@@ -151,9 +146,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->computes(d_WDextentLabel); 
 
     tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, _CstarStripLabel,  Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
@@ -168,10 +161,8 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->modifies(d_WDextentLabel);   
 
     tsk->requires( Task::NewDW, _temperatureLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _mixMWLabel,       Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _CstarStripLabel,  Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _CEqMassFracLabel, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 ); 
     if ( _use_flam_limits ){ 
@@ -217,9 +208,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> E; // extent of reaction 
     constCCVariable<double> T;      // temperature 
     constCCVariable<double> den;    // mixture density
-    constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
     constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
-    constCCVariable<double> CstarStrip;  // mass fraction of the hydrocarbon for the stripping factor
     constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
     constCCVariable<double> O2;     // O2 mass fraction
     constCCVariable<double> diluent; // Diluent mass fraction
@@ -233,10 +222,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       E.initialize(0.0); 
       
       new_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
-      new_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
-      new_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
       if ( _use_flam_limits ){ 
@@ -253,10 +240,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       E.initialize(0.0); 
 
       old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
-      old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
-      old_dw->get( CstarStrip , _CstarStripLabel    , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
       if ( _use_flam_limits ){ 
@@ -274,15 +259,15 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      double f = Ceq[c] + CstarStrip[c];
+      double f = Ceq[c] + Cstar[c];
       
       // Step 1: Compute stripping fraction and extent 
       double tiny = 1.0e-16;
       S[c] = 0.0; 
       double hc_wo_rxn = f * d_MF_HC_f1;
 
-      if ( CstarStrip[c] > tiny ) 
-        S[c] = CstarStrip[c] / hc_wo_rxn; 
+      if ( Cstar[c] > tiny ) 
+        S[c] = Cstar[c] / hc_wo_rxn; 
 
       E[c] = 1.0 - S[c]; 
 
@@ -290,9 +275,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       double rate = 0.0;
       if ( _use_T_clip ){ 
         double fake_diluent = 0.0; 
-        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, f, mixMW[c], den[c], dt, vol ); 
+        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
       } else { 
-        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, mixMW[c], den[c], dt, vol ); 
+        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
       } 
 
       // Overwrite with hot spot if specified -- like a pilot light
@@ -313,9 +298,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
               if ( _use_T_clip ){ 
                 double fake_diluent = 0.0; 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, mixMW[c], den[c], dt, vol ); 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
               } else { 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, mixMW[c], den[c], dt, vol ); 
+                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
               } 
 
             }
@@ -333,14 +318,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-WestbrookDryer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+WestbrookDryer::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "WestbrookDryer::dummyInit"; 
+  string taskname = "WestbrookDryer::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::initialize);
 
   tsk->computes(_src_label);
 
@@ -352,11 +337,11 @@ WestbrookDryer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-WestbrookDryer::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+WestbrookDryer::initialize( const ProcessorGroup* pc, 
+                            const PatchSubset* patches, 
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

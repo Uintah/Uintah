@@ -345,19 +345,19 @@ PCTransport::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-PCTransport::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+PCTransport::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   //not needed
 }
 void 
-PCTransport::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+PCTransport::initialize( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw )
 {
   //not needed
 }

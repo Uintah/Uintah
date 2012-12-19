@@ -51,8 +51,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
       } else { 
 
-        //radiation model (not DO)  doesn't currently set opl
-        db->require( "opl", _opl ); 
+        src_db->findBlock("RMCRT")->require( "opl", _opl ); 
 
       } 
     }

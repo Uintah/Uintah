@@ -58,7 +58,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.68)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -310,7 +310,7 @@ SCI_ARG_WITH(cuda,
                  Use the CUDA installation in DIR),
   [with_cuda="$withval"
    sci_required_cuda=yes],
-  [with_cuda=""])  
+  [with_cuda=""])
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -506,7 +506,7 @@ SCI_ARG_ENABLE(ray-scatter,
   [ray_scatter=${ray_scatter=''}])
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 30, 35)),
+                 Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
 SCI_ARG_ENABLE(exename,
@@ -3298,6 +3298,7 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
+AC_LANG([C++])
 if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
@@ -3400,6 +3401,7 @@ AC_SUBST(INC_PETSC_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
+AC_LANG([C])
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -4018,11 +4020,20 @@ else
    #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
    AC_LANG([C++])
    SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            optional)
+
+   if test "$HAVE_HYPRE" != "yes"; then
+      SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                             HYPRE,
                             $_sci_lib,
                             $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
-                            $_sci_optional)
+                            optional)
+   fi
    AC_LANG([C])
 
    if test "$HAVE_HYPRE" = "yes" ; then

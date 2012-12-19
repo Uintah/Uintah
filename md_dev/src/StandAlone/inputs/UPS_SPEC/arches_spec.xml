@@ -349,7 +349,7 @@
            <velocity                    spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'flat, from_file, massflow'">
 
-            <!-- flat velocity profile -->                             
+            <!-- flat velocity profile [m/s] -->                             
             <u                          spec="OPTIONAL DOUBLE" 
                                         need_applies_to="type flat"/>
             <v                          spec="OPTIONAL DOUBLE" 
@@ -360,9 +360,9 @@
             <input_file                 spec="REQUIRED STRING"
                                         need_applies_to="type from_file"/>
 
-            <!-- mass flow --> 
+            <!-- mass flow [kg/sec]--> 
             <flow_rate                  spec="REQUIRED DOUBLE"
-                                        need_applies_to="type massflow"/>
+                                        need_applies_to="type massflow"/> 
 
 
            </velocity>
@@ -726,6 +726,7 @@
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
               <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
+              <opl                       spec="OPTIONAL DOUBLE  'positive'"/>
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
@@ -760,23 +761,42 @@
                   <mix_mol_w_label       spec="OPTIONAL STRING"/> <!-- default is "mixture_molecular_weight" --> 
                 </grey_gas>
               </property_calculator> 
+              
+
+              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+                                    
+                <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+                <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+        
+                <ROI_extents            spec="OPTIONAL NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+    
+                  <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          
+                  <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                </ROI_extents>
+              </algorithm>
+              
             </RMCRT>
 
             
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
-            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor --> 
-            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature --> 
+            <!-- A: pre-exponential factor.  Units for westbrook/dryer model are in (gmol/cm^3)^(1-m-n)/s and consistent with the choice of m and n. --> 
+            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor. -->
+            <!-- E/R: activiation temperature. Unit for westbrook/dryer model are in kelvin --> 
+            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature. Use same units as listed in Turns. --> 
             <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
             <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
             <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
-            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
-            <cstar_for_strip_label      spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label used for the calc of the stripping factor. --> 
-            <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table --> 
+            <c_fraction_label           spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CxHy mass fraction label for the fast chemistry step (this is usually transported) --> 
             <temperature_clip           spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
             <flammability_limit         spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- Use "nose" plot to turn on/off source term. Noses are specified immediately below --> 
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
@@ -791,7 +811,6 @@
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit --> 
 
             </flammability_limit>
-            <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 

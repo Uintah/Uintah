@@ -155,7 +155,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Warnings and bulletproofing
 
 #ifndef RAY_SCATTER
-  cout<< "sigmaScat: " << _sigmaScat << endl;
+  proc0cout<< "sigmaScat: " << _sigmaScat << endl;
   if(_sigmaScat>0){
     ostringstream warn;
     warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
@@ -550,9 +550,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
-  abskg_dw->getRegion(   abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
+  abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
   sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
-  celltype_dw->getRegion( celltype , d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
+  celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
   
   double start=clock();
 
@@ -1116,7 +1116,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       IntVector domainLo_EC, domainHi_EC;
       level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
       dbg << " getting coarse level data L-" <<L<< endl;
     }
@@ -1142,11 +1142,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                    regionLo,  regionHi);
     
     dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
-    abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
   }
   
-  abskg_fine     = abskg[maxLevels-1];
+  abskg_fine         = abskg[maxLevels-1];
   sigmaT4OverPi_fine = sigmaT4OverPi[maxLevels-1];
   
   // Determine the size of the domain.
@@ -1173,9 +1173,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       int L = maxLevels - 1;
       dbg << " getting fine level data across L-" <<L<< endl;
            
-      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      abskg_fine     = abskg[L];
+      abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
     
@@ -1330,6 +1330,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             // next cell index and position
             cur[dir]  = cur[dir] + step[dir];
             Point pos = level->getCellPosition(cur);
+            Vector dx_prev = level->dCell();  //  Used to compute coarsenRatio
+
             
             //__________________________________
             // Logic for moving between levels
@@ -1360,10 +1362,38 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             }
             
             //__________________________________
+            // Account for uniqueness of first step after reaching a new level
+
+            //__________________________________
             //  update marching variables
-            disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
+            disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
             tMax_prev     = tMax[dir];
             tMax[dir]     = tMax[dir] + tDelta[L][dir];
+
+            Vector dx = level->dCell();
+
+
+            IntVector coarsenRatio = IntVector(1,1,1);
+            coarsenRatio[0] = dx[0]/dx_prev[0];
+            coarsenRatio[1] = dx[1]/dx_prev[1];
+            coarsenRatio[2] = dx[2]/dx_prev[2];
+
+            // Update DyDx and DzDx ratios in the event that coarsening is not uniform in each dir.
+            DyDx[L] = dx.y() / dx.x();
+            DzDx[L] = dx.z() / dx.x();
+            Dx[L] = dx;
+
+            Vector lineup;
+            for (int ii=0; ii<3; ii++){
+              if (sign[ii]) {
+                lineup[ii] = cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 );
+              }
+
+              else {
+                 lineup[ii] = cur[ii] % coarsenRatio[ii];
+              }
+            }
+            tMax += lineup * tDelta[L];
             
             in_domain = domain_BB.inside(pos); 
 
@@ -1418,7 +1448,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_NoOfRays) );
-      
+
       dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_NoOfRays) << endl;
        // } // end quick debug testing
     }  // end cell iterator
@@ -1477,7 +1507,7 @@ Ray::computeExtents(LevelP level_0,
     IntVector patchLo = patch->getCellLowIndex();
     IntVector patchHi = patch->getCellHighIndex();
     
-    fineLevel_ROI_Lo = patchLo  - _halo;
+    fineLevel_ROI_Lo = patchLo - _halo;
     fineLevel_ROI_Hi = patchHi + _halo; 
     dbg << "  patch: " << patchLo << " " << patchHi << endl;
 
@@ -1689,7 +1719,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
-      new_dw->getModifiable( abskg,     d_abskgLabel,     d_matl, patch );
+      new_dw->getModifiable( abskg,         d_abskgLabel,     d_matl, patch );
       new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4_label,  d_matl, patch );
       
       //__________________________________
@@ -2066,7 +2096,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       Q_coarse.initialize(0.0);
 
       // coarsen
-      bool computesAve = false;
+      bool computesAve = true;
       fineToCoarseOperator(Q_coarse,   computesAve, 
                            variable,   matl, new_dw,                   
                            coarsePatch, coarseLevel, fineLevel);        
@@ -2156,7 +2186,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
 
    //#define RAY_SCATTER 1
-   #ifdef RAY_SCATTER
+#ifdef RAY_SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
@@ -2164,7 +2194,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
    double scatLength = -log(_mTwister->randDblExc() ) / scatCoeff;
    double curLength = 0;
-   #endif
+#endif
 
    //+++++++Begin ray tracing+++++++++++++++++++
    int nReflect = 0; // Number of reflections that a ray has undergone
@@ -2232,7 +2262,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
        sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
-       #ifdef RAY_SCATTER
+#ifdef RAY_SCATTER
        curLength += disMin * Dx.x(); // July 18
        if (curLength > scatLength && in_domain){
 
@@ -2286,7 +2316,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 
-       #endif
+#endif
 
      } //end domain while loop.  ++++++++++++++
 
@@ -2339,7 +2369,7 @@ Ray::sched_filter( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( which_divQ_dw, d_divQLabel, Ghost::None, 0 );
+  tsk->requires( which_divQ_dw, d_divQLabel,      Ghost::None, 0 );
   tsk->requires( which_divQ_dw, d_boundFluxLabel, Ghost::None, 0 );
   tsk->computes(                d_divQFiltLabel);
   tsk->computes(                d_boundFluxFiltLabel);
@@ -2379,7 +2409,7 @@ Ray::filter( const ProcessorGroup*,
     new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch);
 
     if( modifies_divQFilt ){
-       old_dw->getModifiable( divQFilt,     d_divQFiltLabel,      d_matl, patch );
+       old_dw->getModifiable(  divQFilt,  d_divQFiltLabel,  d_matl, patch );
      }else{
        new_dw->allocateAndPut( divQFilt,  d_divQFiltLabel,  d_matl, patch );
        divQFilt.initialize( 0.0 );

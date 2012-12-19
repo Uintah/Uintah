@@ -61,7 +61,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useCBDI = false;
   d_useCohesiveZones = false;
   d_createNewParticles = false;
-  d_addNewMaterial = false;
   d_with_color = false;
   d_fracture = false;
   d_minGridLevel = 0;
@@ -74,7 +73,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
-  d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
   d_do_contact_friction = false;
   d_addFrictionWork = 0.0;  // don't do frictional heating by default
@@ -210,8 +208,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   mpm_flag_ps->get("create_new_particles", d_createNewParticles);
-  mpm_flag_ps->get("manual_new_material", d_addNewMaterial);
-  mpm_flag_ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
   mpm_flag_ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
@@ -366,7 +362,6 @@ else{
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
-    dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
@@ -400,8 +395,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("exactDeformation",d_exactDeformation);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
-  ps->appendElement("manual_new_material", d_addNewMaterial);
-  ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial);
   ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);

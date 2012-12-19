@@ -59,6 +59,7 @@
 #include <vtkCellData.h>
 #include <vtkFloatArray.h>
 #include <vtkDoubleArray.h>
+#include <vtkLongArray.h>
 #include <vtkIntArray.h>
 #include <vtkRectilinearGrid.h>
 #include <vtkUnstructuredGrid.h>
@@ -134,9 +135,9 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBO
   }
   fclose( fp );
 
-
-
   const char * lib = "@UINTAH_UDA_TO_VIS_LIB@";
+  //<ctc> part of the secret of bundling udaReader with VisIt... 
+  //const char * lib = "@executable_path/../lib/uintah/libStandAlone_tools_uda2vis.dylib";
 
   // This environment variable prevents Core/Thread/Thread_pthreads.cc
   // from adding it's atexit handler, which will kill visit's process
@@ -537,6 +538,10 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
             AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
           else if (vartype.find("Matrix3") != string::npos)
             AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
+          else if (vartype.find("Stencil7") != string::npos)
+            AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 7); // 7 -> vector
+          else if (vartype.find("Stencil4") != string::npos)
+            AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 4); // 4 -> vector
           else 
             AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
         }
@@ -623,6 +628,10 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
             AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
           else if (vartype.find("Matrix3") != string::npos)
             AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
+          else if (vartype.find("Stencil7") != string::npos)
+            AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 7); // 7 -> vector
+          else if (vartype.find("Stencil4") != string::npos)
+            AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 4); // 4 -> vector
           else
             AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
         }
@@ -921,9 +930,39 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
 //
 // ****************************************************************************
 
+vtkIntArray *ConvertToInt(vtkDataArray *input)
+{
+  vtkIntArray *iarr = vtkIntArray::New();
+  iarr->SetNumberOfComponents(input->GetNumberOfComponents());
+  iarr->SetNumberOfTuples(input->GetNumberOfTuples());
+  for(vtkIdType i = 0; i < input->GetNumberOfTuples(); ++i)
+  {
+    //iarr->SetTuple(i, input->GetTuple(i));
+    double foo=i;
+    iarr->SetTuple(i,&foo);
+  }
+  return iarr;
+}
+
+vtkLongArray *ConvertToLong(vtkDataArray *input)
+{
+  vtkLongArray *iarr = vtkLongArray::New();
+  iarr->SetNumberOfComponents(input->GetNumberOfComponents());
+  iarr->SetNumberOfTuples(input->GetNumberOfTuples());
+  for(vtkIdType i = 0; i < input->GetNumberOfTuples(); ++i)
+  {
+    //iarr->SetTuple(i, input->GetTuple(i));
+    double foo=i;
+    iarr->SetTuple(i,&foo);
+  }
+  return iarr;
+}
+
 vtkDataSet *
 avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
 {
+  //debug5<<"avtudaReaderMTMDFileFormat::GetMesh(timestate="<<timestate<<",domain="<<domain<<",meshname="<<meshname<<std::endl;
+
   ActivateTimestep(timestate);
 
   string meshName(meshname);
@@ -948,6 +987,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     getBounds(low,high,meshName,levelInfo,local_patch);
 
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
+    //debug5<<"Calculating vtkRectilinearGrid mesh for "<<meshName<<" mesh ("<<rgrid<<").\n";
 
     int dims[3];
     for (int i=0; i<3; i++)
@@ -1048,6 +1088,65 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     // don't delete pd->data - vtk owns it now!
     delete pd;
+
+    //try to retrieve existing cache ref
+    void_ref_ptr vrTmp = cache->GetVoidRef(meshname,AUXILIARY_DATA_GLOBAL_NODE_IDS,timestate,domain);
+    vtkDataArray *pID=NULL;
+    if (*vrTmp == NULL)
+    {
+      //
+      // add globel node ids to facilitate point cloud usage
+      //
+      //basically same as GetVar(timestate, domain, "particleID");
+      int level, local_patch;
+      //debug5<<"\tGetLevelAndLocalPatchNumber...\n";
+      GetLevelAndLocalPatchNumber(domain, level, local_patch);
+      int matlNo = -1;
+      if (matl.compare("*") != 0)
+        matlNo = atoi(matl.c_str());
+
+      ParticleDataRaw *pd = NULL;
+
+      //debug5<<"\t(*getParticleData)...\n";
+      //todo: this returns an array of doubles. Need to return expected datatype to avoid unnecessary conversion.
+      pd = (*getParticleData)(archive, grid, level, local_patch, "p.particleID", matlNo, timestate);
+
+      //debug5 << "got particle data: "<<pd<<"\n";
+      if (pd)
+      {
+        vtkDoubleArray *rv = vtkDoubleArray::New();
+        //vtkLongArray *rv = vtkLongArray::New();
+        //debug5<<"\tSetNumberOfComponents("<<pd->components<<")...\n";
+        rv->SetNumberOfComponents(pd->components);
+
+        //debug5<<"\tSetArray...\n";
+        rv->SetArray(pd->data, pd->num*pd->components, 0);
+
+        // don't delete pd->data - vtk owns it now!
+        delete pd;
+        
+        //todo: this is the unnecesary conversion, from long int->double->int, to say nothing of the implicit curtailing that might occur (note also: this is a VisIt bug that uses ints to store particle ids rather than long ints)
+        vtkIntArray *iv=ConvertToInt(rv);
+        //vtkLongArray *iv=ConvertToLong(rv);
+        rv->Delete(); // this should now delete pd->data
+
+        pID=iv;
+      }
+
+      //debug5<<"read particleID ("<<pID<<")\n";
+      if(pID != NULL)
+      {
+        //debug5<<"adding global node ids from particleID\n";
+        pID->SetName("avtGlobalNodeId");
+        void_ref_ptr vr = void_ref_ptr( pID , avtVariableCache::DestructVTKObject );
+        cache->CacheVoidRef( meshname , AUXILIARY_DATA_GLOBAL_NODE_IDS , timestate , domain , vr);
+
+        //make sure it worked
+        void_ref_ptr vrTmp = cache->GetVoidRef(meshname,AUXILIARY_DATA_GLOBAL_NODE_IDS,timestate,domain);
+        if (*vrTmp == NULL || *vrTmp != *vr)
+          throw InvalidFilesException("failed to register uda particle global node");
+      }
+    }
 
     return ugrid;
   }

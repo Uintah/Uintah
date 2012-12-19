@@ -675,19 +675,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     //if (curr_level == numTimeIntegratorLevels - 1) {
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-
-      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-    }
-    //}
-    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
-        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
-      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
-      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
-    }
+//    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+//
+//      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//    }
+//    //}
+//    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
+//        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+//      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
+//      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
+//    }
 
     if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
       // this is the new efficiency calculator
@@ -1511,7 +1511,7 @@ ExplicitSolver::printTotalKE( const ProcessorGroup* ,
   new_dw->get( tke, d_lab->d_totalKineticEnergyLabel ); 
   double total_kin_energy = tke;
 
-  proc0cout << "Total kinetic energy: " << tke << std::endl;
+  proc0cout << "Total kinetic energy: " << total_kin_energy << std::endl;
 
 }
 

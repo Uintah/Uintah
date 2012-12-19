@@ -70,7 +70,6 @@
 //#define SUB_CYCLE_F
 #undef SUB_CYCLE_F
 
-
 using namespace std;
 using namespace Uintah;
 
@@ -3398,105 +3397,6 @@ ElasticPlasticHP::carryForward(const PatchSubset* patches,
 //______________________________________________________________________
 //
 void 
-ElasticPlasticHP::allocateCMDataAddRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* patch,
-                                          MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patch);
-
-  // Add requires local to this model
-  Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW, pRotationLabel_preReloc,       matlset, gnone);
-  task->requires(Task::NewDW, pStrainRateLabel_preReloc,     matlset, gnone);
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,  matlset, gnone);
-  task->requires(Task::NewDW, pPlasticStrainRateLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW, pDamageLabel_preReloc,         matlset, gnone);
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
-  task->requires(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
-  task->requires(Task::NewDW, pEnergyLabel_preReloc,         matlset, gnone);
-  d_flow->allocateCMDataAddRequires(task,matl,patch,lb);
-}
-//______________________________________________________________________
-//
-void 
-ElasticPlasticHP::allocateCMDataAdd(DataWarehouse* new_dw,
-                                  ParticleSubset* addset,
-                                  map<const VarLabel*, 
-                                  ParticleVariableBase*>* newState,
-                                  ParticleSubset* delset,
-                                  DataWarehouse* old_dw)
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  ParticleSubset::iterator n,o;
-
-  ParticleVariable<Matrix3> pRotation;
-  ParticleVariable<double>  pPlasticStrain, pDamage,pPorosity, pStrainRate,
-                            pPlasticStrainRate, pEnergy;
-  ParticleVariable<int>     pLocalized;
-
-  constParticleVariable<Matrix3> o_Rotation;
-  constParticleVariable<double>  o_PlasticStrain, o_Damage,o_Porosity;
-  constParticleVariable<double>  o_StrainRate, o_PlasticStrainRate, o_Energy;
-  constParticleVariable<int>     o_Localized;
-
-  new_dw->allocateTemporary(pRotation,         addset);
-  new_dw->allocateTemporary(pPlasticStrain,    addset);
-  new_dw->allocateTemporary(pPlasticStrainRate,addset);
-  new_dw->allocateTemporary(pDamage,           addset);
-  new_dw->allocateTemporary(pStrainRate,       addset);
-  new_dw->allocateTemporary(pLocalized,        addset);
-  new_dw->allocateTemporary(pPorosity,         addset);
-  new_dw->allocateTemporary(pEnergy,           addset);
-
-  new_dw->get(o_Rotation,         pRotationLabel_preReloc,         delset);
-  new_dw->get(o_StrainRate,       pStrainRateLabel_preReloc,       delset);
-  new_dw->get(o_PlasticStrain,    pPlasticStrainLabel_preReloc,    delset);
-  new_dw->get(o_PlasticStrainRate,pPlasticStrainRateLabel_preReloc,delset);
-  new_dw->get(o_Damage,           pDamageLabel_preReloc,           delset);
-  new_dw->get(o_Localized,        pLocalizedLabel_preReloc,        delset);
-  new_dw->get(o_Porosity,         pPorosityLabel_preReloc,         delset);
-  new_dw->get(o_Energy,           pEnergyLabel_preReloc,           delset);
-
-  n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    pRotation[*n]       = o_Rotation[*o];
-    pStrainRate[*n]     = o_StrainRate[*o];
-    pPlasticStrain[*n]  = o_PlasticStrain[*o];
-    pPlasticStrainRate[*n] = o_PlasticStrainRate[*o];
-    pDamage[*n]     = o_Damage[*o];
-    pLocalized[*n]  = o_Localized[*o];
-    pPorosity[*n]   = o_Porosity[*o];
-    pEnergy[*n]     = o_Energy[*o];
-  }
-
-  (*newState)[pRotationLabel]       = pRotation.clone();
-  (*newState)[pStrainRateLabel]     = pStrainRate.clone();
-  (*newState)[pPlasticStrainLabel]  = pPlasticStrain.clone();
-  (*newState)[pPlasticStrainRateLabel]= pPlasticStrainRate.clone();
-  (*newState)[pDamageLabel]     = pDamage.clone();
-  (*newState)[pLocalizedLabel]  = pLocalized.clone();
-  (*newState)[pPorosityLabel]   = pPorosity.clone();
-  (*newState)[pEnergyLabel]     = pEnergy.clone();
-  
-  // Initialize the data for the flow model
-  d_flow->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-}
-
-//______________________________________________________________________
-//
-void 
 ElasticPlasticHP::addRequiresDamageParameter(Task* task,
                                            const MPMMaterial* matl,
                                            const PatchSet* ) const
@@ -3685,53 +3585,4 @@ void ElasticPlasticHP::computePressEOSCM(double rho_cur,double& pressure,
 double ElasticPlasticHP::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
-}
-//__________________________________
-//
-void
-ElasticPlasticHP::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                const MPMMaterial* matl,
-                                                const PatchSet* ) const
-{
-  Ghost::GhostType  gnone = Ghost::None;
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,   matlset, gnone);
-
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-//__________________________________
-//
-void ElasticPlasticHP::checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
-{
-  if (cout_EP.active()) {
-    cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-            << " id = " << matl->getDWIndex() <<  " patch = "
-            << (patches->get(0))->getID();
-  }  
-  
-  double need_add=0.;
-                                                                                
-  // Loop thru patches
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    int dwi = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<double> pPlasticStrain;
-    new_dw->get(pPlasticStrain, pPlasticStrainLabel_preReloc, pset);
-
-    // Loop thru particles
-    ParticleSubset::iterator iter = pset->begin(); 
-    for( ; iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      if(pPlasticStrain[idx]>5.e-2){
-        need_add = -1.;
-      }
-    }
-  }
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
-  
 }

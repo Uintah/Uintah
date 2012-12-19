@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Arenisca_Verification_Test_10_Pure_Isochoric_Strain_Rates_In_Different_Directions</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>1</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase> AreniscaTest_10_PureIsochoricStrainRates.uda </filebase>
+       <outputInterval>.01</outputInterval>
+       <save label="p.x"/>
+       <save label="p.velocity"/>
+       <save label="p.volume"/>
+       <save label="p.stress"/>
+       <save label="p.particleID"/>
+       <save label="g.stressFS"/>
+       <save label="p.loadCurveID"/>
+       <save label="p.externalforce"/>
+   </DataArchiver>
+
+    <MPM>
+      	<time_integrator>           explicit  </time_integrator>
+      	<use_load_curves>           true      </use_load_curves>
+      	<interpolator>              gimp      </interpolator>
+	<UsePrescribedDeformation>  true      </UsePrescribedDeformation>
+        <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_10_PrescribedDeformation.inp  </PrescribedDeformationFile>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <constitutive_model type="Arenisca">
+	        <B0>10.e9</B0>
+	        <G0>79.e9</G0>
+                <hardening_modulus>0.0</hardening_modulus>
+	        <FSLOPE> 1.0e-10 </FSLOPE>
+	        <FSLOPE_p> 1.0e-10 </FSLOPE_p>
+	        <PEAKI1> 165.0e16 </PEAKI1>
+	        <CR> 1.0 </CR>
+	        <p0_crush_curve> -1e99 </p0_crush_curve>
+	        <p1_crush_curve> -1e99 </p1_crush_curve>
+	        <p3_crush_curve>  0.0 </p3_crush_curve>
+	        <p4_fluid_effect> 0.0 </p4_fluid_effect>
+	        <fluid_B0> 0.0 </fluid_B0>
+	        <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
+	        <subcycling_characteristic_number> 10.0 </subcycling_characteristic_number>
+	        <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+	      </constitutive_model>
+
+	      <density>1000.0</density>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+
+              <geom_object>
+                <box label="Elem">
+                  <min>[ 1.0, 1.0, 1.0]</min>
+                  <max>[ 1.5, 1.5, 1.5]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0,0.0,0]</velocity>
+                <temperature>22</temperature>
+              </geom_object>
+           </material>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+           <Face side = "x-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>                            
+       </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>[ 0.0, 0.0, 0.0]</lower>
+              <upper>[ 2.5, 2.5, 2.5]</upper>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+           <spacing>[0.5,0.5,0.5]</spacing>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

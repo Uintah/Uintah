@@ -109,6 +109,17 @@ namespace Uintah{
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw ); 
 
+      /** @brief Print a summary of the intrusion information **/ 
+      void sched_printIntrusionInformation( SchedulerP& sched, 
+                                            const PatchSet* patches, 
+                                            const MaterialSet* matls );
+
+      void printIntrusionInformation( const ProcessorGroup*, 
+                                        const PatchSubset* patches, 
+                                        const MaterialSubset* matls, 
+                                        DataWarehouse* old_dw, 
+                                        DataWarehouse* new_dw );
+
       /** @brief Sets the cell type, volume and area fractions @ boundaries */
       void sched_setCellType( SchedulerP& sched, 
                                 const PatchSet* patches, 
@@ -541,12 +552,12 @@ namespace Uintah{
           }; 
 
           inline void set_velocity( int dir, 
-                               IntVector c, 
-                               SFCXVariable<double>& u, 
-                               SFCYVariable<double>& v, 
-                               SFCZVariable<double>& w, 
-                               constCCVariable<double>& density, 
-                               double bc_density ){ 
+                                    IntVector c, 
+                                    SFCXVariable<double>& u, 
+                                    SFCYVariable<double>& v, 
+                                    SFCZVariable<double>& w, 
+                                    constCCVariable<double>& density, 
+                                    double bc_density ){ 
 
             if ( dir == 0 || dir == 1 ){ 
 
@@ -923,6 +934,8 @@ namespace Uintah{
       bool _do_energy_exchange; 
       bool _mpm_energy_exchange; 
 
+      mutable CrowdMonitor bc_face_iterator_lock;
+      mutable CrowdMonitor interior_cell_iterator_lock;
 
       const VarLabel* _T_label; 
 
@@ -933,19 +946,23 @@ namespace Uintah{
 
           int p = patch->getID(); 
 
+          bc_face_iterator_lock.readLock();
           BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
+          bc_face_iterator_lock.readUnlock();
 
+          bc_face_iterator_lock.writeLock();
           if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
             //this is a new patch that hasn't been added yet
             std::vector<IntVector> cell_indices; 
-            cell_indices.push_back(c); 
+            cell_indices.push_back(c);
             intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
 
           } else { 
 
             //iterator already started for this patch
-            // does this cell alread exisit in the list? 
+            // does this cell already exist in the list?
+
             bool already_present = false; 
             for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
               if ( *iVEC == c ) { 
@@ -957,7 +974,8 @@ namespace Uintah{
               //not in the list, insert it: 
               iMAP->second.push_back(c); 
             } 
-          } 
+          }
+          bc_face_iterator_lock.writeUnlock();
         }
       }
 
@@ -966,8 +984,11 @@ namespace Uintah{
 
         int p = patch->getID(); 
 
+        interior_cell_iterator_lock.readLock();
         BCIterator::iterator iMAP = intrusion.interior_cell_iterator.find( p );
+        interior_cell_iterator_lock.readUnlock();
 
+        interior_cell_iterator_lock.writeLock();
         if ( patch->containsCell( c ) ){ 
 
           if ( iMAP == intrusion.bc_face_iterator.end() ) {
@@ -993,11 +1014,13 @@ namespace Uintah{
               iMAP->second.push_back(c); 
             } 
           } 
+          interior_cell_iterator_lock.writeUnlock();
         }
       }
 
       void inline initialize_the_iterators( int p, IntrusionBC::Boundary& intrusion ){ 
 
+        bc_face_iterator_lock.writeLock();
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
@@ -1006,7 +1029,10 @@ namespace Uintah{
           cell_indices.clear(); 
           intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
 
-        } 
+        }
+        bc_face_iterator_lock.writeUnlock();
+
+        interior_cell_iterator_lock.writeLock();
         BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
         if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
 
@@ -1016,6 +1042,7 @@ namespace Uintah{
           intrusion.interior_cell_iterator.insert(make_pair( p, cell_indices )); 
 
         } 
+        interior_cell_iterator_lock.writeUnlock();
 
       } 
 

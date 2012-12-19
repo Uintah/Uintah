@@ -152,14 +152,14 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-CoalGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+CoalGasHeat::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasHeat::dummyInit"; 
+  string taskname = "CoalGasHeat::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasHeat::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CoalGasHeat::initialize);
 
   tsk->computes(_src_label);
 
@@ -171,7 +171,7 @@ CoalGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasHeat::dummyInit( const ProcessorGroup* pc, 
+CoalGasHeat::initialize( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
