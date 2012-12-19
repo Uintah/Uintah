@@ -102,6 +102,7 @@ class Electrostatics {
      * @return
      */
     std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+                                         const MDSystem& system,
                                          const Transformation3D<std::complex<double> >& invertSpace);
 
     /**
