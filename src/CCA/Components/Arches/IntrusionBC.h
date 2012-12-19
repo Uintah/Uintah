@@ -552,12 +552,12 @@ namespace Uintah{
           }; 
 
           inline void set_velocity( int dir, 
-                               IntVector c, 
-                               SFCXVariable<double>& u, 
-                               SFCYVariable<double>& v, 
-                               SFCZVariable<double>& w, 
-                               constCCVariable<double>& density, 
-                               double bc_density ){ 
+                                    IntVector c, 
+                                    SFCXVariable<double>& u, 
+                                    SFCYVariable<double>& v, 
+                                    SFCZVariable<double>& w, 
+                                    constCCVariable<double>& density, 
+                                    double bc_density ){ 
 
             if ( dir == 0 || dir == 1 ){ 
 

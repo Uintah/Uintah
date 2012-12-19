@@ -108,7 +108,7 @@ public:
 
   }; // Builder
 
-  inline double getRate( double T, double CxHy, double O2, double diluent, double f_tot_fuel, double mix_mw, double den, double dt, double vol ) {
+  inline double getRate( double T, double CxHy, double O2, double diluent, double f_tot_fuel, double den, double dt, double vol ) {
 
     double rate = 0.0; 
     bool compute_rate = false; 
@@ -136,11 +136,9 @@ public:
 
       double small = 1e-16; 
 
-      double c_O2 = O2 * 1.0/ ( mix_mw * d_MW_O2 ) * d_Press / ( d_R * T ); 
-      c_O2 *= 1.0e-6; // to convert to gmol/cm^3
+      double c_O2 = O2 * 1.0/d_MW_O2 * den * 1.0e-3; //gmol/cm^3
 
-      double c_HC = CxHy * 1.0/ ( mix_mw * d_MW_HC ) * d_Press / ( d_R * T ); 
-      c_HC *= 1.0e-6; // to convert to gmol/cm^3
+      double c_HC = CxHy * 1.0/d_MW_HC * den * 1.0e-3; //gmol/cm^3 
 
       double my_exp = -1.0 * d_ER / T; 
 
@@ -151,8 +149,7 @@ public:
 
       rate = d_A * exp( my_exp ) * p_HC * pow(c_O2, d_n); // gmol/cm^3/s
 
-      rate *= d_MW_HC * mix_mw * d_R * T / d_Press; 
-      rate *= den * 1.0e6; // to get [kg HC/s/vol]
+      rate *= 1.0e3 * d_MW_HC; 
       rate *= d_sign; // picking the sign.
 
       // now check the rate based on local reactants: 
