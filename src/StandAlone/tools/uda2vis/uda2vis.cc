@@ -77,6 +77,16 @@ int numComponents<Vector>() {
 }
 
 template <>
+int numComponents<Stencil7>() {
+  return 7;
+}
+
+template <>
+int numComponents<Stencil4>() {
+  return 4;
+}
+
+template <>
 int numComponents<Point>() {
   return 3;
 }
@@ -96,6 +106,25 @@ void copyComponents<Vector>(double *dest, const Vector &src) {
   dest[0] = (double)src[0];
   dest[1] = (double)src[1];
   dest[2] = (double)src[2];
+}
+
+template <>
+void copyComponents<Stencil7>(double *dest, const Stencil7 &src) {
+  dest[0] = (double)src[0];
+  dest[1] = (double)src[1];
+  dest[2] = (double)src[2];
+  dest[3] = (double)src[3];
+  dest[4] = (double)src[4];
+  dest[5] = (double)src[5];
+  dest[6] = (double)src[6];
+}
+
+template <>
+void copyComponents<Stencil4>(double *dest, const Stencil4 &src) {
+  dest[0] = (double)src[0];
+  dest[1] = (double)src[1];
+  dest[2] = (double)src[2];
+  dest[3] = (double)src[3];
 }
 
 template <>
@@ -325,6 +354,11 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
     return readGridData<VAR, int>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(archive, patch, level, variable_name, material, timestep, low, high);
+  case Uintah::TypeDescription::Other:
+    if (subtype->getName()=="Stencil7")
+      return readGridData<VAR, Stencil7>(archive, patch, level, variable_name, material, timestep, low, high);
+    if (subtype->getName()=="Stencil4")
+      return readGridData<VAR, Stencil4>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::bool_type:
@@ -334,7 +368,7 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
     cerr << "Subtype " << subtype->getName() << " is not implemented...\n";
     return NULL;
   default:
-    cerr << "Unknown subtype\n";
+    cerr << "Unknown subtype: "<<subtype->getName()<<"\n";
     return NULL;
   }
 }
@@ -434,7 +468,6 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
     pd->num += var->getParticleSubset()->numParticles();
   }
 
-
   // copy all the data
   int pi=0;
   pd->data = new double[pd->components * pd->num];
@@ -442,6 +475,7 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
     for (ParticleSubset::iterator p = particle_vars[i]->getParticleSubset()->begin();
          p != particle_vars[i]->getParticleSubset()->end(); ++p) {
 
+      //TODO: need to be able to read data as array of longs for particle id, but copyComponents always reads double
       copyComponents<T>(&pd->data[pi*pd->components],
                         (*particle_vars[i])[*p]);
       pi++;
@@ -504,6 +538,11 @@ getParticleData(DataArchive *archive,
     return readParticleData<Point>(archive, patch, variable_name, material, timestep);
   case Uintah::TypeDescription::Vector:
     return readParticleData<Vector>(archive, patch, variable_name, material, timestep);
+  case Uintah::TypeDescription::Other:
+    if (subtype->getName()=="Stencil7")
+      return readParticleData<Stencil7>(archive, patch, variable_name, material, timestep);
+    if (subtype->getName()=="Stencil4")
+      return readParticleData<Stencil4>(archive, patch, variable_name, material, timestep);
   case Uintah::TypeDescription::Matrix3:
     return readParticleData<Matrix3>(archive, patch, variable_name, material, timestep);
   default:

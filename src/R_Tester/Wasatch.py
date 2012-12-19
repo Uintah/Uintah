@@ -16,6 +16,22 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
                                        "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+liddrivencavity3Dperf_ups = modUPS( the_dir, \
+                                       "lid-driven-cavity-3D-Re1000.ups", \
+                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+liddrivencavity3Dvremanperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-VREMAN.ups", \
+                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+liddrivencavity3Dsmagorinskyperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-SMAGORINSKY.ups", \
+                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+liddrivencavity3Dwaleperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-WALE.ups", \
+                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+                                       
+scalabilitytestperf_ups = modUPS( the_dir, \
+                                       "scalability-test.ups", \
+                                       ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -95,7 +111,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("turb-lid-driven-cavity-3D-VREMAN",           "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       \
+  ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                \

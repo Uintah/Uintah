@@ -71,14 +71,14 @@ public:
                       DataWarehouse* , 
                       int timeSubStep );
   
-  void sched_dummyInit( const LevelP& level, 
-                        SchedulerP& sched );
+  void sched_initialize( const LevelP& level, 
+                         SchedulerP& sched );
   
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   //______________________________________________________________________
   class Builder
@@ -134,8 +134,9 @@ private:
 
   //__________________________________
   //
-  int _radiation_calc_freq;
-  int _matl;
+  int     _radiation_calc_freq;
+
+  int     _matl;
   MaterialSet* _matlSet;
   
 
@@ -165,8 +166,7 @@ private:
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
-
-	std::vector<const VarLabel*> _species_varlabels; 
+  std::vector<const VarLabel*> _species_varlabels; 
 
 }; // end RMCRT
 } // end namespace Uintah

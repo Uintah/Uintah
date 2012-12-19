@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+
+<Uintah_specification>
+
+   <Meta>
+      <title>Kayenta_Verification_Test_02_Pure_Isochoric_Strain_Rates_In_Different_Directions</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>1</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase>KayentaTest_02_IsochoricStrainRates.uda</filebase>
+       <outputInterval>.02</outputInterval>
+       <save label="p.x"/>
+       <save label="p.velocity"/>
+       <save label="p.volume"/>
+       <save label="p.stress"/>
+       <save label="p.particleID"/>
+       <save label="g.stressFS"/>
+       <save label="p.loadCurveID"/>
+       <save label="p.externalforce"/>
+   </DataArchiver>
+
+    <MPM>
+      	<time_integrator>explicit</time_integrator>
+      	<use_load_curves> true </use_load_curves>
+      	<interpolator>gimp</interpolator>
+	<UsePrescribedDeformation>true</UsePrescribedDeformation>
+        <PrescribedDeformationFile>    inputs/MPM/Kayenta/KayentaTest_02_PrescribedDeformation.inp   </PrescribedDeformationFile>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <constitutive_model type="kayenta">
+	        <A1>165.e6</A1>		<!--yield stress in shear -->
+	        <B0>10.e9</B0>		<!--linear elastic bulk modulus (set high to bring attention to spurious predictions) -->
+        	<G0>79.e9</G0>		<!--linear elastic shear modulus -->
+        	<J3TYPE>1</J3TYPE>	<!--Gudehause model capable of circular octahedral profile -->
+        	<RK>1</RK>		<!--TXE/TXC ratio=1 makes cirular octahedral profile -->
+	        <P0>-1.e99</P0>		<!--cannot yield in hydrostatic compression -->
+          	<CTI1>1.e99</CTI1>	<!--pressure cut-off infinity -->
+        	<CTPS>1.e99</CTPS>	<!--principal stress cut-off infinity -->
+	        <CR>0.001</CR>		<!--minimize curved portion of cap -->
+              </constitutive_model>
+
+              <density>1000.0</density>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <box label="Elem">
+                  <min>[ 1.0, 1.0, 1.0]</min>
+                  <max>[ 1.5, 1.5, 1.5]</max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0,0.0,0]</velocity>
+                <temperature>22</temperature>
+              </geom_object>
+           </material>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+           <Face side = "x-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet"><value>[0.0,0.0,0.0]</value></BCType>
+           </Face>                            
+       </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>[ 0.0, 0.0, 0.0]</lower>
+              <upper>[ 2.5, 2.5, 2.5]</upper>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+           <spacing>[0.5,0.5,0.5]</spacing>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

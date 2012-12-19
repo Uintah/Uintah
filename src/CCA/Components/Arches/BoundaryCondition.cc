@@ -180,7 +180,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   int total_cellTypes = 100;
 
-  d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
+  d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
   if(db.get_rep()==0)
   {
@@ -5741,11 +5741,6 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       new_dw->get( area_var, bc_iter->second.total_area_label );
       double area = area_var; 
 
-      proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
-      proc0cout << "            area: " << area << endl;
-      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
-
       for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
 
         //get the face
@@ -5814,6 +5809,12 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
           }
         }
       }
+
+      proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
+      proc0cout << "            area: " << area << endl;
+      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
+
     }
     proc0cout << endl;
   }
@@ -6938,6 +6939,7 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
     _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
     _intrusionBC->sched_computeProperties( sched, patches, matls ); 
     _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_printIntrusionInformation( sched, patches, matls ); 
   }
 
 }

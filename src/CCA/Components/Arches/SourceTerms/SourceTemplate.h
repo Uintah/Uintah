@@ -44,12 +44,12 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  void sched_initialize( const LevelP& level, SchedulerP& sched );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   class Builder
     : public SourceTermBase::Builder { 

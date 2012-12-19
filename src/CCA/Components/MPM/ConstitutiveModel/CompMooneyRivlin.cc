@@ -103,40 +103,6 @@ CompMooneyRivlin::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-///////////////////////////////////////////////////////////////////////////
-/*! Allocate data required during the conversion of failed particles 
-    from one material to another */
-///////////////////////////////////////////////////////////////////////////
-void 
-CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches ,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-}
-
-
-void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
-                                         ParticleSubset* addset,
-                                         map<const VarLabel*,
-                                         ParticleVariableBase*>* newState,
-                                         ParticleSubset* delset,
-                                         DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-}
-
-
 void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
