@@ -183,6 +183,13 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
   }
 }
 
+void MD::scheduleInterpolateChargesToGrid(SchedulerP&,
+                                          const PatchSet*,
+                                          const MaterialSet*)
+{
+
+}
+
 void MD::schedulePerformSPME(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSet* matls)
@@ -414,6 +421,15 @@ void MD::initialize(const ProcessorGroup* /* pg */,
     }
     new_dw->put(sum_vartype(0.0), lb->vdwEnergyLabel);
   }
+}
+
+void MD::interpolateChargesToGrid(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
+{
+
 }
 
 void MD::performSPME(const ProcessorGroup* pg,
