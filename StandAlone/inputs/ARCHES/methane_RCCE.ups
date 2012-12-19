@@ -18,7 +18,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>westbrook_dryer_test.uda</filebase>
+    <filebase>methane_RCCE.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="totalKineticEnergy"/>
@@ -283,9 +283,7 @@
             <fuel_mass_fraction>1.0</fuel_mass_fraction>
             <oxidizer_O2_mass_fraction>.23</oxidizer_O2_mass_fraction>
             <cstar_fraction_label>C*H4</cstar_fraction_label>
-            <cstar_for_strip_label>mixture_fraction_2</cstar_for_strip_label>
-            <equil_fraction_label>mixture_fraction</equil_fraction_label>
-            <mw_label>mixture_molecular_weight</mw_label>
+            <c_fraction_label>mixture_fraction</c_fraction_label>
             <temperature_label>temperature</temperature_label>
             <o2_label>O2</o2_label>
             <density_label>density</density_label>
@@ -317,9 +315,7 @@
             <fuel_mass_fraction>1.0</fuel_mass_fraction>
             <oxidizer_O2_mass_fraction>.23</oxidizer_O2_mass_fraction>
             <cstar_fraction_label>C*H4</cstar_fraction_label>
-            <cstar_for_strip_label>mixture_fraction_2</cstar_for_strip_label>
-            <equil_fraction_label>mixture_fraction</equil_fraction_label>
-            <mw_label>mixture_molecular_weight</mw_label>
+            <c_fraction_label>mixture_fraction</c_fraction_label>
             <temperature_label>temperature</temperature_label>
             <o2_label>O2</o2_label>
             <density_label>density</density_label>
