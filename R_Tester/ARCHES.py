@@ -40,9 +40,11 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
+#  Test: purpose
 #  massource_con_den: a constant density cold channel flow with a constant mass source. used to test mass conservation for pressure solver (with mass source terms)
 #  massource_var_den: a two-fluid mixing cold channel flow with a constant mass source, used to test mass conservation for pressure solver (with mass source terms)
 #  massource_coal_DQMOM: a coal reacting channel flow with a constant mass source term (or with coal mass source term), used to test mass conservation for pressure solver
+#  methane_RCCE: 3m fire using the westbrook dryer/RCCE model
 
 UNUSED_TESTS = []
 NIGHTLYTESTS = [
@@ -56,6 +58,7 @@ NIGHTLYTESTS = [
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Darwin" , ["doesTestRun"])     , 
    ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
+   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_2"                , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
@@ -94,6 +97,7 @@ LOCALTESTS = [
    ("dqmom_test_4"               , "DQMOM_regression/dqmom_test_4.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_jet"                , "ClassicMixingTables/ups/methane_jet.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
+   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
    ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1, "All" , ["exactComparison", "no_restart"]) ,
    ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
