@@ -70,6 +70,26 @@ class Electrostatics {
      */
     ~Electrostatics();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    enum ElectroStaticsType {
+      EWALD,
+      SPME,
+      FMM
+    };
+
+    /**
+     * @brief
+     * @param
+     */
+    Electrostatics(ElectroStaticsType type,
+                   IntVector _globalExtents,
+                   IntVector _globalOffset,
+                   IntVector _localExtents);
+
     SPMEGrid<double> initializeSPME(const MDSystem& system,
                                     const IntVector& ewaldMeshLimits,
                                     const Matrix3& cellInverse,
@@ -84,6 +104,17 @@ class Electrostatics {
      */
     void performSPME(const MDSystem& system,
                      const PatchSet* patches);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline ElectroStaticsType getType() const
+    {
+      return this->electroStaticsType;
+    }
+
 
   private:
 
@@ -176,6 +207,11 @@ class Electrostatics {
       }
       return m;
     }
+
+    ElectroStaticsType electroStaticsType;   //!< The type of long-range electrostatics to be performed.
+    IntVector globalExtents;                 //!<
+    IntVector globalOffset;                  //!<
+    IntVector localExtents;                  //!<
 
 };
 

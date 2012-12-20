@@ -49,70 +49,68 @@ Electrostatics::~Electrostatics()
 
 }
 
+Electrostatics::Electrostatics(ElectroStaticsType type,
+                               IntVector _globalExtents,
+                               IntVector _globalOffset,
+                               IntVector _localExtents) :
+    electroStaticsType(type), globalExtents(_globalExtents), globalOffset(_globalOffset), localExtents(_localExtents)
+{
+
+}
+
 void Electrostatics::performSPME(const MDSystem& system,
                                  const PatchSet* patches)
 {
-//  // Extract necessary information from system object
-//  Matrix3 InverseCell;
-//  double  SystemVolume;
-//
-//   InverseCell = MD_System->GetUnitCellInverse();
-//  SystemVolume = MD_System->GetUnitCellVolume();
-//
-//  // Extract SPME information from electrostatics subsystem object
-//  IntVector SPMEGrid_Extents;
-//  TotalSPMEGrid_Extents = SPME_Data->GetGridExtents();
-//
-//  // Extract spatial information from local patch data
-//  IntVector LocalGridExtents, LocalGridOffset;
-//  LocalGridExtents = LocalPatch->GetGridExtents();
-//   LocalGridOffset = LocalPatch->GetGridOffset();
-//      ParticleList = LocalPatch->ExtractParticleSubset();
-//
-//  cdGrid fStressPre(LocalGridExtents,LocalGridOffset), fTheta(LocalGridExtents,LocalGridOffset);
-//
-//  vector<double> M1(LocalGridExtents.x()),M2(LocalGridExtents.y()),M3(LocalGridExtents.z());
-//
-//  M1 = GenerateMVector(LocalGridExtents.x(),LocalGridOffset.x(),TotalSPMEGrid_Extents.x());
-//  M2 = GenerateMVector(LocalGridExtents.y(),LocalGridOffset.y(),TotalSPMEGrid_Extents.y());
-//  M3 = GenerateMVector(LocalGridExtents.z(),LocalGridOffset.z(),TotalSPMEGrid_Extents.z());
-//
-//  if (MD_System->NewBox()) { // Box dimensions have changed since last integration time step; we need to update B and C
-//    SimpleGrid fBGrid(LocalGridExtents,LocalGridOffset), fCGrid(LocalGridExtents,LocalGridOffset);
-//    CalculateStaticGrids(LocalGridExtents,LocalGridOffset,MD_System,fBGrid,fCGrid,fStressPre,M1,M2,M3);
-//    // Check input parameters, might just need Inverse Cell, System Volume instead of whole MD_System
-//    //  Also probably need to fix this routine up again for current object model
-//
-//    fTheta=fBGrid*fCGrid;
-//  }
-//  SimpleGrid<vector<MapPoint >> LocalGridMap;
-//  LocalGridMap = CreateGridMap(LocalGridExtents,LocalGridOffset,TotalSPMEGrid_Extents,ParticleList/*other variables needed?*/);
-//
-//  // Begin main SPME loop;
-//  SPME_Grid Q;
-//  // set up FFT routine back/forward transform auxiliary data here
-//  FFT_Data_Type ForwardTransformData,BackwardTransformData;
-//
-//  bool converged=false;     // Calculate at least once
-//  Matrix StressTensorLocal=Matrix(0); // Holds this patches contribution to the overall stress tensor
-//  double EnergyLocal=0;       // Holds this patches local contribution to the energy
-//
-//  while (!converged) {    // Iterate over this subset until charge convergence
-//    Q.MapChargeToGrid(LocalGridMap, ParticleList);
-//    Q.InPlaceFFT_RealToFourier(ForwardTransformData);
-//    Q.MultiplyInPlace(fTheta);
-//    EnergyLocal = Q.CalculateEnergyAndStress(M1,M2,M3,StressTensorLocal,fStressPre,fTheta);
-//    // Note: Justin - Can we extract energy easily from stress tensor?  If it's just tr(StressTensor) or somesuch, it would be preferable
-//    //   to have this routine pass back only the stress tensor.
-//    // NYI:  Q.CalculatePolarization(CurrentPolarizationGrid,OldPolarizationGrid);
-//    converged=true;  // No convergence if no polarization
-//    // if (polarizable) { converged=CurrentPolarizationGrid.CheckConvergence(OldPolarizationGrid); }
-//  }
-//  // We need to calculate new forces on particles while preserving old particle values
-//  Q.MapForceFromGrid(LocalGridMap, NewParticleList);
-//
-//  // We need to accumulate EnergyLocal and StressLocal here, as well as the NewParticleList with their associated forces on return
-//  return;
+  // Extract necessary information from system object
+  Matrix3 inverseCell = system.getCellInverse();
+  double systemVolume = system.getVolume();
+  ParticleList = LocalPatch->ExtractParticleSubset();
+
+  cdGrid fStressPre(localExtents, globalOffset), fTheta(localExtents, globalOffset);
+
+  vector<double> M1(localExtents.x()), M2(localExtents.y()), M3(localExtents.z());
+
+  M1 = generateMVector(localExtents.x(), globalOffset.x(), globalExtents.x());
+  M2 = generateMVector(localExtents.y(), globalOffset.y(), globalExtents.y());
+  M3 = generateMVector(localExtents.z(), globalOffset.z(), globalExtents.z());
+
+  // Box dimensions have changed since last integration time step; we need to update B and C
+  if (system.newBox()) {
+    SimpleGrid fBGrid(localExtents, globalOffset), fCGrid(localExtents, globalOffset);
+    CalculateStaticGrids(localExtents, globalOffset, MD_System, fBGrid, fCGrid, fStressPre, M1, M2, M3);
+    // Check input parameters, might just need Inverse Cell, System Volume instead of whole MD_System
+    //  Also probably need to fix this routine up again for current object model
+
+    fTheta = fBGrid * fCGrid;
+  }
+  SimpleGrid<vector<MapPoint<double> > > LocalGridMap;
+  LocalGridMap = createChargeGridMap(localExtents, globalOffset, globalExtents, ParticleList/*other variables needed?*/);
+
+  // Begin main SPME loop;
+  SPME_Grid Q;
+  // set up FFT routine back/forward transform auxiliary data here
+  FFT_Data_Type ForwardTransformData, BackwardTransformData;
+
+  bool converged = false;     // Calculate at least once
+  Matrix StressTensorLocal = Matrix(0);  // Holds this patches contribution to the overall stress tensor
+  double EnergyLocal = 0;       // Holds this patches local contribution to the energy
+
+  while (!converged) {    // Iterate over this subset until charge convergence
+    Q.MapChargeToGrid(LocalGridMap, ParticleList);
+    Q.InPlaceFFT_RealToFourier(ForwardTransformData);
+    Q.MultiplyInPlace(fTheta);
+    EnergyLocal = Q.CalculateEnergyAndStress(M1, M2, M3, StressTensorLocal, fStressPre, fTheta);
+    // Note: Justin - Can we extract energy easily from stress tensor?  If it's just tr(StressTensor) or somesuch, it would be preferable
+    //   to have this routine pass back only the stress tensor.
+    // NYI:  Q.CalculatePolarization(CurrentPolarizationGrid,OldPolarizationGrid);
+    converged = true;  // No convergence if no polarization
+    // if (polarizable) { converged=CurrentPolarizationGrid.CheckConvergence(OldPolarizationGrid); }
+  }
+  // We need to calculate new forces on particles while preserving old particle values
+  Q.MapForceFromGrid(LocalGridMap, NewParticleList);
+
+  // We need to accumulate EnergyLocal and StressLocal here, as well as the NewParticleList with their associated forces on return
+  return;
 }
 
 SPMEGrid<double> Electrostatics::initializeSPME(const MDSystem& system,
@@ -212,7 +210,7 @@ SPMEGridMap<double> Electrostatics::createChargeGridMap(const SPMEGrid<std::comp
   IntVector EwaldMeshLimits = grid->GetMeshLimits();
   IntVector SplineOrder = SPME_GlobalGrid->GetSplineOrder();
 
-  Vector PatchOffset = patch->get ->SpatialOffset();
+  Vector PatchOffset = patch->get->SpatialOffset();
   Vector PatchExtent = CurrentPatch->SpatialExtent();  // HighCorner-LowCorner, where HighCorner is the max(X,Y,Z) of the subspace, LowCorner is
                                                        //   min(X,Y,Z)
 
