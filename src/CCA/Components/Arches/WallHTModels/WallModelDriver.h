@@ -69,7 +69,7 @@ namespace Uintah{
           virtual ~HTModelBase(){}; 
 
           virtual void problemSetup( const ProblemSpecP& input_db ) = 0;
-          virtual void computeHT( const Patch* patch, HTVariables* vars ) = 0; 
+          virtual void computeHT( const Patch* patch, HTVariables& vars ) = 0; 
 
         private: 
 
@@ -86,7 +86,7 @@ namespace Uintah{
           ~SimpleHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, HTVariables* vars ); 
+          void computeHT( const Patch* patch, HTVariables& vars ); 
 
         private: 
 

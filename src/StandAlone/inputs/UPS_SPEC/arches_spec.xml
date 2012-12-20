@@ -458,6 +458,22 @@
         </WallBC>
       </BoundaryConditions>
 
+      <WallHT                           spec="OPTIONAL NO_DATA">
+        <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
+        <model                          spec="MULTIPLE NO_DATA"
+                                        attribute1="type REQUIRED STRING 'simple_ht'">
+          <!-- simple heat transfer 
+                  Solves for the gas side wall temperature by solving the discrete form of: 
+                  q = - k dT/dy
+                  for all domain solid walls everywhere. Excludes intrusions.  
+          --> 
+          <k                            spec="REQUIRED DOUBLE" need_applies_to="type simple_ht"/> <!-- thermal conductivity, [W/(m K)] --> 
+          <wall_thickness               spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- thickness of the wall in meters, [meters] --> 
+          <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] --> 
+
+        </model>
+      </WallHT>
+
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
         <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
@@ -696,7 +712,6 @@
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
-              <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
