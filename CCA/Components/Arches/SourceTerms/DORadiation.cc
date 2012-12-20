@@ -315,12 +315,11 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if ( do_radiation ){ 
 
-
       if ( timeSubStep == 0 ) {
 
         _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 
-        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+        _DO_model->boundarycondition_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 

@@ -89,6 +89,12 @@ public:
                                      ArchesVariables* vars,
                                      ArchesConstVariables* constvars);
 
+      virtual void boundarycondition_new(const ProcessorGroup* pc,
+                                         const Patch* patch,
+                                         CellInformation* cellinfo, 
+                                         ArchesVariables* vars,
+                                         ArchesConstVariables* constvars);
+
       virtual void intensitysolve(const ProcessorGroup* pc,
                                   const Patch* patch,
                                   CellInformation* cellinfo, 
@@ -211,10 +217,10 @@ private:
       bool lprobone, lprobtwo, lprobthree; 
 
       double d_wall_abskg; 
-      double d_wall_temperature; 
       double d_intrusion_abskg; 
 
       bool d_do_const_wall_T;
+      double d_wall_temperature; 
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
