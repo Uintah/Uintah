@@ -30,15 +30,20 @@
 #include <CCA/Components/MD/SPMEGridMap.h>
 #include <CCA/Components/MD/Transformation3D.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
@@ -51,7 +56,9 @@
 
 using namespace Uintah;
 
-static DebugStream md_dbg("MDDebug", false);
+static DebugStream md_cout_dbg("MDDebug", false);
+static DebugStream md_cout_doing("MDDoing", false);
+static DebugStream md_cout_spme("MDSPME", false);
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
@@ -69,6 +76,8 @@ void MD::problemSetup(const ProblemSpecP& params,
                       GridP& /*grid*/,
                       SimulationStateP& sharedState)
 {
+  printTask(md_cout_doing, "MD::problemSetup");
+
   d_sharedState_ = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   ProblemSpecP ps = params->findBlock("MD");
@@ -98,7 +107,9 @@ void MD::problemSetup(const ProblemSpecP& params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize", this, &MD::initialize);
+  printSchedule(level, md_cout_doing, "MD::scheduleInitialize");
+
+  Task* task = scinew Task("MD::initialize", this, &MD::initialize);
   task->computes(lb->pXLabel);
   task->computes(lb->pForceLabel);
   task->computes(lb->pAccelLabel);
@@ -114,7 +125,9 @@ void MD::scheduleInitialize(const LevelP& level,
 void MD::scheduleComputeStableTimestep(const LevelP& level,
                                        SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep", this, &MD::computeStableTimestep);
+  printSchedule(level, md_cout_doing, "MD::scheduleComputeStableTimestep");
+
+  Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
   task->requires(Task::NewDW, lb->vdwEnergyLabel);
   task->computes(d_sharedState_->get_delt_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(), d_sharedState_->allMaterials());
@@ -123,6 +136,8 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 void MD::scheduleTimeAdvance(const LevelP& level,
                              SchedulerP& sched)
 {
+  printSchedule(level, md_cout_doing, "MD::scheduleTimeAdvance");
+
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState_->allMaterials();
 
@@ -133,6 +148,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   d_particleState_preReloc.resize(matls->size());
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
+  scheduleInterpolateParticlesToGrid(sched, patches, matls);
   schedulePerformSPME(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
@@ -146,6 +162,8 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
+  printTask(patches, md_cout_doing, "MD::computeStableTimestep");
+
   if (pg->myrank() == 0) {
     sum_vartype vdwEnergy;
     new_dw->get(vdwEnergy, lb->vdwEnergyLabel);
@@ -161,7 +179,9 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  Task* task = scinew Task("calculateNonBondedForces", this, &MD::calculateNonBondedForces);
+  printSchedule(patches, md_cout_doing, "MD::scheduleCalculateNonBondedForces");
+
+  Task* task = scinew Task("MD::calculateNonBondedForces", this, &MD::calculateNonBondedForces);
 
   task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -183,17 +203,21 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
   }
 }
 
-void MD::scheduleInterpolateChargesToGrid(SchedulerP&,
-                                          const PatchSet*,
-                                          const MaterialSet*)
+void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
 {
+  printSchedule(patches, md_cout_doing, "MD::scheduleInterpolateParticlesToGrid");
 
+  Task* task = scinew Task("MD::interpolateParticlesToGrid", this, &MD::interpolateParticlesToGrid);
 }
 
 void MD::schedulePerformSPME(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSet* matls)
 {
+  printSchedule(patches, md_cout_doing, "MD::schedulePerformSPME");
+
   Task* task = scinew Task("performSPME", this, &MD::performSPME);
 
   task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -233,6 +257,8 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
                                 const PatchSet* patches,
                                 const MaterialSet* matls)
 {
+  printSchedule(patches, md_cout_doing, "MD::scheduleUpdatePosition");
+
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
   task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -354,6 +380,8 @@ void MD::initialize(const ProcessorGroup* /* pg */,
                     DataWarehouse* /*old_dw*/,
                     DataWarehouse* new_dw)
 {
+  printTask(patches, md_cout_doing, "MD::initialize");
+
   // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
@@ -408,7 +436,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
         pids[i] = patch->getID() * numAtoms_ + i;
 
         // TODO update this with new VarLabels
-        if (md_dbg.active()) {
+        if (md_cout_dbg.active()) {
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
@@ -423,13 +451,13 @@ void MD::initialize(const ProcessorGroup* /* pg */,
   }
 }
 
-void MD::interpolateChargesToGrid(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
+void MD::interpolateParticlesToGrid(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
 {
-
+  printTask(patches, md_cout_doing, "MD::interpolateChargesToGrid");
 }
 
 void MD::performSPME(const ProcessorGroup* pg,
@@ -438,7 +466,7 @@ void MD::performSPME(const ProcessorGroup* pg,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw)
 {
-
+  printTask(patches, md_cout_doing, "MD::performSPME");
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,
@@ -447,6 +475,8 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  printTask(patches, md_cout_doing, "MD::calculateNonBondedForces");
+
   // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
@@ -524,7 +554,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
         // sum up contributions to force for atom i
         pforcenew[i] += atomForce;
 
-        if (md_dbg.active()) {
+        if (md_cout_dbg.active()) {
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pids[i] << std::setw(6);
           std::cout << "Prev Position: [";
@@ -544,7 +574,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
       // this accounts for double energy with Aij and Aji
       vdwEnergy *= 0.50;
 
-      if (md_dbg.active()) {
+      if (md_cout_dbg.active()) {
         Vector forces(0.0, 0.0, 0.0);
         for (unsigned int i = 0; i < numParticles; i++) {
           forces += pforcenew[i];
@@ -576,6 +606,8 @@ void MD::updatePosition(const ProcessorGroup* pg,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
+  printTask(patches, md_cout_doing, "MD::updatePosition");
+
   // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
@@ -637,7 +669,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
         pvelocitynew[i] = pvelocity[i] + paccel[i] * delT;
         pxnew[i] = px[i] + pvelocity[i] + pvelocitynew[i] * 0.5 * delT;
 
-        if (md_dbg.active()) {
+        if (md_cout_dbg.active()) {
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pidsnew[i] << std::setw(6);
           std::cout << "New Position: [";

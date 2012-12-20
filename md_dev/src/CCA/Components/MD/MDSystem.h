@@ -71,7 +71,11 @@ class MDSystem {
      * @param _temperature The initial MD system temperature.
      * @param _orthorhombic Whether of not the MD system is using orthorhombic coordinates.
      */
-    MDSystem(double _ewaldBeta, double _volume, double _pressure, double _temperature, bool _orthorhombic);
+    MDSystem(double _ewaldBeta,
+             double _volume,
+             double _pressure,
+             double _temperature,
+             bool _orthorhombic);
 
     /**
      * @brief
@@ -120,7 +124,7 @@ class MDSystem {
      */
     inline double getVolume() const
     {
-      return this->volume;
+      return this->unitCell;
     }
 
     /**
@@ -130,7 +134,7 @@ class MDSystem {
      */
     inline void setVolume(double _volume)
     {
-      this->volume = _volume;
+      this->unitCell = _volume;
     }
 
     /**
@@ -173,7 +177,6 @@ class MDSystem {
       this->temperature = _temperature;
     }
 
-
     /**
      * @brief
      * @param None
@@ -194,14 +197,40 @@ class MDSystem {
       this->orthorhombic = _value;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline bool newBox()
+    {
+      if (this->hasBoxChanged) {
+        this->hasBoxChanged = false;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline void setNewBox(bool value)
+    {
+      this->hasBoxChanged = value;
+    }
+
   private:
 
     Matrix3 cellInverse;  //!<
     double ewaldBeta;     //!< The Ewald damping coefficient
-    double volume;        //!< Total MD system volume
+    double unitCell;      //!< Total MD system unit cell volume
     double pressure;      //!< Total MD system pressure
     double temperature;   //!< Total MD system temperature
     bool orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
+    bool hasBoxChanged;   //!<
 
 };
 

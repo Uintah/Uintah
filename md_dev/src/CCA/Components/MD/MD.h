@@ -108,7 +108,8 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @return
      */
     enum IntegratorType {
-      Explicit, Implicit,
+      Explicit,
+      Implicit,
     };
 
   protected:
@@ -136,9 +137,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void scheduleInterpolateChargesToGrid(SchedulerP&,
-                                          const PatchSet*,
-                                          const MaterialSet*);
+    void scheduleInterpolateParticlesToGrid(SchedulerP&,
+                                            const PatchSet*,
+                                            const MaterialSet*);
 
     /**
      * @brief
@@ -187,11 +188,11 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void interpolateChargesToGrid(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
+    void interpolateParticlesToGrid(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -274,8 +275,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     IntegratorType d_integrator;     //!<
     double delt_;                    //!<
 
-    std::vector<std::vector<const VarLabel*> > d_particleState;           //!<
+    std::vector<std::vector<const VarLabel*> > d_particleState;  //!<
     std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;  //!<
+//    vector<const VarLabel* > particle_state, particle_state_preReloc;
 
     // fields specific to non-bonded interaction (LJ Potential)
     string coordinateFile_;  //!<
@@ -290,6 +292,8 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     std::vector<vector<int> > neighborList;  //!<
 
     Electrostatics* elctrostatics;           //!<
+
+    mutable CrowdMonitor   d_lock;           //!<
 
     // copy constructor and operator=
     MD(const MD&);                           //!<
