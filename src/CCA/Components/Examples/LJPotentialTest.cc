@@ -119,6 +119,7 @@ void LJPotentialTest::problemSetup(const ProblemSpecP& params,
 
   mymat_ = scinew SimpleMaterial();
   d_sharedState_->registerSimpleMaterial(mymat_);
+  registerPermanentParticleState(mymat_);
 
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
@@ -163,17 +164,14 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState_->allMaterials();
 
-  d_particleState.clear();
-  d_particleState_preReloc.clear();
-
-  d_particleState.resize(matls->size());
-  d_particleState_preReloc.resize(matls->size());
-
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_particleState_preReloc, pXLabel, d_particleState, pParticleIDLabel,
-                                    matls);
+  sched->scheduleParticleRelocation(level, pXLabel_preReloc,
+                                    d_sharedState_->d_particleState_preReloc,
+                                    pXLabel,
+                                    d_sharedState_->d_particleState,
+                                    pParticleIDLabel, matls);
 }
 
 void LJPotentialTest::computeStableTimestep(const ProcessorGroup* pg,
@@ -209,14 +207,6 @@ void LJPotentialTest::scheduleCalculateNonBondedForces(SchedulerP& sched,
   task->computes(vdwEnergyLabel);
 
   sched->addTask(task, patches, matls);
-
-  // for particle relocation
-  for (int m = 0; m < matls->size(); m++) {
-    d_particleState_preReloc[m].push_back(pForceLabel_preReloc);
-    d_particleState_preReloc[m].push_back(pEnergyLabel_preReloc);
-    d_particleState[m].push_back(pForceLabel);
-    d_particleState[m].push_back(pEnergyLabel);
-  }
 }
 
 void LJPotentialTest::scheduleUpdatePosition(SchedulerP& sched,
@@ -242,20 +232,6 @@ void LJPotentialTest::scheduleUpdatePosition(SchedulerP& sched,
   task->computes(pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
-
-  // for particle relocation
-  for (int m = 0; m < matls->size(); m++) {
-    d_particleState_preReloc[m].push_back(pAccelLabel_preReloc);
-    d_particleState_preReloc[m].push_back(pVelocityLabel_preReloc);
-    d_particleState_preReloc[m].push_back(pMassLabel_preReloc);
-    d_particleState_preReloc[m].push_back(pChargeLabel_preReloc);
-    d_particleState_preReloc[m].push_back(pParticleIDLabel_preReloc);
-    d_particleState[m].push_back(pAccelLabel);
-    d_particleState[m].push_back(pVelocityLabel);
-    d_particleState[m].push_back(pMassLabel);
-    d_particleState[m].push_back(pChargeLabel);
-    d_particleState[m].push_back(pParticleIDLabel);
-  }
 }
 
 void LJPotentialTest::extractCoordinates()
@@ -411,6 +387,34 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
     }
     new_dw->put(sum_vartype(0.0), vdwEnergyLabel);
   }
+}
+
+void LJPotentialTest::registerPermanentParticleState(SimpleMaterial* matl)
+{
+  // load up the ParticleVariables we want to register for relocation
+  d_particleState_preReloc.push_back(pForceLabel_preReloc);
+  d_particleState.push_back(pForceLabel);
+
+  d_particleState_preReloc.push_back(pAccelLabel_preReloc);
+  d_particleState.push_back(pAccelLabel);
+
+  d_particleState_preReloc.push_back(pVelocityLabel_preReloc);
+  d_particleState.push_back(pVelocityLabel);
+
+  d_particleState_preReloc.push_back(pEnergyLabel_preReloc);
+  d_particleState.push_back(pEnergyLabel);
+
+  d_particleState_preReloc.push_back(pMassLabel_preReloc);
+  d_particleState.push_back(pMassLabel);
+
+  d_particleState_preReloc.push_back(pChargeLabel_preReloc);
+  d_particleState.push_back(pChargeLabel);
+
+  d_particleState_preReloc.push_back(pParticleIDLabel_preReloc);
+  d_particleState.push_back(pParticleIDLabel);
+
+  d_sharedState_->d_particleState_preReloc.push_back(d_particleState_preReloc);
+  d_sharedState_->d_particleState.push_back(d_particleState);
 }
 
 void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
