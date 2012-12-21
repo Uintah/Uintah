@@ -50,6 +50,9 @@
 
 namespace Uintah {
 
+typedef int particleIndex;
+typedef int particleId;
+
 class SimpleMaterial;
 
 class MD : public UintahParallelComponent, public SimulationInterface {
@@ -177,6 +180,13 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
+    void registerPermanentParticleState(SimpleMaterial* matl);
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void computeStableTimestep(const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -232,9 +242,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    inline bool containsAtom(const IntVector &l,
-                             const IntVector &h,
-                             const Point &p) const
+    inline bool containsAtom(const IntVector& l,
+                             const IntVector& h,
+                             const Point& p) const
     {
       return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
     }
@@ -271,13 +281,12 @@ class MD : public UintahParallelComponent, public SimulationInterface {
 
     MDLabel* lb;                     //!<
     SimulationStateP d_sharedState_;  //!<
-    SimpleMaterial* mymat_;          //!<
+    SimpleMaterial* simpleMat;          //!<
     IntegratorType d_integrator;     //!<
     double delt_;                    //!<
 
-    std::vector<std::vector<const VarLabel*> > d_particleState;  //!<
-    std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;  //!<
-//    vector<const VarLabel* > particle_state, particle_state_preReloc;
+    vector<const VarLabel*> particleState;            //!<
+    vector<const VarLabel*> particleState_preReloc;  //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
     string coordinateFile_;  //!<

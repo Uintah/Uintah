@@ -61,7 +61,7 @@ static DebugStream md_cout_doing("MDDoing", false);
 static DebugStream md_cout_spme("MDSPME", false);
 
 MD::MD(const ProcessorGroup* myworld) :
-    UintahParallelComponent(myworld)
+    UintahParallelComponent(myworld), d_lock("MD Particle Creator lock")
 {
   lb = scinew MDLabel();
 }
@@ -89,8 +89,9 @@ void MD::problemSetup(const ProblemSpecP& params,
   ps->get("R12", R12_);
   ps->get("R6", R6_);
 
-  mymat_ = scinew SimpleMaterial();
-  d_sharedState_->registerSimpleMaterial(mymat_);
+  simpleMat = scinew SimpleMaterial();
+  d_sharedState_->registerSimpleMaterial(simpleMat);
+  registerPermanentParticleState(simpleMat);
 
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
@@ -141,19 +142,16 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState_->allMaterials();
 
-  d_particleState.clear();
-  d_particleState_preReloc.clear();
-
-  d_particleState.resize(matls->size());
-  d_particleState_preReloc.resize(matls->size());
-
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
   schedulePerformSPME(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, d_particleState_preReloc, lb->pXLabel, d_particleState,
-                                    lb->pParticleIDLabel, matls);
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState_->d_particleState_preReloc,
+                                    lb->pXLabel,
+                                    d_sharedState_->d_particleState,
+                                    lb->pParticleIDLabel, matls, 1);
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
@@ -193,14 +191,6 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
   task->computes(lb->vdwEnergyLabel);
 
   sched->addTask(task, patches, matls);
-
-  // for particle relocation
-  for (int m = 0; m < matls->size(); m++) {
-    d_particleState_preReloc[m].push_back(lb->pForceLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pEnergyLabel_preReloc);
-    d_particleState[m].push_back(lb->pForceLabel);
-    d_particleState[m].push_back(lb->pEnergyLabel);
-  }
 }
 
 void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -237,20 +227,6 @@ void MD::schedulePerformSPME(SchedulerP& sched,
   task->computes(lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
-
-  // for particle relocation
-  for (int m = 0; m < matls->size(); m++) {
-    d_particleState_preReloc[m].push_back(lb->pAccelLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pVelocityLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pMassLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pChargeLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pParticleIDLabel_preReloc);
-    d_particleState[m].push_back(lb->pAccelLabel);
-    d_particleState[m].push_back(lb->pVelocityLabel);
-    d_particleState[m].push_back(lb->pMassLabel);
-    d_particleState[m].push_back(lb->pChargeLabel);
-    d_particleState[m].push_back(lb->pParticleIDLabel);
-  }
 }
 
 void MD::scheduleUpdatePosition(SchedulerP& sched,
@@ -278,20 +254,6 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->computes(lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
-
-  // for particle relocation
-  for (int m = 0; m < matls->size(); m++) {
-    d_particleState_preReloc[m].push_back(lb->pAccelLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pVelocityLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pMassLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pChargeLabel_preReloc);
-    d_particleState_preReloc[m].push_back(lb->pParticleIDLabel_preReloc);
-    d_particleState[m].push_back(lb->pAccelLabel);
-    d_particleState[m].push_back(lb->pVelocityLabel);
-    d_particleState[m].push_back(lb->pMassLabel);
-    d_particleState[m].push_back(lb->pChargeLabel);
-    d_particleState[m].push_back(lb->pParticleIDLabel);
-  }
 }
 
 void MD::extractCoordinates()
@@ -391,7 +353,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
     IntVector low = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
 
-    // do this for each material; for this example, there is only a single material, material "0"
+    // do this for each material
     unsigned int numMatls = matls->size();
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
@@ -449,6 +411,35 @@ void MD::initialize(const ProcessorGroup* /* pg */,
     }
     new_dw->put(sum_vartype(0.0), lb->vdwEnergyLabel);
   }
+}
+
+void MD::registerPermanentParticleState(SimpleMaterial* matl)
+{
+  // load up the ParticleVariables we want to register for relocation
+  particleState_preReloc.push_back(lb->pForceLabel_preReloc);
+  particleState.push_back(lb->pForceLabel);
+
+  particleState_preReloc.push_back(lb->pAccelLabel_preReloc);
+  particleState.push_back(lb->pAccelLabel);
+
+  particleState_preReloc.push_back(lb->pVelocityLabel_preReloc);
+  particleState.push_back(lb->pVelocityLabel);
+
+  particleState_preReloc.push_back(lb->pEnergyLabel_preReloc);
+  particleState.push_back(lb->pEnergyLabel);
+
+  particleState_preReloc.push_back(lb->pMassLabel_preReloc);
+  particleState.push_back(lb->pMassLabel);
+
+  particleState_preReloc.push_back(lb->pChargeLabel_preReloc);
+  particleState.push_back(lb->pChargeLabel);
+
+  particleState_preReloc.push_back(lb->pParticleIDLabel_preReloc);
+  particleState.push_back(lb->pParticleIDLabel);
+
+  // register the particle states with the shared SimulationState for persistence across timesteps
+  d_sharedState_->d_particleState_preReloc.push_back(particleState_preReloc);
+  d_sharedState_->d_particleState.push_back(particleState);
 }
 
 void MD::interpolateParticlesToGrid(const ProcessorGroup*,

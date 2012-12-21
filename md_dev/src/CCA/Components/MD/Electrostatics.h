@@ -78,7 +78,8 @@ class Electrostatics {
     enum ElectroStaticsType {
       EWALD,
       SPME,
-      FMM
+      FMM,
+      NONE
     };
 
     /**

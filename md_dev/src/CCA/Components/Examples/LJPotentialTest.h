@@ -122,6 +122,8 @@ namespace Uintah {
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
 
+      void registerPermanentParticleState(SimpleMaterial* matl);
+
       void computeStableTimestep(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
@@ -144,8 +146,8 @@ namespace Uintah {
       SimpleMaterial* mymat_;
       double delt_;
 
-      std::vector<std::vector<const VarLabel*> > d_particleState;
-      std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
+      std::vector<const VarLabel*> d_particleState;
+      std::vector<const VarLabel*> d_particleState_preReloc;
 
       // vector quantities
       const VarLabel* pXLabel;
