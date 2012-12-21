@@ -191,9 +191,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBoundary = false;
     d_use_new_bcs = false; 
     _using_new_intrusion = false;
-  }
-  else
-  {
+
+  } else {
 
      // new bc:                                                 
      d_use_new_bcs = false; 

@@ -461,7 +461,7 @@
       <WallHT                           spec="OPTIONAL NO_DATA">
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
         <model                          spec="MULTIPLE NO_DATA"
-                                        attribute1="type REQUIRED STRING 'simple_ht'">
+                                        attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
           <!-- simple heat transfer 
                   Solves for the gas side wall temperature by solving the discrete form of: 
                   q = - k dT/dy
@@ -470,6 +470,18 @@
           <k                            spec="REQUIRED DOUBLE" need_applies_to="type simple_ht"/> <!-- thermal conductivity, [W/(m K)] --> 
           <wall_thickness               spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- thickness of the wall in meters, [meters] --> 
           <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] --> 
+
+          <!-- region ht 
+                Like simple_ht model but only applies the model in the geometry region as specified by the geom_object. 
+                May specify several different regions, each with a unique set of properties. 
+                This includes all wall types (domain walls and intrusions). 
+          --> 
+          <region                       spec="MULTIPLE NO_DATA" need_applies_to="type region_ht">
+            <k                          spec="REQUIRED DOUBLE"/>
+            <wall_thickness             spec="REQUIRED DOUBLE"/>
+            <tube_side_T                spec="REQUIRED DOUBLE"/>
+            <geom_object/>
+          </region> 
 
         </model>
       </WallHT>

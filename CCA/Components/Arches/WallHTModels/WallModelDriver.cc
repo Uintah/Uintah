@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <Core/Grid/Box.h>
 
 using namespace Uintah; 
 using namespace std; 
@@ -54,6 +55,14 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       simple_ht->problemSetup( db_model ); 
 
       _all_ht_models.push_back( simple_ht ); 
+
+    } else if ( type == "region_ht" ){ 
+
+      HTModelBase* alstom_ht = scinew RegionHT(); 
+
+      alstom_ht->problemSetup( db_model ); 
+
+      _all_ht_models.push_back( alstom_ht ); 
 
     } else { 
 
@@ -331,4 +340,97 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
   }
 }
 
+//--------------------------------------------
+// RegionHT HT model
+//----------------------------------
+WallModelDriver::RegionHT::RegionHT(){
+
+  _d.push_back(IntVector(1,0,0)); 
+  _d.push_back(IntVector(-1,0,0)); 
+  _d.push_back(IntVector(0,1,0)); 
+  _d.push_back(IntVector(0,-1,0)); 
+  _d.push_back(IntVector(0,0,1)); 
+  _d.push_back(IntVector(0,0,-1)); 
+
+}; 
+
+//----------------------------------
+WallModelDriver::RegionHT::~RegionHT(){
+
+}; 
+
+//----------------------------------
+void 
+WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){ 
+
+  ProblemSpecP db = input_db; 
+
+  for (ProblemSpecP r_db = db->findBlock("region");
+      r_db !=0; r_db = r_db->findNextBlock("region")){
+
+    WallInfo info; 
+    ProblemSpecP geometry_db = r_db->findBlock("geom_object");
+    GeometryPieceFactory::create( geometry_db, info.geometry ); 
+    r_db->require("k", info.k);
+    r_db->require("wall_thickness", info.dy);
+    r_db->require("tube_side_T", info.T_inner); 
+
+    _regions.push_back( info ); 
+
+  }
+} 
+
+//----------------------------------
+void 
+WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
+
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Box patchBox = patch->getExtraBox();
+  int FLOW = -1; 
+
+  for ( std::vector<WallInfo>::iterator region_iter = _regions.begin(); region_iter != _regions.end(); region_iter++ ){ 
+
+    WallInfo wi = *region_iter; 
+
+    for ( std::vector<GeometryPieceP>::iterator geom_iter = wi.geometry.begin(); geom_iter != wi.geometry.end(); geom_iter++ ){ 
+
+      GeometryPieceP geom = *geom_iter; 
+      Box geomBox = geom->getBoundingBox(); 
+      Box box     = geomBox.intersect( patchBox ); 
+
+      //does the patchbox and geometry box overlap? 
+      if ( !box.degenerate() ){ 
+
+        CellIterator iter = patch->getCellCenterIterator( box ); 
+        constCCVariable<double> q; 
+
+        for (; !iter.done(); iter++){ 
+
+          IntVector c = *iter; 
+
+          for ( int i = 0; i < 6; i++ ){ 
+
+            // is the current cell a solid? 
+            if ( vars.celltype[c] == BoundaryCondition_new::WALL ||
+                 vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
+
+              // is the neighbor in the current direction a flow? 
+              if ( patch->containsCell( c + _d[i] ) ){ 
+                if ( vars.celltype[c + _d[i]] == FLOW ){ 
+                  
+                  q = get_flux( i, vars );  
+
+                  // do heat transfer 
+                  vars.T[c] = wi.T_inner + q[c + _d[i]] * wi.dy / wi.k; 
+
+                } 
+              }
+            } 
+          } 
+        } 
+      } 
+    }
+  } 
+}
 
