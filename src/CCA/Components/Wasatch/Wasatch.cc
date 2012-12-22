@@ -199,7 +199,9 @@ namespace Wasatch{
       wasatchParams_->get( "FieldParallelThreadCount", spatialOpsThreads );
       SpatialOps::set_hard_thread_count(NTHREADS);
       SpatialOps::set_soft_thread_count( spatialOpsThreads );
-      proc0cout << "-> Wasatch is running with " << SpatialOps::get_soft_thread_count() << " data-parallel threads (SpatialOps)" << std::endl;
+      proc0cout << "-> Wasatch is running with " << SpatialOps::get_soft_thread_count()
+      << " / " << SpatialOps::get_hard_thread_count()
+      << " data-parallel threads (SpatialOps)" << std::endl;
 #    else
       proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
@@ -210,7 +212,9 @@ namespace Wasatch{
       wasatchParams_->get( "TaskParallelThreadCount", exprLibThreads );
       Expr::set_hard_thread_count( NTHREADS );
       Expr::set_soft_thread_count( exprLibThreads );
-      proc0cout << "-> Wasatch is running with " << Expr::get_soft_thread_count() << " task-parallel threads (ExprLib)" << std::endl;
+      proc0cout << "-> Wasatch is running with " << Expr::get_soft_thread_count()
+      << " / " << Expr::get_hard_thread_count()
+      << " task-parallel threads (ExprLib)" << std::endl;
 #    else
       proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
