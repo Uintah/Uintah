@@ -64,12 +64,6 @@
     <NameTag name="xvelcc" state="STATE_N" />
     <NameTag name="yvelcc" state="STATE_N" />
   </ForceOnGraph>
-
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
     
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
