@@ -15,12 +15,6 @@
 
     <TimeIntegrator>RK3SSP</TimeIntegrator>
 
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
-
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
