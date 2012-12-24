@@ -48,6 +48,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Thread/Mutex.h>
 
 #include <iostream>
 #include <iomanip>
@@ -56,9 +57,11 @@
 
 using namespace Uintah;
 
-static DebugStream md_cout_dbg("MDDebug", false);
-static DebugStream md_cout_doing("MDDoing", false);
-static DebugStream md_cout_spme("MDSPME", false);
+extern SCIRun::Mutex cerrLock;
+
+static DebugStream md_dbg("MDDebug", false);
+static DebugStream md_cout("MDCout", false);
+static DebugStream md_spme("MDSPME", false);
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld), d_lock("MD Particle Creator lock")
@@ -76,7 +79,7 @@ void MD::problemSetup(const ProblemSpecP& params,
                       GridP& /*grid*/,
                       SimulationStateP& sharedState)
 {
-  printTask(md_cout_doing, "MD::problemSetup");
+  printTask(md_cout, "MD::problemSetup");
 
   d_sharedState_ = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
@@ -108,7 +111,7 @@ void MD::problemSetup(const ProblemSpecP& params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  printSchedule(level, md_cout_doing, "MD::scheduleInitialize");
+  printSchedule(level, md_cout, "MD::scheduleInitialize");
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
   task->computes(lb->pXLabel);
@@ -126,7 +129,7 @@ void MD::scheduleInitialize(const LevelP& level,
 void MD::scheduleComputeStableTimestep(const LevelP& level,
                                        SchedulerP& sched)
 {
-  printSchedule(level, md_cout_doing, "MD::scheduleComputeStableTimestep");
+  printSchedule(level, md_cout, "MD::scheduleComputeStableTimestep");
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
   task->requires(Task::NewDW, lb->vdwEnergyLabel);
@@ -137,7 +140,7 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 void MD::scheduleTimeAdvance(const LevelP& level,
                              SchedulerP& sched)
 {
-  printSchedule(level, md_cout_doing, "MD::scheduleTimeAdvance");
+  printSchedule(level, md_cout, "MD::scheduleTimeAdvance");
 
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState_->allMaterials();
@@ -160,7 +163,7 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::computeStableTimestep");
+  printTask(patches, md_cout, "MD::computeStableTimestep");
 
   if (pg->myrank() == 0) {
     sum_vartype vdwEnergy;
@@ -177,7 +180,7 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  printSchedule(patches, md_cout_doing, "MD::scheduleCalculateNonBondedForces");
+  printSchedule(patches, md_cout, "MD::scheduleCalculateNonBondedForces");
 
   Task* task = scinew Task("MD::calculateNonBondedForces", this, &MD::calculateNonBondedForces);
 
@@ -197,7 +200,7 @@ void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  printSchedule(patches, md_cout_doing, "MD::scheduleInterpolateParticlesToGrid");
+  printSchedule(patches, md_cout, "MD::scheduleInterpolateParticlesToGrid");
 
   Task* task = scinew Task("MD::interpolateParticlesToGrid", this, &MD::interpolateParticlesToGrid);
 }
@@ -206,7 +209,7 @@ void MD::schedulePerformSPME(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSet* matls)
 {
-  printSchedule(patches, md_cout_doing, "MD::schedulePerformSPME");
+  printSchedule(patches, md_cout, "MD::schedulePerformSPME");
 
   Task* task = scinew Task("performSPME", this, &MD::performSPME);
 
@@ -233,7 +236,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
                                 const PatchSet* patches,
                                 const MaterialSet* matls)
 {
-  printSchedule(patches, md_cout_doing, "MD::scheduleUpdatePosition");
+  printSchedule(patches, md_cout, "MD::scheduleUpdatePosition");
 
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
@@ -342,7 +345,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
                     DataWarehouse* /*old_dw*/,
                     DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::initialize");
+  printTask(patches, md_cout, "MD::initialize");
 
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -398,7 +401,8 @@ void MD::initialize(const ProcessorGroup* /* pg */,
         pids[i] = patch->getID() * numAtoms_ + i;
 
         // TODO update this with new VarLabels
-        if (md_cout_dbg.active()) {
+        if (md_dbg.active()) {
+          cerrLock.unlock();
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
@@ -406,6 +410,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
           std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pids[i];
           std::cout << std::setw(12) << " Position: " << pos;
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }
     }
@@ -448,7 +453,7 @@ void MD::interpolateParticlesToGrid(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::interpolateChargesToGrid");
+  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
 }
 
 void MD::performSPME(const ProcessorGroup* pg,
@@ -457,7 +462,7 @@ void MD::performSPME(const ProcessorGroup* pg,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::performSPME");
+  printTask(patches, md_cout, "MD::performSPME");
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,
@@ -466,7 +471,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::calculateNonBondedForces");
+  printTask(patches, md_cout, "MD::calculateNonBondedForces");
 
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -545,7 +550,8 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
         // sum up contributions to force for atom i
         pforcenew[i] += atomForce;
 
-        if (md_cout_dbg.active()) {
+        if (md_dbg.active()) {
+          cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pids[i] << std::setw(6);
           std::cout << "Prev Position: [";
@@ -559,13 +565,15 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
           std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
           std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }  // end atom loop
 
       // this accounts for double energy with Aij and Aji
       vdwEnergy *= 0.50;
 
-      if (md_cout_dbg.active()) {
+      if (md_dbg.active()) {
+        cerrLock.lock();
         Vector forces(0.0, 0.0, 0.0);
         for (unsigned int i = 0; i < numParticles; i++) {
           forces += pforcenew[i];
@@ -578,6 +586,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
         std::cout << std::setprecision(8) << forces.z() << std::setw(4) << "]";
         std::cout << std::endl;
         std::cout.unsetf(std::ios_base::scientific);
+        cerrLock.unlock();
       }
 
       new_dw->deleteParticles(delset);
@@ -597,7 +606,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout_doing, "MD::updatePosition");
+  printTask(patches, md_cout, "MD::updatePosition");
 
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -660,7 +669,8 @@ void MD::updatePosition(const ProcessorGroup* pg,
         pvelocitynew[i] = pvelocity[i] + paccel[i] * delT;
         pxnew[i] = px[i] + pvelocity[i] + pvelocitynew[i] * 0.5 * delT;
 
-        if (md_cout_dbg.active()) {
+        if (md_dbg.active()) {
+          cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pidsnew[i] << std::setw(6);
           std::cout << "New Position: [";
@@ -668,6 +678,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
           std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].y();
           std::cout << std::setprecision(6) << pxnew[i].z() << std::setw(4) << "]";
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }  // end atom loop
 

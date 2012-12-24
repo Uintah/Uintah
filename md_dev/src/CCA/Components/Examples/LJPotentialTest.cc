@@ -39,12 +39,15 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Thread/Mutex.h>
 
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 
 using namespace Uintah;
+
+extern SCIRun::Mutex cerrLock;
 
 static DebugStream ljdbg("LJDebug", false);
 
@@ -375,6 +378,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
 
         // TODO update this with new VarLabels
         if (ljdbg.active()) {
+          cerrLock.lock();
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
@@ -382,6 +386,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
           std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pids[i];
           std::cout << std::setw(12) << " Position: " << pos;
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }
     }
@@ -501,6 +506,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
         pforcenew[i] += atomForce;
 
         if (ljdbg.active()) {
+          cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pids[i] << std::setw(6);
           std::cout << "Prev Position: [";
@@ -514,6 +520,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
           std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
           std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }  // end atom loop
 
@@ -521,6 +528,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
       vdwEnergy *= 0.50;
 
       if (ljdbg.active()) {
+        cerrLock.lock();
         Vector forces(0.0, 0.0, 0.0);
         for (unsigned int i = 0; i < numParticles; i++) {
           forces += pforcenew[i];
@@ -533,6 +541,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
         std::cout << std::setprecision(8) << forces.z() << std::setw(4) << "]";
         std::cout << std::endl;
         std::cout.unsetf(std::ios_base::scientific);
+        cerrLock.unlock();
       }
 
       new_dw->deleteParticles(delset);
@@ -614,6 +623,7 @@ void LJPotentialTest::updatePosition(const ProcessorGroup* pg,
         pxnew[i] = px[i] + pvelocity[i] + pvelocitynew[i] * 0.5 * delT;
 
         if (ljdbg.active()) {
+          cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
           std::cout << "ParticleID: " << std::setw(6) << pidsnew[i] << std::setw(6);
           std::cout << "New Position: [";
@@ -621,6 +631,7 @@ void LJPotentialTest::updatePosition(const ProcessorGroup* pg,
           std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].y();
           std::cout << std::setprecision(6) << pxnew[i].z() << std::setw(4) << "]";
           std::cout << std::endl;
+          cerrLock.unlock();
         }
       }  // end atom loop
 
