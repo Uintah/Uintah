@@ -280,29 +280,28 @@ class MD : public UintahParallelComponent, public SimulationInterface {
                     const Point* atom2);
 
     MDLabel* lb;                     //!<
-    SimulationStateP d_sharedState_;  //!<
-    SimpleMaterial* simpleMat;          //!<
-    IntegratorType d_integrator;     //!<
-    double delt_;                    //!<
+    SimulationStateP sharedState; //!<
+    SimpleMaterial* material;  //!<
+    IntegratorType integrator;       //!<
+    double delt;                     //!<
 
     vector<const VarLabel*> particleState;            //!<
     vector<const VarLabel*> particleState_preReloc;  //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
-    string coordinateFile_;  //!<
-    unsigned int numAtoms_;  //!<
-    double cutoffRadius_;    //!< The short ranged cut off distances (in Angstroms)
-    Vector box_;             //!< The size of simulation
-    double R12_;             //!< This is the v.d.w. repulsive parameter
-    double R6_;              //!< This is the v.d.w. attractive parameter
+    string coordinateFile;  //!
+    unsigned int numAtoms;  //!
+    double cutoffRadius;   //!< The short ranged cut off distances (in Angstroms)
+    Vector box;             //!< The size of simulation
+    double R12;             //!< This is the v.d.w. repulsive parameter
+    double R6;              //!< This is the v.d.w. attractive parameter
 
     // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
     std::vector<Point> atomList;             //!<
     std::vector<vector<int> > neighborList;  //!<
 
     Electrostatics* elctrostatics;           //!<
-
-    mutable CrowdMonitor   d_lock;           //!<
+    MDSystem*       system;                  //!<
 
     // copy constructor and operator=
     MD(const MD&);                           //!<

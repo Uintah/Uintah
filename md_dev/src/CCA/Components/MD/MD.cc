@@ -64,43 +64,56 @@ static DebugStream md_cout("MDCout", false);
 static DebugStream md_spme("MDSPME", false);
 
 MD::MD(const ProcessorGroup* myworld) :
-    UintahParallelComponent(myworld), d_lock("MD Particle Creator lock")
+    UintahParallelComponent(myworld)
 {
   lb = scinew MDLabel();
+  system = scinew MDSystem(myworld);
 }
 
 MD::~MD()
 {
   delete lb;
+  delete system;
 }
 
 void MD::problemSetup(const ProblemSpecP& params,
                       const ProblemSpecP& restart_prob_spec,
-                      GridP& /*grid*/,
-                      SimulationStateP& sharedState)
+                      GridP& grid,
+                      SimulationStateP& shared_state)
 {
   printTask(md_cout, "MD::problemSetup");
 
-  d_sharedState_ = sharedState;
+  sharedState = shared_state;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
-  ProblemSpecP ps = params->findBlock("MD");
+  ProblemSpecP md_ps = params->findBlock("MD");
 
-  ps->get("coordinateFile", coordinateFile_);
-  ps->get("numAtoms", numAtoms_);
-  ps->get("boxSize", box_);
-  ps->get("cutoffRadius", cutoffRadius_);
-  ps->get("R12", R12_);
-  ps->get("R6", R6_);
+  md_ps->get("coordinateFile", coordinateFile);
+  md_ps->get("numAtoms", numAtoms);
+  md_ps->get("boxSize", box);
+  md_ps->get("cutoffRadius", cutoffRadius);
+  md_ps->get("R12", R12);
+  md_ps->get("R6", R6);
 
-  simpleMat = scinew SimpleMaterial();
-  d_sharedState_->registerSimpleMaterial(simpleMat);
-  registerPermanentParticleState(simpleMat);
+  // Populate the MD System object
+  ProblemSpecP md_system_ps = params->findBlock("MDSystem");
+  md_system_ps->get("ewaldBeta", system->d_ewaldBeta);
+  md_system_ps->get("unitCell", system->d_unitCell);
+  md_system_ps->get("pressure", system->d_pressure);
+  md_system_ps->get("temperature", system->d_temperature);
+  md_system_ps->get("orthorhombic", system->d_orthorhombic);
+  md_system_ps->get("changeBox", system->d_changeBox);
+
+  material = scinew SimpleMaterial();
+  sharedState->registerSimpleMaterial(material);
+
+  // Register permanent particle state; for relocation, etc
+  registerPermanentParticleState(material);
 
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
 
-  // for neighbor indices
-  for (unsigned int i = 0; i < numAtoms_; i++) {
+  // for neighbor indices; one list for each atom
+  for (unsigned int i = 0; i < numAtoms; i++) {
     neighborList.push_back(vector<int>(0));
   }
 
@@ -123,7 +136,7 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(lb->pChargeLabel);
   task->computes(lb->pParticleIDLabel);
   task->computes(lb->vdwEnergyLabel);
-  sched->addTask(task, level->eachPatch(), d_sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), sharedState->allMaterials());
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -133,8 +146,8 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
   task->requires(Task::NewDW, lb->vdwEnergyLabel);
-  task->computes(d_sharedState_->get_delt_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), d_sharedState_->allMaterials());
+  task->computes(sharedState->get_delt_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(), sharedState->allMaterials());
 }
 
 void MD::scheduleTimeAdvance(const LevelP& level,
@@ -143,18 +156,15 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   printSchedule(level, md_cout, "MD::scheduleTimeAdvance");
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_sharedState_->allMaterials();
+  const MaterialSet* matls = sharedState->allMaterials();
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
   schedulePerformSPME(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_sharedState_->d_particleState_preReloc,
-                                    lb->pXLabel,
-                                    d_sharedState_->d_particleState,
-                                    lb->pParticleIDLabel, matls, 1);
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, sharedState->d_particleState_preReloc, lb->pXLabel,
+                                    sharedState->d_particleState, lb->pParticleIDLabel, matls, 1);
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
@@ -173,7 +183,7 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << std::endl;
   }
-  new_dw->put(delt_vartype(1), d_sharedState_->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(1), sharedState->get_delt_label(), getLevel(patches));
 }
 
 void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
@@ -220,7 +230,7 @@ void MD::schedulePerformSPME(SchedulerP& sched,
   task->requires(Task::OldDW, lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_sharedState_->get_delt_label());
+  task->requires(Task::OldDW, sharedState->get_delt_label());
 
   task->computes(lb->pXLabel_preReloc);
   task->computes(lb->pAccelLabel_preReloc);
@@ -247,7 +257,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->requires(Task::OldDW, lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_sharedState_->get_delt_label());
+  task->requires(Task::OldDW, sharedState->get_delt_label());
 
   task->computes(lb->pXLabel_preReloc);
   task->computes(lb->pAccelLabel_preReloc);
@@ -262,16 +272,16 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 void MD::extractCoordinates()
 {
   std::ifstream inputFile;
-  inputFile.open(coordinateFile_.c_str());
+  inputFile.open(coordinateFile.c_str());
   if (!inputFile.is_open()) {
-    string message = "\tCannot open input file: " + coordinateFile_;
+    string message = "\tCannot open input file: " + coordinateFile;
     throw ProblemSetupException(message, __FILE__, __LINE__);
   }
 
   // do file IO to extract atom coordinates
   string line;
   unsigned int numRead;
-  for (unsigned int i = 0; i < numAtoms_; i++) {
+  for (unsigned int i = 0; i < numAtoms; i++) {
     // get the atom coordinates
     getline(inputFile, line);
     double x, y, z;
@@ -290,19 +300,19 @@ void MD::generateNeighborList()
 {
   double r2;
   Vector reducedCoordinates;
-  double cut_sq = cutoffRadius_ * cutoffRadius_;
-  for (unsigned int i = 0; i < numAtoms_; i++) {
-    for (unsigned int j = 0; j < numAtoms_; j++) {
+  double cut_sq = cutoffRadius * cutoffRadius;
+  for (unsigned int i = 0; i < numAtoms; i++) {
+    for (unsigned int j = 0; j < numAtoms; j++) {
       if (i != j) {
         // the vector distance between atom i and j
         reducedCoordinates = atomList[i] - atomList[j];
 
         // this is required for periodic boundary conditions
-        reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
+        reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
 
         // eliminate atoms outside of cutoff radius, add those within as neighbors
-        if ((fabs(reducedCoordinates[0]) < cutoffRadius_) && (fabs(reducedCoordinates[1]) < cutoffRadius_)
-            && (fabs(reducedCoordinates[2]) < cutoffRadius_)) {
+        if ((fabs(reducedCoordinates[0]) < cutoffRadius) && (fabs(reducedCoordinates[1]) < cutoffRadius)
+            && (fabs(reducedCoordinates[2]) < cutoffRadius)) {
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
@@ -322,17 +332,17 @@ bool MD::isNeighbor(const Point* atom1,
 {
   double r2;
   Vector reducedCoordinates;
-  double cut_sq = cutoffRadius_ * cutoffRadius_;
+  double cut_sq = cutoffRadius * cutoffRadius;
 
   // the vector distance between atom 1 and 2
   reducedCoordinates = *atom1 - *atom2;
 
   // this is required for periodic boundary conditions
-  reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
+  reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
 
   // check if outside of cutoff radius
-  if ((fabs(reducedCoordinates[0]) < cutoffRadius_) && (fabs(reducedCoordinates[1]) < cutoffRadius_)
-      && (fabs(reducedCoordinates[2]) < cutoffRadius_)) {
+  if ((fabs(reducedCoordinates[0]) < cutoffRadius) && (fabs(reducedCoordinates[1]) < cutoffRadius)
+      && (fabs(reducedCoordinates[2]) < cutoffRadius)) {
     r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
     return r2 < cut_sq;
   }
@@ -372,7 +382,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
 
       // eventually we'll need to use PFS for this
       vector<Point> localAtoms;
-      for (unsigned int i = 0; i < numAtoms_; i++) {
+      for (unsigned int i = 0; i < numAtoms; i++) {
         if (containsAtom(low, high, atomList[i])) {
           localAtoms.push_back(atomList[i]);
         }
@@ -398,7 +408,7 @@ void MD::initialize(const ProcessorGroup* /* pg */,
         penergy[i] = 0.0;
         pmass[i] = 2.5;
         pcharge[i] = 0.0;
-        pids[i] = patch->getID() * numAtoms_ + i;
+        pids[i] = patch->getID() * numAtoms + i;
 
         // TODO update this with new VarLabels
         if (md_dbg.active()) {
@@ -443,8 +453,8 @@ void MD::registerPermanentParticleState(SimpleMaterial* matl)
   particleState.push_back(lb->pParticleIDLabel);
 
   // register the particle states with the shared SimulationState for persistence across timesteps
-  d_sharedState_->d_particleState_preReloc.push_back(particleState_preReloc);
-  d_sharedState_->d_particleState.push_back(particleState);
+  sharedState->d_particleState_preReloc.push_back(particleState_preReloc);
+  sharedState->d_particleState.push_back(particleState);
 }
 
 void MD::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -528,7 +538,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
           reducedCoordinates = px[i] - px[idx];
 
           // this is required for periodic boundary conditions
-          reducedCoordinates -= (reducedCoordinates / box_).vec_rint() * box_;
+          reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
@@ -536,8 +546,8 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
           ir2 = 1.0 / r2;  // 1/r^2
           ir6 = ir2 * ir2 * ir2;  // 1/r^6
           ir12 = ir6 * ir6;  // 1/r^12
-          T12 = R12_ * ir12;
-          T6 = R6_ * ir6;
+          T12 = R12 * ir12;
+          T6 = R6 * ir6;
           penergynew[idx] = T12 - T6;  // energy
           vdwEnergy += penergynew[idx];  // count the energy
           forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
@@ -653,7 +663,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
 
       // get delT
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState_->get_delt_label(), getLevel(patches));
+      old_dw->get(delT, sharedState->get_delt_label(), getLevel(patches));
 
       // loop over the local atoms
       unsigned int localNumParticles = lpset->numParticles();
