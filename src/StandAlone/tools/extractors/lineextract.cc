@@ -72,6 +72,7 @@ using namespace Uintah;
 
 bool verbose = false;
 bool quiet = false;
+bool pad = false;
 bool d_printCell_coords = false;
   
 void
@@ -97,6 +98,7 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,       --verbose:       (prints status of output)\n";
     cerr << "  -q,        --quiet:         (only print data values)\n";
+    cerr << "  -pad,        --pad:         (print zero values for cell locations not currently in the specified level)\n";
     cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
     cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
@@ -248,17 +250,16 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
 
           // find out which patch the variable is on
           int p = 0;
+          bool foundCell = false;
+          Vector dx = level->dCell();
+          Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
+          T val = T();
           for (; p < patches.size(); p++) {
             const Patch* patch = patches[p];
             
             if(patch->isVirtual()){
               continue;
             }
-            
-            T val = T();
-            Vector dx = patch->dCell();
-            Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
-            bool foundCell = false;
             
             switch (variable_type->getType()) {
             case Uintah::TypeDescription::CCVariable: 
@@ -297,18 +298,29 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
             default: break;
             }
             
-            if(foundCell){
-             if(d_printCell_coords){
-                Point point = level->getCellPosition(c);
-                Vector here = point.asVector() + shift;
-                out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
-              }else{
-                out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
-              }
-            }
           } // patch loop
+
+          if(foundCell){
+           if(d_printCell_coords){
+              Point point = level->getCellPosition(c);
+              Vector here = point.asVector() + shift;
+              out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+            }else{
+              out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+            }
+          }
+          else{
+          if(pad){
+           if(d_printCell_coords){
+              Point point = level->getCellPosition(c);
+              Vector here = point.asVector() + shift;
+              out << here.x() << " "<< here.y() << " " << here.z() << " "<< val << endl;;
+            }else{
+              out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+            }
+           }// if pad with zeros
+          }
         }  // cell iterator
-        
         
         for (unsigned i = 0; i < vars.size(); i++)
           delete vars[i];
@@ -629,6 +641,8 @@ int main(int argc, char** argv)
       verbose = true;
     } else if (s == "-q" || s == "--quiet") {
       quiet = true;
+    } else if (s == "-pad" || s == "--pad") {
+      pad = true;
     } else if (s == "-tlow" || s == "--timesteplow") {
       time_start = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-thigh" || s == "--timestephigh") {

@@ -731,7 +731,14 @@ namespace Wasatch{
   Expr::ExpressionID
   MomentumTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
-  {     
+  {
+    // register an initial condition for da pressure
+    Expr::Tag ptag(pressure_tag().name(), Expr::STATE_N);    
+    if( !icFactory.have_entry( ptag ) ) {
+      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(ptag, 0.0 ) );
+    }
+
+
     if( icFactory.have_entry( thisVelTag_ ) ) {
       typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
       Expr::Tag interpolatedDensityTag(densityTag_.name() +"_interp_" + this->dir_name(), Expr::STATE_NONE);

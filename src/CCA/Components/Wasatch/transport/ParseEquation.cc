@@ -411,7 +411,7 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << e.what()
         << std::endl
-        << "ERORR while setting initial conditions on momentum equation"
+        << "ERORR while setting initial conditions on momentum equation "
         << momtranseq->solution_variable_name()
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
@@ -431,7 +431,7 @@ namespace Wasatch{
       std::ostringstream msg;
       msg << e.what()
       << std::endl
-      << "ERORR while setting initial conditions on pressure. When solving for the momentum equations, you must provide an initial condition for the pressure from the input file."
+      << "ERORR while setting initial conditions on pressure. "
       << pressure_tag().name()
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );

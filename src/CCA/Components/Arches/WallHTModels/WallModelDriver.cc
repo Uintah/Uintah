@@ -6,6 +6,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <Core/Grid/Box.h>
 
 using namespace Uintah; 
 using namespace std; 
@@ -22,6 +24,14 @@ WallModelDriver::WallModelDriver( SimulationStateP& shared_state ) :
 //_________________________________________
 WallModelDriver::~WallModelDriver()
 {
+
+  std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
+  for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+
+    delete *iter;
+
+  }
+
 }
 
 //_________________________________________
@@ -38,10 +48,26 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
     std::string type = "not_assigned"; 
     db_model->getAttribute("type", type); 
 
-    if ( type == "simple_wall" ) {
+    if ( type == "simple_ht" ) {
+
+      HTModelBase* simple_ht = scinew SimpleHT(); 
+
+      simple_ht->problemSetup( db_model ); 
+
+      _all_ht_models.push_back( simple_ht ); 
+
+    } else if ( type == "region_ht" ){ 
+
+      HTModelBase* alstom_ht = scinew RegionHT(); 
+
+      alstom_ht->problemSetup( db_model ); 
+
+      _all_ht_models.push_back( alstom_ht ); 
 
     } else { 
+
       throw InvalidValue("Error: Wall Heat Transfer model not recognized.", __FILE__, __LINE__);
+
     } 
   }
 
@@ -69,30 +95,15 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   } 
 
   task->modifies(_T_label);
-
-  if ( time_subset == 0 ){ 
-
-    task->requires(Task::OldDW , _cellType_label , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_E_label     , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_W_label     , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_N_label     , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_S_label     , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_T_label     , Ghost::None , 0 );
-    task->requires(Task::OldDW , _HF_B_label     , Ghost::None , 0 );
-    task->modifies(_T_label); 
-
-  } else { 
-
-    task->requires(Task::NewDW , _cellType_label , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_E_label     , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_W_label     , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_N_label     , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_S_label     , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_T_label     , Ghost::None , 0 );
-    task->requires(Task::NewDW , _HF_B_label     , Ghost::None , 0 );
-    task->modifies(_T_label); 
-
-  } 
+  //fluxes have already been computed at this point because enthalpy 
+  //has been solved 
+  task->requires(Task::NewDW , _cellType_label , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_E_label     , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_W_label     , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_N_label     , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_S_label     , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_T_label     , Ghost::None , 0 );
+  task->requires(Task::NewDW , _HF_B_label     , Ghost::None , 0 );
   
   sched->addTask(task, level->eachPatch(), _shared_state->allArchesMaterials());
   
@@ -107,29 +118,24 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw, 
                            const int time_subset )
 {
-  const Level* level = getLevel(patches);
-  
-  DataWarehouse* which_dw; 
-  if ( time_subset == 0 ) { 
-    which_dw = old_dw; 
-  } else { 
-    which_dw = new_dw; 
-  }
-
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
+    const Level* level = getLevel(patches);
+    
+    DataWarehouse* which_dw; 
+    which_dw = new_dw; 
     const Patch* patch = patches->get(p);
-    HTVariables* vars;
+    HTVariables vars;
 
-    new_dw->getModifiable( vars->T, _T_label, _matl_index, patch ); 
-    which_dw->get(   vars->celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars->hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
+    new_dw->getModifiable( vars.T, _T_label, _matl_index, patch ); 
+    which_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
+    which_dw->get(   vars.hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
 
     std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
@@ -262,6 +268,8 @@ WallModelDriver::doWallHT_alltoall( const ProcessorGroup* my_world,
 
 // ********----- DERIVED HT MODELS --------********
 //
+
+
 // Simple HT model
 //----------------------------------
 WallModelDriver::SimpleHT::SimpleHT(){}; 
@@ -277,13 +285,13 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 
   db->require("k", _k);
   db->require("wall_thickness", _dy);
-  db->require("tube_size_T", _T_inner); 
+  db->require("tube_side_T", _T_inner); 
 
 } 
 
 //----------------------------------
 void 
-WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables* vars ){ 
+WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -297,22 +305,22 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables* vars ){
     constCCVariable<double> q; 
     switch (face) {
       case Patch::xminus:
-        q = vars->hf_e;
+        q = vars.hf_w;
         break; 
       case Patch::xplus:
-        q = vars->hf_w;
+        q = vars.hf_e;
         break; 
       case Patch::yminus:
-        q = vars->hf_n;
+        q = vars.hf_s;
         break; 
       case Patch::yplus:
-        q = vars->hf_s;
+        q = vars.hf_n;
         break; 
       case Patch::zminus:
-        q = vars->hf_t;
+        q = vars.hf_b;
         break; 
       case Patch::zplus:
-        q = vars->hf_b;
+        q = vars.hf_t;
         break; 
       default: 
         break; 
@@ -323,10 +331,106 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables* vars ){
       IntVector c = *cell_iter;        //this is the interior cell 
       IntVector adj = c + offset;      //this is the cell IN the wall 
 
-      vars->T[c] = _T_inner - q[c] * _dy/_k; 
+      if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
+
+        vars.T[c + offset] = _T_inner + q[c] * _dy / _k; 
+      }
 
     }
   }
 }
 
+//--------------------------------------------
+// RegionHT HT model
+//----------------------------------
+WallModelDriver::RegionHT::RegionHT(){
+
+  _d.push_back(IntVector(1,0,0)); 
+  _d.push_back(IntVector(-1,0,0)); 
+  _d.push_back(IntVector(0,1,0)); 
+  _d.push_back(IntVector(0,-1,0)); 
+  _d.push_back(IntVector(0,0,1)); 
+  _d.push_back(IntVector(0,0,-1)); 
+
+}; 
+
+//----------------------------------
+WallModelDriver::RegionHT::~RegionHT(){
+
+}; 
+
+//----------------------------------
+void 
+WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){ 
+
+  ProblemSpecP db = input_db; 
+
+  for (ProblemSpecP r_db = db->findBlock("region");
+      r_db !=0; r_db = r_db->findNextBlock("region")){
+
+    WallInfo info; 
+    ProblemSpecP geometry_db = r_db->findBlock("geom_object");
+    GeometryPieceFactory::create( geometry_db, info.geometry ); 
+    r_db->require("k", info.k);
+    r_db->require("wall_thickness", info.dy);
+    r_db->require("tube_side_T", info.T_inner); 
+
+    _regions.push_back( info ); 
+
+  }
+} 
+
+//----------------------------------
+void 
+WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
+
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Box patchBox = patch->getExtraBox();
+  int FLOW = -1; 
+
+  for ( std::vector<WallInfo>::iterator region_iter = _regions.begin(); region_iter != _regions.end(); region_iter++ ){ 
+
+    WallInfo wi = *region_iter; 
+
+    for ( std::vector<GeometryPieceP>::iterator geom_iter = wi.geometry.begin(); geom_iter != wi.geometry.end(); geom_iter++ ){ 
+
+      GeometryPieceP geom = *geom_iter; 
+      Box geomBox = geom->getBoundingBox(); 
+      Box box     = geomBox.intersect( patchBox ); 
+
+      //does the patchbox and geometry box overlap? 
+      if ( !box.degenerate() ){ 
+
+        CellIterator iter = patch->getCellCenterIterator( box ); 
+        constCCVariable<double> q; 
+
+        for (; !iter.done(); iter++){ 
+
+          IntVector c = *iter; 
+
+          for ( int i = 0; i < 6; i++ ){ 
+
+            // is the current cell a solid? 
+            if ( vars.celltype[c] == BoundaryCondition_new::WALL ||
+                 vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
+
+              // is the neighbor in the current direction a flow? 
+              if ( patch->containsCell( c + _d[i] ) ){ 
+                if ( vars.celltype[c + _d[i]] == FLOW ){ 
+                  
+                  q = get_flux( i, vars );  
+
+                  // do heat transfer 
+                  vars.T[c] = wi.T_inner + q[c + _d[i]] * wi.dy / wi.k; 
+
+                } 
+              }
+            } 
+          } 
+        } 
+      } 
+    }
+  } 
+}
 
