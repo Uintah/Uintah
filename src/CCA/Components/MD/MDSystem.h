@@ -34,6 +34,8 @@
 
 namespace Uintah {
 
+class ProcessorGroup;
+
 using SCIRun::Vector;
 using SCIRun::IntVector;
 
@@ -71,11 +73,7 @@ class MDSystem {
      * @param _temperature The initial MD system temperature.
      * @param _orthorhombic Whether of not the MD system is using orthorhombic coordinates.
      */
-    MDSystem(double _ewaldBeta,
-             double _volume,
-             double _pressure,
-             double _temperature,
-             bool _orthorhombic);
+    MDSystem(const ProcessorGroup* pg);
 
     /**
      * @brief
@@ -84,17 +82,7 @@ class MDSystem {
      */
     inline Matrix3 getCellInverse() const
     {
-      return this->cellInverse;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setCellInverse(Matrix3 _cellInverse)
-    {
-      this->cellInverse = _cellInverse;
+      return this->d_cellInverse;
     }
 
     /**
@@ -104,17 +92,7 @@ class MDSystem {
      */
     inline double getEwaldBeta() const
     {
-      return this->ewaldBeta;
-    }
-
-    /**
-     * @brief Sets the damping coefficient for this MD system.
-     * @param _ewaldBeta The new damping coefficient.
-     * @return None
-     */
-    inline void setEwaldBeta(double _ewaldBeta)
-    {
-      this->ewaldBeta = _ewaldBeta;
+      return this->d_ewaldBeta;
     }
 
     /**
@@ -124,17 +102,7 @@ class MDSystem {
      */
     inline double getVolume() const
     {
-      return this->unitCell;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setVolume(double _volume)
-    {
-      this->unitCell = _volume;
+      return this->d_unitCell;
     }
 
     /**
@@ -144,17 +112,7 @@ class MDSystem {
      */
     inline bool getPressure() const
     {
-      return this->pressure;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setPressure(double _pressure)
-    {
-      this->pressure = _pressure;
+      return this->d_pressure;
     }
 
     /**
@@ -164,17 +122,7 @@ class MDSystem {
      */
     inline bool getTemperature() const
     {
-      return this->temperature;
-    }
-
-    /**
-     * @brief Sets the temperature for this MD system.
-     * @param
-     * @return
-     */
-    inline void setTemperature(double _temperature)
-    {
-      this->temperature = _temperature;
+      return this->d_temperature;
     }
 
     /**
@@ -184,7 +132,7 @@ class MDSystem {
      */
     inline bool isOrthorhombic() const
     {
-      return this->orthorhombic;
+      return this->d_orthorhombic;
     }
 
     /**
@@ -192,9 +140,9 @@ class MDSystem {
      * @param
      * @return
      */
-    inline void setOrthorhombic(bool _value)
+    inline bool newBox() const
     {
-      this->orthorhombic = _value;
+      return this->d_changeBox;
     }
 
     /**
@@ -202,35 +150,26 @@ class MDSystem {
      * @param
      * @return
      */
-    inline bool newBox()
+    inline void changeBox(bool value)
     {
-      if (this->hasBoxChanged) {
-        this->hasBoxChanged = false;
-        return true;
-      } else {
-        return false;
-      }
+      this->d_changeBox = value;
     }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setNewBox(bool value)
-    {
-      this->hasBoxChanged = value;
-    }
+    double d_ewaldBeta;     //!< The Ewald damping coefficient
+    double d_unitCell;      //!< Total MD system unit cell volume
+    double d_pressure;      //!< Total MD system pressure
+    double d_temperature;   //!< Total MD system temperature
+    bool d_orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
+    bool d_changeBox;       //!<
 
   private:
 
-    Matrix3 cellInverse;  //!<
-    double ewaldBeta;     //!< The Ewald damping coefficient
-    double unitCell;      //!< Total MD system unit cell volume
-    double pressure;      //!< Total MD system pressure
-    double temperature;   //!< Total MD system temperature
-    bool orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
-    bool hasBoxChanged;   //!<
+    Matrix3 d_cellInverse;  //!<
+    const ProcessorGroup* d_myworld;  //!< Uintah processor group
+
+
+    MDSystem(const MDSystem& system);
+    MDSystem& operator=(const MDSystem& system);
 
 };
 

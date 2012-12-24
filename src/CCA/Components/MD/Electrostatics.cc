@@ -92,7 +92,7 @@ void Electrostatics::performSPME(const MDSystem& system,
   FFT_Data_Type ForwardTransformData, BackwardTransformData;
 
   bool converged = false;     // Calculate at least once
-  Matrix StressTensorLocal = Matrix(0);  // Holds this patches contribution to the overall stress tensor
+  Matrix3 StressTensorLocal = Matrix3(0);  // Holds this patches contribution to the overall stress tensor
   double EnergyLocal = 0;       // Holds this patches local contribution to the energy
 
   while (!converged) {    // Iterate over this subset until charge convergence
@@ -311,10 +311,10 @@ void Electrostatics::calculateStaticGrids(const IntVector& gridExtents,
   inverseUnitCell = system.getCellInverse();
   ewaldBeta = system.getEwaldBeta();
 
-  vector<double> ordinalSpline(splineOrder - 1);
+  std::vector<double> ordinalSpline(splineOrder - 1);
   ordinalSpline = calculateOrdinalSpline(splineOrder);
 
-  vector<complex<double> > b1, b2, b3;
+  std::vector<std::complex<double> > b1, b2, b3;
   // Generate vectors of b_i (=exp(i*2*Pi*(n-1)m_i/K_i)*sum_(k=0..p-2)M_n(k+1)exp(2*Pi*k*m_i/K_i)
 
   b1 = generateBVector(GridExtents.x(), M1, K.x(), splineOrder, ordinalSpline);
