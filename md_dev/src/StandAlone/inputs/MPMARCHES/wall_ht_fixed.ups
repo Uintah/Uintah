@@ -2,7 +2,7 @@
 <!-- @version: -->
 <Uintah_specification>
   <Meta>
-    <title>Pipe Emitting Heptane</title>
+    <title>Testing fixed wall temperature BCs</title>
   </Meta>
 
   <SimulationComponent type="mpmarches"/>
@@ -11,16 +11,16 @@
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
-    <delt_max>0.1</delt_max>
-    <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>20</max_Timesteps>
+    <delt_min>0.005</delt_min>
+    <delt_max>0.005</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
   </Time>
 
   <DataArchiver>
-    <filebase>hot_block.uda</filebase>
+    <filebase>wall_ht_fixed.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
@@ -29,14 +29,15 @@
     <save label="cellType"/>
     <save label="enthalpy"/>
     <save label="heat_loss"/>
-    <save label="tempSolid_CC"/>
-    <save label="htfluxRadX"/>
-    <save label="htfluxRadY"/>
-    <save label="htfluxRadZ"/>
+    <save label="volFraction"/>
+    <save label="new_radiationFluxN"/>
+    <save label="new_radiationFluxS"/>
+    <save label="new_radiationFluxT"/>
+    <save label="new_radiationFluxB"/>
+    <save label="new_radiationVolq"/>
 <!-- Table Variables -->
 <!-- iv's -->
     <save label="mixture_fraction"/>
-    <save label="scalarVarSP"/>
 <!-- dv's -->
     <save label="density" table_lookup="true"/>
     <save label="temperature" table_lookup="true"/>
@@ -50,7 +51,7 @@
   </MPM>
   <MaterialProperties>
     <MPM>
-      <material name="something hot">
+      <material name="nada">
         <density>   2489.0   </density>
         <constitutive_model type="comp_mooney_rivlin">
           <he_constant_1>5.0</he_constant_1>
@@ -59,16 +60,6 @@
         </constitutive_model>
         <thermal_conductivity>  0.4494           </thermal_conductivity>
         <specific_heat>         940.36           </specific_heat>
-        <geom_object>
-          <cylinder label="hot block">
-            <bottom>          [.5, 1.5, 1.5]   </bottom>
-            <top>             [1.5, 1.5, 1.5]   </top>
-            <radius>           0.8           </radius>
-          </cylinder>
-          <res>                 [2,2,2]         </res>
-          <velocity>            [0.0,0.0,0.0]   </velocity>
-          <temperature>         1600             </temperature>
-        </geom_object>
       </material>
       <contact>
         <type>null</type>
@@ -80,7 +71,7 @@
   <Grid>
     <BoundaryConditions>
       <Face side="x-" name="x- wall">
-        <BCType id="all" label="x-wall" var="WallBC">
+        <BCType id="all" label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
@@ -92,21 +83,32 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
+        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+          <value>500.0</value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
-        <BCType id="all" label="x+wall" var="WallBC">
+      <Face circle="x-" name="x- inlet" origin="0 0.5 0.5" radius=".1">
+        <BCType id="all" label="x-wall" var="VelocityInlet">
+          <value>[1,0,0]</value>
+        </BCType>
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
+        </BCType>
+        <BCType id="all" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="scalar_var" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ outlet">
+        <BCType id="all" label="x+wall" var="OutletBC">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
@@ -118,17 +120,8 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
@@ -144,17 +137,11 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
+        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+          <value>750.0</value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
@@ -170,17 +157,11 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
+        <BCType id="all" label="SolidWallTemperature" var="Neumann">
+          <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
@@ -196,17 +177,11 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
+        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+          <value>750.0</value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
@@ -222,17 +197,11 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
-          <value> 298.0 </value>
-        </BCType>
-        <BCType id="all" var="Dirichlet" label="SolidWallTemperature">
-          <value> 298.0 </value>
+        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+          <value>750.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -240,8 +209,8 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[3,3,3]</upper>
-        <resolution>[15,15,15]</resolution>
+        <upper>[3,1,1]</upper>
+        <resolution>[30,10,10]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -284,7 +253,7 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>false</addSources>
+          <addSources>true</addSources>
           <determines_properties/>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
@@ -302,7 +271,7 @@
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
                 <pctype>jacobi</pctype>
-                <max_iter>75</max_iter>
+                <max_iter>475</max_iter>
               </LinearSolver>
             </DORadiationModel>
           </src>
@@ -317,33 +286,23 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+        <model type="cc_constant" label="scalar_var">
+          <initialization type="constant">
+            <constant>0</constant>
+          </initialization>
+          <constant>0</constant>
+        </model>
       </PropertyModels>
 
-      <Turbulence model="smagorinsky">
-        <variance_coefficient>0.1</variance_coefficient>
-        <cf>0.17</cf>
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
-
       <Properties>
-        <use_mixing_model>true</use_mixing_model>
+        <use_mixing_model>false</use_mixing_model>
         <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+          <inputfile>CH4_equil_nonadiabatic.mix.gz</inputfile>
         </ClassicTable>
       </Properties>
 
       <BoundaryConditions>
         <use_new_bcs/>
-        <intrusions>
-          <intrusion label="block">
-            <constant_temperature T="1000"/>
-            <geom_object>
-              <cylinder label="hot block"/>
-            </geom_object>
-          </intrusion>
-        </intrusions>
       </BoundaryConditions>
 
       <ExplicitSolver>
@@ -352,7 +311,7 @@
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
-            <tolerance>       1.0e-9</tolerance>
+            <tolerance>       1.0e-10</tolerance>
             <solver>          cg    </solver>
             <preconditioner>  pfmg  </preconditioner>
             <maxiterations>   250   </maxiterations>
@@ -374,7 +333,7 @@
 
   <Multimaterial>
     <fluidThermalConductivity>0.03</fluidThermalConductivity>
-    <heatExchange>true</heatExchange>
+    <heatExchange>false</heatExchange>
     <turbulentPrandtNo>0.7</turbulentPrandtNo>
     <fluidHeatCapacity>1007.</fluidHeatCapacity>
     <IfCutCell>false</IfCutCell>

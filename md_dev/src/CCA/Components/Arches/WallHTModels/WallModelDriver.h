@@ -7,6 +7,8 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 
 //============================================
@@ -69,7 +71,7 @@ namespace Uintah{
           virtual ~HTModelBase(){}; 
 
           virtual void problemSetup( const ProblemSpecP& input_db ) = 0;
-          virtual void computeHT( const Patch* patch, HTVariables* vars ) = 0; 
+          virtual void computeHT( const Patch* patch, HTVariables& vars ) = 0; 
 
         private: 
 
@@ -86,13 +88,68 @@ namespace Uintah{
           ~SimpleHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, HTVariables* vars ); 
+          void computeHT( const Patch* patch, HTVariables& vars ); 
 
         private: 
 
           double _k;         ///< Thermal conductivity 
           double _dy;        ///< Wall thickness 
           double _T_inner;   ///< Inner wall temperature
+
+      };
+
+      /** @brief A simple wall heat transfer model for domain walls only **/
+      class RegionHT : public HTModelBase { 
+
+        public: 
+
+          RegionHT(); 
+          ~RegionHT(); 
+
+          void problemSetup( const ProblemSpecP& input_db ); 
+          void computeHT( const Patch* patch, HTVariables& vars ); 
+
+        private: 
+
+          struct WallInfo { 
+            double k; 
+            double dy; 
+            double T_inner; 
+            std::vector<GeometryPieceP> geometry; 
+          };
+
+          std::vector<WallInfo> _regions; 
+
+          std::vector<IntVector> _d; 
+
+          inline constCCVariable<double> get_flux( int i, HTVariables& vars ){ 
+
+            constCCVariable<double> q; 
+            switch (i) {
+              case 0:
+                q = vars.hf_w;
+                break; 
+              case 1:
+                q = vars.hf_e;
+                break; 
+              case 2:
+                q = vars.hf_s;
+                break; 
+              case 3:
+                q = vars.hf_n;
+                break; 
+              case 4:
+                q = vars.hf_b;
+                break; 
+              case 5:
+                q = vars.hf_t;
+                break; 
+              default: 
+                break; 
+            }
+            return q; 
+
+          };
 
       };
 

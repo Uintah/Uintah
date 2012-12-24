@@ -9,11 +9,6 @@
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
     <Turbulence>
        <KolmogorovScale>1000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.1</EddyViscosityConstant>

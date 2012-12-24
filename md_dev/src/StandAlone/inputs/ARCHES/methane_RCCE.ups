@@ -14,13 +14,13 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
-    <max_Timesteps>20</max_Timesteps>
+    <max_Timesteps>21</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>methane_RCCE.uda</filebase>
     <outputTimestepInterval>5</outputTimestepInterval>
-    <outputInitTimestep/>
+<!--    <outputInitTimestep/> -->
     <save label="totalKineticEnergy"/>
     <save label="CCVelocity"/>
     <save label="enthalpy"/>
