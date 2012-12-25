@@ -67,6 +67,7 @@
 #include "Properties.h"
 #include "Operators/Operators.h"
 #include "Expressions/BasicExprBuilder.h"
+#include "Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
 #include "transport/TransportEquation.h"
@@ -348,6 +349,7 @@ namespace Wasatch{
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchParams, graphCategories_ );
+    parse_embedded_geometry(wasatchParams,graphCategories_);
     setup_property_evaluation( wasatchParams, graphCategories_ );
 
     //

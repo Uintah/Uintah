@@ -27,32 +27,9 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Expressions
+SRCDIR := CCA/Components/Wasatch/Expressions/EmbeddedGeometry
 
-SRCS     +=                         \
-	$(SRCDIR)/BasicExprBuilder.cc		\
-	$(SRCDIR)/ConvectiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveVelocity.cc		\
-	$(SRCDIR)/Dilatation.cc			\
-	$(SRCDIR)/MomentumPartialRHS.cc 	\
-	$(SRCDIR)/MomentumRHS.cc 		\
-	$(SRCDIR)/MonolithicRHS.cc		\
-	$(SRCDIR)/PrimVar.cc			\
-	$(SRCDIR)/ScalarRHS.cc			\
-	$(SRCDIR)/ScalabilityTestSrc.cc		\
-	$(SRCDIR)/SetCurrentTime.cc		\
-	$(SRCDIR)/Stress.cc 			\
-	$(SRCDIR)/VelocityMagnitude.cc 		\
-	$(SRCDIR)/Vorticity.cc 			\
-	$(SRCDIR)/Pressure.cc     \
- $(SRCDIR)/PoissonExpression.cc
+SRCS	+=                             \
+	$(SRCDIR)/OscillatingCylinder.cc \
+ 	$(SRCDIR)/EmbeddedGeometryHelper.cc
 
-SUBDIRS := \
-        $(SRCDIR)/MMS \
-        $(SRCDIR)/PBE \
-        $(SRCDIR)/PostProcessing \
-        $(SRCDIR)/Turbulence  \
-        $(SRCDIR)/EmbeddedGeometry
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
