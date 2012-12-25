@@ -8,7 +8,26 @@
     <NameTag              spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING"
                             attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
-                            
+
+   <!-- Geometry Expression provides support for creating special embedded geometries through wasatch-->
+   <GeometryExpression  spec="MULTIPLE NO_DATA"
+                        children1="ONE_OF(CHILD OscillatingCylinder)" >
+     <!-- OscillatingCylinder, as the name describes, creates a time-dependent volume fraction expression -->                        
+      <OscillatingCylinder   spec="OPTIONAL NO_DATA"
+                    attribute1="radius       REQUIRED DOUBLE"
+                    attribute2="insideValue  REQUIRED DOUBLE"
+                    attribute3="outsideValue REQUIRED DOUBLE"
+                    attribute4="frequency REQUIRED DOUBLE"
+                    attribute5="amplitude REQUIRED DOUBLE">
+        <!-- origin of the cylinder -->
+        <Origin                   spec="REQUIRED MULTIPLE_DOUBLES"/>
+        <!-- direction of oscillation. this is normalized in the expression -->        
+        <OscillatingDir           spec="REQUIRED MULTIPLE_DOUBLES"/>        
+        <!-- cylinder axis -->                
+        <Axis           spec="REQUIRED STRING 'X,Y,Z'" />        
+      </OscillatingCylinder>                             
+   </GeometryExpression>                                                     
+
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
@@ -16,6 +35,7 @@
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
+
       <LinearFunction     spec="OPTIONAL NO_DATA"
                             attribute1="slope REQUIRED DOUBLE"      
                             attribute2="intercept REQUIRED DOUBLE" >
@@ -104,6 +124,7 @@
           <NameTag        spec="REQUIRED"/>
         </Coordinate2>
       </Cylinder>
+
       
       <WallDistanceFunction     spec="OPTIONAL NO_DATA">
         <NameTag                        spec="REQUIRED" />
@@ -381,6 +402,15 @@
          handles the time integration of the Wasatch scalars in this case. It is only necessary to specify
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
+
+    <EmbeddedGeometry spec="OPTIONAL NO_DATA"
+                      children1="ONE_OF(CHILD Intrusion, GeometryExpression)" >
+       <inverted spec="OPTIONAL NO_DATA"/>    
+       <Intrusion     spec="MULTIPLE NO_DATA">
+         <geom_object spec="REQUIRED"/>
+      </Intrusion>
+      <GeometryExpression            spec="OPTIONAL" />      
+    </EmbeddedGeometry>
 
     <BasicExpression            spec="MULTIPLE" />
 
