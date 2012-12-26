@@ -80,6 +80,7 @@ namespace Wasatch{
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
+                               const bool hasEmbeddedGeometry,
                                const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState);
@@ -92,6 +93,7 @@ namespace Wasatch{
                    const std::string velName,
                    const std::string momName,
                    Uintah::ProblemSpecP params,
+                   const bool hasEmbeddedGeometry,
                    Uintah::SolverInterface& linSolver );
 
     /**

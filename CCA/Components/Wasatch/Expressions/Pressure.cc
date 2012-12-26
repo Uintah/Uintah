@@ -67,6 +67,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& dilatationtag,
                     const Expr::Tag& d2rhodt2tag,
                     const Expr::Tag& timesteptag,
+                    const Expr::Tag& volfractag,
                     const bool       useRefPressure,
                     const double     refPressureValue,
                     const SCIRun::IntVector refPressureLocation,
@@ -85,6 +86,8 @@ Pressure::Pressure( const std::string& pressureName,
     timestept_( timesteptag ),
     currenttimet_(Expr::Tag(StringNames::self().time,Expr::STATE_NONE) ),
 
+    volfract_(volfractag),
+
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
@@ -92,6 +95,8 @@ Pressure::Pressure( const std::string& pressureName,
     doDens_( d2rhodt2tag != Expr::Tag() ),
 
     didAllocateMatrix_(false),
+    didMatrixUpdate_(false),
+    movingBoundaries_(false),
 
     materialID_(0),
     rkStage_(1),
@@ -201,6 +206,7 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( doY_    )  exprDeps.requires_expression( fyt_ );
   if( doZ_    )  exprDeps.requires_expression( fzt_ );
   if( doDens_ )  exprDeps.requires_expression( d2rhodt2t_ );
+  if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   exprDeps.requires_expression( dilatationt_ );
   exprDeps.requires_expression( timestept_ );
   
@@ -223,6 +229,7 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doY_    )  fy_       = &yvfm.field_ref( fyt_       );
   if( doZ_    )  fz_       = &zvfm.field_ref( fzt_       );
   if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
+  if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
   dilatation_ = &svfm.field_ref( dilatationt_ );
 
   const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
@@ -360,16 +367,152 @@ Pressure::evaluate()
   if( doDens_ ){
     rhs <<= rhs - *d2rhodt2_;
   }
+  
+  if (volfract_ != Expr::Tag() ) {
+    rhs <<= rhs* *volfrac_;
+  }
 
   // update pressure rhs for reference pressure
   if (useRefPressure_) set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
   if(patch_->hasBoundaryFaces()) update_poisson_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
+  
+  // process embedded boundaries
+  if (volfract_ != Expr::Tag())
+      process_embedded_boundaries();
 }
 
 //--------------------------------------------------------------------
 
+void Pressure::process_embedded_boundaries() {
+  // cell offset used to calculate local cell index with respect to patch.
+  const SCIRun::IntVector patchCellOffset = patch_->getCellLowIndex(0);
+  const Uintah::Vector spacing = patch_->dCell();
+  const double dx = spacing[0];
+  const double dy = spacing[1];
+  const double dz = spacing[2];
+  const double dx2 = dx*dx;
+  const double dy2 = dy*dy;
+  const double dz2 = dz*dz;
+  if (movingBoundaries_) {
+    setup_matrix();
+  }
+  
+  //
+  if (!didMatrixUpdate_ || movingBoundaries_) {
+    
+    // didMatrixUpdate_: boolean that tracks whether we have updated the
+    // pressure coef matrix or not when embedded geometries are present
+    didMatrixUpdate_ = true;
+    
+    for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
+      IntVector iCell = *iter;
+      Uintah::Stencil4&  coefs = matrix_[iCell];
+      
+      IntVector iCellOffset = iCell - patchCellOffset;
+      
+      // interior
+      const SpatialOps::structured::IntVec   intCellIJK( iCellOffset[0],
+                                                        iCellOffset[1],
+                                                        iCellOffset[2] );
+      
+      const int iInterior = volfrac_->window_without_ghost().flat_index( intCellIJK  );
+      double volFrac = (*volfrac_)[iInterior];
+      
+      // we are inside an embedded geometry, set pressure to zero.
+      if ( volFrac < 1.0 ) {
+        coefs.w = 0.0;
+        coefs.s = 0.0;
+        coefs.b = 0.0;
+        coefs.p = 1.0;
+      }
+      
+      if (volFrac > 0.0) {
+        // east
+        const SpatialOps::structured::IntVec   eIJK( iCellOffset[0] + 1,
+                                                    iCellOffset[1],
+                                                    iCellOffset[2] );
+        IntVector eIJKUintah(iCell[0] + 1, iCell[1], iCell[2]);
+        const int ieast = volfrac_->window_without_ghost().flat_index( eIJK  );
+        
+        // north
+        const SpatialOps::structured::IntVec   nIJK( iCellOffset[0],
+                                                    iCellOffset[1] + 1,
+                                                    iCellOffset[2] );
+        IntVector nIJKUintah(iCell[0], iCell[1] + 1, iCell[2]);
+        const int inorth = volfrac_->window_without_ghost().flat_index( nIJK  );
+        
+        // top
+        const SpatialOps::structured::IntVec   tIJK( iCellOffset[0],
+                                                    iCellOffset[1],
+                                                    iCellOffset[2] + 1);
+        IntVector tIJKUintah(iCell[0], iCell[1], iCell[2] + 1);
+        const int itop = volfrac_->window_without_ghost().flat_index( tIJK  );
+        
+        // west
+        const SpatialOps::structured::IntVec   wIJK( iCellOffset[0] - 1,
+                                                    iCellOffset[1],
+                                                    iCellOffset[2] );
+        IntVector wIJKUintah(iCell[0] - 1, iCell[1], iCell[2]);
+        const int iwest = volfrac_->window_without_ghost().flat_index( wIJK  );
+        
+        // south
+        const SpatialOps::structured::IntVec   sIJK( iCellOffset[0],
+                                                    iCellOffset[1] - 1,
+                                                    iCellOffset[2] );
+        IntVector sIJKUintah(iCell[0], iCell[1] - 1, iCell[2]);
+        const int isouth = volfrac_->window_without_ghost().flat_index( sIJK  );
+        
+        // bottom
+        const SpatialOps::structured::IntVec   bIJK( iCellOffset[0],
+                                                    iCellOffset[1],
+                                                    iCellOffset[2] - 1);
+        IntVector bIJKUintah(iCell[0], iCell[1], iCell[2] - 1);
+        const int ibot = volfrac_->window_without_ghost().flat_index( bIJK  );
+        
+        //
+        double volFracEast  = (*volfrac_)[ieast];
+        double volFracNorth = (*volfrac_)[inorth];
+        double volFracTop   = (*volfrac_)[itop];
+        double volFracWest  = (*volfrac_)[iwest];
+        double volFracSouth = (*volfrac_)[isouth];
+        double volFracBot   = (*volfrac_)[ibot];
+
+        // neighbors are embedded boundaries
+        if (doX_ && volFracEast < 1.0 ) {
+          coefs.p -= 1.0/dx2;          
+        }
+        
+        if (doY_ && volFracNorth < 1.0 ) {
+          coefs.p -= 1.0/dy2;
+        }
+        
+        if (doZ_ && volFracTop < 1.0 ) {
+          coefs.p -= 1.0/dz2;
+        }
+        
+        if (doX_ && volFracWest < 1.0 ) {
+          coefs.p -= 1.0/dx2;
+          coefs.w  = 0.0;
+        }
+        
+        if (doY_ && volFracSouth < 1.0 ) {
+          coefs.p -= 1.0/dy2;
+          coefs.s = 0.0;
+        }
+        
+        if (doZ_ && volFracBot < 1.0 ) {
+          coefs.p -= 1.0/dz2;
+          coefs.b = 0.0;
+        }
+      }
+    }
+  }  
+}
+
+//--------------------------------------------------------------------
+  
 void
 Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
                         const Uintah::PatchSubset* const patches,
@@ -413,6 +556,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& dilatationtag,
                             const Expr::Tag& d2rhodt2tag,
                             const Expr::Tag& timesteptag,
+                            const Expr::Tag& volfractag,
                             const bool       userefpressure,
                             const double     refPressureValue,
                             const SCIRun::IntVector refPressureLocation,
@@ -426,6 +570,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    dilatationt_ ( dilatationtag ),
    d2rhodt2t_( d2rhodt2tag ),
    timestept_( timesteptag ),
+   volfract_ ( volfractag  ),
    userefpressure_( userefpressure ),
    refpressurevalue_( refPressureValue ),
    refpressurelocation_( refPressureLocation ),
@@ -441,7 +586,7 @@ Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
-                      dilatationt_, d2rhodt2t_, timestept_, userefpressure_,
+                      dilatationt_, d2rhodt2t_, timestept_,volfract_, userefpressure_,
                       refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                       sparams_, solver_ );
 }

@@ -33,11 +33,13 @@
 template< typename FieldT >
 MomRHS<FieldT>::
 MomRHS( const Expr::Tag& pressure,
-        const Expr::Tag& partRHS )
+        const Expr::Tag& partRHS,
+        const Expr::Tag& volFracTag )
   : Expr::Expression<FieldT>(),
     pressuret_( pressure ),
-    rhsPartt_( partRHS ),
-   emptyTag_( Expr::Tag() )
+    rhspartt_( partRHS ),
+    volfract_( volFracTag ),
+    emptyTag_( Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -55,7 +57,8 @@ MomRHS<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   if( pressuret_ != emptyTag_ )    exprDeps.requires_expression( pressuret_ );;
-  exprDeps.requires_expression( rhsPartt_ );
+  exprDeps.requires_expression( rhspartt_ );
+  if( volfract_ != emptyTag_ )    exprDeps.requires_expression( volfract_ );
 }
 
 //--------------------------------------------------------------------
@@ -65,8 +68,9 @@ void
 MomRHS<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  rhsPart_ = &fml.field_manager<FieldT>().field_ref( rhsPartt_ );
+  rhsPart_ = &fml.field_manager<FieldT>().field_ref( rhspartt_ );
   if( pressuret_ != emptyTag_ )  pressure_ = &fml.field_manager<PFieldT>().field_ref( pressuret_ );
+  if( volfract_  != emptyTag_ )  volfrac_  = &fml.field_manager<FieldT>().field_ref( volfract_ );
 }
 
 //--------------------------------------------------------------------
@@ -94,6 +98,9 @@ evaluate()
     result <<= -result;
   }
   result <<= result + *rhsPart_;
+  
+  if ( volfract_ != emptyTag_ )
+    result <<= result * *volfrac_;
 }
 
 //--------------------------------------------------------------------
@@ -102,10 +109,12 @@ template< typename FieldT >
 MomRHS<FieldT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& pressure,
-                  const Expr::Tag& partRHS )
+                  const Expr::Tag& partRHS,
+                  const Expr::Tag& volFracTag )
   : ExpressionBuilder(result),
     pressuret_( pressure ),
-    rhspt_( partRHS )
+    rhspartt_( partRHS ),
+    volfract_( volFracTag )
 {}
 
 //--------------------------------------------------------------------
@@ -114,7 +123,7 @@ template< typename FieldT >
 Expr::ExpressionBase*
 MomRHS<FieldT>::Builder::build() const
 {
-  return new MomRHS<FieldT>( pressuret_, rhspt_ );
+  return new MomRHS<FieldT>( pressuret_, rhspartt_, volfract_ );
 }
 
 //--------------------------------------------------------------------

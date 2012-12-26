@@ -85,16 +85,42 @@ namespace Wasatch{
     TransportEquation( const std::string solutionVarName,
                        const Expr::ExpressionID rhsExprID,
                        const Direction stagLoc,
-                       Uintah::ProblemSpecP params=NULL)
-      : solnVarName_( solutionVarName ),
-        rhsExprID_( rhsExprID ),
-        stagLoc_( stagLoc ),
-        volFracTag_( Expr::Tag() ),
-        hasVolFrac_( false )
+                       const bool hasEmbeddedGeometry = false,
+                       Uintah::ProblemSpecP eqnParams=NULL)
+      : solnVarName_        ( solutionVarName ),
+        rhsExprID_          ( rhsExprID ),
+        stagLoc_            ( stagLoc ),
+        volFracTag_         ( Expr::Tag() ),
+        hasEmbeddedGeometry_(hasEmbeddedGeometry),
+        hasVolFrac_         ( false )
     {
-      if (params && params->findBlock("VolumeFractionExpression")) {
-        volFracTag_ = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-        hasVolFrac_ = true;
+      switch (stagLoc_) {
+        case XDIR:
+          if (eqnParams && eqnParams->findBlock("XAreaFractionExpression")) {
+            volFracTag_ = parse_nametag( eqnParams->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
+            hasVolFrac_ = true;
+          }
+          break;
+        case YDIR:
+          if (eqnParams && eqnParams->findBlock("YAreaFractionExpression")) {
+            volFracTag_ = parse_nametag( eqnParams->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
+            hasVolFrac_ = true;
+          }
+          break;
+        case ZDIR:
+          if (eqnParams && eqnParams->findBlock("ZAreaFractionExpression")) {
+            volFracTag_ = parse_nametag( eqnParams->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+            hasVolFrac_ = true;
+          }
+          break;          
+        case NODIR:
+          if (eqnParams && eqnParams->findBlock("VolumeFractionExpression")) {
+            volFracTag_ = parse_nametag( eqnParams->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+            hasVolFrac_ = true;
+          }
+          break;
+        default:
+          break;
       }
     }
 
@@ -174,12 +200,14 @@ namespace Wasatch{
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
+    bool has_embedded_geometry() { return hasEmbeddedGeometry_;}
   protected:
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
     Expr::Tag volFracTag_;    
     bool hasVolFrac_;
+    bool hasEmbeddedGeometry_;
   };
 
 } // namespace Wasatch

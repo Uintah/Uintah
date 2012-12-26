@@ -431,12 +431,13 @@ namespace Wasatch{
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
+    const bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams, densityTag, graphCategories_, *linSolver_,sharedState);
+          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams,wasatchParams->findBlock("EmbeddedGeometry"), densityTag, graphCategories_, *linSolver_,sharedState);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){

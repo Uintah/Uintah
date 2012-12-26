@@ -75,9 +75,7 @@ namespace Wasatch{
       bool inverted = geomParams->findBlock("inverted");
 
       Uintah::ProblemSpecP geomExprParams = geomParams->findBlock("GeometryExpression");      
-      if (geomExprParams) {
-        std::cout << "parsing oscillating cylinder \n";
-        
+      if (geomExprParams) {        
         if (geomExprParams->findBlock("OscillatingCylinder")) {
           Uintah::ProblemSpecP valParams = geomExprParams->findBlock("OscillatingCylinder");
           double radius, insideValue, outsideValue, frequency, amplitude;
@@ -112,7 +110,7 @@ namespace Wasatch{
       }
       
       // register the volume fractions
-//      initgh->exprFactory->register_expression( scinew svolfracBuilder( svol_frac_tag(), geomObjects, inverted ) );
+//      initgh->exprFactory->register_expression( volFracBuilder );
       solngh->exprFactory->register_expression( volFracBuilder );
       
       // register the area fractions
