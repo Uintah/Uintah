@@ -221,9 +221,11 @@ namespace Uintah {
 
         //__________________________________
         // Setup grid
+#if 0
 #ifdef HYPRE_TIMING
         hypre_global_timing = NULL;
 #endif        
+#endif
         int time_index = hypre_InitializeTiming("Setup grid");
         hypre_BeginTiming(time_index);
         
