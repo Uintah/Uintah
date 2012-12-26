@@ -79,6 +79,7 @@ class MomRHSPart
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
 
   const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_, emptyTag_;
+  const Expr::Tag volfract_;
 
   const XFluxT    *cFluxX_, *tauX_;
   const YFluxT    *cFluxY_, *tauY_;
@@ -86,6 +87,8 @@ class MomRHSPart
   const SVolField *density_;
   const FieldT    *bodyForce_;
   const FieldT    *srcTerm_;
+
+  const FieldT* volfrac_;
 
   const DivX* divXOp_;
   const DivY* divYOp_;
@@ -101,12 +104,15 @@ class MomRHSPart
               const Expr::Tag& tauZ,
               const Expr::Tag& densityTag,
               const Expr::Tag& bodyForceTag,
-              const Expr::Tag& srcTermTag);
+              const Expr::Tag& srcTermTag,
+              const Expr::Tag& volFracTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_;
+    const Expr::Tag volfract_;
+    
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& convFluxX,
@@ -117,7 +123,8 @@ public:
              const Expr::Tag& tauZ,
              const Expr::Tag& densityTag,
              const Expr::Tag& bodyForceTag,
-             const Expr::Tag& srcTermTag);
+             const Expr::Tag& srcTermTag,
+             const Expr::Tag& volFracTag );
 
     Expr::ExpressionBase* build() const;
   };

@@ -270,9 +270,9 @@ namespace Wasatch{
       zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
     }
     
-    
+    //_____________
+    // Turbulence
     Expr::Tag turbDiffTag = Expr::Tag();
-    // TURBULENCE
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     if (turbulenceParams.turbulenceModelName != NONE && enableTurbulenceModel ) { 
       Expr::Tag turbViscTag = turbulent_viscosity_tag();//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
@@ -283,7 +283,6 @@ namespace Wasatch{
         factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbulentSchmidt, turbViscTag ) );
       }      
     }
-    // END TURBULENCE
     
     //_________________
     // Diffusive Fluxes

@@ -274,6 +274,7 @@ namespace Wasatch{
   
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
+                                                                 const bool hasEmbeddedGeometry,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
@@ -337,7 +338,7 @@ namespace Wasatch{
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< XVolField > MomTransEq;
-      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, xvelname, xmomname, params, linSolver );
+      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, xvelname, xmomname, params, hasEmbeddedGeometry, linSolver );
       momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
                                       densityTag,
@@ -346,6 +347,7 @@ namespace Wasatch{
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       turbParams,
+                                      hasEmbeddedGeometry,
                                       rhsID,
                                       linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
@@ -357,7 +359,7 @@ namespace Wasatch{
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< YVolField > MomTransEq;
-      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, yvelname, ymomname, params, linSolver );
+      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, yvelname, ymomname, params, hasEmbeddedGeometry, linSolver );
       momtranseq = scinew MomTransEq( yvelname,
                                      ymomname,
                                      densityTag,
@@ -366,8 +368,9 @@ namespace Wasatch{
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
+                                     hasEmbeddedGeometry,
                                      rhsID,
-                                       linSolver,sharedState );
+                                     linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
@@ -377,7 +380,7 @@ namespace Wasatch{
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
-      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, zvelname, zmomname, params, linSolver );
+      const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, zvelname, zmomname, params, hasEmbeddedGeometry, linSolver );
       momtranseq = scinew MomTransEq( zvelname,
                                      zmomname,
                                      densityTag,
@@ -386,6 +389,7 @@ namespace Wasatch{
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
+                                     hasEmbeddedGeometry,
                                      rhsID,
                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);

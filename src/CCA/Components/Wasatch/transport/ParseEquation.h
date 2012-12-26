@@ -124,6 +124,7 @@ namespace Wasatch{
    */
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
+                                                                 const bool embeddedGeomParams,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver,
@@ -150,7 +151,7 @@ namespace Wasatch{
    */
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                          Uintah::ProblemSpecP wasatchParams,
-                                                                        GraphCategories& gc);
+                                                                         GraphCategories& gc);
 
 
   /**
