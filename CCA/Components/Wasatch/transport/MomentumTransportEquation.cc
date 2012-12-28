@@ -378,6 +378,7 @@ namespace Wasatch{
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const bool hasEmbeddedGeometry,
+                             const bool hasMovingGeometry,
                              const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
@@ -585,7 +586,7 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
-                                                                                       d2rhodt2t, timestepTag,volFracTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
+                                                                                       d2rhodt2t, timestepTag,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
         factory.cleave_from_children( pressureID_ );

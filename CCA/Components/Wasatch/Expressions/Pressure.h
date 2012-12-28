@@ -81,7 +81,7 @@ class Pressure
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
   bool didMatrixUpdate_;
-  bool movingBoundaries_;
+  bool hasMovingGeometry_;
   int  materialID_;
   int  rkStage_;
   const bool useRefPressure_;
@@ -134,7 +134,8 @@ class Pressure
             const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
             const Expr::Tag& timesteptag,
-            const Expr::Tag& volfractag,           
+            const Expr::Tag& volfractag,
+            const bool hasMovingGeometry,
             const bool       userefpressure,
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
@@ -146,6 +147,7 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_,volfract_;
+    const bool hasMovingGeometry_;
     const bool userefpressure_;
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
@@ -161,6 +163,7 @@ public:
              const Expr::Tag& d2rhodt2tag,
              const Expr::Tag& timesteptag,
              const Expr::Tag& volfractag,
+             const bool hasMovingGeometry,
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,

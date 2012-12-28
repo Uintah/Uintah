@@ -68,6 +68,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& d2rhodt2tag,
                     const Expr::Tag& timesteptag,
                     const Expr::Tag& volfractag,
+                    const bool hasMovingGeometry,
                     const bool       useRefPressure,
                     const double     refPressureValue,
                     const SCIRun::IntVector refPressureLocation,
@@ -96,7 +97,7 @@ Pressure::Pressure( const std::string& pressureName,
 
     didAllocateMatrix_(false),
     didMatrixUpdate_(false),
-    movingBoundaries_(false),
+    hasMovingGeometry_(hasMovingGeometry),
 
     materialID_(0),
     rkStage_(1),
@@ -336,6 +337,7 @@ Pressure::evaluate()
   rhs <<= - *dilatation_/ *timestep_;
 
   SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( rhs );
+  *tmp <<= 0.0;
 
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
@@ -395,12 +397,12 @@ void Pressure::process_embedded_boundaries() {
   const double dx2 = dx*dx;
   const double dy2 = dy*dy;
   const double dz2 = dz*dz;
-  if (movingBoundaries_) {
+  if (hasMovingGeometry_) {
     setup_matrix();
   }
   
   //
-  if (!didMatrixUpdate_ || movingBoundaries_) {
+  if (!didMatrixUpdate_ || hasMovingGeometry_) {
     
     // didMatrixUpdate_: boolean that tracks whether we have updated the
     // pressure coef matrix or not when embedded geometries are present
@@ -557,6 +559,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& d2rhodt2tag,
                             const Expr::Tag& timesteptag,
                             const Expr::Tag& volfractag,
+                            const bool hasMovingGeometry,
                             const bool       userefpressure,
                             const double     refPressureValue,
                             const SCIRun::IntVector refPressureLocation,
@@ -571,6 +574,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    d2rhodt2t_( d2rhodt2tag ),
    timestept_( timesteptag ),
    volfract_ ( volfractag  ),
+   hasMovingGeometry_(hasMovingGeometry),
    userefpressure_( userefpressure ),
    refpressurevalue_( refPressureValue ),
    refpressurelocation_( refPressureLocation ),
@@ -586,7 +590,7 @@ Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
-                      dilatationt_, d2rhodt2t_, timestept_,volfract_, userefpressure_,
+                      dilatationt_, d2rhodt2t_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
                       refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                       sparams_, solver_ );
 }

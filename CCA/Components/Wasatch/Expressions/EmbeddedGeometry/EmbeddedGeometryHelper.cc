@@ -72,7 +72,7 @@ namespace Wasatch{
       Uintah::ProblemSpecP geomParams = parser->findBlock("EmbeddedGeometry");
 
       // we only allow the ENTIRE geometry to be inverted, not per intrusion
-      bool inverted = geomParams->findBlock("inverted");
+      bool inverted = geomParams->findBlock("Inverted");
 
       Uintah::ProblemSpecP geomExprParams = geomParams->findBlock("GeometryExpression");      
       if (geomExprParams) {        
