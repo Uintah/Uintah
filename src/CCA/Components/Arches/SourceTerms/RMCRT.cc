@@ -387,14 +387,19 @@ void
 RMCRT_Radiation::sched_initialize( const LevelP& level, 
                                    SchedulerP& sched )
 {
-
-  
-  // HACK This should be pulled in from arches, not computed here.
+  // HACK archesLevelIndex should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
-  int archesLevelIndex = grid->numLevels()-1; // this is the finest level
-  
   int maxLevels = grid->numLevels();
+  int archesLevelIndex = maxLevels-1; // this is the index of the finest level  
+
+  //__________________________________
+  //  Additional bulletproofing, this belongs in problem setup
+  if (_whichAlgo == dataOnion && maxLevels == 1){
+    throw ProblemSetupException("ERROR:  RMCRT_radiation, there must be more than 1 level if you're using the Data Onion algorithm", __FILE__, __LINE__);
+  }  
   
+  //__________________________________
+  //  schedule the tasks
   for (int L=0; L< maxLevels; ++L){
   
     if( L != archesLevelIndex ){
@@ -433,7 +438,6 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
                              DataWarehouse* , 
                              DataWarehouse* new_dw )
 {
-
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
