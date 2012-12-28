@@ -435,9 +435,12 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
+      bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
+      bool hasMovingBoundaries = false;
+      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams,wasatchParams->findBlock("EmbeddedGeometry"), densityTag, graphCategories_, *linSolver_,sharedState);
+          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams,hasEmbeddedGeometry,hasMovingBoundaries, densityTag, graphCategories_, *linSolver_,sharedState);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){

@@ -403,11 +403,12 @@
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
-    <EmbeddedGeometry spec="OPTIONAL NO_DATA"
-                      children1="ONE_OF(CHILD Intrusion, GeometryExpression)" >
-       <inverted spec="OPTIONAL NO_DATA"/>    
-       <Intrusion     spec="MULTIPLE NO_DATA">
-         <geom_object spec="REQUIRED"/>
+    <EmbeddedGeometry  spec="OPTIONAL NO_DATA"
+                       children1="ONE_OF(CHILD Intrusion, GeometryExpression)" >
+       <Inverted       spec="OPTIONAL NO_DATA"/>
+       <MovingGeometry spec="OPTIONAL NO_DATA"/>  
+       <Intrusion      spec="MULTIPLE NO_DATA">
+         <geom_object  spec="REQUIRED"/>
       </Intrusion>
       <GeometryExpression            spec="OPTIONAL" />      
     </EmbeddedGeometry>

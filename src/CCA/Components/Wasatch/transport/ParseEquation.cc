@@ -275,6 +275,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
                                                                  const bool hasEmbeddedGeometry,
+                                                                const bool hasMovingGeometry,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
@@ -348,6 +349,7 @@ namespace Wasatch{
                                       params,
                                       turbParams,
                                       hasEmbeddedGeometry,
+                                      hasMovingGeometry,
                                       rhsID,
                                       linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
@@ -369,6 +371,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      hasEmbeddedGeometry,
+                                     hasMovingGeometry,
                                      rhsID,
                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
@@ -390,6 +393,7 @@ namespace Wasatch{
                                      params,
                                      turbParams,
                                      hasEmbeddedGeometry,
+                                     hasMovingGeometry,
                                      rhsID,
                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);

@@ -81,6 +81,7 @@ namespace Wasatch{
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
+                               const bool hasMovingGeometry,
                                const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState);
