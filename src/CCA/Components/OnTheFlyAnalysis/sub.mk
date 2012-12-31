@@ -39,7 +39,8 @@ SRCS     += \
 	$(SRCDIR)/flatPlate_heatFlux.cc	\
 	$(SRCDIR)/particleExtract.cc	\
 	$(SRCDIR)/containerExtract.cc	\
-	$(SRCDIR)/vorticity.cc
+	$(SRCDIR)/vorticity.cc             \
+	$(SRCDIR)/1stLawThermo.cc                    
 
 PSELIBS := \
 	Core/Geometry                    \
