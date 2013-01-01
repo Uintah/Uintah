@@ -9,8 +9,14 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Grid/Box.h>
 
-using namespace Uintah; 
+#include <Core/Parallel/Parallel.h>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+
+
 using namespace std; 
+using namespace Uintah; 
 
 //_________________________________________
 WallModelDriver::WallModelDriver( SimulationStateP& shared_state ) :
@@ -42,10 +48,13 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   ProblemSpecP db = input_db; 
 
   db->getWithDefault( "temperature_label", _T_label_name, "temperature" ); 
+  db->getWithDefault( "WallHT_Calc_Freq",   _WallHT_calc_freq, 10 ); 
 
   for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != 0; db_model = db_model->findNextBlock( "model" ) ){
 
     std::string type = "not_assigned"; 
+
+
     db_model->getAttribute("type", type); 
 
     if ( type == "simple_ht" ) {
@@ -118,8 +127,11 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
                            DataWarehouse* new_dw, 
                            const int time_subset )
 {
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
+
+    int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
 
     const Level* level = getLevel(patches);
     
@@ -128,22 +140,27 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     const Patch* patch = patches->get(p);
     HTVariables vars;
 
-    new_dw->getModifiable( vars.T, _T_label, _matl_index, patch ); 
-    which_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
-    which_dw->get(   vars.hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
+    //    cout <<"timestep="<<timestep<<endl;
 
-    std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
+    if(timestep % _WallHT_calc_freq==0 && time_subset==1){
+      new_dw->getModifiable( vars.T, _T_label, _matl_index, patch ); 
+      old_dw->get(     vars.T_old    , _T_label        , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
+      which_dw->get(   vars.hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
 
-    //loop over all HT models
-    for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+      std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
-      (*iter)->computeHT( patch, vars );
+      //loop over all HT models
+      for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
 
+        (*iter)->computeHT( patch, vars );
+
+      }
     }
   }
 }
@@ -293,6 +310,7 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 void 
 WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
+    double _Delta_T, net_q;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   
@@ -305,22 +323,22 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
     constCCVariable<double> q; 
     switch (face) {
       case Patch::xminus:
-        q = vars.hf_w;
+          q = vars.hf_w;
         break; 
       case Patch::xplus:
-        q = vars.hf_e;
+          q = vars.hf_e;
         break; 
       case Patch::yminus:
-        q = vars.hf_s;
+          q = vars.hf_s; 
         break; 
       case Patch::yplus:
-        q = vars.hf_n;
+          q = vars.hf_n;
         break; 
       case Patch::zminus:
-        q = vars.hf_b;
+          q = vars.hf_b;
         break; 
       case Patch::zplus:
-        q = vars.hf_t;
+          q = vars.hf_t;
         break; 
       default: 
         break; 
@@ -333,9 +351,31 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
 
       if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
 
-        vars.T[c + offset] = _T_inner + q[c] * _dy / _k; 
-      }
+          //        vars.T[c + offset] = _T_inner + q[c] * _dy / _k; 
+          net_q = q[c]-5.67e-8*pow(vars.T_old[c+offset],4);
+          net_q = net_q>0 ? net_q : 0;
+          _Delta_T = _T_inner + net_q*_dy/_k;
 
+          if(((c+offset)[0]==13 || (c+offset)[0]==28) && (c+offset)[1]==5)
+              cout<<"Dt=" << _Delta_T <<"  ";
+
+          _Delta_T = _Delta_T > 3000 ? 3000 : _Delta_T;
+          _Delta_T = _Delta_T < 373 ? 373: _Delta_T;
+
+          if(((c+offset)[0]==13 || (c+offset)[0]==28) && (c+offset)[1]==5)
+              cout<<"before_vars.T=" <<", " << vars.T_old[c+offset] <<"net_q="<< net_q<<", q="<< q[c]<<",  Dt=" << _Delta_T << endl;
+
+          vars.T[c+offset] = 0.95*vars.T_old[c+offset] + 0.05*_Delta_T;
+
+          //          vars.T[c+offset] = vars.T[c+offset]>vars.T[c] ? vars.T[c] : vars.T[c+offset];
+
+          if(((c+offset)[0]==13 || (c+offset)[0]==28) && (c+offset)[1]==5){
+              cout<<"after_vars.T=" << vars.T[c+offset]  <<"  _dy=" << _dy <<"  _k=" << _k << ", c=" << c+offset << endl;
+              // cout<<"cb:"<<c+offset<<": hf="<<vars.hf_e[c+offset]<<", "<<vars.hf_w[c+offset]<<", "<<vars.hf_s[c+offset]<<", "<<vars.hf_n[c+offset]<<", "<<vars.hf_t[c+offset]<<", "<<vars.hf_b[c+offset]<<"\n";
+              // cout<<"c:"<<c<<": hf="<<vars.hf_e[c]<<", "<<vars.hf_w[c]<<", "<<vars.hf_s[c]<<", "<<vars.hf_n[c]<<", "<<vars.hf_t[c]<<", "<<vars.hf_b[c]<<"\n";
+
+          }
+      }
     }
   }
 }
@@ -374,7 +414,9 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("k", info.k);
     r_db->require("wall_thickness", info.dy);
     r_db->require("tube_side_T", info.T_inner); 
-
+    r_db->require("Relax_C", info.Relax_C); 
+    r_db->require("max_TW", info.max_TW);
+    r_db->require("min_TW", info.min_TW);
     _regions.push_back( info ); 
 
   }
@@ -384,6 +426,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
 void 
 WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
+  double _Delta_T, net_q;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Box patchBox = patch->getExtraBox();
@@ -420,9 +463,26 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
                 if ( vars.celltype[c + _d[i]] == FLOW ){ 
                   
                   q = get_flux( i, vars );  
+                  net_q = q[c+_d[i]]-5.67e-8*pow(vars.T_old[c],4);
+                  net_q = net_q>0 ? net_q : 0;
 
                   // do heat transfer 
-                  vars.T[c] = wi.T_inner + q[c + _d[i]] * wi.dy / wi.k; 
+                  _Delta_T = wi.T_inner + net_q * wi.dy / wi.k;
+
+                  if((c[0]==10 || c[0]== 28) && c[1]== 5)
+                      cout << "Dt=" << _Delta_T <<", "; 
+
+                  _Delta_T = _Delta_T > wi.max_TW ? wi.max_TW : _Delta_T;
+                  _Delta_T = _Delta_T < wi.min_TW ? wi.min_TW : _Delta_T;
+
+                  if((c[0]==250 || c[0]==600) && c[1]== 72)
+                      cout << "before_vars.T=" << vars.T_old[c]  << ", q=" << q[c+_d[i]] << ", net_q=" << net_q << ", Dt=" << _Delta_T  << endl;
+
+
+                  vars.T[c] = (1-wi.Relax_C)*vars.T_old[c]+wi.Relax_C*_Delta_T; 
+
+                  if((c[0]==250 || c[0]== 600) && c[1]== 72)
+                      cout<<"after_vars.T="<<vars.T[c] <<" , " <<vars.T[c+_d[i]] << ", wi.dy=" << wi.dy << ", wi.k=" << wi.k << ", c=" << c << "\n";
 
                 } 
               }

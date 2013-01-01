@@ -49,6 +49,7 @@ namespace Uintah{
       struct HTVariables {
 
         CCVariable<double> T; 
+        constCCVariable<double> T_old;
         constCCVariable<int> celltype; 
         constCCVariable<double > hf_e; 
         constCCVariable<double > hf_w; 
@@ -61,6 +62,7 @@ namespace Uintah{
 
     private: 
 
+      int _WallHT_calc_freq;   ///< Wall heat transfer model calculation frequency
 
       /** @brief The base class definition for all derived wall heat transfer models **/ 
       class HTModelBase{
@@ -78,6 +80,7 @@ namespace Uintah{
           std::string _model_name; 
 
       };
+
 
       /** @brief A simple wall heat transfer model for domain walls only **/
       class SimpleHT : public HTModelBase { 
@@ -112,9 +115,12 @@ namespace Uintah{
         private: 
 
           struct WallInfo { 
-            double k; 
-            double dy; 
-            double T_inner; 
+              double k; 
+              double dy; 
+              double T_inner; 
+              double Relax_C;    ///< relaxation coefficient
+              double max_TW;     ///< maximum wall temperature
+              double min_TW;     ///< minimum wall temperature
             std::vector<GeometryPieceP> geometry; 
           };
 
@@ -230,6 +236,10 @@ namespace Uintah{
 
 
   }; 
+
+
+
+
 } // namespace Uintah
 
 #endif
