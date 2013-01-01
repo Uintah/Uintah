@@ -460,6 +460,7 @@
 
       <WallHT                           spec="OPTIONAL NO_DATA">
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
+        <WallHT_Calc_Freq               spec="OPTIONAL INTEGER"/> <!-- calculate wallHT every N steps, default = 10 --> 
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
           <!-- simple heat transfer 
@@ -480,6 +481,9 @@
             <k                          spec="REQUIRED DOUBLE"/>
             <wall_thickness             spec="REQUIRED DOUBLE"/>
             <tube_side_T                spec="REQUIRED DOUBLE"/>
+            <Relax_C                    spec="REQUIRED DOUBLE"/>  <!-- Relaxation Coefficient to renew wall temperature, recommend 0.05, related to DIVQ iteration interial -->
+            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
+            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
             <geom_object/>
           </region> 
 
