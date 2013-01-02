@@ -75,6 +75,16 @@ const TypeDescription* fun_getTypeDescription(double*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(dblcomplex*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::double_complex_type,
+          "double complex", true, MPI_DOUBLE_COMPLEX);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(float*)
 {
    static TypeDescription* td;

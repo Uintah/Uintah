@@ -80,6 +80,7 @@ public:
     ReductionVariable,
     SoleVariable,
     double_type,
+    double_complex_type,
     float_type,
     bool_type,
     int_type,

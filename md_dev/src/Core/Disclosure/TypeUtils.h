@@ -34,6 +34,7 @@
 #endif
 
 #include <cfloat>
+#include <complex>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -42,6 +43,7 @@ namespace Uintah {
 
 using SCIRun::Point;
 using SCIRun::Vector;
+using std::complex;
 
 class Matrix3;
 class Stencil7;
@@ -51,6 +53,7 @@ class Short27;
 class TypeDescription;
 
 typedef int64_t long64;
+typedef std::complex<double> dblcomplex;
 
  const TypeDescription* fun_getTypeDescription(bool*);
  const TypeDescription* fun_getTypeDescription(unsigned char*);
@@ -59,6 +62,7 @@ typedef int64_t long64;
 // const TypeDescription* fun_getTypeDescription(long*);
  const TypeDescription* fun_getTypeDescription(long64*);
  const TypeDescription* fun_getTypeDescription(double*);
+ const TypeDescription* fun_getTypeDescription(dblcomplex*);
  const TypeDescription* fun_getTypeDescription(float*);
  const TypeDescription* fun_getTypeDescription(Point*);
  const TypeDescription* fun_getTypeDescription(Vector*);
