@@ -481,7 +481,6 @@
             <k                          spec="REQUIRED DOUBLE"/>
             <wall_thickness             spec="REQUIRED DOUBLE"/>
             <tube_side_T                spec="REQUIRED DOUBLE"/>
-            <Relax_C                    spec="REQUIRED DOUBLE"/>  <!-- Relaxation Coefficient to renew wall temperature, recommend 0.05, related to DIVQ iteration interial -->
             <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
             <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
             <geom_object/>
