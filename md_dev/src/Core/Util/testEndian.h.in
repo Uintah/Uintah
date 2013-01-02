@@ -62,7 +62,11 @@
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <complex>
+
 namespace SCIRun{
+
+typedef std::complex<double> dblcomplex;
 
 #define SWAP_2(u2)/* IronDoc macro to swap two byte quantity */ \
   { unsigned char* _p = (unsigned char*)(&(u2)); \
@@ -94,6 +98,7 @@ SCISHARE void swapbytes(uint64_t& i);
 SCISHARE void swapbytes(float& i);
 //SCISHARE void swapbytes(int64_t& i){SWAP_8(i);}
 SCISHARE void swapbytes(double& i);
+SCISHARE void swapbytes(dblcomplex& i);
 SCISHARE void swapbytes(Point &i);
 SCISHARE void swapbytes(Vector &i);
 SCISHARE void swapbytes(FILE* &i);
