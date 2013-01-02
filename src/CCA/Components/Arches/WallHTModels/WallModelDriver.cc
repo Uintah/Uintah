@@ -142,7 +142,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     //    cout <<"timestep="<<timestep<<endl;
 
-    if(timestep % _WallHT_calc_freq==0 && time_subset==1){
+    if(timestep % _WallHT_calc_freq==0){
       new_dw->getModifiable( vars.T, _T_label, _matl_index, patch ); 
       old_dw->get(     vars.T_old    , _T_label        , _matl_index , patch , Ghost::None, 0 );
       which_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
@@ -310,7 +310,7 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 void 
 WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
-    double _Delta_T, net_q;
+    double _Delta_T, _net_q ;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   
@@ -352,9 +352,9 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
       if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
 
           //        vars.T[c + offset] = _T_inner + q[c] * _dy / _k; 
-          net_q = q[c]-5.67e-8*pow(vars.T_old[c+offset],4);
-          net_q = net_q>0 ? net_q : 0;
-          _Delta_T = _T_inner + net_q*_dy/_k;
+          _net_q = q[c]-5.67e-8*pow(vars.T_old[c+offset],4);
+          _net_q = _net_q>0 ? _net_q : 0;
+          _Delta_T = _T_inner + _net_q*_dy/_k;
 
           if(((c+offset)[0]==13 || (c+offset)[0]==28) && (c+offset)[1]==5)
               cout<<"Dt=" << _Delta_T <<"  ";
@@ -363,7 +363,7 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
           _Delta_T = _Delta_T < 373 ? 373: _Delta_T;
 
           if(((c+offset)[0]==13 || (c+offset)[0]==28) && (c+offset)[1]==5)
-              cout<<"before_vars.T=" <<", " << vars.T_old[c+offset] <<"net_q="<< net_q<<", q="<< q[c]<<",  Dt=" << _Delta_T << endl;
+              cout<<"before_vars.T=" <<", " << vars.T_old[c+offset] <<"_net_q="<< _net_q<<", q="<< q[c]<<",  Dt=" << _Delta_T << endl;
 
           vars.T[c+offset] = 0.95*vars.T_old[c+offset] + 0.05*_Delta_T;
 
@@ -414,7 +414,6 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("k", info.k);
     r_db->require("wall_thickness", info.dy);
     r_db->require("tube_side_T", info.T_inner); 
-    r_db->require("Relax_C", info.Relax_C); 
     r_db->require("max_TW", info.max_TW);
     r_db->require("min_TW", info.min_TW);
     _regions.push_back( info ); 
@@ -426,7 +425,8 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
 void 
 WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
-  double _Delta_T, net_q;
+    int num;
+    double _TW1, _TW0, _Tmax, _Tmin, _net_q, _error, _ini_error;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Box patchBox = patch->getExtraBox();
@@ -463,26 +463,44 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
                 if ( vars.celltype[c + _d[i]] == FLOW ){ 
                   
                   q = get_flux( i, vars );  
-                  net_q = q[c+_d[i]]-5.67e-8*pow(vars.T_old[c],4);
-                  net_q = net_q>0 ? net_q : 0;
+                  _TW0 = vars.T_old[c];
+                  _net_q = q[c+_d[i]]-5.67e-8*pow(_TW0,4);
+                  _net_q = _net_q>0 ? _net_q : 0;
+                  _TW1 = wi.T_inner + _net_q * wi.dy / wi.k;
+                 
+                  if(_TW1 < _TW0){
+                      _Tmax = _TW0>wi.max_TW ? wi.max_TW : _TW0;
+                      _Tmin = _TW1<wi.min_TW ? wi.min_TW : _TW1;
+                  }
+                  else{
+                      _Tmax = _TW1>wi.max_TW ? wi.max_TW : _TW1;
+                      _Tmin = _TW0<wi.min_TW ? wi.min_TW : _TW0;
+                  }
+                  _ini_error = fabs(_TW0-_TW1)/_TW1;
+                  
+                  vars.T[c] = _TW0;
 
-                  // do heat transfer 
-                  _Delta_T = wi.T_inner + net_q * wi.dy / wi.k;
+                  _error = 1;
+                  num = 0;
+                  while(_ini_error>1e-3 && _error>1e-5 && num<50){
+                      _TW0 = (_Tmax+_Tmin)/2.0; 
+                      _net_q = q[c+_d[i]]-5.67e-8*pow(_TW0,4);
+                      _net_q = _net_q>0 ? _net_q : 0;
+                      _TW1 = wi.T_inner + _net_q * wi.dy / wi.k;
+                      if(_TW1 < _TW0)
+                          _Tmax = _TW0;
+                      else
+                          _Tmin = _TW0;
+                      
+                      _error = fabs(_Tmax-_Tmin)/_TW0;
+                      num++;
 
-                  if((c[0]==10 || c[0]== 28) && c[1]== 5)
-                      cout << "Dt=" << _Delta_T <<", "; 
-
-                  _Delta_T = _Delta_T > wi.max_TW ? wi.max_TW : _Delta_T;
-                  _Delta_T = _Delta_T < wi.min_TW ? wi.min_TW : _Delta_T;
-
-                  if((c[0]==250 || c[0]==600) && c[1]== 72)
-                      cout << "before_vars.T=" << vars.T_old[c]  << ", q=" << q[c+_d[i]] << ", net_q=" << net_q << ", Dt=" << _Delta_T  << endl;
+                      if((c[0]==10 || c[0]==20) && c[1]== 5)
+                          cout<<"Tmax="<<_Tmax<<", Tmin="<<_Tmin<<", TW0="<<_TW0<<", TW1="<<_TW1<<", error="<<_error<<", num="<<num<<",  net_q="<<_net_q<<",  c:"<<c<<endl;
+                  }
 
 
-                  vars.T[c] = (1-wi.Relax_C)*vars.T_old[c]+wi.Relax_C*_Delta_T; 
-
-                  if((c[0]==250 || c[0]== 600) && c[1]== 72)
-                      cout<<"after_vars.T="<<vars.T[c] <<" , " <<vars.T[c+_d[i]] << ", wi.dy=" << wi.dy << ", wi.k=" << wi.k << ", c=" << c << "\n";
+                  vars.T[c] = _TW0; 
 
                 } 
               }
