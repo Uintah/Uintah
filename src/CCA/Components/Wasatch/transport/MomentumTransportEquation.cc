@@ -412,10 +412,10 @@ namespace Wasatch{
 
     //_____________
     // volume fractions for embedded boundaries Terms
-    Expr::Tag volFracTag =  this->has_embedded_geometry() ? Wasatch::svol_frac_tag() : Expr::Tag();
+    Expr::Tag volFracTag =     this->has_embedded_geometry()             ? Wasatch::svol_frac_tag() : Expr::Tag();
     Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? Wasatch::xvol_frac_tag() : Expr::Tag();
     Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? Wasatch::yvol_frac_tag() : Expr::Tag();
-    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom )? Wasatch::zvol_frac_tag() : Expr::Tag();
+    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? Wasatch::zvol_frac_tag() : Expr::Tag();
 
     //__________________
     // dilatation
@@ -620,6 +620,58 @@ namespace Wasatch{
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
+    // multiply the initial condition by the volume fraction for embedded geometries
+    if (hasEmbeddedGeometry_) {
+      Expr::Tag volFracTag = Expr::Tag();
+      switch (stagLoc_) {
+        case XDIR:
+          if (hasEmbeddedGeometry_) volFracTag = Wasatch::xvol_frac_tag();
+          break;
+        case YDIR:
+          if (hasEmbeddedGeometry_) volFracTag = Wasatch::yvol_frac_tag();
+          break;
+        case ZDIR:
+          if (hasEmbeddedGeometry_) volFracTag = Wasatch::zvol_frac_tag();
+          break;
+        default:
+          break;
+      }
+      
+      std::cout << "MOM TAG = " << mom_tag(thisMomName_) << std::endl;
+      //create modifier expression
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(volFracTag);
+      //theTagList.push_back(mom_tag(thisMomName_));
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+                                                                   theTagList,
+                                                                   ExprAlgbr::PRODUCT,
+                                                                   true) );
+      
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        
+        // get the patch subset
+        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
+        
+        // loop over every patch in the patch subset
+        for( int ipss=0; ipss<patches->size(); ++ipss ){
+          
+          // get a pointer to the current patch
+          const Uintah::Patch* const patch = patches->get(ipss);
+          
+          // loop over materials
+          for( int im=0; im<materials->size(); ++im ){
+            //    if (hasVolFrac_) {
+            // attach the modifier expression to the target expression
+            factory.attach_modifier_expression( modifierTag, mom_tag(thisMomName_), patch->getID(), true );
+            //    }
+            
+          }
+        }
+      }
+    }
+        
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
@@ -655,6 +707,7 @@ namespace Wasatch{
 //                                           patchInfoMap,
 //                                           materials );
     }
+
     // set bcs for pressure
     // We cannot set pressure BCs here using Wasatch's BC techniques because
     // we need to set the BCs AFTER the pressure solve. We had to create
@@ -670,8 +723,7 @@ namespace Wasatch{
                                            patchInfoMap,
                                            materials, bcFunctorMap );
     }
-
-  }
+}
 
   //------------------------------------------------------------------
 
@@ -816,23 +868,6 @@ namespace Wasatch{
                                                                              ExprAlgbr::PRODUCT ) );
     }
     
-   
-////    if (hasVolFrac_) {
-//      std::cout << "MOM TAG = " << mom_tag(thisMomName_) << std::endl;
-//      //create modifier expression
-//      typedef ExprAlgebra<FieldT> ExprAlgbr;
-//      Expr::TagList theTagList;
-//    //theTagList.push_back(volFracTag_);
-//    theTagList.push_back(Expr::Tag("pressure",Expr::STATE_N));
-//      //theTagList.push_back(mom_tag(thisMomName_));
-//      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_modifier", Expr::STATE_NONE);
-//      icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
-//                                                                     theTagList,
-//                                                                     ExprAlgbr::PRODUCT, true ) );
-//      // attach the modifier expression to the target expression
-//      icFactory.attach_modifier_expression( modifierTag, mom_tag(thisMomName_) );
-////    }
-
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 

@@ -133,6 +133,7 @@ evaluate()
   result <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
+  //*tmp <<= 0.0;
 
   if( cfluxXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *cFluxX_, *tmp );

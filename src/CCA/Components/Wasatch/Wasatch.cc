@@ -435,7 +435,6 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
-      bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
       bool hasMovingBoundaries = false;
       if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
@@ -462,7 +461,7 @@ namespace Wasatch{
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
-        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, graphCategories_);
+        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, hasEmbeddedGeometry, graphCategories_);
         adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
       }
       catch( std::runtime_error& err ){

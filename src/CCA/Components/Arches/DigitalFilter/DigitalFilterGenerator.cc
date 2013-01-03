@@ -854,7 +854,7 @@ int main( int argc, const char* argv[] )
     radius = getDouble(gzFp);
     charDim = 2*radius;
     Point p(origin[0], origin[1], origin[2]);
-    bcGeom = new CircleBCData(p, radius);
+    bcGeom = new CircleBCData(p, radius,0);
   } else if (faceShape=="ellipse") {
     origin[0] = getDouble(gzFp);
     origin[1] = getDouble(gzFp);
