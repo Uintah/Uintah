@@ -13,11 +13,14 @@
    <!--____________________________________________________________________-->
 
    <Time>
-       <maxTime>10.0</maxTime>
+       <maxTime>1.0</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>1</delt_min>
-       <delt_max>1</delt_max>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.1</delt_max>
+       <delt_init>0.001</delt_init>
+       <max_Timesteps>2</max_Timesteps>
        <timestep_multiplier>1</timestep_multiplier>
+
    </Time>
    
    
@@ -38,14 +41,6 @@
        <save label = "p.particleID"/>
        <checkpoint cycle = "2" interval = "1"/>
    </DataArchiver>
-   
-      ParticleVariable<Point> px;
-      ParticleVariable<Vector> pforce;
-      ParticleVariable<Vector> paccel;
-      ParticleVariable<double> penergy;
-      ParticleVariable<double> pmass;
-      ParticleVariable<double> pcharge;
-      ParticleVariable<long64> pids;
 
     <!--____________________________________________________________________-->
     <!--   S I M U LA T I O N     O P T I O N S                             -->
