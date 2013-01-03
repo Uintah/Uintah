@@ -74,7 +74,7 @@ LJPotentialTest::LJPotentialTest(const ProcessorGroup* myworld) :
   pMassLabel = VarLabel::create("p.mass", ParticleVariable<Vector>::getTypeDescription());
   pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<Vector>::getTypeDescription());
 
-  pChargeLabel = VarLabel::create("charge", ParticleVariable<Vector>::getTypeDescription());
+  pChargeLabel = VarLabel::create("p.charge", ParticleVariable<Vector>::getTypeDescription());
   pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<Vector>::getTypeDescription());
 
   pParticleIDLabel = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
