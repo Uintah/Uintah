@@ -502,6 +502,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                     Uintah::ProblemSpecP wasatchParams,
+                                   const bool hasEmbeddedGeometry,
                                     GraphCategories& gc )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -555,7 +556,7 @@ namespace Wasatch{
       const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
                                                                       params, weightsTags, abscissaeTags,
                                                                       momentID, initialMoments[iMom]);
-      momtranseq = scinew MomTransEq( thisPhiName, rhsID, params);
+      momtranseq = scinew MomTransEq( thisPhiName, rhsID, hasEmbeddedGeometry, params);
       adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
       adaptors.push_back(adaptor);
       // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO

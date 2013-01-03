@@ -93,6 +93,7 @@ namespace Wasatch{
      */
     MomentTransportEquation(const std::string thisPhiName,
                             const Expr::ExpressionID id,
+                            const bool hasEmbeddedGeometry,                            
                             Uintah::ProblemSpecP params);
 
     ~MomentTransportEquation();

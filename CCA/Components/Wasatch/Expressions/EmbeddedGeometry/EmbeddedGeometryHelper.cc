@@ -26,6 +26,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <expression/PlaceHolderExpr.h>
 
 //-- Wasatch includes --//
 #include "EmbeddedGeometryHelper.h"
@@ -66,6 +67,7 @@ namespace Wasatch{
     if (parser->findBlock("EmbeddedGeometry")) {
 
       Expr::ExpressionBuilder* volFracBuilder = NULL;
+      Expr::ExpressionBuilder* volFracBuilderInit = NULL;
       GraphHelper* const initgh = gc[INITIALIZATION];
       GraphHelper* const solngh = gc[ADVANCE_SOLUTION];
       
@@ -94,6 +96,7 @@ namespace Wasatch{
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;
           volFracBuilder = scinew Builder( svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          volFracBuilderInit = scinew Builder( svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
         }
         
       } else {
@@ -106,23 +109,32 @@ namespace Wasatch{
           Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         }
         typedef GeometryPieceWrapper::Builder svolfracBuilder;        
+        volFracBuilderInit = scinew svolfracBuilder( svol_frac_tag(), geomObjects, inverted );
         volFracBuilder = scinew svolfracBuilder( svol_frac_tag(), geomObjects, inverted );
       }
       
       // register the volume fractions
-//      initgh->exprFactory->register_expression( volFracBuilder );
+      initgh->exprFactory->register_expression( volFracBuilderInit );
       solngh->exprFactory->register_expression( volFracBuilder );
       
       // register the area fractions
       typedef AreaFraction<XVolField>::Builder xvolfracBuilder;
       typedef AreaFraction<YVolField>::Builder yvolfracBuilder;
-      typedef AreaFraction<ZVolField>::Builder zvolfracBuilder;      
-//      initgh->exprFactory->register_expression( scinew xvolfracBuilder( xvol_frac_tag(), svol_frac_tag() ) );
-//      initgh->exprFactory->register_expression( scinew yvolfracBuilder( yvol_frac_tag(), svol_frac_tag() ) );
-//      initgh->exprFactory->register_expression( scinew zvolfracBuilder( zvol_frac_tag(), svol_frac_tag() ) );
+      typedef AreaFraction<ZVolField>::Builder zvolfracBuilder;
+      
+      initgh->exprFactory->register_expression( scinew xvolfracBuilder( xvol_frac_tag(), svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew yvolfracBuilder( yvol_frac_tag(), svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew zvolfracBuilder( zvol_frac_tag(), svol_frac_tag() ) );
+      
       solngh->exprFactory->register_expression( scinew xvolfracBuilder( xvol_frac_tag(), svol_frac_tag() ) );
       solngh->exprFactory->register_expression( scinew yvolfracBuilder( yvol_frac_tag(), svol_frac_tag() ) );
       solngh->exprFactory->register_expression( scinew zvolfracBuilder( zvol_frac_tag(), svol_frac_tag() ) );
+      
+      // force on graph
+      //initgh->rootIDs.insert( initgh->exprFactory->get_id( svol_frac_tagN() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( xvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( yvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( zvol_frac_tag() ) );
     }
   }
   

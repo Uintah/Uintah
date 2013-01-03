@@ -422,9 +422,11 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::
   MomentTransportEquation( const std::string thisPhiName,
                           const Expr::ExpressionID rhsID,
+                          const bool hasEmbeddedGeometry,
                           Uintah::ProblemSpecP params)
   : Wasatch::TransportEquation( thisPhiName, rhsID,
                                 get_staggered_location<FieldT>(),
+                                hasEmbeddedGeometry,
                                 params)
   {}
 
@@ -443,19 +445,6 @@ namespace Wasatch {
   {
     Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
                                  Expr::STATE_N );
-    if (hasVolFrac_) {
-      //create modifier expression
-      typedef ExprAlgebra<FieldT> ExprAlgbr;
-      Expr::TagList theTagList;
-      theTagList.push_back(volFracTag_);
-      //theTagList.push_back(phiTag);
-      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_modifier", Expr::STATE_NONE);
-      icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
-                                                  theTagList,
-                                                  ExprAlgbr::PRODUCT, true ) );
-      // attach the modifier expression to the target expression
-      icFactory.attach_modifier_expression( modifierTag, phiTag );
-    }
     return icFactory.get_id( phiTag );
   }
 
@@ -470,6 +459,50 @@ namespace Wasatch {
                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+    
+    
+    // multiply the initial condition by the volume fraction for embedded geometries
+    std::cout << "has volume fraction = " << hasVolFrac_ << std::endl;
+    if (hasVolFrac_) {
+
+      Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
+                                   Expr::STATE_N );
+      
+            std::cout << "attaching modifier expression on " << phiTag << std::endl;
+      //create modifier expression
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(volFracTag_);
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+                                                                   theTagList,
+                                                                   ExprAlgbr::PRODUCT,
+                                                                   true) );
+      
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        
+        // get the patch subset
+        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
+        
+        // loop over every patch in the patch subset
+        for( int ipss=0; ipss<patches->size(); ++ipss ){
+          
+          // get a pointer to the current patch
+          const Uintah::Patch* const patch = patches->get(ipss);
+          
+          // loop over materials
+          for( int im=0; im<materials->size(); ++im ){
+            //    if (hasVolFrac_) {
+            // attach the modifier expression to the target expression
+            factory.attach_modifier_expression( modifierTag, phiTag, patch->getID(), true );
+            //    }
+            
+          }
+        }
+      }
+    }
+
+    
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     if (factory.have_entry(phiTag)) {
       process_boundary_conditions<FieldT>( phiTag,

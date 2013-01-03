@@ -152,6 +152,7 @@ namespace Wasatch{
    */
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                          Uintah::ProblemSpecP wasatchParams,
+                                                                         const bool hasEmbeddedGeometry,
                                                                          GraphCategories& gc);
 
 
