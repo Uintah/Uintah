@@ -46,7 +46,7 @@ double bTilde ( int k, double n ) {
 double BSum ( int k, double n, int N ) {
   double SumTerm = 0.0;
   for (int j=-N; j<=N; j++) {  
-    SumTerm	= SumTerm + bTilde(j, n);
+    SumTerm	= SumTerm + bTilde(j, n) * bTilde(j, n);
   }
   SumTerm = sqrt(SumTerm);
   double BK = bTilde(k, n)/SumTerm;
@@ -363,17 +363,17 @@ public:
       for (int k = 0; k< inlet.kSize; k++) {
         distance = abs( inlet.distanceProfile[j][k] ); 
         if (inlet.faceSide == "x-" ) {
-          inlet.velocityProfile[j][k][0] = Vmax* (1 - distance*distance);
+          inlet.velocityProfile[j][k][0] = Vmax* (1.0 - distance*distance);
         } else if (inlet.faceSide == "x+") {
-          inlet.velocityProfile[j][k][0] = -(Vmax* (1 - distance*distance) );
+          inlet.velocityProfile[j][k][0] = -(Vmax* (1.0 - distance*distance) );
         } else if (inlet.faceSide == "y-") {
-          inlet.velocityProfile[j][k][1] =  Vmax* (1 - distance*distance);
+          inlet.velocityProfile[j][k][1] =  Vmax* (1.0 - distance*distance);
         } else if (inlet.faceSide == "y+") {
-          inlet.velocityProfile[j][k][1] = -(Vmax* (1 - distance*distance) );
+          inlet.velocityProfile[j][k][1] = -(Vmax* (1.0  - distance*distance) );
         } else if (inlet.faceSide == "z-") {
-          inlet.velocityProfile[j][k][2] =  Vmax* (1 - distance*distance);
+          inlet.velocityProfile[j][k][2] =  Vmax* (1.0 - distance*distance);
         } else if (inlet.faceSide == "z+") {
-          inlet.velocityProfile[j][k][2] = -(Vmax* (1 - distance*distance) );
+          inlet.velocityProfile[j][k][2] = -(Vmax* (1.0 - distance*distance) );
         }
       }
     }
@@ -392,17 +392,17 @@ public:
         distance = inlet.distanceProfile[j][k];
         if (distance < 1.0) {
           if (inlet.faceSide == "x-" ) {
-            inlet.velocityProfile[j][k][0] = Vmax* pow( (1 - distance), 1.0/7.0 );
+            inlet.velocityProfile[j][k][0] = Vmax* pow( (1.0 - distance), 1.0/7.0 );
           } else if (inlet.faceSide == "x+") {
-            inlet.velocityProfile[j][k][0] = -( Vmax* pow( (1 - distance), 1.0/7.0 ) );
+            inlet.velocityProfile[j][k][0] = -( Vmax* pow( (1.0 - distance), 1.0/7.0 ) );
           } else if (inlet.faceSide == "y-") {
-            inlet.velocityProfile[j][k][1] =  Vmax* pow( (1 - distance), 1.0/7.0 );
+            inlet.velocityProfile[j][k][1] =  Vmax* pow( (1.0 - distance), 1.0/7.0 );
           } else if (inlet.faceSide == "y+") {
-            inlet.velocityProfile[j][k][1] = -( Vmax* pow( (1 - distance), 1.0/7.0 ) );
+            inlet.velocityProfile[j][k][1] = -( Vmax* pow( (1.0 - distance), 1.0/7.0 ) );
           } else if (inlet.faceSide == "z-") {
-            inlet.velocityProfile[j][k][2] =  Vmax* pow( (1 - distance), 1.0/7.0 );
+            inlet.velocityProfile[j][k][2] =  Vmax* pow( (1.0 - distance), 1.0/7.0 );
           } else if (inlet.faceSide == "z+") {
-            inlet.velocityProfile[j][k][2] = -( Vmax* pow( (1 - distance), 1.0/7.0 ) );
+            inlet.velocityProfile[j][k][2] = -( Vmax* pow( (1.0 - distance), 1.0/7.0 ) );
           }
         } 
       }
@@ -1428,7 +1428,7 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<filterSize[0]; i++) {
       for (int j = 0; j<filterSize[1]; j++) {
         for (int k = 0; k<filterSize[2]; k++) {
-          filterCoefficients[i][j][k] = BSum(i, n_a[0], N_a[0]) * BSum(j, n_a[1], N_a[1]) * BSum(k, n_a[2], N_a[2]); 
+          filterCoefficients[i][j][k] = BSum(i-N_a[0], n_a[0], N_a[0]) * BSum(j-N_a[1], n_a[1], N_a[1]) * BSum(k-N_a[2], n_a[2], N_a[2]); 
         }
       }
     }
@@ -1453,9 +1453,9 @@ int main( int argc, const char* argv[] )
         for (int iprime = 0; iprime < variableFilterSize[j][k][0]; iprime++) {
           for (int jprime = 0; jprime < variableFilterSize[j][k][1]; jprime++) {
             for (int kprime = 0; kprime < variableFilterSize[j][k][2]; kprime++) {
-              variableFilterCoefficients[j][k][iprime][jprime][kprime] = BSum(iprime, variable_n_a[j][k][0], variable_N_a[j][k][0]) *
-                                                                         BSum(jprime, variable_n_a[j][k][1], variable_N_a[j][k][1]) *
-                                                                         BSum(kprime, variable_n_a[j][k][2], variable_N_a[j][k][2]);
+              variableFilterCoefficients[j][k][iprime][jprime][kprime] = BSum(iprime-variable_N_a[j][k][0], variable_n_a[j][k][0], variable_N_a[j][k][0]) *
+                                                                         BSum(jprime-variable_N_a[j][k][1], variable_n_a[j][k][1], variable_N_a[j][k][1]) *
+                                                                         BSum(kprime-variable_N_a[j][k][2], variable_n_a[j][k][2], variable_N_a[j][k][2]);
             }
           }
         } //end iprime
@@ -1606,6 +1606,13 @@ int main( int argc, const char* argv[] )
   //open file to write out
   ofstream myfile;
   myfile.open( outputfile.c_str(), ios::out );
+  //Some indentifing header info
+  myfile << "#Resolution: " << resolution[0] << " " << resolution[1] << " " << resolution[2] << endl;
+  myfile << "#Velocity Prof: " << velocityType << endl;
+  myfile << "#Stress Prof: " << stressType << endl;
+  myfile << "#Length Prof: " << lengthScaleType << endl;
+  myfile << "#Ave Length Scale: " << L_a[0] << " " << L_a[1] << " " << L_a[2] << endl;
+  
   myfile << "#Table Dimensions" << endl;
   myfile << NT+1 << " " << jSize << " " << kSize << endl; 
   myfile << "#Minimum Cell Index" << endl;
