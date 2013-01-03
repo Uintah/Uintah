@@ -29,6 +29,16 @@ namespace Uintah {
 
 class VarLabel;
 
+/**
+ *  @class MDLabel
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper
+ *  @date   December, 2012
+ *
+ *  @brief
+ *
+ *  @param
+ */
 class MDLabel {
 
   public:
@@ -37,33 +47,36 @@ class MDLabel {
 
     ~MDLabel();
 
-    // vector quantities
+    ///////////////////////////////////////////////////////////////////////////
+    // Particle Variables
     const VarLabel* pXLabel;
     const VarLabel* pXLabel_preReloc;
-
     const VarLabel* pForceLabel;
     const VarLabel* pForceLabel_preReloc;
-
     const VarLabel* pAccelLabel;
     const VarLabel* pAccelLabel_preReloc;
-
     const VarLabel* pVelocityLabel;
     const VarLabel* pVelocityLabel_preReloc;
-
-    // scalars
     const VarLabel* pEnergyLabel;
     const VarLabel* pEnergyLabel_preReloc;
-
     const VarLabel* pMassLabel;
     const VarLabel* pMassLabel_preReloc;
-
     const VarLabel* pChargeLabel;
     const VarLabel* pChargeLabel_preReloc;
-
     const VarLabel* pParticleIDLabel;
     const VarLabel* pParticleIDLabel_preReloc;
 
-    // reduction variables
+    ///////////////////////////////////////////////////////////////////////////
+    // Grid Variables
+    const VarLabel* gForceLabel;
+    const VarLabel* gAccelLabel;
+    const VarLabel* gVelocityLabel;
+    const VarLabel* gEnergyLabel;
+    const VarLabel* gMassLabel;
+    const VarLabel* gChargeLabel;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Reduction Variables
     const VarLabel* vdwEnergyLabel;
 
 };
