@@ -32,11 +32,14 @@
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <complex>
+
 using namespace Uintah;
 
 MDLabel::MDLabel()
 {
-  // vector quantities
+  ///////////////////////////////////////////////////////////////////////////
+  // Particle Variables
   pXLabel = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription());
   pXLabel_preReloc = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
                                       VarLabel::PositionVariable);
@@ -50,26 +53,43 @@ MDLabel::MDLabel()
   pVelocityLabel = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
   pVelocityLabel_preReloc = VarLabel::create("p.velocity+", ParticleVariable<Vector>::getTypeDescription());
 
-  // scalars
   pEnergyLabel = VarLabel::create("p.energy", ParticleVariable<double>::getTypeDescription());
   pEnergyLabel_preReloc = VarLabel::create("p.energy+", ParticleVariable<double>::getTypeDescription());
 
-  pMassLabel = VarLabel::create("p.mass", ParticleVariable<Vector>::getTypeDescription());
-  pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<Vector>::getTypeDescription());
+  pMassLabel = VarLabel::create("p.mass", ParticleVariable<double>::getTypeDescription());
+  pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<double>::getTypeDescription());
 
-  pChargeLabel = VarLabel::create("charge", ParticleVariable<Vector>::getTypeDescription());
-  pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<Vector>::getTypeDescription());
+  pChargeLabel = VarLabel::create("p.charge", ParticleVariable<double>::getTypeDescription());
+  pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<double>::getTypeDescription());
 
   pParticleIDLabel = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
 
-  // reduction variables
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Grid Variables
+  gForceLabel = VarLabel::create("g.force", NCVariable<Vector>::getTypeDescription());
+
+  gAccelLabel = VarLabel::create("g.accel", NCVariable<Vector>::getTypeDescription());
+
+  gVelocityLabel = VarLabel::create("g.velocity", NCVariable<Vector>::getTypeDescription());
+
+  gEnergyLabel = VarLabel::create("g.energy", NCVariable<std::complex<double> >::getTypeDescription());
+
+  gMassLabel = VarLabel::create("g.mass", NCVariable<double>::getTypeDescription());
+
+  gChargeLabel = VarLabel::create("g.charge", NCVariable<double>::getTypeDescription());
+
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Reduction Variables
   vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
 }
 
 MDLabel::~MDLabel()
 {
-  // vector quantities
+  ///////////////////////////////////////////////////////////////////////////
+  // Particle Variables
   VarLabel::destroy(pXLabel);
   VarLabel::destroy(pXLabel_preReloc);
   VarLabel::destroy(pForceLabel);
@@ -78,8 +98,6 @@ MDLabel::~MDLabel()
   VarLabel::destroy(pAccelLabel_preReloc);
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
-
-  // scalars
   VarLabel::destroy(pEnergyLabel);
   VarLabel::destroy(pEnergyLabel_preReloc);
   VarLabel::destroy(pMassLabel);
@@ -89,6 +107,17 @@ MDLabel::~MDLabel()
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
 
-  // reduction variables
+  ///////////////////////////////////////////////////////////////////////////
+  // Grid Variables
+  VarLabel::destroy(gForceLabel);
+  VarLabel::destroy(gAccelLabel);
+  VarLabel::destroy(gVelocityLabel);
+  VarLabel::destroy(gEnergyLabel);
+  VarLabel::destroy(gMassLabel);
+  VarLabel::destroy(gChargeLabel);
+
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Reduction Variables
   VarLabel::destroy(vdwEnergyLabel);
 }
