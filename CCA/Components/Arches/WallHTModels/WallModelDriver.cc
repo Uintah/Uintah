@@ -54,12 +54,46 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   ProblemSpecP db = input_db; 
 
   db->getWithDefault( "temperature_label", _T_label_name, "temperature" ); 
-  db->getWithDefault( "calc_frequency",   _calc_freq, 10 ); 
+
+  bool found_radiation_model = false;  
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
+
+    ProblemSpecP sources_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+
+    for (ProblemSpecP src_db = sources_db->findBlock("src");
+          src_db !=0; src_db = src_db->findNextBlock("src")){
+
+      string type; 
+      src_db->getAttribute("type", type); 
+
+      if ( type == "do_radiation" ){ 
+
+        src_db->findBlock("DORadiationModel")->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
+        found_radiation_model = true; 
+
+      } else if ( type == "rmcrt" ) { 
+
+        src_db->findBlock("RMCRT")->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
+        found_radiation_model = true; 
+
+      } 
+    }
+
+  } else { 
+
+    // no sources found 
+    throw InvalidValue("Error: No validate radiation model found for the wall heat transfer model (no <Sources> found in <TransportEqn>).", __FILE__, __LINE__);
+
+  } 
+
+  if ( !found_radiation_model ){ 
+    throw InvalidValue("Error: No validate radiation model found for the wall heat transfer model (no src attribute matched a recognized radiation model).", __FILE__, __LINE__);
+  } 
+
 
   for ( ProblemSpecP db_model = db->findBlock( "model" ); db_model != 0; db_model = db_model->findNextBlock( "model" ) ){
 
     std::string type = "not_assigned"; 
-
 
     db_model->getAttribute("type", type); 
 
@@ -390,6 +424,9 @@ void
 WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){ 
 
   ProblemSpecP db = input_db; 
+  db->getWithDefault( "max_it", _max_it, 50 ); 
+  db->getWithDefault( "initial_tol", _init_tol, 1e-3 ); 
+  db->getWithDefault( "tol", _tol, 1e-5 ); 
 
   for (ProblemSpecP r_db = db->findBlock("region");
       r_db !=0; r_db = r_db->findNextBlock("region")){
