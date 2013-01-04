@@ -412,7 +412,7 @@ void
 WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
   int num;
-  double _TW1, _TW0, _Tmax, _Tmin, _net_q, _error, _ini_error;
+  double TW1, TW0, Tmax, Tmin, net_q, error, initial_error;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Box patchBox = patch->getExtraBox();
@@ -449,44 +449,51 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
                 if ( vars.celltype[c + _d[i]] == FLOW ){ 
                   
                   q = get_flux( i, vars );  
-                  _TW0 = vars.T_old[c];
-                  _net_q = q[c+_d[i]] - _sigma_constant * pow( _TW0 , 4 );
-                  _net_q = _net_q > 0 ? _net_q : 0;
-                  _TW1 = wi.T_inner + _net_q * wi.dy / wi.k;
+                  TW0 = vars.T_old[c];
+                  net_q = q[c+_d[i]] - _sigma_constant * pow( TW0 , 4 );
+                  net_q = net_q > 0 ? net_q : 0;
+                  TW1 = wi.T_inner + net_q * wi.dy / wi.k;
                  
-                  if(_TW1 < _TW0){
-                      _Tmax = _TW0>wi.max_TW ? wi.max_TW : _TW0;
-                      _Tmin = _TW1<wi.min_TW ? wi.min_TW : _TW1;
+                  if( TW1 < TW0 ){
+                      Tmax = TW0>wi.max_TW ? wi.max_TW : TW0;
+                      Tmin = TW1<wi.min_TW ? wi.min_TW : TW1;
                   }
                   else{
-                      _Tmax = _TW1>wi.max_TW ? wi.max_TW : _TW1;
-                      _Tmin = _TW0<wi.min_TW ? wi.min_TW : _TW0;
+                      Tmax = TW1>wi.max_TW ? wi.max_TW : TW1;
+                      Tmin = TW0<wi.min_TW ? wi.min_TW : TW0;
                   }
 
-                  _ini_error = fabs(_TW0-_TW1)/_TW1;
+                  initial_error = fabs( TW0 - TW1 ) / TW1;
                   
-                  vars.T[c] = _TW0;
+                  vars.T[c] = TW0;
 
-                  _error = 1;
+                  error = 1;
                   num = 0;
 
-                  while(_ini_error>1e-3 && _error>1e-5 && num<50){
+                  while ( initial_error > _init_tol && error > _tol && num < _max_it ){
 
-                      _TW0 = (_Tmax+_Tmin)/2.0; 
-                      _net_q = q[c+_d[i]] - _sigma_constant * pow( _TW0, 4 );
-                      _net_q = _net_q>0 ? _net_q : 0;
-                      _TW1 = wi.T_inner + _net_q * wi.dy / wi.k;
-                      if(_TW1 < _TW0)
-                          _Tmax = _TW0;
-                      else
-                          _Tmin = _TW0;
+                      TW0 = ( Tmax + Tmin ) / 2.0; 
+                      net_q = q[c+_d[i]] - _sigma_constant * pow( TW0, 4 );
+                      net_q = net_q>0 ? net_q : 0;
+                      TW1 = wi.T_inner + net_q * wi.dy / wi.k;
+
+                      if( TW1 < TW0 ) {
+
+                          Tmax = TW0;
+
+                      } else {
+
+                          Tmin = TW0;
+
+                      }
                       
-                      _error = fabs(_Tmax-_Tmin)/_TW0;
+                      error = fabs( Tmax - Tmin ) / TW0;
+
                       num++;
 
                   }
 
-                  vars.T[c] = _TW0; 
+                  vars.T[c] = TW0; 
 
                 } 
               }
