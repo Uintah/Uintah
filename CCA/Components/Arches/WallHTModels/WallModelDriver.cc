@@ -149,8 +149,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
     task->computes( _T_copy_label ); 
 
-    task->modifies( _T_label ); 
-
     task->requires( Task::OldDW, _cc_vel_label, Ghost::None, 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
 
@@ -163,8 +161,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task->requires( Task::NewDW , _HF_B_label     , Ghost::None , 0 );
 
   } else { 
-
-    task->modifies( _T_label ); 
 
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
 
