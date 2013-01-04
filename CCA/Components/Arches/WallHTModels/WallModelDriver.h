@@ -228,6 +228,7 @@ namespace Uintah{
               double k; 
               double dy; 
               double T_inner; 
+              double Relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
               double max_TW;     ///< maximum wall temperature
               double min_TW;     ///< minimum wall temperature
             std::vector<GeometryPieceP> geometry; 
