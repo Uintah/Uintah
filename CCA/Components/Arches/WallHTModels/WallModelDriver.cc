@@ -160,75 +160,94 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     const Patch* patch = patches->get(p);
     HTVariables vars;
 
-    if ( timestep%_calc_freq == 0 ) { 
+    // Note: The local T_copy is necessary because boundary conditions are being applied 
+    // in the table lookup to T based on the conditions for the independent variables. These 
+    // BCs are being applied regardless of the type of wall temperature model. 
 
-      if( time_subset == 0 && time_subset % _calc_freq == 0 ){
+    if( time_subset == 0 && timestep % _calc_freq == 0 ){A
 
-        old_dw->get( vars.T_old  , _T_label      , _matl_index , patch , Ghost::None , 0 );
-        old_dw->get( vars.cc_vel , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
+      // actually compute the wall HT model 
 
-        new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
-        new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
+      old_dw->get( vars.T_old  , _T_label      , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.cc_vel , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
 
-        vars.T_copy.initialize(0.0);
+      new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
+      new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
 
-        new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
-        new_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
 
-        std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
+      std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
-        for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+      for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
 
-          (*iter)->computeHT( patch, vars );
+        (*iter)->computeHT( patch, vars );
 
-        }
+      }
 
-      } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
+      //Do a wholesale copy of T -> T_copy.  Note that we could force the derived models to do this
+      //but that creates a danger of a developer forgeting to perform the operation. For now, do it 
+      //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
+      vars.T_copy.copyData( vars.T ); 
 
-        CCVariable<double> T; 
-        CCVariable<double> T_copy; 
-        constCCVariable<double> T_old; 
-        constCCVariable<int> cell_type; 
+    } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
 
-        old_dw->get( T_old  , _T_copy_label      , _matl_index , patch , Ghost::None , 0 );
-        new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
-        new_dw->getModifiable(  T, _T_label, _matl_index   , patch ); 
-        new_dw->allocateAndPut( T_copy, _T_copy_label, _matl_index, patch ); 
+      // no ht solve this step: 
+      // 1) copy T_old (from OldDW) -> T   (to preserve BCs)
+      // 2) copy T -> T_copy  (for future RK steps)
 
-        std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
+      CCVariable<double> T; 
+      CCVariable<double> T_copy; 
+      constCCVariable<double> T_old; 
+      constCCVariable<int> cell_type; 
 
-        for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+      old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
+      new_dw->getModifiable(  T      , _T_label        , _matl_index , patch );
+      new_dw->allocateAndPut( T_copy , _T_copy_label   , _matl_index , patch );
 
-          (*iter)->copySolution( patch, T, T_old, cell_type ); 
+      std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
-        }
+      for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
 
-        T_copy.copyData( T ); 
+        // Note: This only copies the previous T bounary conditions into T and does not
+        // change the gas temperature field. 
+        (*iter)->copySolution( patch, T, T_old, cell_type ); 
 
-      } else { 
+      }
 
-        CCVariable<double> T; 
-        constCCVariable<double> T_old; 
-        constCCVariable<int> cell_type; 
+      //Do a wholesale copy of T -> T_copy.  Note that we could force the derived models to do this
+      //but that creates a danger of a developer forgeting to perform the operation. For now, do it 
+      //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue. 
+      T_copy.copyData( T ); 
 
-        new_dw->getModifiable( T , _T_label        , _matl_index , patch );
-        new_dw->get( T_old       , _T_copy_label   , _matl_index , patch    , Ghost::None , 0 );
-        new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
+    } else { 
 
-        std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
+      // no ht solve for RK steps > 0: 
+      // 1) T_copy (NewDW) should have the BC's from previous solution
+      // 2) copy BC information from T_copy (NewDW) -> T to preserve BCs
 
-        for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+      CCVariable<double> T; 
+      constCCVariable<double> T_old; 
+      constCCVariable<int> cell_type; 
 
-          (*iter)->copySolution( patch, T, T_old, cell_type ); 
+      new_dw->getModifiable( T , _T_label        , _matl_index , patch );
+      new_dw->get( T_old       , _T_copy_label   , _matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
 
-        }
+      std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
-      } 
+      for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
+
+        (*iter)->copySolution( patch, T, T_old, cell_type ); 
+
+      }
+
     } 
   }
 }
