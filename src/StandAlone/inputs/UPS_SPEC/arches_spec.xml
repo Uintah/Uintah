@@ -490,6 +490,11 @@
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
             <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
             <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
+            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
+
+                       because we have assumed (with this model) that the wall comes to 
+                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation. for wall with large thermal resistance, recommend relaxation_coef=0.1, for small thermal resisitance, recommend relaxation_coef=1.0 --> 
+
             <geom_object/>
           </region> 
 
