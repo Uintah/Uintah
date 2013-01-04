@@ -349,15 +349,16 @@ namespace Wasatch{
     
     Expr::Tag volFracTag = Expr::Tag();
     Wasatch::Direction stagLoc = get_staggered_location<FieldT>();
+    VolFractionNames& vNames = VolFractionNames::self();
     switch (stagLoc) {
       case XDIR:
-        if (hasEmbeddedGeometry) volFracTag = Wasatch::xvol_frac_tag();
+        if (hasEmbeddedGeometry) volFracTag = vNames.xvol_frac_tag();
         break;
       case YDIR:
-        if (hasEmbeddedGeometry) volFracTag = Wasatch::yvol_frac_tag();
+        if (hasEmbeddedGeometry) volFracTag = vNames.yvol_frac_tag();
         break;
       case ZDIR:
-        if (hasEmbeddedGeometry) volFracTag = Wasatch::zvol_frac_tag();
+        if (hasEmbeddedGeometry) volFracTag = vNames.zvol_frac_tag();
         break;
       default:
         break;
@@ -412,10 +413,11 @@ namespace Wasatch{
 
     //_____________
     // volume fractions for embedded boundaries Terms
-    Expr::Tag volFracTag =     this->has_embedded_geometry()             ? Wasatch::svol_frac_tag() : Expr::Tag();
-    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? Wasatch::xvol_frac_tag() : Expr::Tag();
-    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? Wasatch::yvol_frac_tag() : Expr::Tag();
-    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? Wasatch::zvol_frac_tag() : Expr::Tag();
+    VolFractionNames& vNames = VolFractionNames::self();
+    Expr::Tag volFracTag =     this->has_embedded_geometry()             ? vNames.svol_frac_tag() : Expr::Tag();
+    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? vNames.xvol_frac_tag() : Expr::Tag();
+    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? vNames.yvol_frac_tag() : Expr::Tag();
+    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? vNames.zvol_frac_tag() : Expr::Tag();
 
     //__________________
     // dilatation
@@ -622,16 +624,17 @@ namespace Wasatch{
 
     // multiply the initial condition by the volume fraction for embedded geometries
     if (hasEmbeddedGeometry_) {
+      VolFractionNames& vNames = VolFractionNames::self();
       Expr::Tag volFracTag = Expr::Tag();
       switch (stagLoc_) {
         case XDIR:
-          if (hasEmbeddedGeometry_) volFracTag = Wasatch::xvol_frac_tag();
+          if (hasEmbeddedGeometry_) volFracTag = vNames.xvol_frac_tag();
           break;
         case YDIR:
-          if (hasEmbeddedGeometry_) volFracTag = Wasatch::yvol_frac_tag();
+          if (hasEmbeddedGeometry_) volFracTag = vNames.yvol_frac_tag();
           break;
         case ZDIR:
-          if (hasEmbeddedGeometry_) volFracTag = Wasatch::zvol_frac_tag();
+          if (hasEmbeddedGeometry_) volFracTag = vNames.zvol_frac_tag();
           break;
         default:
           break;

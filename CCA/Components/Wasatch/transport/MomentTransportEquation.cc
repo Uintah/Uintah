@@ -28,6 +28,7 @@
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
+#include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Aggregation.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Birth.h>
@@ -257,6 +258,7 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::
   get_moment_rhs_id(Expr::ExpressionFactory& factory,
                     Uintah::ProblemSpecP params,
+                    const bool hasEmbeddedGeometry,
                     Expr::TagList& weightsTags,
                     Expr::TagList& abscissaeTags,
                     const double momentOrder,
@@ -281,29 +283,20 @@ namespace Wasatch {
 
     //_____________
     // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag = Expr::Tag();
-    if (params->findBlock("VolumeFractionExpression")) {
-      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-    }
-
+    Expr::Tag volFracTag   = Expr::Tag();
     Expr::Tag xAreaFracTag = Expr::Tag();
-    if (params->findBlock("XAreaFractionExpression")) {
-      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
-    }
-
     Expr::Tag yAreaFracTag = Expr::Tag();
-    if (params->findBlock("YAreaFractionExpression")) {
-      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
-    }
-
     Expr::Tag zAreaFracTag = Expr::Tag();
-    if (params->findBlock("ZAreaFractionExpression")) {
-      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    if (hasEmbeddedGeometry) {
+      VolFractionNames& vNames = VolFractionNames::self();
+      volFracTag = vNames.svol_frac_tag();
+      xAreaFracTag = vNames.xvol_frac_tag();
+      yAreaFracTag = vNames.yvol_frac_tag();
+      zAreaFracTag = vNames.zvol_frac_tag();
     }
-
+    
     //____________
     //Multi Environment Mixing 
-
     if( params->findBlock("MultiEnvMixingModel") ){
       Expr::TagList multiEnvWeightsTags;
       std::string baseName;
@@ -462,8 +455,7 @@ namespace Wasatch {
     
     
     // multiply the initial condition by the volume fraction for embedded geometries
-    std::cout << "has volume fraction = " << hasVolFrac_ << std::endl;
-    if (hasVolFrac_) {
+    if (hasEmbeddedGeometry_) {
 
       Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
                                    Expr::STATE_N );
@@ -472,7 +464,8 @@ namespace Wasatch {
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;
-      theTagList.push_back(volFracTag_);
+      VolFractionNames& vNames = VolFractionNames::self();
+      theTagList.push_back( vNames.svol_frac_tag() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,

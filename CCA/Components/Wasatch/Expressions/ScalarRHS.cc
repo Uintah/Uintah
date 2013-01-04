@@ -86,29 +86,29 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
 
-  if( !doXDir_ && haveXAreaFrac_ ){
-    std::ostringstream msg;
-    msg << "ERROR from " __FILE__ << std::endl
-        << "      xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-        << std::endl;
-    throw std::invalid_argument( msg.str() );
-  }
-
-  if( !doXDir_ && haveYAreaFrac_ ){
-    std::ostringstream msg;
-    msg << "ERROR from " __FILE__ << std::endl
-        << "      yAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-        << std::endl;
-    throw std::invalid_argument( msg.str() );
-  }
-
-  if( !doZDir_ && haveZAreaFrac_ ){
-    std::ostringstream msg;
-    msg << "ERROR from " __FILE__ << std::endl
-        << "      zAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-        << std::endl;
-    throw std::invalid_argument( msg.str() );
-  }
+//  if( doXDir_ && haveXAreaFrac_ ){
+//    std::ostringstream msg;
+//    msg << "ERROR from " __FILE__ << std::endl
+//        << "      xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+//        << std::endl;
+//    throw std::invalid_argument( msg.str() );
+//  }
+//
+//  if( doYDir_ && haveYAreaFrac_ ){
+//    std::ostringstream msg;
+//    msg << "ERROR from " __FILE__ << std::endl
+//        << "      yAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+//        << std::endl;
+//    throw std::invalid_argument( msg.str() );
+//  }
+//
+//  if( doZDir_ && haveZAreaFrac_ ){
+//    std::ostringstream msg;
+//    msg << "ERROR from " __FILE__ << std::endl
+//        << "      zAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
+//        << std::endl;
+//    throw std::invalid_argument( msg.str() );
+//  }
 }
 
 //------------------------------------------------------------------
@@ -156,9 +156,9 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
     volfrac_ = &fml.template field_manager<SVolField>().field_ref( volFracTag_ );
   }
 
-  if ( haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
-  if ( haveYAreaFrac_ ) yareafrac_ = &yVolFM.field_ref( yAreaFracTag_ );
-  if ( haveZAreaFrac_ ) zareafrac_ = &zVolFM.field_ref( zAreaFracTag_ );
+  if ( doXDir_ && haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
+  if ( doYDir_ && haveYAreaFrac_ ) yareafrac_ = &yVolFM.field_ref( yAreaFracTag_ );
+  if ( doZDir_ && haveZAreaFrac_ ) zareafrac_ = &zVolFM.field_ref( zAreaFracTag_ );
 
   srcTerm_.clear();
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
@@ -189,9 +189,9 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
   }
 
   if( haveVolFrac_   ) exprDeps.requires_expression( volFracTag_   );
-  if( haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
-  if( haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
-  if( haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
+  if( doXDir_ && haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
+  if( doYDir_ && haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
+  if( doZDir_ && haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
 
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
     if( isrc->context() != Expr::INVALID_CONTEXT ){
@@ -216,9 +216,9 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
       densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
   }
   if( haveVolFrac_   ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
-  if( haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
-  if( haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
-  if( haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
+  if( doXDir_ && haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
+  if( doYDir_ && haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
+  if( doZDir_ && haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
 
 }
 

@@ -401,10 +401,12 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
+    const bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
+
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
+      adaptors_.push_back( parse_equation( transEqnParams, turbParams, hasEmbeddedGeometry, densityTag, isConstDensity, graphCategories_ ) );
     }
 
     //
@@ -431,7 +433,6 @@ namespace Wasatch{
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
-    const bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){

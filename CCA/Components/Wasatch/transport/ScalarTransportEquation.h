@@ -163,6 +163,7 @@ namespace Wasatch{
      */
     ScalarTransportEquation( const std::string solnVarName,
                              Uintah::ProblemSpecP params,
+                             const bool hasEmbeddedGeometry,
                              const Expr::Tag densityTag,
                              const bool isConstDensity,
                              const Expr::ExpressionID id );
@@ -216,6 +217,7 @@ namespace Wasatch{
                                                const bool isConstDensity,
                                                Expr::ExpressionFactory& factory,
                                                Uintah::ProblemSpecP params,
+                                               const bool hasEmbeddedGeometry,
                                                TurbulenceParameters turbulenceParams);
 
     /**

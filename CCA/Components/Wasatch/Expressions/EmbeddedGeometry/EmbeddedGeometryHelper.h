@@ -34,31 +34,35 @@
  *  \file BasicExprBuilder.h
  *  \brief parser support for creating embedded geometry.
  */
-
 namespace Expr{
   class ExpressionBuilder;
 }
 
 namespace Wasatch{
-  /**
-   *  \brief obtain the tag for the volume fraction
-   */
-  Expr::Tag xvol_frac_tag();
-
-  /**
-   *  \brief obtain the tag for the volume fraction
-   */
-  Expr::Tag yvol_frac_tag();
-
-  /**
-   *  \brief obtain the tag for the volume fraction
-   */
-  Expr::Tag zvol_frac_tag();
-
-  /**
-   *  \brief obtain the tag for the volume fraction
-   */
-  Expr::Tag svol_frac_tag();
+  
+  class VolFractionNames
+  {
+  public:
+    
+    /**
+     *  Access the VolumeFraction names and tags.
+     */
+    static VolFractionNames& self();
+    
+    Expr::Tag svol_frac_tag() {return Expr::Tag(svolfrac_,Expr::STATE_NONE);}
+    Expr::Tag xvol_frac_tag() {return Expr::Tag(xvolfrac_,Expr::STATE_NONE);}
+    Expr::Tag yvol_frac_tag() {return Expr::Tag(yvolfrac_,Expr::STATE_NONE);}
+    Expr::Tag zvol_frac_tag() {return Expr::Tag(zvolfrac_,Expr::STATE_NONE);}
+    
+    void set_svol_frac_name(const std::string svolfrac){svolfrac_ = svolfrac;}
+    void set_xvol_frac_name(const std::string xvolfrac){xvolfrac_ = xvolfrac;}
+    void set_yvol_frac_name(const std::string yvolfrac){yvolfrac_ = yvolfrac;}
+    void set_zvol_frac_name(const std::string zvolfrac){zvolfrac_ = zvolfrac;}
+    
+  private:
+    std::string svolfrac_, xvolfrac_,yvolfrac_,zvolfrac_;
+    VolFractionNames();
+  };
 
   /**
    *  \addtogroup WasatchParser

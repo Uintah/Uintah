@@ -136,6 +136,7 @@ namespace Wasatch{
      */
     static Expr::ExpressionID  get_moment_rhs_id(Expr::ExpressionFactory& factory,
                                                   Uintah::ProblemSpecP params,
+                                                  const bool hasEmbeddedGeometry,
                                                   Expr::TagList& weightsTags,
                                                   Expr::TagList& abscissaeTags,
                                                   const double momentOrder,

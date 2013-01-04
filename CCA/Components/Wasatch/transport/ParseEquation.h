@@ -93,6 +93,7 @@ namespace Wasatch{
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
                   TurbulenceParameters turbParams,
+                  const bool hasEmbeddedGeometry,
                   const Expr::Tag densityTag,
                   const bool isConstDensity,
                   GraphCategories& gc );
