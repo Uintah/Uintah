@@ -404,9 +404,15 @@
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
     <EmbeddedGeometry  spec="OPTIONAL NO_DATA"
-                       children1="ONE_OF(CHILD Intrusion, GeometryExpression)" >
+                       children1="ONE_OF(CHILD Intrusion, GeometryExpression, External)" >
        <Inverted       spec="OPTIONAL NO_DATA"/>
        <MovingGeometry spec="OPTIONAL NO_DATA"/>  
+       <External       spec="OPTIONAL NO_DATA">
+        <SVolFraction     spec="REQUIRED STRING"/>
+        <XVolFraction     spec="REQUIRED STRING"/>
+        <YVolFraction     spec="REQUIRED STRING"/>
+        <ZVolFraction     spec="REQUIRED STRING"/>                        
+       </External>         
        <Intrusion      spec="MULTIPLE NO_DATA">
          <geom_object  spec="REQUIRED"/>
       </Intrusion>
@@ -559,25 +565,7 @@
         <!-- specify an expression for the diffusive flux -->
         <NameTag  spec="OPTIONAL" />
       </DiffusiveFluxExpression>
-      
-      <!-- ================================================================================== -->            
-      <!-- Specification of the embedded boundary via volume and area fractions -->
-      <VolumeFractionExpression spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </VolumeFractionExpression>
-
-      <XAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </XAreaFractionExpression>
-
-      <YAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </YAreaFractionExpression>
-
-      <ZAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </ZAreaFractionExpression>
-      
+            
       
       <!-- ================================================================================== -->            
       <!-- Specification of the source term -->
@@ -881,27 +869,7 @@
         <!-- specify the name of one or more source term expressions to be added to this transport equation -->
         <NameTag                        spec="REQUIRED" />
       </SourceTermExpression>
-      
-      
-      <!-- ================================================================================== -->            
-      <!-- Specification of the embedded boundary via volume and area fractions -->
-      <VolumeFractionExpression spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </VolumeFractionExpression>
-
-      <XAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </XAreaFractionExpression>
-
-      <YAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </YAreaFractionExpression>
-
-      <ZAreaFractionExpression  spec="OPTIONAL NO_DATA">
-        <NameTag  spec="REQUIRED" />
-      </ZAreaFractionExpression>
-      
-
+            
     </MomentTransportEquation>
 
     <ForceOnGraph             spec="MULTIPLE NO_DATA"

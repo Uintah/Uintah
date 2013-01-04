@@ -90,39 +90,8 @@ namespace Wasatch{
       : solnVarName_        ( solutionVarName ),
         rhsExprID_          ( rhsExprID ),
         stagLoc_            ( stagLoc ),
-        volFracTag_         ( Expr::Tag() ),
-        hasEmbeddedGeometry_(hasEmbeddedGeometry),
-        hasVolFrac_         ( false )
-    {
-      switch (stagLoc_) {
-        case XDIR:
-          if (eqnParams && eqnParams->findBlock("XAreaFractionExpression")) {
-            volFracTag_ = parse_nametag( eqnParams->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
-            hasVolFrac_ = true;
-          }
-          break;
-        case YDIR:
-          if (eqnParams && eqnParams->findBlock("YAreaFractionExpression")) {
-            volFracTag_ = parse_nametag( eqnParams->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
-            hasVolFrac_ = true;
-          }
-          break;
-        case ZDIR:
-          if (eqnParams && eqnParams->findBlock("ZAreaFractionExpression")) {
-            volFracTag_ = parse_nametag( eqnParams->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
-            hasVolFrac_ = true;
-          }
-          break;          
-        case NODIR:
-          if (eqnParams && eqnParams->findBlock("VolumeFractionExpression")) {
-            volFracTag_ = parse_nametag( eqnParams->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-            hasVolFrac_ = true;
-          }
-          break;
-        default:
-          break;
-      }
-    }
+        hasEmbeddedGeometry_(hasEmbeddedGeometry)
+    {}
 
     virtual ~TransportEquation(){}
 
@@ -205,8 +174,6 @@ namespace Wasatch{
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
-    Expr::Tag volFracTag_;    
-    bool hasVolFrac_;
     bool hasEmbeddedGeometry_;
   };
 

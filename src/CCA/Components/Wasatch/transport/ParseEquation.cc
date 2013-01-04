@@ -98,6 +98,7 @@ namespace Wasatch{
 
   EqnTimestepAdaptorBase* parse_equation( Uintah::ProblemSpecP params,
                                           TurbulenceParameters turbParams,
+                                          const bool hasEmbeddedGeometry,
                                           const Expr::Tag densityTag,
                                           const bool isConstDensity,
                                           GraphCategories& gc )
@@ -122,9 +123,10 @@ namespace Wasatch{
 
     if( eqnLabel == "generic" ){
        typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
-        rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params, turbParams );
+        rhsID = ScalarTransEqn::get_rhs_expr_id( densityTag, isConstDensity, *solnGraphHelper->exprFactory, params, hasEmbeddedGeometry, turbParams );
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                           params,
+                                          hasEmbeddedGeometry,
                                           densityTag,
                                           isConstDensity,
                                           rhsID );
@@ -275,7 +277,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
                                                                  const bool hasEmbeddedGeometry,
-                                                                const bool hasMovingGeometry,
+                                                                 const bool hasMovingGeometry,
                                                                  const Expr::Tag densityTag,
                                                                  GraphCategories& gc,
                                                                  Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
@@ -502,7 +504,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                     Uintah::ProblemSpecP wasatchParams,
-                                   const bool hasEmbeddedGeometry,
+                                    const bool hasEmbeddedGeometry,
                                     GraphCategories& gc )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -554,7 +556,7 @@ namespace Wasatch{
       // create moment transport equation
       typedef MomentTransportEquation< SVolField > MomTransEq;
       const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
-                                                                      params, weightsTags, abscissaeTags,
+                                                                      params, hasEmbeddedGeometry, weightsTags, abscissaeTags,
                                                                       momentID, initialMoments[iMom]);
       momtranseq = scinew MomTransEq( thisPhiName, rhsID, hasEmbeddedGeometry, params);
       adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );

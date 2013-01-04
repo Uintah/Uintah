@@ -43,29 +43,33 @@
 #include <expression/ExprLib.h>
 
 namespace Wasatch{
-
-  Expr::Tag xvol_frac_tag() {
-    return Expr::Tag("xvolFraction",Expr::STATE_NONE);
-  }
   
-  Expr::Tag yvol_frac_tag() {
-    return Expr::Tag("yvolFraction",Expr::STATE_NONE);
-  }
+  VolFractionNames::VolFractionNames() :
+    svolfrac_("svolFraction"),
+    xvolfrac_("xvolFraction"),
+    yvolfrac_("yvolFraction"),
+    zvolfrac_("zvolFraction")
+  {}
   
-  Expr::Tag zvol_frac_tag() {
-    return Expr::Tag("zvolFraction",Expr::STATE_NONE);
+  //------------------------------------------------------------------
+  
+  VolFractionNames&
+  VolFractionNames::self()
+  {
+    static VolFractionNames s;
+    return s;
   }
 
-  Expr::Tag svol_frac_tag() {
-    return Expr::Tag("svolFraction",Expr::STATE_NONE);
-  }
+  //------------------------------------------------------------------
 
   void
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
                                 GraphCategories& gc )
   {
     if (parser->findBlock("EmbeddedGeometry")) {
-
+      
+      VolFractionNames& vNames = VolFractionNames::self();
+      
       Expr::ExpressionBuilder* volFracBuilder = NULL;
       Expr::ExpressionBuilder* volFracBuilderInit = NULL;
       GraphHelper* const initgh = gc[INITIALIZATION];
@@ -76,6 +80,24 @@ namespace Wasatch{
       // we only allow the ENTIRE geometry to be inverted, not per intrusion
       bool inverted = geomParams->findBlock("Inverted");
 
+      // check if we have external volume fractions
+      if ( geomParams->findBlock("External") ) {
+        Uintah::ProblemSpecP externalParams = geomParams->findBlock("External");
+        std::string svolfracname, xvolfracname, yvolfracname, zvolfracname;
+        externalParams->get("SVolFraction",svolfracname);
+        externalParams->get("XVolFraction",xvolfracname);
+        externalParams->get("YVolFraction",yvolfracname);
+        externalParams->get("ZVolFraction",zvolfracname);
+        VolFractionNames& vNames = VolFractionNames::self();
+        vNames.set_svol_frac_name(svolfracname);
+        vNames.set_xvol_frac_name(xvolfracname);
+        vNames.set_yvol_frac_name(yvolfracname);
+        vNames.set_zvol_frac_name(zvolfracname);
+        // volume fraction expressions have been specified external and should
+        // be registered outside, therefore, we return from this call.
+        return;
+      }
+      
       Uintah::ProblemSpecP geomExprParams = geomParams->findBlock("GeometryExpression");      
       if (geomExprParams) {        
         if (geomExprParams->findBlock("OscillatingCylinder")) {
@@ -95,8 +117,8 @@ namespace Wasatch{
           std::string axis;
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;
-          volFracBuilder = scinew Builder( svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
-          volFracBuilderInit = scinew Builder( svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          volFracBuilder = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          volFracBuilderInit = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
         }
         
       } else {
@@ -109,8 +131,8 @@ namespace Wasatch{
           Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         }
         typedef GeometryPieceWrapper::Builder svolfracBuilder;        
-        volFracBuilderInit = scinew svolfracBuilder( svol_frac_tag(), geomObjects, inverted );
-        volFracBuilder = scinew svolfracBuilder( svol_frac_tag(), geomObjects, inverted );
+        volFracBuilderInit = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
+        volFracBuilder = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
       }
       
       // register the volume fractions
@@ -122,19 +144,19 @@ namespace Wasatch{
       typedef AreaFraction<YVolField>::Builder yvolfracBuilder;
       typedef AreaFraction<ZVolField>::Builder zvolfracBuilder;
       
-      initgh->exprFactory->register_expression( scinew xvolfracBuilder( xvol_frac_tag(), svol_frac_tag() ) );
-      initgh->exprFactory->register_expression( scinew yvolfracBuilder( yvol_frac_tag(), svol_frac_tag() ) );
-      initgh->exprFactory->register_expression( scinew zvolfracBuilder( zvol_frac_tag(), svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
       
-      solngh->exprFactory->register_expression( scinew xvolfracBuilder( xvol_frac_tag(), svol_frac_tag() ) );
-      solngh->exprFactory->register_expression( scinew yvolfracBuilder( yvol_frac_tag(), svol_frac_tag() ) );
-      solngh->exprFactory->register_expression( scinew zvolfracBuilder( zvol_frac_tag(), svol_frac_tag() ) );
+      solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
+      solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
+      solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
       
       // force on graph
       //initgh->rootIDs.insert( initgh->exprFactory->get_id( svol_frac_tagN() ) );
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( xvol_frac_tag() ) );
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( yvol_frac_tag() ) );
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( zvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.xvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.yvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.zvol_frac_tag() ) );
     }
   }
   
