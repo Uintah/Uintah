@@ -220,6 +220,10 @@ namespace Uintah{
 
 
           const double _sigma_constant;      ///< Stefan Boltzman constant [W/(m^2 K^4)]
+          double _init_tol;                  ///< initial tolerance for the iterative solver
+          double _tol;                       ///< solver tolerance 
+          int _max_it;                       ///< maximum iterations allowed 
+
           struct WallInfo { 
               double k; 
               double dy; 
