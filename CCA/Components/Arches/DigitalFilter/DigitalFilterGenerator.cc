@@ -1469,14 +1469,14 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<6; i++) {
       for (int j = 0; j<jSize; j++) {
         for (int k = 0; k<kSize; k++ ) {
-          if (newTurbInlet.stressProfile[j][k][i] != newTurbInlet.stressProfile[j][k][i] || newTurbInlet.stressProfile[j][k][i] > infinity) 
+          if (newTurbInlet.stressProfile[j][k][i] != newTurbInlet.stressProfile[j][k][i] || abs(newTurbInlet.stressProfile[j][k][i]) > infinity) 
             newTurbInlet.stressProfile[j][k][i] = 0.0;
         }
       }
     }
   } else {
     for (int i = 0; i<6; i++) {
-      if (newTurbInlet.constStress[i] != newTurbInlet.constStress[i] || newTurbInlet.constStress[i] > infinity) 
+      if (newTurbInlet.constStress[i] != newTurbInlet.constStress[i] || abs(newTurbInlet.constStress[i]) > infinity) 
         newTurbInlet.constStress[i] = 0.0; 
     }
   }
