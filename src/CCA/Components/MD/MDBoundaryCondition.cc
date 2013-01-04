@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MDBoundCond.h>
+#include <CCA/Components/MD/MDBoundaryCondition.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -35,19 +35,19 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-MDBoundCond::MDBoundCond()
+MDBoundaryCondition::MDBoundaryCondition()
 {
 }
 
-MDBoundCond::~MDBoundCond()
+MDBoundaryCondition::~MDBoundaryCondition()
 {
 }
 
-void MDBoundCond::setBoundaryCondition(const Patch* patch,
-                                       int matID,
-                                       const string& type,
-                                       NCVariable<Vector>& variable,
-                                       string interp_type)
+void MDBoundaryCondition::setBoundaryCondition(const Patch* patch,
+                                               int matID,
+                                               const string& type,
+                                               NCVariable<Vector>& variable,
+                                               string interp_type)
 {
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
     IntVector oneCell = patch->faceDirection(face);
@@ -62,41 +62,11 @@ void MDBoundCond::setBoundaryCondition(const Patch* patch,
         Iterator nbound_ptr;
         Iterator nu;        // not used;
 
-        if (type == "Velocity") {
-          const BoundCondBase* bcb = patch->getArrayBCValues(face, matID, "Velocity", nu, nbound_ptr, child);
-
-          const BoundCond<Vector>* bc = dynamic_cast<const BoundCond<Vector>*>(bcb);
-          if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
-              Vector bcv = bc->getValue();
-              for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-                IntVector nd = *nbound_ptr;
-                variable[nd] = bcv;
-              }
-              if (interp_type == "gimp" || interp_type == "3rdorderBS" || interp_type == "cpdi") {
-                for (NodeIterator it(l, h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = bcv;
-                }
-              }
-            }
-            delete bc;
-          } else {
-            delete bcb;
-          }
-
-        } else if (type == "Symmetric") {
+        if (type == "Symmetric") {
           const BoundCondBase* bcb = patch->getArrayBCValues(face, matID, "Symmetric", nu, nbound_ptr, child);
 
           if (bcb->getBCType__NEW() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus) {
-              if (interp_type == "linear") {
-                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-                  IntVector nd = *nbound_ptr;
-                  variable[nd] = Vector(0., variable[nd].y(), variable[nd].z());
-                }
-              }  // linear
-
               if (interp_type == "gimp" || interp_type == "cpdi" || interp_type == "3rdorderBS") {
                 IntVector off = IntVector(1, 0, 0);
                 IntVector L(0, 0, 0), H(0, 0, 0);
@@ -133,12 +103,6 @@ void MDBoundCond::setBoundaryCondition(const Patch* patch,
             }  // xplus/xminus faces
 
             if (face == Patch::yplus || face == Patch::yminus) {
-              if (interp_type == "linear") {
-                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-                  IntVector node = *nbound_ptr;
-                  variable[node] = Vector(variable[node].x(), 0., variable[node].z());
-                }
-              }  // linear
               if (interp_type == "gimp" || interp_type == "cpdi" || interp_type == "3rdorderBS") {
                 IntVector off = IntVector(0, 1, 0);
                 IntVector L(0, 0, 0), H(0, 0, 0);
@@ -175,12 +139,6 @@ void MDBoundCond::setBoundaryCondition(const Patch* patch,
             }  // yplus/yminus faces
 
             if (face == Patch::zplus || face == Patch::zminus) {
-              if (interp_type == "linear") {
-                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-                  IntVector node = *nbound_ptr;
-                  variable[node] = Vector(variable[node].x(), variable[node].y(), 0.);
-                }
-              }  // linear
               if (interp_type == "gimp" || interp_type == "cpdi" || interp_type == "3rdorderBS") {
                 IntVector off = IntVector(0, 0, 1);
                 IntVector L(0, 0, 0), H(0, 0, 0);
@@ -226,11 +184,11 @@ void MDBoundCond::setBoundaryCondition(const Patch* patch,
   }
 }
 
-void MDBoundCond::setBoundaryCondition(const Patch* patch,
-                                       int matID,
-                                       const string& type,
-                                       NCVariable<double>& variable,
-                                       string interp_type)
+void MDBoundaryCondition::setBoundaryCondition(const Patch* patch,
+                                               int matID,
+                                               const string& type,
+                                               NCVariable<double>& variable,
+                                               string interp_type)
 {
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
     IntVector oneCell = patch->faceDirection(face);

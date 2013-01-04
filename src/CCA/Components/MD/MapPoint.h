@@ -53,10 +53,26 @@ using SCIRun::IntVector;
 template<class T> class MapPoint {
 
   public:
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     MapPoint();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     ~MapPoint();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline const double getParticleCharge() const
     {
       // TODO Figure out what charge is
@@ -64,22 +80,32 @@ template<class T> class MapPoint {
 //      return this->globalParticleSubset;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline const double getChargeWeight() const
     {
       return this->d_chargeWeight;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline void setParticleCharge(double charge)
     {
 
     }
 
-
   private:
+
     // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle
     ParticleSubset& globalParticleSubset;
-    double d_chargeWeight;
-    Vector d_forceGRadient;
+    double chargeWeight;
+    Vector forceGradient;
 
 };
 

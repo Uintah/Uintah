@@ -25,12 +25,13 @@
 #ifndef UINTAH_MD_BOUNDCOND_H
 #define UINTAH_MD_BOUNDCOND_H
 
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
+
+class Vector;
 
 /**
  *  @class MDDoundCond
@@ -42,27 +43,45 @@ using namespace SCIRun;
  *
  *  @param
  */
-class MDBoundCond {
+class MDBoundaryCondition {
 
   public:
 
-    MDBoundCond();
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    MDBoundaryCondition();
 
-    ~MDBoundCond();
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    ~MDBoundaryCondition();
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void setBoundaryCondition(const Patch* patch,
                               int matID,
                               const string& type,
                               NCVariable<Vector>& variable,
                               string interp_type = "linear");
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     void setBoundaryCondition(const Patch* patch,
                               int matID,
                               const string& type,
                               NCVariable<double>& variable,
                               string interp_type = "linear");
-
-  private:
 
 };
 
