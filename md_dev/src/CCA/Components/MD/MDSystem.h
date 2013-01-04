@@ -35,6 +35,7 @@
 namespace Uintah {
 
 class ProcessorGroup;
+class MD;
 
 using SCIRun::Vector;
 using SCIRun::IntVector;
@@ -155,18 +156,19 @@ class MDSystem {
       this->d_changeBox = value;
     }
 
+    friend class MD;
+
+  private:
+
     double d_ewaldBeta;     //!< The Ewald damping coefficient
     double d_unitCell;      //!< Total MD system unit cell volume
     double d_pressure;      //!< Total MD system pressure
     double d_temperature;   //!< Total MD system temperature
-    bool d_orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_changeBox;       //!<
-
-  private:
+    bool   d_orthorhombic;  //!< Whether or not the MD system is using orthorhombic coordinates
+    bool   d_changeBox;     //!<
 
     Matrix3 d_cellInverse;  //!<
     const ProcessorGroup* d_myworld;  //!< Uintah processor group
-
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

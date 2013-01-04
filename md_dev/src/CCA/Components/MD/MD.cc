@@ -161,7 +161,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
   schedulePerformSPME(sched, patches, matls);
-  scheduleUpdatePosition(sched, patches, matls);
+  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, sharedState->d_particleState_preReloc, lb->pXLabel,
                                     sharedState->d_particleState, lb->pParticleIDLabel, matls, 1);
@@ -169,8 +169,8 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
                                const PatchSubset* patches,
-                               const MaterialSubset* /*matls*/,
-                               DataWarehouse*,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
 {
   printTask(patches, md_cout, "MD::computeStableTimestep");
@@ -213,6 +213,8 @@ void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   printSchedule(patches, md_cout, "MD::scheduleInterpolateParticlesToGrid");
 
   Task* task = scinew Task("MD::interpolateParticlesToGrid", this, &MD::interpolateParticlesToGrid);
+
+  sched->addTask(task, patches, matls);
 }
 
 void MD::schedulePerformSPME(SchedulerP& sched,
@@ -242,13 +244,13 @@ void MD::schedulePerformSPME(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
-void MD::scheduleUpdatePosition(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls)
+void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
 {
-  printSchedule(patches, md_cout, "MD::scheduleUpdatePosition");
+  printSchedule(patches, md_cout, "MD::scheduleInterpolateToParticlesAndUpdate");
 
-  Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
+  Task* task = scinew Task("interpolateToParticlesAndUpdate", this, &MD::interpolateToParticlesAndUpdate);
 
   task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -610,13 +612,13 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
 
 }
 
-void MD::updatePosition(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout, "MD::updatePosition");
+  printTask(patches, md_cout, "MD::interpolateToParticlesAndUpdate");
 
   // loop through all patches
   unsigned int numPatches = patches->size();

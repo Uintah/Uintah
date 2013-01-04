@@ -83,7 +83,7 @@ template<typename T> class SimpleGrid {
      */
     inline SCIRun::Array3<double> getCharges() const
     {
-      return this->d_charges;
+      return this->charges;
     }
 
     /**
@@ -93,7 +93,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getExtents() const
     {
-      return this->d_gridExtents;
+      return this->gridExtents;
     }
 
     /**
@@ -103,7 +103,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getOffset() const
     {
-      return this->d_gridOffset;
+      return this->gridOffset;
     }
 
     /**
@@ -113,7 +113,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getNonGhostExtent() const
     {
-      return this->d_gridExtents - this->d_numGhostCells;
+      return this->gridExtents - this->numGhostCells;
     }
 
     /**The offset
@@ -124,7 +124,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getNonGhostOffset() const
     {
-      return this->d_gridOffset - this->d_numGhostCells;
+      return this->gridOffset - this->numGhostCells;
     }
 
     /**
@@ -138,7 +138,7 @@ template<typename T> class SimpleGrid {
                          const int& y,
                          const int& z)
     {
-      return this->d_charges(x, y, z);
+      return this->charges(x, y, z);
     }
 
     /**
@@ -152,7 +152,7 @@ template<typename T> class SimpleGrid {
                         const int& y,
                         const int& z) const
     {
-      return this->d_charges(x, y, z);
+      return this->charges(x, y, z);
     }
 
     /**
@@ -162,7 +162,7 @@ template<typename T> class SimpleGrid {
      */
     inline T& operator()(const IntVector& idx)
     {
-      return this->d_charges(idx.x(), idx.y(), idx.z());
+      return this->charges(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -172,7 +172,7 @@ template<typename T> class SimpleGrid {
      */
     inline T operator()(const IntVector& idx) const
     {
-      return this->d_charges(idx.x(), idx.y(), idx.z());
+      return this->charges(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -216,10 +216,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator+=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] += gridIn.d_charges[x][y][z];
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] += gridIn.charges[x][y][z];
           }
         }
       }
@@ -233,10 +233,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator-=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] -= gridIn.d_charges[x][y][z];
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] -= gridIn.charges[x][y][z];
           }
         }
       }
@@ -250,10 +250,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator*=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] *= gridIn.d_charges[x][y][z];
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] *= gridIn.charges[x][y][z];
           }
         }
       }
@@ -267,10 +267,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator/=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] /= gridIn.d_charges[x][y][z];
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] /= gridIn.charges[x][y][z];
           }
         }
       }
@@ -284,10 +284,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator+=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] += valueIn;
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] += valueIn;
           }
         }
       }
@@ -301,10 +301,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator-=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] -= valueIn;
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] -= valueIn;
           }
         }
       }
@@ -318,10 +318,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator*=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] *= valueIn;
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] *= valueIn;
           }
         }
       }
@@ -335,10 +335,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator/=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges[x][y][z] /= valueIn;
+      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+            charges[x][y][z] /= valueIn;
           }
         }
       }
@@ -360,10 +360,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
     {
-      d_charges.copy(copy.getCharges());          // SCIRun::Array3 assignment operator is private, use copy() method
-      d_gridExtents = copy.d_gridExtents;
-      d_gridOffset = copy.d_gridOffset;
-      d_numGhostCells = copy.d_numGhostCells;
+      charges.copy(copy.getCharges());          // SCIRun::Array3 assignment operator is private, use copy() method
+      gridExtents = copy.gridExtents;
+      gridOffset = copy.gridOffset;
+      numGhostCells = copy.numGhostCells;
       return *this;
     }
 
@@ -380,10 +380,10 @@ template<typename T> class SimpleGrid {
 
   private:
 
-    SCIRun::Array3<T> d_charges;  //!< Grid cell values - can be double or std::complex<double>>
-    IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
-    IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
-    int d_numGhostCells;          //!< The number of ghost cells for the patch the associated points are on
+    SCIRun::Array3<T> charges;  //!< Grid cell values - can be double or std::complex<double>>
+    IntVector gridExtents;      //!< Stores the number of total grid points in this grid
+    IntVector gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
+    int numGhostCells;          //!< The number of ghost cells for the patch the associated points are on
 
     // NOTE:  We need to decide how to deal with ghost cells.
     // Extent/Offset of total grid doesn't tell us how much is "real" and how much is "ghost"

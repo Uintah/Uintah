@@ -55,6 +55,16 @@ typedef int particleId;
 
 class SimpleMaterial;
 
+/**
+ *  @class MD
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper
+ *  @date   December, 2012
+ *
+ *  @brief
+ *
+ *  @param
+ */
 class MD : public UintahParallelComponent, public SimulationInterface {
 
   public:
@@ -158,9 +168,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void scheduleUpdatePosition(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls);
+    void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls);
 
   private:
 
@@ -231,11 +241,11 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void updatePosition(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
+    void interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -291,7 +301,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     // fields specific to non-bonded interaction (LJ Potential)
     string coordinateFile;  //!
     unsigned int numAtoms;  //!
-    double cutoffRadius;   //!< The short ranged cut off distances (in Angstroms)
+    double cutoffRadius;    //!< The short ranged cut off distances (in Angstroms)
     Vector box;             //!< The size of simulation
     double R12;             //!< This is the v.d.w. repulsive parameter
     double R6;              //!< This is the v.d.w. attractive parameter

@@ -130,8 +130,8 @@ template<class T> class SPMEGrid {
     * @return T& A reference to the value at index [x,y,z] in this SimpleGrid.
     */
    inline Vector operator()(const int& x,
-                        const int& y,
-                        const int& z)
+                             const int& y,
+                             const int& z)
    {
      return this->d_field(x,y,z);
    }
@@ -143,9 +143,9 @@ template<class T> class SPMEGrid {
     * @param z The z component of the 3D cell index.
     * @return T The value at index [x,y,z] in this SimpleGrid.
     */
-   inline Vector operator()(const int& x,
-                       const int& y,
-                       const int& z) const
+    inline Vector operator()(const int& x,
+                             const int& y,
+                             const int& z) const
    {
      return this->d_field(x, y, z);
    }

@@ -47,9 +47,9 @@ template<typename T>
 SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const IntVector& offset,
                           const int numGhostCells) :
-    d_gridExtents(extents), d_gridOffset(extents), d_numGhostCells(numGhostCells)
+    gridExtents(extents), gridOffset(extents), numGhostCells(numGhostCells)
 {
-  d_charges(extents.x(), extents.y(), extents.z());
+  charges(extents.x(), extents.y(), extents.z());
 }
 
 template<typename T>
@@ -61,8 +61,8 @@ SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 template<typename T>
 bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 {
-  if ((this->d_gridExtents != gridIn.d_gridExtents) || (this->d_gridOffset != gridIn.d_gridOffset)
-      || (this->d_numGhostCells != gridIn.d_numGhostCells)) {
+  if ((this->gridExtents != gridIn.gridExtents) || (this->gridOffset != gridIn.gridOffset)
+      || (this->numGhostCells != gridIn.numGhostCells)) {
     ostringstream ostr;
     ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
     throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -75,10 +75,10 @@ template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
-  for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-        sg[x][y][z] *= gridIn.d_charges[x][y][z];
+  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+        sg[x][y][z] *= gridIn.charges[x][y][z];
       }
     }
   }
@@ -89,10 +89,10 @@ template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
-  for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-        sg[x][y][z] += gridIn.d_charges[x][y][z];
+  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+        sg[x][y][z] += gridIn.charges[x][y][z];
       }
     }
   }
@@ -103,10 +103,10 @@ template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();
-  for (unsigned int x = 0; x < d_gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < d_gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < d_gridExtents.z(); ++z) {
-        sg[x][y][z] -= gridIn.d_charges[x][y][z];
+  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
+    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
+      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
+        sg[x][y][z] -= gridIn.charges[x][y][z];
       }
     }
   }
@@ -124,9 +124,9 @@ SimpleGrid<T>& SimpleGrid<T>::operator-()
 template<typename T>
 std::ostream& SimpleGrid<T>::print(std::ostream& out) const
 {
-  out << "Extent, [x,y,z]: " << this->d_gridExtents;
-  out << "Offset, [x,y,z]: " << this->d_gridOffset;
-  out << "GhostCells, [x,y,z]: " << this->d_gridExtents;
+  out << "Extent, [x,y,z]: " << this->gridExtents;
+  out << "Offset, [x,y,z]: " << this->gridOffset;
+  out << "GhostCells, [x,y,z]: " << this->gridExtents;
   return out;
 }
 
