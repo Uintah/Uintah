@@ -194,6 +194,9 @@ namespace Uintah{
           double _dy;        ///< Wall thickness 
           double _T_inner;   ///< Inner wall temperature
           const double _sigma_constant;      ///< Stefan Boltzman constant [W/(m^2 K^4)]
+          double _T_max;     ///< Maximum allowed wall temperature
+          double _T_min;     ///< Minimum allowed wall temperature
+          double _relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
 
       };
 

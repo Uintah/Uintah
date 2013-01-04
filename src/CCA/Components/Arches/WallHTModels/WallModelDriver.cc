@@ -164,7 +164,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     // in the table lookup to T based on the conditions for the independent variables. These 
     // BCs are being applied regardless of the type of wall temperature model. 
 
-    if( time_subset == 0 && timestep % _calc_freq == 0 ){A
+    if( time_subset == 0 && timestep % _calc_freq == 0 ){
 
       // actually compute the wall HT model 
 
@@ -274,6 +274,9 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
   db->require("k", _k);
   db->require("wall_thickness", _dy);
   db->require("tube_side_T", _T_inner); 
+  db->getWithDefault( "T_wall_min", _T_min, 373 ); 
+  db->getWithDefault( "T_wall_max", _T_max, 3000);
+  db->getWithDefault( "relaxation_coef", _relax, 1.0); 
 
 } 
 
@@ -281,7 +284,7 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 void 
 WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){ 
 
-  double _Delta_T, _net_q ;
+  double T_wall, net_q;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   
@@ -322,14 +325,14 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
 
       if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
 
-          _net_q = q[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
-          _net_q = _net_q > 0 ? _net_q : 0;
-          _Delta_T = _T_inner + _net_q * _dy / _k;
+          net_q = q[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
+          net_q = net_q > 0 ? net_q : 0;
+          T_wall = _T_inner + net_q * _dy / _k;
 
-          _Delta_T = _Delta_T > 3000 ? 3000 : _Delta_T;
-          _Delta_T = _Delta_T < 373 ? 373: _Delta_T;
+          T_wall = T_wall > _T_max ? _T_max : T_wall;
+          T_wall = T_wall < _T_min ? _T_min : T_wall;
 
-          vars.T[adj] = 0.95 * vars.T_old[adj] + 0.05 * _Delta_T;
+          vars.T[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
 
       }
     }
