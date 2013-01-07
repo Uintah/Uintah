@@ -47,8 +47,16 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-    <BoundaryConditions>
-      <Face side="x-" name="floor">
+      <BoundaryConditions>
+        <FaceGeometry name="x- floor"     type="side"   direction="x-" />
+        <FaceGeometry name="fuel inlet"   type="circle" direction="x-" origin="0 1.5 1.5" radius="0.5" />
+        <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+        <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+        <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+        <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+        <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- floor" side="x-">
         <BCType id="all" label="bottom wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -68,7 +76,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius=".5" name="fuel inlet">
+      <Face geometry="fuel inlet" side="x-">
         <BCType id="all" label="inlet" var="MassFlowInlet">
           <value>0.4</value>
         </BCType>
@@ -88,7 +96,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
+      <Face geometry="x+ wall" side="x+">
         <BCType id="all" label="top" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -108,7 +116,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y-" name="y- wall">
+      <Face geometry="y- wall" side="y-">
         <BCType id="all" label="y-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -128,7 +136,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y+" name="y+ wall">
+      <Face geometry="y+ wall" side="y+">
         <BCType id="all" label="y+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -148,7 +156,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z-" name="z- wall">
+      <Face geometry="z- wall" side="z-" >
         <BCType id="all" label="z-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
@@ -168,7 +176,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z+" name="z+ wall">
+      <Face geometry="z+ wall" side="z+">
         <BCType id="all" label="z+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
