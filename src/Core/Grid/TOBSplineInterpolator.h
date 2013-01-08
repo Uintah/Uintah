@@ -51,6 +51,7 @@ namespace Uintah {
                                              vector<Vector>& d_S,
                                              const Matrix3& size,
                                              const Matrix3& defgrad);
+
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                        vector<IntVector>& ni,
                                                        vector<double>& S,
