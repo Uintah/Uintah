@@ -198,8 +198,8 @@ void Array3<T>::allocate()
       objs[i]=p;
       p+=dm2;
       for(int j=0;j<dm2;j++){
-	objs[i][j]=pp;
-	pp+=dm3;
+        objs[i][j]=pp;
+        pp+=dm3;
       }
     }
   } else {

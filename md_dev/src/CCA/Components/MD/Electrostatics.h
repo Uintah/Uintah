@@ -41,6 +41,8 @@
 
 namespace Uintah {
 
+typedef std::complex<double> dblcomplex;
+
 using SCIRun::Vector;
 using SCIRun::IntVector;
 
@@ -71,9 +73,7 @@ class Electrostatics {
     ~Electrostatics();
 
     /**
-     * @brief
-     * @param
-     * @return
+     * @brief Enumeration of all supported ElectroStatics types.
      */
     enum ElectroStaticsType {
       EWALD,
@@ -84,6 +84,9 @@ class Electrostatics {
 
     /**
      * @brief
+     * @param
+     * @param
+     * @param
      * @param
      */
     Electrostatics(ElectroStaticsType type,
@@ -124,7 +127,7 @@ class Electrostatics {
      * @param
      * @return
      */
-    SPMEGridMap<double> createChargeGridMap(const SPMEGrid<std::complex<double> >& grid,
+    SPMEGridMap<double> createChargeGridMap(const SPMEGrid<dblcomplex>& grid,
                                             const MDSystem& system,
                                             const Patch* patch);
 
@@ -135,7 +138,7 @@ class Electrostatics {
      */
     std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                          const MDSystem& system,
-                                         const Transformation3D<std::complex<double> >& invertSpace);
+                                         const Transformation3D<dblcomplex>& invertSpace);
 
     /**
      * @brief
@@ -145,9 +148,10 @@ class Electrostatics {
     void calculateStaticGrids(const IntVector& gridExtents,
                               const IntVector& offset,
                               const MDSystem& system,
-                              SimpleGrid<std::complex<double> >& fBGrid,
+                              SimpleGrid<dblcomplex>& fBGrid,
                               SimpleGrid<double>& fCGrid,
-                              SimpleGrid<std::complex<double> >& fStressPre,
+                              SimpleGrid<dblcomplex>& fStressPre,
+                              int splineOrder,
                               Vector& M1,
                               Vector& M2,
                               Vector& M3);
@@ -158,6 +162,8 @@ class Electrostatics {
      * @return
      */
     SimpleGrid<double> fC(const IntVector& gridExtents,
+                          const IntVector& gridOffset,
+                          const int numGhostCells,
                           const MDSystem& system);
 
     /**
@@ -165,28 +171,28 @@ class Electrostatics {
      * @param
      * @return
      */
-    SimpleGrid<std::complex<double> > fB(const IntVector& gridExtents,
-                                         const MDSystem& system,
-                                         int splineOrder);
+    SimpleGrid<dblcomplex> fB(const IntVector& gridExtents,
+                              const MDSystem& system,
+                              const int splineOrder);
 
     /**
      * @brief
      * @param
      * @return
      */
-    vector<std::complex<double> > calculateOrdinalSpline(int orderMinusOne,
-                                                         int splineOrder);
+    vector<double> calculateOrdinalSpline(const int orderMinusOne,
+                                              const int splineOrder);
 
     /**
      * @brief
      * @param
      * @return
      */
-    vector<std::complex<double> > generateBVector(int points,
-                                                  const std::vector<double>& M,
-                                                  int max,
-                                                  int splineOrder,
-                                                  const std::vector<double>& splineCoeff);
+    vector<dblcomplex> generateBVector(int numPoints,
+                                       const std::vector<double>& M,
+                                       int max,
+                                       int splineOrder,
+                                       std::vector<double>& splineCoeff);
 
     /**
      * @brief

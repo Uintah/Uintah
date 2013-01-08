@@ -290,13 +290,13 @@ class MD : public UintahParallelComponent, public SimulationInterface {
                     const Point* atom2);
 
     MDLabel* lb;                     //!<
-    SimulationStateP sharedState; //!<
-    SimpleMaterial* material;  //!<
+    SimulationStateP sharedState;    //!<
+    SimpleMaterial* material;        //!<
     IntegratorType integrator;       //!<
     double delt;                     //!<
 
     vector<const VarLabel*> particleState;            //!<
-    vector<const VarLabel*> particleState_preReloc;  //!<
+    vector<const VarLabel*> particleState_preReloc;   //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
     string coordinateFile;  //!
