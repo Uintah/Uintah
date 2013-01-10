@@ -435,7 +435,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("tube_side_T", info.T_inner); 
     r_db->require("max_TW", info.max_TW);
     r_db->require("min_TW", info.min_TW);
-    r_db->getWithDefault("relaxation_coef", info.Relax, 1.0);
+    r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info ); 
 
   }
@@ -527,7 +527,7 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
 
                   }
 
-                  vars.T[c] = (1-wi.Relax)*vars.T_old[c]+wi.Relax*TW0; 
+                  vars.T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0; 
 
                 } 
               }
