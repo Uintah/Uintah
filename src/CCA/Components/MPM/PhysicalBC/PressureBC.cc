@@ -41,7 +41,8 @@ using namespace Uintah;
 using namespace std;
 
 // Store the geometry object and the load curve
-PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid, const MPMFlags* flags)
+PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid,
+                       const MPMFlags* flags)
 {
   // First read the geometry information
   // d_surface is the geometry object containing the surface to be loaded.
@@ -133,7 +134,10 @@ void PressureBC::outputProblemSpec(ProblemSpecP& ps)
   d_surface->outputProblemSpec(geom_ps);
   press_ps->appendElement("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
   d_loadCurve->outputProblemSpec(press_ps);
-  press_ps->appendElement("res",d_res);
+  press_ps->appendElement("outward_normal",d_outwardNormal);
+  if(d_axisymmetric_end){
+    press_ps->appendElement("res",d_res);
+  }
 }
 
 // Get the type of this object for BC application
