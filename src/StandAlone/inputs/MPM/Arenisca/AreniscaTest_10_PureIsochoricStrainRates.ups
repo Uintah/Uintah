@@ -27,8 +27,8 @@
        <save label="p.stress"/>
        <save label="p.particleID"/>
        <save label="g.stressFS"/>
-       <save label="p.loadCurveID"/>
-       <save label="p.externalforce"/>
+       <save label = "p.plasticStrainVol"/>
+       <save label = "p.elasticStrainVol"/>
    </DataArchiver>
 
     <MPM>
@@ -47,7 +47,7 @@
        <MPM>
            <material>
               <constitutive_model type="Arenisca">
-	        <B0>10.e9</B0>
+	        <B0>79e10</B0>
 	        <G0>79.e9</G0>
                 <hardening_modulus>0.0</hardening_modulus>
 	        <FSLOPE> 1.0e-10 </FSLOPE>
