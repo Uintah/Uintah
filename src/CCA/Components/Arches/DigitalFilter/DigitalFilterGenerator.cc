@@ -656,7 +656,7 @@ public:
         inlet.stressProfile[j][k][1] = r21/inlet.stressProfile[j][k][0];
         inlet.stressProfile[j][k][2] = sqrt(r22-inlet.stressProfile[j][k][1]*inlet.stressProfile[j][k][1]);
         inlet.stressProfile[j][k][3] = r31/inlet.stressProfile[j][k][0];
-        inlet.stressProfile[j][k][4] = ( r32 - inlet.stressProfile[j][k][2]*inlet.stressProfile[j][k][3] ) / inlet.stressProfile[j][k][2];
+        inlet.stressProfile[j][k][4] = ( r32 - inlet.stressProfile[j][k][1]*inlet.stressProfile[j][k][3] ) / inlet.stressProfile[j][k][2];
         inlet.stressProfile[j][k][5] = sqrt(r33 - inlet.stressProfile[j][k][3] * inlet.stressProfile[j][k][3] - 
                                                    inlet.stressProfile[j][k][4] * inlet.stressProfile[j][k][4] );
       }
