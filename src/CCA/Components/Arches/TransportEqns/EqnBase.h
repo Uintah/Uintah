@@ -153,9 +153,9 @@ public:
 
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
-  computeBCsSpecial( const Patch* patch, 
-                       string varName,
-                       phiType& phi )
+  computeBCsSpecial( const Patch   * patch, 
+                     const string  & varName,
+                           phiType & phi )
   {
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
   };

@@ -1944,6 +1944,10 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
   string full_filename = validateFilename( filename, NULL );
 
   xmlDocPtr doc = xmlReadFile( full_filename.c_str(), 0, XML_PARSE_PEDANTIC );
+
+  if( doc == NULL ) {
+    throw ProblemSetupException("Error parsing '" + filename + "'.  Please fix the XML.", __FILE__, __LINE__);
+  }
     
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP

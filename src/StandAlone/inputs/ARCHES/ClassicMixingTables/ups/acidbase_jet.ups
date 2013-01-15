@@ -56,8 +56,17 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-    <BoundaryConditions>
-      <Face side="x-">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x- circle"    type="circle" direction="x-" origin="0 1.5 1.5" radius="0.5" />
+
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-">
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -71,7 +80,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+      <Face geometry="x- circle" side="x-">
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
         </BCType>
@@ -85,7 +94,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="x+" name="x+ wall">
+      <Face geometry="x+ wall" side="x+" >
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -99,7 +108,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y-" name="y- wall">
+      <Face geometry="y- wall" side="y-" >
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -113,7 +122,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="y+" name="y+ wall">
+      <Face geometry="y+ wall" side="y+">
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -127,7 +136,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z-" name="z- wall">
+      <Face geometry="z- wall" side="z-" >
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -141,7 +150,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face side="z+" name="z+ wall">
+      <Face geometry="z+ wall" side="z+" >
+
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -273,7 +283,8 @@
       </TransportEqns>
 
 <!-- BOUNDARY Specification -->
-      <BoundaryConditions>
+          <BoundaryConditions>
+ 
         <FlowInlet>
           <Flow_rate>40000</Flow_rate>
           <mixture_fraction>1.0</mixture_fraction>

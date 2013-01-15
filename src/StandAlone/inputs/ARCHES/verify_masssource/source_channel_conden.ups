@@ -65,8 +65,15 @@
     </MPM>
   </MaterialProperties>
   <Grid>
-    <BoundaryConditions>
-      <Face side="x-" name="x- face">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x+ out"       type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-">
         <BCType id="1" label="x-wall" var="VelocityInlet">
           <value>[10.0, 0.0, 0.0]</value>
         </BCType>
@@ -84,7 +91,7 @@
         </BCType>
       </Face>
 
-      <Face side="x+" name="x+ out">
+      <Face geometry="x+ out" side="x+">
         <BCType id="1" label="x+wall" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -102,7 +109,7 @@
         </BCType>
       </Face>
 
-      <Face side="y-" name="y- wall">
+      <Face geometry="y- wall" side="y-" >
         <BCType id="1" label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -120,7 +127,7 @@
         </BCType>
       </Face>
 
-      <Face side="y+" name="y+ wall">
+      <Face geometry="y+ wall" side="y+">
         <BCType id="1" label="y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -138,7 +145,7 @@
         </BCType>
       </Face>
 
-      <Face side="z-" name="z- wall">
+      <Face geometry="z- wall" side="z-" >
 	<BCType id="1" label="z-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -156,7 +163,7 @@
         </BCType>
       </Face>
 
-      <Face side="z+" name="z+ wall">
+      <Face geometry="z+ wall" side="z+">
 	<BCType id="1" label="z+wall" var="WallBC">
           <value>0.0</value>
         </BCType>
@@ -250,7 +257,7 @@
         </ColdFlow>
       </Properties>
 
-      <BoundaryConditions>
+          <BoundaryConditions>
         <use_new_bcs/>
       </BoundaryConditions>
 

@@ -173,9 +173,9 @@ void
 BCData::print( int depth ) const
 {
 
-  static bool verbose = false; // FIXME debugging helper var 
+  static bool beVerbose = false; // FIXME debugging helper var 
 
-  if( verbose ) { // FIXME debugging output
+  if( beVerbose ) { // FIXME debugging output
     string indentation( depth*2, ' ' );
     string indent2( (depth+1)*2, ' ' );
   

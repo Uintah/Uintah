@@ -42,7 +42,7 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
           db_face = db_face->findNextBlock("Face") ){
 
       std::string face_name = "NA";
-      db_face->getAttribute("name", face_name ); 
+      db_face->getAttribute("geometry", face_name ); 
 
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
           db_BCType = db_BCType->findNextBlock("BCType") ){
@@ -206,7 +206,7 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
         }
 
         std::string face_name = "NA";
-        db_face->getAttribute("name", face_name ); 
+        db_face->getAttribute("geometry", face_name ); 
         DoubleMap bc_name_to_value;
 
         for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
@@ -231,6 +231,9 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
                 throw ProblemSetupException( "Error: When using Tabulated BCs, you must specify the dependent variable in the <value> tag..", __FILE__, __LINE__);
               } 
 
+// qwerty... make sure that this is working correctly. jeremy pointed me at this code.
+
+              cout << "jeremy said to look in here\n";
               // get the value from the table
               double tabulate_value = table->getTableValue( iv, dep_variable, inert_map );  
               bc_name_to_value.insert( std::make_pair(name, tabulate_value) );
@@ -276,10 +279,11 @@ BoundaryCondition_new::readInputFile( std::string file_name )
 //---------------------------------------------------------------------------
 // Method: Set Scalar BC values 
 //---------------------------------------------------------------------------
-void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
-                                              const Patch* patch,
-                                              CCVariable<double>& scalar, 
-                                              string varname )
+void
+BoundaryCondition_new::setScalarValueBC( const ProcessorGroup     *,
+                                         const Patch              * patch,
+                                               CCVariable<double> & scalar, 
+                                         const string             &  varname )
 {
   // This method sets the value of the scalar in the boundary cell
   // so that the boundary condition set in the input file is satisfied. 
@@ -386,6 +390,9 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
           }
         } else if ( bc_kind == "Tabulated") {
 
+// qwerty Jeremy pointed to here... make sure we get to this location and it does the same.
+          cout << "I got to tabulated: " << face_name << "\n";
+
           MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
 
           if ( i_face != _tabVarsMap.end() ){ 
@@ -399,6 +406,9 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
             }
 
           }
+        } else {
+          // FIXME - clean this up....
+          cout << "Is this an error condition?\n";
         }
       }
     }
@@ -408,10 +418,11 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
 //---------------------------------------------------------------------------
 // Method: Set Cell Centered Vector BC values 
 //---------------------------------------------------------------------------
-void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
-    const Patch* patch,
-    CCVariable<Vector>& vec, 
-    string varname )
+void
+BoundaryCondition_new::setVectorValueBC( const ProcessorGroup     *,
+                                         const Patch              * patch,
+                                               CCVariable<Vector> & vec, 
+                                         const string             & varname )
 {
   // This method sets the value of the CELL-CENTERED VECTOR components in the boundary cell
   // so that the boundary condition set in the input file is satisfied. 
