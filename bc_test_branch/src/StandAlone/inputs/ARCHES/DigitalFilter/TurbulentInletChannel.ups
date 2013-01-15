@@ -36,8 +36,17 @@
 
   <Grid>
 
-    <BoundaryConditions>
-      <Face side="x-">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"      direction="x-" />
+           <FaceGeometry name="x- rect"      type="rectangle" direction="x-" lower="0 0 0" upper="0 0.1 0.1" /> 
+
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+           <FaceGeometry name="z- wall"      type="side"   direction="z-" />
+           <FaceGeometry name="z+ wall"      type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-">
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
@@ -45,7 +54,7 @@
 
 
       <!--Face side="x-"-->
-    <Face rectangle="x-" lower="0 0 0" upper="0 0.1 0.1">
+      <Face geometry="x- rect" side="x-" >
         <!--BCType id = "all" label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType-->
@@ -60,7 +69,7 @@
         </BCType>
       </Face>
 
-      <Face side="x+">
+      <Face geometry="x+ wall" side="x+">
         <BCType id = "all" label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
@@ -69,7 +78,7 @@
         </BCType>
       </Face>
 
-        <Face side="y-">
+        <Face geometry="y- wall" side="y-">
         <BCType id = "all" label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
@@ -78,7 +87,7 @@
         </BCType>
       </Face>
 
-      <Face side="y+">
+      <Face geometry="y+ wall" side="y+">
         <BCType id = "all" label = "ypwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
@@ -87,7 +96,7 @@
         </BCType>
       </Face>
 
-      <Face side="z-">
+      <Face geometry="z- wall" side="z-">
         <BCType id = "all" label = "zmwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
@@ -96,7 +105,7 @@
         </BCType>
       </Face>
 
-      <Face side="z+">
+      <Face geometry="z+ wall" side="z+">
         <BCType id = "all" label = "zpwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
@@ -163,9 +172,9 @@
         </ColdFlow>
       </Properties>
 
-<BoundaryConditions>
-  <use_new_bcs/>
-</BoundaryConditions>
+    <BoundaryConditions>
+      <use_new_bcs/>
+    </BoundaryConditions>
 
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">

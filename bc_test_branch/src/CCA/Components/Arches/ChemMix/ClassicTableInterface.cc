@@ -388,6 +388,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
 
+cout << "ClassicTableInterface.cc: indep var names: " << i << ", " << d_allIndepVarNames[i] << "\n";
+
       constCCVariable<double> the_var; 
       new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
@@ -404,6 +406,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
     DepVarMap depend_storage; 
     if ( initialize_me ) {
+
+cout << "ClassicTableInterface.cc: initialize_me\n";
 
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
@@ -491,6 +495,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
     CCVariable<double> arches_density; 
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
+
+cout << "ClassicTableInterface.cc: cell iter size: " << patch->getCellIterator().size() << "\n";
 
     // Go through the patch and populate the requested state variables
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -582,6 +588,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
 
+cout << "ClassicTableInterface.cc: faces: " << bf.size() << "\n";
+
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
 
@@ -595,10 +603,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator nu;
         Iterator bound_ptr; 
 
-        std::vector<ClassicTableInterface::BoundaryType> which_bc;
         std::vector<double> bc_values;
 
         // look to make sure every variable has a BC set:
+        // stuff the bc values into a container for use later
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
           std::string variable_name = d_allIndepVarNames[i]; 
@@ -609,24 +617,39 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
+//qwerty bound pointer is different... 
+
           // The template parameter needs to be generalized here to handle strings, etc...
           foundIterator = 
             getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
 
-          if ( bc_kind == "Dirichlet" ) {
-            which_bc.push_back(ClassicTableInterface::DIRICHLET); 
-          } else if (bc_kind == "Neumann" ) { 
-            which_bc.push_back(ClassicTableInterface::NEUMANN); 
-          } else if (bc_kind == "FromFile") { 
-            which_bc.push_back(ClassicTableInterface::FROMFILE);
+
+// FIXME: debug
+cout << "ClassicTableInterface.cc: bc_value: " << bc_value << "\n";
+ for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){ cout << *bound_ptr << ", "; }
+
+cout << "\n";
+// FIXME: end debug
+
+
+          if ( foundIterator ) { 
+            bc_values.push_back( bc_value ); 
           } else { 
-            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-          }
+            throw InvalidValue( "Error: Boundary condition not found for: "+variable_name, __FILE__, __LINE__ ); 
+          } 
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
 
         }
+
+        // FIXME: debug
+        cout << "ClassicTableInterface.cc: bound_ptr size: " << bound_ptr.size() << "\n";
+        // FIXME: end debug
+
+cout << "ClassicTableInterface.cc: 1) here:" << iv.size() <<": ";
+for( int cntr = 0; cntr < iv.size(); cntr++ ) { cout << iv[cntr] << ", "; }
+cout << "\n";
 
         // now use the last bound_ptr to loop over all boundary cells: 
         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
@@ -634,35 +657,26 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           IntVector c   =   *bound_ptr; 
           IntVector cp1 = ( *bound_ptr - insideCellDir ); 
 
+cout << "ClassicTableInterface.cc: c, cp1: " << c << ", " << cp1 <<"\n";
+
           // again loop over iv's and fill iv vector
           for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
-            switch (which_bc[i]) { 
+cout << "ClassicTableInterface.cc: indep_storage(i,c), indep_storage(i,cp1): " << indep_storage[i][c] << ", " << indep_storage[i][cp1] <<"\n";
 
-              case ClassicTableInterface::DIRICHLET:
-                iv.push_back( bc_values[i] );
-                break; 
+            iv.push_back( 0.5 * ( indep_storage[i][c] + indep_storage[i][cp1]) );
 
-              case ClassicTableInterface::NEUMANN:
-                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
-                break; 
-
-              case ClassicTableInterface::FROMFILE: 
-                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
-                break; 
-
-              default: 
-                throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-
-            }
           }
+
+cout << "ClassicTableInterface.cc: 2) here:" << iv.size() <<": ";
+for( int cntr = 0; cntr < iv.size(); cntr++ ) { cout << iv[cntr] << ", "; }
+cout << "\n";
 
           double total_inert_f = 0.0; 
           for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
               inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-            double inert_f = inert_iter->second.var[c];
-            total_inert_f += inert_f; 
+            total_inert_f += 0.5 * ( inert_iter->second.var[c] + inert_iter->second.var[cp1] );
           }
 
           if ( d_does_post_mixing && d_has_transform ) { 
@@ -672,10 +686,14 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           }
 
           // now get state for boundary cell: 
+cout << "ClassicTableInterface.cc: 3) here:" << iv.size() <<": ";
+for( int cntr = 0; cntr < iv.size(); cntr++ ) { cout << iv[cntr] << ", "; }
+cout << "\n";
+
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
             //  double table_value = tableLookUp( iv, i->second.index ); 
-						double table_value = ND_interp->find_val( iv, i->second.index );
+            double table_value = ND_interp->find_val( iv, i->second.index );
 
             // for post look-up mixing
             for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
@@ -718,6 +736,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               arches_cp[c] = table_value; 
             } else if (i->first == "CO2" && !d_coldflow) {
               arches_co2[c] = table_value; 
+cout << "ClassicTableInterface.cc: co2: " << table_value << "\n";
             } else if (i->first == "H2O" && !d_coldflow) {
               arches_h2o[c] = table_value; 
             }
@@ -736,6 +755,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         bool foundIterator = "false"; 
         getBCKind( patch, face, child, T_name, matlIndex, bc_kind, face_name ); 
 
+        cout << "ClassicTableInterface.cc: bc_kind is '" << bc_kind << "', ''" << face_name << ", child: " << child << "\n";
+
         if ( bc_kind == "Dirichlet" || bc_kind == "Neumann" ) { 
           foundIterator = 
             getIteratorBCValue<double>( patch, face, child, T_name, matlIndex, bc_value, bound_ptr ); 
@@ -747,6 +768,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         if ( foundIterator ) {
 
+cout << "ClassicTableInterface.cc: found Iterator: " << bc_kind << "\n";
           if ( iter == depend_storage.end() ) { 
             throw InternalError("Error: SolidWallTemperature was specified in the <BoundaryCondition> section yet I could not find a temperature variable (default label=temperature). Consider setting/checking <temperature_label_name> in the input file. " ,__FILE__,__LINE__);
           } 
@@ -756,6 +778,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           if ( bc_kind == "Dirichlet" ) { 
 
+cout << "ClassicTableInterface.cc: Dirichlet\n";
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
 
               IntVector c   =   *bound_ptr; 
@@ -767,6 +790,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           } else if ( bc_kind == "Neumann" ) { 
 
+cout << "ClassicTableInterface.cc: Neumann\n";
             Vector Dx = patch->dCell(); 
             switch (face) {
               case Patch::xminus:
@@ -817,12 +841,14 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
+cout << "ClassicTableInterface.cc: modify_ref_den\n";
+
       double den_ref = 0.0;
 
       if (patch->containsCell(d_ijk_den_ref)) {
 
         den_ref = arches_density[d_ijk_den_ref];
-        cerr << "Modified reference density to: density_ref = " << den_ref << endl;
+        cout << "ClassicTableInterface.cc: Modified reference density to: density_ref = " << den_ref << endl;
 
       }
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);

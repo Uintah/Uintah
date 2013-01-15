@@ -586,6 +586,7 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
 
   } // for face_geom_ps
 
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Read in the <Face>s and assign the above <FaceGeometry> to them:
   //
@@ -595,12 +596,19 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
   //
   map< Patch::FaceType, BCFace* > sides;
 
+  bool foundWallForEachFace[6] = { false, false, false, false, false, false };
+
   for( ProblemSpecP face_ps = bc_ps->findBlock("Face"); face_ps != 0; face_ps=face_ps->findNextBlock("Face") ) {
 
     BCGeomBase      * bcGeom;    // Set in following createFace() call...
     Patch::FaceType   face_side; // Set in following createFace() call...
 
     createFace( face_ps, faceGeomPieces, sides, bcGeom, face_side );
+
+    if( dynamic_cast< SideBCData *>( bcGeom ) != NULL ) {
+      // Bulletproofing... this tracks whether we find a 'Side' <Face> for each <FaceGeometry>
+      foundWallForEachFace[ face_side ] = true;
+    }
 
     cout << "Just added " << bcGeom->getName() << "\n";
 
@@ -610,7 +618,10 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
     typedef map     <int, BCGeomBase*>    mI2BCGB;
 
     string face_label = "none";
-    face_ps->getAttribute( "name", face_label );  // FIXME... should this be inside the following BCType loop?
+
+    // FIXME: Note, 'name' was replaced by 'geometry'... as the 'name' was moved up to the <FaceGeometry> tag... but
+    //        'geometry' refers to that by its name, so they are actually the same thing.
+    face_ps->getAttribute( "geometry", face_label );  // FIXME... should this be inside the following BCType loop?
 
     for( ProblemSpecP child = face_ps->findBlock("BCType"); child != 0; child = child->findNextBlock("BCType") ) {
 
@@ -654,6 +665,18 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
     // FIXME... what do do below for the above comment?
 
   }  // end for( <Face> )
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Bulletproofing... make sure there are at least one face (of type 'side') for each side
+  //
+  for( Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face=Patch::nextFace(face) ) {
+    
+    if( foundWallForEachFace[ face ] == false ) {
+      ostringstream err;
+      err << "ERROR: You must specify geometry all 6 sides.... you don't have " << Patch::getFaceName( face );
+      throw ProblemSetupException( err.str(), __FILE__, __LINE__ );
+    }
+  }
 
   // Take the individual boundary conditions and combine them into
   // a single difference (side and the union of any holes (circles or

@@ -34,8 +34,21 @@
   </DataArchiver>
 
   <Grid>
-    <BoundaryConditions>
-      <Face side="z-" name="inlet">
+        <BoundaryConditions>
+           <FaceGeometry name="x- wall"      type="side"   direction="x-" />
+           <FaceGeometry name="x+ wall"      type="side"   direction="x+" />
+           <FaceGeometry name="y- wall"      type="side"   direction="y-" />
+           <FaceGeometry name="y+ wall"      type="side"   direction="y+" />
+
+           <FaceGeometry name="inlet"        type="side"   direction="z-" />
+           <FaceGeometry name="outlet"       type="side"   direction="z+" />
+ 
+      <Face geometry="x- wall" side="x-" />
+      <Face geometry="x+ wall" side="x+" />
+      <Face geometry="y- wall" side="y-" />
+      <Face geometry="y+ wall" side="y+" />
+
+      <Face geometry="inlet" side="z-">
         <BCType id="all" label="velocity inlet" var="VelocityInlet">
           <value>[0,0,1]</value>
         </BCType>
@@ -49,7 +62,7 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <Face side="z+" name="outlet">
+      <Face geometry="outlet" side="z+">
         <BCType id="all" label="the outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -159,7 +172,8 @@
         </ColdFlow>
       </Properties>
 
-      <BoundaryConditions>
+          <BoundaryConditions>
+ 
         <use_new_bcs/>
       </BoundaryConditions>
 

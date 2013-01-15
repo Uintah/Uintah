@@ -1,5 +1,6 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_new_h
 #define Uintah_Components_Arches_BoundaryCondition_new_h
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -43,17 +44,19 @@ public:
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
              in the actual boundary condition. */   
-  void setScalarValueBC(const ProcessorGroup*,
-                        const Patch* patch,
-                        CCVariable<double>& scalar, 
-                        string varname );
+  void setScalarValueBC( const ProcessorGroup     *,
+                         const Patch              * patch,
+                               CCVariable<double> & scalar, 
+                         const string             & varname );
+
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. */ 
-  void setVectorValueBC( const ProcessorGroup*,
-    const Patch* patch,
-    CCVariable<Vector>& vec, 
-    string varname );
+  void setVectorValueBC( const ProcessorGroup     *,
+                         const Patch              * patch,
+                               CCVariable<Vector> & vec, 
+                         const string             & varname );
+
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. This is 

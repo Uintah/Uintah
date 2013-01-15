@@ -329,4 +329,14 @@
 
   </CFD>
 
+  <Scheduler>
+    <VarTracker> 
+      <start_time> 0 </start_time> 
+      <end_time> 10000 </end_time> 
+      <start_index> [-1, -1, -1] </start_index> 
+      <end_index> [999,999,999] </end_index> 
+      <var label="CO2" dw="NewDW" /> 
+    </VarTracker>   
+  </Scheduler>
+
 </Uintah_specification>
