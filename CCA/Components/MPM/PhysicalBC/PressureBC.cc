@@ -355,6 +355,13 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
     force = force*(-1.0);
   }
   // determine four boundary-corners of the particle
+  // px1 is the position of the center of the boundary particle face
+  // that is on the physical boundary.
+  // The direction to px1 is determined by taking the dot product of the
+  // normal vector with each of the r-vectors.  the one with a unity dot product
+  // is the winner.  Then just go out to that surface.
+  // TODO:  There is much optimization to be done below, such as *0.5 instead
+  // of /2.0.  Also, bailing out of the loop as soon as px1 is found.  
   int i1=0,i2=0;
   Matrix3 dsize=pDeformationMeasure*psize;
   Point px1;
@@ -371,7 +378,7 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
     i2=(i+2)%3;
    }
   }
-  // px1 is the position of the center of the boundary particle face that is on the physical boundary.
+  // TODO:  eliminate /2.0 in favor of *0.5
   pExternalForceCorner1=Point(px1.x()-dsize(0,i1)*dxCell[0]/2.0-dsize(0,i2)*dxCell[0]/2.0,
                               px1.y()-dsize(1,i1)*dxCell[1]/2.0-dsize(1,i2)*dxCell[1]/2.0,
                               px1.z()-dsize(2,i1)*dxCell[2]/2.0-dsize(2,i2)*dxCell[2]/2.0);
