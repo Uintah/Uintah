@@ -67,6 +67,7 @@
 #include "Properties.h"
 #include "Operators/Operators.h"
 #include "Expressions/BasicExprBuilder.h"
+#include "Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
 #include "transport/TransportEquation.h"
@@ -348,6 +349,7 @@ namespace Wasatch{
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchParams, graphCategories_ );
+    parse_embedded_geometry(wasatchParams,graphCategories_);
     setup_property_evaluation( wasatchParams, graphCategories_ );
 
     //
@@ -399,10 +401,12 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
+    const bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
+
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
+      adaptors_.push_back( parse_equation( transEqnParams, turbParams, hasEmbeddedGeometry, densityTag, isConstDensity, graphCategories_ ) );
     }
 
     //
@@ -432,9 +436,11 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
+      bool hasMovingBoundaries = false;
+      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams, densityTag, graphCategories_, *linSolver_,sharedState);
+          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams,hasEmbeddedGeometry,hasMovingBoundaries, densityTag, graphCategories_, *linSolver_,sharedState);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -456,7 +462,7 @@ namespace Wasatch{
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
-        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, graphCategories_);
+        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, hasEmbeddedGeometry, graphCategories_);
         adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
       }
       catch( std::runtime_error& err ){

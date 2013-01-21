@@ -240,7 +240,11 @@ evaluate()
     for (int i=0; i<nEnvironments; ++i) {
       const int matLoc = 2*i;
       *resultsIterators[matLoc] = weights_[i];
-      *resultsIterators[matLoc + 1] = eigenValues_[i];
+      if (eigenValues_[i] != 0.0 ) {
+        *resultsIterators[matLoc + 1] = eigenValues_[i];
+      } else {
+        *resultsIterators[matLoc + 1] = 1.0;  //prevent div by 0 in other functions
+      }
     }
 
     // verify that the weights and abscissae are stored properly in the resultsiterators

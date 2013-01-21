@@ -103,11 +103,11 @@ ArchesLabel::ArchesLabel()
   d_cellTypeLabel = VarLabel::create("cellType", 
                                   CCVariable<int>::getTypeDescription());
   // labels for inlet and outlet flow rates
-  d_totalflowINLabel   =  VarLabel::create("totalflowIN",   sum_variable);
-  d_totalflowOUTLabel  =  VarLabel::create("totalflowOUT",  sum_variable);
-  d_netflowOUTBCLabel  =  VarLabel::create("netflowOUTBC",  sum_variable);
-  d_totalAreaOUTLabel  =  VarLabel::create("totalAreaOUT",  sum_variable);
-  d_denAccumLabel      =  VarLabel::create("denAccum",      sum_variable);
+  d_totalflowINLabel   =  VarLabel::create("totalflowIN",   sum_variable); //gone
+  d_totalflowOUTLabel  =  VarLabel::create("totalflowOUT",  sum_variable); //gone
+  d_netflowOUTBCLabel  =  VarLabel::create("netflowOUTBC",  sum_variable); //gone
+  d_totalAreaOUTLabel  =  VarLabel::create("totalAreaOUT",  sum_variable); //gone
+  d_denAccumLabel      =  VarLabel::create("denAccum",      sum_variable); //not used anywhere that I can tell 
 
 
   // Density Labels
@@ -143,9 +143,9 @@ ArchesLabel::ArchesLabel()
   d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", SFCZ_double);
   
   // labels for ref density and pressure
-  d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable);
+  d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable); //ref density only used in compdynamicproc
   d_refDensityPred_label  =  VarLabel::create("refDensityPredLabel",  sum_variable);
-  d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable);
+  d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable); //ref pressure only used in the pressure solver
   d_refPressure_label     =  VarLabel::create("refPressureLabel",     sum_variable);
 
   // Scalar 
@@ -236,7 +236,7 @@ ArchesLabel::ArchesLabel()
   d_pressPlusHydroLabel = VarLabel::create("pPlusHydro",  CC_double);
 
 
-  d_uvwoutLabel = VarLabel::create("uvwout", min_variable); 
+  d_uvwoutLabel = VarLabel::create("uvwout", min_variable); //turned off 
 
 
   // predictor-corrector labels
@@ -325,20 +325,20 @@ ArchesLabel::ArchesLabel()
   d_velDivResidualLabel        =  VarLabel::create("velDivResidual",        CC_double);
   d_continuityResidualLabel    =  VarLabel::create("continuityResidual",    CC_double);
 
-  d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable);
+  d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable); //only used in ScalarSolver
 
-  d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable);
+  d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable); // Used in EnthalpySolver and ExplicitSolver (also computed here)
   d_negativeDensityGuessPred_label       =  VarLabel::create("negativeDensityGuessPred",       sum_variable);
   d_negativeDensityGuessInterm_label     =  VarLabel::create("negativeDensityGuessInterm",     sum_variable);
-  d_densityLag_label                     =  VarLabel::create("densityLag",                     sum_variable);
-  d_densityLagPred_label                 =  VarLabel::create("densityLagPred",                 sum_variable);
+  d_densityLag_label                     =  VarLabel::create("densityLag",                     sum_variable); // Only computed/used if maxDensityLag is used in the input file. 
+  d_densityLagPred_label                 =  VarLabel::create("densityLagPred",                 sum_variable); // will restart the timestep if (guess_rho - computed_rho) > lag_rho
   d_densityLagInterm_label               =  VarLabel::create("densityLagInterm",               sum_variable);
   d_densityLagAfterAverage_label         =  VarLabel::create("densityLagAfterAverage",         sum_variable);
   d_densityLagAfterIntermAverage_label   =  VarLabel::create("densityLagAfterIntermAverage",   sum_variable);
   
 // kinetic energy
   d_kineticEnergyLabel             =  VarLabel::create("kineticEnergy",             CC_double);
-  d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable);
+  d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable); //only computes if turned on from input file 
 
 // scalar mms and gradP Ln error
 // ** warning...the L2 error here is not complete
@@ -348,7 +348,7 @@ ArchesLabel::ArchesLabel()
 //              Alternatively, one could add an 
 //              additional reduction var. and do this inline
 //              with the code.
-  d_smmsLnErrorLabel              =  VarLabel::create("smmsLnError",              CC_double);
+  d_smmsLnErrorLabel              =  VarLabel::create("smmsLnError",              CC_double); //MMS error is only computed if doMMS is true
   d_totalsmmsLnErrorLabel         =  VarLabel::create("totalsmmsLnError",         sum_variable);
   d_totalsmmsLnErrorPredLabel     =  VarLabel::create("totalsmmsLnErrorPred",     sum_variable);
   d_totalsmmsLnErrorIntermLabel   =  VarLabel::create("totalsmmsLnErrorInterm",   sum_variable);

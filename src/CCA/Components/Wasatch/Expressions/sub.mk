@@ -52,6 +52,7 @@ SUBDIRS := \
         $(SRCDIR)/MMS \
         $(SRCDIR)/PBE \
         $(SRCDIR)/PostProcessing \
-        $(SRCDIR)/Turbulence
+        $(SRCDIR)/Turbulence  \
+        $(SRCDIR)/EmbeddedGeometry
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
