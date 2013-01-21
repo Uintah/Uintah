@@ -221,12 +221,6 @@ namespace Uintah {
 
         //__________________________________
         // Setup grid
-#ifdef HYPRE_TIMING
-        hypre_global_timing = NULL;
-#endif        
-        int time_index = hypre_InitializeTiming("Setup grid");
-        hypre_BeginTiming(time_index);
-        
         HYPRE_StructGrid grid;
         HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
         
@@ -263,13 +257,8 @@ namespace Uintah {
         // Assemble the grid
         HYPRE_StructGridAssemble(grid);
 
-        hypre_EndTiming(time_index);
-        
         //__________________________________
         // Create the stencil
-        time_index = hypre_InitializeTiming("Create matrix");
-        hypre_BeginTiming(time_index);
-        
         HYPRE_StructStencil stencil;
         if(params->symmetric){
           
@@ -426,13 +415,10 @@ namespace Uintah {
           }
         }
         HYPRE_StructMatrixAssemble(*HA);
-        hypre_EndTiming(time_index);
+
 
         //__________________________________
         // Create the RHS
-        time_index = hypre_InitializeTiming("Setup RHS");
-        hypre_BeginTiming(time_index);
-        
         HYPRE_StructVector* HB = hypre_solver_s->HB;
 
         if (timestep == 1 || restart) {
@@ -478,13 +464,9 @@ namespace Uintah {
           }
         }
         HYPRE_StructVectorAssemble(*HB);
-        hypre_EndTiming(time_index);
-        
+
         //__________________________________
         // Create the solution vector
-        time_index = hypre_InitializeTiming("Setup X");
-        hypre_BeginTiming(time_index);
-                
         HYPRE_StructVector* HX = hypre_solver_s->HX;
 
         if (timestep == 1 || restart) {
@@ -533,15 +515,6 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         HYPRE_StructVectorAssemble(*HX);
-        
-        hypre_EndTiming(time_index);
-        hypre_PrintTiming("Uintah->Struct Interface", pg->getComm());
-
-        for(int i=0; i<= time_index; i++){
-          hypre_FinalizeTiming(i);
-        }
-        hypre_ClearTiming();
-        
         
         //__________________________________
         //  Dynamic tolerances  Arches uses this

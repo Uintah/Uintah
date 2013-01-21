@@ -50,20 +50,22 @@ class MomRHS
   typedef SpatialOps::structured::SVolField PFieldT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
 
-  const Expr::Tag pressuret_, rhsPartt_, emptyTag_;
+  const Expr::Tag pressuret_, rhspartt_, volfract_, emptyTag_;
 
-  const FieldT *rhsPart_;
+  const FieldT  *rhsPart_;
+  const FieldT  *volfrac_;
   const PFieldT *pressure_;
 
   const Grad* gradOp_;
 
   MomRHS( const Expr::Tag& pressure,
-          const Expr::Tag& partRHS );
+          const Expr::Tag& partRHS,
+          const Expr::Tag& volFracTag);
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag pressuret_, rhspt_;
+    const Expr::Tag pressuret_, rhspartt_, volfract_;
   public:
     /**
      *  \param result the result of this expression
@@ -74,7 +76,8 @@ public:
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& pressure,
-             const Expr::Tag& partRHS );
+             const Expr::Tag& partRHS,
+             const Expr::Tag& volFracTag);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };

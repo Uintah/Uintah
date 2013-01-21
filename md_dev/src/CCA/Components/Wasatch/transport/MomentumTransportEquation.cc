@@ -35,6 +35,9 @@
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
+
+#include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
+
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
@@ -43,6 +46,7 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+#include <expression/ExprLib.h>
 
 using std::string;
 
@@ -336,13 +340,30 @@ namespace Wasatch{
                   const std::string velName,
                   const std::string momName,
                   Uintah::ProblemSpecP params,
+                  const bool hasEmbeddedGeometry,
                   Uintah::SolverInterface& linSolver )
   {
     const Expr::Tag momTag = mom_tag( momName );
     const Expr::Tag rhsFull( momTag.name() + "_rhs_full", Expr::STATE_NONE );
-    bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
+    bool  enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     
-    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) ) );
+    Expr::Tag volFracTag = Expr::Tag();
+    Wasatch::Direction stagLoc = get_staggered_location<FieldT>();
+    VolFractionNames& vNames = VolFractionNames::self();
+    switch (stagLoc) {
+      case XDIR:
+        if (hasEmbeddedGeometry) volFracTag = vNames.xvol_frac_tag();
+        break;
+      case YDIR:
+        if (hasEmbeddedGeometry) volFracTag = vNames.yvol_frac_tag();
+        break;
+      case ZDIR:
+        if (hasEmbeddedGeometry) volFracTag = vNames.zvol_frac_tag();
+        break;
+      default:
+        break;
+    }    
+    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) , volFracTag ) );
   }
 
   //==================================================================
@@ -357,12 +378,16 @@ namespace Wasatch{
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
+                             const bool hasEmbeddedGeometry,
+                             const bool hasMovingGeometry,
                              const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
     : Wasatch::TransportEquation( momName,
                                   rhsID,
-                                  get_staggered_location<FieldT>() ),
+                                  get_staggered_location<FieldT>(),
+                                  hasEmbeddedGeometry,
+                                  params ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
@@ -379,6 +404,21 @@ namespace Wasatch{
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    
+    std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+
+    //_____________
+    // volume fractions for embedded boundaries Terms
+    VolFractionNames& vNames = VolFractionNames::self();
+    Expr::Tag volFracTag =     this->has_embedded_geometry()             ? vNames.svol_frac_tag() : Expr::Tag();
+    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? vNames.xvol_frac_tag() : Expr::Tag();
+    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? vNames.yvol_frac_tag() : Expr::Tag();
+    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? vNames.zvol_frac_tag() : Expr::Tag();
+
     //__________________
     // dilatation
     const Expr::Tag dilTag( "dilatation", Expr::STATE_NONE );
@@ -390,12 +430,6 @@ namespace Wasatch{
 
     //___________________________________
     // diffusive flux (stress components)
-    std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
-    //
     if (stagLoc_ == XDIR) thisMomName_ = xmomname;
     if (stagLoc_ == YDIR) thisMomName_ = ymomname;
     if (stagLoc_ == ZDIR) thisMomName_ = zmomname;
@@ -466,11 +500,26 @@ namespace Wasatch{
     // partial rhs:
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
+    Expr::Tag volTag = Expr::Tag();
+    switch (stagLoc_) {
+      case Wasatch::XDIR:
+        volTag = xAreaFracTag;
+        break;
+      case Wasatch::YDIR:
+        volTag = yAreaFracTag;
+        break;
+      case Wasatch::ZDIR:
+        volTag = zAreaFracTag;
+        break;        
+      default:
+        break;
+    }
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
         new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
                                                   cfxt, cfyt, cfzt,
                                                   tauxt, tauyt, tauzt, densityTag_,
-                                                  bodyForceTag, srcTermTag ) );
+                                                  bodyForceTag, srcTermTag,
+                                                  volTag) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
 
@@ -479,10 +528,26 @@ namespace Wasatch{
 
     //__________________
     // density time derivative
-    const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
+    const Expr::Tag d2rhodt2t; //( "density-acceleration", Expr::STATE_NONE); // for now this is empty
 
-    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_ ));
+    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, volTag ));
 
+//    if(has_embedded_geometry()) {
+//      std::cout << "attaching modifier expression to primvar \n";
+//      //create modifier expression
+//      typedef ExprAlgebra<FieldT> ExprAlgbr;
+//      Expr::TagList theTagList;
+//      theTagList.push_back(volTag);
+//      //theTagList.push_back(mom_tag(thisMomName_));
+//      
+//      Expr::Tag modifierTag = Expr::Tag( thisVelTag_.name() + "_modifier", Expr::STATE_NONE);
+//      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+//                                                                     theTagList,
+//                                                                     ExprAlgbr::PRODUCT, true ) );
+//      // attach the modifier expression to the target expression
+//      factory.attach_modifier_expression( modifierTag, thisVelTag_);
+//    }
+    
     //__________________
     // pressure
     bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
@@ -523,10 +588,8 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
-                                                                                       d2rhodt2t, timestepTag, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
+                                                                                       d2rhodt2t, timestepTag,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *solverParams_, linSolver);
-        proc0cout << "PRESSURE: " << std::endl
-        << pbuilder->get_computed_field_tags() << std::endl;
         pressureID_ = factory.register_expression( pbuilder );
         factory.cleave_from_children( pressureID_ );
         factory.cleave_from_parents ( pressureID_ );
@@ -559,6 +622,59 @@ namespace Wasatch{
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
+    // multiply the initial condition by the volume fraction for embedded geometries
+    if (hasEmbeddedGeometry_) {
+      VolFractionNames& vNames = VolFractionNames::self();
+      Expr::Tag volFracTag = Expr::Tag();
+      switch (stagLoc_) {
+        case XDIR:
+          if (hasEmbeddedGeometry_) volFracTag = vNames.xvol_frac_tag();
+          break;
+        case YDIR:
+          if (hasEmbeddedGeometry_) volFracTag = vNames.yvol_frac_tag();
+          break;
+        case ZDIR:
+          if (hasEmbeddedGeometry_) volFracTag = vNames.zvol_frac_tag();
+          break;
+        default:
+          break;
+      }
+      
+      std::cout << "MOM TAG = " << mom_tag(thisMomName_) << std::endl;
+      //create modifier expression
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      theTagList.push_back(volFracTag);
+      //theTagList.push_back(mom_tag(thisMomName_));
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+                                                                   theTagList,
+                                                                   ExprAlgbr::PRODUCT,
+                                                                   true) );
+      
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        
+        // get the patch subset
+        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
+        
+        // loop over every patch in the patch subset
+        for( int ipss=0; ipss<patches->size(); ++ipss ){
+          
+          // get a pointer to the current patch
+          const Uintah::Patch* const patch = patches->get(ipss);
+          
+          // loop over materials
+          for( int im=0; im<materials->size(); ++im ){
+            //    if (hasVolFrac_) {
+            // attach the modifier expression to the target expression
+            factory.attach_modifier_expression( modifierTag, mom_tag(thisMomName_), patch->getID(), true );
+            //    }
+            
+          }
+        }
+      }
+    }
+        
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
@@ -594,6 +710,7 @@ namespace Wasatch{
 //                                           patchInfoMap,
 //                                           materials );
     }
+
     // set bcs for pressure
     // We cannot set pressure BCs here using Wasatch's BC techniques because
     // we need to set the BCs AFTER the pressure solve. We had to create
@@ -609,8 +726,7 @@ namespace Wasatch{
                                            patchInfoMap,
                                            materials, bcFunctorMap );
     }
-
-  }
+}
 
   //------------------------------------------------------------------
 

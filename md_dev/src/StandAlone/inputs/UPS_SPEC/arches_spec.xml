@@ -470,16 +470,31 @@
           <k                            spec="REQUIRED DOUBLE" need_applies_to="type simple_ht"/> <!-- thermal conductivity, [W/(m K)] --> 
           <wall_thickness               spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- thickness of the wall in meters, [meters] --> 
           <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] --> 
+          <T_wall_min                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- minimum allowed wall temperature [K]. Default = 373 --> 
+          <T_wall_max                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- maximum allowed wall temperature [K]. Default = 373 --> 
+          <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- relaxation to help with wildy varying wall temperatures 
+                                                                                                                  because we have assumed (with this model) that the wall comes to 
+                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 (no relaxation).  --> 
 
           <!-- region ht 
                 Like simple_ht model but only applies the model in the geometry region as specified by the geom_object. 
                 May specify several different regions, each with a unique set of properties. 
                 This includes all wall types (domain walls and intrusions). 
           --> 
+          <max_it                       spec="OPTIONAL INTEGER 'positive'"/> <!-- max iterations allowed for temperature solve, default = 50 --> 
+          <initial_tol                  spec="OPTIONAL DOUBLE 'positive'"/>  <!-- tolerance check on before starting the iteration loop, default = 1e-3 --> 
+          <tol                          spec="OPTIONAL DOUBLE 'positive'"/>  <!-- iterator tolerance on temperature, default = 1e-5 --> 
           <region                       spec="MULTIPLE NO_DATA" need_applies_to="type region_ht">
-            <k                          spec="REQUIRED DOUBLE"/>
-            <wall_thickness             spec="REQUIRED DOUBLE"/>
-            <tube_side_T                spec="REQUIRED DOUBLE"/>
+            <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
+            <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] --> 
+            <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
+            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
+            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
+            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
+
+                       because we have assumed (with this model) that the wall comes to 
+                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation. for wall with large thermal resistance, recommend relaxation_coef=0.1, for small thermal resisitance, recommend relaxation_coef=1.0 --> 
+
             <geom_object/>
           </region> 
 
