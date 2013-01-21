@@ -103,20 +103,28 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
+    void computeContributions(const ProcessorGroup* pg,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matl_sub ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
     
     // general labels
-    class total_heatRateLabel {
+    class FL_Labels {
     public:
-      VarLabel* total_heatRateLabel;
+      VarLabel* lastWriteTimeLabel;
+      VarLabel* fileVarsStructLabel;
     };
     
-    total_heatRateLabel* v_lb;
+    FL_Labels* FL_lb;
     MPMLabel* M_lb;
        
-    struct plane{    // plane geometry
+    struct cv_face{ 
       Point startPt;
-      Point endPt; 
-    };   
+      Point endPt;
+       
+    };  
+    vector<cv_face*> d_cv_faces;
        
     //__________________________________
     // global constants
@@ -125,11 +133,15 @@ WARNING
     ProblemSpecP d_prob_spec;
     
     const Material* d_matl;
-    MaterialSet* d_matl_set;
+    MaterialSet* d_matlSet;
     const MaterialSubset* d_matl_sub;
-    vector<plane*> d_plane;
-    Vector d_oneOrZero;
-    Point d_corner_pt[4];
+    MaterialSubset* d_zeroMatl;
+    PatchSet* d_zeroPatch;
+    
+    double d_writeFreq; 
+    double d_StartTime;
+    double d_StopTime;
+    
   };
 }
 
