@@ -60,7 +60,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 
-##  require autoconf version 2.68
+##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -335,30 +335,35 @@ SCI_ARG_WITH(spatialops,
   [with_spatialops="$withval"
    sci_required_spatialops=yes],
   [with_spatialops=""])
+
 SCI_ARG_WITH(exprlib,
   AC_HELP_STRING(--with-exprlib=DIR,
                  Use the ExprLib library in DIR),
   [with_exprlib="$withval"
    sci_required_exprlib=yes],
   [with_exprlib=""])
+
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
   [with_tabprops="$withval"
    sci_required_tabprops=yes],
   [with_tabprops=""])
+
 SCI_ARG_WITH(radprops,
   AC_HELP_STRING(--with-radprops=DIR,
                  Use the RadProps library in DIR),
   [with_radprops="$withval"
    sci_required_radprops=yes],
   [with_radprops=""])
+
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
+
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
@@ -372,6 +377,13 @@ SCI_ARG_WITH(papi,
   [with_papi="$withval"
    sci_required_papi=yes],
   [with_papi=""])
+  
+SCI_ARG_WITH(fftw,
+  AC_HELP_STRING(--with-fftw=DIR,
+                 Use the FFTW installation in DIR),
+  [with_fftw="$withval"
+   sci_required_fftw=yes],
+  [with_fftw=""])
   
 SCI_ARG_WITH(gperftools,
   AC_HELP_STRING(--with-gperftools=DIR,
@@ -3511,6 +3523,53 @@ AC_SUBST(PAPI_LIB_DIR_FLAG)
 AC_SUBST(PAPI_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
+
+##  --  search for fftw stuff  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+if test "$sci_required_fftw" = "yes"; then
+ 
+  if test "$with_fftw" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_fftw"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_fftw/include"
+  fi
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(FFTW, FFTW libraries and headers,
+               fftw3.h,
+               $_sci_inc,
+               fftw3 fftw3_mpi fftw3_threads,
+               $_sci_lib,
+               ,
+               [fftw_complex* in;
+                fftw_complex* out;
+                fftw_plan plan_backward;
+                fftw_plan plan_forward;
+                in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*100);
+                out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*100);
+                fftw_free(in);
+                fftw_free(out);],
+               $_sci_optional)
+  AC_LANG(C)     
+  
+  DEF_FFTW="#define HAVE_FFTW 1"
+
+fi #end sci_required_fftw
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_FFTW)
+AC_SUBST(DEF_FFTW)
+AC_SUBST(INC_FFTW_H)
+AC_SUBST(FFTW_LIB_DIR_FLAG)
+AC_SUBST(FFTW_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/fftw_testdefs.h"
 
 
 ##  --  search for google perftools stuff  -------------------------------------------
