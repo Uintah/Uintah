@@ -28,6 +28,8 @@
 @DEF_FFTW@
 
 #ifdef HAVE_FFTW
+// When <complex.h> is included before <fftw3.h>, then fftw_complex is
+// defined to be the native complex type
 #  include <complex>
 #  include <fftw3.h>
 #  include <fftw3-mpi.h>
