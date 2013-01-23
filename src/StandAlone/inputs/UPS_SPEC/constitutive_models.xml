@@ -249,7 +249,7 @@
       <y2                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
       <yinf                        spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
     </flow_model>
-    <visco_flow_model        spec="OPTIONAL NO_DATA"
+    <visco_plasticity_model        spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'suvic_i'" >
       <coeff_backstress_evol       spec="OPTIONAL DOUBLE" />
       <exponent_backstress_evol    spec="OPTIONAL DOUBLE" />
@@ -271,7 +271,7 @@
       <intial_drag                 spec="OPTIONAL DOUBLE" />
       <initial_yield               spec="OPTIONAL DOUBLE" />
       <integration_parameter_theta spec="OPTIONAL DOUBLE" />
-    </visco_flow_model>
+    </visco_plasticity_model>
     <pressure                      spec="OPTIONAL DOUBLE" />
     <PR                            spec="OPTIONAL DOUBLE" />
     <remove_particles              spec="OPTIONAL BOOLEAN" />
