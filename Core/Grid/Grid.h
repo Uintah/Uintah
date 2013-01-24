@@ -122,6 +122,8 @@ WARNING
 
     //Assigns the boundary conditions to the grid
     void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
+
+    void setExtraCell (IntVector ex);
            
      friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
@@ -129,6 +131,7 @@ WARNING
     enum Axis {
       XAxis, YAxis, ZAxis
     };
+
 
   private:
     std::vector<LevelP> d_levels;
@@ -163,6 +166,8 @@ WARNING
     // patch layout exceeds this number, a warning message will be printed suggestion
     // the user run on a different number of processors.
     // static const double PATCH_TOLERANCE_ = 3;  
+    
+    IntVector d_extraCells;
 
   };
 
