@@ -377,6 +377,10 @@ namespace Uintah {
 
     if (!d_restarting) {
       grid = scinew Grid;
+      d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+      if(!d_sim)
+        throw InternalError("No simulation component", __FILE__, __LINE__);
+      d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
       grid->problemSetup(d_ups, d_myworld, d_doAMR);
     }
     else {
