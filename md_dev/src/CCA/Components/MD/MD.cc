@@ -28,7 +28,6 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/SPMEGrid.h>
 #include <CCA/Components/MD/SPMEGridMap.h>
-#include <CCA/Components/MD/Transformation3D.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -54,6 +53,8 @@
 #include <iomanip>
 #include <fstream>
 #include <complex>
+
+#include <sci_defs/fftw_defs.h>
 
 using namespace Uintah;
 

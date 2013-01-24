@@ -23,8 +23,8 @@
  */
 
 #include <CCA/Components/MD/SPMEGrid.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
 
 #include <iostream>

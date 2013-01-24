@@ -35,7 +35,6 @@
 #include <CCA/Components/MD/SPMEGrid.h>
 #include <CCA/Components/MD/SPMEGridMap.h>
 #include <CCA/Components/MD/MapPoint.h>
-#include <CCA/Components/MD/Transformation3D.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -265,14 +264,6 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @return
      */
     void generateNeighborList();
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
-                                         const Transformation3D<std::complex<double> >& invertSpace);
 
     /**
      * @brief

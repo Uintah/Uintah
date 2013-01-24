@@ -25,9 +25,6 @@
 #ifndef UINTAH_MD_MAPPOINT_H
 #define UINTAH_MD_MAPPOINT_H
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -39,6 +36,10 @@ namespace Uintah {
 
 using SCIRun::Vector;
 using SCIRun::IntVector;
+
+class Point;
+class Vector;
+class IntVector;
 
 /**
  *  @class MapPoint
