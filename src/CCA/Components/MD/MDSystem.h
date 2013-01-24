@@ -67,8 +67,7 @@ class MDSystem {
     ~MDSystem();
 
     /**
-     * @brief Default constructor
-     * @param _ewaldBeta The Ewald damping coefficient.
+     * @brief 4 argument constructor
      * @param _volume The initial MD system volume.
      * @param _pressure The initial MD system pressure.
      * @param _temperature The initial MD system temperature.
@@ -84,16 +83,6 @@ class MDSystem {
     inline Matrix3 getCellInverse() const
     {
       return this->d_cellInverse;
-    }
-
-    /**
-     * @brief Returns the damping coefficient for this MD system.
-     * @param None
-     * @return double The damping coefficient for this MD system.
-     */
-    inline double getEwaldBeta() const
-    {
-      return this->d_ewaldBeta;
     }
 
     /**
@@ -160,7 +149,6 @@ class MDSystem {
 
   private:
 
-    double d_ewaldBeta;     //!< The Ewald damping coefficient
     double d_unitCell;      //!< Total MD system unit cell volume
     double d_pressure;      //!< Total MD system pressure
     double d_temperature;   //!< Total MD system temperature

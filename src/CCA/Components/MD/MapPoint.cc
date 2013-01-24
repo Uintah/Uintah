@@ -23,14 +23,18 @@
  */
 
 #include <CCA/Components/MD/MapPoint.h>
-#include <Core/Math/UintahMiscMath.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Math/MiscMath.h>
-
-#include <iostream>
-
-#include <sci_values.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
+template<class T>
+MapPoint<T>::MapPoint()
+{
+
+}
+
+template<class T>
+MapPoint<T>::~MapPoint()
+{
+
+}
