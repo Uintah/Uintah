@@ -1089,28 +1089,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel,    indx, patch);
       heatFlux.initialize(0.0);
 
-/*`==========TESTING==========*/
-#if 0
-  09/09/11  Jim is going to check with BB to see if we can delete the particle addition
-      // Ignore the dummy materials that are used when particles are
-      // localized
-      if (d_mpm->flags->d_createNewParticles) {
-        if (m%2 == 0) // The actual materials
-          mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                          Temp_CC,     vel_CC,
-                                          vol_frac_CC, patch);  
-        else // The dummy materials
-          mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                               Temp_CC,     vel_CC,  
-                                               vol_frac_CC, patch);  
-      } else {
-        mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                        Temp_CC,     vel_CC,  
-                                        vol_frac_CC, patch);  
-      }
-#endif 
-/*===========TESTING==========`*/      
-      
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       vol_frac_CC, patch);
