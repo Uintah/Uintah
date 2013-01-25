@@ -1083,7 +1083,7 @@ void Grid::assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb)
   }
 }
 
-void Grid::setExtraCell(IntVector ex)
+void Grid::setExtraCells(IntVector ex)
 {
   if (numLevels()>0)  {
      throw ProblemSetupException("Cannot set extraCells after grid setup",

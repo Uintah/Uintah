@@ -123,7 +123,7 @@ WARNING
     //Assigns the boundary conditions to the grid
     void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
 
-    void setExtraCell (IntVector ex);
+    void setExtraCells (IntVector ex);
            
      friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
