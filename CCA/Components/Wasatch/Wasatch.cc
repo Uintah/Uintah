@@ -184,6 +184,102 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
+  
+  void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& params,
+                           Uintah::GridP& grid,
+                           Uintah::SimulationStateP& state)
+  {
+    // disallow different periodicities on multiple levels
+    std::vector<Uintah::IntVector> levelPeriodicityVectors;    
+    // disallow specification of extraCells and different periodicities on multiple levels
+        int nlevels = 0;
+      std::ostringstream msg;
+      bool foundExtraCells = false;
+      bool isPeriodic = false;
+      Uintah::ProblemSpecP gridspec = params->findBlock("Grid");
+      for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
+          level != 0;
+          level = gridspec->findNextBlock("Level") ) {
+        nlevels++;
+        Uintah::IntVector periodicDirs(0,0,0);
+        level->get("periodic", periodicDirs);
+        levelPeriodicityVectors.push_back(periodicDirs);
+        //isPeriodic = isPeriodic || (periodicDirs.x() == 1 || periodicDirs.y() == 1 || periodicDirs.z() == 1);
+        
+        for( Uintah::ProblemSpecP box = level->findBlock("Box");
+            box != 0;
+            box = level->findNextBlock("Box") ){
+          // note that a [0,0,0] specification gets added by default,
+          // so we will check to ensure that something other than
+          // [0,0,0] has not been specified.
+          if( box->findBlock("extraCells") ){
+            Uintah::IntVector extraCells;
+            box->get("extraCells",extraCells);
+            if( extraCells != Uintah::IntVector(0,0,0) ){
+              foundExtraCells = true;
+              std::string boxLabel;
+              box->get("label",boxLabel);
+              msg << "box '" << boxLabel << "' has extraCells specified." << endl;
+            }
+          }
+        }
+      }
+    
+    // check for different periodicities on different levels
+    std::vector<Uintah::IntVector>::iterator periodicityIter = levelPeriodicityVectors.begin();
+    int xPeriodSum = 0, yPeriodSum = 0, zPeriodSum = 0;
+    while (periodicityIter != levelPeriodicityVectors.end()) {
+      Uintah::IntVector& pvector = *periodicityIter;
+      xPeriodSum += pvector.x();
+      yPeriodSum += pvector.y();
+      zPeriodSum += pvector.z();
+      ++periodicityIter;
+    }
+    if ( ( xPeriodSum !=0 && xPeriodSum < nlevels ) ||
+         ( yPeriodSum !=0 && yPeriodSum < nlevels ) ||
+         ( zPeriodSum !=0 && zPeriodSum < nlevels ) ) {
+      msg << endl
+      << "  Specification of different periodicities for different levels is not supported in Wasatch." << endl
+      << "  Please revise your input file." << endl
+      << endl;
+      throw std::runtime_error( msg.str() );
+    }
+#     ifdef WASATCH_IN_ARCHES
+      if( !foundExtraCells && !isPeriodic ){
+        msg << endl
+        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
+        << "  Please add an 'extraCells' block to your input file" << endl
+        << endl;
+        throw std::runtime_error( msg.str() );
+      }
+#     else
+      if( foundExtraCells ){
+        msg << endl
+        << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
+        << "  Please remove it from your input file." << endl
+        << endl;
+        throw std::runtime_error( msg.str() );
+      }
+#     endif        
+    
+    // set extra cells on all levels
+//    gridspec = params->findBlock("Grid");
+//    Uintah::ProblemSpecP levelspec = gridspec->findBlock("Level");
+//    Uintah::IntVector periodicDirs(0,0,0);
+//    levelspec->get("periodic", periodicDirs);
+    Uintah::IntVector periodicityVector = levelPeriodicityVectors[0];
+    const bool isXPeriodic = (periodicityVector.x() == 1) ? true : false;
+    const bool isYPeriodic = (periodicityVector.y() == 1) ? true : false;
+    const bool isZPeriodic = (periodicityVector.z() == 1) ? true : false;
+    
+    //isPeriodic = (isXPeriodic || isYPeriodic || isZPeriodic );
+    Uintah::IntVector extraCells( (isXPeriodic) ? 0 : 1,
+                                  (isYPeriodic) ? 0 : 1,
+                                  (isZPeriodic) ? 0 : 1 );
+    
+    grid->setExtraCells(extraCells);
+  }
+  //--------------------------------------------------------------------
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
                               const Uintah::ProblemSpecP& ,  /* jcs not sure what this param is for */
@@ -219,57 +315,6 @@ namespace Wasatch{
 #    else
       proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
-    }
-
-    // disallow specification of extraCells
-    {
-      std::ostringstream msg;
-      bool foundExtraCells = false;
-      bool isPeriodic = false;
-      Uintah::ProblemSpecP grid = params->findBlock("Grid");
-      for( Uintah::ProblemSpecP level = grid->findBlock("Level");
-           level != 0;
-           level = grid->findNextBlock("Level") ){
-        
-        Uintah::IntVector periodicDirs;
-        level->get("periodic", periodicDirs);
-        isPeriodic = isPeriodic || (periodicDirs.x() == 1 || periodicDirs.y() == 1 || periodicDirs.z() == 1);
-
-        for( Uintah::ProblemSpecP box = level->findBlock("Box");
-             box != 0;
-             box = level->findNextBlock("Box") ){
-          // note that a [0,0,0] specification gets added by default,
-          // so we will check to ensure that something other than
-          // [0,0,0] has not been specified.
-          if( box->findBlock("extraCells") ){
-            Uintah::IntVector extraCells;
-            box->get("extraCells",extraCells);
-            if( extraCells != Uintah::IntVector(0,0,0) ){
-              foundExtraCells = true;
-              std::string boxLabel;
-              box->get("label",boxLabel);
-              msg << "box '" << boxLabel << "' has extraCells specified." << endl;
-            }
-          }
-        }
-      }
-#     ifdef WASATCH_IN_ARCHES
-      if( !foundExtraCells && !isPeriodic ){
-        msg << endl
-        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
-        << "  Please add an 'extraCells' block to your input file" << endl
-        << endl;
-        throw std::runtime_error( msg.str() );
-      }
-#     else
-      if( foundExtraCells ){
-        msg << endl
-            << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
-            << "  Please remove it from your input file" << endl
-            << endl;
-        throw std::runtime_error( msg.str() );
-      }
-#     endif
     }
 
     // PARSE BC FUNCTORS

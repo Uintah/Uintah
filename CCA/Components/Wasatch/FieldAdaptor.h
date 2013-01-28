@@ -275,11 +275,12 @@ namespace Wasatch{
   template<typename FieldT>
   inline Uintah::IntVector get_uintah_ghost_descriptor()
   {
-    int ng = get_n_ghost<FieldT>(); // no extra cells
-#ifdef WASATCH_IN_ARCHES
-    ng=0; // for extra cells
-#endif
-    return Uintah::IntVector(ng,ng,ng);    
+//    int ng = get_n_ghost<FieldT>(); // no extra cells
+//#ifdef WASATCH_IN_ARCHES
+//    ng=0; // for extra cells
+//#endif
+    int ng = 0; // for extra cells
+    return Uintah::IntVector(ng,ng,ng);
   }
 
   template<>
