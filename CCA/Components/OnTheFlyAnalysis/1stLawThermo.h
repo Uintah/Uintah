@@ -26,12 +26,14 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
+
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Labels/ICELabel.h>
 
 #include <map>
 #include <vector>
@@ -108,23 +110,40 @@ WARNING
                               const MaterialSubset* matl_sub ,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
-    
+                              
+    void faceInfo(const std::string fc,
+                   Patch::FaceType& face_side, 
+                   Vector& norm,
+                   int& p_dir);
+
+    void createFile(string& filename, FILE*& fp);
+        
     // general labels
     class FL_Labels {
     public:
-      VarLabel* lastWriteTimeLabel;
+      VarLabel* lastCompTimeLabel;
       VarLabel* fileVarsStructLabel;
+      
+      VarLabel* ICE_totalIntEngLabel;
+      VarLabel* MPM_totalIntEngLabel;
+      VarLabel* totalFluxesLabel;
     };
     
     FL_Labels* FL_lb;
+    ICELabel* I_lb;
     MPMLabel* M_lb;
+    
+    enum FaceType {partial=0, entireFace=1, none=2};  
        
     struct cv_face{ 
-      Point startPt;
-      Point endPt;
-       
+      Point    startPt;
+      Point    endPt;
+      int      p_dir;
+      Vector   normalDir;
+      FaceType face;  
     };  
-    vector<cv_face*> d_cv_faces;
+    
+    std::map< int, cv_face* > d_cv_faces;
        
     //__________________________________
     // global constants
@@ -132,13 +151,11 @@ WARNING
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     
-    const Material* d_matl;
-    MaterialSet* d_matlSet;
-    const MaterialSubset* d_matl_sub;
     MaterialSubset* d_zeroMatl;
+    MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
     
-    double d_writeFreq; 
+    double d_analysisFreq; 
     double d_StartTime;
     double d_StopTime;
     
