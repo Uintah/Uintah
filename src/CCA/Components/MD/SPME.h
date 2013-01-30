@@ -27,18 +27,16 @@
 
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/SPMEGrid.h>
-#include <CCA/Components/MD/SPMEGridMap.h>
 #include <Core/Grid/Variables/Array3.h>
 
 #include <vector>
-#include <complex>
 
 #include <sci_defs/fftw_defs.h>
 
 namespace Uintah {
 
 typedef std::complex<double> dblcomplex;
+typedef SimpleGrid<complex<double> > cdGrid;
 
 using SCIRun::Vector;
 using SCIRun::IntVector;
@@ -49,6 +47,8 @@ class ParticleSubset;
 class IntVector;
 class Point;
 class Vector;
+class MapPoint;
+class CenteredCardinalBSpline;
 
 /**
  *  @class SPME
@@ -127,6 +127,8 @@ class SPME : public Electrostatics {
       return this->electrostaticsType;
     }
 
+    friend class MD;
+
   private:
 
     /**
@@ -143,10 +145,8 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    SimpleGrid<std::vector<MapPoint<double> > > createChargeGridMap(IntVector localExtents,
-                                                                    IntVector globalOffset,
-                                                                    IntVector globalExtents,
-                                                                    ParticleSubset* pset);
+    std::vector<std::vector<MapPoint> > createChargeMap(ParticleSubset* pset,
+                                                        CenteredCardinalBSpline& spline);
 
     /**
      * @brief
@@ -154,11 +154,10 @@ class SPME : public Electrostatics {
      * @return
      */
     std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
-                                         const MDSystem& system,
-                                         const fftw_complex& invertSpace);
+                                         const MDSystem& system);
 
     /**
-     * @brief
+     * @brief No ghost points
      * @param
      * @return
      */
@@ -172,6 +171,22 @@ class SPME : public Electrostatics {
                               const std::vector<double>& M1,
                               const std::vector<double>& M2,
                               const std::vector<double>& M3);
+
+    /**
+     * @brief Map points (charges) onto the underlying grid.
+     * @param
+     * @return
+     */
+    SimpleGrid<double>& mapChargeToGrid(const std::vector<std::vector<MapPoint> > gridMap,
+                                        const ParticleSubset* globalParticleList);
+
+    /**
+     * @brief Map forces from grid back to points.
+     * @param
+     * @return
+     */
+    SimpleGrid<double>& mapForceFromGrid(const std::vector<std::vector<MapPoint> > gridMap,
+                                         ParticleSubset* globalParticleList);
 
     /**
      * @brief
@@ -216,6 +231,27 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
+    inline vector<double> generateMPrimeVector(unsigned int points,
+                                               int shift,
+                                               int max) const
+    {
+      std::vector<double> m(points);
+      int halfMax = max / 2;
+
+      for (size_t i = 0; i < points; ++i) {
+        m[i] = i + shift;
+        if (m[i] > halfMax) {
+          m[i] -= max;
+        }
+      }
+      return m;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline vector<double> generateMVector(unsigned int points,
                                           int shift,
                                           int max) const
@@ -232,12 +268,13 @@ class SPME : public Electrostatics {
       return m;
     }
 
+    cdGrid Q;
     ElectroStaticsType electrostaticsType;   //!<
     int numGridPoints;                       //!<
     int numGhostCells;                       //!<
     int splineOrder;                         //!<
     bool polarizable;                        //!<
-    double ewaldBeta;                      //!< The Ewald damping coefficient
+    double ewaldBeta;                        //!< The Ewald damping coefficient
 
 };
 

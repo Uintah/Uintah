@@ -32,8 +32,7 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Components/MD/SPMEGrid.h>
-#include <CCA/Components/MD/SPMEGridMap.h>
+#include <CCA/Components/MD/SPME.h>
 #include <CCA/Components/MD/MapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -53,6 +52,7 @@ typedef int particleIndex;
 typedef int particleId;
 
 class SimpleMaterial;
+class SPME;
 
 /**
  *  @class MD
@@ -301,7 +301,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     std::vector<Point> atomList;             //!<
     std::vector<vector<int> > neighborList;  //!<
 
-    Electrostatics* elctrostatics;           //!<
+    SPME*           electrostatics;          //!<
     MDSystem*       system;                  //!<
 
     // copy constructor and operator=
