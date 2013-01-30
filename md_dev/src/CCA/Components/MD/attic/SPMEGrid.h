@@ -36,6 +36,8 @@
 
 #include <complex>
 
+#include <sci_defs/fftw_defs.h>
+
 namespace Uintah {
 
 using Uintah::Matrix3;
@@ -61,8 +63,8 @@ template<class T> class SPMEGrid {
      * @param
      * @return
      */
-    SPMEGrid<T>& mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap,
-                                 const ParticleSubset& globalParticleList);
+    SPMEGrid<T>& mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<double> > > gridMap,
+                                 const ParticleSubset* globalParticleList);
 
     /**
      * @brief Map forces from grid back to points.
@@ -113,14 +115,14 @@ template<class T> class SPMEGrid {
      * @param
      * @return
      */
-    SPMEGrid<T>& inPlaceFFT_RealToFourier(/*Data for FFTW3 routine goes here */);
+    SPMEGrid<T>& inPlaceFFT_RealToFourier(fftw_complex forwardTransformData);
 
     /**
      * @brief Transforms 'Q' from fourier to real space
      * @param
      * @return
      */
-    SPMEGrid<T>& inPlaceFFT_FourierToReal(/*Data for FFTW3 routine goes here */);
+    SPMEGrid<T>& inPlaceFFT_FourierToReal(fftw_complex backwardTransformData);
 
    /**
     * @brief Pass through indexing of Value array.

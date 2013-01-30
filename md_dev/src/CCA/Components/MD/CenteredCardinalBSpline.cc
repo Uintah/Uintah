@@ -22,17 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MapPoint.h>
+#include <CCA/Components/MD/CenteredCardinalBSpline.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
-MapPoint::MapPoint()
+CenteredCardinalBSpline::CenteredCardinalBSpline()
 {
 
 }
 
-MapPoint::~MapPoint()
+CenteredCardinalBSpline::~CenteredCardinalBSpline()
 {
 
 }

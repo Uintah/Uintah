@@ -72,6 +72,18 @@ bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 }
 
 template<typename T>
+void SimpleGrid<T>::inPlaceFFT_RealToFourier()
+{
+
+}
+
+template<typename T>
+void SimpleGrid<T>::inPlaceFFT_FourierToReal()
+{
+
+}
+
+template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
 {
   SimpleGrid sg();

@@ -30,7 +30,11 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Util/Assert.h>
 
+#include <sci_defs/fftw_defs.h>
+
 namespace Uintah {
+
+typedef std::complex<double> dblcomplex;
 
 using SCIRun::Vector;
 using SCIRun::Point;
@@ -73,6 +77,15 @@ template<typename T> class SimpleGrid {
                const int numGhostCells);
 
     /**
+     * @brief
+     * @param
+     */
+    inline void initialize(T val)
+    {
+      this->charges.initialize(val);
+    }
+
+    /**
      * @brief Copy constructor.
      * @param copy A reference to the SimpleGrid to copy.
      */
@@ -81,9 +94,9 @@ template<typename T> class SimpleGrid {
     /**
      *
      */
-    inline SCIRun::Array3<double> getCharges() const
+    inline T*** getCharges() const
     {
-      return this->charges;
+      return this->charges.get_dataptr();
     }
 
     /**
@@ -183,6 +196,21 @@ template<typename T> class SimpleGrid {
      *              as the specified SimpleGrid, flase otherwise.
      */
     bool verifyRegistration(SimpleGrid<T>& gridIn);
+
+
+    /**
+     * @brief Transforms 'Q' from real to fourier space
+     * @param
+     * @return
+     */
+    void inPlaceFFT_RealToFourier();
+
+    /**
+     * @brief Transforms 'Q' from fourier to real space
+     * @param
+     * @return
+     */
+    void inPlaceFFT_FourierToReal();
 
     //-------------------------------------------------------------------------------------
     // Beware high expense temporary creation; meta-template.

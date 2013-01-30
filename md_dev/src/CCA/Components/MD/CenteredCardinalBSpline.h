@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_MAPPOINT_H
-#define UINTAH_MD_MAPPOINT_H
+#ifndef UINTAH_MD_CENTEREDCARDINALBSPLINE_H
+#define UINTAH_MD_CENTEREDCARDINALBSPLINE_H
 
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -45,16 +45,16 @@ class Vector;
 class IntVector;
 
 /**
- *  @class MapPoint
+ *  @class CenteredCardinalBSpline
  *  @ingroup MD
  *  @author Alan Humphrey and Justin Hooper
- *  @date   January, 2012
+ *  @date   January, 2013
  *
  *  @brief
  *
  *  @param
  */
-class MapPoint {
+class CenteredCardinalBSpline {
 
   public:
 
@@ -63,75 +63,16 @@ class MapPoint {
      * @param
      * @return
      */
-    MapPoint();
+    CenteredCardinalBSpline();
 
     /**
      * @brief
      * @param
      * @return
      */
-    ~MapPoint();
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const double getParticleCharge() const
-    {
-      // TODO Figure out what charge is
-//      return Particle->Charge();
-//      return this->globalParticleSubset;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const particleIndex getParticleID() const
-    {
-      return this->particleID;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const IntVector getGridIndex() const
-    {
-      return this->gridIndex;
-    }
-
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const double getCoefficient() const
-    {
-      return this->coefficient;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const Vector getForceVector() const
-    {
-      return this->forceVector;
-    }
+    ~CenteredCardinalBSpline();
 
   private:
-
-    // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle
-    particleIndex particleID;
-    IntVector gridIndex;
-    double coefficient;
-    Vector forceVector;
 
 };
 

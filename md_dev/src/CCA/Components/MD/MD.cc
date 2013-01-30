@@ -26,8 +26,7 @@
  */
 
 #include <CCA/Components/MD/MD.h>
-#include <CCA/Components/MD/SPMEGrid.h>
-#include <CCA/Components/MD/SPMEGridMap.h>
+#include <CCA/Components/MD/SPME.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -69,12 +68,14 @@ MD::MD(const ProcessorGroup* myworld) :
 {
   lb = scinew MDLabel();
   system = scinew MDSystem(myworld);
+  electrostatics = scinew SPME();
 }
 
 MD::~MD()
 {
   delete lb;
   delete system;
+  delete electrostatics;
 }
 
 void MD::problemSetup(const ProblemSpecP& params,
@@ -97,12 +98,15 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   // Populate the MD System object
   ProblemSpecP md_system_ps = params->findBlock("MDSystem");
-  md_system_ps->get("ewaldBeta", system->d_ewaldBeta);
   md_system_ps->get("unitCell", system->d_unitCell);
   md_system_ps->get("pressure", system->d_pressure);
   md_system_ps->get("temperature", system->d_temperature);
   md_system_ps->get("orthorhombic", system->d_orthorhombic);
   md_system_ps->get("changeBox", system->d_changeBox);
+
+  // Populate the MD Electrostatics object
+  ProblemSpecP md_electrostatics_ps = params->findBlock("Electrostatics");
+  md_electrostatics_ps->get("ewaldBeta", electrostatics->ewaldBeta);
 
   material = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(material);

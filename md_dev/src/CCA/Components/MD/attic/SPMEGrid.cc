@@ -35,8 +35,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 template<class T>
-SPMEGrid<T>& SPMEGrid<T>::mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<T> > > gridMap,
-                                          const ParticleSubset& globalParticleList)
+SPMEGrid<T>& SPMEGrid<T>::mapChargeToGrid(const SimpleGrid<std::vector<MapPoint<double> > > gridMap,
+                                          const ParticleSubset* globalParticleList)
 {
 //  IntVector Extent = LocalGridMap.GetLocalExtents();  // Total number of grid points on the local grid including ghost points (X,Y,Z)
 //  IntVector Initial = Extent + LocalGridMap.GetLocalShift();  // Offset of lowest index points in LOCAL coordinate system.
@@ -81,13 +81,13 @@ SPMEGrid<T>& SPMEGrid<T>::calculateField()
 }
 
 template<class T>
-SPMEGrid<T>& SPMEGrid<T>::inPlaceFFT_RealToFourier(/*Data for FFTW3 routine goes here */)
+SPMEGrid<T>& SPMEGrid<T>::inPlaceFFT_RealToFourier(fftw_complex forwardTransformData)
 {
 
 }
 
 template<class T>
-SPMEGrid<T>& SPMEGrid<T>::inPlaceFFT_FourierToReal(/*Data for FFTW3 routine goes here */)
+SPMEGrid<T>& SPMEGrid<T>::inPlaceFFT_FourierToReal(fftw_complex backwardTransformData)
 {
 
 }
