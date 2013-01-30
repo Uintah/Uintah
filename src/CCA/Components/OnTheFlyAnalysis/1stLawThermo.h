@@ -26,7 +26,6 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
@@ -34,9 +33,7 @@
 
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
-
 #include <map>
-#include <vector>
 
 namespace Uintah {
   
@@ -53,8 +50,6 @@ GENERAL INFORMATION
    Todd Harman
    Department of Mechanical Engineering
    University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
 
 KEYWORDS
@@ -105,11 +100,17 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void computeContributions(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matl_sub ,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
+    void compute_ICE_Contributions(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matl_sub ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+                                   
+    void compute_MPM_Contributions(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matl_sub ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
                               
     void faceInfo(const std::string fc,
                    Patch::FaceType& face_side, 
@@ -117,6 +118,11 @@ WARNING
                    int& p_dir);
 
     void createFile(string& filename, FILE*& fp);
+    
+    void bulletProofing( GridP& grid,
+                         const string& side,            
+                         const Point& start,            
+                         const Point& end );
         
     // general labels
     class FL_Labels {
@@ -133,7 +139,7 @@ WARNING
     ICELabel* I_lb;
     MPMLabel* M_lb;
     
-    enum FaceType {partial=0, entireFace=1, none=2};  
+    enum FaceType {partialFace=0, entireFace=1, none=2};  
        
     struct cv_face{ 
       Point    startPt;
