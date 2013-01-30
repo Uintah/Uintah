@@ -29,9 +29,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
 
-#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
@@ -47,11 +45,8 @@
 #include <Core/Util/DebugStream.h>
 
 #include <dirent.h>
-#include <sys/stat.h>
 #include <iostream>
-#include <fstream>
 #include <cstdio>
-
 
 using namespace Uintah;
 using namespace std;
@@ -162,68 +157,13 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
     
     faceInfo(side, f, norm, p_dir);
     
-    
-    cout << " //__________________________________READING IN  side: " << side << endl;
-    
     if (faceMap["extents"] == "partialFace"){
     
       face_ps->get( "startPt", start );
       face_ps->get( "endPt",   end );
-      type = partial;
+      type = partialFace;
 
-      //__________________________________
-      // bullet proofing
-      // -plane must be parallel to the coordinate system
-      // -plane can't exceed computational domain
-
-      // plane must be parallel to the coordinate system
-      bool X = ( start.x() == end.x() );
-      bool Y = ( start.y() == end.y() );  // 1 out of 3 of these must be true
-      bool Z = ( start.z() == end.z() );
-
-      bool validPlane = false;
-
-      if( !X && !Y && Z ){
-        validPlane = true;
-      }
-      if( !X && Y && !Z ){
-        validPlane = true;
-      } 
-      if( X && !Y && !Z ){
-        validPlane = true;
-      }
-
-      if( validPlane == false ){
-        ostringstream warn;
-        warn << "\n ERROR:1stLawThermo: the plane on face ("<< side
-             << ") that you've specified " << start << " " << end 
-             << " is not parallel to the coordinate system. \n" << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-
-      //the plane can't exceed computational domain
-      BBox compDomain;
-      grid->getInteriorSpatialRange(compDomain);     
-
-      Point min = compDomain.min();
-      Point max = compDomain.max();
-
-      if( start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-         end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ){
-        ostringstream warn;
-        warn << "\n ERROR:1stLawThermo: a portion of plane that you've specified " << start 
-             << " " << end << " lies outside of the computational domain. \n" << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-
-      if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-        ostringstream warn;
-        warn << "\n ERROR:1stLawThermo: the plane that you've specified " << start 
-             << " " << end << " the starting point is > than the ending point \n" << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-     
-     
+      bulletProofing(grid, side, start, end);
     }else{
       type = entireFace;
     }
@@ -263,7 +203,7 @@ void FirstLawThermo::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
     
-    double tminus = -1.0/d_analysisFreq;
+    double tminus = -1.0/d_analysisFreq;    
     new_dw->put(max_vartype(tminus), FL_lb->lastCompTimeLabel);
 
     //__________________________________
@@ -284,11 +224,7 @@ void FirstLawThermo::initialize(const ProcessorGroup*,
         warn << "ERROR:FirstLawThermo  The main uda directory does not exist. ";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
-      closedir(check);
-      
-      //__________________________________
-      //  write data out
-      
+      closedir(check);      
     } 
   }  
 }
@@ -307,17 +243,15 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   sched->overrideVariableBehavior("FileInfo", false, false, false, true, true);
   
   //__________________________________  
-  //  compute the contributions from the various sources of energy
-  printSchedule(level,cout_doing,"FirstLawThermo::scheduleDoAnalysis");
+  //  compute the ICE contributions
+  printSchedule( level,cout_doing,"FirstLawThermo::scheduleDoAnalysis" );
   
-  Task* t0 = scinew Task("FirstLawThermo::computeContributions", 
-                    this,&FirstLawThermo::computeContributions);
+  Task* t0 = scinew Task( "FirstLawThermo::compute_ICE_Contributions", 
+                     this,&FirstLawThermo::compute_ICE_Contributions );
 
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-//  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  
   const MaterialSubset* ice_ss = ice_matls->getUnion();
   
   t0->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
@@ -331,38 +265,52 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   t0->requires( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
   
   t0->computes( FL_lb->ICE_totalIntEngLabel );
-  t0->computes( FL_lb->MPM_totalIntEngLabel );
   t0->computes( FL_lb->totalFluxesLabel );
   
   sched->addTask( t0, level->eachPatch(), all_matls );
+  
+  //__________________________________
+  //  compute the MPM contributions
+  Task* t1 = scinew Task( "FirstLawThermo::compute_MPM_Contributions", 
+                     this,&FirstLawThermo::compute_MPM_Contributions );
+
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSubset* mpm_ss = mpm_matls->getUnion();
+  
+  t1->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
+  t1->requires( Task::NewDW, M_lb->pMassLabel_preReloc,        mpm_ss, gn );
+  t1->requires( Task::NewDW, M_lb->pTemperatureLabel_preReloc, mpm_ss, gn );
+  t1->computes( FL_lb->MPM_totalIntEngLabel );
+  
+  sched->addTask( t1, level->eachPatch(), all_matls ); 
 
 
   //__________________________________
   //  output the contributions
-  Task* t1 = scinew Task("FirstLawThermo::doAnalysis", 
+  Task* t2 = scinew Task("FirstLawThermo::doAnalysis", 
                     this,&FirstLawThermo::doAnalysis );
                     
-  t1->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
-  t1->requires( Task::OldDW, FL_lb->fileVarsStructLabel, d_zeroMatl, gn, 0 );
+  t2->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
+  t2->requires( Task::OldDW, FL_lb->fileVarsStructLabel, d_zeroMatl, gn, 0 );
   
-  t1->requires( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
-  t1->requires( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
-  t1->requires( Task::NewDW, FL_lb->totalFluxesLabel );
+  t2->requires( Task::NewDW, FL_lb->ICE_totalIntEngLabel );
+  t2->requires( Task::NewDW, FL_lb->MPM_totalIntEngLabel );
+  t2->requires( Task::NewDW, FL_lb->totalFluxesLabel );
   
-  t1->computes( FL_lb->lastCompTimeLabel );
-  t1->computes( FL_lb->fileVarsStructLabel, d_zeroMatl );
-  sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule this  patch 0 since all you're doing is writing out data
+  t2->computes( FL_lb->lastCompTimeLabel );
+  t2->computes( FL_lb->fileVarsStructLabel, d_zeroMatl );
+  sched->addTask( t2, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule this  patch 0 since all you're doing is writing out data
 
 }
 
 
 //______________________________________________________________________
-// 
-void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matl_sub ,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
+//        ICE Contributions to the energy
+void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matl_sub ,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   max_vartype analysisTime;
@@ -381,7 +329,7 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing FirstLawThermo::computeContributions");
+    printTask(patches, patch,cout_doing,"Doing FirstLawThermo::compute_ICE_Contributions");
 
     CCVariable<double> int_eng;
     constCCVariable<double> temp_CC;
@@ -401,7 +349,6 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
     Ghost::GhostType gn  = Ghost::None;
 
     double ICE_totalIntEng = 0.0;
-    double MPM_totalIntEng = 0.0;
     double total_flux      = 0.0;
 
     for (int m = 0; m < numICEmatls; m++ ) {
@@ -427,7 +374,6 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
       
       ICE_totalIntEng += mat_int_eng;
 
-
       //__________________________________
       // Sum the fluxes passing through the boundaries      
       vector<Patch::FaceType> bf;
@@ -439,23 +385,34 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
         
         cv_face* cvFace = d_cv_faces[face];
 
-        cout << " cvFace: " << patch->getFaceName(face ) << " faceType " << cvFace->face 
-             << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
-        cout << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
+        cout_dbg << " cvFace: " << patch->getFaceName(face ) << " faceType " << cvFace->face 
+                 << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
+        cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
-        if( cvFace->face == entireFace ){        // TODO: need to define iterators
-        } else {
+        // define the iterator on this face  The defauls is the entire face
+        Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+        CellIterator iterLimits=patch->getFaceIterator(face, MEC);;
+        
+        if( cvFace->face == partialFace ){
+        
+          IntVector lo  = level->getCellIndex( cvFace->startPt );
+          IntVector hi  = level->getCellIndex( cvFace->endPt );
+          IntVector pLo = patch->getCellLowIndex();
+          IntVector pHi = patch->getCellHighIndex();
+          
+          IntVector low  = Max(lo, pLo);    // find the intersection
+          IntVector high = Min(hi, pHi);
+           
+          iterLimits = CellIterator(low,high);
         }
 
         IntVector axes = patch->getFaceAxes(face);
         int P_dir = axes[0];  // principal direction
         double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
 
-        Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;    
-
         if (face == Patch::xminus || face == Patch::xplus) {    // X faces
           double area = dx.y() * dx.z();
-          for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
+          for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
 
             double flux = uvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
@@ -465,7 +422,7 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
 
         if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
           double area = dx.x() * dx.z();
-          for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
+          for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
 
             double flux = vvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
@@ -475,7 +432,7 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
 
         if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
           double area = dx.x() * dx.y();
-          for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
+          for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
 
             double flux = wvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
@@ -487,12 +444,64 @@ void FirstLawThermo::computeContributions(const ProcessorGroup* pg,
       mat_fluxes = mat_fluxes * delT;
       total_flux += mat_fluxes;
     }  // ICE Matls loop
-
+    
     new_dw->put( sum_vartype(ICE_totalIntEng), FL_lb->ICE_totalIntEngLabel );
-    new_dw->put( sum_vartype(MPM_totalIntEng), FL_lb->MPM_totalIntEngLabel );
     new_dw->put( sum_vartype(total_flux),      FL_lb->totalFluxesLabel );
   }  // patch loop
 }
+
+
+//______________________________________________________________________
+//        MPM Contributions to the energy
+void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matl_sub ,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
+{
+  max_vartype analysisTime;  
+  old_dw->get(analysisTime, FL_lb->lastCompTimeLabel);
+
+  double lastCompTime = analysisTime;
+  double nextCompTime = lastCompTime + 1.0/d_analysisFreq;  
+  double now = d_dataArchiver->getCurrentTime();
+
+  if( now < nextCompTime  ){
+    return;
+  }
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing FirstLawThermo::compute_MPM_Contributions");
+
+    //__________________________________
+    //  compute the thermal energy of the solids
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    double MPM_totalIntEng = 0.0;
+    
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      constParticleVariable<double> pmassNew, pTempNew;
+      
+      ParticleSubset* pset = old_dw->getParticleSubset( dwi, patch );
+      new_dw->get( pTempNew, M_lb->pTemperatureLabel_preReloc, pset );
+      new_dw->get( pmassNew, M_lb->pMassLabel_preReloc,        pset );
+      
+      double Cp=mpm_matl->getSpecificHeat();
+    
+      for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+        particleIndex idx = *iter;    
+    
+        MPM_totalIntEng += pTempNew[idx] * pmassNew[idx] * Cp;
+      }
+    }  // matl loop
+    
+    new_dw->put( sum_vartype(MPM_totalIntEng), FL_lb->MPM_totalIntEngLabel );
+  }
+}
+
+
 
 
 //______________________________________________________________________
@@ -519,7 +528,8 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       printTask(patches, patch,cout_doing,"Doing doAnalysis");
 
       //__________________________________
-      // open the struct that contains the file pointer map. 
+      // open the struct that contains the file pointer map.  We use FileInfoP types
+      // and store them in the DW to avoid doing system calls (SLOW).
       // Note: after regridding this may not exist for this patch in the old_dw
       PerPatch<FileInfoP> fileInfo;
 
@@ -540,7 +550,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       string filename = udaDir + "/" + "1stLawThermo.dat";
       FILE *fp;
 
-      cout << " here " << myFiles.count(filename) << endl;
+
       if( myFiles.count(filename) == 0 ){
         createFile(filename, fp);
         myFiles[filename] = fp;
@@ -558,9 +568,13 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       new_dw->get( ICE_totalIntEng, FL_lb->ICE_totalIntEngLabel );
       new_dw->get( MPM_totalIntEng, FL_lb->MPM_totalIntEngLabel );
       new_dw->get( total_flux,      FL_lb->totalFluxesLabel );
-      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E\n", now, 
+      
+      double totalIntEng = (double)ICE_totalIntEng + (double)MPM_totalIntEng;
+      
+      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E\n", now, 
                   (double)ICE_totalIntEng, 
                   (double)MPM_totalIntEng, 
+                  totalIntEng,
                   (double)total_flux );
       
       time_dw = now;
@@ -571,10 +585,10 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       // reuse the Handle fileInfo and just replace the contents   
       fileInfo.get().get_rep()->files = myFiles;
 
-      new_dw->put(fileInfo,               FL_lb->fileVarsStructLabel, 0, patch);
-      new_dw->put(max_vartype( time_dw ), FL_lb->lastCompTimeLabel);
+      new_dw->put(fileInfo, FL_lb->fileVarsStructLabel, 0, patch);
     }
   }
+  new_dw->put(max_vartype( time_dw ), FL_lb->lastCompTimeLabel);
 }
 
 
@@ -590,7 +604,7 @@ void FirstLawThermo::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"#Time                      ICE_totalIntEng            MPM_totalIntEng             totalFlux\n");
+  fprintf(fp,"#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux\n");
   cout << Parallel::getMPIRank() << " FirstLawThermo:Created file " << filename << endl;
 }
 
@@ -632,4 +646,90 @@ void FirstLawThermo::faceInfo(const std::string fc,
     p_dir = 2;
     face_side = Patch::zplus;
   }
+}
+//______________________________________________________________________
+//  bulletProofing on the user inputs
+void FirstLawThermo::bulletProofing(GridP& grid,
+                                    const string& side,
+                                    const Point& start,
+                                    const Point& end)
+{
+   //__________________________________
+   // plane must be parallel to the coordinate system
+   bool X = ( start.x() == end.x() );
+   bool Y = ( start.y() == end.y() );  // 1 out of 3 of these must be true
+   bool Z = ( start.z() == end.z() );
+
+   bool validPlane = false;
+
+   if( !X && !Y && Z ){
+     validPlane = true;
+   }
+   if( !X && Y && !Z ){
+     validPlane = true;
+   } 
+   if( X && !Y && !Z ){
+     validPlane = true;
+   }
+
+   if( validPlane == false ){
+     ostringstream warn;
+     warn << "\n ERROR:1stLawThermo: the plane on face ("<< side
+          << ") that you've specified " << start << " " << end 
+          << " is not parallel to the coordinate system. \n" << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+   }
+
+   //__________________________________
+   //  plane must be on the edge of the domain
+   validPlane = true;
+   BBox compDomain;
+   grid->getInteriorSpatialRange(compDomain);
+   Point min = compDomain.min();
+   Point max = compDomain.max();
+
+   Point me = min;
+   if (side == "x+" || side == "y+" || side == "z+" ){
+     me = max;
+   }
+
+   if(side == "x+" || side == "x-" ){
+     if(start.x() != me.x() ){
+       validPlane = false;
+     }
+   }
+   if(side == "y+" || side == "y-" ){
+     if(start.y() != me.y() ){
+       validPlane = false;
+     }
+   }
+   if(side == "z+" || side == "z-" ){
+     if(start.z() != me.z() ){
+       validPlane = false;
+     }
+   }
+   if( validPlane == false ){
+     ostringstream warn;
+     warn << "\n ERROR:1stLawThermo: the plane on face ("<< side
+          << ") that you've specified " << start << " to " << end 
+          << " is not at the edge of the computational domain. \n" << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+   }
+
+   //__________________________________
+   //the plane can't exceed computational domain
+   if( start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
+       end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ){
+     ostringstream warn;
+     warn << "\n ERROR:1stLawThermo: a portion of plane that you've specified " << start 
+          << " " << end << " lies outside of the computational domain. \n" << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+   }
+
+   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
+     ostringstream warn;
+     warn << "\n ERROR:1stLawThermo: the plane that you've specified " << start 
+          << " " << end << " the starting point is > than the ending point \n" << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+   }
 }
