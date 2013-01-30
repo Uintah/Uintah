@@ -488,7 +488,9 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
       new_dw->get( pTempNew, M_lb->pTemperatureLabel_preReloc, pset );
       new_dw->get( pmassNew, M_lb->pMassLabel_preReloc,        pset );
       
-      double Cp=mpm_matl->getSpecificHeat();
+// HACK UNTIL
+      double Cp = 1.0;
+      //double Cp=mpm_matl->getSpecificHeat();
     
       for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;    
