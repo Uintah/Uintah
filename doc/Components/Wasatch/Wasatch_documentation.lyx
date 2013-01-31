@@ -4278,6 +4278,752 @@ e fluxes at the pressure outlet boundary.
 \end_layout
 
 \begin_layout Chapter
+Complex Geometry
+\end_layout
+
+\begin_layout Standard
+Wasatch can, in principle, handle geometries of arbitrary complexity by
+ using a discrete stairstepping procedure.
+ This approach may be thought of as a simplified version of the cut-cell
+ method where only integer volume (and area) fractions are allowed.
+ A volume fraction field is defined as the amount of fluid that fills a
+ given control volume while the area-fraction corresponds to the fraction
+ of the cell-boundary at a fluid-solid interface.
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_embedded_cylinder_cut_cell_approach.pdf
+	width 3in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Embedded cylinder using cut-cells.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch_embedded_cylinder_stairstepping.pdf
+	width 3in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Embedded cylinder using stairstepping.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Comparison of cut-cells and stairstepping for embedded geometries.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Rational Formulation
+\end_layout
+
+\begin_layout Standard
+To handle embedded geometries, Wasatch first calculates four scalar fields,
+ 
+\begin_inset Formula $\varphi_{\mathrm{v}}$
+\end_inset
+
+, 
+\begin_inset Formula $\varphi_{\mathrm{x}}$
+\end_inset
+
+, 
+\begin_inset Formula $\varphi_{\mathrm{y}}$
+\end_inset
+
+, and 
+\begin_inset Formula $\varphi_{\mathrm{z}}$
+\end_inset
+
+.
+ These correspond to the cell-centered and x, y, z-staggered volume fractions,
+ respectively.
+ The staggered volume fractions are nothing more than the area-fractions.
+ We call them staggered volume fractions, however, because of the nature
+ of stairstpping and the fact that area fractions have integer values in
+ this case and hence coincide with staggered volumes on structured, uniform
+ grids.
+ These are shown in figure 1 below where the various volume fractions are
+ depicted along with their associated control volumes.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch_embedded_vol_area_fractions.pdf
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Cell-centered and staggered volume fractions associated with a solid intrusion.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Momentum Transport
+\end_layout
+
+\begin_layout Standard
+In order for the solid intrusions to affect the fluid dynamics, the surface
+ (convection, diffusion) and volume (pressure) forces must be set appropriately
+ at cell boundaries.
+ In general, one must multiply surface forces by the area fractions while
+ volume forces get multiplied by the cell-centered volume fraction.
+ In Wasatch, this may be easily accomplished by multiplying the momentum
+ partial-right-hand-side expressions by their corresponding area fractions,
+ as follows
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\rho\mathbf{u}}{\partial t}=\boldsymbol{\varphi}\cdot\mathbf{F}-\varphi_{\mathrm{v}}\nabla p;\quad\mathbf{F}\equiv-\nabla\cdot\rho\mathbf{u}\mathbf{u}-\nabla\cdot\boldsymbol{\tau}_{ij};\quad\boldsymbol{\varphi}\equiv(\varphi_{\mathrm{x}},\varphi_{\mathrm{y}},\varphi_{\mathrm{z}})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The pressure poisson equation is also modified to account for the presence
+ of the solids.
+ We assume that the pressure is uniformly known inside the solid (e.g.
+ 
+\begin_inset Formula $p=0$
+\end_inset
+
+) and modify the matrix accordingly.
+ For a cell inside a solid, we set all matrix coefficients to zero except
+ the center coefficient which is set to 1
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{equation}
+a.w=a.e=a.n=a.s=a.t=a.b=0,\quad a.p=1
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For a fluid cell neighboring a solid, treatment is similar to that at a
+ wall.
+ For illustration purposes, we give the following example at a corner cell.
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/pdf/wasatch_embedded_pressure_coefs_interior.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Pressure matrix coefficients near embedded boundaries.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Input Specification
+\end_layout
+
+\begin_layout Standard
+Wasatch provides a simple interface for specifying intrusions as shown in
+ 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-embedded-geometry-ups-spec"
+
+\end_inset
+
+.
+ Geometry, which is represented by volume and area fractions, can be specified
+ via three mechanisms:
+\end_layout
+
+\begin_layout Enumerate
+Uintah's geometry objects: These include all of Uintah's geometry pieces
+ as well as geometry operations such as unions, intersections, differences,
+ etc...
+ Please refer to Uintah's UPS specification for a list of supported geometry
+ objects.
+\end_layout
+
+\begin_layout Enumerate
+Wasatch's geometry expressions: These are useful when designing special
+ geometry objects not handled by Uintah including time-dependent geometry.
+\end_layout
+
+\begin_layout Enumerate
+External volume and area fractions: This is useful when another Uintah component
+ (e.g.
+ Arches) is driving Wasatch and that component calculates area and volume
+ fractions.
+ All one needs in this case is to provide the names of the volume and area
+ fractions calculated by the external component.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=XML,tabsize=2"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<EmbeddedGeometry  spec="OPTIONAL NO_DATA"                        
+\end_layout
+
+\begin_layout Plain Layout
+
+                   children1="ONE_OF(CHILD Intrusion, GeometryExpression,
+ External)" >        
+\end_layout
+
+\begin_layout Plain Layout
+
+  <Inverted       spec="OPTIONAL NO_DATA"/>      
+\end_layout
+
+\begin_layout Plain Layout
+
+  <MovingGeometry spec="OPTIONAL NO_DATA"/>          
+\end_layout
+
+\begin_layout Plain Layout
+
+  <External       spec="OPTIONAL NO_DATA">         
+\end_layout
+
+\begin_layout Plain Layout
+
+    <SVolFraction     spec="REQUIRED STRING"/>        
+\end_layout
+
+\begin_layout Plain Layout
+
+    <XVolFraction     spec="REQUIRED STRING"/>         
+\end_layout
+
+\begin_layout Plain Layout
+
+    <YVolFraction     spec="REQUIRED STRING"/>         
+\end_layout
+
+\begin_layout Plain Layout
+
+    <ZVolFraction     spec="REQUIRED STRING"/>                         
+      
+\end_layout
+
+\begin_layout Plain Layout
+
+  </External>                
+\end_layout
+
+\begin_layout Plain Layout
+
+  <Intrusion      spec="MULTIPLE NO_DATA">       
+\end_layout
+
+\begin_layout Plain Layout
+
+    <geom_object  spec="REQUIRED"/>     
+\end_layout
+
+\begin_layout Plain Layout
+
+  </Intrusion>      
+\end_layout
+
+\begin_layout Plain Layout
+
+  <GeometryExpression            spec="OPTIONAL" />        
+\end_layout
+
+\begin_layout Plain Layout
+
+</EmbeddedGeometry>
+\end_layout
+
+\begin_layout Plain Layout
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Specification of embedded geometry in Wasatch.
+\begin_inset CommandInset label
+LatexCommand label
+name "lst:wasatch-embedded-geometry-ups-spec"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As an illustrative example of using some of Uintah's geometry objects, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-embedded-geometry-example"
+
+\end_inset
+
+ summarizes the embedded geometry specification for the intrusion of two
+ parallelpepipeds and a cylinder in a cross-flow.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=XML,tabsize=2"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+<EmbeddedGeometry>
+\end_layout
+
+\begin_layout Plain Layout
+
+ <Intrusion>
+\end_layout
+
+\begin_layout Plain Layout
+
+		<geom_object>
+\end_layout
+
+\begin_layout Plain Layout
+
+		<union>
+\end_layout
+
+\begin_layout Plain Layout
+
+			 <cylinder>
+\end_layout
+
+\begin_layout Plain Layout
+
+					<bottom>[0,0,-1]</bottom>
+\end_layout
+
+\begin_layout Plain Layout
+
+					<top>[0,0,1]</top>
+\end_layout
+
+\begin_layout Plain Layout
+
+					<radius>0.15</radius>
+\end_layout
+
+\begin_layout Plain Layout
+
+			 </cylinder>
+\end_layout
+
+\begin_layout Plain Layout
+
+			 <parallelepiped>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p1>[0,0.3,1]</p1>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p2>[0,0.55,1]</p2>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p3>[0.5,0.55,1]</p3>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p4>[0,0.3,-1]</p4>                                       
+\end_layout
+
+\begin_layout Plain Layout
+
+			 </parallelepiped>             
+\end_layout
+
+\begin_layout Plain Layout
+
+			 <parallelepiped>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p1>[0.35, -0.3,  1]</p1>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p2>[0.35, -0.55, 1]</p2>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p3>[0.65, -0.55, 1]</p3>
+\end_layout
+
+\begin_layout Plain Layout
+
+				 <p4>[0.35, -0.3, -1]</p4>                                       
+\end_layout
+
+\begin_layout Plain Layout
+
+			 </parallelepiped>                        
+\end_layout
+
+\begin_layout Plain Layout
+
+		 </union>
+\end_layout
+
+\begin_layout Plain Layout
+
+	 </geom_object>
+\end_layout
+
+\begin_layout Plain Layout
+
+ </Intrusion>    
+\end_layout
+
+\begin_layout Plain Layout
+
+</EmbeddedGeometry>
+\end_layout
+
+\begin_layout Plain Layout
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Example of embedding multiple geometrical objects in Wasatch.
+\begin_inset CommandInset label
+LatexCommand label
+name "lst:wasatch-embedded-geometry-example"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The specification shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-embedded-geometry-example"
+
+\end_inset
+
+ produces the snapshows shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:Embedded-geometry-example-snapshots"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/raster/wasatch-embedded-flow-past-objects.png
+	lyxscale 10
+	width 5in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Illustration of the embedded geometry shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-embedded-geometry-example"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename figures/raster/wasatch-embedded-flow-past-objects-1.png
+	width 5in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Flow over multiple intrusions showing scalar mixing in the wake region of
+ the embedded geometry.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Embedded geometry example in Wasatch.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Embedded-geometry-example-snapshots"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Limitations
+\end_layout
+
+\begin_layout Standard
+At the time of writing (January 2013), Wasatch embedded boundaries have
+ the following limitations:
+\end_layout
+
+\begin_layout Itemize
+Simple wall boundary conditions: embedded objects are assumed to be simple/inert
+ walls with no scalar or momentum fluxes at their boundaries.
+\end_layout
+
+\begin_layout Itemize
+Embedded geometry is assumed to be stationary.
+\end_layout
+
+\begin_layout Standard
+Future efforts in this arena will address the above limitations.
+ There is currently no interest, however, in moving from stairstepping towards
+ cut-cell methods.
+\end_layout
+
+\begin_layout Chapter
 Modeling General Scalar Transport
 \end_layout
 
@@ -5469,7 +6215,7 @@ Normalized
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -5523,7 +6269,7 @@ key "ghia_lid_driven_cavity_1982"
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
