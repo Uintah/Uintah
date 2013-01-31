@@ -209,6 +209,8 @@
       <thickness              spec="OPTIONAL DOUBLE 'positive'" />
       <num_radial             spec="REQUIRED DOUBLE 'positive'" />
       <num_axial              spec="REQUIRED DOUBLE 'positive'" />
+      <arc_start_angle        spec="OPTIONAL DOUBLE 'positive'" />
+      <arc_angle              spec="OPTIONAL DOUBLE 'positive'" />
     </smoothcyl>
 
     <tri                      spec="OPTIONAL NO_DATA"
