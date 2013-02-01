@@ -3527,8 +3527,10 @@ if test "$sci_required_gperftools" = "yes"; then
   
   if test "$IS_OSX" = "yes"; then
      gperf_lib_list=tcmalloc_and_profiler
-  else
+  elif test "IS_STATIC_BUILD" = "yes"; then 
      gperf_lib_list="tcmalloc profiler unwind"
+  else  
+     gperf_lib_list="tcmalloc profiler"
   fi
 
   AC_LANG(C++)
