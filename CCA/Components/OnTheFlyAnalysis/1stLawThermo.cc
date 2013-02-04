@@ -260,6 +260,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   t0->requires( Task::NewDW, I_lb->rho_CCLabel,        ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->temp_CCLabel,       ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->specific_heatLabel, ice_ss, gn );
+  t0->requires( Task::NewDW, I_lb->gammaLabel,         ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->uvel_FCMELabel,     ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->vvel_FCMELabel,     ice_ss, gn );
   t0->requires( Task::NewDW, I_lb->wvel_FCMELabel,     ice_ss, gn );
@@ -303,7 +304,6 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
 
 }
 
-
 //______________________________________________________________________
 //        ICE Contributions to the energy
 void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
@@ -335,6 +335,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
     constCCVariable<double> temp_CC;
     constCCVariable<double> rho_CC;
     constCCVariable<double> cv;
+    constCCVariable<double> gamma;
 
     constSFCXVariable<double> uvel_FC;
     constSFCYVariable<double> vvel_FC;
@@ -361,6 +362,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
       new_dw->get(uvel_FC, I_lb->uvel_FCMELabel,    indx, patch, gn,0);
       new_dw->get(vvel_FC, I_lb->vvel_FCMELabel,    indx, patch, gn,0);
       new_dw->get(wvel_FC, I_lb->wvel_FCMELabel,    indx, patch, gn,0);
+      new_dw->get(gamma,   I_lb->gammaLabel,        indx, patch, gn,0);
 
       double mat_int_eng = 0.0;
 
@@ -390,8 +392,8 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
         // define the iterator on this face  The defauls is the entire face
-        Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-        CellIterator iterLimits=patch->getFaceIterator(face, MEC);;
+        Patch::FaceIteratorType SFC = Patch::SFCVars;
+        CellIterator iterLimits=patch->getFaceIterator(face, SFC);
         
         if( cvFace->face == partialFace ){
         
@@ -414,9 +416,8 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.y() * dx.z();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-
-            double flux = uvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
-            mat_fluxes += plus_minus_one * flux;
+            double flux = uvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
+	     mat_fluxes += plus_minus_one * flux;
           }
         }
 
@@ -424,8 +425,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.x() * dx.z();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-
-            double flux = vvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
+	     double flux = vvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
             mat_fluxes += plus_minus_one * flux;
           }
         }
@@ -434,14 +434,12 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.x() * dx.y();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-
-            double flux = wvel_FC[c] * rho_CC[c] * area * temp_CC[c] * cv[c];
+	     double flux = wvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
             mat_fluxes += plus_minus_one * flux;
           }
         }
       }  // boundary faces
       
-      mat_fluxes = mat_fluxes * delT;
       total_flux += mat_fluxes;
     }  // ICE Matls loop
     
