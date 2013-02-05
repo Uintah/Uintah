@@ -177,6 +177,25 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
     
     d_cv_faces[f] = cvFace;  
   }
+  
+  //__________________________________
+  //  Loop over all the MPM Matls and pull out the specific heat
+  //  This Assumes that MPM matls are listed from 0 to N
+  //  It also assumes that cp is constant
+  int matl = 0;
+  ProblemSpecP root_ps = d_prob_spec->getRootNode();
+  ProblemSpecP mat_ps =  root_ps->findBlockWithOutAttribute("MaterialProperties");
+  
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  if(mpm_mat_ps){
+    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0; 
+         ps = ps->findNextBlock("material") ) {
+      double cp;   
+      ps->require("specific_heat",cp);
+      d_mpm_specificHeat[matl] = cp;
+      matl +=1;
+    } 
+  }
 }
 
 //______________________________________________________________________
@@ -486,9 +505,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
       new_dw->get( pTempNew, M_lb->pTemperatureLabel_preReloc, pset );
       new_dw->get( pmassNew, M_lb->pMassLabel_preReloc,        pset );
       
-// HACK UNTIL
-      double Cp = 1.0;
-      //double Cp=mpm_matl->getSpecificHeat();
+      double Cp = d_mpm_specificHeat[dwi];
     
       for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;    
@@ -604,6 +621,10 @@ void FirstLawThermo::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
+  fprintf(fp,"# This assumes:\n");
+  fprintf(fp,"#    - mpm matls have constant specific heat\n");
+  fprintf(fp,"#    - mpm matls are listed in order 0, 1, 2, 3\n");
+  fprintf(fp,"#    - Contributions due to the kinetic energy are ignored\n");
   fprintf(fp,"#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux\n");
   cout << Parallel::getMPIRank() << " FirstLawThermo:Created file " << filename << endl;
 }
