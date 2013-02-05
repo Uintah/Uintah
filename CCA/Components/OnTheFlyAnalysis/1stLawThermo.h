@@ -160,6 +160,7 @@ WARNING
     MaterialSubset* d_zeroMatl;
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
+    std::map< int, double > d_mpm_specificHeat;
     
     double d_analysisFreq; 
     double d_StartTime;
