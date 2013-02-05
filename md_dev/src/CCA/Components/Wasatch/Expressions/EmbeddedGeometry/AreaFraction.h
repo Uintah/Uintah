@@ -149,14 +149,18 @@ evaluate()
   using namespace SpatialOps;
   using SpatialOps::operator<<=;
   DestT& destResult = this->value();
+  destResult <<= 1.0; // this will make sure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
+  InpterpSrcT2DestTOp_->apply_to_field(*src_, destResult); // interpolate cell centered volume fraction to faces
+  destResult <<= cond( destResult < 1.0, 0.0 ) // replace 0.5 values by 0.0
+                     ( 1.0 );
   
-  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>(destResult);
-  *tmp <<= 1.0 - *src_; // 1 - SVOLFraction
-  
-  InpterpSrcT2DestTOp_->apply_to_field(*tmp, destResult); // interpolate
-  
-  destResult <<= 1.0 - cond( destResult > 0.0, 1.0 ) // replace 0.5 values by 1.0 and take (1 - result) to get the areafraction
-                           ( 0.0 );
+//  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>(destResult);
+//  *tmp <<= 1.0 - *src_; // 1 - SVOLFraction
+//  
+//  InpterpSrcT2DestTOp_->apply_to_field(*tmp, destResult); // interpolate
+//  
+//  destResult <<= 1.0 - cond( destResult > 0.0, 1.0 ) // replace 0.5 values by 1.0 and take (1 - result) to get the areafraction
+//                           ( 0.0 );
 }
 
 //--------------------------------------------------------------------

@@ -144,6 +144,7 @@ Grid::Grid()
   ares_ = 0;
   bres_ = 0;
   cres_ = 0;
+  d_extraCells = IntVector(0,0,0);
 }
 
 Grid::~Grid()
@@ -405,7 +406,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         }
         
         IntVector ec;
-        box_ps->getWithDefault("extraCells", ec, IntVector(0,0,0));
+        box_ps->getWithDefault("extraCells", ec, d_extraCells);
         extraCells = Max(ec, extraCells);
         
         // bulletproofing
@@ -429,6 +430,12 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           }
         }
       }  // boxes loop
+
+      if (extraCells!=d_extraCells && d_extraCells!=IntVector(0,0,0)) {
+          if(pg->myrank() == 0) {
+            cout << "Warning:: Input file overrides extraCells specification, current extraCell: " << extraCells << "\n";
+          }
+      }
 
       // Look for stretched grid info
       vector<StretchSpec> stretch[3];
@@ -1074,4 +1081,14 @@ void Grid::assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb)
     LevelP level= getLevel(l);
     level->assignBCS(grid_ps,lb);
   }
+}
+
+void Grid::setExtraCells(IntVector ex)
+{
+  if (numLevels()>0)  {
+     throw ProblemSetupException("Cannot set extraCells after grid setup",
+                                __FILE__, __LINE__);
+     return;
+  }
+  d_extraCells= ex;
 }

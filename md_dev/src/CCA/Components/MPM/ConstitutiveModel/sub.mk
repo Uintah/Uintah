@@ -49,7 +49,6 @@ SRCS   += \
         $(SRCDIR)/ViscoScramImplicit.cc         \
         $(SRCDIR)/MWViscoElastic.cc             \
         $(SRCDIR)/IdealGasMP.cc                 \
-        $(SRCDIR)/Membrane.cc                   \
         $(SRCDIR)/ShellMaterial.cc              \
         $(SRCDIR)/ElasticPlasticHP.cc           \
         $(SRCDIR)/Water.cc                      \

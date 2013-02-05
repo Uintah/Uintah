@@ -1386,14 +1386,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             Vector lineup;
             for (int ii=0; ii<3; ii++){
               if (sign[ii]) {
-                lineup[ii] = cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 );
+                lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
               }
 
               else {
                  lineup[ii] = cur[ii] % coarsenRatio[ii];
               }
             }
-            tMax += lineup * tDelta[L];
+            tMax += lineup * tDelta[prevLev];
             
             in_domain = domain_BB.inside(pos); 
 

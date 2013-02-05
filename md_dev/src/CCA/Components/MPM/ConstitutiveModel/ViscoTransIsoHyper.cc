@@ -842,9 +842,15 @@ void ViscoTransIsoHyper::addInitialComputesAndRequires(Task* task,
                                                     const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pFailureLabel,              matlset);
   task->computes(pStretchLabel,              matlset);
-  task->computes(lb->pStressLabel_preReloc,  matlset);
+  task->computes(pFailureLabel,              matlset);
+  task->computes(pElasticStressLabel,        matlset);//visco_label
+  task->computes(pHistory1Label,             matlset);
+  task->computes(pHistory2Label,             matlset);
+  task->computes(pHistory3Label,             matlset);
+  task->computes(pHistory4Label,             matlset);
+  task->computes(pHistory5Label,             matlset);
+  task->computes(pHistory6Label,             matlset);
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* task,

@@ -78,6 +78,9 @@ WARNING
                                const ProblemSpecP& restart_prob_spec,
                                GridP& grid, SimulationStateP& state) = 0;
 
+     virtual void preGridProblemSetup(const ProblemSpecP& params, 
+                               GridP& grid, SimulationStateP& state) {}
+
      virtual void outputProblemSpec(ProblemSpecP& ps) {}
      virtual void outputPS(Dir& dir) {}
       
