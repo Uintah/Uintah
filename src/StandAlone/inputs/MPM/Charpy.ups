@@ -34,7 +34,7 @@
    </DataArchiver> 
     <MPM>
        <time_integrator>explicit</time_integrator>
-       <interpolator>gimp</interpolator>
+       <interpolator>cpdi</interpolator>
        <withColor>true</withColor>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
 	<artificial_viscosity> true </artificial_viscosity>

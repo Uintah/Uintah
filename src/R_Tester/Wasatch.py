@@ -60,6 +60,12 @@ scalabilitytestperf_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_objects_xy",          "intrusion_flow_past_objects_xy.ups",    16,  "Linux",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_over_icse",                "intrusion_flow_over_icse.ups",          16,  "Linux",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),\
   ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
@@ -111,6 +117,12 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ), \
   ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
   ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \

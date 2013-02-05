@@ -85,7 +85,7 @@
                  <remove_particles> false </remove_particles>
                  <zero_stress_upon_failure> false </zero_stress_upon_failure>	      
 
-     <visco_flow_model type="suvic_i"> 
+     <visco_plasticity_model type="suvic_i"> 
 
 	<coeff_backstress_evol>75e6</coeff_backstress_evol>
 	<exponent_backstress_evol> 1</exponent_backstress_evol>
@@ -108,7 +108,7 @@
 	<initial_yield> 0.0</initial_yield>
 	<integration_parameter_theta> 0.5</integration_parameter_theta>
 
-     </visco_flow_model>
+     </visco_plasticity_model>
      
 	      </constitutive_model>
 

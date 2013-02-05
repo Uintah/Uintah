@@ -218,6 +218,10 @@ namespace Wasatch{
      */
     void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
+    
+    void preGridProblemSetup(const Uintah::ProblemSpecP& params,
+                             Uintah::GridP& grid,
+                             Uintah::SimulationStateP& state);
 
     //__________________________________
     //  AMR

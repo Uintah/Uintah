@@ -278,7 +278,7 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
                                      deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
+      double J = deformationGradient_new[idx].Determinant();
       pvolume_new[idx]=Jinc*pvolume[idx];
 
       // Compute the local sound speed

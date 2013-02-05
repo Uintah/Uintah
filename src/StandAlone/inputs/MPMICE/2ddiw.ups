@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-
+       <max_Timesteps >      10          </max_Timesteps>
        <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
@@ -31,7 +31,7 @@
                               <value> 0.0   </value>
         </BCType>
         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                              <value> [10.,0.,0.] </value>
+                              <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" var = "Neumann" label = "Temperature">
                               <value> 0.0  </value>
@@ -107,8 +107,8 @@
            <Box label = "1">
               <lower>        [0,0,1.1250]    </lower>
               <upper>        [4.5,2.5,1.375]    </upper>
-                <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [2,2,1]    </patches>
+               <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [2,1,1]    </patches>
            </Box>
            <spacing>        [0.125,0.125,0.125]  </spacing>
        </Level>
@@ -203,7 +203,7 @@
             </contact>
       </MPM>
        <ICE>
-         <material>
+         <material name = "fluid">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
@@ -239,10 +239,11 @@
             
     <!--____________________________________________________________________-->
     <DataAnalysis>
+
        <Module name="particleExtract">
        
         <material>structure</material>
-        <samplingFrequency> 1e10 </samplingFrequency>
+        <samplingFrequency> 1e4 </samplingFrequency>
         <timeStart>          0   </timeStart>
         <timeStop>          100  </timeStop>
         <colorThreshold>
@@ -255,6 +256,24 @@
         </Variables>
  
       </Module>
+
+      <Module name = "firstLawThermo">
+        <samplingFrequency> 1e4 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <controlVolume>
+          <Face side = "x+"  extents = "entireFace"/>
+          <Face side = "x-"  extents = "entireFace"/>
+          <Face side = "y+"  extents = "partialFace">
+            <startPt>        [0,   2.5, 1.125 ] </startPt>
+            <endPt>          [4.5, 2.5, 1.375]  </endPt>
+          </Face>
+          <Face side = "y-"  extents = "entireFace"/>
+          <Face side = "z+"  extents = "entireFace"/>
+          <Face side = "z-"  extents = "entireFace"/>
+        </controlVolume>
+      </Module>
+      
     </DataAnalysis>  
        
 </Uintah_specification>

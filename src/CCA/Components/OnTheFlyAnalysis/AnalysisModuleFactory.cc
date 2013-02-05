@@ -26,6 +26,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+#include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -74,6 +75,8 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
         modules.push_back (scinew vorticity(module_ps,sharedState, dataArchiver));
       } else if (module == "flatPlate_heatFlux") {
         modules.push_back (scinew flatPlate_heatFlux(module_ps,sharedState, dataArchiver));
+      } else if (module == "firstLawThermo") {
+        modules.push_back (scinew FirstLawThermo(module_ps,sharedState, dataArchiver));
       } else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }

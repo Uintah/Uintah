@@ -26,15 +26,14 @@
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_FirstLawThermo_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Labels/ICELabel.h>
 #include <map>
-#include <vector>
 
 namespace Uintah {
   
@@ -51,8 +50,6 @@ GENERAL INFORMATION
    Todd Harman
    Department of Mechanical Engineering
    University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
 
 KEYWORDS
@@ -103,20 +100,56 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
+    void compute_ICE_Contributions(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matl_sub ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+                                   
+    void compute_MPM_Contributions(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matl_sub ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+                              
+    void faceInfo(const std::string fc,
+                   Patch::FaceType& face_side, 
+                   Vector& norm,
+                   int& p_dir);
+
+    void createFile(string& filename, FILE*& fp);
     
+    void bulletProofing( GridP& grid,
+                         const string& side,            
+                         const Point& start,            
+                         const Point& end );
+        
     // general labels
-    class total_heatRateLabel {
+    class FL_Labels {
     public:
-      VarLabel* total_heatRateLabel;
+      VarLabel* lastCompTimeLabel;
+      VarLabel* fileVarsStructLabel;
+      
+      VarLabel* ICE_totalIntEngLabel;
+      VarLabel* MPM_totalIntEngLabel;
+      VarLabel* totalFluxesLabel;
     };
     
-    total_heatRateLabel* v_lb;
+    FL_Labels* FL_lb;
+    ICELabel* I_lb;
     MPMLabel* M_lb;
+    
+    enum FaceType {partialFace=0, entireFace=1, none=2};  
        
-    struct plane{    // plane geometry
-      Point startPt;
-      Point endPt; 
-    };   
+    struct cv_face{ 
+      Point    startPt;
+      Point    endPt;
+      int      p_dir;
+      Vector   normalDir;
+      FaceType face;  
+    };  
+    
+    std::map< int, cv_face* > d_cv_faces;
        
     //__________________________________
     // global constants
@@ -124,12 +157,14 @@ WARNING
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
-    const MaterialSubset* d_matl_sub;
-    vector<plane*> d_plane;
-    Vector d_oneOrZero;
-    Point d_corner_pt[4];
+    MaterialSubset* d_zeroMatl;
+    MaterialSet* d_zeroMatlSet;
+    PatchSet* d_zeroPatch;
+    
+    double d_analysisFreq; 
+    double d_StartTime;
+    double d_StopTime;
+    
   };
 }
 

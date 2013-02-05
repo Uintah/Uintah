@@ -172,12 +172,13 @@ namespace Uintah {
               for ( int i = 2; i < N; i++ ){ 
                 double value = (species[i])[c] * _sp_mw[i-1] * (species[1])[c];
                 //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
+                if(value < 0) value = 0;  // assert that no mole fractions are negative
                 mol_frac.push_back(value); 
               } 
 
               _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
 
-              abskg[c] = effCff; //need to generalize this to the other coefficients  
+              abskg[c] = effCff; //need to generalize this to the other coefficients
 
             }
 
