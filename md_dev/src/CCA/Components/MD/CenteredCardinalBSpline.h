@@ -61,18 +61,63 @@ class CenteredCardinalBSpline {
     /**
      * @brief
      * @param
-     * @return
      */
     CenteredCardinalBSpline();
 
     /**
      * @brief
      * @param
-     * @return
      */
-    ~CenteredCardinalBSpline();
+    CenteredCardinalBSpline::~CenteredCardinalBSpline()
+
+    /**
+     * @brief
+     * @param
+     */
+    CenteredCardinalBSpline(const int& _SplineOrder);
+
+    /**
+     * @brief
+     * @param
+     */
+    vector<double> evaluate(const double& X);
+
+    /**
+     * @brief
+     * @param
+     */
+    vector<double> derivative(const double& X);
 
   private:
+
+    /**
+     * @brief
+     * @param
+     */
+    vector<int> generateBasisOffsets(const int& SplineOrder);
+
+    /**
+     * @brief
+     * @param
+     */
+    vector<int> generatePrefactorMap(const int& SplineOrder);
+
+    /**
+     * @brief
+     * @param
+     */
+    vector<double> generatePrefactorValues(const int& SplineOrder);
+
+    int splineOrder;
+
+    // For calculating values of the spline
+    vector<double> prefactorValues;
+    vector<int> prefactorMap, basisOffsets;
+
+    // For calculating derivatives of the spline (=difference of spline of order SplineOrder - 1)
+    vector<double> derivativeValues;
+    vector<int> derivativeMap;
+    vector<int> derivativeOffsets;
 
 };
 

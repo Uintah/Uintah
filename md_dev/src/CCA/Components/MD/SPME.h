@@ -26,6 +26,7 @@
 #define UINTAH_MD_ELECTROSTATICS_SPME_H
 
 #include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/Array3.h>
 
@@ -47,8 +48,8 @@ class ParticleSubset;
 class IntVector;
 class Point;
 class Vector;
+class Matrix3;
 class MapPoint;
-class CenteredCardinalBSpline;
 
 /**
  *  @class SPME
@@ -74,7 +75,7 @@ class SPME : public Electrostatics {
      * @brief
      * @param
      */
-    ~SPME();
+    virtual ~SPME();
 
     /**
      * @brief
@@ -83,51 +84,52 @@ class SPME : public Electrostatics {
      * @param
      * @param
      */
-    SPME(int _numGridPoints,
-         int _numGhostCells,
-         int _splineOrder,
-         bool _polarizable,
-         double _ewaldBeta);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void initialize();
+    SPME(const MDSystem& _System,
+         const double _EwaldBeta,
+         const bool _polarizable,
+         const double _PolarizationTolerance,
+         const SCIRun::IntVector& _K,
+         const CenteredCardinalBSpline& _Spline);
 
     /**
      * @brief
      * @param
      * @return
      */
-    void setup();
+    virtual void initialize(const MDSystem&);
 
     /**
      * @brief
      * @param
      * @return
      */
-    void calculate();
+    virtual void setup();
 
     /**
      * @brief
      * @param
      * @return
      */
-    void finalize();
+    virtual void calculate();
 
     /**
      * @brief
      * @param
      * @return
      */
-    inline ElectroStaticsType getType() const
+    virtual void finalize();
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline ElectrostaticsType getType() const
     {
-      return this->electrostaticsType;
+      return this->electrostaticMethod;
     }
 
-    friend class MD;
+    friend class MDSystem;
 
   private:
 
@@ -220,61 +222,141 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    vector<dblcomplex> generateBVector(int numPoints,
-                                       const std::vector<double>& M,
-                                       int max,
-                                       int splineOrder,
-                                       const std::vector<double>* splineCoeff);
+    vector<dblcomplex> generateBVector(const std::vector<double>& M,
+                                       const int InitialIndex,
+                                       const int LocalExtent,
+                                       const CenteredCardinalBSpline&) const;
+    /**
+     * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
+     *          Equation 4.8
+     * @param Extents - The number of internal grid points on the current processor
+     * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+     * @return A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
+     */
+    SimpleGrid<double> CalculateBGrid(const SCIRun::IntVector& Extents,
+                                      const SCIRun::IntVector& Offsets) const;
 
     /**
-     * @brief
-     * @param
-     * @return
+     * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
+     *          Equation 3.9
+     * @param Extents - The number of internal grid points on the current processor
+     * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+     * @return A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
      */
-    inline vector<double> generateMPrimeVector(unsigned int points,
-                                               int shift,
-                                               int max) const
-    {
-      std::vector<double> m(points);
-      int halfMax = max / 2;
+    SimpleGrid<double> CalculateCGrid(const SCIRun::IntVector& Extents,
+                                      const SCIRun::IntVector& Offsets) const;
 
-      for (size_t i = 0; i < points; ++i) {
-        m[i] = i + shift;
-        if (m[i] > halfMax) {
-          m[i] -= max;
-        }
+    SimpleGrid<Matrix3> CalculateStressPrefactor(const SCIRun::IntVector& Extents,
+                                                 const SCIRun::IntVector& Offset);
+
+    /**
+     * @brief Generates split grid vector.
+     *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
+     * @param KMax - Maximum number of grid points for direction
+     * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
+     * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
+     */
+    inline vector<double> generateMPrimeVector(unsigned int KMax,
+                                               const CenteredCardinalBSpline& InterpolatingSpline) const
+    {
+      int NumPoints = KMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
+      std::vector<double> m(NumPoints);
+
+      int HalfSupport = InterpolatingSpline.HalfSupport();
+      int HalfMax = KMax / 2;
+
+      // Pre wrap on the left and right sides as necessary for spline support
+      double* LeftMost = m[HalfSupport];
+
+      // Seed internal array (without wrapping)
+      for (size_t Index = 0; Index <= HalfMax; ++Index) {
+        LeftMost[Index] = Index;
       }
+      for (size_t Index = HalfMax + 1; Index < KMax; ++Index) {
+        LeftMost[Index] = Index - KMax;
+      }
+
+      // Right end wraps into m=i portion
+      for (size_t Index = 0; Index < HalfSupport; ++Index) {
+        m[KMax + Index] = Index;
+      }
+
+      // Left end wraps into m=i-KMax portion
+      for (size_t Index = -3; Index < 0; ++Index) {
+        LeftMost[Index] = Index;  // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
+      }
+
       return m;
     }
 
     /**
-     * @brief
-     * @param
-     * @return
+     * @brief Generates reduced Fourier grid vector.
+     *        Generates the vector of values i/K_i for i = 0..K-1
+     * @param KMax - Maximum number of grid points for direction
+     * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
+     * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    inline vector<double> generateMVector(unsigned int points,
-                                          int shift,
-                                          int max) const
+    inline vector<double> generateMFractionalVector(unsigned int KMax,
+                                                    const CenteredCardinalBSpline& InterpolatingSpline) const
     {
-      std::vector<double> m(points);
-      int halfMax = max / 2;
+      int NumPoints = KMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
+      std::vector<double> m(NumPoints);
 
-      for (size_t i = 0; i < points; ++i) {
-        m[i] = i + shift;
-        if (m[i] > halfMax) {
-          m[i] -= max;
-        }
+      int HalfSupport = InterpolatingSpline.HalfSupport();
+
+      //  Pre wrap on the left and right sides as necessary for spline support
+      double* LeftMost = m[HalfSupport];
+      double KMaxInv = static_cast<double>(KMax);
+
+      for (size_t Index = -3; Index < 0; ++Index) {
+        LeftMost[-Index] = (static_cast<double>(KMax - Index)) * KMaxInv;
       }
+
+      for (size_t Index = 0; Index < KMax; ++Index) {
+        m[Index] = static_cast<double>(Index) * KMaxInv;
+      }
+
+      double* RightMost = m[KMax];
+      for (size_t Index = 0; Index < HalfSupport; ++Index) {
+        RightMost[Index] = static_cast<double>(Index) * KMaxInv;
+      }
+
       return m;
     }
 
-    cdGrid Q;
-    ElectroStaticsType electrostaticsType;   //!<
-    int numGridPoints;                       //!<
-    int numGhostCells;                       //!<
-    int splineOrder;                         //!<
-    bool polarizable;                        //!<
-    double ewaldBeta;                        //!< The Ewald damping coefficient
+    SPME::SPME(const MDSystem& SimulationSystem,
+               const double _EwaldBeta,
+               const bool _IsPolarizable,
+               const SCIRun::IntVector& _KLimits,
+               const CenteredCardinalBSpline& _Spline);
+
+    // Values fixed on instantiation
+    ElectrostaticsType electrostaticMethod;              // Implementation type for long range electrostatics
+    double EwaldBeta;						                  // The Ewald calculation damping coefficient
+    bool polarizable;				                  	   // Use polarizable Ewald formulation
+    double PolarizationTolerance;                        // Tolerance threshold for polarizable system
+    SCIRun::IntVector KLimits;                           // Number of grid divisions in each direction
+    CenteredCardinalBSpline InterpolatingSpline;         // Spline object to hold info for spline calculation
+
+    // Patch dependant quantities
+    SCIRun::IntVector localGridExtents;                  // Number of grid points in each direction for this patch
+    SCIRun::IntVector localGridOffset;		               // Grid point index of local 0,0,0 origin in global coordinates
+    SCIRun::IntVector localGhostPositiveSize;            // Number of ghost cells on positive boundary
+    SCIRun::IntVector localGhostNegativeSize;            // Number of ghost cells on negative boundary
+
+    // Variables inherited from MDSystem to make life easier
+
+    Matrix3 UnitCell;                       // Unit cell lattice parameters
+    Matrix3 InverseUnitCell;                // Inverse lattice parameters
+    double SystemVolume;                   // Volume of the unit cell
+
+    // Actually holds the data we're working with
+    SimpleGrid<double> fTheta;
+    SimpleGrid<Matrix3> StressPrefactor;
+    SimpleGrid<complex<double> > Q;
+
+    // FFT Related variables
+    fftw_complex forwardTransformPlan, backwardTransformPlan;
 
 };
 

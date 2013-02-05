@@ -53,115 +53,301 @@ SPME::~SPME()
 
 }
 
-SPME::SPME(int _numGridPoints,
-           int _numGhostCells,
-           int _splineOrder,
-           bool _polarizable,
-           double _ewaldBeta) :
-    numGridPoints(_numGridPoints),
-      numGhostCells(_numGhostCells),
-      splineOrder(_splineOrder),
-      polarizable(_polarizable),
-      ewaldBeta(_ewaldBeta)
+SPME::SPME(const MDSystem& SimulationSystem,
+           const double _EwaldBeta,
+           const bool _IsPolarizable,
+           const double _Tolerance,
+           const SCIRun::IntVector& _K,
+           const CenteredCardinalBSpline& _Spline)
+          :EwaldBeta(_EwaldBeta),
+           polarizable(_IsPolarizable),
+           PolarizationTolerance(_Tolerance),
+           KLimits(_K),
+           InterpolatingSpline(_Spline)
 {
-
+  ElectrostaticMethod = SPME;
+  // Initialize and check for proper construction
+  this->initialize(SimulationSystem);
+  this->setup();
+  SCIRun::IntVector localGridSize = localGridExtents + localGhostPositiveSize + localGhostNegativeSize;
+  SimpleGrid<complex<double> > Q(localGridSize,localGridOffset,localGhostNegativeSize,localGhostPositiveSize);
+  Q.initialize(complex<double> (0.0,0.0));
 }
 
-void SPME::initialize()
+std::vector<dblcomplex> SPME::generateBVector( const std::vector<double>& MFractional,
+                                               const int InitialVectorIndex,
+                                               const int LocalGridExtent,
+                                               const CenteredCardinalBSpline& InterpolatingSpline) const
 {
+  double PI = acos(-1.0);
+  double TwoPI = 2.0*PI;
+  double orderM12PI = TwoPI*(InterpolatingSpline.Order()-1);
 
+  int HalfSupport=InterpolatingSpline.HalfSupport();
+  std::vector<dblcomplex> b(LocalGridExtent);
+  std::vector<double> ZeroAlignedSpline=InterpolatingSpline.Evaluate(0);
+
+  double* LocalMFractional=MFractional[InitialVectorIndex]; // Reset MFractional zero so we can index into it negatively
+  for (size_t Index=0; Index < LocalGridExtent; ++Index) {
+    double Internal=TwoPI*LocalMFractional[Index];
+     // Formula looks significantly different from given SPME for offset splines.
+     //   See Essmann et. al., J. Chem. Phys. 103 8577 (1995). for conversion, particularly formula C3 pt. 2 (paper uses pt. 4)
+     dblcomplex Phi_N=0.0;
+     for (int DenomIndex=-HalfSupport; DenomIndex <= HalfSupport; ++DenomIndex) {
+        Phi_N += dblcomplex(cos(Internal*DenomIndex),sin(Internal*DenomIndex));
+     }
+     b[Index]=1.0/Phi_N;
+  }
+  return b;
+}
+
+SimpleGrid<double> SPME::CalculateBGrid(const SCIRun::IntVector& localExtents,
+                                        const SCIRun::IntVector& globalOffset) const {
+
+     size_t Limit_Kx = KLimits.x();
+     size_t Limit_Ky = KLimits.y();
+     size_t Limit_Kz = KLimits.z();
+
+     std::vector<double> mf1 = SPME::generateMFractionalVector(Limit_Kx, InterpolatingSpline);
+     std::vector<double> mf2 = SPME::generateMFractionalVector(Limit_Ky, InterpolatingSpline);
+     std::vector<double> mf3 = SPME::generateMFractionalVector(Limit_Kz, InterpolatingSpline);
+
+     // localExtents is without ghost grid points
+     std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), InterpolatingSpline);
+     std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), InterpolatingSpline);
+     std::vector<dblcomplex> b3 = generateBVector(mf3, globalOffset.z(), localExtents.z(), InterpolatingSpline);
+
+     SimpleGrid<double> BGrid(localExtents,globalOffset,0); // No ghost cells; internal only
+
+     size_t XExtents=localExtents.x();
+      size_t YExtents=localExtents.y();
+      size_t ZExtents=localExtents.z();
+
+      int XOffset=globalOffset.x();
+      int YOffset=globalOffset.y();
+      int ZOffset=globalOffset.z();
+
+     for (size_t kX = 0; kX < XExtents; ++kX) {
+        for (size_t kY = 0; kY < YExtents; ++kY) {
+           for (size_t kZ = 0; kZ < ZExtents; ++kZ) {
+              BGrid(kX, kY, kZ) = norm(b1[kX+XOffset])*norm(b2[kY+YOffset])*norm(b3[kZ+ZOffset]);
+         }
+      }
+   }
+   return BGrid;
+}
+
+SimpleGrid<double> SPME::CalculateCGrid(const SCIRun::IntVector& Extents,
+                                        const SCIRun::IntVector& Offset) const {
+
+   std::vector<double> mp1 = SPME::generateMPrimeVector(KLimits.x(), InterpolatingSpline);
+   std::vector<double> mp2 = SPME::generateMPrimeVector(KLimits.y(), InterpolatingSpline);
+   std::vector<double> mp3 = SPME::generateMPrimeVector(KLimits.z(), InterpolatingSpline);
+
+   size_t XExtents=Extents.x();
+   size_t YExtents=Extents.y();
+   size_t ZExtents=Extents.z();
+
+   int XOffset=Offset.x();
+   int YOffset=Offset.y();
+   int ZOffset=Offset.z();
+
+   double PI=acos(-1.0);
+   double PI2=PI*PI;
+   double invBeta2 = 1.0/(EwaldBeta*EwaldBeta);
+   double invVolFactor = 1.0/(SystemVolume*PI);
+
+   SimpleGrid<double> CGrid(Extents,Offset,0); // No ghost cells; internal only
+   for (size_t kX = 0; kX < XExtents; ++kX) {
+      for (size_t kY = 0; kY < YExtents; ++kY) {
+         for (size_t kZ=0; kZ < ZExtents; ++kZ) {
+            if (kX != 0 || kY != 0 || kZ != 0) {
+               SCIRun::Vector m(mp1[kX+XOffset],mp2[kY+YOffset],mp3[kZ+ZOffset]);
+
+               m *= InverseUnitCell;
+
+               double M2=m.length2();
+               double factor=PI2*M2*invBeta2;
+               CGrid(kX, kY, kZ)=invVolFactor*exp(-factor)/M2;
+            }
+         }
+      }
+   }
+   CGrid(0, 0, 0)=0;
+   return CGrid;
+}
+
+SimpleGrid<Matrix3> SPME::CalculateStressPrefactor(const SCIRun::IntVector& Extents, const SCIRun::IntVector& Offset) {
+
+   std::vector<double> mp1 = SPME::generateMPrimeVector(KLimits.x(), InterpolatingSpline);
+   std::vector<double> mp2 = SPME::generateMPrimeVector(KLimits.y(), InterpolatingSpline);
+   std::vector<double> mp3 = SPME::generateMPrimeVector(KLimits.z(), InterpolatingSpline);
+
+   size_t XExtents=Extents.x();
+   size_t YExtents=Extents.y();
+   size_t ZExtents=Extents.z();
+
+   int XOffset=Offset.x();
+   int YOffset=Offset.y();
+   int ZOffset=Offset.z();
+
+   double PI=acos(-1.0);
+   double PI2=PI*PI;
+   double invBeta2 = 1.0/(EwaldBeta*EwaldBeta);
+
+   SimpleGrid<Matrix3>StressPre(Extents,Offset,0); // No ghost cells; internal only
+   for (size_t kX = 0; kX < XExtents; ++kX) {
+      for (size_t kY = 0; kY < YExtents; ++kY) {
+         for (size_t kZ=0; kZ < ZExtents; ++kZ) {
+            if (kX!=0 || kY!=0 || kZ!=0) {
+               SCIRun::Vector m(mp1[kX+XOffset],mp2[kY+YOffset],mp3[kZ+ZOffset]);
+               m *= InverseUnitCell;
+               double M2=m.length2();
+               Matrix3 LocalStressContribution(-2.0*(1.0+PI2*M2*invBeta2)/M2);
+
+               // Multiply by fourier vectorial contribution
+               for (size_t s1=0; s1 < 3; ++s1) {
+                 for (size_t s2=0; s2 < 3; ++s2) {
+                   LocalStressContribution(s1,s2) *= (m[s1]*m[s2]);
+                 }
+               }
+
+               // Account for delta function
+               for (size_t Delta=0; Delta < 3; ++Delta) {
+                 LocalStressContribution(Delta,Delta) += 1.0;
+               }
+
+               StressPre(kX, kY, kZ)=LocalStressContribution;
+            }
+         }
+      }
+   }
+   StressPre(0, 0, 0)=Matrix3(0);
+   return StressPre;
+}
+
+// Interface implementations
+void SPME::initialize(const MDSystem& SimulationSystem)
+{
+  // We call SPME::initialize from the constructor or if we've somehow maintained our object across a system change
+
+  // Note:  I presume the indices are the local cell indices without ghost cells
+  localGridExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
+
+  // Holds the index to map the local chunk of cells into the global cell structure
+  localGridOffset  = patch->getCellLowIndex();
+
+  // Get useful information from global system descriptor to work with locally.
+  UnitCell         = SimulationSystem->UnitCell();
+  InverseUnitCell  = SimulationSystem->InverseUnitCell();
+  SystemVolume     = SimulationSystem->Volume();
+
+  // Alan:  Not sure what the correct syntax is here, but the idea is that we'll store the number of ghost cells
+  //          along each of the min/max boundaries.  This lets us differentiate should we need to for centered and
+  //          left/right shifted splines
+  localGhostPositiveSize = patch->getExtraCellHighIndex() - patch->getCellHighIndex();
+  localGhostNegativeSize = patch->getCellLowIndex() - patch->getExtraCellLowIndex();
+  return;
 }
 
 void SPME::setup()
 {
 
+
+  // We should only have to do this if KLimits or the inverse cell changes
+  // Calculate B and C
+  SimpleGrid<double> fBGrid = CalculateBGrid(localGridExtents,localGridOffset);
+  SimpleGrid<double> fCGrid = CalculateCGrid(localGridExtents,localGridOffset);
+  // Composite B and C into Theta
+  size_t XExtent = localGridExtents.x();
+  size_t YExtent = localGridExtents.y();
+  size_t ZExtent = localGridExtents.z();
+  for (size_t XIndex=0; XIndex < XExtent; ++XIndex) {
+    for (size_t YIndex=0; YIndex < YExtent; ++YIndex) {
+      for (size_t ZIndex=0; ZIndex < ZExtent; ++ZIndex) {
+        fTheta(XIndex, YIndex, ZIndex) = fBGrid(XIndex, YIndex, ZIndex)*fCGrid(XIndex, YIndex, ZIndex);
+      }
+    }
+  }
+
+  StressPrefactor = CalculateStressPrefactor;
 }
 
 void SPME::calculate()
 {
+  // Note:  Must run SPME->setup() after every time there is a new box/K grid mapping (e.g. every step for NPT)
+  //          This should be checked for in the system electrostatic driver
+  vector<vector<ChargeMapPoints> > ChargeMap=SPME::generateChargeMap(pset,InterpolatingSpline);
+  bool ElectrostaticsConverged=false;
+  int NumberofIterations=0;
+  while (!ElectrostaticsConverged && (NumberofIterations < MaxIterations)) {
+    SPME::MapChargeToGrid(pset,ChargeMap); // Calculate Q(r)
 
+    // Map the local patch's charge grid into the global grid and transform
+    SPME::GlobalMPIReduceChargeGrid();
+    SPME::ForwardTransformGlobalChargeGrid(); // Q(r) -> Q*(k)
+    // Once reduced and transformed, we need the local grid repopulated with Q*(k)
+    SPME::MPIDistributeLocalChargeGrid();
+
+    // Multiply the transformed Q out
+    size_t XExtent=localGridExtents.x();
+    size_t YExtent=localGridExtents.y();
+    size_t ZExtent=localGridExtents.z();
+    double localEnergy=0.0;
+    Matrix3 localStress(0.0);
+    for (int kX=0; kX < XExtent; ++kX) {
+      for (int kY=0; kY < YExtent; ++kY) {
+        for (int kZ=0; kZ < ZExtent; ++kZ) {
+          complex<double> GridValue=Q(kX, kY, kZ);
+          Q(kX, kY, kZ) = GridValue*conj(GridValue)*fTheta(kX, kY, kZ);  // Calculate (Q*Q^)*(B*C)
+          localEnergy += Q(kX, kY, kZ);
+          localStress += Q(kX, kY, kZ)*StressPrefactor(kX, kY, kZ);
+        }
+      }
+    }
+
+    // Transform back to real space
+    SPME::GlobalMPIReduceChargeGrid();
+    SPME::ReverseTransformGlobalChargeGrid();
+    SPME::MPIDistributeLocalChargeGrid();
+
+    //  This may need to be before we transform the charge grid back to real space if we can calculate
+    //    polarizability from the fourier space component
+    ElectrostaticsConverged = true;
+    if (polarizable) {
+      // calculate polarization here
+      // if (RMSPolarizationDifference > PolarizationTolerance) { ElectrostaticsConverged = false; }
+      std::cerr << "Error:  Polarization not currently implemented!";
+    }
+    // Sanity check - Limit maximum number of polarization iterations we try
+    ++NumberofIterations;
+  }
+  SPME::MapForcesFromGrid(pset,ChargeMap); // Calculate electrostatic contribution to f_ij(r)
 }
 
 void SPME::finalize()
 {
-
+  // Something goes here, though I'm not sure what
 }
 
-void SPME::performSPME(const MDSystem& system,
-                       const Patch* patch,
-                       ParticleSubset* pset)
+std::vector<std::vector<MapPoint> > SPME::GenerateChargeMap(ParticleSubset* pset,
+                                                            CenteredCardinalBSpline& spline)
 {
-  // Extract necessary information from system object
-  Matrix3 inverseCell = system.getCellInverse();
-  double systemVolume = system.getVolume();
-  IntVector localExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
-  IntVector globalOffset(numGhostCells, numGhostCells, numGhostCells);
-  IntVector globalExtents(numGhostCells, numGhostCells, numGhostCells);
+  /*  WORK IN PROGRESS
+    I think we can make this a vector<SimpleGrid<MapPoint> > to make iteration and overlay far easier
+    JBH - 2-4-2013
 
-  SimpleGrid<double> fStressPre(localExtents, globalOffset, numGhostCells);
-  SimpleGrid<double> fTheta(localExtents, globalOffset, numGhostCells);
-  fStressPre.initialize(0.0);
-  fTheta.initialize(0.0);
+  int MaxParticleIndex=localParticleSet->size();
+  std::vector<SimpleGrid<MapPoint> > ChargeMap;
+  // Loop through particles
+  for (size_t ChargeIndex=0; ChargeIndex < MaxChargeIndex; ++ChargeIndex) {
+    int ParticleID = pst[ChargeIndex]->GetParticleID();
 
-  std::vector<double> M1(localExtents.x()), M2(localExtents.y()), M3(localExtents.z());
+    vector<MapPoint> ParticleMap;
 
-  M1 = generateMPrimeVector(localExtents.x(), globalOffset.x(), globalExtents.x());
-  M2 = generateMPrimeVector(localExtents.y(), globalOffset.y(), globalExtents.y());
-  M3 = generateMPrimeVector(localExtents.z(), globalOffset.z(), globalExtents.z());
 
-  // Box dimensions have changed since last integration time step; we need to update B and C
-  if (system.newBox()) {
-    SimpleGrid<double> fBGrid(localExtents, globalOffset, numGhostCells);
-    SimpleGrid<double> fCGrid(localExtents, globalOffset, numGhostCells);
-    fBGrid.initialize(0.0);
-    fCGrid.initialize(0.0);
-
-    calculateStaticGrids(localExtents, globalOffset, system, fBGrid, fCGrid, fStressPre, splineOrder, M1, M2, M3);
-
-    // Check input parameters, might just need Inverse Cell, System Volume instead of whole MD_System
-    //  Also probably need to fix this routine up again for current object model
-
-//    fTheta = fBGrid * fCGrid;
   }
-  std::vector<std::vector<MapPoint> > localGridMap;
-  CenteredCardinalBSpline spline;
-  localGridMap = createChargeMap(pset, spline);
-
-  // Begin main SPME loop;
-  SimpleGrid<double> Q;
-
-  // set up FFT routine back/forward transform auxiliary data here
-  fftw_complex forwardTransformData, backwardTransformData;
-
-  bool converged = false;     // Calculate at least once
-  Matrix3 StressTensorLocal = Matrix3(0);  // Holds this patches contribution to the overall stress tensor
-  double EnergyLocal = 0;       // Holds this patches local contribution to the energy
-
-  while (!converged) {    // Iterate over this subset until charge convergence
-    mapChargeToGrid(localGridMap, pset);
-//    Q.inPlaceFFT_RealToFourier(forwardTransformData);
-//    Q.multiplyInPlace(fTheta);
-//    EnergyLocal = Q.CalculateEnergyAndStress(M1, M2, M3, StressTensorLocal, fStressPre, fTheta);
-
-    // Note: Justin - Can we extract energy easily from stress tensor?  If it's just tr(StressTensor) or somesuch, it would be preferable
-    //   to have this routine pass back only the stress tensor.
-
-    // NYI:  Q.CalculatePolarization(CurrentPolarizationGrid,OldPolarizationGrid);
-
-    converged = true;  // No convergence if no polarization
-    // if (polarizable) { converged=CurrentPolarizationGrid.CheckConvergence(OldPolarizationGrid); }
-  }
-  // We need to calculate new forces on particles while preserving old particle values
-  mapForceFromGrid(localGridMap, pset);
-
-  // We need to accumulate EnergyLocal and StressLocal here, as well as the NewParticleList with their associated forces on return
-  return;
-}
-
-std::vector<std::vector<MapPoint> > SPME::createChargeMap(ParticleSubset* pset,
-                                                          CenteredCardinalBSpline& spline)
-{
-
+  */
 }
 
 std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
@@ -192,67 +378,7 @@ std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCo
   return localReducedCoords;
 }
 
-//No ghost points
-void SPME::calculateStaticGrids(const IntVector& gridExtents,
-                                const IntVector& offset,
-                                const MDSystem& system,
-                                SimpleGrid<double>& fBGrid,
-                                SimpleGrid<double>& fCGrid,
-                                SimpleGrid<double>& fStressPre,
-                                int splineOrder,
-                                const std::vector<double>& M1,
-                                const std::vector<double>& M2,
-                                const std::vector<double>& M3)
-{
-  Matrix3 inverseUnitCell;
-  double ewaldBeta;
-  IntVector subGridOffset, K;
-  IntVector halfGrid = gridExtents / IntVector(2, 2, 2);
-  inverseUnitCell = system.getCellInverse();
 
-  const std::vector<double> ordinalSpline = calculateOrdinalSpline(splineOrder - 1, splineOrder);
-
-  std::vector<dblcomplex> b1, b2, b3;
-
-  // Generate vectors of b_i (=exp(i*2*Pi*(n-1)m_i/K_i)*sum_(k=0..p-2)M_n(k+1)exp(2*Pi*k*m_i/K_i)
-  b1 = generateBVector(gridExtents.x(), M1, K.x(), splineOrder, &ordinalSpline);
-  b2 = generateBVector(gridExtents.y(), M2, K.y(), splineOrder, &ordinalSpline);
-  b3 = generateBVector(gridExtents.z(), M3, K.z(), splineOrder, &ordinalSpline);
-
-  // Use previously calculated vectors to calculate our grids
-  double PI, PI2, invBeta2, volFactor;
-
-  PI = acos(-1.0);
-  PI2 = PI * PI;
-  invBeta2 = 1.0 / (ewaldBeta * ewaldBeta);
-  volFactor = 1.0 / (PI * system.getVolume());
-
-  size_t extentsX = gridExtents.x();
-  size_t extentsY = gridExtents.y();
-  size_t extentsZ = gridExtents.z();
-  for (size_t kX = 0; kX < extentsX; ++kX) {
-    for (size_t kY = 0; kY < extentsY; ++kY) {
-      for (size_t kZ = 0; kZ < extentsZ; ++kZ) {
-
-        fBGrid(kX, kY, kZ) = norm(b1[kX]) * norm(b2[kY]) * norm(b3[kZ]);  // Calculate B
-
-        if (kX != 0 && kY != 0 && kZ != 0) {  // Calculate C and stress pre-multiplication factor
-          Vector m(M1[kX], M2[kY], M3[kZ]), M;  //
-          double M2, Factor;
-
-          M = m * inverseUnitCell;
-          M2 = M.length2();
-          Factor = PI2 * M2 * invBeta2;
-
-          fCGrid(kX, kY, kZ) = volFactor * exp(-Factor) / M2;
-          fStressPre(kX, kY, kZ) = 2 * (1 + Factor) / M2;
-        }
-      }
-    }
-  }
-  fCGrid(0, 0, 0) = 0.0;
-  fStressPre(0, 0, 0) = 0.0;  // Exceptional values
-}
 
 SimpleGrid<double>& SPME::mapChargeToGrid(const std::vector<std::vector<MapPoint> > gridMap,
                                           const ParticleSubset* globalParticleList)
@@ -266,154 +392,4 @@ SimpleGrid<double>& SPME::mapForceFromGrid(const std::vector<std::vector<MapPoin
 
 }
 
-SimpleGrid<double> SPME::fC(const IntVector& gridExtents,
-                            const IntVector& gridOffset,
-                            const int numGhostCells,
-                            const MDSystem& system)
-{
-  SimpleGrid<double> C(gridExtents, gridOffset, numGhostCells);
-  Matrix3 inverseCell;
-  double ewaldBeta;
 
-  inverseCell = system.getCellInverse();
-  IntVector halfGrid = gridExtents / IntVector(2, 2, 2);
-
-  double PI = acos(-1.0);
-  double PI2 = PI * PI;
-  double invBeta2 = 1.0 / (ewaldBeta * ewaldBeta);
-  double volFactor = 1.0 / (PI * system.getVolume());
-
-  Vector M;
-  int extentX = gridExtents.x();
-  for (int m1 = 0; m1 < extentX; ++m1) {
-    M[0] = m1;
-    if (m1 > halfGrid.x()) {
-      M[0] -= gridExtents.x();
-    }
-    int extentY = gridExtents.y();
-    for (int m2 = 0; m2 < extentY; ++m2) {
-      M[1] = m2;
-      if (m2 > halfGrid.y()) {
-        M[1] -= gridExtents.y();
-      }
-      int extentZ = gridExtents.z();
-      for (int m3 = 0; m3 < extentZ; ++m3) {
-        M[2] = m3;
-        if (m3 > halfGrid.z()) {
-          M[2] -= gridExtents.z();
-        }
-        // Calculate C point values
-        if ((m1 != 0) && (m2 != 0) && (m3 != 0)) {  // Discount C(0,0,0)
-          Vector tempM = M * inverseCell;
-          double M2 = tempM.length2();
-          double val = volFactor * exp(-PI2 * M2 * invBeta2) / M2;
-          C(m1, m2, m3) = val;
-        }
-      }
-    }
-  }
-  return C;
-}
-
-SimpleGrid<dblcomplex> SPME::fB(const IntVector& gridExtents,
-                                const MDSystem& system,
-                                int splineOrder)
-{
-  Matrix3 InverseCell;
-  SimpleGrid<dblcomplex> B;
-
-  InverseCell = system.getCellInverse();
-  IntVector halfGrid = gridExtents / IntVector(2, 2, 2);
-  Vector inverseGrid = Vector(1.0, 1.0, 1.0) / gridExtents;
-
-  double PI = acos(-1.0);
-  double orderM12PI = 2.0 * PI * (splineOrder - 1);
-
-  vector<dblcomplex> b1(gridExtents.x()), b2(gridExtents.y()), b3(gridExtents.z());
-  vector<double> ordinalSpline(splineOrder - 1);
-
-  // Calculates Mn(0)..Mn(n-1)
-  ordinalSpline = calculateOrdinalSpline(splineOrder - 1, splineOrder);
-
-  // Calculate k_i = m_i/K_i
-  for (int m1 = 0; m1 < gridExtents.x(); ++m1) {
-    double kX = m1;
-    if (m1 > halfGrid.x()) {
-      kX = m1 - gridExtents.x();
-    }
-    kX /= gridExtents.x();
-    dblcomplex num = dblcomplex(cos(orderM12PI * kX), sin(orderM12PI * kX));
-    dblcomplex denom = ordinalSpline[0];  //
-    for (int k = 1; k < splineOrder - 1; ++k) {
-      denom += ordinalSpline[k] * dblcomplex(cos(orderM12PI * kX * k), sin(orderM12PI * kX * k));
-    }
-    b1[m1] = num / denom;
-  }
-
-  for (int m2 = 0; m2 < gridExtents.y(); ++m2) {
-    double kY = m2;
-    if (m2 > halfGrid.y()) {
-      kY = m2 - gridExtents.y();
-    }
-    kY /= gridExtents.y();
-    dblcomplex num = dblcomplex(cos(orderM12PI * kY), sin(orderM12PI * kY));
-    dblcomplex denom = ordinalSpline[0];  //
-    for (int k = 1; k < splineOrder - 1; ++k) {
-      denom += ordinalSpline[k] * dblcomplex(cos(orderM12PI * kY * k), sin(orderM12PI * kY * k));
-    }
-    b2[m2] = num / denom;
-  }
-
-  for (int m3 = 0; m3 < gridExtents.z(); ++m3) {
-    double kZ = m3;
-    if (m3 > halfGrid.z()) {
-      kZ = m3 - gridExtents.y();
-    }
-    kZ /= gridExtents.y();
-    dblcomplex num = dblcomplex(cos(orderM12PI * kZ), sin(orderM12PI * kZ));
-    dblcomplex denom = ordinalSpline[0];  //
-    for (int k = 1; k < splineOrder - 1; ++k) {
-      denom += ordinalSpline[k] * dblcomplex(cos(orderM12PI * kZ * k), sin(orderM12PI * kZ * k));
-    }
-    b3[m3] = num / denom;
-  }
-
-  // Calculate B point values
-  for (int m1 = 0; m1 < gridExtents.x(); ++m1) {
-    for (int m2 = 0; m2 < gridExtents.x(); ++m2) {
-      for (int m3 = 0; m3 < gridExtents.x(); ++m3) {
-        B(m1, m2, m3) = norm(b1[m1]) * norm(b2[m2]) * norm(b3[m3]);
-      }
-    }
-  }
-  return B;
-}
-
-vector<double> SPME::calculateOrdinalSpline(int orderMinusOne,
-                                            int splineOrder)
-{
-
-}
-
-std::vector<dblcomplex> SPME::generateBVector(int numPoints,
-                                              const std::vector<double>& M,
-                                              int max,
-                                              int splineOrder,
-                                              const std::vector<double>* splineCoeff)
-{
-  double PI = acos(-1.0);
-  double orderM12PI = (splineOrder - 1) * 2.0 * PI;
-
-  std::vector<dblcomplex> B(numPoints);
-  for (int idx = 0; idx < numPoints; ++idx) {
-    double k = M[idx] / max;
-    dblcomplex numerator = dblcomplex(cos(orderM12PI * k), sin(orderM12PI * k));
-    dblcomplex denominator;
-    for (int p = 0; p < splineOrder - 1; ++p) {
-      double k1 = M[idx] / max;
-      denominator += (*splineCoeff)[p] * dblcomplex(cos(orderM12PI * k1 * p), sin(orderM12PI * k1 * p));
-    }
-    B[idx] = numerator / denominator;
-  }
-  return B;
-}

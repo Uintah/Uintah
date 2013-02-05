@@ -301,7 +301,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     std::vector<Point> atomList;             //!<
     std::vector<vector<int> > neighborList;  //!<
 
-    SPME*           electrostatics;          //!<
+    Electrostatics* electrostatics;          //!<
     MDSystem*       system;                  //!<
 
     // copy constructor and operator=
