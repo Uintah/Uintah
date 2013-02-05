@@ -51,7 +51,6 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <complex>
 
 #include <sci_defs/fftw_defs.h>
 

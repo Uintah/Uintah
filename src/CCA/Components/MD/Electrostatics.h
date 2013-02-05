@@ -49,7 +49,7 @@ class Electrostatics {
     /**
      * @brief Enumeration of all supported ElectroStatics types.
      */
-    enum ElectroStaticsType {
+    enum ElectrostaticsType {
       EWALD, SPME, FMM, NONE
     };
 
@@ -94,7 +94,7 @@ class Electrostatics {
      * @param
      * @return
      */
-    virtual ElectroStaticsType getType() const = 0;
+    virtual ElectrostaticsType getType() const = 0;
 
   private:
 
