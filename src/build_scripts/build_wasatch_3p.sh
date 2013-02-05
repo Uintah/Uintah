@@ -7,6 +7,7 @@
 # $1 - location to build the 3P
 # $2 - boost location
 # $3 - whether Uintah is being built in debug mode or not...
+# $4 - whether Uintah is being built with static libraries or not ...
 #
 
 BASE_BUILD_DIR=$1
@@ -15,6 +16,14 @@ BOOST_DIR=$2
 if test $3 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
+
+if test $4 != "yes"; then
+  STATIC="-DBoost_USE_STATIC_LIBS=ON"
+else
+  STATIC=""
+fi
+
+
 
 ###########################################################################
 # GIT Hash Tags for the various libraries
@@ -92,6 +101,7 @@ INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
 run \
 "cmake \
   $DEBUG \
+  $STATIC \
   -DENABLE_TESTS=OFF \
   -DENABLE_THREADS=OFF \
   -DBoost_DIR=$BOOST_DIR \
@@ -122,6 +132,7 @@ SPATIAL_OPS_INSTALL_DIR=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
 run \
 "cmake \
   $DEBUG \
+  $STATIC \
   -DENABLE_TESTS=OFF \
   \
   -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
@@ -154,6 +165,7 @@ INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/TabProps
 run \
 "cmake \
   $DEBUG \
+  $STATIC \
   -DTabProps_PREPROCESSOR=OFF \
   -DTabProps_UTILS=OFF \
   -DTabProps_BSPLINE=OFF \
@@ -185,6 +197,7 @@ INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
 run \
 "cmake \
   $DEBUG \
+  $STATIC \
   -DRadProps_ENABLE_TESTING=OFF \
   -DBoost_DIR=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
