@@ -54,70 +54,93 @@ class IntVector;
  *
  *  @param
  */
+
+/**
+ * @brief Selection function on [-0.5,0.5)
+ * @param X - double, input value for selection function
+ * @return 1 if -0.5 <= X < 0.5, 0 otherwise
+ */
+double s0(const double& X);
+
+
+
+
 class CenteredCardinalBSpline {
 
   public:
-
     /**
      * @brief
      * @param
+     * @return
      */
     CenteredCardinalBSpline();
 
     /**
-     * @brief
-     * @param
-     */
-    CenteredCardinalBSpline::~CenteredCardinalBSpline()
-
-    /**
-     * @brief
-     * @param
+     * @brief Constructor for non-null spline
+     * @param SplineOrder - int, order of the spline
+     * @return Object of spline type
      */
     CenteredCardinalBSpline(const int& _SplineOrder);
 
     /**
      * @brief
      * @param
+     * @return
      */
-    vector<double> evaluate(const double& X);
+    ~CenteredCardinalBSpline();
 
     /**
-     * @brief
-     * @param
+     * @brief Evaluate the spline across the entire support range
+     * @param X - double, Value of the point for which spline is calculated
+     * @return std::vector<double> - Contains the spline values on evenly spaced points with spacing 1.0
+     *           over the entire support range of the spline.
      */
-    vector<double> derivative(const double& X);
+    vector<double> Evaluate(const double& X) const;
+
+    /**
+     * @brief Generate the derivative of the spline for the entire support range
+     * @param X - double, Value of the point for which the spline derivative is calculated
+     * @return std::vector<double> - Contains the spline derivatives on evenly spaced points with spacing 1.0
+     *           over the entire support range of the spline.
+     */
+    vector<double> Derivative(const double& X) const;
+
+    /*
+     * @brief Return the support range of the current spline
+     * @param None
+     * @return int - The support range (maximum number of grid points) over which the spline has non-zero values
+     */
+    inline int Support() const {
+      return SplineSupport;
+    }
+
+    /*
+     * @brief Returns half of the support range (rounded down) for the current spline
+     * @param None
+     * @return int - Half the support range over which the spline is defined.  In a 0-centric language, this is
+     *           also the array index of the principle value in the Evaluate and Derivative returned arrays.
+     */
+    inline int HalfSupport() const {
+      return SplineHalfSupport;
+    }
 
   private:
+    int SplineOrder;
+    int SplineSupport;
+    int SplineHalfSupport;
 
-    /**
-     * @brief
-     * @param
-     */
-    vector<int> generateBasisOffsets(const int& SplineOrder);
+    // Stores values necessary for calculating the spline
+    vector<double> PrefactorValues;
+    vector<int>    PrefactorMap, BasisOffsets;
 
-    /**
-     * @brief
-     * @param
-     */
-    vector<int> generatePrefactorMap(const int& SplineOrder);
+    // Stores values necessary for calculating the spline derivatives
+    vector<double> DerivativeValues;
+    vector<int>    DerivativeMap, DerivativeOffsets;
 
-    /**
-     * @brief
-     * @param
-     */
-    vector<double> generatePrefactorValues(const int& SplineOrder);
-
-    int splineOrder;
-
-    // For calculating values of the spline
-    vector<double> prefactorValues;
-    vector<int> prefactorMap, basisOffsets;
-
-    // For calculating derivatives of the spline (=difference of spline of order SplineOrder - 1)
-    vector<double> derivativeValues;
-    vector<int> derivativeMap;
-    vector<int> derivativeOffsets;
+    // Internal functions involved in setting up the spline
+    vector<int> GenerateBasisOffsets(const int Order);
+    vector<int> GeneratePrefactorMap(const int Order);
+    vector<double> GeneratePrefactorValues(const int Order);
 
 };
 
