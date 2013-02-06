@@ -26,7 +26,6 @@
 #define UINTAH_MD_ELECTROSTATICS_SPME_H
 
 #include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/Array3.h>
 
@@ -50,6 +49,7 @@ class Point;
 class Vector;
 class Matrix3;
 class MapPoint;
+class CenteredCardinalBSpline;
 
 /**
  *  @class SPME
@@ -75,7 +75,7 @@ class SPME : public Electrostatics {
      * @brief
      * @param
      */
-    virtual ~SPME();
+    ~SPME();
 
     /**
      * @brief
@@ -96,28 +96,28 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    virtual void initialize(const MDSystem&);
+    void initialize(const MDSystem&);
 
     /**
      * @brief
      * @param
      * @return
      */
-    virtual void setup();
+    void setup();
 
     /**
      * @brief
      * @param
      * @return
      */
-    virtual void calculate();
+    void calculate();
 
     /**
      * @brief
      * @param
      * @return
      */
-    virtual void finalize();
+    void finalize();
 
     /**
      * @brief
@@ -126,7 +126,7 @@ class SPME : public Electrostatics {
      */
     inline ElectrostaticsType getType() const
     {
-      return this->electrostaticMethod;
+      return this->electrostaticsType;
     }
 
     friend class MDSystem;
@@ -147,48 +147,36 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    std::vector<std::vector<MapPoint> > createChargeMap(ParticleSubset* pset,
-                                                        CenteredCardinalBSpline& spline);
+    std::vector<MapPoint> GenerateChargeMap(ParticleSubset* _pset,
+                                            CenteredCardinalBSpline& Spline);
 
     /**
      * @brief
      * @param
      * @return
      */
-    std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+    //std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                          const MDSystem& system);
 
-    /**
-     * @brief No ghost points
-     * @param
-     * @return
-     */
-    void calculateStaticGrids(const IntVector& gridExtents,
-                              const IntVector& offset,
-                              const MDSystem& system,
-                              SimpleGrid<double>& fBGrid,
-                              SimpleGrid<double>& fCGrid,
-                              SimpleGrid<double>& fStressPre,
-                              int splineOrder,
-                              const std::vector<double>& M1,
-                              const std::vector<double>& M2,
-                              const std::vector<double>& M3);
+
 
     /**
      * @brief Map points (charges) onto the underlying grid.
      * @param
      * @return
      */
-    SimpleGrid<double>& mapChargeToGrid(const std::vector<std::vector<MapPoint> > gridMap,
-                                        const ParticleSubset* globalParticleList);
+    void MapChargeToGrid(const std::vector<MapPoint>& GridMap,
+                         const ParticleSubset* globalParticleList,
+                         int HalfSupport);
 
     /**
      * @brief Map forces from grid back to points.
      * @param
      * @return
      */
-    SimpleGrid<double>& mapForceFromGrid(const std::vector<std::vector<MapPoint> > gridMap,
-                                         ParticleSubset* globalParticleList);
+    void MapForceFromGrid(const std::vector<MapPoint>& GridMap,
+                          const ParticleSubset* globalParticleList,
+                          int HalfSupport);
 
     /**
      * @brief
@@ -257,33 +245,33 @@ class SPME : public Electrostatics {
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
     inline vector<double> generateMPrimeVector(unsigned int KMax,
-                                               const CenteredCardinalBSpline& InterpolatingSpline) const
-    {
-      int NumPoints = KMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
+    		                                   const CenteredCardinalBSpline& InterpolatingSpline) const
+	{
+      int NumPoints = KMax + InterpolatingSpline.Support(); // For simplicity, store the whole vector
       std::vector<double> m(NumPoints);
 
-      int HalfSupport = InterpolatingSpline.HalfSupport();
-      int HalfMax = KMax / 2;
+      int HalfSupport=InterpolatingSpline.HalfSupport();
+      int HalfMax = KMax/2;
 
       // Pre wrap on the left and right sides as necessary for spline support
-      double* LeftMost = m[HalfSupport];
+      double* LeftMost=m[HalfSupport];
 
       // Seed internal array (without wrapping)
-      for (size_t Index = 0; Index <= HalfMax; ++Index) {
-        LeftMost[Index] = Index;
+      for (size_t Index=0; Index <= HalfMax; ++Index) {
+    	  LeftMost[Index]=Index;
       }
-      for (size_t Index = HalfMax + 1; Index < KMax; ++Index) {
-        LeftMost[Index] = Index - KMax;
+      for (size_t Index=HalfMax + 1; Index < KMax; ++Index) {
+    	  LeftMost[Index]=Index-KMax;
       }
 
       // Right end wraps into m=i portion
-      for (size_t Index = 0; Index < HalfSupport; ++Index) {
-        m[KMax + Index] = Index;
+      for (size_t Index=0; Index < HalfSupport; ++Index) {
+    	  m[KMax+Index]=Index;
       }
 
       // Left end wraps into m=i-KMax portion
-      for (size_t Index = -3; Index < 0; ++Index) {
-        LeftMost[Index] = Index;  // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
+      for (size_t Index=-3; Index < 0; ++Index) {
+    	  LeftMost[Index]=Index; // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
       }
 
       return m;
@@ -297,41 +285,35 @@ class SPME : public Electrostatics {
      * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
     inline vector<double> generateMFractionalVector(unsigned int KMax,
-                                                    const CenteredCardinalBSpline& InterpolatingSpline) const
-    {
-      int NumPoints = KMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
-      std::vector<double> m(NumPoints);
+    		                                        const CenteredCardinalBSpline& InterpolatingSpline) const
+	{
+    	int NumPoints = KMax + InterpolatingSpline.Support(); // For simplicity, store the whole vector
+    	std::vector<double> m(NumPoints);
 
-      int HalfSupport = InterpolatingSpline.HalfSupport();
+    	int HalfSupport=InterpolatingSpline.HalfSupport();
 
-      //  Pre wrap on the left and right sides as necessary for spline support
-      double* LeftMost = m[HalfSupport];
-      double KMaxInv = static_cast<double>(KMax);
+    	//  Pre wrap on the left and right sides as necessary for spline support
+    	double* LeftMost=m[HalfSupport];
+    	double KMaxInv = static_cast<double> (KMax);
 
-      for (size_t Index = -3; Index < 0; ++Index) {
-        LeftMost[-Index] = (static_cast<double>(KMax - Index)) * KMaxInv;
-      }
+    	for (size_t Index=-3; Index < 0; ++Index) {
+    		LeftMost[-Index]=(static_cast<double> (KMax-Index))*KMaxInv;
+    	}
 
-      for (size_t Index = 0; Index < KMax; ++Index) {
-        m[Index] = static_cast<double>(Index) * KMaxInv;
-      }
+    	for (size_t Index=0; Index < KMax; ++Index) {
+    		m[Index]=static_cast<double> (Index)*KMaxInv;
+    	}
 
-      double* RightMost = m[KMax];
-      for (size_t Index = 0; Index < HalfSupport; ++Index) {
-        RightMost[Index] = static_cast<double>(Index) * KMaxInv;
-      }
+    	double* RightMost=m[KMax];
+    	for (size_t Index=0; Index < HalfSupport; ++Index) {
+    		RightMost[Index]=static_cast<double> (Index)*KMaxInv;
+    	}
 
-      return m;
-    }
-
-    SPME::SPME(const MDSystem& SimulationSystem,
-               const double _EwaldBeta,
-               const bool _IsPolarizable,
-               const SCIRun::IntVector& _KLimits,
-               const CenteredCardinalBSpline& _Spline);
+    	return m;
+	}
 
     // Values fixed on instantiation
-    ElectrostaticsType electrostaticMethod;              // Implementation type for long range electrostatics
+    ElectrostaticsType ElectrostaticMethod;              // Implementation type for long range electrostatics
     double EwaldBeta;						                  // The Ewald calculation damping coefficient
     bool polarizable;				                  	   // Use polarizable Ewald formulation
     double PolarizationTolerance;                        // Tolerance threshold for polarizable system
@@ -348,10 +330,10 @@ class SPME : public Electrostatics {
 
     Matrix3 UnitCell;                       // Unit cell lattice parameters
     Matrix3 InverseUnitCell;                // Inverse lattice parameters
-    double SystemVolume;                   // Volume of the unit cell
+    double  SystemVolume;                   // Volume of the unit cell
 
     // Actually holds the data we're working with
-    SimpleGrid<double> fTheta;
+    SimpleGrid<double>  fTheta;
     SimpleGrid<Matrix3> StressPrefactor;
     SimpleGrid<complex<double> > Q;
 

@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+//---------------------------------------------------------------------------------------------------------------------------------
 #include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/MapPoint.h>
 #include <CCA/Components/MD/MDSystem.h>
@@ -270,31 +270,31 @@ void SPME::setup()
     }
   }
 
-  StressPrefactor = CalculateStressPrefactor;
+  StressPrefactor = CalculateStressPrefactor
 }
 
 void SPME::calculate()
 {
   // Note:  Must run SPME->setup() after every time there is a new box/K grid mapping (e.g. every step for NPT)
   //          This should be checked for in the system electrostatic driver
-  vector<vector<ChargeMapPoints> > ChargeMap=SPME::generateChargeMap(pset,InterpolatingSpline);
+  vector<MapPoint> GridMap=SPME::GenerateChargeMap(pset,InterpolatingSpline);
   bool ElectrostaticsConverged=false;
   int NumberofIterations=0;
   while (!ElectrostaticsConverged && (NumberofIterations < MaxIterations)) {
-    SPME::MapChargeToGrid(pset,ChargeMap); // Calculate Q(r)
+    SPME::MapChargeToGrid(GridMap,pset,InterpolatingSpline.HalfSupport()); // Calculate Q(r)
 
     // Map the local patch's charge grid into the global grid and transform
-    SPME::GlobalMPIReduceChargeGrid();
+    SPME::GlobalMPIReduceChargeGrid(GHOST::AROUND);  //Ghost points should get transferred here
     SPME::ForwardTransformGlobalChargeGrid(); // Q(r) -> Q*(k)
-    // Once reduced and transformed, we need the local grid repopulated with Q*(k)
-    SPME::MPIDistributeLocalChargeGrid();
+    // Once reduced and transformed, we need the local grid re-populated with Q*(k)
+    SPME::MPIDistributeLocalChargeGrid(GHOST::NONE);
 
     // Multiply the transformed Q out
     size_t XExtent=localGridExtents.x();
     size_t YExtent=localGridExtents.y();
     size_t ZExtent=localGridExtents.z();
-    double localEnergy=0.0;
-    Matrix3 localStress(0.0);
+    double localEnergy=0.0;  //Maybe should be global?
+    Matrix3 localStress(0.0);//Maybe should be global?
     for (int kX=0; kX < XExtent; ++kX) {
       for (int kY=0; kY < YExtent; ++kY) {
         for (int kZ=0; kZ < ZExtent; ++kZ) {
@@ -307,9 +307,9 @@ void SPME::calculate()
     }
 
     // Transform back to real space
-    SPME::GlobalMPIReduceChargeGrid();
+    SPME::GlobalMPIReduceChargeGrid(GHOST::NONE);  //Ghost points should NOT get transferred here
     SPME::ReverseTransformGlobalChargeGrid();
-    SPME::MPIDistributeLocalChargeGrid();
+    SPME::MPIDistributeLocalChargeGrid(GHOST::AROUND);
 
     //  This may need to be before we transform the charge grid back to real space if we can calculate
     //    polarizability from the fourier space component
@@ -322,34 +322,76 @@ void SPME::calculate()
     // Sanity check - Limit maximum number of polarization iterations we try
     ++NumberofIterations;
   }
-  SPME::MapForcesFromGrid(pset,ChargeMap); // Calculate electrostatic contribution to f_ij(r)
+  SPME::GlobalReduceEnergy();
+  SPME::GlobalReduceStress(); //Uintah framework?
+
 }
 
 void SPME::finalize()
 {
+  SPME::MapForcesFromGrid(pset,ChargeMap); // Calculate electrostatic contribution to f_ij(r)
+  //Reduction for Energy, Pressure Tensor?
   // Something goes here, though I'm not sure what
+  // Output?
 }
 
-std::vector<std::vector<MapPoint> > SPME::GenerateChargeMap(ParticleSubset* pset,
-                                                            CenteredCardinalBSpline& spline)
+std::vector<MapPoint> SPME::GenerateChargeMap(ParticleSubset* localParticleSet,
+                                              CenteredCardinalBSpline& Spline)
 {
-  /*  WORK IN PROGRESS
-    I think we can make this a vector<SimpleGrid<MapPoint> > to make iteration and overlay far easier
-    JBH - 2-4-2013
 
-  int MaxParticleIndex=localParticleSet->size();
-  std::vector<SimpleGrid<MapPoint> > ChargeMap;
+  size_t MaxParticleIndex=localParticleSet->size();
+  std::vector<MapPoint> ChargeMap;
   // Loop through particles
-  for (size_t ChargeIndex=0; ChargeIndex < MaxChargeIndex; ++ChargeIndex) {
-    int ParticleID = pst[ChargeIndex]->GetParticleID();
+  for (size_t ChargeIndex=0; ChargeIndex < MaxParticleIndex; ++ChargeIndex) {
+    int ParticleID = localParticleSet[ChargeIndex]->GetParticleID();
+    SCIRun::Vector ParticleGridCoordinates;
 
-    vector<MapPoint> ParticleMap;
+    //Calculate reduced coordinates of point to recast into charge grid
+    ParticleGridCoordinates = ((localParticleSet[ChargeIndex]->GetParticleCoordinates()).AsVector())*InverseUnitCell;
+    // ** NOTE: JBH --> We may want to do this with a bit more thought eventually, since multiplying by the InverseUnitCell
+    //                  is expensive if the system is orthorhombic, however it's not clear it's more expensive than dropping
+    //                  to call MDSystem->IsOrthorhombic() and then branching the if statement appropriately.
 
+    // This bit is tedious since we don't have any cross-pollination between type Vector and type IntVector.
+    // Should we put that in (requires modifying Uintah framework).
+    SCIRun::Vector KReal,SplineValues;
+    SCIRun::IntVector ParticleGridOffset;
+    for (size_t Index=0; Index < 3; ++Index) {
+      KReal[Index] = static_cast<double> (KLimits[Index]);  // For some reason I can't construct a Vector from an IntVector -- Maybe we should fix that instead?
+      ParticleGridCoordinates[Index]*=KReal[Index];         // Recast particle into charge grid based representation
+      ParticleGridOffset[Index]=static_cast<int> (ParticleGridCoordinates[Index]);  // Reference grid point for particle
+      SplineValues[Index]=ParticleGridCoordinates[Index]-ParticleGridOffset[Index]; // Spline offset for spline function
+    }
+    vector<double> XSplineArray=Spline.Evaluate(SplineValues[0]);
+    vector<double> YSplineArray=Spline.Evaluate(SplineValues[1]);
+    vector<double> ZSplineArray=Spline.Evaluate(SplineValues[2]);
 
+    vector<double> XSplineDeriv=Spline.Derivative(SplineValues[0]);
+    vector<double> YSplineDeriv=Spline.Derivative(SplineValues[1]);
+    vector<double> ZSplineDeriv=Spline.Derivative(SplineValues[2]);
+
+    //MapPoint CurrentMapPoint(ParticleID,ParticleGridOffset,XSplineArray,YSplineArray,ZSplineArray);
+    //
+
+    SimpleGrid<double> ChargeGrid(XSplineArray, YSplineArray, ZSplineArray, ParticleGridOffset, 0);
+    SimpleGrid<SCIRun::Vector> ForceGrid(XSplineDeriv.size(),YSplineDeriv.size(),ZSplineDeriv.size(), ParticleGridOffset, 0);
+    size_t XExtent=XSplineArray.size();
+    size_t YExtent=YSplineArray.size();
+    size_t ZExtent=ZSplineArray.size();
+    for (size_t XIndex=0; XIndex < XExtent; ++XIndex) {
+      for (size_t YIndex=0; YIndex < YExtent; ++YIndex) {
+        for (size_t ZIndex=0; ZIndex < ZExtent; ++ZIndex) {
+          ChargeGrid(XIndex, YIndex, ZIndex)=XSplineArray[XIndex]*YSplineArray[YIndex]*ZSplineArray[ZIndex];
+          ForceGrid(XIndex, YIndex, ZIndex)=SCIRun::Vector(XSplineDeriv[XIndex],YSplineDeriv[YIndex],ZSplineDeriv[ZIndex]);
+        }
+      }
+    }
+    MapPoint CurrentMapPoint(ParticleID,ParticleGridOffset,ChargeGrid,ForceGrid);
+    ChargeMap.push_back(CurrentMapPoint);
   }
-  */
+  return ChargeMap;
 }
-
+/*  No longer needed
 std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                            const MDSystem& system)
 {
@@ -377,19 +419,56 @@ std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCo
   }
   return localReducedCoords;
 }
+*/
 
-
-
-SimpleGrid<double>& SPME::mapChargeToGrid(const std::vector<std::vector<MapPoint> > gridMap,
-                                          const ParticleSubset* globalParticleList)
+void SPME::MapChargeToGrid(const std::vector<MapPoint>& GridMap,
+                           const ParticleSubset*        localParticleSubset,
+                                 int                    HalfSupport)
 {
+  size_t MaxParticleIndex = localParticleSubset->size();
+  Q.initialize(0.0);  // Reset charges before we start adding onto them.
+  for (size_t ParticleIndex = 0; ParticleIndex < MaxParticleIndex; ++ParticleIndex) {
+    double Charge=localParticleSubset[ParticleIndex]->GetCharge();
 
+    !  FIXME Alan return (&ChargeGrid);
+    SimpleGrid<double> ChargeMap=GridMap[ParticleIndex]->ChargeMapAddress(); //FIXME -- return reference, don't copy
+
+    SCIRun::IntVector QAnchor=ChargeMap.getOffset();  // Location of the 0,0,0 origin for the charge map grid
+    SCIRun::IntVector SupportExtent=ChargeMap.getExtents(); // Extents of the charge map grid
+    for (int XMask=-HalfSupport; XMask <= HalfSupport; ++XMask) {
+      for (int YMask=-HalfSupport; YMask <= HalfSupport; ++YMask) {
+        for (int ZMask=-HalfSupport; ZMask <= HalfSupport; ++ZMask) {
+          Q(QAnchor.x()+XMask, QAnchor.y()+YMask, QAnchor.z()+ZMask) +=
+            Charge * ChargeMap(XMask+HalfSupport, YMask+HalfSupport, ZMask+HalfSupport);
+        }
+      }
+    }
+
+  }
 }
 
-SimpleGrid<double>& SPME::mapForceFromGrid(const std::vector<std::vector<MapPoint> > gridMap,
-                                           ParticleSubset* globalParticleList)
+void SPME::MapForceFromGrid(const std::vector<MapPoint>& GridMap,
+                            const ParticleSubset*        localParticleSubset,
+                                  int                    HalfSupport)
 {
-
+  size_t MaxParticleIndex = localParticleSubset->size();
+  for (size_t ParticleIndex = 0; ParticleIndex < MaxParticleIndex; ++ParticleIndex) {
+    SCIRun::Vector NewForce=localParticleSubset[ParticleIndex]->GetForce();
+    SimpleGrid<SCIRun::Vector> ForceMap=GridMap[ParticleIndex]->ForceMapAddress(); // FIXME -- return reference, don't copy
+    SCIRun::IntVector QAnchor=ForceMap.getOffset(); // Location of the 0,0,0 origin for the force map grid
+    SCIRun::IntVector SupportExtent=ForceMap.getExtents(); // Extents of the force map grid
+    for (int XMask=-HalfSupport; XMask <= HalfSupport; ++XMask) {
+      for (int YMask=-HalfSupport; YMask <= HalfSupport; ++YMask) {
+        for (int ZMask=-HalfSupport; ZMask <= HalfSupport; ++ZMask) {
+          SCIRun::Vector CurrentForce;
+          CurrentForce=ForceMap(XMask+HalfSupport, YMask+HalfSupport, ZMask+HalfSupport) *
+                         Q(QAnchor.x()+XMask, QAnchor.y()+YMask, QAnchor.z()+ZMask);
+          NewForce += CurrentForce;
+        }
+      }
+    }
+    localParticleSubset[ParticleIndex]->SetForce(NewForce);
+  }
 }
 
 
