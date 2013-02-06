@@ -17,7 +17,7 @@ if test $3 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
 
-if test $4 != "yes"; then
+if test $4 = "yes"; then
   STATIC="-DBoost_USE_STATIC_LIBS=ON"
 else
   STATIC=""
