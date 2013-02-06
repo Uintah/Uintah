@@ -68,6 +68,7 @@ FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
+  d_conversion   = 1.0/1000.;     // in SI units this is J/KJ
   
   FL_lb = scinew FL_Labels();
   I_lb  = scinew ICELabel();
@@ -122,6 +123,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   d_prob_spec->require( "samplingFrequency", d_analysisFreq );
   d_prob_spec->require( "timeStart",         d_StartTime );            
   d_prob_spec->require( "timeStop",          d_StopTime );
+  d_prob_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
   
   d_zeroMatl = scinew MaterialSubset();
   d_zeroMatl->add(0);
@@ -435,8 +437,12 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.y() * dx.z();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            double flux = uvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-	     mat_fluxes += plus_minus_one * flux;
+            double vel    = uvel_FC[c];
+            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
+            double KE     = 0.5 * vel * vel;
+            double enthpy = temp_CC[c] * gamma[c] * cv[c];
+            
+	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
           }
         }
 
@@ -444,8 +450,12 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.x() * dx.z();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-	     double flux = vvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-            mat_fluxes += plus_minus_one * flux;
+            double vel    = vvel_FC[c];
+            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
+            double KE     = 0.5 * vel * vel;
+            double enthpy = temp_CC[c] * gamma[c] * cv[c];
+            
+	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
           }
         }
 
@@ -453,8 +463,12 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double area = dx.x() * dx.y();
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-	     double flux = wvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-            mat_fluxes += plus_minus_one * flux;
+            double vel    = wvel_FC[c];
+            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
+            double KE     = 0.5 * vel * vel;
+            double enthpy = temp_CC[c] * gamma[c] * cv[c];
+            
+	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
           }
         }
       }  // boundary faces
@@ -624,7 +638,7 @@ void FirstLawThermo::createFile(string& filename,  FILE*& fp)
   fprintf(fp,"# This assumes:\n");
   fprintf(fp,"#    - mpm matls have constant specific heat\n");
   fprintf(fp,"#    - mpm matls are listed in order 0, 1, 2, 3\n");
-  fprintf(fp,"#    - Contributions due to the kinetic energy are ignored\n");
+  fprintf(fp,"#    - Energy conversion factor, in SI units KJ ->J %E\n",d_conversion);
   fprintf(fp,"#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux\n");
   cout << Parallel::getMPIRank() << " FirstLawThermo:Created file " << filename << endl;
 }
