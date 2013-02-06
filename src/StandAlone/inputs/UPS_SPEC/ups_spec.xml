@@ -654,6 +654,7 @@
       </objects>
       
       <!--1st lawThermo-->
+      <engy_convt_factor                spec="OPTIONAL DOUBLE"  need_applies_to="name firstLawThermo"/> 
       <controlVolume                    spec="OPTIONAL NO_DATA" need_applies_to="name firstLawThermo">       
         <Face                           spec="MULTIPLE NO_DATA"  
                                           attribute1="side REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" 
