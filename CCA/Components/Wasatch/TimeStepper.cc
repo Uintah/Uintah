@@ -23,7 +23,6 @@
  */
 
 //-- Wasatch Includes --//
-
 #include "TimeStepper.h"
 #include "TaskInterface.h"
 #include "CoordHelper.h"
@@ -31,8 +30,6 @@
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
 //-- ExprLib includes --//
-#include <expression/FieldManager.h>  // for field type mapping
-#include <expression/ExpressionTree.h>
 #include <expression/ExpressionFactory.h>
 #include <expression/PlaceHolderExpr.h>
 
@@ -115,10 +112,10 @@ namespace Wasatch{
       if (rkStage==1) {
         newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
       } else {
-        newDW->           getModifiable( phiNew, ifld->varLabel, material, patch, gt, ng );
+        newDW->getModifiable( phiNew, ifld->varLabel, material, patch, gt, ng );
       }
-      oldDW->           get( phiOld, ifld->varLabel, material, patch, gt, ng );
-      newDW->           get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
+      oldDW->get( phiOld, ifld->varLabel, material, patch, gt, ng );
+      newDW->get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
 
       //______________________________________
       // forward Euler or RK3SSP timestep at each point:
