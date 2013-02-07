@@ -1010,14 +1010,6 @@ void BoundaryCondition_new::Tabulated::extra_setupBC( ProblemSpecP& db, std::str
       if ( face_name == "NOTSET" ){
         throw ProblemSetupException("Error: When using Tabulated BCs you must name each <Face>.", __FILE__, __LINE__);
       }
-
-            //1. get the independent variables for this face
-            //2. get the type of bc for the independent variable 
-            //3. allocated the appropriate container 
-            //4. get the table variable name we are looking up 
-            //5. look up the value
-            //6. put the value(s) in the container 
-            //7. put the container into the map 
             
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
                                      db_BCType = db_BCType->findNextBlock("BCType") ){
@@ -1150,6 +1142,7 @@ void BoundaryCondition_new::Tabulated::applyBC( const Patch* patch, Patch::FaceT
   bool foundIterator = getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
 
   if (foundIterator) {
+
     MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
 
     if ( i_face != _tabVarsMap.end() ){ 
