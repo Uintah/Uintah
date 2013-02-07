@@ -31,6 +31,7 @@ public:
   typedef std::map< std::string, double  > DoubleMap; 
   typedef std::map< std::string, DoubleMap > MapDoubleMap;
 
+
   BoundaryCondition_new(const int matl_id);
 
   ~BoundaryCondition_new();
@@ -85,7 +86,106 @@ public:
   /** @brief Read in a file for boundary conditions **/ 
   std::map<IntVector, double> readInputFile( std::string file_name ); 
 
+  //new stuff--------------------
+  class BCFunctionBase{ 
+
+    public: 
+
+      BCFunctionBase() {};
+      virtual ~BCFunctionBase(){}; 
+
+      virtual void setupBC( ProblemSpecP& db, const std::string eqn_name ) = 0; 
+      virtual void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi ) = 0; 
+      virtual bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value ) = 0; 
+ 
+    protected: 
+    
+  };
+
 private: 
+
+  typedef std::map< std::string, map<std::string, BCFunctionBase* > > VarToMappedF; 
+
+  class Dirichlet : public BCFunctionBase { 
+
+    public:
+
+      Dirichlet( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Dirichlet(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
+
+    private: 
+
+      const int d_matl_id; 
+
+  }; 
+
+  class Neumann : public BCFunctionBase { 
+
+    public:
+
+      Neumann( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Neumann(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
+
+    private: 
+
+      const int d_matl_id; 
+
+  }; 
+
+  class FromFile : public BCFunctionBase { 
+
+    public:
+
+      FromFile( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~FromFile(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
+
+    private: 
+
+      typedef std::map<IntVector, double> CellToValueMap;                 ///< (i,j,k)   ---> boundary condition value 
+      typedef std::map<std::string, CellToValueMap> FaceToBCValueMap;     ///< face name ---> CellToValueMap 
+
+      const int d_matl_id; 
+      
+      std::map<IntVector, double> readInputFile( std::string file_name );
+      FaceToBCValueMap d_face_map; 
+
+  }; 
+
+  class Tabulated : public BCFunctionBase { 
+
+    public:
+
+      Tabulated( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Tabulated(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
+      void extra_setupBC( ProblemSpecP& db, const std::string eqn_name, MixingRxnModel* table ); 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
+
+    private: 
+
+      typedef std::map< std::string, double  > DoubleMap;                   ///< dependant var ---> value
+      typedef std::map< std::string, DoubleMap > MapDoubleMap;              ///< face name  ---> DoubleMap
+
+      const int d_matl_id; 
+      
+      MapDoubleMap _tabVarsMap; 
+
+  }; 
+  //-----------------------------
  
   //variables
 	const int d_matl_id; 
