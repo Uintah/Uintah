@@ -310,12 +310,12 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
       getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
 
       bool foundIterator = "false"; 
-      if ( bc_kind == "Dirichlet" || bc_kind == "Neumann" ) { 
-        foundIterator = 
-          getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
-      } else if ( bc_kind == "Tabulated" ){
+      if ( bc_kind == "Tabulated" ){ 
         foundIterator = 
           getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
+      } else {
+        foundIterator = 
+          getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
       } 
 
       if (foundIterator) {
