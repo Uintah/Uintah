@@ -485,8 +485,11 @@ namespace Wasatch{
       if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, turbParams,hasEmbeddedGeometry,hasMovingBoundaries, densityTag, graphCategories_, *linSolver_,sharedState);
-        adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
+          const EquationAdaptors adaptors =
+              parse_momentum_equations( momEqnParams, turbParams,
+                  hasEmbeddedGeometry,hasMovingBoundaries, densityTag,
+                  graphCategories_, *linSolver_, sharedState );
+        adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -507,8 +510,10 @@ namespace Wasatch{
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
-        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, wasatchParams, hasEmbeddedGeometry, graphCategories_);
-        adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
+        const EquationAdaptors adaptors =
+            parse_moment_transport_equations( momEqnParams, wasatchParams,
+                hasEmbeddedGeometry, graphCategories_ );
+        adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -525,8 +530,8 @@ namespace Wasatch{
         poissonEqnParams != 0;
         poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") ){
       try{
-        parse_poisson_equation(poissonEqnParams, graphCategories_, *linSolver_,
-                               sharedState);
+        parse_poisson_equation( poissonEqnParams, graphCategories_,
+                                *linSolver_, sharedState );
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -538,8 +543,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_,
-                                         *graphCategories_[ ADVANCE_SOLUTION ] );
+      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ] );
     }    
     
     //
@@ -616,7 +620,8 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions(*icGraphHelper2, localPatches2, patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
+          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches2,
+              patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -715,8 +720,7 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
                                                         "compute timestep",
                                                         *tsGraphHelper->exprFactory,
-                                                        level,
-                                                        sched,
+                                                        level, sched,
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
@@ -924,12 +928,13 @@ namespace Wasatch{
                          Uintah::SchedulerP& sched )
   {
     switch ( pss ) {
+
     case USE_FOR_TASKS:
       // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       return level->eachPatch();
       break;
-    case USE_FOR_OPERATORS:
 
+    case USE_FOR_OPERATORS: {
       const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
       Uintah::PatchSet* patches = new Uintah::PatchSet;
@@ -943,14 +948,15 @@ namespace Wasatch{
       patchSetList_.push_back( patches );
       return patches;
     }
+    }
     return NULL;
   }
 
  //------------------------------------------------------------------
 
  void
- Wasatch::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
-                          Uintah::SchedulerP& /*sched*/)
+ Wasatch::scheduleCoarsen( const Uintah::LevelP& /*coarseLevel*/,
+                           Uintah::SchedulerP& /*sched*/ )
  {
    // do nothing for now
  }
@@ -958,9 +964,9 @@ namespace Wasatch{
  //------------------------------------------------------------------
 
  void
- Wasatch::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
-                                  Uintah::SchedulerP& /*scheduler*/,
-                                  bool, bool)
+ Wasatch::scheduleRefineInterface( const Uintah::LevelP& /*fineLevel*/,
+                                   Uintah::SchedulerP& /*scheduler*/,
+                                   bool, bool )
  {
    // do nothing for now
  }
