@@ -183,6 +183,9 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     } 
   } 
 
+  // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
+  const ProblemSpecP db_root = db->getRootNode(); 
+  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 }
 
 //---------------------------------------------------------------------------

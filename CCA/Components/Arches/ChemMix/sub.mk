@@ -5,7 +5,8 @@ SRCDIR := CCA/Components/Arches/ChemMix
 SRCS += \
         $(SRCDIR)/MixingRxnModel.cc \
         $(SRCDIR)/ClassicTableInterface.cc \
-                                $(SRCDIR)/ColdFlow.cc 
+        $(SRCDIR)/ColdFlow.cc \
+        $(SRCDIR)/PCTProps.cc
 
 ifeq ($(HAVE_TABPROPS),yes)
         SRCS += $(SRCDIR)/TabPropsInterface.cc
