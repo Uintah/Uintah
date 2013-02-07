@@ -45,7 +45,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
-//#include <Core/Grid/Ghost.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Wasatch {
@@ -85,7 +84,8 @@ namespace Wasatch {
     Uintah::VarLabel* const  get_old_var_label() const{ return oldVarLabel_; }
     Uintah::Ghost::GhostType get_ghost_type() { return ghostType_; }
 
-    virtual void populate_old_variable( Uintah::DataWarehouse* const dw,
+    virtual void populate_old_variable( Uintah::DataWarehouse* const newdw,
+                                        Uintah::DataWarehouse* const olddw,
                                         const Uintah::Patch* patch,
                                         const int mat ) = 0;
   };
@@ -106,7 +106,8 @@ namespace Wasatch {
 
     ~VarHelper(){}
 
-    void populate_old_variable( Uintah::DataWarehouse* const dw,
+    void populate_old_variable( Uintah::DataWarehouse* const newdw,
+                                Uintah::DataWarehouse* const olddw,
                                 const Uintah::Patch* patch,
                                 const int mat )
     {
@@ -118,16 +119,21 @@ namespace Wasatch {
 
       UintahField oldVal; // we will save the current value into this one
       ConstUintahField val; // copy the value from this
-      dw->           get( val,    varLabel_,    mat, patch, gt, ng );
-      dw->allocateAndPut( oldVal, oldVarLabel_, mat, patch, gt, ng );
-
+      
+      newdw->allocateAndPut( oldVal, oldVarLabel_, mat, patch, gt, ng );
       T* const fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,patch);
-      const T* const f = wrap_uintah_field_as_spatialops<T>(val,   patch);
-
       using SpatialOps::operator <<=;
-      (*fOldVal) <<= (*f);
+      
+      if (olddw->exists(varLabel_,mat,patch)) {
+        olddw->           get( val,    varLabel_,    mat, patch, gt, ng );
+        const T* const f = wrap_uintah_field_as_spatialops<T>(val,   patch);
+        (*fOldVal) <<= (*f);
+        delete f;
+      } else  {
+        (*fOldVal) <<= 0.0;
+      }      
 
-      delete fOldVal; delete f;
+      delete fOldVal;
     }
   };
 
@@ -228,7 +234,7 @@ namespace Wasatch {
       const Uintah::Patch* const patch = patches->get(ip);
       for( int im=0; im<materials->size(); ++im ){
         BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
-          vh->populate_old_variable( newDW, patch, im );
+          vh->populate_old_variable( newDW, oldDW, patch, im );
         }
       }
     }
