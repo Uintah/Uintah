@@ -35,6 +35,7 @@ SRCS    +=                              \
         $(SRCDIR)/FieldAdaptor.cc       \
         $(SRCDIR)/CoordHelper.cc        \
         $(SRCDIR)/GraphHelperTools.cc   \
+        $(SRCDIR)/OldVariable.cc		\
         $(SRCDIR)/ParseTools.cc         \
         $(SRCDIR)/Properties.cc         \
         $(SRCDIR)/StringNames.cc        \

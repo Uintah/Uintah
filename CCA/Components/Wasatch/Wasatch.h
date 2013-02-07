@@ -239,9 +239,10 @@ namespace Wasatch{
     void disable_wasatch_material(){ buildWasatchMaterial_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
-    const std::set<std::string>& locked_fields(){ return lockedFields_; }
+    const std::set<std::string>& locked_fields() const{ return lockedFields_; }
+    std::set<std::string>& locked_fields(){ return lockedFields_; }
     void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
-    const Uintah::MaterialSet* const get_wasatch_materials(){ return materials_; }
+    const Uintah::MaterialSet* const get_wasatch_materials() const{ return materials_; }
 
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
