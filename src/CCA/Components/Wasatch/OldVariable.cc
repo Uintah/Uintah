@@ -45,8 +45,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
+//#include <Core/Grid/Ghost.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
 
 namespace Wasatch {
 
@@ -57,18 +57,20 @@ namespace Wasatch {
   protected:
     const Expr::Tag name_, oldName_;
     Uintah::VarLabel *oldVarLabel_, *varLabel_;  // jcs need to get varLabel_ from an existing one...
-
+    Uintah::Ghost::GhostType ghostType_;
     // note that we can pull a VarLabel from the Expr::FieldManager if we have that available.  But we will need a tag and not a string to identify the variable.
 
   public:
 
     VarHelperBase( const Expr::Tag& var,
                    const Uintah::TypeDescription* typeDesc,
-                   const Uintah::IntVector ghostDesc )
+                   const Uintah::IntVector ghostDesc,
+                   Uintah::Ghost::GhostType ghostType)
     : name_( var ),
       oldName_( var.name() + "_old", Expr::STATE_NONE ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc, ghostDesc ) ),
-      varLabel_   ( Uintah::VarLabel::find( name_.name() ) )
+      varLabel_   ( Uintah::VarLabel::find( name_.name() ) ),
+      ghostType_  ( ghostType )
     {}
 
     virtual ~VarHelperBase()
@@ -79,8 +81,9 @@ namespace Wasatch {
     const Expr::Tag& var_name()     const{ return name_;    }
     const Expr::Tag& old_var_name() const{ return oldName_; }
 
-    Uintah::VarLabel* const get_var_label    () const{ return varLabel_;    }
-    Uintah::VarLabel* const get_old_var_label() const{ return oldVarLabel_; }
+    Uintah::VarLabel* const  get_var_label    () const{ return varLabel_;    }
+    Uintah::VarLabel* const  get_old_var_label() const{ return oldVarLabel_; }
+    Uintah::Ghost::GhostType get_ghost_type() { return ghostType_; }
 
     virtual void populate_old_variable( Uintah::DataWarehouse* const dw,
                                         const Uintah::Patch* patch,
@@ -97,7 +100,8 @@ namespace Wasatch {
     VarHelper( const Expr::Tag& var )
     : VarHelperBase( var,
                      get_uintah_field_type_descriptor<T>(),
-                     get_uintah_ghost_descriptor<T>() )
+                     get_uintah_ghost_descriptor<T>(),
+                     get_uintah_ghost_type<T>())
     {}
 
     ~VarHelper(){}
@@ -202,8 +206,9 @@ namespace Wasatch {
 
     // create the Uintah task to accomplish this.
     Uintah::Task* oldVarTask = scinew Uintah::Task( "set old variables", this, &OldVariable::populate_old_variable );
+    
     BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
-      oldVarTask->requires( Uintah::Task::OldDW, vh->get_var_label() );
+      oldVarTask->requires( Uintah::Task::OldDW, vh->get_var_label(), vh->get_ghost_type() );
       oldVarTask->computes( vh->get_old_var_label() );
     }
     sched->addTask( oldVarTask, patches, materials );
