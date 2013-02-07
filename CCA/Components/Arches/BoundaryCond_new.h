@@ -96,7 +96,6 @@ public:
 
       virtual void setupBC( ProblemSpecP& db, const std::string eqn_name ) = 0; 
       virtual void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi ) = 0; 
-      virtual bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value ) = 0; 
  
     protected: 
     
@@ -115,7 +114,6 @@ private:
 
       void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
       void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
-      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
 
     private: 
 
@@ -132,7 +130,6 @@ private:
 
       void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
       void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
-      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
 
     private: 
 
@@ -149,7 +146,6 @@ private:
 
       void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
       void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
-      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
 
     private: 
 
@@ -173,7 +169,6 @@ private:
       void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
       void extra_setupBC( ProblemSpecP& db, const std::string eqn_name, MixingRxnModel* table ); 
       void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
-      bool getpointwiseBC( const Patch* patch, const Patch::FaceType face, const int child, const std::string varname, const IntVector ijk, double bc_value );
 
     private: 
 

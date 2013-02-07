@@ -805,21 +805,6 @@ void BoundaryCondition_new::Dirichlet::applyBC( const Patch* patch, Patch::FaceT
   }
 }
 
-bool BoundaryCondition_new::Dirichlet::getpointwiseBC( const Patch* patch, const Patch::FaceType face, 
-                                                       const int child, const std::string varname, 
-                                                       const IntVector ijk, double bc_value )
-{
-
-  Iterator bound_ptr;
-  string bc_kind = "NA"; 
-  bc_value = 0.0;
-
-  bool foundIterator = getIteratorBCValueBCKind( patch, face, child, varname, d_matl_id, bc_value, bound_ptr, bc_kind ); 
-
-  return foundIterator; 
-
-}
-
 //---------NEUMANN-------------
 
 void BoundaryCondition_new::Neumann::applyBC( const Patch* patch, Patch::FaceType face, 
@@ -872,15 +857,6 @@ void BoundaryCondition_new::Neumann::applyBC( const Patch* patch, Patch::FaceTyp
       phi[*bound_ptr] = phi[bp1] + the_sign * dx * bc_value;
     }
   }
-}
-
-bool BoundaryCondition_new::Neumann::getpointwiseBC( const Patch* patch, const Patch::FaceType face, 
-                                                     const int child, const std::string varname, 
-                                                     const IntVector ijk, double bc_value )
-{
-  stringstream err_msg; 
-  err_msg << "Error: Attempting to get a pointwise value for variable: " << varname << " on face " << face << "\n Neumann conditions can only return gradients. \n" << endl;
-  throw InvalidValue(err_msg.str(),__FILE__,__LINE__); 
 }
 
 //---------FROMFILE-------------
@@ -980,20 +956,6 @@ void BoundaryCondition_new::FromFile::applyBC( const Patch* patch, Patch::FaceTy
   }
 }
 
-bool BoundaryCondition_new::FromFile::getpointwiseBC( const Patch* patch, const Patch::FaceType face, 
-                                                      const int child, const std::string varname, 
-                                                      const IntVector ijk, double bc_value )
-{
-
-  Iterator bound_ptr;
-  string bc_kind = "NA"; 
-  bc_value = 0.0;
-
-  bool foundIterator = getIteratorBCValueBCKind( patch, face, child, varname, d_matl_id, bc_value, bound_ptr, bc_kind ); 
-
-  return foundIterator; 
-
-}
 std::map<IntVector, double>
 BoundaryCondition_new::FromFile::readInputFile( std::string file_name )
 {
@@ -1202,10 +1164,4 @@ void BoundaryCondition_new::Tabulated::applyBC( const Patch* patch, Patch::FaceT
 
     }
   }
-}
-
-bool BoundaryCondition_new::Tabulated::getpointwiseBC( const Patch* patch, const Patch::FaceType face, 
-                                                      const int child, const std::string varname, 
-                                                      const IntVector ijk, double bc_value )
-{
 }
