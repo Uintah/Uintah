@@ -56,6 +56,10 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
 
           if ( type == "FromFile" ){ 
 
+            if ( face_name == "NA" ){
+              throw ProblemSetupException( "Error: When using FromFile BCs, you must name the <Face> using the name attribute.", __FILE__, __LINE__);
+            }
+
             //Check reference file for this scalar
             std::string file_name;
             db_BCType->require("inputfile", file_name); 
@@ -92,7 +96,7 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
             CellToValueMap bc_values;  
             bc_values = readInputFile( eqn_input_file ); 
 
-            scalar_bc_from_file.insert(make_pair(eqn_name, bc_values)); 
+            scalar_bc_from_file.insert(make_pair(face_name, bc_values)); 
 
           } else if ( type == "Tabulated" ){ 
   
@@ -366,7 +370,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
           }
         } else if (bc_kind == "FromFile") { 
 
-          ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( varname ); 
+          ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name ); 
 
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
