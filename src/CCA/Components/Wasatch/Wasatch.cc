@@ -74,6 +74,7 @@
 #include "BCHelperTools.h"
 #include "ParseTools.h"
 #include "FieldClippingTools.h"
+#include "OldVariable.h"
 
 using std::endl;
 
@@ -112,6 +113,8 @@ namespace Wasatch{
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
     icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
+
+    OldVariable::self().sync_with_wasatch( this );
   }
 
   //--------------------------------------------------------------------
@@ -757,7 +760,11 @@ namespace Wasatch{
       isRestarting_ = false;
     }
 
-    for (int iStage=1; iStage<=nRKStages_; iStage++) {
+    const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
+    const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
+
+    for( int iStage=1; iStage<=nRKStages_; iStage++ ){
       // jcs why do we need this instead of getting the level?
       // jcs notes:
       //
@@ -772,13 +779,9 @@ namespace Wasatch{
       //       solve)
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
-      const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -804,6 +807,9 @@ namespace Wasatch{
       if( buildTimeIntegrator_ ){
         create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
       }
+
+      // set up any "old" variables that have been requested.
+      OldVariable::self().setup_tasks( allPatches, materials_, sched );
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
