@@ -58,9 +58,9 @@ namespace Wasatch {
    *  Example usage:
    *  \code
    *   OldVariable& oldVar = OldVariable::self();
-   *   oldVar.add_variable<SVolField  >( solnFactory, varTag1 );
-   *   oldVar.add_variable<SSurfXField>( solnFactory, varTag2 );
-   *   oldVar.add_variable<XVolField  >( solnFactory, varTag3 );
+   *   oldVar.add_variable<SVolField  >( graph_category, varTag1 );
+   *   oldVar.add_variable<SSurfXField>( graph_category, varTag2 );
+   *   oldVar.add_variable<XVolField  >( graph_category, varTag3 );
    *   // ...
    *   oldVar.setup_tasks( patches, materials, sched );
    *  \endcode
