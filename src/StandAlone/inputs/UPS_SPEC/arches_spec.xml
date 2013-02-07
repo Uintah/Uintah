@@ -19,7 +19,8 @@
       <VarID                            spec="OPTIONAL NO_DATA"> <!-- matches variables to specific CFD roles --> 
         <var                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction'"/>
+                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction, 
+                                                                          co2, h2o, soot, specific_heat'"/>
       </VarID>
 
       <PropertyModels                   spec="OPTIONAL NO_DATA" >

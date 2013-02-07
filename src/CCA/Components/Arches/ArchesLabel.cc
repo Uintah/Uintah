@@ -47,11 +47,6 @@ using namespace std;
 ArchesLabel::ArchesLabel()
 {
 
-  // These are allowed CFD roles: 
-  d_allowed_roles.push_back("temperature"); 
-  d_allowed_roles.push_back("density");
-  d_allowed_roles.push_back("enthalpy"); 
-
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
@@ -807,10 +802,12 @@ void ArchesLabel::problemSetup( const ProblemSpecP& db )
   } 
 } 
 /** @brief Retrieve a label based on its CFD role **/
-const VarLabel* ArchesLabel::getVarlabelByRole( const std::string role ){ 
+const VarLabel* ArchesLabel::getVarlabelByRole( VARID role ){ 
 
    RLMAP::iterator i = d_r_to_l.find(role);
    const VarLabel* the_label; 
+
+   const std::string role_name = getRoleString( role ); 
 
    if ( i != d_r_to_l.end() ){
 
@@ -822,14 +819,14 @@ const VarLabel* ArchesLabel::getVarlabelByRole( const std::string role ){
 
      } else { 
 
-      std::string msg = "Error: Label not recognized in <VarID> storage for role = "+role+"\n";;
+      std::string msg = "Error: Label not recognized in <VarID> storage for role = "+role_name+"\n";;
       throw InvalidValue(msg,__FILE__,__LINE__);
 
      } 
 
    } else { 
 
-     std::string msg = "Error: Role not found in <VarID> storage for role = "+role+"\n";
+     std::string msg = "Error: Role not found in <VarID> storage for role = "+role_name+"\n";
      throw InvalidValue(msg,__FILE__,__LINE__);
 
    } 
@@ -841,14 +838,30 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
   //first make sure that the role is allowed: 
   //allowed roles are defined in the constructor of this class. 
   bool found_role = false; 
-  for ( std::vector<std::string>::iterator i_r = d_allowed_roles.begin(); i_r != d_allowed_roles.end(); i_r++){ 
-
-    if ( *i_r == role ){ 
-
-      found_role = true; 
-
-    } 
+  VARID which_var; 
+  if ( role == "temperature" ) { 
+    found_role = true; 
+    which_var = TEMPERATURE; 
+  } else if ( role == "density" ) { 
+    found_role = true; 
+    which_var = DENSITY; 
+  } else if ( role == "enthalpy" ) { 
+    found_role = true; 
+    which_var = ENTHALPY;
+  } else if ( role == "co2" ) { 
+    found_role = true; 
+    which_var = CO2; 
+  } else if ( role == "h2o" ) { 
+    found_role = true; 
+    which_var = H2O;
+  } else if ( role == "co2" ) {
+    found_role = true;
+    which_var = CO2; 
+  } else if ( role == "soot" ) { 
+    found_role = true;
+    which_var = SOOT;
   } 
+
   if ( !found_role ){ 
 
     std::string msg = "Error: Trying to assign a role "+role+" which is not defined as valid in ArchesLabel.cc\n";
@@ -856,8 +869,7 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
 
   } 
 
-
-  RLMAP::iterator i = d_r_to_l.find( role ); 
+  RLMAP::iterator i = d_r_to_l.find( which_var ); 
 
   if ( i != d_r_to_l.end() ){ 
     //if this role and found, make sure that the label is consistent with 
@@ -868,7 +880,33 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
     } // else the variable is already identified with its role so no need to do anything...
   } else { 
     //not found...so insert it
-    d_r_to_l.insert(std::make_pair(role,label)); 
+    d_r_to_l.insert(std::make_pair(which_var,label)); 
   } 
 
 }; 
+
+const string
+ArchesLabel::getRoleString( VARID role )
+{
+  std::string name; 
+  if ( role == TEMPERATURE ){ 
+    name = "temperature"; 
+  } else if ( role == DENSITY ){ 
+    name = "density"; 
+  } else if ( role == ENTHALPY ){ 
+    name = "enthalpy"; 
+  } else if ( role == SOOT ){ 
+    name = "soot"; 
+  } else if ( role == CO2 ){ 
+    name = "co2"; 
+  } else if ( role == H2O ){ 
+    name = "h2o"; 
+  } else if ( role == SPECIFICHEAT ){ 
+    name = "specific_heat"; 
+  } else if ( role == MIXTUREFRACTION ){ 
+    name = "mixture_fraction"; 
+  } else { 
+    std::string msg = "Error: Role not recognized!\n";
+    throw InvalidValue(msg, __FILE__,__LINE__); 
+  } 
+}

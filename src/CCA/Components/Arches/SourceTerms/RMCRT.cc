@@ -148,7 +148,7 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
 void 
 RMCRT_Radiation::extraSetup()
 { 
-  _tempLabel = _labels->getVarlabelByRole("temperature");
+  _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
   
   

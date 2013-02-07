@@ -828,8 +828,6 @@ private:
   string d_enthalpy_name; 
   const VarLabel* d_enthalpy_label; 
 
-  IntVector d_ijk_den_ref;                      ///< Reference density location
-
   IndexMap d_depVarIndexMap;                    ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;               ///< Reference to the integer location of variables for heat loss calculation
   mutable CrowdMonitor depVarIndexMapLock;      ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
