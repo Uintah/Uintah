@@ -355,7 +355,7 @@ namespace Wasatch{
         saveLabelParams=saveLabelParams->findNextBlock("save") ){
       std::string saveTheLabel;
       saveLabelParams->getAttribute("label",saveTheLabel);
-      ioFieldSet_.insert(saveTheLabel);
+      lockedFields_.insert(saveTheLabel);
     }
 
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
@@ -632,12 +632,11 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                         "initialization",
                                                         *icGraphHelper->exprFactory,
-                                                        level,
-                                                        sched,
+                                                        level, sched,
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, ioFieldSet_ );
+                                                        1, lockedFields_ );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials_ );
@@ -721,7 +720,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, ioFieldSet_ );
+                                                        1, lockedFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -891,13 +890,9 @@ namespace Wasatch{
     // create all of the required tasks on the timestepper.  This involves
     // the task(s) that compute(s) the RHS for each transport equation and
     // the task that updates the variables from time "n" to "n+1"
-    timeStepper_->create_tasks( timeID,
-                                patchInfoMap_,
-                                localPatches,
-                                materials,
-                                level,
-                                sched,
-                                rkStage, ioFieldSet_ );
+    timeStepper_->create_tasks( timeID, patchInfoMap_, localPatches,
+                                materials, level, sched,
+                                rkStage, lockedFields_ );
   }
 
   //--------------------------------------------------------------------
