@@ -909,4 +909,5 @@ ArchesLabel::getRoleString( VARID role )
     std::string msg = "Error: Role not recognized!\n";
     throw InvalidValue(msg, __FILE__,__LINE__); 
   } 
+  return name; 
 }
