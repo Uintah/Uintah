@@ -405,10 +405,10 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
 
       for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
         Patch::FaceType face = *itr;
-        
+        string faceName = patch->getFaceName(face );
         cv_face* cvFace = d_cv_faces[face];
 
-        cout_dbg << " cvFace: " << patch->getFaceName(face ) << " faceType " << cvFace->face 
+        cout_dbg << " cvFace: " <<  faceName << " faceType " << cvFace->face 
                  << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
         cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
@@ -432,44 +432,119 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         IntVector axes = patch->getFaceAxes(face);
         int P_dir = axes[0];  // principal direction
         double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+        
+        cout << " face Direction " << patch->faceDirection(face) << endl;
 
-        if (face == Patch::xminus || face == Patch::xplus) {    // X faces
+        //__________________________________
+        //           X faces
+        if (face == Patch::xminus || face == Patch::xplus) {    
           double area = dx.y() * dx.z();
+          double sumKE   = 0;
+          double sumH    = 0;
+          double sumMdot = 0;
+          cout << "iter limits " << iterLimits << endl;
+           
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            double vel    = uvel_FC[c];
-            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
-            double KE     = 0.5 * vel * vel;
-            double enthpy = temp_CC[c] * gamma[c] * cv[c];
-            
-	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
-          }
-        }
+            double vel = uvel_FC[c];
 
-        if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
+ #if 0           
+            // upwinding
+            IntVector offset(0,0,0);
+            if (vel > 0 ){
+              offset = IntVector (-1,0,0);
+            }
+            c + offset;
+ #endif
+            // compute the average values
+            IntVector cc = c - IntVector(1,0,0);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+                              
+            sumKE   += mdot * KE;
+            sumH    += mdot * enthpy;
+            sumMdot += mdot;
+          
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
+            //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+          }
+          cout << "face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
+        }
+        
+        //__________________________________
+        //        Y faces
+        if (face == Patch::yminus || face == Patch::yplus) {    
           double area = dx.x() * dx.z();
+          double sumKE = 0;
+          double sumH  = 0;
+          
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            double vel    = vvel_FC[c];
-            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
-            double KE     = 0.5 * vel * vel;
-            double enthpy = temp_CC[c] * gamma[c] * cv[c];
-            
-	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
-          }
-        }
+            double vel = vvel_FC[c];
+           
+ #if 0
+            // upwinding
+            IntVector offset(0,0,0);
 
-        if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
+            if (vel > 0 ){
+              offset = IntVector (0,-1,0);
+            }
+            c + offset;
+#endif
+            
+            // compute the average values
+            IntVector cc = c - IntVector(0,1,0);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+            
+            sumH  += mdot * enthpy; 
+            sumKE += mdot * KE;         
+             
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
+            //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+          }
+          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+        }
+        
+        //__________________________________
+        //        Z faces
+        if (face == Patch::zminus || face == Patch::zplus) {
           double area = dx.x() * dx.y();
+          double sumKE = 0;
+          double sumH  = 0;
+          
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            double vel    = wvel_FC[c];
-            double mdot   = plus_minus_one * vel * rho_CC[c] * area;
-            double KE     = 0.5 * vel * vel;
-            double enthpy = temp_CC[c] * gamma[c] * cv[c];
+            double vel = wvel_FC[c];
+#if 0            
+            // upwinding
+            IntVector offset(0,0,0);
+            if (vel > 0 ){
+              offset = IntVector (0,0,-1);
+            }
+            c + offset;
+#endif            
             
-	     mat_fluxes +=  mdot * (enthpy * KE * d_conversion);
+            // compute the average values
+            IntVector cc = c - IntVector(0,0,1);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+            
+            sumH  += mdot * enthpy;
+            sumKE += mdot * KE;
+            
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
           }
+          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
       }  // boundary faces
       
