@@ -40,8 +40,8 @@ SRCS     += \
 	$(SRCDIR)/particleExtract.cc	\
 	$(SRCDIR)/containerExtract.cc	\
 	$(SRCDIR)/vorticity.cc             \
-	$(SRCDIR)/1stLawThermo.cc                    
-
+	$(SRCDIR)/1stLawThermo.cc          \
+	$(SRCDIR)/MinMax.cc
 PSELIBS := \
 	Core/Geometry                    \
 	Core/Exceptions                  \

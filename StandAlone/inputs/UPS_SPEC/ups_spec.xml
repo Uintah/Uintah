@@ -616,15 +616,15 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo"/>
-      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo"/>
-      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
-      <Variables                        spec="OPTIONAL NO_DATA" >
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract, minMax">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl OPTIONAL STRING" />
