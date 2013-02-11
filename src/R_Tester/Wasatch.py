@@ -16,22 +16,21 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
                                        "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
-liddrivencavity3Dperf_ups = modUPS( the_dir, \
+liddrivencavity3Dlaminarperf_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
-                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+                                       ["<max_Timesteps> 70 </max_Timesteps>","<resolution>[64,64,64]</resolution>","<patches>[1,1,1]</patches>"])
 liddrivencavity3Dvremanperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-VREMAN.ups", \
-                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+                                       ["<max_Timesteps> 70 </max_Timesteps>","<resolution>[64,64,64]</resolution>","<patches>[1,1,1]</patches>"])
 liddrivencavity3Dsmagorinskyperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-SMAGORINSKY.ups", \
-                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
+                                       ["<max_Timesteps> 70 </max_Timesteps>","<resolution>[64,64,64]</resolution>","<patches>[1,1,1]</patches>"])
 liddrivencavity3Dwaleperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-WALE.ups", \
-                                       ["<max_Timesteps> 1000 </max_Timesteps>"])
-                                       
+                                       ["<max_Timesteps> 70 </max_Timesteps>","<resolution>[64,64,64]</resolution>","<patches>[1,1,1]</patches>"])
 scalabilitytestperf_ups = modUPS( the_dir, \
-                                       "scalability-test.ups", \
-                                       ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
+                                  "scalability-test.ups", \
+                                  ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -60,6 +59,10 @@ scalabilitytestperf_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("turb-lid-driven-cavity-3D-LAMINAR_perf",   liddrivencavity3Dlaminarperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
