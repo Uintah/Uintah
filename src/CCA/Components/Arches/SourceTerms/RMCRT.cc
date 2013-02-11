@@ -314,7 +314,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
                            &RMCRT_Radiation::radProperties, time_sub_step ); 
                            
   printSchedule(level,dbg, "RMCRT_Radiation::sched_radProperties");
-  std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from radprops
+  std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); 
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel ); 
