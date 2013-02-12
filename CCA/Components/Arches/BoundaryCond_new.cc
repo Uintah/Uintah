@@ -292,8 +292,6 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
-  int archIndex = 0; 
-
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
 
@@ -334,39 +332,14 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
 
         } else if (bc_kind == "Neumann") {
 
-          double dx = 0.0;
-          double the_sign = 1.0; 
-
-          switch (face) {
-            case Patch::xminus:
-              dx = Dx.x(); 
-              the_sign = -1.0;
-              break; 
-            case Patch::xplus:
-              dx = Dx.x(); 
-              break; 
-            case Patch::yminus:
-              dx = Dx.y(); 
-              the_sign = -1.0; 
-              break; 
-            case Patch::yplus:
-              dx = Dx.y(); 
-              break; 
-            case Patch::zminus:
-              dx = Dx.z(); 
-              the_sign = -1.0; 
-              break; 
-            case Patch::zplus:
-              dx = Dx.z(); 
-              break; 
-            default: 
-              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-              break; 
-          }
-
+          IntVector axes = patch->getFaceAxes(face);
+          int P_dir = axes[0];  // principal direction
+          double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+          double dx = Dx[P_dir];
+          
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector bp1(*bound_ptr - insideCellDir); 
-            scalar[*bound_ptr] = scalar[bp1] + the_sign * dx * bc_value;
+            scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
           }
         } else if (bc_kind == "FromFile") { 
 
@@ -424,8 +397,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
-  int archIndex = 0; 
-
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
 
@@ -463,43 +434,18 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
 
         } else if (bc_kind == "Neumann") {
 
-          double dx = 0.0;
-          double the_sign = 1.0; 
-
-          switch (face) {
-            case Patch::xminus:
-              dx = Dx.x(); 
-              the_sign = -1.0;
-              break; 
-            case Patch::xplus:
-              dx = Dx.x(); 
-              break; 
-            case Patch::yminus:
-              dx = Dx.y(); 
-              the_sign = -1.0; 
-              break; 
-            case Patch::yplus:
-              dx = Dx.y(); 
-              break; 
-            case Patch::zminus:
-              dx = Dx.z(); 
-              the_sign = -1.0; 
-              break; 
-            case Patch::zplus:
-              dx = Dx.z(); 
-              break; 
-            default: 
-              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-              break; 
-          }
+          IntVector axes = patch->getFaceAxes(face);
+          int P_dir = axes[0];  // principal direction
+          double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+          double dx = Dx[P_dir];
 
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             
             IntVector bp1(*bound_ptr - insideCellDir); 
             
-            X = vec[bp1].x() + the_sign * dx * bc_value.x();
-            Y = vec[bp1].y() + the_sign * dx * bc_value.y();
-            Z = vec[bp1].z() + the_sign * dx * bc_value.z();
+            X = vec[bp1].x() + plus_minus_one * dx * bc_value.x();
+            Y = vec[bp1].y() + plus_minus_one * dx * bc_value.y();
+            Z = vec[bp1].z() + plus_minus_one * dx * bc_value.z();
           
             vec[*bound_ptr] = Vector(X,Y,Z); 
           }
@@ -523,8 +469,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
-
-  int archIndex = 0; 
 
   for (iter = bf.begin(); iter !=bf.end(); iter++){
     Patch::FaceType face = *iter;
@@ -561,106 +505,27 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
           }
         } else if (bc_kind == "Neumann") {
           
-          double dX, dY, dZ; 
+          double dvdx, dvdy, dvdz; 
 
-          switch (face) {
-            case Patch::xminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
+          IntVector axes = patch->getFaceAxes(face);
+          int P_dir = axes[0];  // principal direction
+          double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+          double dx = Dx[P_dir];
 
-                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.x(); 
-                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.x(); 
-                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.x(); 
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
-                X = vec[bp1].x() - Dx.x() * dX; 
-                Y = vec[bp1].y() - Dx.x() * dY; 
-                Z = vec[bp1].z() - Dx.x() * dZ; 
+            IntVector bp1(*bound_ptr - insideCellDir); 
 
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-            case Patch::xplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
+            dvdx = -1.0 * plus_minus_one * ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / dx; 
+            dvdy = -1.0 * plus_minus_one * ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / dx; 
+            dvdz = -1.0 * plus_minus_one * ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / dx; 
 
-                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.x();
-                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.x();
-                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.x();
+            X = vec[bp1].x() + plus_minus_one * dx * dvdx; 
+            Y = vec[bp1].y() + plus_minus_one * dx * dvdy; 
+            Z = vec[bp1].z() + plus_minus_one * dx * dvdz; 
 
-                X = vec[bp1].x() + Dx.x() * dX; 
-                Y = vec[bp1].y() + Dx.x() * dY; 
-                Z = vec[bp1].z() + Dx.x() * dZ; 
+            vec[*bound_ptr] = Vector(X,Y,Z); 
 
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#ifdef YDIM
-            case Patch::yminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-
-                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.y(); 
-                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.y(); 
-                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.y(); 
-
-                X = vec[bp1].x() - Dx.y() * dX; 
-                Y = vec[bp1].y() - Dx.y() * dY; 
-                Z = vec[bp1].z() - Dx.y() * dZ; 
-
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-            case Patch::yplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-
-                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.y();
-                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.y();
-                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.y();
-
-                X = vec[bp1].x() + Dx.y() * dX; 
-                Y = vec[bp1].y() + Dx.y() * dY; 
-                Z = vec[bp1].z() + Dx.y() * dZ; 
-
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#endif
-#ifdef ZDIM
-            case Patch::zminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-
-                dX = ( const_vec[bp1].x() - const_vec[*bound_ptr].x() ) / Dx.z(); 
-                dY = ( const_vec[bp1].y() - const_vec[*bound_ptr].y() ) / Dx.z(); 
-                dZ = ( const_vec[bp1].z() - const_vec[*bound_ptr].z() ) / Dx.z(); 
-
-                X = vec[bp1].x() - Dx.z() * dX; 
-                Y = vec[bp1].y() - Dx.z() * dY; 
-                Z = vec[bp1].z() - Dx.z() * dZ; 
-
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-            case Patch::zplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-
-                dX = ( const_vec[*bound_ptr].x() - const_vec[bp1].x() ) / Dx.z();
-                dY = ( const_vec[*bound_ptr].y() - const_vec[bp1].y() ) / Dx.z();
-                dZ = ( const_vec[*bound_ptr].z() - const_vec[bp1].z() ) / Dx.z();
-
-                X = vec[bp1].x() + Dx.z() * dX; 
-                Y = vec[bp1].y() + Dx.z() * dY; 
-                Z = vec[bp1].z() + Dx.z() * dZ; 
-
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#endif
-          default: 
-            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-            break; 
           }
         }
       }
@@ -825,40 +690,16 @@ void BoundaryCondition_new::Neumann::applyBC( const Patch* patch, Patch::FaceTyp
     // --- notation --- 
     // bp1: boundary cell + 1 or the interior cell one in from the boundary
     IntVector insideCellDir = patch->faceDirection(face);
-    Vector Dx = patch->dCell(); 
-    double dx = 0.0;
-    double the_sign = 1.0; 
 
-    switch (face) {
-      case Patch::xminus:
-        dx = Dx.x(); 
-        the_sign = -1.0;
-        break; 
-      case Patch::xplus:
-        dx = Dx.x(); 
-        break; 
-      case Patch::yminus:
-        dx = Dx.y(); 
-        the_sign = -1.0; 
-        break; 
-      case Patch::yplus:
-        dx = Dx.y(); 
-        break; 
-      case Patch::zminus:
-        dx = Dx.z(); 
-        the_sign = -1.0; 
-        break; 
-      case Patch::zplus:
-        dx = Dx.z(); 
-        break; 
-      default: 
-        throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-        break; 
-    }
+    IntVector axes = patch->getFaceAxes(face);
+    Vector Dx = patch->dCell(); 
+    int P_dir = axes[0];  // principal direction
+    double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+    double dx = Dx[P_dir];
 
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector bp1(*bound_ptr - insideCellDir); 
-      phi[*bound_ptr] = phi[bp1] + the_sign * dx * bc_value;
+      phi[*bound_ptr] = phi[bp1] + plus_minus_one * dx * bc_value;
     }
   }
 }
