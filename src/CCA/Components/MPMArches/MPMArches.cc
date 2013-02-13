@@ -1146,8 +1146,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleSolveHeatEquations(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
