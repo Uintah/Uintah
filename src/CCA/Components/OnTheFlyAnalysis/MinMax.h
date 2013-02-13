@@ -100,6 +100,13 @@ GENERAL INFORMATION
     void createFile(string& filename, FILE*& fp);
     
     void createDirectory(string& lineName, string& levelIndex);
+
+    template <class Tvar, class Ttype>
+    void findMinMax( DataWarehouse*  new_dw,
+                     const VarLabel* varLabel,
+                     const int       indx,
+                     const Patch*    patch,
+                     CellIterator    iter );
                     
     
     // general labels
@@ -107,6 +114,7 @@ GENERAL INFORMATION
     public:
       VarLabel* lastCompTimeLabel;
       VarLabel* fileVarsStructLabel;
+      std::map< std::string, const VarLabel* > LabelMap;
     };
     
     MinMaxLabel* d_lb;    
@@ -126,6 +134,7 @@ GENERAL INFORMATION
     MaterialSet*     d_matl_set;
     std::set<string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
+    PatchSet*        d_zeroPatch;
     
   
   };
