@@ -151,20 +151,16 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->gVelocityStarLabel,       matlset, gac, NGN);
-  if(!flag->d_doGridReset){
-    task->requires(Task::NewDW, lb->gDisplacementLabel,     matlset, gac, NGN);
-  }
-  task->requires(Task::OldDW, lb->pSizeLabel,               matlset, gnone);
-  task->requires(Task::OldDW, lb->pTempPreviousLabel,       matlset, gnone);
+  task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
+  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
+                                                            matlset, gnone);
+  task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel_preReloc,               matlset);
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
@@ -202,31 +198,17 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
                                           DataWarehouse*  new_dw,
                                           const MPMMaterial* matl)
 {
-  double rho_orig = matl->getInitialDensity();
-  Matrix3 Id, Zero(0.0); Id.Identity();
-
-  constParticleVariable<double>  pMass;
-  constParticleVariable<Matrix3> pDefGrad_old;
-  old_dw->get(pMass,            lb->pMassLabel,               pset);
-  old_dw->get(pDefGrad_old,     lb->pDeformationMeasureLabel, pset);
-
-  ParticleVariable<double>  pVol_new, pIntHeatRate_new,p_q;
-  ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
-  new_dw->allocateAndPut(pVol_new,         lb->pVolumeLabel_preReloc,  pset);
+  ParticleVariable<double>  pIntHeatRate_new,p_q;
+  ParticleVariable<Matrix3> pStress_new;
   new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
-  new_dw->allocateAndPut(pDefGrad_new,  lb->pDeformationMeasureLabel_preReloc, 
-                                                                       pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
   new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    pVol_new[idx] = (pMass[idx]/rho_orig);
     pIntHeatRate_new[idx] = 0.0;
-    pDefGrad_new[idx] = pDefGrad_old[idx];
-    //pDefGrad_new[idx] = Id;
-    pStress_new[idx] = Zero;
+    pStress_new[idx]=Matrix3(0.0);
     p_q[idx]=0.;
   }
 }

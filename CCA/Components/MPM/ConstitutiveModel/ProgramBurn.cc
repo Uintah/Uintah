@@ -231,29 +231,21 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     double p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    Matrix3 Identity;
-    Identity.Identity();
+    Matrix3 Identity; Identity.Identity();
 
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass,pProgressF;
-    ParticleVariable<double> pvolume;
+    constParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q,pProgressF_new;
-    ParticleVariable<Matrix3> velGrad;
+    constParticleVariable<Matrix3> velGrad;
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>      pLocalized_new;
     constParticleVariable<long64> pParticleID;
@@ -261,30 +253,23 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
     old_dw->get(pLocalized,          pLocalizedLabel,              pset);
     old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
     
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc,  pset);
-
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
     new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
-
-    new_dw->allocateTemporary(velGrad,                             pset);
-
-    constNCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
+    new_dw->get(pvolume,          lb->pVolumeLabel_preReloc,              pset);
+    new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,             pset);
+    new_dw->get(deformationGradient_new,
+                                  lb->pDeformationMeasureLabel_preReloc,  pset);
 
     double time = d_sharedState->getElapsedTime() - d_initialData.d_T0;
 
@@ -297,11 +282,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     double R2 = d_initialData.d_R2;
     double om = d_initialData.d_om;
     double rho0 = d_initialData.d_rho0; // matl->getInitialDensity();
-
-    if(!flag->d_doGridReset){
-      cerr << "The program_burn model doesn't work without resetting the grid"
-           << endl;
-    }
 
     double A_d=d_initialData.d_direction.x();
     double B_d=d_initialData.d_direction.y();
@@ -350,81 +330,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      Matrix3 velGrad_new(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                      deformationGradient[idx]);
-
-        computeVelocityGradient(velGrad_new,ni,d_S, oodx, gvelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx],
-                                                   deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad_new,ni,d_S,S,oodx,gvelocity,
-                                                                  px[idx]);
-      }
-
-      Matrix3 F=deformationGradient[idx];
-      double Lnorm_dt = velGrad_new.Norm()*delT;
-      int num_scs = min(max(4,2*((int) Lnorm_dt)),10000);
-      if(num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-      double dtsc = delT/(double (num_scs));
-      Matrix3 OP_tensorL_DT = Identity + velGrad_new*dtsc;
-      for(int n=0;n<num_scs;n++){
-        F=OP_tensorL_DT*F;
-//          if(num_scs >1000){
-//          cerr << "n = " << n << endl;
-//          cerr << "F = " << F << endl;
-//          cerr << "J = " << F.Determinant() << endl << endl;
-//          }
-      }
-
-      deformationGradient_new[idx]=F;
-
-      velGrad[idx] = velGrad_new;
     }
-
-    // The following is used only for pressure stabilization
-    CCVariable<double> J_CC;
-    new_dw->allocateTemporary(J_CC,       patch);
-    J_CC.initialize(0.);
-    if(flag->d_doPressureStabilization) {
-      CCVariable<double> vol_0_CC;
-      CCVariable<double> vol_CC;
-      new_dw->allocateTemporary(vol_0_CC, patch);
-      new_dw->allocateTemporary(vol_CC,   patch);
-
-      vol_0_CC.initialize(0.);
-      vol_CC.initialize(0.);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        // get the volumetric part of the deformation
-        double J = deformationGradient_new[idx].Determinant();
-
-        // Get the deformed volume
-        double rho_cur = rho0/J;
-        pvolume[idx] = pmass[idx]/rho_cur;
-
-        IntVector cell_index;
-        patch->findCell(px[idx],cell_index);
-
-        vol_CC[cell_index]  +=pvolume[idx];
-        vol_0_CC[cell_index]+=pmass[idx]/rho0;
-      }
-
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        J_CC[c]=vol_CC[c]/vol_0_CC[c];
-      }
-    } //end of pressureStabilization loop  at the patch level
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -432,16 +338,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
       double J = deformationGradient_new[idx].Determinant();
 
-      // More Pressure Stabilization
-      if(flag->d_doPressureStabilization) {
-        IntVector cell_index;
-        patch->findCell(px[idx],cell_index);
-
-        // Change F such that the determinant is equal to the average for
-        // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index]/J);
-        J=J_CC[cell_index];
-      }
       if (J<=0.0) {
         double Jold = deformationGradient[idx].Determinant();
         cout<<"negative J in ProgramBurn, J="<<J<<", Jold = " << Jold << endl;
@@ -452,7 +348,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                                     << pvelocity[idx]*pmass[idx] <<endl;
         J=1;
       }
-
 
       //  The following computes a pressure for partially burned particles
       //  as a mixture of Murnahan and JWL pressures, based on pProgressF
@@ -484,9 +379,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
       p = pM*(1.0-pProgressF_new[idx]) + pJWL*pProgressF_new[idx];
 
-      // Get the deformed volume and current density
-      pvolume[idx] = pmass[idx]/rho_cur;
-
       // compute the total stress
       pstress[idx] = Identity*(-p);
 
@@ -517,7 +409,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),      lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 

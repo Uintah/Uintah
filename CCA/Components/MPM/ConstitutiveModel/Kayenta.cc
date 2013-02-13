@@ -37,7 +37,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Containers/StaticArray.h>
@@ -530,9 +529,6 @@ void Kayenta::viscousStressUpdate(Matrix3& D, const Matrix3& old_stress, double&
   USM = bulk;
 
   c_dil = sqrt(bulk/rho_cur);
-
-
-
 }
 
 void Kayenta::computeStressTensor(const PatchSubset* patches,
@@ -545,32 +541,22 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     double se = 0.0;
     const Patch* patch = patches->get(p);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+    Matrix3 Identity; Identity.Identity();
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-    Identity.Identity();
-
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new,velGrad;
     constParticleVariable<double> pmass, pvolume, ptemperature, peakI1IDist;
-    ParticleVariable<double> pvolume_new, peakI1IDist_new;
+    ParticleVariable<double> peakI1IDist_new;
+    constParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
-    constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>     pLocalized_new;
@@ -580,11 +566,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc, pset);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -598,17 +580,16 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
 
-    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
     ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc,        pset);
     new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
+    new_dw->get(deformationGradient_new,
+                           lb->pDeformationMeasureLabel_preReloc,        pset);
+    new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
+    new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
     peakI1IDist_new.copyData(peakI1IDist);
 
@@ -623,73 +604,25 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      // Initialize velocity gradient
-      velGrad.set(0.0);
-
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                  deformationGradient[idx]);
-
-        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
-
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx],
-                                                      deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
       pLocalized_new[idx]=0;
-
-      // New Way using subcycling
-      Matrix3 one; one.Identity();
-      Matrix3 F=deformationGradient[idx];
-      double Lnorm_dt = velGrad.Norm()*delT;
-      int num_scs = max(1,2*((int) Lnorm_dt));
-      if(num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-      double dtsc = delT/(double (num_scs));
-      Matrix3 OP_tensorL_DT = one + velGrad*dtsc;
-      for(int n=0;n<num_scs;n++){
-        F=OP_tensorL_DT*F;
-      }
-      deformationGradient_new[idx]=F;
-
-      // Old First Order Way
-//    deformationGradientInc = velGrad * delT + Identity;
-
-//    Jinc = deformationGradientInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-//    deformationGradient_new[idx] = deformationGradientInc *
-//                                   deformationGradient[idx];
 
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
-      double Jold = deformationGradient[idx].Determinant();
-      Jinc = J/Jold;
 
       // Check 1: Look at Jacobian
       if (J<=0.0 || J > d_hugeJ) {
           double Jold = deformationGradient[idx].Determinant();
           cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
-          cout << "pos = " << px[idx] << endl;
 
           pLocalized_new[idx]=-999;
           cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
           cout<< "material = " << dwi << endl << "Momentum deleted = "
                                         << pvelocity[idx]*pmass[idx] <<endl;
-          deformationGradient_new[idx]=one;
           D=Matrix3(0.);
       }
-
-      pvolume_new[idx]=Jinc*pvolume[idx];
 
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
@@ -796,7 +729,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(UI[0]/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
@@ -813,7 +745,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
 
-    delete interpolator;
   }
 }
 

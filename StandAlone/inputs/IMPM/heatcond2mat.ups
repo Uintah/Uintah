@@ -28,7 +28,6 @@
        <save label = "p.stress"/>
        <save label = "p.temperature"/>
        <save label = "g.temperature"/>
-<!--       <save label = "g.temperaturenobc"/> -->
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
        <checkpoint cycle = "2" interval = "0.01"/>

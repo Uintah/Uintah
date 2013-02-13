@@ -586,9 +586,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
-  //d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
 
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);

@@ -159,48 +159,33 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     Identity.Identity();
     double c_dil = 0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    Vector dx=patch->dCell();
 
     int dwi = matl->getDWIndex();
 
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<Matrix3> deformationGradient;
+    constParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> velGrad;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume;
+    constParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt,p_q;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    new_dw->get(pvolume,             lb->pVolumeLabel_preReloc,    pset);
+    new_dw->get(deformationGradient_new,
+                            lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
 
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,    pset);
     new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
-
-    ParticleVariable<Matrix3> velGrad;
-    new_dw->allocateTemporary(velGrad, pset);
 
     double C1 = d_initialData.C1;
     double C2 = d_initialData.C2;
@@ -208,100 +193,11 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     double PR = d_initialData.PR;
     double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
-    double rho_orig = matl->getInitialDensity();
-
-    // Get the deformation gradients first.  This is done differently
-    // depending on whether or not the grid is reset.  (Should it be??? -JG)
-    if(flag->d_doGridReset){
-      constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-        particleIndex idx = *iter;
-
-        Matrix3 tensorL(0.0);
-        if(!flag->d_axisymmetric){
-         // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   deformationGradient[idx]);
-
-         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
-        } else {  // axi-symmetric kinematics
-         // Get the node indices that surround the cell
-         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                          psize[idx],deformationGradient[idx]);
-         // x -> r, y -> z, z -> theta
-         computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
-        }
-        velGrad[idx]=tensorL;
-
-        deformationGradient_new[idx]=(tensorL*delT+Identity)
-                                    *deformationGradient[idx];
-      }
-
-    }
-    else if(!flag->d_doGridReset){
-      constNCVariable<Vector> gdisplacement;
-      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromDisplacement(gdisplacement,
-                                                 pset, px, psize,
-                                                 deformationGradient_new,
-                                                 deformationGradient,
-                                                 dx, interpolator);
-    }
-
-    // The following is used only for pressure stabilization
-    CCVariable<double> J_CC;
-    new_dw->allocateTemporary(J_CC,       patch);
-    J_CC.initialize(0.);
-
-    if(flag->d_doPressureStabilization) {
-      CCVariable<double> vol_0_CC;
-      CCVariable<double> vol_CC;
-      new_dw->allocateTemporary(vol_0_CC, patch);
-      new_dw->allocateTemporary(vol_CC,   patch);
-
-      vol_0_CC.initialize(0.);
-      vol_CC.initialize(0.);
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        // get the volumetric part of the deformation
-        J = deformationGradient_new[idx].Determinant();
-
-        // Get the deformed volume
-        pvolume[idx]=(pmass[idx]/rho_orig)*J;
-
-        IntVector cell_index;
-        patch->findCell(px[idx],cell_index);
-
-        vol_CC[cell_index]  +=pvolume[idx];
-        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
-      }
-
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        J_CC[c]=vol_CC[c]/vol_0_CC[c];
-      }
-    } //end of pressureStabilization loop  at the patch level
-
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      if(flag->d_doPressureStabilization) {
-        IntVector cell_index;
-        patch->findCell(px[idx],cell_index);
-
-        // get the original volumetric part of the deformation
-        J = deformationGradient_new[idx].Determinant();
-
-        // Change F such that the determinant is equal to the average for
-        // the cell
-        deformationGradient_new[idx]*=cbrt(J_CC[cell_index]/J);
-      }
 
       // Compute the left Cauchy-Green deformation tensor
       B = deformationGradient_new[idx]*deformationGradient_new[idx].Transpose();
@@ -321,15 +217,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
       pstress[idx]=(B*C1pi1C2 - (B*B)*C2 + Identity*i3w3)*2.0/J;
 
-      // Update particle volumes
-      pvolume[idx]=(pmass[idx]/rho_orig)*J;
-
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
+      double rho_cur = pmass[idx]/pvolume[idx];
       c_dil = sqrt((4.*(C1+C2*invar2)/J
                     +8.*(2.*C3/(invar3*invar3*invar3)+C4*(2.*invar3-1.))
                     -Min((pstress[idx])(0,0),(pstress[idx])(1,1)
-                         ,(pstress[idx])(2,2))/J)*pvolume[idx]/pmass[idx]);
+                         ,(pstress[idx])(2,2))/J)/rho_cur);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -338,7 +232,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double bulk = (4.*(C1+C2*invar2)/J);  // I'm a little fuzzy here - JG
-        double rho_cur = rho_orig/J;
         double c_bulk = sqrt(bulk/rho_cur);
         Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
@@ -366,7 +259,6 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),      lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 

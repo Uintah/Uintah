@@ -97,6 +97,9 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
+  pVelGradLabel = VarLabel::create("p.velGrad",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel = VarLabel::create( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
@@ -169,6 +172,9 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
+  pVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
