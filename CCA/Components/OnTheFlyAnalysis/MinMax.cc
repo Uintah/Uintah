@@ -90,10 +90,17 @@ MinMax::~MinMax()
     delete d_zero_matl;
   } 
   
+  
   VarLabel::destroy(d_lb->lastCompTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
+  
+  // delete min/max reduction variables
+  map<string, const VarLabel*>::iterator iter = d_lb->LabelMap.begin();
+  for (; iter != d_lb->LabelMap.end(); iter++) {
+    VarLabel::destroy( iter->second );
+  }
+  
   delete d_lb;
-
 }
 
 //______________________________________________________________________
@@ -186,23 +193,29 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   d_zero_matl->add(0);
   d_zero_matl->addReference();
   
+  // one patch
+  const Patch* p = grid->getPatchByID(0,0);
+  d_zeroPatch = scinew PatchSet();
+  d_zeroPatch->add(p);
+  d_zeroPatch->addReference();
+  
   //__________________________________
   //  Read in variables label names                
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
                     var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);
     
-    string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
+    string labelName = attribute["label"];
+    VarLabel* label = VarLabel::find(labelName);
     if(label == NULL){
       throw ProblemSetupException("MinMax: analyze label not found: "
-                           + name , __FILE__, __LINE__);
+                           + labelName , __FILE__, __LINE__);
     }
     
     //__________________________________
     //  Bulletproofing
     // The user must specify the matl for single matl variables
-    if ( name == "press_CC" && attribute["matl"].empty() ){
+    if ( labelName == "press_CC" && attribute["matl"].empty() ){
       throw ProblemSetupException("MinMax: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
     
@@ -240,6 +253,16 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     d_varLabels.push_back(label);
+    
+    //__________________________________
+    //  Create the var labels for the reduction variables
+    
+    string VLmax = labelName + "_max";
+    string VLmin = labelName + "_min";
+    VarLabel* meMax = VarLabel::create(VLmax, max_vartype::getTypeDescription());
+    VarLabel* meMin = VarLabel::create(VLmin, max_vartype::getTypeDescription());
+    d_lb->LabelMap[VLmax] = meMax;
+    d_lb->LabelMap[VLmin] = meMin;
   }
 }
 
@@ -335,11 +358,20 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
       delete matSubSet;
     }
   }
+  
+  // schedule the reduction variables
+  map<string, const VarLabel*>::iterator iter = d_lb->LabelMap.begin();
+  for (; iter != d_lb->LabelMap.end(); iter++) {
+    const VarLabel* me =  iter->second ;
+    t0->computes( me );
+  }
+  
   sched->addTask( t0, level->eachPatch(), d_matl_set );
  
   
   //__________________________________
   //  Write write min/max to a  file
+  // Only write data on patch 0
 
   Task* t1 = scinew Task( "MinMax::doAnalysis", 
                        this,&MinMax::doAnalysis );      
@@ -347,10 +379,17 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   t1->requires( Task::OldDW, d_lb->lastCompTimeLabel );
   t1->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
   
+  // schedule the reduction variables
+  for (iter = d_lb->LabelMap.begin(); iter != d_lb->LabelMap.end(); iter++) {
+    const VarLabel* me =  iter->second ;
+    cout << " requiring " << iter->first << endl;
+    t1->requires( Task::NewDW, me );
+  }
+    
   t1->computes( d_lb->lastCompTimeLabel );
   t1->computes( d_lb->fileVarsStructLabel, d_zero_matl );
   
-  sched->addTask( t1, level->eachPatch(), d_matl_set );
+  sched->addTask( t1, d_zeroPatch, d_matl_set );
 }
 
 //______________________________________________________________________
@@ -370,109 +409,90 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   double now = d_dataArchiver->getCurrentTime();
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
-  
+
+
+  /*  Loop over patches  */
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);    
-    
-    cout << " HERE " << endl;
-    
-    //__________________________________
-    // compute min/max if it's time to write
-    if( now >= nextWriteTime){
-    
-      printTask(patches, patch,cout_doing,"Doing MinMax::computeMinMax");
-            
-      Ghost::GhostType gn = Ghost::None;
 
-      for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-        string name = d_varLabels[i]->getName();
-        // bulletproofing
-        if(d_varLabels[i] == NULL){
-          throw InternalError("MinMax: analyze label not found: " 
-                          + name , __FILE__, __LINE__);
-        }
+    /* Loop over variables */
+    for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+      string labelName = d_varLabels[i]->getName();
+      
+      // bulletproofing
+      if(d_varLabels[i] == NULL){
+        throw InternalError("MinMax: analyze label not found: " 
+                             + labelName , __FILE__, __LINE__);
+      }    
+      //__________________________________
+      // compute min/max if it's time to write
+      if( now >= nextWriteTime){
 
+        printTask(patches, patch,cout_doing,"Doing MinMax::computeMinMax");
+
+        Ghost::GhostType gn = Ghost::None;
         const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
         const Uintah::TypeDescription* subtype = td->getSubType();
 
-
         int indx = d_varMatl[i];
         
-        IntVector maxIndx( -SHRT_MAX, -SHRT_MAX, -SHRT_MAX);
-        IntVector minIndx(  SHRT_MAX,  SHRT_MAX,  SHRT_MAX);
-        Point maxPos(-DBL_MAX,-DBL_MAX,-DBL_MAX);
-        Point minPos( DBL_MAX, DBL_MAX, DBL_MAX);
-        
         switch(td->getType()){
-          case Uintah::TypeDescription::CCVariable:      // CC Variables
+          case Uintah::TypeDescription::CCVariable:             // CC Variables
             switch(subtype->getType()) {
             
-            case Uintah::TypeDescription::double_type:{
-              constCCVariable<double> q_CC;
-              new_dw->get(q_CC, d_varLabels[i], indx, patch, gn, 0);
-              double max = -DBL_MAX;
-              double min = DBL_MAX;
-              
-              
-              for (CellIterator iter=patch->getCellIterator();!iter.done();iter++) {
-                IntVector c = *iter;
-                double Q = q_CC[c];
-                if ( Q >= max ){
-                  max = Q;
-                  maxIndx = c;
-                }
-                
-                if (Q <= min ){
-                  min = Q;
-                  minIndx = c;
-                }
-              }    
-              Point maxPos = level->getCellPosition(maxIndx);
-              Point minPos = level->getCellPosition(minIndx);          
-              
-              cout << name << " max: " << max << " " << maxIndx << " maxPos " << maxPos << endl;
-              cout << "         min: " << min << " " << minIndx << " minPos " << minPos << endl;
+            case Uintah::TypeDescription::double_type:{         // CC double
+              CellIterator iter=patch->getCellIterator();
+              findMinMax <constCCVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
               break;
-            } 
-            case Uintah::TypeDescription::Vector: {
-              constCCVariable<Vector> q_CC;
-              new_dw->get(q_CC, d_varLabels[i], indx, patch, gn, 0);
+            }
+            case Uintah::TypeDescription::Vector: {             // CC Vector
+              CellIterator iter=patch->getCellIterator();
+              findMinMax< constCCVariable<Vector>, Vector > ( new_dw, d_varLabels[i], indx, patch, iter );
               break;
             }  
-            case Uintah::TypeDescription::int_type: {
-              constCCVariable<int> q_CC;
-              new_dw->get(q_CC, d_varLabels[i], indx, patch, gn, 0);
+            case Uintah::TypeDescription::int_type: {            // CC int
+              CellIterator iter=patch->getCellIterator();
+              findMinMax< constCCVariable<int>, int > ( new_dw, d_varLabels[i], indx, patch, iter );
               break; 
             }
             default:
               throw InternalError("MinMax: invalid data type", __FILE__, __LINE__); 
             }
             break;
-          case Uintah::TypeDescription::SFCXVariable: {   // SFCX Variables
-            constSFCXVariable<double> q_SFCX;
-            new_dw->get( q_SFCX, d_varLabels[i], indx, patch, gn, 0 );
+            
+            
+          case Uintah::TypeDescription::SFCXVariable: {         // SFCX double
+            CellIterator iter=patch->getSFCXIterator();
+            findMinMax <constSFCXVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
             break;
           }
-          case Uintah::TypeDescription::SFCYVariable: {   // SFCY Variables
-            constSFCYVariable<double> q_SFCY;  
-            new_dw->get( q_SFCY, d_varLabels[i], indx, patch, gn, 0 );
+          case Uintah::TypeDescription::SFCYVariable: {         // SFCY double
+            CellIterator iter=patch->getSFCYIterator();
+            findMinMax <constSFCYVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
             break;
           }
-          case Uintah::TypeDescription::SFCZVariable: {   // SFCZ Variables
-            constSFCZVariable<double> q_SFCZ;
-            new_dw->get( q_SFCZ, d_varLabels[i], indx, patch, gn, 0 );
+          case Uintah::TypeDescription::SFCZVariable: {         // SFCZ double
+            CellIterator iter=patch->getSFCZIterator();
+            findMinMax <constSFCZVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
             break;
           }
           default:
             ostringstream warn;
-            warn << "ERROR:AnalysisModule:lineExtact: ("<<d_varLabels[i]->getName() << " " 
+            warn << "ERROR:AnalysisModule:MinMax: ("<<d_varLabels[i]->getName() << " " 
                  << td->getName() << " ) has not been implemented" << endl;
             throw InternalError(warn.str(), __FILE__, __LINE__);
         }
-        
-      }            
+      } // time to write data
+      
+      string VLmax = labelName + "_max";
+      string VLmin = labelName + "_min";
+      const VarLabel* meMin = d_lb->LabelMap[ VLmin ];
+      const VarLabel* meMax = d_lb->LabelMap[ VLmax ];
+      
+      new_dw->put(max_vartype(999),  meMax);
+      new_dw->put(min_vartype(-999), meMin);
          
-    }  // time to write data
+    }  // VarLabel loop  
   }  // patches
 }
 
@@ -519,21 +539,21 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     }    
     
     int proc = lb->getPatchwiseProcessorAssignment(patch);
-    cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
     //__________________________________
     // write data if this processor owns this patch
     // and if it's time to write
     if( proc == pg->myrank() && now >= nextWriteTime){  
 
-#if 1 
+      printTask(patches, patch,cout_doing,"Doing MinMax::doAnalysis");
+
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-        string name = d_varLabels[i]->getName();
+        string labelName = d_varLabels[i]->getName();
          
         // bulletproofing
         if(d_varLabels[i] == NULL){
           
           throw InternalError("MinMax: analyze label not found: " 
-                          + name , __FILE__, __LINE__);
+                          + labelName , __FILE__, __LINE__);
         }
             
       
@@ -552,7 +572,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         }
         
         ostringstream fname;
-        fname<<path<<"/"<<name <<"("<<d_varMatl[i]<<")";
+        fname<< path << "/" << labelName <<"("<<d_varMatl[i]<<")";
         string filename = fname.str();
 
         //__________________________________
@@ -567,11 +587,25 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         } else {
           fp = myFiles[filename];
         }
-
         if (!fp){
           throw InternalError("\nERROR:dataAnalysisModule:MinMax:  failed opening file"+filename,__FILE__, __LINE__);
         }   
-#endif    
+        
+        
+        //__________________________________
+        //  Now get the data and write it to the file
+        string VLmax = labelName + "_max";
+        string VLmin = labelName + "_min";
+        const VarLabel* meMin = d_lb->LabelMap[ VLmin ];
+        const VarLabel* meMax = d_lb->LabelMap[ VLmax ];
+        
+        max_vartype maxQ;
+        min_vartype minQ;
+        new_dw->get( maxQ, meMax);
+        new_dw->get( minQ, meMin); 
+        
+        fprintf( fp, "%16.15E     %16.15E    %16.15E\n",now,  (double)maxQ, (double)minQ ); 
+            
       }    
       lastWriteTime = now;     
     }  // time to write data
@@ -587,6 +621,51 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 }
 
 
+//______________________________________________________________________
+//
+
+template <class Tvar, class Ttype>
+void MinMax::findMinMax( DataWarehouse*  new_dw,
+                         const VarLabel* varLabel,
+                         const int       indx,
+                         const Patch*    patch,
+                         CellIterator    iter )
+{
+
+  const Level* level = patch->getLevel();
+  Tvar Q_var;
+  Ttype Q;
+  new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
+  
+  Ttype maxQ( Q_var[*iter] );  // initial values
+  Ttype minQ( maxQ );
+  
+  IntVector maxIndx( *iter );
+  IntVector minIndx( *iter );
+  
+  for (;!iter.done();iter++) {
+    IntVector c = *iter;
+    Q = Q_var[c];
+    
+    // use Max & Min instead of std::max & min
+    // These functions can handle Vectors
+    maxQ = Max(maxQ,Q);  
+    minQ = Min(minQ,Q);
+    
+    if ( Q == maxQ ){
+      maxIndx = c;
+    }
+    if (Q == minQ ){
+      minIndx = c;
+    }
+  }  
+
+  Point maxPos = level->getCellPosition(maxIndx);
+  Point minPos = level->getCellPosition(minIndx);          
+
+  cout << varLabel->getName() << " max: " << maxQ << " " << maxIndx << " maxPos " << maxPos << endl;
+  cout << "         min: " << minQ << " " << minIndx << " minPos " << minPos << endl; 
+}
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
@@ -600,30 +679,20 @@ void MinMax::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"Time    max    min\n");
+  fprintf(fp,"Time                      max                       min\n");
   
   cout << Parallel::getMPIRank() << " MinMax:Created file " << filename << endl;
 }
 //______________________________________________________________________
-// create the directory structure   lineName/LevelIndex
+// create the directory structure   dirName/LevelIndex
 //
 void
-MinMax::createDirectory(string& lineName, string& levelIndex)
+MinMax::createDirectory(string& dirName, string& levelIndex)
 {
-  DIR *check = opendir(lineName.c_str());
+  DIR *check = opendir(dirName.c_str());
   if ( check == NULL ) {
-    cout << Parallel::getMPIRank() << "MinMax:Making directory " << lineName << endl;
-    MKDIR( lineName.c_str(), 0777 );
-  } else {
-    closedir(check);
-  }
-  
-  // level index
-  string path = lineName + "/" + levelIndex;
-  check = opendir(path.c_str());
-  if ( check == NULL ) {
-    cout << "MinMax:Making directory " << path << endl;
-    MKDIR( path.c_str(), 0777 );
+    cout << Parallel::getMPIRank() << "MinMax:Making directory " << dirName << endl;
+    MKDIR( dirName.c_str(), 0777 );
   } else {
     closedir(check);
   }
