@@ -1122,7 +1122,7 @@ DataArchiver::outputTimestep(Dir& baseDir,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << timestep;Fia
+  tname << "t" << setw(5) << setfill('0') << timestep;
   *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
   // Create the directory for this timestep, if necessary
