@@ -1028,9 +1028,10 @@ WARNING
     virtual void doitGPU(const ProcessorGroup* pg, const PatchSubset*,
               const MaterialSubset*, vector<DataWarehouseP>& dws, int device);
 
-    inline const char* getName() const {
-      return (d_usesGPU ? d_taskNameGPU : d_taskName).c_str();
+    inline  const string& getName() const {
+      return (d_usesGPU ? d_taskNameGPU : d_taskName);
     }
+
     inline const PatchSet* getPatchSet() const {
       return patch_set;
     }
