@@ -185,9 +185,18 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
         SCI_THROW(InternalError("Variable produced in old datawarehouse: "
               +comp->var->getName(), __FILE__, __LINE__));
       } else if(comp->var->typeDescription()->isReductionVariable()){
-        ASSERT(comp->patches == 0);
+        int levelidx = comp->reductionLevel?comp->reductionLevel->getIndex():-1;
         // Look up this variable in the reductionTasks map
         int dw = comp->mapDataWarehouse();
+        // skip perlevel redution on delT
+        if (comp->var->getName()== "delT" && task->getName() != "coarsenDelt" ) {
+          if (dbg.active())
+            dbg << d_myworld->myrank() << " Skipping Reduction task for variable: " 
+              << comp->var->getName() << " on level " << levelidx 
+              << ", DW " << dw << '\n';
+          continue;
+        }
+        ASSERT(comp->patches == 0);
 
         // use the dw as a 'material', just for the sake of looking it up.
         // it should only differentiate on AMR W-cycle graphs...
@@ -198,7 +207,6 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
         ReductionTasksMap::iterator it=reductionTasks.find(key);
         if(it == reductionTasks.end()){
           // No reduction task yet, create one
-          int levelidx = comp->reductionLevel?comp->reductionLevel->getIndex():-1;
           if (dbg.active())
             dbg << d_myworld->myrank() << " creating Reduction task for variable: " 
               << comp->var->getName() << " on level " << levelidx 
@@ -335,14 +343,14 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
           dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
         if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
           if(req->var->typeDescription()->isReductionVariable()) {
+            // Match the level first 
+            if(compiter->second->reductionLevel == req->reductionLevel) {
+              add = true;
+            }
             // with reduction variables, you can modify them up to the Reduction Task, which also modifies
             // those who don't modify will get the reduced value.
-            if (!modifies){
-              add=true;
-              requiresReductionTask=true;
-            }
-            else if(compiter->second->reductionLevel == req->reductionLevel) {
-              add = true;
+            if (!modifies && req->task->getName() !="coarsenDelt") {
+                requiresReductionTask=true;
             }
           }
           else if(overlaps(compiter->second, req)) {
@@ -1465,7 +1473,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     else if (patches && patches->empty() && 
         (req->patches_dom == Task::FineLevel || task->getTask()->getType() == Task::OncePerProc ||
          task->getTask()->getType() == Task::Output || 
-         strcmp(task->getTask()->getName(), "SchedulerCommon::copyDataToNewGrid") == 0))
+         task->getTask()->getName() == "SchedulerCommon::copyDataToNewGrid"))
     {
       // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
       // there aren't any patches on this processor.  Perfectly legal, so do nothing
