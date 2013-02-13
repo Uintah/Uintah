@@ -1122,11 +1122,16 @@ DataArchiver::outputTimestep(Dir& baseDir,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << timestep;
+  tname << "t" << setw(5) << setfill('0') << timestep;Fia
   *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
   // Create the directory for this timestep, if necessary
-  if(d_writeMeta){
+  // It is not gurantteed that the rank holding d_writeMeta will call 
+  // outputTimstep to create dir before another rank begin to output data.
+  // A race condition happens when a rank executes output task and
+  // the rank holding d_writeMeta is still compiling task graph. 
+  // So every rank should try to create dir.
+  //if(d_writeMeta){
     Dir tdir;
     try {
       tdir = baseDir.createSubdir(tname.str());
@@ -1150,7 +1155,7 @@ DataArchiver::outputTimestep(Dir& baseDir,
         ldir = tdir.getSubdir(lname.str());
       }
     }
-  }
+  //}
 }
 
 void
