@@ -293,6 +293,12 @@ namespace Wasatch {
     BoundaryConditionBase<FieldT>& modExpr =
       dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
+    
+    // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
+    const SCIRun::IntVector sciPatchCellOffset = patch->getCellLowIndex(0);
+    SpatialOps::structured::IntVec patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
+    modExpr.set_patch_cell_offset(patchCellOffset);
+    
     // set the ghost and interior points as well as coefficients
     modExpr.set_ghost_coef(cg);
     modExpr.set_ghost_points(flatGhostPoints);

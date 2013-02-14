@@ -344,7 +344,7 @@
     <!-- Spec for boundary condition expression types -->
     <BCExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction" >
+                            children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, TurbulentInlet" >
 
       <TaskList           spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
       
@@ -378,7 +378,15 @@
                             attribute3="HalfHeight REQUIRED DOUBLE"
                             attribute4="n REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
-      </PowerLawFunction>      
+      </PowerLawFunction>  
+      
+      <TurbulentInlet  spec="OPTIONAL NO_DATA"
+                       attribute1="component REQUIRED STRING"
+                       attribute2="period OPTIONAL INTEGER"
+                       attribute3="timeperiod OPTIONAL DOUBLE">
+        <InputFile         spec="REQUIRED STRING"/>
+      </TurbulentInlet>      
+    
        
     </BCExpression>
 
