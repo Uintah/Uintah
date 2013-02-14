@@ -25,6 +25,23 @@
 				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
       </TurbulentInlet>
     </BCExpression>
+
+    <BCExpression type="YVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="y-turbulent-inlet" state="STATE_NONE" />
+      <TurbulentInlet period="2" component="Y">
+				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
+      </TurbulentInlet>
+    </BCExpression>
+
+    <BCExpression type="ZVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="z-turbulent-inlet" state="STATE_NONE" />
+      <TurbulentInlet period="2" component="Z">
+				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
+      </TurbulentInlet>
+    </BCExpression>
+    
     
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
@@ -118,8 +135,18 @@
  -->
     <Face rectangle="x-" lower="0.0 -0.025 -0.025" upper="0 0.025 0.025">
         <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 11.7 </value>
+          <value> 0.0 </value>
           <functor_name>x-turbulent-inlet</functor_name>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+          <functor_name>y-turbulent-inlet</functor_name>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+          <functor_name>z-turbulent-inlet</functor_name>
         </BCType>
         
         <BCType id="all" var="Dirichlet" label="y-mom">
