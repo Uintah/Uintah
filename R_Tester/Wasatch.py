@@ -59,6 +59,7 @@ scalabilitytestperf_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("turbulent-inlet-test-xminus",          "turbulent-inlet-test-xminus.ups",    12,  "Linux",  ["exactComparison","no_restart"] ),                         \
   ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
   ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
@@ -120,6 +121,7 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("turbulent-inlet-test-xminus",          "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] ),                         \
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
