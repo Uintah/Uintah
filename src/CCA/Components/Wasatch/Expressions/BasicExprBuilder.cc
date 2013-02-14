@@ -1050,13 +1050,13 @@ namespace Wasatch{
       }
       
       Expr::Tag xVelTag("x-" + baseName, Expr::STATE_NONE);
-      typedef typename TurbulentInletBC<XVolField>::Builder xBuilder;
+      typedef TurbulentInletBC<XVolField>::Builder xBuilder;
       
       Expr::Tag yVelTag("y-" + baseName, Expr::STATE_NONE);
-      typedef typename TurbulentInletBC<YVolField>::Builder yBuilder;
+      typedef TurbulentInletBC<YVolField>::Builder yBuilder;
       
       Expr::Tag zVelTag("z-" + baseName, Expr::STATE_NONE);
-      typedef typename TurbulentInletBC<ZVolField>::Builder zBuilder;
+      typedef TurbulentInletBC<ZVolField>::Builder zBuilder;
       
       GraphHelper* const initGraphHelper = gc[INITIALIZATION];
       initGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
