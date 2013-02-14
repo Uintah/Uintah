@@ -983,7 +983,7 @@ namespace Wasatch{
     // parse and build boundary condition expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BCExpression");
         exprParams != 0;
-        exprParams = exprParams->findNextBlock("BCExpression") ){
+        exprParams = exprParams->findNextBlock("BCExpression") ) {
       
       std::string fieldType;
       exprParams->getAttribute("type",fieldType);
@@ -1027,6 +1027,47 @@ namespace Wasatch{
         ++taskNameIter;
       }
     }
+    
+    // This is a special parser for turbulent inlets
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("TurbulentInlet");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("TurbulentInlet") ) {
+      
+      std::string inputFileName, velDir, baseName;
+      int period=1;
+      double timePeriod;
+      exprParams->get("InputFile",inputFileName);
+      exprParams->get("BaseName",baseName);
+      
+      bool hasPeriod = exprParams->getAttribute("period",period);
+      bool hasTimePeriod = exprParams->getAttribute("timeperiod",timePeriod);
+      if (hasTimePeriod) period = 0;
+      
+      if (hasPeriod && hasTimePeriod) {
+        std::ostringstream msg;
+        msg << "ERROR: When specifying a TurbulentInletBC, you cannot specify both timeperiod AND period. Please revise your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      Expr::Tag xVelTag("x-" + baseName, Expr::STATE_NONE);
+      typedef typename TurbulentInletBC<XVolField>::Builder xBuilder;
+      
+      Expr::Tag yVelTag("y-" + baseName, Expr::STATE_NONE);
+      typedef typename TurbulentInletBC<YVolField>::Builder yBuilder;
+      
+      Expr::Tag zVelTag("z-" + baseName, Expr::STATE_NONE);
+      typedef typename TurbulentInletBC<ZVolField>::Builder zBuilder;
+      
+      GraphHelper* const initGraphHelper = gc[INITIALIZATION];
+      initGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+      
+      GraphHelper* const slnGraphHelper = gc[ADVANCE_SOLUTION];
+      slnGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+    }    
     
     //___________________________________________________
     // parse and build initial conditions for moment transport

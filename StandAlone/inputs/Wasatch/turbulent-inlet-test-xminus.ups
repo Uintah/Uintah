@@ -18,29 +18,11 @@
       <TurbulenceModel> VREMAN </TurbulenceModel>
     </Turbulence>
 
-    <BCExpression type="XVOL">
-      <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="x-turbulent-inlet" state="STATE_NONE" />
-      <TurbulentInlet period="2" component="X">
-				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
-      </TurbulentInlet>
-    </BCExpression>
 
-    <BCExpression type="YVOL">
-      <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="y-turbulent-inlet" state="STATE_NONE" />
-      <TurbulentInlet period="2" component="Y">
+      <TurbulentInlet period="2">
+        <BaseName>turbulent-inlet</BaseName>
 				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
       </TurbulentInlet>
-    </BCExpression>
-
-    <BCExpression type="ZVOL">
-      <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="z-turbulent-inlet" state="STATE_NONE" />
-      <TurbulentInlet period="2" component="Z">
-				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
-      </TurbulentInlet>
-    </BCExpression>
     
     
     <!-- Set the initial condition expression for x-momentum -->
