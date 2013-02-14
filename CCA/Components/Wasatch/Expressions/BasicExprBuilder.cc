@@ -60,6 +60,7 @@
 #include "BoundaryConditions/LinearBC.h"
 #include "BoundaryConditions/ParabolicBC.h"
 #include "BoundaryConditions/PowerLawBC.h"
+#include "BoundaryConditions/TurbulentInletBC.h"
 #include "BoundaryConditions/BoundaryConditionBase.h"
 
 //-- ExprLib includes --//
@@ -796,6 +797,30 @@ namespace Wasatch{
       typedef typename PowerLawBC<FieldT>::Builder Builder;
       builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
     }
+    
+    else if ( params->findBlock("TurbulentInlet") ) {
+      std::string inputFileName;
+      std::string velDir;
+      int period=1;
+      double timePeriod;
+      Uintah::ProblemSpecP valParams = params->findBlock("TurbulentInlet");
+      valParams->get("InputFile",inputFileName);
+      valParams->getAttribute("component",velDir);
+      
+      bool hasPeriod = valParams->getAttribute("period",period);
+      bool hasTimePeriod = valParams->getAttribute("timeperiod",timePeriod);
+      if (hasTimePeriod) period = 0;
+      
+      if (hasPeriod && hasTimePeriod) {
+        std::ostringstream msg;
+        msg << "ERROR: When specifying a TurbulentInletBC, you cannot specify both timeperiod AND period. Please revise your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      typedef typename TurbulentInletBC<FieldT>::Builder Builder;
+      builder = scinew Builder(tag,inputFileName, velDir,period, timePeriod);
+    }
+
     
     return builder;
   }
