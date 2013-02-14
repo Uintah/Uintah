@@ -1702,7 +1702,8 @@ int main( int argc, const char* argv[] )
   myfile << "#Stress Prof: " << stressType << endl;
   myfile << "#Length Prof: " << lengthScaleType << endl;
   myfile << "#Ave Length Scale: " << L_a[0] << " " << L_a[1] << " " << L_a[2] << endl;
-  
+  myfile << "#Face Side" << endl;
+  myfile << faceSide << endl;
   myfile << "#Table Dimensions" << endl;
   myfile << NT+1 << " " << jSize << " " << kSize << endl; 
   myfile << "#Minimum Cell Index" << endl;
