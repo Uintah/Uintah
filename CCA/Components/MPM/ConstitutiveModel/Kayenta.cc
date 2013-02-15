@@ -1017,6 +1017,6 @@ Kayenta::WeibullParser(WeibParameters &iP)
     iP.WeibMod    = atof(weibModulus.c_str());
     iP.WeibRefVol = atof(weibRefVol.c_str());
     iP.WeibSeed   = atoi(weibSeed.c_str());
-    UI[51]=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
+    UI[d_PEAKI1I]=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
   } // End if (iP.Perturb)
 }
