@@ -5,7 +5,22 @@
 \usepackage{fancyvrb}
 \usepackage{chapterbib}
 \usepackage{hyperref}
+
 \usepackage{listings}
+\lstset{
+  backgroundcolor=\color{codegray},
+  captionpos=b,
+  numberstyle={\tiny \sffamily},
+  frame=lines,
+  basicstyle={\small \ttfamily},
+  language={xml},
+  keywordstyle=\color[rgb]{0,0,1},
+  commentstyle=\color[rgb]{0.133,0.545,0.133},
+  stringstyle=\color[rgb]{0.627,0.126,0.941},
+  breaklines=true,
+} 
+
+
 \usepackage{wrapfig}
 \usepackage{subfig}
 \usepackage{algorithm}
@@ -100,7 +115,7 @@
 \title{Uintah User Guide}
 
 
-\author{ Jim Guilkey, Todd Harman, Justin Luitjens, \\ John Schmidt, Jeremy Thornock, J. Davison de St. Germain, \\ Siddharth Shankar, Joseph Peterson, Carson Brownlee, Charles Reid}
+\author{ Jim Guilkey, Todd Harman, Justin Luitjens, \\ John Schmidt, Jeremy Thornock, J. Davison de St. Germain, \\ Siddharth Shankar, Joseph Peterson, Carson Brownlee,\\ Charles Reid, Tony Saad}
 
 \date{Version 1.5}
 
@@ -124,6 +139,7 @@
 \include{mpm}
 %\include{mpmarches}
 \include{mpmice}
+\include{wasatch}
 \include{glossary}
 
 \end{document} 

@@ -602,11 +602,11 @@ The steps in generating the inlet data are listed here directly from Klein's pro
 \item Choose a length scale for each coordinate direction as$ L_{y}=n_{y}\Delta y , L_{z}=n_{z}\Delta z $ and a timescale for the flow direction (or length scale by Talyor's hypothesis) $T_{x}=n_{t}\Delta t$  (or $L_{x} = n_x \Delta x$ ), set the size of the support $N_{\alpha}\geq 2n_{\alpha} $ for $\alpha=x,y,z$ . Also prescribe a mean flow profile.
 \item Initialize three random fields $\mathcal{R}_{\alpha}$  of dimensions $[-N_{x}:N_{x},-N_{y}+1:M_{y}+N_{y},-N_{z}+1:M_{z}+N_{z} ]$ , with $M_{y}\times M_{z}$  denoting the resolution of the grid of the inflow plane. The size is actually $[2N_{x}+1,2N_{y}+M_{y},2N_{z}+M_{z} ]$.
 \item Calculate the filter coefficients b(i,j,k), using \ref{eq:DFGfiltercoef}
-\item 4. Loop over the inlet dimensions j  and k  and apply the filter operation for each velocity fluctuation
+\item Loop over the inlet dimensions j  and k  and apply the filter operation for each velocity fluctuation
 \begin{equation} \label{eq:DFGmain}
 \mathcal{U}_{\alpha}(j,k)=\sum_{i'=-N_{x}}^{N_{x}}\sum_{j'=-N_{y}}^{N_{y}}\sum_{k'=-N_{z}}^{N_{z}}b(i',j',k')\mathcal{R}_{\alpha}(i',j+j',k+k') 
 \end{equation}
-\item 5. Using the time-averaged Reynold's stress tensor ($R_{ij}$)  solve for the transformation matrix $a_{ij}$
+\item Using the time-averaged Reynold's stress tensor ($R_{ij}$)  solve for the transformation matrix $a_{ij}$
 \begin{equation}
  a_{ij}=\left[\begin{array}{ccc}
 (R_{11})^{1/2} & 0 & 0\\
