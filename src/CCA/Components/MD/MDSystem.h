@@ -29,13 +29,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Array3.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
 
 namespace Uintah {
-
-class ProcessorGroup;
-class MD;
 
 using SCIRun::Vector;
 using SCIRun::IntVector;
@@ -67,13 +65,10 @@ class MDSystem {
     ~MDSystem();
 
     /**
-     * @brief 4 argument constructor
-     * @param _volume The initial MD system volume.
-     * @param _pressure The initial MD system pressure.
-     * @param _temperature The initial MD system temperature.
-     * @param _orthorhombic Whether of not the MD system is using orthorhombic coordinates.
+     * @brief
+     * @param
      */
-    MDSystem(const ProcessorGroup* pg);
+    MDSystem(ProblemSpecP& ps);
 
     /**
      * @brief
@@ -152,11 +147,10 @@ class MDSystem {
     double d_unitCell;      //!< Total MD system unit cell volume
     double d_pressure;      //!< Total MD system pressure
     double d_temperature;   //!< Total MD system temperature
-    bool   d_orthorhombic;  //!< Whether or not the MD system is using orthorhombic coordinates
-    bool   d_changeBox;     //!<
+    bool d_orthorhombic;  //!< Whether or not the MD system is using orthorhombic coordinates
+    bool d_changeBox;     //!<
 
     Matrix3 d_cellInverse;  //!<
-    const ProcessorGroup* d_myworld;  //!< Uintah processor group
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

@@ -26,6 +26,7 @@
  */
 
 #include <CCA/Components/MD/MD.h>
+#include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/SPME.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -66,8 +67,6 @@ MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
 {
   lb = scinew MDLabel();
-  system = scinew MDSystem(myworld);
-  electrostatics = scinew SPME();
 }
 
 MD::~MD()
@@ -95,22 +94,17 @@ void MD::problemSetup(const ProblemSpecP& params,
   md_ps->get("R12", R12);
   md_ps->get("R6", R6);
 
-  // Populate the MD System object
-  ProblemSpecP md_system_ps = params->findBlock("MDSystem");
-  md_system_ps->get("unitCell", system->d_unitCell);
-  md_system_ps->get("pressure", system->d_pressure);
-  md_system_ps->get("temperature", system->d_temperature);
-  md_system_ps->get("orthorhombic", system->d_orthorhombic);
-  md_system_ps->get("changeBox", system->d_changeBox);
+  // create and populate the MD System object
+  system = scinew MDSystem(md_ps);
 
-  // Populate the MD Electrostatics object
-  ProblemSpecP md_electrostatics_ps = params->findBlock("Electrostatics");
-  md_electrostatics_ps->get("ewaldBeta", electrostatics->ewaldBeta);
+  // create the Electrostatics object via factory method
+  electrostatics = ElectrostaticsFactory::create(params, system);
 
+  // create and register MD materials (this is ill defined right now)
   material = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(material);
 
-  // Register permanent particle state; for relocation, etc
+  // register permanent particle state; for relocation, etc
   registerPermanentParticleState(material);
 
   // do file I/O to get atom coordinates and simulation cell size

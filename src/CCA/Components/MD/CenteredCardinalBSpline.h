@@ -47,7 +47,7 @@ class IntVector;
 /**
  *  @class CenteredCardinalBSpline
  *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
+ *  @author Justin Hooper & Alan Humphrey
  *  @date   January, 2013
  *
  *  @brief
@@ -62,32 +62,30 @@ class IntVector;
  */
 double s0(const double& X);
 
-
-
-
 class CenteredCardinalBSpline {
 
   public:
     /**
      * @brief
      * @param
-     * @return
      */
     CenteredCardinalBSpline();
 
     /**
-     * @brief Constructor for non-null spline
-     * @param SplineOrder - int, order of the spline
-     * @return Object of spline type
-     */
-    CenteredCardinalBSpline(const int& _SplineOrder);
-
-    /**
      * @brief
      * @param
-     * @return
      */
     ~CenteredCardinalBSpline();
+
+    /**
+     * @brief Constructor for non-null spline
+     * @param splineOrder - int, order of the spline
+     */
+    CenteredCardinalBSpline(int splineOrder);
+
+    CenteredCardinalBSpline(const CenteredCardinalBSpline& spline);
+
+    CenteredCardinalBSpline& operator=(const CenteredCardinalBSpline& spline);
 
     /**
      * @brief Evaluate the spline across the entire support range
@@ -110,7 +108,8 @@ class CenteredCardinalBSpline {
      * @param None
      * @return int - The support range (maximum number of grid points) over which the spline has non-zero values
      */
-    inline int Support() const {
+    inline int Support() const
+    {
       return SplineSupport;
     }
 
@@ -120,7 +119,8 @@ class CenteredCardinalBSpline {
      * @return int - Half the support range over which the spline is defined.  In a 0-centric language, this is
      *           also the array index of the principle value in the Evaluate and Derivative returned arrays.
      */
-    inline int HalfSupport() const {
+    inline int HalfSupport() const
+    {
       return SplineHalfSupport;
     }
 
@@ -131,17 +131,16 @@ class CenteredCardinalBSpline {
 
     // Stores values necessary for calculating the spline
     vector<double> PrefactorValues;
-    vector<int>    PrefactorMap, BasisOffsets;
+    vector<int> PrefactorMap, BasisOffsets;
 
     // Stores values necessary for calculating the spline derivatives
     vector<double> DerivativeValues;
-    vector<int>    DerivativeMap, DerivativeOffsets;
+    vector<int> DerivativeMap, DerivativeOffsets;
 
     // Internal functions involved in setting up the spline
     vector<int> GenerateBasisOffsets(const int Order);
     vector<int> GeneratePrefactorMap(const int Order);
     vector<double> GeneratePrefactorValues(const int Order);
-
 };
 
 }  // End namespace Uintah

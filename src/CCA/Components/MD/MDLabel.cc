@@ -65,7 +65,6 @@ MDLabel::MDLabel()
   pParticleIDLabel = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
 
-
   ///////////////////////////////////////////////////////////////////////////
   // Grid Variables
   gForceLabel = VarLabel::create("g.force", NCVariable<Vector>::getTypeDescription());
@@ -79,7 +78,6 @@ MDLabel::MDLabel()
   gMassLabel = VarLabel::create("g.mass", NCVariable<double>::getTypeDescription());
 
   gChargeLabel = VarLabel::create("g.charge", NCVariable<double>::getTypeDescription());
-
 
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables
@@ -115,7 +113,6 @@ MDLabel::~MDLabel()
   VarLabel::destroy(gEnergyLabel);
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gChargeLabel);
-
 
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables

@@ -120,8 +120,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @return
      */
     enum IntegratorType {
-      Explicit,
-      Implicit,
+      Explicit, Implicit,
     };
 
   protected:
@@ -302,7 +301,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     std::vector<vector<int> > neighborList;  //!<
 
     Electrostatics* electrostatics;          //!<
-    MDSystem*       system;                  //!<
+    MDSystem* system;                  //!<
 
     // copy constructor and operator=
     MD(const MD&);                           //!<

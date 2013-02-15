@@ -27,28 +27,17 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-double S0(const double& X) {
-  if ( X < -0.5) return 0;
-  if ( X >= 0.5) return 0;
+double S0(const double& X)
+{
+  if (X < -0.5)
+    return 0;
+  if (X >= 0.5)
+    return 0;
   return 1;
 }
 
-CenteredCardinalBSpline::CenteredCardinalBSpline(const int& _SplineOrder)
-                                                :SplineOrder(_SplineOrder)
+CenteredCardinalBSpline::CenteredCardinalBSpline()
 {
-  int OddShift=SplineOrder%2;
-  SplineSupport=SplineOrder+OddShift+1;
-  SplineHalfSupport=SplineSupport/2;
-
-  //Initialize calculation arrays; these need only be calculated once per spline order
-  BasisOffsets    = CenteredCardinalBSpline::GenerateBasisOffsets(SplineOrder);
-  PrefactorMap    = CenteredCardinalBSpline::GeneratePrefactorMap(SplineOrder);
-  PrefactorValues = CenteredCardinalBSpline::GeneratePrefactorValues(SplineOrder);
-
-  //Initialize derivative arrays
-  DerivativeOffsets = GenerateBasisOffsets(SplineOrder-1);
-  DerivativeMap     = GeneratePrefactorMap(SplineOrder-1);
-  DerivativeValues  = GeneratePrefactorValues(SplineOrder-1);
 
 }
 
@@ -57,7 +46,27 @@ CenteredCardinalBSpline::~CenteredCardinalBSpline()
 
 }
 
-vector<double> CenteredCardinalBSpline::GeneratePrefactorValues(const int& Order) {
+CenteredCardinalBSpline::CenteredCardinalBSpline(int splineOrder) :
+    SplineOrder(splineOrder)
+{
+  int OddShift = SplineOrder % 2;
+  SplineSupport = SplineOrder + OddShift + 1;
+  SplineHalfSupport = SplineSupport / 2;
+
+  //Initialize calculation arrays; these need only be calculated once per spline order
+  BasisOffsets = CenteredCardinalBSpline::GenerateBasisOffsets(SplineOrder);
+  PrefactorMap = CenteredCardinalBSpline::GeneratePrefactorMap(SplineOrder);
+  PrefactorValues = CenteredCardinalBSpline::GeneratePrefactorValues(SplineOrder);
+
+  //Initialize derivative arrays
+  DerivativeOffsets = GenerateBasisOffsets(SplineOrder - 1);
+  DerivativeMap = GeneratePrefactorMap(SplineOrder - 1);
+  DerivativeValues = GeneratePrefactorValues(SplineOrder - 1);
+
+}
+
+vector<double> CenteredCardinalBSpline::GeneratePrefactorValues(const int order)
+{
   // There are innately p-n terms for the spline centered at X=0 where p is the
   //   spline order, and n is the order of the basis splines.  For this code, n=0.
   // To return a vector which accounts for all points in the spline support, we

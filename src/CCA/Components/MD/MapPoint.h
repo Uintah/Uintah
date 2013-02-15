@@ -104,7 +104,6 @@ class MapPoint {
       return this->gridIndex;
     }
 
-
     /**
      * @brief
      * @param

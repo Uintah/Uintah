@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 //---------------------------------------------------------------------------------------------------------------------------------
-
 #ifndef UINTAH_MD_SIMPLEGRID_H
 #define UINTAH_MD_SIMPLEGRID_H
 
@@ -209,7 +208,6 @@ template<typename T> class SimpleGrid {
      *              as the specified SimpleGrid, flase otherwise.
      */
     bool verifyRegistration(SimpleGrid<T>& gridIn);
-
 
     /**
      * @brief Transforms 'Q' from real to fourier space
@@ -408,7 +406,6 @@ template<typename T> class SimpleGrid {
       return *this;
     }
 
-
 //    friend std::ostream& operator<<(std::ostream& out,
 //                                    const Uintah::SimpleGrid<T>& sg);
     /**
@@ -417,7 +414,6 @@ template<typename T> class SimpleGrid {
      * @return std::ostream& A reference to the populated std::ostream.
      */
     std::ostream& print(std::ostream& out) const;
-
 
   private:
 
