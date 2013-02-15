@@ -75,19 +75,9 @@ class MDSystem {
      * @param
      * @return
      */
-    inline Matrix3 getCellInverse() const
-    {
-      return this->d_cellInverse;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
     inline double getVolume() const
     {
-      return this->d_unitCell;
+      return this->d_volume;
     }
 
     /**
@@ -140,17 +130,38 @@ class MDSystem {
       this->d_changeBox = value;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline Matrix3 getUnitCell() const
+    {
+      return this->d_unitCell;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline Matrix3 getInverseCell() const
+    {
+      return this->d_inverseCell;
+    }
+
     friend class MD;
 
   private:
 
-    double d_unitCell;      //!< Total MD system unit cell volume
+    double d_volume;         //!< Total MD system unit cell volume
     double d_pressure;      //!< Total MD system pressure
     double d_temperature;   //!< Total MD system temperature
-    bool d_orthorhombic;  //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_changeBox;     //!<
+    bool d_orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
+    bool d_changeBox;       //!< Whether or not the system size has changed
 
-    Matrix3 d_cellInverse;  //!<
+    Matrix3 d_unitCell;     //!< MD system unit cell
+    Matrix3 d_inverseCell;  //!< MD system inverse unit cell
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

@@ -25,24 +25,9 @@
 #ifndef UINTAH_MD_CENTEREDCARDINALBSPLINE_H
 #define UINTAH_MD_CENTEREDCARDINALBSPLINE_H
 
-#include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-
 #include <vector>
 
 namespace Uintah {
-
-typedef int particleIndex;
-typedef int particleId;
-
-using SCIRun::Vector;
-using SCIRun::IntVector;
-
-class Point;
-class Vector;
-class IntVector;
 
 /**
  *  @class CenteredCardinalBSpline
@@ -78,69 +63,89 @@ class CenteredCardinalBSpline {
     ~CenteredCardinalBSpline();
 
     /**
-     * @brief Constructor for non-null spline
-     * @param splineOrder - int, order of the spline
+     * @brief Single argument constructor.
+     * @param splineOrder The order of the spline.
      */
     CenteredCardinalBSpline(int splineOrder);
 
+    /**
+     * @brief Constructor for non-null spline.
+     * @param splineOrder - int, order of the spline.
+     */
     CenteredCardinalBSpline(const CenteredCardinalBSpline& spline);
 
+    /**
+     * @brief
+     * @param
+     */
     CenteredCardinalBSpline& operator=(const CenteredCardinalBSpline& spline);
 
     /**
-     * @brief Evaluate the spline across the entire support range
-     * @param X - double, Value of the point for which spline is calculated
+     * @brief Evaluate the spline across the entire support range.
+     * @param x  Value of the point for which spline is calculated.
      * @return std::vector<double> - Contains the spline values on evenly spaced points with spacing 1.0
      *           over the entire support range of the spline.
      */
-    vector<double> Evaluate(const double& X) const;
+    std::vector<double> evaluate(const double x) const;
 
     /**
      * @brief Generate the derivative of the spline for the entire support range
-     * @param X - double, Value of the point for which the spline derivative is calculated
+     * @param x - double, Value of the point for which the spline derivative is calculated
      * @return std::vector<double> - Contains the spline derivatives on evenly spaced points with spacing 1.0
      *           over the entire support range of the spline.
      */
-    vector<double> Derivative(const double& X) const;
+    std::vector<double> derivative(const double x) const;
 
     /*
-     * @brief Return the support range of the current spline
+     * @brief Return the support range of the current spline.
      * @param None
-     * @return int - The support range (maximum number of grid points) over which the spline has non-zero values
+     * @return int The support range (maximum number of grid points) over which the spline has non-zero values.
      */
-    inline int Support() const
+    inline int getSupport() const
     {
-      return SplineSupport;
+      return this->splineSupport;
     }
 
     /*
-     * @brief Returns half of the support range (rounded down) for the current spline
+     * @brief Returns half of the support range (rounded down) for the current spline.
      * @param None
-     * @return int - Half the support range over which the spline is defined.  In a 0-centric language, this is
-     *           also the array index of the principle value in the Evaluate and Derivative returned arrays.
+     * @return int Half the support range over which the spline is defined. In a 0-centric language, this is
+     *             also the array index of the principle value in the arrays returned by evaluate and derivative.
      */
-    inline int HalfSupport() const
+    inline int getHalfSupport() const
     {
-      return SplineHalfSupport;
+      return this->splineHalfSupport;
     }
 
   private:
-    int SplineOrder;
-    int SplineSupport;
-    int SplineHalfSupport;
+
+    int splineOrder;
+    int splineSupport;
+    int splineHalfSupport;
 
     // Stores values necessary for calculating the spline
-    vector<double> PrefactorValues;
-    vector<int> PrefactorMap, BasisOffsets;
+    std::vector<double> prefactorValues;
+    std::vector<int> prefactorMap;
+    std::vector<int> basisOffsets;
 
     // Stores values necessary for calculating the spline derivatives
-    vector<double> DerivativeValues;
-    vector<int> DerivativeMap, DerivativeOffsets;
+    std::vector<double> derivativeValues;
+    std::vector<int> derivativeMap;
+    std::vector<int> derivativeOffsets;
 
     // Internal functions involved in setting up the spline
-    vector<int> GenerateBasisOffsets(const int Order);
-    vector<int> GeneratePrefactorMap(const int Order);
-    vector<double> GeneratePrefactorValues(const int Order);
+    std::vector<int> generateBasisOffsets(const int order);
+
+    std::vector<int> generatePrefactorMap(const int order,
+                                          const std::vector<int>& offset);
+
+    std::vector<double> generatePrefactorValues(const int order);
+
+    std::vector<double> evaluateInternal(const double x,
+                                         const int order,
+                                         const std::vector<int>& map,
+                                         const std::vector<int>& offsets,
+                                         const std::vector<double>& values) const;
 };
 
 }  // End namespace Uintah
