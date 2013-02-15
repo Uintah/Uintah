@@ -50,7 +50,7 @@ SPME::SPME()
 
 SPME::~SPME()
 {
-delete}
+}
 
 SPME::SPME(const MDSystem* system,
            const double ewaldBeta,
@@ -60,11 +60,11 @@ SPME::SPME(const MDSystem* system,
            const int splineOrder) :
     EwaldBeta(ewaldBeta), polarizable(isPolarizable), PolarizationTolerance(tolerance), KLimits(kLimits)
 {
-  InterpolatingSpline = scinew CenteredCardinalBSpline(splineOrder);
+  InterpolatingSpline = CenteredCardinalBSpline(splineOrder);
   ElectrostaticMethod = Electrostatics::SPME;
 
   // Initialize and check for proper construction
-  this->initialize(system);
+  this->initialize(*system);
   this->setup();
   SCIRun::IntVector localGridSize = localGridExtents + localGhostPositiveSize + localGhostNegativeSize;
   SimpleGrid<complex<double> > Q(localGridSize, localGridOffset, localGhostNegativeSize, localGhostPositiveSize);
@@ -77,16 +77,16 @@ std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& MFracti
                                               const CenteredCardinalBSpline& InterpolatingSpline) const
 {
   double PI = acos(-1.0);
-  double TwoPI = 2.0 * PI;
-  double orderM12PI = TwoPI * (InterpolatingSpline.Order() - 1);
+  double twoPI = 2.0 * PI;
+  double orderM12PI = twoPI * (InterpolatingSpline.getOrder() - 1);
 
-  int HalfSupport = InterpolatingSpline.HalfSupport();
+  int HalfSupport = InterpolatingSpline.getHalfSupport();
   std::vector<dblcomplex> b(LocalGridExtent);
-  std::vector<double> ZeroAlignedSpline = InterpolatingSpline.Evaluate(0);
+  std::vector<double> ZeroAlignedSpline = InterpolatingSpline.evaluate(0);
 
-  double* LocalMFractional = MFractional[InitialVectorIndex];  // Reset MFractional zero so we can index into it negatively
+  double* localMFractional = MFractional[InitialVectorIndex];  // Reset MFractional zero so we can index into it negatively
   for (size_t Index = 0; Index < LocalGridExtent; ++Index) {
-    double Internal = TwoPI * LocalMFractional[Index];
+    double Internal = twoPI * localMFractional[Index];
     // Formula looks significantly different from given SPME for offset splines.
     //   See Essmann et. al., J. Chem. Phys. 103 8577 (1995). for conversion, particularly formula C3 pt. 2 (paper uses pt. 4)
     dblcomplex Phi_N = 0.0;
@@ -176,27 +176,27 @@ SimpleGrid<double> SPME::CalculateCGrid(const SCIRun::IntVector& Extents,
   return CGrid;
 }
 
-SimpleGrid<Matrix3> SPME::CalculateStressPrefactor(const SCIRun::IntVector& Extents,
-                                                   const SCIRun::IntVector& Offset)
+SimpleGrid<Matrix3> SPME::CalculateStressPrefactor(const SCIRun::IntVector& extents,
+                                                   const SCIRun::IntVector& offset)
 {
 
   std::vector<double> mp1 = SPME::generateMPrimeVector(KLimits.x(), InterpolatingSpline);
   std::vector<double> mp2 = SPME::generateMPrimeVector(KLimits.y(), InterpolatingSpline);
   std::vector<double> mp3 = SPME::generateMPrimeVector(KLimits.z(), InterpolatingSpline);
 
-  size_t XExtents = Extents.x();
-  size_t YExtents = Extents.y();
-  size_t ZExtents = Extents.z();
+  size_t XExtents = extents.x();
+  size_t YExtents = extents.y();
+  size_t ZExtents = extents.z();
 
-  int XOffset = Offset.x();
-  int YOffset = Offset.y();
-  int ZOffset = Offset.z();
+  int XOffset = offset.x();
+  int YOffset = offset.y();
+  int ZOffset = offset.z();
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
   double invBeta2 = 1.0 / (EwaldBeta * EwaldBeta);
 
-  SimpleGrid<Matrix3> StressPre(Extents, Offset, 0);  // No ghost cells; internal only
+  SimpleGrid<Matrix3> StressPre(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < XExtents; ++kX) {
     for (size_t kY = 0; kY < YExtents; ++kY) {
       for (size_t kZ = 0; kZ < ZExtents; ++kZ) {
@@ -228,7 +228,7 @@ SimpleGrid<Matrix3> SPME::CalculateStressPrefactor(const SCIRun::IntVector& Exte
 }
 
 // Interface implementations
-void SPME::initialize(const MDSystem& SimulationSystem)
+void SPME::initialize(const MDSystem& system)
 {
   // We call SPME::initialize from the constructor or if we've somehow maintained our object across a system change
 
@@ -239,9 +239,9 @@ void SPME::initialize(const MDSystem& SimulationSystem)
   localGridOffset = patch->getCellLowIndex();
 
   // Get useful information from global system descriptor to work with locally.
-  UnitCell = SimulationSystem->UnitCell();
-  InverseUnitCell = SimulationSystem->InverseUnitCell();
-  SystemVolume = SimulationSystem->Volume();
+  UnitCell = system.getUnitCell();
+  InverseUnitCell = system.getInverseCell();
+  SystemVolume = system.getVolume();
 
   // Alan:  Not sure what the correct syntax is here, but the idea is that we'll store the number of ghost cells
   //          along each of the min/max boundaries.  This lets us differentiate should we need to for centered and
@@ -269,8 +269,7 @@ void SPME::setup()
       }
     }
   }
-
-  StressPrefactor = CalculateStressPrefactor
+  StressPrefactor = CalculateStressPrefactor;
 }
 
 void SPME::calculate()
@@ -281,7 +280,7 @@ void SPME::calculate()
   bool ElectrostaticsConverged = false;
   int NumberofIterations = 0;
   while (!ElectrostaticsConverged && (NumberofIterations < MaxIterations)) {
-    SPME::MapChargeToGrid(GridMap, pset, InterpolatingSpline.HalfSupport());  // Calculate Q(r)
+    SPME::MapChargeToGrid(GridMap, pset, InterpolatingSpline.getHalfSupport());  // Calculate Q(r)
 
     // Map the local patch's charge grid into the global grid and transform
     SPME::GlobalMPIReduceChargeGrid(GHOST::AROUND);  //Ghost points should get transferred here
@@ -295,9 +294,9 @@ void SPME::calculate()
     size_t ZExtent = localGridExtents.z();
     double localEnergy = 0.0;  //Maybe should be global?
     Matrix3 localStress(0.0);  //Maybe should be global?
-    for (int kX = 0; kX < XExtent; ++kX) {
-      for (int kY = 0; kY < YExtent; ++kY) {
-        for (int kZ = 0; kZ < ZExtent; ++kZ) {
+    for (size_t kX = 0; kX < XExtent; ++kX) {
+      for (size_t kY = 0; kY < YExtent; ++kY) {
+        for (size_t kZ = 0; kZ < ZExtent; ++kZ) {
           complex<double> GridValue = Q(kX, kY, kZ);
           Q(kX, kY, kZ) = GridValue * conj(GridValue) * fTheta(kX, kY, kZ);  // Calculate (Q*Q^)*(B*C)
           localEnergy += Q(kX, kY, kZ);
@@ -362,13 +361,13 @@ std::vector<MapPoint> SPME::GenerateChargeMap(ParticleSubset* localParticleSet,
       ParticleGridOffset[Index] = static_cast<int>(ParticleGridCoordinates[Index]);  // Reference grid point for particle
       SplineValues[Index] = ParticleGridCoordinates[Index] - ParticleGridOffset[Index];  // Spline offset for spline function
     }
-    vector<double> XSplineArray = Spline.Evaluate(SplineValues[0]);
-    vector<double> YSplineArray = Spline.Evaluate(SplineValues[1]);
-    vector<double> ZSplineArray = Spline.Evaluate(SplineValues[2]);
+    vector<double> XSplineArray = Spline.evaluate(SplineValues[0]);
+    vector<double> YSplineArray = Spline.evaluate(SplineValues[1]);
+    vector<double> ZSplineArray = Spline.evaluate(SplineValues[2]);
 
-    vector<double> XSplineDeriv = Spline.Derivative(SplineValues[0]);
-    vector<double> YSplineDeriv = Spline.Derivative(SplineValues[1]);
-    vector<double> ZSplineDeriv = Spline.Derivative(SplineValues[2]);
+    vector<double> XSplineDeriv = Spline.derivative(SplineValues[0]);
+    vector<double> YSplineDeriv = Spline.derivative(SplineValues[1]);
+    vector<double> ZSplineDeriv = Spline.derivative(SplineValues[2]);
 
     //MapPoint CurrentMapPoint(ParticleID,ParticleGridOffset,XSplineArray,YSplineArray,ZSplineArray);
     //

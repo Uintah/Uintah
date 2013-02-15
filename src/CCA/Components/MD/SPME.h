@@ -235,12 +235,12 @@ class SPME : public Electrostatics {
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
     inline vector<double> generateMPrimeVector(unsigned int kMax,
-                                               const CenteredCardinalBSpline& InterpolatingSpline) const
+                                               const CenteredCardinalBSpline& spline) const
     {
-      int NumPoints = kMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
+      int NumPoints = kMax + spline.getSupport();  // For simplicity, store the whole vector
       std::vector<double> m(NumPoints);
 
-      int halfSupport = InterpolatingSpline.HalfSupport();
+      int halfSupport = spline.getHalfSupport();
       int halfMax = kMax / 2;
 
       // Pre wrap on the left and right sides as necessary for spline support
@@ -278,9 +278,9 @@ class SPME : public Electrostatics {
     inline vector<double> generateMFractionalVector(unsigned int kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
-      int NumPoints = kMax + interpolatingSpline.Support();  // For simplicity, store the whole vector
+      int NumPoints = kMax + interpolatingSpline.getSupport();  // For simplicity, store the whole vector
       std::vector<double> m(NumPoints);
-      int HalfSupport = interpolatingSpline.HalfSupport();
+      int HalfSupport = interpolatingSpline.getHalfSupport();
 
       //  Pre wrap on the left and right sides as necessary for spline support
       std::vector<double> LeftMost(m[HalfSupport]);
@@ -302,24 +302,24 @@ class SPME : public Electrostatics {
     }
 
     // Values fixed on instantiation
-    ElectrostaticsType ElectrostaticMethod;              // Implementation type for long range electrostatics
-    double EwaldBeta;						                  // The Ewald calculation damping coefficient
-    bool polarizable;				                  	   // Use polarizable Ewald formulation
-    double PolarizationTolerance;                        // Tolerance threshold for polarizable system
-    SCIRun::IntVector KLimits;                           // Number of grid divisions in each direction
-    CenteredCardinalBSpline* InterpolatingSpline;         // Spline object to hold info for spline calculation
+    ElectrostaticsType ElectrostaticMethod;         //!< Implementation type for long range electrostatics
+    double EwaldBeta;						                    //!< The Ewald calculation damping coefficient
+    bool polarizable;				                    	  //!< Use polarizable Ewald formulation
+    double PolarizationTolerance;                   //!< Tolerance threshold for polarizable system
+    SCIRun::IntVector KLimits;                      //!< Number of grid divisions in each direction
+    CenteredCardinalBSpline InterpolatingSpline;    //!< Spline object to hold info for spline calculation
 
     // Patch dependant quantities
-    SCIRun::IntVector localGridExtents;                  // Number of grid points in each direction for this patch
-    SCIRun::IntVector localGridOffset;		               // Grid point index of local 0,0,0 origin in global coordinates
-    SCIRun::IntVector localGhostPositiveSize;            // Number of ghost cells on positive boundary
-    SCIRun::IntVector localGhostNegativeSize;            // Number of ghost cells on negative boundary
+    SCIRun::IntVector localGridExtents;             //!< Number of grid points in each direction for this patch
+    SCIRun::IntVector localGridOffset;		          //!< Grid point index of local 0,0,0 origin in global coordinates
+    SCIRun::IntVector localGhostPositiveSize;       //!< Number of ghost cells on positive boundary
+    SCIRun::IntVector localGhostNegativeSize;       //!< Number of ghost cells on negative boundary
 
     // Variables inherited from MDSystem to make life easier
 
-    Matrix3 UnitCell;                       // Unit cell lattice parameters
-    Matrix3 InverseUnitCell;                // Inverse lattice parameters
-    double SystemVolume;                   // Volume of the unit cell
+    Matrix3 UnitCell;           //!< Unit cell lattice parameters
+    Matrix3 InverseUnitCell;    //!< Inverse lattice parameters
+    double SystemVolume;        //!< Volume of the unit cell
 
     // Actually holds the data we're working with
     SimpleGrid<double> fTheta;
