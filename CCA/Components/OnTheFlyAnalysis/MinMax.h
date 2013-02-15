@@ -32,6 +32,8 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 
@@ -97,7 +99,9 @@ GENERAL INFORMATION
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename, FILE*& fp);
+    void createFile(string& filename, 
+                    FILE*& fp,
+                    string& levelIndex);
     
     void createDirectory(string& lineName, string& levelIndex);
 
@@ -106,7 +110,7 @@ GENERAL INFORMATION
                      const VarLabel* varLabel,
                      const int       indx,
                      const Patch*    patch,
-                     CellIterator    iter );
+                     GridIterator    iter );
                     
     
     // general labels
@@ -117,7 +121,19 @@ GENERAL INFORMATION
       std::map< std::string, const VarLabel* > LabelMap;
     };
     
-    MinMaxLabel* d_lb;    
+    MinMaxLabel* d_lb;
+    
+    // structs that hold the min/max values
+    // and the 
+    struct patchMinMax_D{
+      double Q;
+      IntVector c;
+    };
+    
+    struct patchMinMax_V{
+      Vector Q;
+      IntVector c;
+    };
        
     //__________________________________
     // global constants always begin with "d_"
