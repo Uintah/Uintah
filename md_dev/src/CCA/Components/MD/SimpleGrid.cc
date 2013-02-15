@@ -58,15 +58,13 @@ SimpleGrid<T>::SimpleGrid(const std::vector<T>& XArray,
                           const std::vector<T>& ZArray,
                           const SCIRun::IntVector& offset,
                           const int numGhostCells) :
-                          gridExtents(IntVector(XArray.size(),YArray.size(),ZArray.size())),
-                          gridOffset(offset),
-                          numGhostCells(numGhostCells)
+    gridExtents(IntVector(XArray.size(), YArray.size(), ZArray.size())), gridOffset(offset), numGhostCells(numGhostCells)
 {
-  size_t XExtent=XArray.size();
-  size_t YExtent=YArray.size();
-  size_t ZExtent=ZArray.size();
+  size_t XExtent = XArray.size();
+  size_t YExtent = YArray.size();
+  size_t ZExtent = ZArray.size();
 
-  charges(XExtent,YExtent,ZExtent);
+  charges(XExtent, YExtent, ZExtent);
 }
 
 template<typename T>

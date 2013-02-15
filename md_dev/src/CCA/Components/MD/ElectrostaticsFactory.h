@@ -22,98 +22,41 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICS_H
-#define UINTAH_MD_ELECTROSTATICS_H
+#ifndef UINTAH_MD_ELECTROSTATICSFACTORY_h
+#define UINTAH_MD_ELECTROSTATICSFACTORY_h
 
-#include <CCA/Components/MD/MDSystem.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Ports/Output.h>
 
 namespace Uintah {
 
-using SCIRun::Vector;
-using SCIRun::IntVector;
+class ProcessorGroup;
+class MDSystem;
 
 /**
- *  @class Electrostatics
+ *  @class ElectrostaticsFactory
  *  @ingroup MD
  *  @author Alan Humphrey and Justin Hooper
- *  @date   January, 2013
+ *  @date   February, 2013
  *
- *  @brief Interface for Electrostatics calculation types
+ *  @brief
  *
  *  @param
  */
-class Electrostatics {
+class ElectrostaticsFactory {
 
   public:
 
     /**
-     * @brief Enumeration of all supported ElectroStatics types.
-     */
-    enum ElectrostaticsType {
-      EWALD, SPME, FMM, NONE
-    };
-
-    /**
-     * @brief
+     * @brief Simply create the appropriate Electrostatics object.
+     *         This method has a switch for all known Electrostatics types.
+     * @param
      * @param
      */
-    Electrostatics();
-
-    /**
-     * @brief
-     * @param
-     */
-    virtual ~Electrostatics();
-
-    /**
-     * @brief
-     * @param
-     */
-    virtual void initialize(const MDSystem& system) = 0;
-
-    /**
-     * @brief
-     * @param
-     */
-    virtual void setup() = 0;
-
-    /**
-     * @brief
-     * @param
-     */
-    virtual void calculate() = 0;
-
-    /**
-     * @brief
-     * @param
-     */
-    virtual void finalize() = 0;
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual ElectrostaticsType getType() const = 0;
-
-  private:
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    Electrostatics(const Electrostatics&);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    Electrostatics& operator=(const Electrostatics&);
-
+    static Electrostatics* create(const ProblemSpecP& ps,
+                                  MDSystem* system);
 };
-
 }  // End namespace Uintah
 
 #endif

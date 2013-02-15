@@ -45,8 +45,13 @@ MDSystem::~MDSystem()
 
 }
 
-MDSystem::MDSystem(const ProcessorGroup* pg)
+MDSystem::MDSystem(ProblemSpecP& ps)
 {
-  this->d_myworld = pg;
+  ps->findBlock("MDSystem");
+  ps->get("unitCell", d_unitCell);
+  ps->get("pressure", d_pressure);
+  ps->get("temperature", d_temperature);
+  ps->get("orthorhombic", d_orthorhombic);
+  ps->get("changeBox", d_changeBox);
 }
 

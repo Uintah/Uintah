@@ -26,6 +26,7 @@
 #define UINTAH_MD_ELECTROSTATICS_SPME_H
 
 #include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/Array3.h>
 
@@ -49,7 +50,6 @@ class Point;
 class Vector;
 class Matrix3;
 class MapPoint;
-class CenteredCardinalBSpline;
 
 /**
  *  @class SPME
@@ -84,19 +84,19 @@ class SPME : public Electrostatics {
      * @param
      * @param
      */
-    SPME(const MDSystem& _System,
+    SPME(const MDSystem* _System,
          const double _EwaldBeta,
          const bool _polarizable,
          const double _PolarizationTolerance,
          const SCIRun::IntVector& _K,
-         const CenteredCardinalBSpline& _Spline);
+         const int splineOrder);
 
     /**
      * @brief
      * @param
      * @return
      */
-    void initialize(const MDSystem&);
+    void initialize(const MDSystem& system);
 
     /**
      * @brief
@@ -126,7 +126,7 @@ class SPME : public Electrostatics {
      */
     inline ElectrostaticsType getType() const
     {
-      return this->electrostaticsType;
+      return this->ElectrostaticMethod;
     }
 
     friend class MDSystem;
@@ -149,16 +149,6 @@ class SPME : public Electrostatics {
      */
     std::vector<MapPoint> GenerateChargeMap(ParticleSubset* _pset,
                                             CenteredCardinalBSpline& Spline);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    //std::vector<Point> calcReducedCoords(const std::vector<Point>& localRealCoordinates,
-                                         const MDSystem& system);
-
-
 
     /**
      * @brief Map points (charges) onto the underlying grid.
@@ -240,38 +230,39 @@ class SPME : public Electrostatics {
     /**
      * @brief Generates split grid vector.
      *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
-     * @param KMax - Maximum number of grid points for direction
+     * @param kMax - Maximum number of grid points for direction
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
-    inline vector<double> generateMPrimeVector(unsigned int KMax,
-    		                                   const CenteredCardinalBSpline& InterpolatingSpline) const
-	{
-      int NumPoints = KMax + InterpolatingSpline.Support(); // For simplicity, store the whole vector
+    inline vector<double> generateMPrimeVector(unsigned int kMax,
+                                               const CenteredCardinalBSpline& InterpolatingSpline) const
+    {
+      int NumPoints = kMax + InterpolatingSpline.Support();  // For simplicity, store the whole vector
       std::vector<double> m(NumPoints);
 
-      int HalfSupport=InterpolatingSpline.HalfSupport();
-      int HalfMax = KMax/2;
+      int halfSupport = InterpolatingSpline.HalfSupport();
+      int halfMax = kMax / 2;
 
       // Pre wrap on the left and right sides as necessary for spline support
-      double* LeftMost=m[HalfSupport];
+      std::vector<double> leftMost(m[halfSupport]);
 
       // Seed internal array (without wrapping)
-      for (size_t Index=0; Index <= HalfMax; ++Index) {
-    	  LeftMost[Index]=Index;
+      for (int index = 0; index <= halfMax; ++index) {
+        leftMost[index] = index;
       }
-      for (size_t Index=HalfMax + 1; Index < KMax; ++Index) {
-    	  LeftMost[Index]=Index-KMax;
+
+      for (size_t index = halfMax + 1; index < kMax; ++index) {
+        leftMost[index] = (double)(index - kMax);
       }
 
       // Right end wraps into m=i portion
-      for (size_t Index=0; Index < HalfSupport; ++Index) {
-    	  m[KMax+Index]=Index;
+      for (int index = 0; index < halfSupport; ++index) {
+        m[kMax + index] = (double)index;
       }
 
       // Left end wraps into m=i-KMax portion
-      for (size_t Index=-3; Index < 0; ++Index) {
-    	  LeftMost[Index]=Index; // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
+      for (int index = -3; index < 0; ++index) {
+        leftMost[index] = index;  // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
       }
 
       return m;
@@ -284,33 +275,31 @@ class SPME : public Electrostatics {
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    inline vector<double> generateMFractionalVector(unsigned int KMax,
-    		                                        const CenteredCardinalBSpline& InterpolatingSpline) const
-	{
-    	int NumPoints = KMax + InterpolatingSpline.Support(); // For simplicity, store the whole vector
-    	std::vector<double> m(NumPoints);
+    inline vector<double> generateMFractionalVector(unsigned int kMax,
+                                                    const CenteredCardinalBSpline& interpolatingSpline) const
+    {
+      int NumPoints = kMax + interpolatingSpline.Support();  // For simplicity, store the whole vector
+      std::vector<double> m(NumPoints);
+      int HalfSupport = interpolatingSpline.HalfSupport();
 
-    	int HalfSupport=InterpolatingSpline.HalfSupport();
+      //  Pre wrap on the left and right sides as necessary for spline support
+      std::vector<double> LeftMost(m[HalfSupport]);
+      double KMaxInv = (double)kMax;
+      for (size_t index = -3; index < 0; ++index) {
+        LeftMost[-index] = (static_cast<double>(kMax - index)) * KMaxInv;
+      }
 
-    	//  Pre wrap on the left and right sides as necessary for spline support
-    	double* LeftMost=m[HalfSupport];
-    	double KMaxInv = static_cast<double> (KMax);
+      for (size_t index = 0; index < kMax; ++index) {
+        m[index] = (double)index * KMaxInv;
+      }
 
-    	for (size_t Index=-3; Index < 0; ++Index) {
-    		LeftMost[-Index]=(static_cast<double> (KMax-Index))*KMaxInv;
-    	}
+      std::vector<double> RightMost(m[kMax]);
+      for (int index = 0; index < HalfSupport; ++index) {
+        RightMost[index] = (double)index * KMaxInv;
+      }
 
-    	for (size_t Index=0; Index < KMax; ++Index) {
-    		m[Index]=static_cast<double> (Index)*KMaxInv;
-    	}
-
-    	double* RightMost=m[KMax];
-    	for (size_t Index=0; Index < HalfSupport; ++Index) {
-    		RightMost[Index]=static_cast<double> (Index)*KMaxInv;
-    	}
-
-    	return m;
-	}
+      return m;
+    }
 
     // Values fixed on instantiation
     ElectrostaticsType ElectrostaticMethod;              // Implementation type for long range electrostatics
@@ -318,7 +307,7 @@ class SPME : public Electrostatics {
     bool polarizable;				                  	   // Use polarizable Ewald formulation
     double PolarizationTolerance;                        // Tolerance threshold for polarizable system
     SCIRun::IntVector KLimits;                           // Number of grid divisions in each direction
-    CenteredCardinalBSpline InterpolatingSpline;         // Spline object to hold info for spline calculation
+    CenteredCardinalBSpline* InterpolatingSpline;         // Spline object to hold info for spline calculation
 
     // Patch dependant quantities
     SCIRun::IntVector localGridExtents;                  // Number of grid points in each direction for this patch
@@ -330,10 +319,10 @@ class SPME : public Electrostatics {
 
     Matrix3 UnitCell;                       // Unit cell lattice parameters
     Matrix3 InverseUnitCell;                // Inverse lattice parameters
-    double  SystemVolume;                   // Volume of the unit cell
+    double SystemVolume;                   // Volume of the unit cell
 
     // Actually holds the data we're working with
-    SimpleGrid<double>  fTheta;
+    SimpleGrid<double> fTheta;
     SimpleGrid<Matrix3> StressPrefactor;
     SimpleGrid<complex<double> > Q;
 

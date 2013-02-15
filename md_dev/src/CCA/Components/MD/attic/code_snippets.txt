@@ -1,0 +1,27 @@
+std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
+                                           const MDSystem& system)
+{
+  std::vector<Point> localReducedCoords;
+  size_t idx;
+  Point coord;  // Fractional coordinates; 3 - vector
+
+  // bool Orthorhombic; true if simulation cell is orthorhombic, false if it's generic
+  size_t numParticles = localRealCoordinates.size();
+  Matrix3 inverseBox = system.getCellInverse();        // For generic coordinate systems
+  if (!system.isOrthorhombic()) {
+    for (idx = 0; idx < numParticles; ++idx) {
+      coord = localRealCoordinates[idx];                   // Get non-ghost particle coordinates for this cell
+      coord = (inverseBox * coord.asVector()).asPoint();   // InverseBox is a 3x3 matrix so this is a matrix multiplication = slow
+      localReducedCoords.push_back(coord);                 // Reduced non-ghost particle coordinates for this cell
+    }
+  } else {
+    for (idx = 0; idx < numParticles; ++idx) {
+      coord = localRealCoordinates[idx];        // Get non-ghost particle coordinates for this cell
+      coord(0) *= inverseBox(0, 0);
+      coord(1) *= inverseBox(1, 1);
+      coord(2) *= inverseBox(2, 2);               // 6 Less multiplications and additions than generic above
+      localReducedCoords.push_back(coord);      // Reduced, non-ghost particle coordinates for this cell
+    }
+  }
+  return localReducedCoords;
+}

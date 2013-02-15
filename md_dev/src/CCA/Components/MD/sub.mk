@@ -39,7 +39,8 @@ SRCS += $(SRCDIR)/MD.cc                       \
         $(SRCDIR)/SPME.cc                     \
         $(SRCDIR)/SimpleGrid.cc               \
         $(SRCDIR)/CenteredCardinalBSpline.cc  \
-        $(SRCDIR)/MDBoundaryCondition.cc
+        $(SRCDIR)/MDBoundaryCondition.cc      \
+        $(SRCDIR)/ElectrostaticsFactory.cc
 
 SUBDIRS := \
 
