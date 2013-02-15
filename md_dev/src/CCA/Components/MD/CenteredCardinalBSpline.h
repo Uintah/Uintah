@@ -97,6 +97,16 @@ class CenteredCardinalBSpline {
     std::vector<double> derivative(const double x) const;
 
     /*
+     * @brief Return the order of the current spline.
+     * @param None
+     * @return int The order of the current spline..
+     */
+    inline int getOrder() const
+    {
+      return this->splineOrder;
+    }
+
+    /*
      * @brief Return the support range of the current spline.
      * @param None
      * @return int The support range (maximum number of grid points) over which the spline has non-zero values.
