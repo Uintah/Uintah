@@ -366,10 +366,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // boundaries in the explicit projection, we want to 
     // show the effect of AE, etc. in AP for the 
     // intrusion boundaries    
-    if (d_MAlab){
-      d_boundaryCondition->mmpressureBC(new_dw, patch,
-                                        &vars, &constVars);
-    }
+    d_boundaryCondition->mmpressureBC(new_dw, patch,
+                                      &vars, &constVars);
+
     // Calculate Pressure Diagonal
     discrete->calculatePressDiagonal(patch, &vars);
 
