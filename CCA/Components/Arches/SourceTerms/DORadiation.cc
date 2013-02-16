@@ -366,7 +366,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       } 
 
     } 
-    old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gn ,  0 ); 
+    old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
 
     if ( do_radiation ){ 
 
