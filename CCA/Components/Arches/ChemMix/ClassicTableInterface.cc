@@ -727,7 +727,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       if (patch->containsCell(d_ijk_den_ref)) {
 
         den_ref = arches_density[d_ijk_den_ref];
-        cerr << "Modified reference density to: density_ref = " << den_ref << endl;
 
       }
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
