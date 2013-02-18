@@ -1265,8 +1265,7 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
-          <src label="coal_gas_momentum" type="coal_gas_momentum">
-          </src>
+          <src label="coal_gas_momentum"/>
         </MomentumSolver>
 
         <MixtureFractionSolver>  <!-- do we need this solver???-->
