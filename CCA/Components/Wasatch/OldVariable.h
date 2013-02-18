@@ -48,7 +48,7 @@ namespace Uintah{
 
 namespace Wasatch {
 
-  class Wasatch;
+  class Wasatch;  // forward declaration
 
   /**
    *  \class OldVariable
