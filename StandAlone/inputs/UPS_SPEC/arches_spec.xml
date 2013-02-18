@@ -727,7 +727,6 @@
               <geom_object/>
             </injector_region>
 
-            <geom_object/>
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
                                           within the geom_oject (use <inputfile> spec)--> 
