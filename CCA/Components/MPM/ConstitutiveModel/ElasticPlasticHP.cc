@@ -867,6 +867,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           pLocalized_new[idx]=-999;
 
           tensorL=zero;
+          tensorF_new.Identity();
       }
 
       // Calculate the current density and deformed volume
