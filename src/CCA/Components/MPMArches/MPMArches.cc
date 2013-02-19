@@ -218,7 +218,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, grid, sharedState);
+      am->problemSetup(prob_spec, materials_ps, grid, sharedState);
     }
   }
 
