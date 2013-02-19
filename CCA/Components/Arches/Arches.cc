@@ -706,7 +706,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       for( iter  = d_analysisModules.begin();
            iter != d_analysisModules.end(); iter++){
         AnalysisModule* am = *iter;
-        am->problemSetup(params, grid, sharedState);
+        am->problemSetup(params, materials_ps, grid, sharedState);
       }
     }
   }

@@ -109,6 +109,7 @@ FirstLawThermo::~FirstLawThermo()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void FirstLawThermo::problemSetup(const ProblemSpecP&,
+                                  const ProblemSpecP& restart_prob_spec,
                                   GridP& grid,
                                   SimulationStateP& sharedState)
 {
@@ -184,10 +185,20 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   //  Loop over all the MPM Matls and pull out the specific heat
   //  This Assumes that MPM matls are listed from 0 to N
   //  It also assumes that cp is constant
-  int matl = 0;
-  ProblemSpecP root_ps = d_prob_spec->getRootNode();
-  ProblemSpecP mat_ps =  root_ps->findBlockWithOutAttribute("MaterialProperties");
+  // If we are doing a restart, then use the "timestep.xml"
+ 
+  // first try prob_spec
+  ProblemSpecP root_ps = d_prob_spec->getRootNode();  
+  ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
   
+  if ( !mat_ps && restart_prob_spec ){   // read in from checkpoint/timestep.xml on a restart
+    ProblemSpecP silly = restart_prob_spec;
+    root_ps = silly->getRootNode();
+    mat_ps  = root_ps->findBlockWithOutAttribute( "MaterialProperties" ); 
+  }
+  
+  int matl = 0;
+ 
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   if(mpm_mat_ps){
     for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0; 
@@ -199,7 +210,6 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
     } 
   }
 }
-
 //______________________________________________________________________
 void FirstLawThermo::scheduleInitialize(SchedulerP& sched,
                                         const LevelP& level)

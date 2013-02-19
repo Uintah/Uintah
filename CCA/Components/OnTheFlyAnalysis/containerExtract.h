@@ -66,19 +66,21 @@ namespace Uintah {
       virtual ~containerExtract();
 
       virtual void problemSetup(const ProblemSpecP& prob_spec,
-          GridP& grid,
-          SimulationStateP& sharedState);
+                                const ProblemSpecP& restart_prob_spec,
+                                GridP& grid,
+                                SimulationStateP& sharedState);
+          
 
       virtual void scheduleInitialize(SchedulerP& sched,
-          const LevelP& level);
+                                      const LevelP& level);
 
       virtual void restartInitialize();
 
       virtual void scheduleDoAnalysis(SchedulerP& sched,
-          const LevelP& level);
+                                      const LevelP& level);
 
       virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                    const LevelP& level) {};
+                                               const LevelP& level) {};
 
     private:
       // general labels

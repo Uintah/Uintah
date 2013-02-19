@@ -52,8 +52,10 @@ namespace Uintah {
     virtual ~AnalysisModule();
 
     virtual void problemSetup(const ProblemSpecP& params,
+                              const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& state) = 0;
+                              
                               
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level) =0;

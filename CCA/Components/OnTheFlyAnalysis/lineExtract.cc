@@ -98,6 +98,7 @@ lineExtract::~lineExtract()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
+                               const ProblemSpecP& ,
                                GridP& grid,
                                SimulationStateP& sharedState)
 {
