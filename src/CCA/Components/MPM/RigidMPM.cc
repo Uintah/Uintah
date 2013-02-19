@@ -212,10 +212,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
-
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-
-
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
@@ -224,14 +221,13 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,     gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        Ghost::None);
-
-
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -244,7 +240,10 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
   t->computes(lb->pMassLabel_preReloc);
+  t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
+  t->computes(lb->pVelGradLabel_preReloc);
+  t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
@@ -318,19 +317,20 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<Matrix3> psizeNew;
-      constParticleVariable<double> pmass, pTemperature;
-      ParticleVariable<double> pmassNew,pTempNew;
+      constParticleVariable<double> pmass, pTemperature,pvolume;
+      ParticleVariable<double> pmassNew,pTempNew,pVolNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
-      constParticleVariable<Matrix3> pDeformationMeasure;
+      constParticleVariable<Matrix3> pFOld;
+      ParticleVariable<Matrix3> pFNew,pVelGrad;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew;       
 
       // Get the arrays of grid data on which the new part. values depend
-      constNCVariable<Vector> gvelocity_star, gacceleration;
+      constNCVariable<Vector> gacceleration;
       constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
       constNCVariable<double> dTdt;
 
@@ -340,25 +340,29 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
+      old_dw->get(pvolume,               lb->pVolumeLabel,                pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
+      old_dw->get(pFOld,                 lb->pDeformationMeasureLabel,    pset);
+
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
+      new_dw->allocateAndPut(pVolNew,      lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
-      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
-
-
-      // for thermal stress analysis
-      new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
+      new_dw->allocateAndPut(pVelGrad,    lb->pVelGradLabel_preReloc,     pset);
+      new_dw->allocateAndPut(pFNew,       lb->pDeformationMeasureLabel_preReloc,
+                                                                          pset);
      
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
       psizeNew.copyData(psize);
+      pVolNew.copyData(pvolume);
 
       //Carry forward NC_CCweight
       constNCVariable<double> NC_CCweight;
@@ -389,6 +393,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // For RigidMPM, this isn't done
 
       double Cp=mpm_matl->getSpecificHeat();
+      Matrix3 Identity; Identity.Identity();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -397,7 +402,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx],pDeformationMeasure[idx]);
+                                                         psize[idx],pFOld[idx]);
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);
@@ -421,14 +426,15 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx];
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        pVelGrad[idx]        = Matrix3(0.);
+        pFNew[idx]           = Identity;
 
         thermal_energy += pTempNew[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         total_mom += pvelocitynew[idx]*pmass[idx];
       }
-      
-      
+
       //__________________________________
       //  particle debugging label-- carry forward
       if (flags->d_with_color) {
