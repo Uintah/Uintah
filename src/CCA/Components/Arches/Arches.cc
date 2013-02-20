@@ -1578,7 +1578,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
             IntVector currCell(colX, colY, colZ);
             double tmp_time;
 
-            if (d_MAlab) {
+//            if (d_MAlab) {
               int flag = 1;
               int colXm = colX - 1;
               int colXp = colX + 1;
@@ -1621,16 +1621,16 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
                    1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
                   small_num;
               }
-            }
-            else
-              tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-                Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-                Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-                (visc[currCell]/den[currCell])*
-                (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-                 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-                 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-                small_num;
+ //           }
+ //           else
+ //             tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+ //               Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+ //               Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+ //               (visc[currCell]/den[currCell])*
+ //               (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+ //                1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+ //                1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+ //               small_num;
 
             delta_t2=Min(1.0/tmp_time, delta_t2);
           }
