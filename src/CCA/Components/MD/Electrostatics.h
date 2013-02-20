@@ -26,6 +26,7 @@
 #define UINTAH_MD_ELECTROSTATICS_H
 
 #include <CCA/Components/MD/MDSystem.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
 
@@ -69,7 +70,9 @@ class Electrostatics {
      * @brief
      * @param
      */
-    virtual void initialize(const MDSystem& system) = 0;
+    virtual void initialize(const MDSystem* system,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls) = 0;
 
     /**
      * @brief

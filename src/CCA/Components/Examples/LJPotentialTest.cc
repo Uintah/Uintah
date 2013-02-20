@@ -170,11 +170,8 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, pXLabel_preReloc,
-                                    d_sharedState_->d_particleState_preReloc,
-                                    pXLabel,
-                                    d_sharedState_->d_particleState,
-                                    pParticleIDLabel, matls);
+  sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_sharedState_->d_particleState_preReloc, pXLabel,
+                                    d_sharedState_->d_particleState, pParticleIDLabel, matls);
 }
 
 void LJPotentialTest::computeStableTimestep(const ProcessorGroup* pg,
@@ -364,17 +361,18 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
       new_dw->allocateAndPut(pcharge, pChargeLabel, pset);
       new_dw->allocateAndPut(pids, pParticleIDLabel, pset);
 
-      int numParticles = pset->numParticles();
-      for (int i = 0; i < numParticles; i++) {
-        Point pos = localAtoms[i];
-        px[i] = pos;
-        pforce[i] = Vector(0.0, 0.0, 0.0);
-        paccel[i] = Vector(0.0, 0.0, 0.0);
-        pvelocity[i] = Vector(0.0, 0.0, 0.0);
-        penergy[i] = 0.0;
-        pmass[i] = 2.5;
-        pcharge[i] = 0.0;
-        pids[i] = patch->getID() * numAtoms_ + i;
+      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
+        particleIndex idx = *iter;
+
+        Point pos = localAtoms[idx];
+        px[idx] = pos;
+        pforce[idx] = Vector(0.0, 0.0, 0.0);
+        paccel[idx] = Vector(0.0, 0.0, 0.0);
+        pvelocity[idx] = Vector(0.0, 0.0, 0.0);
+        penergy[idx] = 0.0;
+        pmass[idx] = 2.5;
+        pcharge[idx] = 0.0;
+        pids[idx] = patch->getID() * numAtoms_ + idx;
 
         // TODO update this with new VarLabels
         if (ljdbg.active()) {
@@ -383,7 +381,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
           std::cout << std::setw(10) << "Patch_ID: " << std::setw(4) << patch->getID();
-          std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pids[i];
+          std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pids[idx];
           std::cout << std::setw(12) << " Position: " << pos;
           std::cout << std::endl;
           cerrLock.unlock();
@@ -458,10 +456,10 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
       new_dw->allocateAndPut(penergynew, pEnergyLabel_preReloc, pset);
       new_dw->allocateAndPut(pforcenew, pForceLabel_preReloc, pset);
 
-      unsigned int numParticles = pset->numParticles();
-      for (unsigned int i = 0; i < numParticles; i++) {
-        pforcenew[i] = pforce[i];
-        penergynew[i] = penergy[i];
+      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
+        particleIndex idx = *iter;
+        pforcenew[idx] = pforce[idx];
+        penergynew[idx] = penergy[idx];
       }
 
       // loop over all atoms in system, calculate the forces
@@ -530,6 +528,7 @@ void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
       if (ljdbg.active()) {
         cerrLock.lock();
         Vector forces(0.0, 0.0, 0.0);
+        unsigned int numParticles = pset->numParticles();
         for (unsigned int i = 0; i < numParticles; i++) {
           forces += pforcenew[i];
         }
@@ -609,27 +608,27 @@ void LJPotentialTest::updatePosition(const ProcessorGroup* pg,
       old_dw->get(delT, d_sharedState_->get_delt_label(), getLevel(patches));
 
       // loop over the local atoms
-      unsigned int localNumParticles = lpset->numParticles();
-      for (unsigned int i = 0; i < localNumParticles; i++) {
+      for (ParticleSubset::iterator iter = lpset->begin(); iter != lpset->end(); iter++) {
+        particleIndex idx = *iter;
 
         // carry these values over for now
-        pmassnew[i] = pmass[i];
-        pchargenew[i] = pcharge[i];
-        pidsnew[i] = pids[i];
+        pmassnew[idx] = pmass[idx];
+        pchargenew[idx] = pcharge[idx];
+        pidsnew[idx] = pids[idx];
 
         // update position
-        paccelnew[i] = pforce[i] / pmass[i];
-        pvelocitynew[i] = pvelocity[i] + paccel[i] * delT;
-        pxnew[i] = px[i] + pvelocity[i] + pvelocitynew[i] * 0.5 * delT;
+        paccelnew[idx] = pforce[idx] / pmass[idx];
+        pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
+        pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;
 
         if (ljdbg.active()) {
           cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
-          std::cout << "ParticleID: " << std::setw(6) << pidsnew[i] << std::setw(6);
+          std::cout << "ParticleID: " << std::setw(6) << pidsnew[idx] << std::setw(6);
           std::cout << "New Position: [";
-          std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].x();
-          std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].y();
-          std::cout << std::setprecision(6) << pxnew[i].z() << std::setw(4) << "]";
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[idx].x();
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[idx].y();
+          std::cout << std::setprecision(6) << pxnew[idx].z() << std::setw(4) << "]";
           std::cout << std::endl;
           cerrLock.unlock();
         }

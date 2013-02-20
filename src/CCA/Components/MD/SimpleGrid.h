@@ -106,7 +106,7 @@ template<typename T> class SimpleGrid {
     /**
      *
      */
-    inline T*** getCharges() const
+    inline T*** getCharges()
     {
       return this->charges.get_dataptr();
     }
