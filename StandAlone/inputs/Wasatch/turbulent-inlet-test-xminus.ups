@@ -21,7 +21,7 @@
 
       <TurbulentInlet period="2">
         <BaseName>turbulent-inlet</BaseName>
-				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt.gz </InputFile>
+				<InputFile> inputs/Wasatch/turbulent-inlet-test-xminus-data.txt </InputFile>
       </TurbulentInlet>
     
     
