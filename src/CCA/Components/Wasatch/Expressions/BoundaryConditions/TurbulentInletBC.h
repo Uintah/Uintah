@@ -27,6 +27,8 @@
 
 #include <expression/Expression.h>
 #include <Core/IO/UintahZlibUtil.h>
+#include <Core/IO/UintahIFStreamUtil.h>
+#include <istream>
 #include <CCA/Components/Wasatch/StringNames.h>
 
 template< typename FieldT >
@@ -106,15 +108,15 @@ timePeriod_(timePeriod)
   using namespace std;
   using namespace Uintah;
   
-  // parse input file
-  gzFile gzFp = gzopen( inputFileName.c_str(), "r" );
-  
-  if( gzFp == NULL ) {
+  ifstream ifs( inputFileName.c_str() );
+
+  if( !ifs ) {
     proc0cout << "Error opening file for Turbulent Inlet: " << inputFileName << endl;
     throw ProblemSetupException("Unable to open the given input file: " + inputFileName, __FILE__, __LINE__);
   }
   
-  std::string face = getString(gzFp);
+  std::string face;
+  getValue(ifs,face);
   if (face.compare("x-")==0 || face.compare("x+") ==0) {
     iComponent_ = 1;
     jComponent_ = 2;
@@ -126,32 +128,30 @@ timePeriod_(timePeriod)
     jComponent_ = 1;
   }
   
-  NT_ = getInt(gzFp);
-  jSize_ = getInt(gzFp);
-  kSize_ = getInt(gzFp);
-  
+  getValue(ifs, NT_);
+  getValue(ifs, jSize_);
+  getValue(ifs, kSize_);
   minC_.resize(3);
-  minC_[0] = getInt(gzFp);
-  minC_[1] = getInt(gzFp);
-  minC_[2] = getInt(gzFp);
+  getValue(ifs,minC_[0]);
+  getValue(ifs,minC_[1]);
+  getValue(ifs,minC_[2]);
   
   fluct_.resize(NT_,vector< vector<double> >(jSize_,vector<double>(kSize_)));
+  int dummyVar;
+  double u,v,w;
   for (int t = 0; t<NT_; t++) {
     for(int j = 0; j<jSize_; j++) {
       for (int k = 0; k<kSize_; k++) {
-        getInt(gzFp);
-        getInt(gzFp);
-        getInt(gzFp);
-        double u = getDouble(gzFp);
-        double v = getDouble(gzFp);
-        double w = getDouble(gzFp);
+        getValue(ifs,dummyVar);
+        getValue(ifs,dummyVar);
+        getValue(ifs,dummyVar);
+        getValue(ifs,u);
+        getValue(ifs,v);
+        getValue(ifs,w);
         fluct_[t][j][k] = (velDir_.compare("X")==0) ? u : (velDir_.compare("Y")==0 ? v : w);
       }
     }
   }
-  
-  proc0cout << "Total Realizations: " << NT_ << endl;
-  proc0cout << "Geom Size " << jSize_ << " " << kSize_ << endl;
 }
 
 //--------------------------------------------------------------------
