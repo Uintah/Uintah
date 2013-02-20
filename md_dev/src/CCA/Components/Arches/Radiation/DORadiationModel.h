@@ -102,6 +102,13 @@ public:
                                   ArchesConstVariables* constvars, 
                                   int wall_type);
 
+      virtual void intensitysolve_new(const ProcessorGroup* pc,
+                                  const Patch* patch,
+                                  CellInformation* cellinfo, 
+                                  ArchesVariables* vars,
+                                  ArchesConstVariables* constvars, 
+                                  int wall_type);
+
       //__________________________________
       //  This task is called by enthalpy solver
       //  and it computes div_q

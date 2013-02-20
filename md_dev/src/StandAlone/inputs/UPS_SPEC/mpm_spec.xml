@@ -18,7 +18,7 @@
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, KeepStress, ZeroStress, RemoveMass, AllowNoShear, BrittleDamage'" />
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, ZeroStress,  AllowNoShear, BrittleDamage'" />
       <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- default is 0. -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
@@ -31,6 +31,7 @@
       <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
+      <minimum_subcycles_for_F            spec="OPTIONAL INTEGER"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->

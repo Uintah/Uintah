@@ -97,6 +97,9 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
+  pVelGradLabel = VarLabel::create("p.velGrad",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel = VarLabel::create( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
@@ -169,6 +172,9 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
+  pVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
@@ -443,8 +449,8 @@ MPMLabel::MPMLabel()
   pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
                   ParticleVariable<double>::getTypeDescription());
 
-  pVelGradsLabel = VarLabel::create("p.velGrads",
-                  ParticleVariable<Matrix3>::getTypeDescription());
+//  pVelGradsLabel = VarLabel::create("p.velGrads",
+//                  ParticleVariable<Matrix3>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
                   NCVariable<int>::getTypeDescription());
@@ -667,6 +673,8 @@ MPMLabel::~MPMLabel()
   //PermanentParticleState
   VarLabel::destroy(pDeformationMeasureLabel);
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
+  VarLabel::destroy(pVelGradLabel);
+  VarLabel::destroy(pVelGradLabel_preReloc);
   VarLabel::destroy(pStressLabel);
   VarLabel::destroy(pStressLabel_preReloc);
   VarLabel::destroy(pVolumeLabel);
@@ -795,7 +803,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
-  VarLabel::destroy(pVelGradsLabel);
+//  VarLabel::destroy(pVelGradsLabel);
 
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);

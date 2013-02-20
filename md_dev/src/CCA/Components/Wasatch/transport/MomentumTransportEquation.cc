@@ -348,7 +348,7 @@ namespace Wasatch{
     bool  enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     
     Expr::Tag volFracTag = Expr::Tag();
-    Wasatch::Direction stagLoc = get_staggered_location<FieldT>();
+    Direction stagLoc = get_staggered_location<FieldT>();
     VolFractionNames& vNames = VolFractionNames::self();
     switch (stagLoc) {
       case XDIR:
@@ -383,11 +383,11 @@ namespace Wasatch{
                              const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
-    : Wasatch::TransportEquation( momName,
-                                  rhsID,
-                                  get_staggered_location<FieldT>(),
-                                  hasEmbeddedGeometry,
-                                  params ),
+    : TransportEquation( momName,
+                         rhsID,
+                         get_staggered_location<FieldT>(),
+                         hasEmbeddedGeometry,
+                         params ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
@@ -502,13 +502,13 @@ namespace Wasatch{
     // pressure gradient) for use in the projection
     Expr::Tag volTag = Expr::Tag();
     switch (stagLoc_) {
-      case Wasatch::XDIR:
+      case XDIR:
         volTag = xAreaFracTag;
         break;
-      case Wasatch::YDIR:
+      case YDIR:
         volTag = yAreaFracTag;
         break;
-      case Wasatch::ZDIR:
+      case ZDIR:
         volTag = zAreaFracTag;
         break;        
       default:

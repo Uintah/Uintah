@@ -6,6 +6,8 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/IO/UintahZlibUtil.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 
 /** 
@@ -53,6 +55,8 @@ class Inject: public SourceTermBase {
 
 public: 
 
+  enum ITYPE {CONSTANT, FROMFILE};
+
   Inject<sT>( std::string srcName, SimulationStateP& shared_state, 
                        vector<std::string> reqLabelNames, std::string type );
 
@@ -99,11 +103,18 @@ public:
       SimulationStateP& _shared_state; 
       vector<std::string> _required_label_names; 
 
+
   }; // Builder
 private:
 
-  double d_constant; 
+  typedef std::map<IntVector, double> CellToValueMap; 
+
+  double _constant; 
   std::vector<GeometryPieceP> _geomPieces; 
+  ITYPE _injet_type; 
+  CellToValueMap _storage; 
+
+  CellToValueMap readInputFile( std::string file_name );
 
 }; // end Inject
 
@@ -142,15 +153,61 @@ private:
   {
   
     ProblemSpecP db = inputdb; 
-  
-    for (ProblemSpecP inject_db = db->findBlock("injector"); inject_db != 0; inject_db = inject_db->findNextBlock("injector")){
-  
-      ProblemSpecP geomObj = inject_db->findBlock("geom_object");
-      GeometryPieceFactory::create(geomObj, _geomPieces); 
-  
-    }
+ 
+    //only allow the injector to work in this region: 
+    ProblemSpecP geomObj = db->findBlock("injector_region")->findBlock("geom_object");
+    GeometryPieceFactory::create(geomObj, _geomPieces); 
 
-    db->getWithDefault("constant",d_constant, 0.); 
+    std::string inject_type = "NA"; 
+    db->require( "inject_type", inject_type ); 
+
+    if ( inject_type == "constant" ){ 
+
+      db->getWithDefault("constant",_constant, 0.0); 
+      _injet_type = CONSTANT; 
+
+    } else if ( inject_type == "file" ){ 
+
+      std::string file_name;
+      db->require("inputfile", file_name); 
+
+      gzFile file = gzopen( file_name.c_str(), "r" ); 
+
+      if ( file == NULL ) { 
+        proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+        throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+      }
+
+      int total_variables = getInt( file ); 
+      std::string input_file; 
+      bool found_file = false; 
+
+      for ( int i = 0; i < total_variables; i++ ){
+
+        std::string varname  = getString( file );
+        input_file  = getString( file ); 
+
+        if ( input_file == _src_name ){ 
+          found_file = true; 
+          break; 
+        } 
+      }
+      gzclose( file ); 
+
+      if ( !found_file ){ 
+        std::stringstream err_msg; 
+        err_msg << "Error: Unable to find input file for inject source term: " << _src_name << " Check this file for errors: \n" << file_name << endl;
+        throw ProblemSetupException( err_msg.str(), __FILE__, __LINE__);
+      } 
+
+      _storage = Inject::readInputFile( input_file ); 
+
+      
+    } else { 
+
+      throw ProblemSetupException( "Error: Inject type not recognized.", __FILE__, __LINE__);
+
+    } 
   
   }
   //---------------------------------------------------------------------------
@@ -194,13 +251,13 @@ private:
       int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
       Box patchInteriorBox = patch->getBox(); 
   
-      sT constSrc; 
+      sT src; 
       if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-        new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
-        constSrc.initialize(0.0);
+        new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
+        src.initialize(0.0);
       } else {
-        new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
-        constSrc.initialize(0.0);
+        new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
+        src.initialize(0.0);
       } 
   
       // not sure which logic is best...
@@ -243,9 +300,22 @@ private:
             
             Point p = patch->cellPosition( *iter );
             if ( piece->inside(p) ) {
-  
-              // add constant source if cell is inside geometry piece 
-              constSrc[c] += d_constant; 
+ 
+              if ( _injet_type == CONSTANT ){ 
+
+                // constant source 
+                src[c] = _constant; 
+
+              } else {
+
+                // constant source from input file
+                CellToValueMap::iterator i_store = _storage.find( *iter ); 
+
+                if ( i_store != _storage.end() ){ 
+                  src[c] = i_store->second;  
+                } 
+
+              } 
             }
           }
         }
@@ -299,6 +369,37 @@ private:
         new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
       }
     }
+  }
+
+  template <typename sT>
+  std::map<IntVector, double>
+  Inject<sT>::readInputFile( std::string file_name )
+  {
+  
+    gzFile file = gzopen( file_name.c_str(), "r" ); 
+    if ( file == NULL ) { 
+      proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+      throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+    }
+  
+    std::string variable = getString( file ); 
+    int num_points = getInt( file ); 
+    std::map<IntVector, double> result; 
+  
+    for ( int i = 0; i < num_points; i++ ) {
+      int I = getInt( file ); 
+      int J = getInt( file ); 
+      int K = getInt( file ); 
+      double v = getDouble( file ); 
+  
+      IntVector C(I,J,K);
+  
+      result.insert( std::make_pair( C, v ));
+  
+    }
+  
+    gzclose( file ); 
+    return result; 
   }
 
 

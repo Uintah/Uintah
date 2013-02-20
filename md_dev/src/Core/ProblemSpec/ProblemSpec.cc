@@ -1300,6 +1300,24 @@ ProblemSpec::getAttribute(const string& name, double &value) const
 
 
 bool
+ProblemSpec::getAttribute(const string& name, int &value) const
+{
+  string stringValue;
+  if(!getAttribute(name, stringValue)) {
+    return false;
+  }
+  checkForInputError( stringValue, INT_TYPE );
+  istringstream ss(stringValue);
+  ss >> value;
+  if( !ss ) {
+    printf( "WARNING: ProblemSpec.cc: getAttribute(%s, int): stringstream failed...\n", name.c_str() );
+  }
+  
+  return true;
+}
+
+
+bool
 ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& result) const
 {
   

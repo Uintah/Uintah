@@ -235,6 +235,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
   tsk->requires(Task::NewDW,   d_lab->d_vVelRhoHatLabel,  gaf, 1);
   tsk->requires(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_volFractionLabel, gac, 1);
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
   if ( extraProjection ){
@@ -287,8 +288,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     // Get the required data
     Ghost::GhostType  gac = Ghost::AroundCells;
+    constCCVariable<double> volFraction; 
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,  indx, patch, gac, 1);
     new_dw->get(constVelocityVars.density,  d_lab->d_densityCPLabel, indx, patch, gac, 1);
+    new_dw->get(volFraction,                d_lab->d_volFractionLabel, indx, patch, gac, 1); 
 
     if ( extraProjection ){
       new_dw->get(constVelocityVars.pressure, d_lab->d_pressureExtraProjectionLabel, indx, patch, gac, 1);
@@ -320,7 +323,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     }else {
       d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
-                                     constVelocityVars.density, constVelocityVars.pressure);
+                                     constVelocityVars.density, constVelocityVars.pressure, volFraction);
     }
 
     //intrusions: 
@@ -439,6 +442,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1); 
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
@@ -575,6 +579,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
 
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
+    constCCVariable<double> volFraction; 
+    new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 1);
 
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, indx, patch, gac, 2);
@@ -937,11 +943,9 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
-    if (d_MAlab){
-      d_boundaryCondition->mmvelocityBC(patch, cellinfo,
-                                        &velocityVars, &constVelocityVars);
+    d_boundaryCondition->mmvelocityBC(patch, cellinfo,
+                                      &velocityVars, &constVelocityVars);
 
-    }
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
@@ -963,7 +967,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                  &constVelocityVars);
     }else {
       d_rhsSolver->calculateHatVelocity(patch, delta_t,
-                                       cellinfo, &velocityVars, &constVelocityVars);
+                                       cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
 
     d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, 

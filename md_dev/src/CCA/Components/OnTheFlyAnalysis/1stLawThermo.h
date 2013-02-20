@@ -72,8 +72,10 @@ WARNING
     virtual ~FirstLawThermo();
    
     virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
+                              
                               
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
@@ -160,7 +162,9 @@ WARNING
     MaterialSubset* d_zeroMatl;
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
+    std::map< int, double > d_mpm_specificHeat;
     
+    double d_conversion;        // conversion of between KJ -> J in SI units.
     double d_analysisFreq; 
     double d_StartTime;
     double d_StopTime;

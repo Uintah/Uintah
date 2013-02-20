@@ -94,7 +94,11 @@ MieGruneisenEOSEnergy::computePressure(const MPMMaterial* matl,
   // Retrieve specific internal energy e
   double e = state->energy;
 
-  // Calculate the pressure
+  // Calculate the pressure, See:
+  // Steinberg, D.,
+  // Equation of State and Strength Properties of Selected materials,
+  // 1991, Lawrence Livermore National Laboratory.
+  // UCRL-MA-106439
 
   double p;
   if(eta >= 0.0) {

@@ -248,7 +248,7 @@ namespace Uintah {
         Iterator bound_ptr, Vector value, 
         double swirl_no, Vector swirl_cent );
 
-      void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
+      void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, string face_name, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         Iterator bound_iter, std::string file_name );
 
@@ -1166,9 +1166,11 @@ namespace Uintah {
 
       // input information
       typedef std::map<IntVector, double> CellToValue; 
-      CellToValue _u_input; 
-      CellToValue _v_input; 
-      CellToValue _w_input; 
+      typedef std::map<std::string, CellToValue> FaceToInput;  
+
+      FaceToInput _u_input; 
+      FaceToInput _v_input; 
+      FaceToInput _w_input; 
 
       // const VarLabel* inputs
       const ArchesLabel* d_lab;

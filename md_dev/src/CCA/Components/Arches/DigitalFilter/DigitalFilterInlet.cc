@@ -88,6 +88,9 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
     throw ProblemSetupException("Unable to open the given input file: " + fileName, __FILE__, __LINE__);
   }
   
+  // get the face direction
+  getString(gzFp);
+  
   NT = getInt(gzFp);
   jSize = getInt(gzFp);
   kSize = getInt(gzFp);

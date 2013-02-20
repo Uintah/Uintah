@@ -867,6 +867,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pDeformationMeasureLabel);
   particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
 
+  if(d_flags->d_integrator_type=="explicit"){
+    particle_state.push_back(d_lb->pVelGradLabel);
+    particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
+  }
+
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
 

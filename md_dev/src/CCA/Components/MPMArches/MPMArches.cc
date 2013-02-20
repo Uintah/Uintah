@@ -218,7 +218,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, grid, sharedState);
+      am->problemSetup(prob_spec, materials_ps, grid, sharedState);
     }
   }
 
@@ -1146,8 +1146,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleSolveHeatEquations(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,

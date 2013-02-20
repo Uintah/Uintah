@@ -343,6 +343,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void finalParticleUpdate(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void updateCohesiveZones(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -456,6 +464,10 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
+  virtual void scheduleFinalParticleUpdate(SchedulerP&, 
+                                           const PatchSet*,
+                                           const MaterialSet*);
+
   virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSubset*,
@@ -519,7 +531,43 @@ protected:
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
                    
+  inline void computeVelocityGradient(Matrix3& velGrad,
+                                    vector<IntVector>& ni,
+                                    vector<Vector>& d_S,
+                                    const double* oodx,
+                                    constNCVariable<Vector>& gVelocity)
+  {
+    for(int k = 0; k < flags->d_8or27; k++) {
+      const Vector& gvel = gVelocity[ni[k]];
+      for (int j = 0; j<3; j++){
+        double d_SXoodx = d_S[k][j]*oodx[j];
+        for (int i = 0; i<3; i++) {
+          velGrad(i,j) += gvel[i] * d_SXoodx;
+        }
+      }
+    }
+  };
 
+
+  inline void computeAxiSymVelocityGradient(Matrix3& velGrad,
+                                           vector<IntVector>& ni,
+                                           vector<Vector>& d_S,
+                                           vector<double>& S,
+                                           const double* oodx,
+                                           constNCVariable<Vector>& gVelocity,
+                                           const Point& px)
+  {
+    // x -> r, y -> z, z -> theta
+    for(int k = 0; k < flags->d_8or27; k++) {
+      Vector gvel = gVelocity[ni[k]];
+      for (int j = 0; j<2; j++){
+        for (int i = 0; i<2; i++) {
+          velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+        }
+      }
+      velGrad(2,2) += gvel.x()*d_S[k].z();
+    }
+  };
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
