@@ -68,6 +68,7 @@ FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
+  d_conversion   = 1.0/1000.;     // in SI units this is J/KJ
   
   FL_lb = scinew FL_Labels();
   I_lb  = scinew ICELabel();
@@ -108,6 +109,7 @@ FirstLawThermo::~FirstLawThermo()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void FirstLawThermo::problemSetup(const ProblemSpecP&,
+                                  const ProblemSpecP& restart_prob_spec,
                                   GridP& grid,
                                   SimulationStateP& sharedState)
 {
@@ -122,6 +124,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   d_prob_spec->require( "samplingFrequency", d_analysisFreq );
   d_prob_spec->require( "timeStart",         d_StartTime );            
   d_prob_spec->require( "timeStop",          d_StopTime );
+  d_prob_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
   
   d_zeroMatl = scinew MaterialSubset();
   d_zeroMatl->add(0);
@@ -177,8 +180,36 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
     
     d_cv_faces[f] = cvFace;  
   }
+  
+  //__________________________________
+  //  Loop over all the MPM Matls and pull out the specific heat
+  //  This Assumes that MPM matls are listed from 0 to N
+  //  It also assumes that cp is constant
+  // If we are doing a restart, then use the "timestep.xml"
+ 
+  // first try prob_spec
+  ProblemSpecP root_ps = d_prob_spec->getRootNode();  
+  ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
+  
+  if ( !mat_ps && restart_prob_spec ){   // read in from checkpoint/timestep.xml on a restart
+    ProblemSpecP silly = restart_prob_spec;
+    root_ps = silly->getRootNode();
+    mat_ps  = root_ps->findBlockWithOutAttribute( "MaterialProperties" ); 
+  }
+  
+  int matl = 0;
+ 
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  if(mpm_mat_ps){
+    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0; 
+         ps = ps->findNextBlock("material") ) {
+      double cp;   
+      ps->require("specific_heat",cp);
+      d_mpm_specificHeat[matl] = cp;
+      matl +=1;
+    } 
+  }
 }
-
 //______________________________________________________________________
 void FirstLawThermo::scheduleInitialize(SchedulerP& sched,
                                         const LevelP& level)
@@ -384,10 +415,10 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
 
       for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
         Patch::FaceType face = *itr;
-        
+        string faceName = patch->getFaceName(face );
         cv_face* cvFace = d_cv_faces[face];
 
-        cout_dbg << " cvFace: " << patch->getFaceName(face ) << " faceType " << cvFace->face 
+        cout_dbg << " cvFace: " <<  faceName << " faceType " << cvFace->face 
                  << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
         cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
@@ -411,32 +442,119 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         IntVector axes = patch->getFaceAxes(face);
         int P_dir = axes[0];  // principal direction
         double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+        
+        cout << " face Direction " << patch->faceDirection(face) << endl;
 
-        if (face == Patch::xminus || face == Patch::xplus) {    // X faces
+        //__________________________________
+        //           X faces
+        if (face == Patch::xminus || face == Patch::xplus) {    
           double area = dx.y() * dx.z();
+          double sumKE   = 0;
+          double sumH    = 0;
+          double sumMdot = 0;
+          cout << "iter limits " << iterLimits << endl;
+           
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            double flux = uvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-	     mat_fluxes += plus_minus_one * flux;
-          }
-        }
+            double vel = uvel_FC[c];
 
-        if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
+ #if 0           
+            // upwinding
+            IntVector offset(0,0,0);
+            if (vel > 0 ){
+              offset = IntVector (-1,0,0);
+            }
+            c + offset;
+ #endif
+            // compute the average values
+            IntVector cc = c - IntVector(1,0,0);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+                              
+            sumKE   += mdot * KE;
+            sumH    += mdot * enthpy;
+            sumMdot += mdot;
+          
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
+            //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+          }
+          cout << "face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
+        }
+        
+        //__________________________________
+        //        Y faces
+        if (face == Patch::yminus || face == Patch::yplus) {    
           double area = dx.x() * dx.z();
+          double sumKE = 0;
+          double sumH  = 0;
+          
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-	     double flux = vvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-            mat_fluxes += plus_minus_one * flux;
-          }
-        }
+            double vel = vvel_FC[c];
+           
+ #if 0
+            // upwinding
+            IntVector offset(0,0,0);
 
-        if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
+            if (vel > 0 ){
+              offset = IntVector (0,-1,0);
+            }
+            c + offset;
+#endif
+            
+            // compute the average values
+            IntVector cc = c - IntVector(0,1,0);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+            
+            sumH  += mdot * enthpy; 
+            sumKE += mdot * KE;         
+             
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
+            //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+          }
+          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+        }
+        
+        //__________________________________
+        //        Z faces
+        if (face == Patch::zminus || face == Patch::zplus) {
           double area = dx.x() * dx.y();
+          double sumKE = 0;
+          double sumH  = 0;
+          
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-	     double flux = wvel_FC[c] * rho_CC[c] * area * temp_CC[c] * gamma[c] * cv[c];
-            mat_fluxes += plus_minus_one * flux;
+            double vel = wvel_FC[c];
+#if 0            
+            // upwinding
+            IntVector offset(0,0,0);
+            if (vel > 0 ){
+              offset = IntVector (0,0,-1);
+            }
+            c + offset;
+#endif            
+            
+            // compute the average values
+            IntVector cc = c - IntVector(0,0,1);
+            
+            double mdot   = plus_minus_one * vel * area * (rho_CC[c] + rho_CC[cc])/2.0; 
+            double KE     = 0.5 * vel * vel;
+            double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
+                              temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
+            
+            sumH  += mdot * enthpy;
+            sumKE += mdot * KE;
+            
+            mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
           }
+          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
       }  // boundary faces
       
@@ -486,9 +604,7 @@ void FirstLawThermo::compute_MPM_Contributions(const ProcessorGroup* pg,
       new_dw->get( pTempNew, M_lb->pTemperatureLabel_preReloc, pset );
       new_dw->get( pmassNew, M_lb->pMassLabel_preReloc,        pset );
       
-// HACK UNTIL
-      double Cp = 1.0;
-      //double Cp=mpm_matl->getSpecificHeat();
+      double Cp = d_mpm_specificHeat[dwi];
     
       for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;    
@@ -604,6 +720,10 @@ void FirstLawThermo::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
+  fprintf(fp,"# This assumes:\n");
+  fprintf(fp,"#    - mpm matls have constant specific heat\n");
+  fprintf(fp,"#    - mpm matls are listed in order 0, 1, 2, 3\n");
+  fprintf(fp,"#    - Energy conversion factor, in SI units KJ ->J %E\n",d_conversion);
   fprintf(fp,"#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux\n");
   cout << Parallel::getMPIRank() << " FirstLawThermo:Created file " << filename << endl;
 }

@@ -114,6 +114,7 @@ struct InletInfo {
   
   //profiles
   std::vector<std::vector<double> > distanceProfile;
+  std::vector<std::vector<double> > angleProfile;
   std::vector<std::vector<std::vector<double> > > velocityProfile;
   std::vector<double> constVelocity;
   double velocityMagnitude;
@@ -168,6 +169,10 @@ public:
       jj = 0; kk = 1;
     } 
     
+    //tmp vars for angle
+    double magA, magB;
+    double AdotB;
+    
     for (int j = 0; j< inlet.jSize; j++) {
       for (int k = 0; k< inlet.kSize; k++) {
 
@@ -181,6 +186,20 @@ public:
         }
         
         inlet.distanceProfile[j][k] = isPos*inlet.distanceProfile[j][k]/charDim_*2.0; //normalize distance
+        
+        //find the angle from [1,0], need for radial type data
+        magA = 1.0;
+        magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
+                    ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
+        
+        AdotB = (minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]; //y1*y2
+        
+        if ( (minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk] >= 0) {
+          inlet.angleProfile[j][k] = acos(AdotB/magB);
+        } else {
+          inlet.angleProfile[j][k] = -acos(AdotB/magB);
+        }
+
       }
     }
   };
@@ -207,6 +226,9 @@ public:
     } else if (inlet.faceSide=="z-" || inlet.faceSide=="z+") {
       jj = 0; kk = 1;
     }
+    
+    double magA, magB;
+    double AdotB;
 
     for (int j = 0; j< inlet.jSize; j++) {
       for (int k = 0; k< inlet.kSize; k++) {
@@ -215,6 +237,20 @@ public:
                                              ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
         // neg D = inner, pos D = outer
         inlet.distanceProfile[j][k] = (inlet.distanceProfile[j][k] - middleRadius_)/charDim_; //normalize distance
+      
+        //find the angle from [1,0], need for radial type data
+        magA = 1.0;
+        magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
+                    ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
+        
+        AdotB = (minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]; //y1*y2
+        
+        if ( (minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk] >= 0) {
+          inlet.angleProfile[j][k] = acos(AdotB/magB);
+        } else {
+          inlet.angleProfile[j][k] = -acos(AdotB/magB);
+        }
+      
       }
     }
     
@@ -369,7 +405,7 @@ public:
         } else if (inlet.faceSide == "y-") {
           inlet.velocityProfile[j][k][1] =  Vmax* (1.0 - distance*distance);
         } else if (inlet.faceSide == "y+") {
-          inlet.velocityProfile[j][k][1] = -(Vmax* (1.0  - distance*distance) );
+          inlet.velocityProfile[j][k][1] = -(Vmax* (1.0 - distance*distance) );
         } else if (inlet.faceSide == "z-") {
           inlet.velocityProfile[j][k][2] =  Vmax* (1.0 - distance*distance);
         } else if (inlet.faceSide == "z+") {
@@ -389,7 +425,7 @@ public:
     double Vmax = inlet.velocityMagnitude;
     for (int j = 0; j< inlet.jSize; j++) {
       for (int k = 0; k< inlet.kSize; k++) {
-        distance = inlet.distanceProfile[j][k];
+        distance = abs(inlet.distanceProfile[j][k]);
         if (distance < 1.0) {
           if (inlet.faceSide == "x-" ) {
             inlet.velocityProfile[j][k][0] = Vmax* pow( (1.0 - distance), 1.0/7.0 );
@@ -412,9 +448,10 @@ public:
 
 class specifiedV : public BaseVelocity {
 public:
-  specifiedV( std::vector<double>& specDistance, std::vector<std::vector<double> >& specVelocity, bool isSymmetric){
+  specifiedV( std::vector<double>& specDistance, std::vector<std::vector<double> >& specVelocity, bool isSymmetric, bool isRadial){
     interpV = new Interpolator( specDistance, specVelocity);
 		isSymmetric_ = isSymmetric;
+    isRadial_ = isRadial;
   };
   ~specifiedV(){};
   inline void setVelocity( InletInfo& inlet) {
@@ -428,15 +465,34 @@ public:
         U = interpV->returnValue(distance, 0);
         V = interpV->returnValue(distance, 1);
         W = interpV->returnValue(distance, 2);
-        inlet.velocityProfile[j][k][0] = U;
-        inlet.velocityProfile[j][k][1] = V;
-        inlet.velocityProfile[j][k][2] = W;
+        
+        if ( !isRadial_ ) {
+          inlet.velocityProfile[j][k][0] = U;
+          inlet.velocityProfile[j][k][1] = V;
+          inlet.velocityProfile[j][k][2] = W;
+        } else {
+          //need if statement to set a direction here, use V as radial, W as angular
+          if (inlet.faceSide == "x-" || inlet.faceSide == "x+") {
+            inlet.velocityProfile[j][k][0] = U;
+            inlet.velocityProfile[j][k][1] = V * cos(inlet.angleProfile[j][k]) + W * sin(inlet.angleProfile[j][k]);
+            inlet.velocityProfile[j][k][2] = V * sin(inlet.angleProfile[j][k]) - W * cos(inlet.angleProfile[j][k]);
+          } else if (inlet.faceSide == "y-" || inlet.faceSide == "y+") {
+            inlet.velocityProfile[j][k][0] = V * cos(inlet.angleProfile[j][k]) + W * sin(inlet.angleProfile[j][k]);
+            inlet.velocityProfile[j][k][1] = U ;
+            inlet.velocityProfile[j][k][2] = V * sin(inlet.angleProfile[j][k]) - W * cos(inlet.angleProfile[j][k]);
+          } else {
+            inlet.velocityProfile[j][k][0] = V * cos(inlet.angleProfile[j][k]) + W * sin(inlet.angleProfile[j][k]);
+            inlet.velocityProfile[j][k][1] = V * sin(inlet.angleProfile[j][k]) - W * cos(inlet.angleProfile[j][k]);
+            inlet.velocityProfile[j][k][2] = U ;
+          }
+        }
       }
     }
   };
 private:
   Interpolator * interpV;
   bool isSymmetric_;
+  bool isRadial_;
 };
 
 class constV : public BaseVelocity {
@@ -622,9 +678,10 @@ public:
 
 class specifiedS : public BaseStress {
 public:
-  specifiedS( std::vector<double>& specDistance, std::vector<std::vector<double> >& specStress, bool isSymmetric ) {
+  specifiedS( std::vector<double>& specDistance, std::vector<std::vector<double> >& specStress, bool isSymmetric, bool isRadial) {
     interpS = new Interpolator( specDistance, specStress );
     isSymmetric_ = isSymmetric;
+    isRadial_ = isRadial;
   };
   ~specifiedS(){};
   inline void setStress( InletInfo& inlet) {
@@ -650,7 +707,32 @@ public:
           r31 = -r31;
           r32 = -r32;
         }
-          
+        
+        double tmp1, tmp2, tmp3;
+        if (isRadial_) { 
+          if (inlet.faceSide == "x-" || inlet.faceSide == "x+" ) {
+            tmp1 = r22; tmp2 = r21; tmp3 = r33;
+            r21 = tmp2*cos(inlet.angleProfile[j][k]);
+            r31 = tmp2*sin(inlet.angleProfile[j][k]);
+            r22 = abs(tmp1*cos(inlet.angleProfile[j][k]))+abs(tmp3*sin(inlet.angleProfile[j][k]));
+            r33 = abs(tmp1*sin(inlet.angleProfile[j][k]))-abs(tmp3*cos(inlet.angleProfile[j][k]));
+          } else if (inlet.faceSide == "y-" || inlet.faceSide == "y+") {
+            tmp1 = r11; tmp2 = r21; tmp3 = r33;
+            r21 = tmp2*cos(inlet.angleProfile[j][k]);
+            r32 = tmp2*sin(inlet.angleProfile[j][k]);
+            r11 = abs(tmp1*cos(inlet.angleProfile[j][k])) +abs(tmp3*sin(inlet.angleProfile[j][k]));
+            r33 = abs(tmp1*sin(inlet.angleProfile[j][k])) -abs(tmp3*cos(inlet.angleProfile[j][k]));
+          } else { //z
+            tmp1 = r11; tmp2 = r31; tmp3 = r33;
+            r31 = tmp2*cos(inlet.angleProfile[j][k]);
+            r32 = tmp2*cos(inlet.angleProfile[j][k]);
+            r11 = abs(tmp1*cos(inlet.angleProfile[j][k])) +abs(tmp3*sin(inlet.angleProfile[j][k]));
+            r22 = abs(tmp1*sin(inlet.angleProfile[j][k])) -abs(tmp3*cos(inlet.angleProfile[j][k]));
+          }
+        }
+        
+        //a11 = 0, a21 = 1, a22 = 2, a31 = 3, a32 = 4, a33 = 5
+        
         //Lund transform of stress tensor
         inlet.stressProfile[j][k][0] = sqrt( r11 );
         inlet.stressProfile[j][k][1] = r21/inlet.stressProfile[j][k][0];
@@ -664,6 +746,7 @@ public:
   };
 private:
   bool isSymmetric_;
+  bool isRadial_;
   Interpolator * interpS;
 };
 
@@ -1121,6 +1204,8 @@ int main( int argc, const char* argv[] )
   
   vector<vector <double> > dProf (jSize, vector<double> (kSize, 0.0) );
   newTurbInlet.distanceProfile = dProf;
+  vector<vector <double> > aProf (jSize, vector<double> (kSize, 0.0) );
+  newTurbInlet.angleProfile = aProf;
   vector< vector<vector <double> > > vProf (jSize, vector<vector<double> > (kSize, vector<double> (3, 0.0) ) );
   newTurbInlet.velocityProfile = vProf;
   vector< vector<vector <double> > > AijProf (jSize, vector<vector<double> > (kSize, vector<double> (6, 0.0) ) );
@@ -1153,6 +1238,11 @@ int main( int argc, const char* argv[] )
   newTurbInlet.velocityMagnitude = magVelocity;
   cout << "Average Velocity Magnitude: " << magVelocity << endl;
   
+  bool isRadial=false;
+  if (variationDirection == "Radial" || variationDirection == "radial") {
+    isRadial = true;
+  }
+  
   BaseVelocity* vel;
   bool userV = true;
   if (velocityType == "laminar") {
@@ -1162,7 +1252,7 @@ int main( int argc, const char* argv[] )
   } else if (velocityType == "power") {
     vel = new powerV();
   } else if (velocityType == "specified") {
-    vel = new specifiedV( specDistance, specVelocity, isSymmetric);
+    vel = new specifiedV( specDistance, specVelocity, isSymmetric, isRadial);
   } else if (velocityType == "constant") {
     userV = false;
     vel = new constV();
@@ -1181,7 +1271,7 @@ int main( int argc, const char* argv[] )
   } else if (stressType == "channel" || stressType=="pipe") {
     stress = new channelStress();
   } else if (stressType == "specified") {
-    stress = new specifiedS( specDistance, specStress, isSymmetric );
+    stress = new specifiedS( specDistance, specStress, isSymmetric, isRadial );
   } else if (stressType == "constant") {
     userS = false;
     stress = new constS();
@@ -1612,7 +1702,8 @@ int main( int argc, const char* argv[] )
   myfile << "#Stress Prof: " << stressType << endl;
   myfile << "#Length Prof: " << lengthScaleType << endl;
   myfile << "#Ave Length Scale: " << L_a[0] << " " << L_a[1] << " " << L_a[2] << endl;
-  
+  myfile << "#Face Side" << endl;
+  myfile << faceSide << endl;
   myfile << "#Table Dimensions" << endl;
   myfile << NT+1 << " " << jSize << " " << kSize << endl; 
   myfile << "#Minimum Cell Index" << endl;

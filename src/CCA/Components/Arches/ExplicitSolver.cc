@@ -393,7 +393,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //
       std::stringstream strRKStage;
       strRKStage << curr_level;
-      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
+      const std::set<std::string>& ioFieldSet = wasatch.locked_fields();
       Wasatch::TaskInterface* wasatchRHSTask =
       scinew Wasatch::TaskInterface( gh->rootIDs,
                                     "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),

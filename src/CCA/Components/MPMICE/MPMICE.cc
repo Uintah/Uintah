@@ -268,7 +268,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, grid, sharedState);
+      am->problemSetup(prob_spec, restart_prob_spec, grid, sharedState);
     }
   }  
 }
@@ -282,8 +282,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
   
   // Global flags required by mpmice
   ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
-  mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);
-
+  mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);  
 }
 
 //______________________________________________________________________
@@ -586,9 +585,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
-  //d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
 
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);

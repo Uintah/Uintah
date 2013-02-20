@@ -60,6 +60,7 @@
 #include "BoundaryConditions/LinearBC.h"
 #include "BoundaryConditions/ParabolicBC.h"
 #include "BoundaryConditions/PowerLawBC.h"
+#include "BoundaryConditions/TurbulentInletBC.h"
 #include "BoundaryConditions/BoundaryConditionBase.h"
 
 //-- ExprLib includes --//
@@ -797,6 +798,30 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
     }
     
+    else if ( params->findBlock("TurbulentInlet") ) {
+      std::string inputFileName;
+      std::string velDir;
+      int period=1;
+      double timePeriod;
+      Uintah::ProblemSpecP valParams = params->findBlock("TurbulentInlet");
+      valParams->get("InputFile",inputFileName);
+      valParams->getAttribute("component",velDir);
+      
+      bool hasPeriod = valParams->getAttribute("period",period);
+      bool hasTimePeriod = valParams->getAttribute("timeperiod",timePeriod);
+      if (hasTimePeriod) period = 0;
+      
+      if (hasPeriod && hasTimePeriod) {
+        std::ostringstream msg;
+        msg << "ERROR: When specifying a TurbulentInletBC, you cannot specify both timeperiod AND period. Please revise your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      typedef typename TurbulentInletBC<FieldT>::Builder Builder;
+      builder = scinew Builder(tag,inputFileName, velDir,period, timePeriod);
+    }
+
+    
     return builder;
   }
   
@@ -958,7 +983,7 @@ namespace Wasatch{
     // parse and build boundary condition expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BCExpression");
         exprParams != 0;
-        exprParams = exprParams->findNextBlock("BCExpression") ){
+        exprParams = exprParams->findNextBlock("BCExpression") ) {
       
       std::string fieldType;
       exprParams->getAttribute("type",fieldType);
@@ -1002,6 +1027,47 @@ namespace Wasatch{
         ++taskNameIter;
       }
     }
+    
+    // This is a special parser for turbulent inlets
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("TurbulentInlet");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("TurbulentInlet") ) {
+      
+      std::string inputFileName, velDir, baseName;
+      int period=1;
+      double timePeriod;
+      exprParams->get("InputFile",inputFileName);
+      exprParams->get("BaseName",baseName);
+      
+      bool hasPeriod = exprParams->getAttribute("period",period);
+      bool hasTimePeriod = exprParams->getAttribute("timeperiod",timePeriod);
+      if (hasTimePeriod) period = 0;
+      
+      if (hasPeriod && hasTimePeriod) {
+        std::ostringstream msg;
+        msg << "ERROR: When specifying a TurbulentInletBC, you cannot specify both timeperiod AND period. Please revise your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      Expr::Tag xVelTag("x-" + baseName, Expr::STATE_NONE);
+      typedef TurbulentInletBC<XVolField>::Builder xBuilder;
+      
+      Expr::Tag yVelTag("y-" + baseName, Expr::STATE_NONE);
+      typedef TurbulentInletBC<YVolField>::Builder yBuilder;
+      
+      Expr::Tag zVelTag("z-" + baseName, Expr::STATE_NONE);
+      typedef TurbulentInletBC<ZVolField>::Builder zBuilder;
+      
+      GraphHelper* const initGraphHelper = gc[INITIALIZATION];
+      initGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      initGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+      
+      GraphHelper* const slnGraphHelper = gc[ADVANCE_SOLUTION];
+      slnGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
+      slnGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
+    }    
     
     //___________________________________________________
     // parse and build initial conditions for moment transport

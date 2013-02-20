@@ -83,10 +83,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Obtain object parameters
   db_classic->require( "inputfile", tableFileName );
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
-  
-  // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
-  const ProblemSpecP db_root = db_classic->getRootNode(); 
-  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
   proc0cout << "----------Mixing Table Information---------------  " << endl;
@@ -168,6 +164,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Check for heat loss as a property model 
   // If found, add sensible and adiabatic enthalpy to the lookup 
   // Some of this is a repeat of what is happening already in HeatLoss.cc
+  const ProblemSpecP db_root = db_classic->getRootNode(); 
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels") ){ 
    const ProblemSpecP db_prop_models = 
      db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
@@ -730,7 +727,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       if (patch->containsCell(d_ijk_den_ref)) {
 
         den_ref = arches_density[d_ijk_den_ref];
-        cerr << "Modified reference density to: density_ref = " << den_ref << endl;
 
       }
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);

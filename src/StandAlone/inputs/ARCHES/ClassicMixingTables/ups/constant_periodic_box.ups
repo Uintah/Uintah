@@ -27,6 +27,7 @@
     <save label="mixture_fraction"/>
     <save label="heat_loss"/>
 <!-- dv's -->
+    <save label="mixture_molcular_weight" table_lookup="true"/>
     <save label="CH4" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>

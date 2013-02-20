@@ -293,6 +293,12 @@ namespace Wasatch {
     BoundaryConditionBase<FieldT>& modExpr =
       dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
+    
+    // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
+    const SCIRun::IntVector sciPatchCellOffset = patch->getCellLowIndex(0);
+    SpatialOps::structured::IntVec patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
+    modExpr.set_patch_cell_offset(patchCellOffset);
+    
     // set the ghost and interior points as well as coefficients
     modExpr.set_ghost_coef(cg);
     modExpr.set_ghost_points(flatGhostPoints);
@@ -807,7 +813,11 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials,
-                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
+                                    std::string useFieldForBCIterator,
+                                    double useBCValue,
+                                    std::string useBCKind,
+                                    std::string useBCFunctorName)
   {
 
     /*
@@ -824,6 +834,13 @@ namespace Wasatch {
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
     const std::string phiName = phiTag.name();
+    
+    bool useOtherField = useFieldForBCIterator.empty() ? false : true;
+    
+    if (useFieldForBCIterator.empty()) {
+      useFieldForBCIterator = fieldName;
+    }
+    
     // loop over local patches
     for( int ip=0; ip<localPatches->size(); ++ip ){
 
@@ -908,7 +925,12 @@ namespace Wasatch {
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
               //
-              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, useFieldForBCIterator, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              if (useOtherField) {
+                bc_value = useBCValue;
+                bc_kind = useBCKind;
+                bc_functor_name = useBCFunctorName;
+              }
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
                 process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name);
@@ -1405,7 +1427,12 @@ namespace Wasatch {
                                                        const Uintah::PatchSet* const localPatches,    \
                                                        const PatchInfoMap& patchInfoMap,              \
                                                        const Uintah::MaterialSubset* const materials, \
-                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap);
+                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap, \
+                                                       std::string useFieldForBCIterator,              \
+                                                       double useBCValue,                              \
+                                                       std::string useBCKind,                          \
+                                                       std::string useBCFunctorName);                 
+
 
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(SVolField);
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(XVolField);

@@ -63,18 +63,22 @@ namespace Uintah {
     class ArchesLabel {
     public:
 
+      enum VARID { BADVALUE, TEMPERATURE, DENSITY, SOOT, H2O, CO2, ENTHALPY, SPECIFICHEAT, MIXTUREFRACTION };
+
       ArchesLabel();
       ~ArchesLabel();
       void setSharedState(SimulationStateP& sharedState);
       void problemSetup( const ProblemSpecP& db );
 
-      typedef std::map<const std::string,const std::string> RLMAP; 
+      typedef std::map<VARID,const std::string> RLMAP; 
 
       /** @brief Retrieve a label based on its CFD role **/
-      const VarLabel* getVarlabelByRole( const std::string role );
+      const VarLabel* getVarlabelByRole( VARID role );
 
       /** @brief Set a label to have a specific role **/ 
       void setVarlabelToRole( const std::string label, const std::string role );
+
+      const std::string getRoleString( VARID role );
      
       SimulationStateP d_sharedState;
 
@@ -507,7 +511,6 @@ namespace Uintah {
     private: 
 
       RLMAP d_r_to_l; 
-      std::vector<std::string> d_allowed_roles; 
 
     }; // End class ArchesLabel
 } // End namespace Uintah

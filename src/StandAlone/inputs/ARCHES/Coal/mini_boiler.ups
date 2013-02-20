@@ -6072,7 +6072,7 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
-          <src label="coal_gas_momentum" type="coal_gas_momentum">
+          <src label="coal_gas_momentum">
           </src>
         </MomentumSolver>
 

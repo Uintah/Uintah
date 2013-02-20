@@ -378,7 +378,7 @@
                             attribute3="HalfHeight REQUIRED DOUBLE"
                             attribute4="n REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
-      </PowerLawFunction>      
+      </PowerLawFunction>  
        
     </BCExpression>
 
@@ -392,6 +392,13 @@
   </CommonTags>
 
   <Wasatch                      spec="OPTIONAL NO_DATA">
+
+		<TurbulentInlet  spec="OPTIONAL NO_DATA"
+										 attribute1="period OPTIONAL INTEGER"
+										 attribute2="timeperiod OPTIONAL DOUBLE">
+      <BaseName           spec="REQUIRED STRING" />  <!-- this will create 3 expressions: x-basename, y-basename, z-basename !-->
+			<InputFile         spec="REQUIRED STRING"/>
+		</TurbulentInlet>      
 
     <!-- specify the thread counts at the ExprLib and SpatialOps level, respectively -->
     <TaskParallelThreadCount  spec="OPTIONAL INTEGER" />
@@ -424,7 +431,7 @@
     <BCExpression            spec="MULTIPLE" />
     
     <MomentInitialization   spec="MULTIPLE"/>
-    
+        
     <PrecipitationBasicExpression     spec="MULTIPLE" />
 
     <PostProcessingExpression           spec="MULTIPLE" />

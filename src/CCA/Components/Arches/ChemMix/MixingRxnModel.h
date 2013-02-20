@@ -180,6 +180,8 @@ namespace Uintah {
 
     std::string _temperature_label_name; 
 
+    IntVector d_ijk_den_ref;                      ///< Reference density location
+
     class TransformBase { 
 
       public: 

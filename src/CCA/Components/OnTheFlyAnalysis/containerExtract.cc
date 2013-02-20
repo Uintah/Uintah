@@ -127,6 +127,7 @@ containerExtract::~containerExtract()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void containerExtract::problemSetup(const ProblemSpecP& prob_spec,
+                               const ProblemSpecP& restart_prob_spec,
                                GridP& grid,
                                SimulationStateP& sharedState)
 {

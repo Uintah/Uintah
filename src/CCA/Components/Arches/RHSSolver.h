@@ -83,13 +83,15 @@ public:
                             double delta_t,
                             CellInformation* cellinfo,
                             ArchesVariables* vars,
-                            ArchesConstVariables* constvars);
+                            ArchesConstVariables* constvars, 
+                            constCCVariable<double>& volFrac);
 
   void calculateVelocity(const Patch* patch,
                          double delta_t,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
                          constCCVariable<double>&,
+                         constCCVariable<double>&, 
                          constCCVariable<double>&);
 
   ////////////////////////////////////////////////////////////////////////
@@ -139,7 +141,8 @@ public:
                                StencilMatrix<T>& A,
                                const OffsetArray1<double>& sew,
                                const OffsetArray1<double>& sns,
-                               const OffsetArray1<double>& stb,              
+                               const OffsetArray1<double>& stb,
+                               constCCVariable<double>& volFracion, 
                                double delta_t);              
 
   inline void setMMS(bool doMMS) {

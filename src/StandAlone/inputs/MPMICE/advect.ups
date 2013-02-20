@@ -256,7 +256,24 @@
         </exchange_coefficients>
             </exchange_properties> 
     </MaterialProperties>
-            
+    
+    <!--__________________________________-->
+    <DataAnalysis>
 
+      <Module name = "minMax">
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"   matl="1"/>
+          <analyze label="vel_CC"    matl="1"/>
+          <analyze label="uvel_FCME" matl="1"/>
+          <analyze label="vvel_FCME" matl="1"/>
+          <analyze label="wvel_FCME" matl="1"/>
+          <analyze label="g.velocity" matl="0"/>
+        </Variables>
+      </Module>            
+    </DataAnalysis>
        
 </Uintah_specification>
