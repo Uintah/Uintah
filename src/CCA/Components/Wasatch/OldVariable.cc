@@ -55,6 +55,7 @@ namespace Wasatch {
   {
   protected:
     const Expr::Tag name_, oldName_;
+    bool needsNewVarLabel_;
     Uintah::VarLabel *oldVarLabel_, *varLabel_;  // jcs need to get varLabel_ from an existing one...
     Uintah::Ghost::GhostType ghostType_;
     // note that we can pull a VarLabel from the Expr::FieldManager if we have that available.  But we will need a tag and not a string to identify the variable.
@@ -67,14 +68,16 @@ namespace Wasatch {
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
       oldName_( var.name() + "_old", Expr::STATE_NONE ),
+      needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc, ghostDesc ) ),
-      varLabel_   ( Uintah::VarLabel::find( name_.name() ) ),
+      varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc, ghostDesc ) : Uintah::VarLabel::find( name_.name() ) ),
       ghostType_  ( ghostType )
     {}
 
     virtual ~VarHelperBase()
     {
       Uintah::VarLabel::destroy( oldVarLabel_ );
+      if (needsNewVarLabel_) Uintah::VarLabel::destroy( varLabel_ );
     }
 
     const Expr::Tag& var_name()     const{ return name_;    }
@@ -211,9 +214,11 @@ namespace Wasatch {
     if( varHelpers_.size() == 0 ) return;
 
     // create the Uintah task to accomplish this.
+    std::cout << "creating uintah task \n";
     Uintah::Task* oldVarTask = scinew Uintah::Task( "set old variables", this, &OldVariable::populate_old_variable );
     
     BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
+      std::cout << "my var label "<< vh->get_var_label() << std::endl;
       oldVarTask->requires( Uintah::Task::OldDW, vh->get_var_label(), vh->get_ghost_type() );
       oldVarTask->computes( vh->get_old_var_label() );
     }
