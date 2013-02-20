@@ -23,17 +23,13 @@
  */
 
 #include <CCA/Components/MD/MDSystem.h>
-#include <Core/Math/UintahMiscMath.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <iostream>
 
 #include <sci_values.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 MDSystem::MDSystem()
 {
@@ -48,7 +44,6 @@ MDSystem::~MDSystem()
 MDSystem::MDSystem(ProblemSpecP& ps)
 {
   ps->findBlock("MDSystem");
-  ps->get("unitCell", d_unitCell);
   ps->get("pressure", d_pressure);
   ps->get("temperature", d_temperature);
   ps->get("orthorhombic", d_orthorhombic);

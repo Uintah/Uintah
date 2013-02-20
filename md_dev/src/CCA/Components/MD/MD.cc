@@ -225,17 +225,12 @@ void MD::schedulePerformSPME(SchedulerP& sched,
 
   task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, sharedState->get_delt_label());
 
   task->computes(lb->pXLabel_preReloc);
-  task->computes(lb->pAccelLabel_preReloc);
-  task->computes(lb->pVelocityLabel_preReloc);
-  task->computes(lb->pMassLabel_preReloc);
+  task->computes(lb->pForceLabel_preReloc);
   task->computes(lb->pChargeLabel_preReloc);
   task->computes(lb->pParticleIDLabel_preReloc);
 
@@ -349,13 +344,16 @@ bool MD::isNeighbor(const Point* atom1,
   return false;
 }
 
-void MD::initialize(const ProcessorGroup* /* pg */,
+void MD::initialize(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
-                    DataWarehouse* /*old_dw*/,
+                    DataWarehouse* old_dw,
                     DataWarehouse* new_dw)
 {
   printTask(patches, md_cout, "MD::initialize");
+
+  // initialize electrostatics object
+  electrostatics->initialize(system, patches, matls);
 
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -473,6 +471,10 @@ void MD::performSPME(const ProcessorGroup* pg,
                      DataWarehouse* new_dw)
 {
   printTask(patches, md_cout, "MD::performSPME");
+
+  electrostatics->setup();
+  electrostatics->calculate();
+  electrostatics->finalize();
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,

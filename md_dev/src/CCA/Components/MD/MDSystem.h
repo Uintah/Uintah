@@ -25,18 +25,10 @@
 #ifndef UINTAH_MD_MDSYSTEM_H
 #define UINTAH_MD_MDSYSTEM_H
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Variables/Array3.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
-#include <vector>
+#include <Core/Math/Matrix3.h>
 
 namespace Uintah {
-
-using SCIRun::Vector;
-using SCIRun::IntVector;
 
 /**
  *  @class MDSystem
@@ -149,8 +141,6 @@ class MDSystem {
     {
       return this->d_inverseCell;
     }
-
-    friend class MD;
 
   private:
 
