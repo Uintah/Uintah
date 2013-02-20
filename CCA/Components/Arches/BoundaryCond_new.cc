@@ -978,7 +978,6 @@ void BoundaryCondition_new::Tabulated::applyBC( const Patch* patch, Patch::FaceT
                                                int child, std::string varname, std::string face_name,
                                                CCVariable<double>& phi )
 {
-  double bc_value; 
   Iterator bound_ptr;
   string bc_kind = "NA"; 
   string bc_s_value = "NA";
