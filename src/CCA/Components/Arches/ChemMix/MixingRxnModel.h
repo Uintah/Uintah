@@ -148,6 +148,9 @@ namespace Uintah {
 
     /** @brief Returns the map of participating inerts **/
     inline InertMasterMap& getInertMap(){ return d_inertMap; }; 
+
+    /** @brief Returns a boolean regarding if post mixing is used or not **/ 
+    inline bool doesPostMix(){ return d_does_post_mixing; }; 
   
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
     inline void insertIntoMap( const string var_name ){

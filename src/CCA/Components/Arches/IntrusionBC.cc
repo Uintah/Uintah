@@ -432,7 +432,32 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           }
 
-          double density = mixingTable->getTableValue(iv, "density"); 
+          bool does_post_mix = mixingTable->doesPostMix(); 
+
+          double density = 0.0; 
+          typedef std::map<string,double> DMap; 
+          DMap inert_list; 
+          
+          if ( does_post_mix ){ 
+            typedef std::map<string, DMap > IMap;
+            IMap inert_map = mixingTable->getInertMap(); 
+            for ( IMap::iterator imap =  inert_map.begin(); 
+                                 imap != inert_map.end(); imap++ ){
+              string name = imap->first; 
+              std::map<std::string, scalarInletBase*>::iterator scalar_iter = iIntrusion->second.scalar_map.find( name ); 
+
+              if ( scalar_iter == iIntrusion->second.scalar_map.end() ){ 
+                throw InvalidValue("Error: Cannot compute property values for IntrusionBC. Make sure all participating inerts are specified!", __FILE__, __LINE__); 
+              } 
+
+              double inert_value = scalar_iter->second->get_scalar( c ); 
+              inert_list.insert(make_pair(name,inert_value));
+            }
+            density = mixingTable->getTableValue(iv, "density",inert_list);
+          } else { 
+            density = mixingTable->getTableValue(iv, "density"); 
+          }
+
           iIntrusion->second.density_map.insert(std::make_pair(c, density)); 
           //
           //Note: Using the last value of density to set the total intrusion density.  

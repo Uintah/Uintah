@@ -57,6 +57,9 @@
 
 namespace Uintah{ 
 
+  // setenv SCI_DEBUG INTRUSION_DEBUG:+ 
+  //static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
+
   class VarLabel; 
   class ArchesLabel;
   class MPMArchesLabel; 
