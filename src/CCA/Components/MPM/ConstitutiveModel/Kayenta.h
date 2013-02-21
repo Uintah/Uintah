@@ -90,9 +90,9 @@ namespace Uintah {
     enum KAYENTA_DC { DC1, DC2, DC3, DC4, DC5, DC6, DC7, DC8,
                       DC9, DC10, DC11, DC12, DC13, NUM_KAYENTA_DC };
     enum KAYENTA_GC { NUM_KAYENTA_GC };
-    double UI[100];
-    double GC[100];
-    double DC[100];
+    double UI[130];
+    double GC[20];
+    double DC[20];
     double rinit[200];
     double d_hugeJ;
     // weibull parameter set
