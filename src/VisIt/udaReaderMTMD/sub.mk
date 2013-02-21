@@ -41,6 +41,9 @@ VISIT_SRCDIR := VisIt/udaReaderMTMD
 # Force the make system to do the visit_stuff:
 ALLTARGETS := $(ALLTARGETS) visit_stuff
 
+# Uintah include dir
+UINTAH_INCLUDE_DIR := $(SRCTOP_ABS)
+
 #
 # List of the .h, .C, and .xml files in the src side that need to be linked on the bin side.
 #
@@ -67,12 +70,13 @@ $(links_to_create) :
 ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@echo creating VisIt Makefile...
 	@echo SRCTOP_ABS=${SRCTOP_ABS}
+	@echo UINTAH_INCLUDE_DIR=${UINTAH_INCLUDE_DIR}
 	@cd ${VISIT_SRCDIR}; \
           rm -f Makefile.visit; \
           mv Makefile Makefile.sci; \
           ${VISIT_INSTALL_DIR}/bin/xml2cmake ${VISIT_PLUGIN_INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
           ${VISIT_INSTALL_DIR}/bin/xml2info -clobber $(OBJTOP_ABS)/${VISIT_SRCDIR}/udaReaderMTMD.xml; \
-          cmake . -DVISIT_DISABLE_SETTING_COMPILER:BOOL=TRUE -DUINTAH_INCLUDE_DIR:PATH=/Users/cam/code/uintah/src -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
+          cmake . -DVISIT_DISABLE_SETTING_COMPILER:BOOL=TRUE -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
           cp Makefile Makefile.visit;
 
 #
