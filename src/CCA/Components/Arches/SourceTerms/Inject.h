@@ -166,7 +166,7 @@ private:
       db->getWithDefault("constant",_constant, 0.0); 
       _injet_type = CONSTANT; 
 
-    } else if ( inject_type == "file" ){ 
+    } else if ( inject_type == "fromfile" ){ 
 
       std::string file_name;
       db->require("inputfile", file_name); 
@@ -187,7 +187,7 @@ private:
         std::string varname  = getString( file );
         input_file  = getString( file ); 
 
-        if ( input_file == _src_name ){ 
+        if ( varname == _src_name ){ 
           found_file = true; 
           break; 
         } 
