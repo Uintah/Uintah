@@ -411,10 +411,15 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).find(patchID); 
 
         // start face iterator
+        bool found_valid_density = false; 
+        double found_density = 0.0;
         for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
           IntVector c = *i; 
           iv.clear(); 
+
+          cout_intrusiondebug << "IntrusionBC::For Intrusion named: " << iIntrusion->second.name << std::endl;
+          cout_intrusiondebug << "IntrusionBC::At location = " << c << std::endl;
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){ 
 
@@ -430,6 +435,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
             //iv[niv] = scalar_var;
             iv.push_back(scalar_var); 
 
+            cout_intrusiondebug << "IntrusionBC::For independent variable " << iv_var_names[niv] << ". Using value = " << scalar_var << std::endl;
+
           }
 
           bool does_post_mix = mixingTable->doesPostMix(); 
@@ -437,8 +444,12 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           double density = 0.0; 
           typedef std::map<string,double> DMap; 
           DMap inert_list; 
+
           
           if ( does_post_mix ){ 
+
+            cout_intrusiondebug << "IntrusionBC::Using inert stream mixing to look up properties" << std::endl;
+
             typedef std::map<string, DMap > IMap;
             IMap inert_map = mixingTable->getInertMap(); 
             for ( IMap::iterator imap =  inert_map.begin(); 
@@ -452,9 +463,18 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
               double inert_value = scalar_iter->second->get_scalar( c ); 
               inert_list.insert(make_pair(name,inert_value));
+
+              cout_intrusiondebug << "IntrusionBC::For inert variable " << name << ". Using value = " << inert_value << std::endl;
+
             }
             density = mixingTable->getTableValue(iv, "density",inert_list);
+
+            cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+
           } else { 
+
+            cout_intrusiondebug << "IntrusionBC::NOT using inert stream mixing to look up properties" << std::endl;
+
             density = mixingTable->getTableValue(iv, "density"); 
           }
 
@@ -462,9 +482,19 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           //
           //Note: Using the last value of density to set the total intrusion density.  
           //This is needed for mass flow inlet conditions but assumes a constant density across the face
-          iIntrusion->second.density = density; 
+          if ( std::abs(density) > 1e-10 ){ 
+            found_density = density;
+            found_valid_density = true; 
+          } 
 
         } // ... end of face iterator ... 
+
+        if ( !found_valid_density ){ 
+          string err_msg = "Error: Unable to compute a real density for the intrusion named: "+iIntrusion->second.name;
+          throw InvalidValue( err_msg, __FILE__, __LINE__ ); 
+        } else { 
+          iIntrusion->second.density = found_density; 
+        }
       } 
     }
   }

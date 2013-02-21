@@ -17,6 +17,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Util/DebugStream.h>
 
 //============================================
 
@@ -58,7 +59,7 @@
 namespace Uintah{ 
 
   // setenv SCI_DEBUG INTRUSION_DEBUG:+ 
-  //static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
+  static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
 
   class VarLabel; 
   class ArchesLabel;
