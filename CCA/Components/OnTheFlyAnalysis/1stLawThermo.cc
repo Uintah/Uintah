@@ -443,7 +443,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         int P_dir = axes[0];  // principal direction
         double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
         
-        cout << " face Direction " << patch->faceDirection(face) << endl;
+//        cout << " face Direction " << patch->faceDirection(face) << endl;
 
         //__________________________________
         //           X faces
@@ -452,7 +452,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double sumKE   = 0;
           double sumH    = 0;
           double sumMdot = 0;
-          cout << "iter limits " << iterLimits << endl;
+//          cout << "iter limits " << iterLimits << endl;
            
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
@@ -481,7 +481,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
             //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
           }
-          cout << "face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
+         // cout << "face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
         }
         
         //__________________________________
@@ -519,7 +519,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
             //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
           }
-          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+          // cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
         
         //__________________________________
@@ -554,7 +554,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
           }
-          cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+          // cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
       }  // boundary faces
       
@@ -664,7 +664,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       
       string udaDir = d_dataArchiver->getOutputLocation();
       string filename = udaDir + "/" + "1stLawThermo.dat";
-      FILE *fp;
+      FILE *fp=NULL;
 
 
       if( myFiles.count(filename) == 0 ){
@@ -693,6 +693,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
                   totalIntEng,
                   (double)total_flux );
       
+//      fflush(fp);   If you want to write the data right now, no buffering.
       time_dw = now;
       
       //__________________________________
