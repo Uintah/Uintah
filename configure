@@ -41511,11 +41511,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 if test "$sci_required_magma" = "yes"; then
 
-  echo
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required MAGMA components......" >&5
-$as_echo "$as_me: checking for required MAGMA components......" >&6;}
-  echo
-
   # guard against building MAGMA without CUDA, need cublas, etc from CUDA installation
   if test \( "$with_cuda" \) -a \( "$with_magma" = "no" \); then
     as_fn_error $? "Cannot build with MAGMA support without CUDA. Both --with-magma=DIR and --with-cuda=DIR must be specified. " "$LINENO" 5
@@ -41614,11 +41609,11 @@ $as_echo "$as_me: checking for required MAGMA components......" >&6;}
   _magma_inc="$with_magma/include"
   _cuda_inc="$with_cuda/include"
 
-  ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 ##
@@ -41657,7 +41652,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ## arg 2 : MAGMA libraries and headers
 ## arg 3 : magma.h
 ## arg 4 : $_magma_inc $_cuda_inc
-## arg 5 : magma cublas cudart
+## arg 5 : magma magmablas lapack cublas cudart
 ## arg 6 : $_magma_lib $_cuda_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -41734,10 +41729,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "magma cublas cudart"; then
+if test -n "magma magmablas lapack cublas cudart"; then
 
    found_framework=no
-   for lib in magma cublas cudart; do
+   for lib in magma magmablas lapack cublas cudart; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -41914,7 +41909,7 @@ magma_init();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
 
 
 if test "$IS_VC" = "yes"; then
@@ -42030,7 +42025,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" magma cublas cudart; do
+  for i in "" magma magmablas lapack cublas cudart; do
     if test -z "$i"; then
        continue
     fi
@@ -42067,6 +42062,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
   DEF_MAGMA="#define HAVE_MAGMA 1"
+
+#[aph] - debug
+#echo
+#echo "HAVE_MAGMA         = " $HAVE_MAGMA
+#echo "HAVE_MAGMA_H       = " $HAVE_MAGMA_H
+#echo "INC_MAGMA_H        = " $INC_MAGMA_H
+#echo "MAGMA_LIB_FLAG     = " $MAGMA_LIB_FLAG
+#echo "MAGMA_LIB_DIR      = " $MAGMA_LIB_DIR
+#echo "MAGMA_LIB_DIR_FLAG = " $MAGMA_LIB_DIR_FLAG
+#echo
 
 fi #end sci_required_magma
 
