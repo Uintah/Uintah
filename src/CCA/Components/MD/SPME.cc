@@ -70,7 +70,7 @@ SPME::SPME(const MDSystem* system,
   Q.initialize(complex<double>(0.0, 0.0));
 }
 
-std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& MFractional,
+std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
                                               const int initialVectorIndex,
                                               const int localGridExtent,
                                               const CenteredCardinalBSpline& interpolatingSpline) const
@@ -83,7 +83,7 @@ std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& MFracti
   std::vector<dblcomplex> b(localGridExtent);
   std::vector<double> zeroAlignedSpline = interpolatingSpline.evaluate(0);
 
-  double* localMFractional = MFractional[initialVectorIndex];  // Reset MFractional zero so we can index into it negatively
+  double* localMFractional = mFractional[initialVectorIndex];  // Reset MFractional zero so we can index into it negatively
   for (int Index = 0; Index < localGridExtent; ++Index) {
     double internal = twoPI * localMFractional[Index];
     // Formula looks significantly different from given SPME for offset splines.
@@ -100,7 +100,6 @@ std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& MFracti
 SimpleGrid<double> SPME::calculateBGrid(const SCIRun::IntVector& localExtents,
                                         const SCIRun::IntVector& globalOffset) const
 {
-
   size_t Limit_Kx = kLimits.x();
   size_t Limit_Ky = kLimits.y();
   size_t Limit_Kz = kLimits.z();
@@ -137,7 +136,6 @@ SimpleGrid<double> SPME::calculateBGrid(const SCIRun::IntVector& localExtents,
 SimpleGrid<double> SPME::calculateCGrid(const SCIRun::IntVector& extents,
                                         const SCIRun::IntVector& offset) const
 {
-
   std::vector<double> mp1 = SPME::generateMPrimeVector(kLimits.x(), interpolatingSpline);
   std::vector<double> mp2 = SPME::generateMPrimeVector(kLimits.y(), interpolatingSpline);
   std::vector<double> mp3 = SPME::generateMPrimeVector(kLimits.z(), interpolatingSpline);
@@ -178,7 +176,6 @@ SimpleGrid<double> SPME::calculateCGrid(const SCIRun::IntVector& extents,
 SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const SCIRun::IntVector& extents,
                                                    const SCIRun::IntVector& offset)
 {
-
   std::vector<double> mp1 = SPME::generateMPrimeVector(kLimits.x(), interpolatingSpline);
   std::vector<double> mp2 = SPME::generateMPrimeVector(kLimits.y(), interpolatingSpline);
   std::vector<double> mp3 = SPME::generateMPrimeVector(kLimits.z(), interpolatingSpline);
@@ -254,7 +251,6 @@ void SPME::initialize(const MDSystem* system,
 
 void SPME::setup()
 {
-
   // We should only have to do this if KLimits or the inverse cell changes
   // Calculate B and C
   SimpleGrid<double> fBGrid = calculateBGrid(localGridExtents, localGridOffset);
@@ -275,8 +271,21 @@ void SPME::setup()
 
 void SPME::calculate()
 {
+
+//  // Patch dependent quantities
+//  SCIRun::IntVector localGridExtents;             //!< Number of grid points in each direction for this patch
+//  SCIRun::IntVector localGridOffset;              //!< Grid point index of local 0,0,0 origin in global coordinates
+//  SCIRun::IntVector localGhostPositiveSize;       //!< Number of ghost cells on positive boundary
+//  SCIRun::IntVector localGhostNegativeSize;       //!< Number of ghost cells on negative boundary
+
+//  // Actually holds the data we're working with per patch
+//  SimpleGrid<double> fTheta;            //!<
+//  SimpleGrid<Matrix3> stressPrefactor;  //!<
+//  SimpleGrid<complex<double> > Q;       //!<
+
   // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
   //          This should be checked for in the system electrostatic driver
+
   std::vector<MapPoint> GridMap = SPME::generateChargeMap(pset, interpolatingSpline);
   bool converged = false;
   int numIterations = 0;
@@ -336,9 +345,8 @@ void SPME::finalize()
 }
 
 std::vector<MapPoint> SPME::generateChargeMap(ParticleSubset* pset,
-                                              CenteredCardinalBSpline& Spline)
+                                              CenteredCardinalBSpline& spline)
 {
-
   size_t MaxParticleIndex = pset->numParticles();
   std::vector<MapPoint> ChargeMap;
   // Loop through particles
@@ -355,27 +363,26 @@ std::vector<MapPoint> SPME::generateChargeMap(ParticleSubset* pset,
 
     // This bit is tedious since we don't have any cross-pollination between type Vector and type IntVector.
     // Should we put that in (requires modifying Uintah framework).
-    SCIRun::Vector KReal, SplineValues;
-    SCIRun::IntVector ParticleGridOffset;
+    SCIRun::Vector KReal, splineValues;
+    SCIRun::IntVector particleGridOffset;
     for (size_t Index = 0; Index < 3; ++Index) {
       KReal[Index] = static_cast<double>(kLimits[Index]);  // For some reason I can't construct a Vector from an IntVector -- Maybe we should fix that instead?
       ParticleGridCoordinates[Index] *= KReal[Index];         // Recast particle into charge grid based representation
-      ParticleGridOffset[Index] = static_cast<int>(ParticleGridCoordinates[Index]);  // Reference grid point for particle
-      SplineValues[Index] = ParticleGridCoordinates[Index] - ParticleGridOffset[Index];  // Spline offset for spline function
+      particleGridOffset[Index] = static_cast<int>(ParticleGridCoordinates[Index]);  // Reference grid point for particle
+      splineValues[Index] = ParticleGridCoordinates[Index] - particleGridOffset[Index];  // spline offset for spline function
     }
-    vector<double> XSplineArray = Spline.evaluate(SplineValues[0]);
-    vector<double> YSplineArray = Spline.evaluate(SplineValues[1]);
-    vector<double> ZSplineArray = Spline.evaluate(SplineValues[2]);
+    vector<double> XSplineArray = spline.evaluate(splineValues[0]);
+    vector<double> YSplineArray = spline.evaluate(splineValues[1]);
+    vector<double> ZSplineArray = spline.evaluate(splineValues[2]);
 
-    vector<double> XSplineDeriv = Spline.derivative(SplineValues[0]);
-    vector<double> YSplineDeriv = Spline.derivative(SplineValues[1]);
-    vector<double> ZSplineDeriv = Spline.derivative(SplineValues[2]);
+    vector<double> XSplineDeriv = spline.derivative(splineValues[0]);
+    vector<double> YSplineDeriv = spline.derivative(splineValues[1]);
+    vector<double> ZSplineDeriv = spline.derivative(splineValues[2]);
 
-    //MapPoint CurrentMapPoint(ParticleID,ParticleGridOffset,XSplineArray,YSplineArray,ZSplineArray);
-    //
+//    MapPoint CurrentMapPoint(ParticleID, ParticleGridOffset, XSplineArray, YSplineArray, ZSplineArray);
 
-    SimpleGrid<double> ChargeGrid(XSplineArray, YSplineArray, ZSplineArray, ParticleGridOffset, 0);
-    SimpleGrid<SCIRun::Vector> ForceGrid(XSplineDeriv.size(), YSplineDeriv.size(), ZSplineDeriv.size(), ParticleGridOffset, 0);
+    SimpleGrid<double> ChargeGrid(XSplineArray, YSplineArray, ZSplineArray, particleGridOffset, 0);
+    SimpleGrid<SCIRun::Vector> ForceGrid(XSplineDeriv.size(), YSplineDeriv.size(), ZSplineDeriv.size(), particleGridOffset, 0);
     size_t XExtent = XSplineArray.size();
     size_t YExtent = YSplineArray.size();
     size_t ZExtent = ZSplineArray.size();
@@ -387,7 +394,7 @@ std::vector<MapPoint> SPME::generateChargeMap(ParticleSubset* pset,
         }
       }
     }
-    MapPoint CurrentMapPoint(ParticleID, ParticleGridOffset, ChargeGrid, ForceGrid);
+    MapPoint CurrentMapPoint(ParticleID, particleGridOffset, ChargeGrid, ForceGrid);
     ChargeMap.push_back(CurrentMapPoint);
   }
   return ChargeMap;

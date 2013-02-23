@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,15 @@ MapPoint::MapPoint()
 }
 
 MapPoint::~MapPoint()
+{
+
+}
+
+MapPoint::MapPoint(particleIndex _particleID,
+                   IntVector _gridOffset,
+                   SimpleGrid<double> _chargeGrid,
+                   SimpleGrid<SCIRun::Vector> _forceGrid) :
+    particleID(_particleID), gridOffset(_gridOffset), chargeGrid(_chargeGrid), forceGrid(_forceGrid)
 {
 
 }
