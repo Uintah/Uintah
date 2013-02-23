@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,10 +25,8 @@
 #ifndef UINTAH_MD_MAPPOINT_H
 #define UINTAH_MD_MAPPOINT_H
 
-#include <Core/Grid/Variables/Array3.h>
+#include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
 
 #include <vector>
 
@@ -77,12 +75,10 @@ class MapPoint {
      * @param
      * @return
      */
-    inline const double getParticleCharge() const
-    {
-      // TODO Figure out what charge is
-//      return Particle->Charge();
-//      return this->globalParticleSubset;
-    }
+    MapPoint(particleIndex particleID,
+             IntVector gridOffset,
+             SimpleGrid<double> chargeGrid,
+             SimpleGrid<SCIRun::Vector> forceGrid);
 
     /**
      * @brief
@@ -99,9 +95,9 @@ class MapPoint {
      * @param
      * @return
      */
-    inline const IntVector getGridIndex() const
+    inline const IntVector getGridOffset() const
     {
-      return this->gridIndex;
+      return this->gridOffset;
     }
 
     /**
@@ -109,9 +105,9 @@ class MapPoint {
      * @param
      * @return
      */
-    inline const double getCoefficient() const
+    inline const SimpleGrid<double>& getChargeGrid() const
     {
-      return this->coefficient;
+      return this->chargeGrid;
     }
 
     /**
@@ -119,18 +115,17 @@ class MapPoint {
      * @param
      * @return
      */
-    inline const Vector getForceVector() const
+    inline const SimpleGrid<SCIRun::Vector>& getForceGrid() const
     {
-      return this->forceVector;
+      return this->forceGrid;
     }
 
   private:
 
-    // Some manner of mapping the provided particle pointer/reference to a storable way to index the particle
     particleIndex particleID;
-    IntVector gridIndex;
-    double coefficient;
-    Vector forceVector;
+    IntVector gridOffset;
+    SimpleGrid<double> chargeGrid;
+    SimpleGrid<SCIRun::Vector> forceGrid;
 
 };
 

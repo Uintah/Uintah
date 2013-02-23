@@ -472,8 +472,13 @@ void MD::performSPME(const ProcessorGroup* pg,
 {
   printTask(patches, md_cout, "MD::performSPME");
 
-  electrostatics->setup();
+  if (system->newBox()) {
+    electrostatics->setup();
+    system->changeBox(false);
+  }
+
   electrostatics->calculate();
+
   electrostatics->finalize();
 }
 

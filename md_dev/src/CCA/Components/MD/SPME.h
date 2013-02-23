@@ -138,15 +138,6 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    void performSPME(const MDSystem& system,
-                     const Patch* patch,
-                     ParticleSubset* pset);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
     std::vector<MapPoint> generateChargeMap(ParticleSubset* pset,
                                             CenteredCardinalBSpline& Spline);
 
@@ -237,35 +228,35 @@ class SPME : public Electrostatics {
     inline vector<double> generateMPrimeVector(unsigned int kMax,
                                                const CenteredCardinalBSpline& spline) const
     {
-      int NumPoints = kMax + spline.getSupport();  // For simplicity, store the whole vector
-      std::vector<double> m(NumPoints);
+      int numPoints = kMax + spline.getSupport();  // For simplicity, store the whole vector
+      std::vector<double> mPrime(numPoints);
 
       int halfSupport = spline.getHalfSupport();
-      int halfMax = kMax / 2;
+      size_t halfMax = kMax / 2;
 
       // Pre wrap on the left and right sides as necessary for spline support
-      std::vector<double> leftMost(m[halfSupport]);
+      std::vector<double> leftMost(mPrime[halfSupport]);
 
       // Seed internal array (without wrapping)
-      for (int index = 0; index <= halfMax; ++index) {
-        leftMost[index] = index;
+      for (size_t idx = 0; idx <= halfMax; ++idx) {
+        leftMost[idx] = idx;
       }
 
-      for (size_t index = halfMax + 1; index < kMax; ++index) {
-        leftMost[index] = (double)(index - kMax);
+      for (size_t idx = halfMax + 1; idx < kMax; ++idx) {
+        leftMost[idx] = (double)(idx - kMax);
       }
 
       // Right end wraps into m=i portion
-      for (int index = 0; index < halfSupport; ++index) {
-        m[kMax + index] = (double)index;
+      for (int idx = 0; idx < halfSupport; ++idx) {
+        mPrime[kMax + idx] = (double)idx;
       }
 
       // Left end wraps into m=i-KMax portion
-      for (int index = -3; index < 0; ++index) {
-        leftMost[index] = index;  // i = KMax - abs(Index) = KMax + Index; i-KMax = KMax + Index - KMax = Index
+      for (int idx = -3; idx < 0; ++idx) {
+        leftMost[idx] = idx;  // i = KMax - abs(idx) = KMax + idx; i-KMax = KMax + idx - KMax = idx
       }
 
-      return m;
+      return mPrime;
     }
 
     /**
@@ -278,27 +269,27 @@ class SPME : public Electrostatics {
     inline vector<double> generateMFractionalVector(unsigned int kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
-      int NumPoints = kMax + interpolatingSpline.getSupport();  // For simplicity, store the whole vector
-      std::vector<double> m(NumPoints);
-      int HalfSupport = interpolatingSpline.getHalfSupport();
+      int numPoints = kMax + interpolatingSpline.getSupport();  // For simplicity, store the whole vector
+      std::vector<double> mFractional(numPoints);
+      int halfSupport = interpolatingSpline.getHalfSupport();
 
       //  Pre wrap on the left and right sides as necessary for spline support
-      std::vector<double> LeftMost(m[HalfSupport]);
-      double KMaxInv = (double)kMax;
-      for (size_t index = -3; index < 0; ++index) {
-        LeftMost[-index] = (static_cast<double>(kMax - index)) * KMaxInv;
+      std::vector<double> leftMost(mFractional[halfSupport]);
+      double kMaxInv = (double)kMax;
+      for (size_t idx = -3; idx < 0; ++idx) {
+        leftMost[-idx] = (static_cast<double>(kMax - idx)) * kMaxInv;
       }
 
-      for (size_t index = 0; index < kMax; ++index) {
-        m[index] = (double)index * KMaxInv;
+      for (size_t idx = 0; idx < kMax; ++idx) {
+        mFractional[idx] = (double)idx * kMaxInv;
       }
 
-      std::vector<double> RightMost(m[kMax]);
-      for (int index = 0; index < HalfSupport; ++index) {
-        RightMost[index] = (double)index * KMaxInv;
+      std::vector<double> rightMost(mFractional[kMax]);
+      for (int idx = 0; idx < halfSupport; ++idx) {
+        rightMost[idx] = (double)idx * kMaxInv;
       }
 
-      return m;
+      return mFractional;
     }
 
     // Values fixed on instantiation
@@ -309,21 +300,21 @@ class SPME : public Electrostatics {
     SCIRun::IntVector kLimits;                      //!< Number of grid divisions in each direction
     CenteredCardinalBSpline interpolatingSpline;    //!< Spline object to hold info for spline calculation
 
-    // Patch dependent quantities
-    SCIRun::IntVector localGridExtents;             //!< Number of grid points in each direction for this patch
-    SCIRun::IntVector localGridOffset;		          //!< Grid point index of local 0,0,0 origin in global coordinates
-    SCIRun::IntVector localGhostPositiveSize;       //!< Number of ghost cells on positive boundary
-    SCIRun::IntVector localGhostNegativeSize;       //!< Number of ghost cells on negative boundary
+//    // Patch dependent quantities
+//    SCIRun::IntVector localGridExtents;             //!< Number of grid points in each direction for this patch
+//    SCIRun::IntVector localGridOffset;		          //!< Grid point index of local 0,0,0 origin in global coordinates
+//    SCIRun::IntVector localGhostPositiveSize;       //!< Number of ghost cells on positive boundary
+//    SCIRun::IntVector localGhostNegativeSize;       //!< Number of ghost cells on negative boundary
 
-    // Variables inherited from MDSystem to make life easier
+    // Variables we'll get from the MDSystem instance to make life easier
     Matrix3 unitCell;           //!< Unit cell lattice parameters
     Matrix3 inverseUnitCell;    //!< Inverse lattice parameters
     double systemVolume;        //!< Volume of the unit cell
 
-    // Actually holds the data we're working with
-    SimpleGrid<double> fTheta;            //!<
-    SimpleGrid<Matrix3> stressPrefactor;  //!<
-    SimpleGrid<complex<double> > Q;       //!<
+//    // Actually holds the data we're working with
+//    SimpleGrid<double> fTheta;            //!<
+//    SimpleGrid<Matrix3> stressPrefactor;  //!<
+//    SimpleGrid<complex<double> > Q;       //!<
 
     // FFT Related variables
     fftw_complex forwardTransformPlan;    //!<
