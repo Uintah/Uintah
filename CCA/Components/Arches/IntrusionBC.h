@@ -858,19 +858,19 @@ namespace Uintah{
       struct Boundary { 
 
         // The name of the intrusion is the key value in the map that stores all intrusions 
-        INTRUSION_TYPE               type; 
-        std::vector<GeometryPieceP>  geometry; 
-        std::vector<const VarLabel*> labels;
+        INTRUSION_TYPE                type; 
+        std::vector<GeometryPieceP>   geometry; 
+        std::vector<const VarLabel*>  labels;
         std::map<std::string, double> varnames_values_map; 
-        std::vector<std::string>     VARIABLE_TYPE; 
+        std::vector<std::string>      VARIABLE_TYPE; 
         // Note that directions is a vector as: [-X,+X,-Y,+Y,-Z,+Z] ~ 0 means "off"/non-zero means "on"
-        std::vector<int>             directions; 
-        double                       mass_flow_rate; 
-        BCIterator                   bc_face_iterator;
-        BCIterator                   interior_cell_iterator; 
-        bool                         has_been_initialized; 
-        Vector                       velocity;
-        std::string                  name; 
+        std::vector<int>              directions; 
+        double                        mass_flow_rate; 
+        BCIterator                    bc_face_iterator;
+        BCIterator                    interior_cell_iterator; 
+        bool                          has_been_initialized; 
+        Vector                        velocity;
+        std::string                   name; 
 
         //state space information: 
         double density; // from state-space calculation

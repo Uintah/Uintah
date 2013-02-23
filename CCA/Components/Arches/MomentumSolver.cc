@@ -726,6 +726,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                       &constVelocityVars);
 
     //__________________________________
+    // ---- This needs to get moved somewhere else ----
     // for scalesimilarity model add stress tensor to the source of velocity eqn.
     if (d_mixedModel) {
       StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
@@ -965,7 +966,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       d_boundaryCondition->calculateVelRhoHat_mm(patch, delta_t,
                                                  cellinfo, &velocityVars,
                                                  &constVelocityVars);
-    }else {
+    } else {
       d_rhsSolver->calculateHatVelocity(patch, delta_t,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
