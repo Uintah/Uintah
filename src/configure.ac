@@ -3755,10 +3755,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 ##  --  search for magma stuff  -------------------------------------------
 
 if test "$sci_required_magma" = "yes"; then
- 
-  echo
-  AS_MESSAGE(checking for required MAGMA components......)
-  echo
   
   # guard against building MAGMA without CUDA, need cublas, etc from CUDA installation
   if test \( "$with_cuda" \) -a \( "$with_magma" = "no" \); then
@@ -3786,11 +3782,11 @@ if test "$sci_required_magma" = "yes"; then
   _magma_inc="$with_magma/include"
   _cuda_inc="$with_cuda/include"
  
-  AC_LANG(C)
+  AC_LANG(C++)
   SCI_TRY_LINK(MAGMA, MAGMA libraries and headers,
                magma.h,
                $_magma_inc $_cuda_inc,
-               magma cublas cudart,
+               magma magmablas lapack cublas cudart,
                $_magma_lib $_cuda_lib,
                ,
                [magma_init();
@@ -3799,6 +3795,16 @@ if test "$sci_required_magma" = "yes"; then
   AC_LANG(C)     
   
   DEF_MAGMA="#define HAVE_MAGMA 1"
+
+#[aph] - debug
+#echo
+#echo "HAVE_MAGMA         = " $HAVE_MAGMA
+#echo "HAVE_MAGMA_H       = " $HAVE_MAGMA_H
+#echo "INC_MAGMA_H        = " $INC_MAGMA_H
+#echo "MAGMA_LIB_FLAG     = " $MAGMA_LIB_FLAG
+#echo "MAGMA_LIB_DIR      = " $MAGMA_LIB_DIR
+#echo "MAGMA_LIB_DIR_FLAG = " $MAGMA_LIB_DIR_FLAG
+#echo
 
 fi #end sci_required_magma
 
