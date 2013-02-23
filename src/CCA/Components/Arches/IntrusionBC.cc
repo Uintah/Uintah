@@ -491,10 +491,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
         } // ... end of face iterator ... 
 
-        if ( !found_valid_density ){ 
-          string err_msg = "Error: Unable to compute a real density for the intrusion named: "+iIntrusion->second.name;
-          throw InvalidValue( err_msg, __FILE__, __LINE__ ); 
-        } else { 
+        if ( found_valid_density ){ 
           iIntrusion->second.density = found_density; 
         }
       } 
