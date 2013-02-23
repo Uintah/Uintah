@@ -119,7 +119,7 @@ class PCTProps : public MixingRxnModel {
 	double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
 
   /** @brief Method to find the index for any dependent variable.  **/
-  int inline findIndex( std::string name ){ };
+  int inline findIndex( std::string name ){ return 0; };
 
   private: 
 

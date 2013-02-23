@@ -196,7 +196,6 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       ProblemSpecP geometry_db = db_intrusion->findBlock("geom_object");
       GeometryPieceFactory::create( geometry_db, intrusion.geometry ); 
 
-
       //labels
       for ( ProblemSpecP db_labels = db_intrusion->findBlock("variable"); db_labels != 0; db_labels = db_labels->findNextBlock("variable") ){ 
 
@@ -270,6 +269,9 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       //make an area varlable
       intrusion.bc_area = VarLabel::create( name + "_bc_area", sum_vartype::getTypeDescription() ); 
+
+      //initialize density
+      intrusion.density = 0.0;
 
       //this is for the face iterator
       intrusion.has_been_initialized = false; 
@@ -763,43 +765,56 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
                                         DataWarehouse* new_dw )
 {
 
-  proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
-  for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+  for ( int p = 0; p < patches->size(); p++ ){ 
 
-    sum_vartype area_var; 
-    new_dw->get( area_var, iter->second.bc_area ); 
-    double area = area_var; 
+    const Patch* patch = patches->get(p); 
+    const int patchID = patch->getID(); 
+    int archIndex = 0; 
+    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
-    if ( iter->second.type == SIMPLE_WALL ){ 
-      proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+    if ( p == 0 ) { 
 
-    } else if ( iter->second.type == INLET ){ 
-      proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
-      IntVector c(0,0,0); 
-      Vector U = iter->second.velocity_inlet_generator->get_velocity(c); 
-      if ( iter->second.mass_flow_rate < 1e-16 ) { 
-        proc0cout << "              U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
-      } else { 
-        proc0cout << "    m_dot(set)  = "  << iter->second.mass_flow_rate << std::endl;
-        proc0cout << "    resultant U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+      proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
+
+      for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+
+        sum_vartype area_var; 
+        new_dw->get( area_var, iter->second.bc_area ); 
+        double area = area_var; 
+
+        if ( iter->second.type == SIMPLE_WALL ){ 
+          proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+
+        } else if ( iter->second.type == INLET ){ 
+          proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
+          IntVector c(0,0,0); 
+          Vector U = iter->second.velocity_inlet_generator->get_velocity(c); 
+          if ( iter->second.mass_flow_rate < 1e-16 ) { 
+            proc0cout << "              U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+          } else { 
+            proc0cout << "    m_dot(set)  = "  << iter->second.mass_flow_rate << std::endl;
+            proc0cout << "    resultant U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+          }
+          proc0cout << "   density  = "  << iter->second.density << std::endl;
+          proc0cout << " inlet area = "  << area << std::endl;
+          proc0cout << "   scalar information " << std::endl;
+          for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
+              i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
+      
+            proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
+            
+          } 
+
+        } 
+
+        proc0cout << "   solid T  = "  << iter->second.temperature << std::endl;
+
+        proc0cout << " \n";
+
       }
-      proc0cout << "   density  = "  << iter->second.density << std::endl;
-      proc0cout << " inlet area = "  << area << std::endl;
-      proc0cout << "   scalar information " << std::endl;
-      for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
-          i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
-  
-        proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
-        
-      } 
-
-    } 
-    proc0cout << "   solid T  = "  << iter->second.temperature << std::endl;
-
-    proc0cout << " \n";
-
+      proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
+    }
   }
-  proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
 }
 
 //_________________________________________
