@@ -75,7 +75,7 @@ FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
   M_lb  = scinew MPMLabel();
   
   FL_lb->lastCompTimeLabel    = VarLabel::create( "lastCompTime",     max_vartype::getTypeDescription() );
-  FL_lb->fileVarsStructLabel  = VarLabel::create( "FileInfo",         PerPatch<FileInfoP>::getTypeDescription() );
+  FL_lb->fileVarsStructLabel  = VarLabel::create( "FileInfo_1stLaw",  PerPatch<FileInfoP>::getTypeDescription() );
   FL_lb->ICE_totalIntEngLabel = VarLabel::create( "ICE_totalIntEng",  sum_vartype::getTypeDescription() );
   FL_lb->MPM_totalIntEngLabel = VarLabel::create( "MPM_totalIntEng",  sum_vartype::getTypeDescription() );
   FL_lb->totalFluxesLabel     = VarLabel::create( "totalFluxes",      sum_vartype::getTypeDescription() );
@@ -271,7 +271,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
 
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo", false, false, false, true, true);
+  sched->overrideVariableBehavior("FileInfo_1stLaw", false, false, false, true, true);
   
   //__________________________________  
   //  compute the ICE contributions

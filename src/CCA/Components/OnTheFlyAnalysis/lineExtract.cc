@@ -112,7 +112,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
 
-  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo", 
+  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo_lineExtract", 
                                             PerPatch<FileInfoP>::getTypeDescription());       
                                             
   //__________________________________
@@ -401,7 +401,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
    
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo", false, false, false, true, true); 
+  sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true); 
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
