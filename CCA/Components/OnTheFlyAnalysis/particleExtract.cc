@@ -555,7 +555,7 @@ void particleExtract::createFile(string& filename, FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"Time    X      Y      Z     "); 
+  fprintf(fp,"# Time    X      Y      Z     "); 
   
   // All ParticleVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
