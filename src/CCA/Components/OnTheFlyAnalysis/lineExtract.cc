@@ -708,7 +708,7 @@ void lineExtract::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"X_CC      Y_CC      Z_CC      Time"); 
+  fprintf(fp,"# X_CC      Y_CC      Z_CC      Time"); 
   
   // All CCVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
