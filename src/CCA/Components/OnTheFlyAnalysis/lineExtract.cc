@@ -682,6 +682,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           }
           
           fprintf(fp,    "\n");
+          fflush(fp);
         }  // loop over points
       }  // loop over lines 
       lastWriteTime = now;     
@@ -778,6 +779,7 @@ void lineExtract::createFile(string& filename,  FILE*& fp)
     }
   }
   fprintf(fp,"\n");
+  fflush(fp);
   
   cout << Parallel::getMPIRank() << " lineExtract:Created file " << filename << endl;
 }
