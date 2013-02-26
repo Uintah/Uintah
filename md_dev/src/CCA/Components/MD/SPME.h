@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,7 +28,7 @@
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 #include <vector>
 
@@ -39,17 +39,12 @@ namespace Uintah {
 typedef std::complex<double> dblcomplex;
 typedef SimpleGrid<complex<double> > cdGrid;
 
-using SCIRun::Vector;
 using SCIRun::IntVector;
 
 class MDSystem;
-class Patch;
+class SPMEMapPoint;
 class ParticleSubset;
 class IntVector;
-class Point;
-class Vector;
-class Matrix3;
-class MapPoint;
 
 /**
  *  @class SPME
@@ -84,46 +79,48 @@ class SPME : public Electrostatics {
      * @param
      * @param
      */
-    SPME(const MDSystem* _System,
-         const double _EwaldBeta,
-         const bool _polarizable,
-         const double _PolarizationTolerance,
-         const SCIRun::IntVector& _K,
+    SPME(const MDSystem* system,
+         const double ewaldBeta,
+         const bool polarizable,
+         const double polarizationTolerance,
+         const SCIRun::IntVector& kLimits,
          const int splineOrder);
 
     /**
      * @brief
      * @param
+     * @param
+     * @param
      * @return
      */
     void initialize(const MDSystem* system,
                     const PatchSubset* patches,
-                    const MaterialSubset* matls);
+                    const MaterialSubset* materials);
 
     /**
      * @brief
-     * @param
-     * @return
+     * @param None
+     * @return None
      */
     void setup();
 
     /**
      * @brief
-     * @param
-     * @return
+     * @param None
+     * @return None
      */
     void calculate();
 
     /**
      * @brief
-     * @param
-     * @return
+     * @param None
+     * @return None
      */
     void finalize();
 
     /**
      * @brief
-     * @param
+     * @param None
      * @return
      */
     inline ElectrostaticsType getType() const
@@ -136,31 +133,37 @@ class SPME : public Electrostatics {
     /**
      * @brief
      * @param
+     * @param
      * @return
      */
-    std::vector<MapPoint> generateChargeMap(ParticleSubset* pset,
-                                            CenteredCardinalBSpline& Spline);
+    std::vector<SPMEMapPoint> generateChargeMap(ParticleSubset* pset,
+                                                CenteredCardinalBSpline& spline);
 
     /**
      * @brief Map points (charges) onto the underlying grid.
      * @param
+     * @param
+     * @param
      * @return
      */
-    void mapChargeToGrid(const std::vector<MapPoint>& GridMap,
+    void mapChargeToGrid(const std::vector<SPMEMapPoint>& gridMap,
                          ParticleSubset* pset,
-                         int HalfSupport);
+                         int halfSupport);
 
     /**
      * @brief Map forces from grid back to points.
      * @param
      * @return
      */
-    void mapForceFromGrid(const std::vector<MapPoint>& GridMap,
+    void mapForceFromGrid(const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
-                          int HalfSupport);
+                          int halfSupport);
 
     /**
      * @brief
+     * @param
+     * @param
+     * @param
      * @param
      * @return
      */
@@ -172,6 +175,8 @@ class SPME : public Electrostatics {
     /**
      * @brief
      * @param
+     * @param
+     * @param
      * @return
      */
     SimpleGrid<dblcomplex> fB(const IntVector& gridExtents,
@@ -181,6 +186,7 @@ class SPME : public Electrostatics {
     /**
      * @brief
      * @param
+     * @param
      * @return
      */
     vector<double> calculateOrdinalSpline(const int orderMinusOne,
@@ -189,34 +195,46 @@ class SPME : public Electrostatics {
     /**
      * @brief
      * @param
+     * @param
+     * @param
+     * @param
      * @return
      */
     vector<dblcomplex> generateBVector(const std::vector<double>& M,
-                                       const int InitialIndex,
-                                       const int LocalExtent,
-                                       const CenteredCardinalBSpline&) const;
+                                       const int initialIndex,
+                                       const int localExtent,
+                                       const CenteredCardinalBSpline& spline) const;
     /**
      * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
      *          Equation 4.8
      * @param Extents - The number of internal grid points on the current processor
      * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+     *
      * @return A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
      */
-    SimpleGrid<double> calculateBGrid(const SCIRun::IntVector& Extents,
-                                      const SCIRun::IntVector& Offsets) const;
+    SimpleGrid<double> calculateBGrid(const SCIRun::IntVector& extents,
+                                      const SCIRun::IntVector& offsets) const;
 
     /**
      * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
      *          Equation 3.9
      * @param Extents - The number of internal grid points on the current processor
      * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+     *
      * @return A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
      */
-    SimpleGrid<double> calculateCGrid(const SCIRun::IntVector& Extents,
-                                      const SCIRun::IntVector& Offsets) const;
+    SimpleGrid<double> calculateCGrid(const SCIRun::IntVector& extents,
+                                      const SCIRun::IntVector& offsets) const;
 
-    SimpleGrid<Matrix3> calculateStressPrefactor(const SCIRun::IntVector& Extents,
-                                                 const SCIRun::IntVector& Offset);
+    /**
+     * @brief
+     * @param extents - The number of internal grid points on the current processor
+     * @param offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+     *
+     * @return A SimpleGrid<Matrix3>
+     */
+    SimpleGrid<Matrix3> calculateStressPrefactor(const SCIRun::IntVector& extents,
+                                                 const SCIRun::IntVector& offset);
 
     /**
      * @brief Generates split grid vector.
@@ -261,12 +279,12 @@ class SPME : public Electrostatics {
 
     /**
      * @brief Generates reduced Fourier grid vector.
-     *        Generates the vector of values i/K_i for i = 0..K-1
+     *        Generates the vector of values i/K_i for i = 0...K-1
      * @param KMax - Maximum number of grid points for direction
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    inline vector<double> generateMFractionalVector(unsigned int kMax,
+    inline vector<double> generateMFractionalVector(size_t kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
       int numPoints = kMax + interpolatingSpline.getSupport();  // For simplicity, store the whole vector
@@ -300,21 +318,10 @@ class SPME : public Electrostatics {
     SCIRun::IntVector kLimits;                      //!< Number of grid divisions in each direction
     CenteredCardinalBSpline interpolatingSpline;    //!< Spline object to hold info for spline calculation
 
-//    // Patch dependent quantities
-//    SCIRun::IntVector localGridExtents;             //!< Number of grid points in each direction for this patch
-//    SCIRun::IntVector localGridOffset;		          //!< Grid point index of local 0,0,0 origin in global coordinates
-//    SCIRun::IntVector localGhostPositiveSize;       //!< Number of ghost cells on positive boundary
-//    SCIRun::IntVector localGhostNegativeSize;       //!< Number of ghost cells on negative boundary
-
     // Variables we'll get from the MDSystem instance to make life easier
     Matrix3 unitCell;           //!< Unit cell lattice parameters
     Matrix3 inverseUnitCell;    //!< Inverse lattice parameters
     double systemVolume;        //!< Volume of the unit cell
-
-//    // Actually holds the data we're working with
-//    SimpleGrid<double> fTheta;            //!<
-//    SimpleGrid<Matrix3> stressPrefactor;  //!<
-//    SimpleGrid<complex<double> > Q;       //!<
 
     // FFT Related variables
     fftw_complex forwardTransformPlan;    //!<

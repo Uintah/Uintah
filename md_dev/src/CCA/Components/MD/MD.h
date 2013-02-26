@@ -33,7 +33,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/SPME.h>
-#include <CCA/Components/MD/MapPoint.h>
+#include <CCA/Components/MD/SPMEMapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>

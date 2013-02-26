@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_MAPPOINT_H
-#define UINTAH_MD_MAPPOINT_H
+#ifndef UINTAH_MD_SPMEMAPPOINT_H
+#define UINTAH_MD_SPMEMAPPOINT_H
 
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -43,16 +43,16 @@ class Vector;
 class IntVector;
 
 /**
- *  @class MapPoint
+ *  @class SPMEMapPoint
  *  @ingroup MD
  *  @author Alan Humphrey and Justin Hooper
- *  @date   January, 2012
+ *  @date   February, 2013
  *
  *  @brief
  *
  *  @param
  */
-class MapPoint {
+class SPMEMapPoint {
 
   public:
 
@@ -61,21 +61,21 @@ class MapPoint {
      * @param
      * @return
      */
-    MapPoint();
+    SPMEMapPoint();
 
     /**
      * @brief
      * @param
      * @return
      */
-    ~MapPoint();
+    ~SPMEMapPoint();
 
     /**
      * @brief
      * @param
      * @return
      */
-    MapPoint(particleIndex particleID,
+    SPMEMapPoint(particleIndex particleID,
              IntVector gridOffset,
              SimpleGrid<double> chargeGrid,
              SimpleGrid<SCIRun::Vector> forceGrid);
