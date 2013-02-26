@@ -35,8 +35,8 @@ SRCDIR	:= CCA/Components/MD
 SRCS += $(SRCDIR)/MD.cc                       \
         $(SRCDIR)/MDLabel.cc                  \
         $(SRCDIR)/MDSystem.cc                 \
-        $(SRCDIR)/MapPoint.cc                 \
         $(SRCDIR)/SPME.cc                     \
+        $(SRCDIR)/SPMEMapPoint.cc             \
         $(SRCDIR)/SimpleGrid.cc               \
         $(SRCDIR)/CenteredCardinalBSpline.cc  \
         $(SRCDIR)/MDBoundaryCondition.cc      \

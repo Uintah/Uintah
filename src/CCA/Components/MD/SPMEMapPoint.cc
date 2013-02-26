@@ -22,25 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MapPoint.h>
+#include <CCA/Components/MD/SPMEMapPoint.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
-MapPoint::MapPoint()
+SPMEMapPoint::SPMEMapPoint()
 {
 
 }
 
-MapPoint::~MapPoint()
+SPMEMapPoint::~SPMEMapPoint()
 {
 
 }
 
-MapPoint::MapPoint(particleIndex _particleID,
-                   IntVector _gridOffset,
-                   SimpleGrid<double> _chargeGrid,
-                   SimpleGrid<SCIRun::Vector> _forceGrid) :
+SPMEMapPoint::SPMEMapPoint(particleIndex _particleID,
+                           IntVector _gridOffset,
+                           SimpleGrid<double> _chargeGrid,
+                           SimpleGrid<SCIRun::Vector> _forceGrid) :
     particleID(_particleID), gridOffset(_gridOffset), chargeGrid(_chargeGrid), forceGrid(_forceGrid)
 {
 
