@@ -1,0 +1,812 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>PBX Manual RVE #1</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.000001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>pbxManual1.uda</filebase>
+       <outputInterval>0.001</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
+        <save label = "p.deformationMeasure"/>
+        <save label = "p.volumedeformed" />
+        <save label = "p.externalforce" />
+<!--
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+-->
+       <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name = "Binder">
+              <density>1900.0</density>
+                <constitutive_model type="hypo_elastic">
+                   <G>0.23e6</G>
+                   <K>11.7e6</K>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                   <difference>
+                  <box label = "matrix">
+                     <min>[0.0,0.0,0.0]</min>
+                     <max>[1.0,1.0,1.0]</max>
+                  </box>
+                    <union>
+                      <cylinder label="part1">
+                        <bottom>[0.500000,0.500000,0.0]</bottom>
+                        <top>[0.500000,0.500000,1.0]</top>
+                        <radius>0.472000</radius>
+                      </cylinder>
+                      <cylinder label="part2">
+                        <bottom>[1.000000,0.500000,0.0]</bottom>
+                        <top>[1.000000,0.500000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part3">
+                        <bottom>[0.000000,0.500000,0.0]</bottom>
+                        <top>[0.000000,0.500000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part4">
+                        <bottom>[0.000000,0.500000,0.0]</bottom>
+                        <top>[0.000000,0.500000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part5">
+                        <bottom>[1.000000,0.500000,0.0]</bottom>
+                        <top>[1.000000,0.500000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part6">
+                        <bottom>[1.000000,0.555000,0.0]</bottom>
+                        <top>[1.000000,0.555000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part7">
+                        <bottom>[0.000000,0.555000,0.0]</bottom>
+                        <top>[0.000000,0.555000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part8">
+                        <bottom>[0.000000,0.445000,0.0]</bottom>
+                        <top>[0.000000,0.445000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part9">
+                        <bottom>[1.000000,0.445000,0.0]</bottom>
+                        <top>[1.000000,0.445000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part10">
+                        <bottom>[1.000000,0.619500,0.0]</bottom>
+                        <top>[1.000000,0.619500,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part11">
+                        <bottom>[0.000000,0.619500,0.0]</bottom>
+                        <top>[0.000000,0.619500,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part12">
+                        <bottom>[0.000000,0.380500,0.0]</bottom>
+                        <top>[0.000000,0.380500,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part13">
+                        <bottom>[1.000000,0.380500,0.0]</bottom>
+                        <top>[1.000000,0.380500,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part14">
+                        <bottom>[0.970000,0.675500,0.0]</bottom>
+                        <top>[0.970000,0.675500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part15">
+                        <bottom>[0.030000,0.675500,0.0]</bottom>
+                        <top>[0.030000,0.675500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part16">
+                        <bottom>[0.030000,0.324500,0.0]</bottom>
+                        <top>[0.030000,0.324500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part17">
+                        <bottom>[0.970000,0.324500,0.0]</bottom>
+                        <top>[0.970000,0.324500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part18">
+                        <bottom>[1.000000,0.720000,0.0]</bottom>
+                        <top>[1.000000,0.720000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part19">
+                        <bottom>[0.000000,0.720000,0.0]</bottom>
+                        <top>[0.000000,0.720000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part20">
+                        <bottom>[0.000000,0.280000,0.0]</bottom>
+                        <top>[0.000000,0.280000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part21">
+                        <bottom>[1.000000,0.280000,0.0]</bottom>
+                        <top>[1.000000,0.280000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part22">
+                        <bottom>[0.945500,0.741500,0.0]</bottom>
+                        <top>[0.945500,0.741500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part23">
+                        <bottom>[0.054500,0.741500,0.0]</bottom>
+                        <top>[0.054500,0.741500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part24">
+                        <bottom>[0.054500,0.258500,0.0]</bottom>
+                        <top>[0.054500,0.258500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part25">
+                        <bottom>[0.945500,0.258500,0.0]</bottom>
+                        <top>[0.945500,0.258500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part26">
+                        <bottom>[1.000000,0.775000,0.0]</bottom>
+                        <top>[1.000000,0.775000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part27">
+                        <bottom>[0.000000,0.775000,0.0]</bottom>
+                        <top>[0.000000,0.775000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part28">
+                        <bottom>[0.000000,0.225000,0.0]</bottom>
+                        <top>[0.000000,0.225000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part29">
+                        <bottom>[1.000000,0.225000,0.0]</bottom>
+                        <top>[1.000000,0.225000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part30">
+                        <bottom>[0.953000,0.801500,0.0]</bottom>
+                        <top>[0.953000,0.801500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part31">
+                        <bottom>[0.047000,0.801500,0.0]</bottom>
+                        <top>[0.047000,0.801500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part32">
+                        <bottom>[0.047000,0.198500,0.0]</bottom>
+                        <top>[0.047000,0.198500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part33">
+                        <bottom>[0.953000,0.198500,0.0]</bottom>
+                        <top>[0.953000,0.198500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part34">
+                        <bottom>[0.898000,0.818000,0.0]</bottom>
+                        <top>[0.898000,0.818000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part35">
+                        <bottom>[0.102000,0.818000,0.0]</bottom>
+                        <top>[0.102000,0.818000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part36">
+                        <bottom>[0.102000,0.182000,0.0]</bottom>
+                        <top>[0.102000,0.182000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part37">
+                        <bottom>[0.898000,0.182000,0.0]</bottom>
+                        <top>[0.898000,0.182000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part38">
+                        <bottom>[0.953000,0.856500,0.0]</bottom>
+                        <top>[0.953000,0.856500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part39">
+                        <bottom>[0.047000,0.856500,0.0]</bottom>
+                        <top>[0.047000,0.856500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part40">
+                        <bottom>[0.047000,0.143500,0.0]</bottom>
+                        <top>[0.047000,0.143500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part41">
+                        <bottom>[0.953000,0.143500,0.0]</bottom>
+                        <top>[0.953000,0.143500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part42">
+                        <bottom>[1.000000,0.830000,0.0]</bottom>
+                        <top>[1.000000,0.830000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part43">
+                        <bottom>[0.000000,0.830000,0.0]</bottom>
+                        <top>[0.000000,0.830000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part44">
+                        <bottom>[0.000000,0.170000,0.0]</bottom>
+                        <top>[0.000000,0.170000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part45">
+                        <bottom>[1.000000,0.170000,0.0]</bottom>
+                        <top>[1.000000,0.170000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part46">
+                        <bottom>[1.000000,0.885000,0.0]</bottom>
+                        <top>[1.000000,0.885000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part47">
+                        <bottom>[0.000000,0.885000,0.0]</bottom>
+                        <top>[0.000000,0.885000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part48">
+                        <bottom>[0.000000,0.115000,0.0]</bottom>
+                        <top>[0.000000,0.115000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part49">
+                        <bottom>[1.000000,0.115000,0.0]</bottom>
+                        <top>[1.000000,0.115000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part50">
+                        <bottom>[0.953000,0.911500,0.0]</bottom>
+                        <top>[0.953000,0.911500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part51">
+                        <bottom>[0.047000,0.911500,0.0]</bottom>
+                        <top>[0.047000,0.911500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part52">
+                        <bottom>[0.047000,0.088500,0.0]</bottom>
+                        <top>[0.047000,0.088500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part53">
+                        <bottom>[0.953000,0.088500,0.0]</bottom>
+                        <top>[0.953000,0.088500,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part54">
+                        <bottom>[0.889000,0.889000,0.0]</bottom>
+                        <top>[0.889000,0.889000,1.0]</top>
+                        <radius>0.037000</radius>
+                      </cylinder>
+                      <cylinder label="part55">
+                        <bottom>[0.111000,0.889000,0.0]</bottom>
+                        <top>[0.111000,0.889000,1.0]</top>
+                        <radius>0.037000</radius>
+                      </cylinder>
+                      <cylinder label="part56">
+                        <bottom>[0.111000,0.111000,0.0]</bottom>
+                        <top>[0.111000,0.111000,1.0]</top>
+                        <radius>0.037000</radius>
+                      </cylinder>
+                      <cylinder label="part57">
+                        <bottom>[0.889000,0.111000,0.0]</bottom>
+                        <top>[0.889000,0.111000,1.0]</top>
+                        <radius>0.037000</radius>
+                      </cylinder>
+                      <cylinder label="part58">
+                        <bottom>[0.818000,0.898000,0.0]</bottom>
+                        <top>[0.818000,0.898000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part59">
+                        <bottom>[0.182000,0.898000,0.0]</bottom>
+                        <top>[0.182000,0.898000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part60">
+                        <bottom>[0.182000,0.102000,0.0]</bottom>
+                        <top>[0.182000,0.102000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part61">
+                        <bottom>[0.818000,0.102000,0.0]</bottom>
+                        <top>[0.818000,0.102000,1.0]</top>
+                        <radius>0.030500</radius>
+                      </cylinder>
+                      <cylinder label="part62">
+                        <bottom>[1.000000,1.000000,0.0]</bottom>
+                        <top>[1.000000,1.000000,1.0]</top>
+                        <radius>0.071500</radius>
+                      </cylinder>
+                      <cylinder label="part63">
+                        <bottom>[0.000000,1.000000,0.0]</bottom>
+                        <top>[0.000000,1.000000,1.0]</top>
+                        <radius>0.071500</radius>
+                      </cylinder>
+                      <cylinder label="part64">
+                        <bottom>[0.000000,0.000000,0.0]</bottom>
+                        <top>[0.000000,0.000000,1.0]</top>
+                        <radius>0.071500</radius>
+                      </cylinder>
+                      <cylinder label="part65">
+                        <bottom>[1.000000,0.000000,0.0]</bottom>
+                        <top>[1.000000,0.000000,1.0]</top>
+                        <radius>0.071500</radius>
+                      </cylinder>
+                      <cylinder label="part66">
+                        <bottom>[0.911500,0.953000,0.0]</bottom>
+                        <top>[0.911500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part67">
+                        <bottom>[0.088500,0.953000,0.0]</bottom>
+                        <top>[0.088500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part68">
+                        <bottom>[0.088500,0.047000,0.0]</bottom>
+                        <top>[0.088500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part69">
+                        <bottom>[0.911500,0.047000,0.0]</bottom>
+                        <top>[0.911500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part70">
+                        <bottom>[0.856500,0.953000,0.0]</bottom>
+                        <top>[0.856500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part71">
+                        <bottom>[0.143500,0.953000,0.0]</bottom>
+                        <top>[0.143500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part72">
+                        <bottom>[0.143500,0.047000,0.0]</bottom>
+                        <top>[0.143500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part73">
+                        <bottom>[0.856500,0.047000,0.0]</bottom>
+                        <top>[0.856500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part74">
+                        <bottom>[0.801500,0.953000,0.0]</bottom>
+                        <top>[0.801500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part75">
+                        <bottom>[0.198500,0.953000,0.0]</bottom>
+                        <top>[0.198500,0.953000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part76">
+                        <bottom>[0.198500,0.047000,0.0]</bottom>
+                        <top>[0.198500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part77">
+                        <bottom>[0.801500,0.047000,0.0]</bottom>
+                        <top>[0.801500,0.047000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part78">
+                        <bottom>[0.741500,0.945500,0.0]</bottom>
+                        <top>[0.741500,0.945500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part79">
+                        <bottom>[0.258500,0.945500,0.0]</bottom>
+                        <top>[0.258500,0.945500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part80">
+                        <bottom>[0.258500,0.054500,0.0]</bottom>
+                        <top>[0.258500,0.054500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part81">
+                        <bottom>[0.741500,0.054500,0.0]</bottom>
+                        <top>[0.741500,0.054500,1.0]</top>
+                        <radius>0.031500</radius>
+                      </cylinder>
+                      <cylinder label="part82">
+                        <bottom>[0.675500,0.970000,0.0]</bottom>
+                        <top>[0.675500,0.970000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part83">
+                        <bottom>[0.324500,0.970000,0.0]</bottom>
+                        <top>[0.324500,0.970000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part84">
+                        <bottom>[0.324500,0.030000,0.0]</bottom>
+                        <top>[0.324500,0.030000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part85">
+                        <bottom>[0.675500,0.030000,0.0]</bottom>
+                        <top>[0.675500,0.030000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part86">
+                        <bottom>[0.619500,1.000000,0.0]</bottom>
+                        <top>[0.619500,1.000000,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part87">
+                        <bottom>[0.380500,1.000000,0.0]</bottom>
+                        <top>[0.380500,1.000000,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part88">
+                        <bottom>[0.380500,0.000000,0.0]</bottom>
+                        <top>[0.380500,0.000000,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part89">
+                        <bottom>[0.619500,0.000000,0.0]</bottom>
+                        <top>[0.619500,0.000000,1.0]</top>
+                        <radius>0.035000</radius>
+                      </cylinder>
+                      <cylinder label="part90">
+                        <bottom>[0.555000,1.000000,0.0]</bottom>
+                        <top>[0.555000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part91">
+                        <bottom>[0.445000,1.000000,0.0]</bottom>
+                        <top>[0.445000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part92">
+                        <bottom>[0.445000,0.000000,0.0]</bottom>
+                        <top>[0.445000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part93">
+                        <bottom>[0.555000,0.000000,0.0]</bottom>
+                        <top>[0.555000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part94">
+                        <bottom>[0.500000,1.000000,0.0]</bottom>
+                        <top>[0.500000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part95">
+                        <bottom>[0.500000,1.000000,0.0]</bottom>
+                        <top>[0.500000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part96">
+                        <bottom>[0.500000,0.000000,0.0]</bottom>
+                        <top>[0.500000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part97">
+                        <bottom>[0.500000,0.000000,0.0]</bottom>
+                        <top>[0.500000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part98">
+                        <bottom>[0.720000,1.000000,0.0]</bottom>
+                        <top>[0.720000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part99">
+                        <bottom>[0.280000,1.000000,0.0]</bottom>
+                        <top>[0.280000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part100">
+                        <bottom>[0.280000,0.000000,0.0]</bottom>
+                        <top>[0.280000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part101">
+                        <bottom>[0.720000,0.000000,0.0]</bottom>
+                        <top>[0.720000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part102">
+                        <bottom>[0.775000,1.000000,0.0]</bottom>
+                        <top>[0.775000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part103">
+                        <bottom>[0.225000,1.000000,0.0]</bottom>
+                        <top>[0.225000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part104">
+                        <bottom>[0.225000,0.000000,0.0]</bottom>
+                        <top>[0.225000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part105">
+                        <bottom>[0.775000,0.000000,0.0]</bottom>
+                        <top>[0.775000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part106">
+                        <bottom>[0.830000,1.000000,0.0]</bottom>
+                        <top>[0.830000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part107">
+                        <bottom>[0.170000,1.000000,0.0]</bottom>
+                        <top>[0.170000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part108">
+                        <bottom>[0.170000,0.000000,0.0]</bottom>
+                        <top>[0.170000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part109">
+                        <bottom>[0.830000,0.000000,0.0]</bottom>
+                        <top>[0.830000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part110">
+                        <bottom>[0.885000,1.000000,0.0]</bottom>
+                        <top>[0.885000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part111">
+                        <bottom>[0.115000,1.000000,0.0]</bottom>
+                        <top>[0.115000,1.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part112">
+                        <bottom>[0.115000,0.000000,0.0]</bottom>
+                        <top>[0.115000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                      <cylinder label="part113">
+                        <bottom>[0.885000,0.000000,0.0]</bottom>
+                        <top>[0.885000,0.000000,1.0]</top>
+                        <radius>0.025000</radius>
+                      </cylinder>
+                    </union>
+                   </difference>
+                 <res>[2,2,1]</res>
+                 <velocity>[0.0,0.0,0]</velocity>
+                 <temperature>293</temperature>
+               </geom_object>
+           </material>
+           <material name = "HMX">
+              <density>1190.0</density>
+                <constitutive_model type="hypo_elastic">
+                   <G>5.8e9</G>
+                   <K>1.43e10</K>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                   <intersection>
+                  <box label = "matrix"> </box>
+                    <union>
+                      <cylinder label="part1"> </cylinder>
+                      <cylinder label="part2"> </cylinder>
+                      <cylinder label="part3"> </cylinder>
+                      <cylinder label="part4"> </cylinder>
+                      <cylinder label="part5"> </cylinder>
+                      <cylinder label="part6"> </cylinder>
+                      <cylinder label="part7"> </cylinder>
+                      <cylinder label="part8"> </cylinder>
+                      <cylinder label="part9"> </cylinder>
+                      <cylinder label="part10"> </cylinder>
+                      <cylinder label="part11"> </cylinder>
+                      <cylinder label="part12"> </cylinder>
+                      <cylinder label="part13"> </cylinder>
+                      <cylinder label="part14"> </cylinder>
+                      <cylinder label="part15"> </cylinder>
+                      <cylinder label="part16"> </cylinder>
+                      <cylinder label="part17"> </cylinder>
+                      <cylinder label="part18"> </cylinder>
+                      <cylinder label="part19"> </cylinder>
+                      <cylinder label="part20"> </cylinder>
+                      <cylinder label="part21"> </cylinder>
+                      <cylinder label="part22"> </cylinder>
+                      <cylinder label="part23"> </cylinder>
+                      <cylinder label="part24"> </cylinder>
+                      <cylinder label="part25"> </cylinder>
+                      <cylinder label="part26"> </cylinder>
+                      <cylinder label="part27"> </cylinder>
+                      <cylinder label="part28"> </cylinder>
+                      <cylinder label="part29"> </cylinder>
+                      <cylinder label="part30"> </cylinder>
+                      <cylinder label="part31"> </cylinder>
+                      <cylinder label="part32"> </cylinder>
+                      <cylinder label="part33"> </cylinder>
+                      <cylinder label="part34"> </cylinder>
+                      <cylinder label="part35"> </cylinder>
+                      <cylinder label="part36"> </cylinder>
+                      <cylinder label="part37"> </cylinder>
+                      <cylinder label="part38"> </cylinder>
+                      <cylinder label="part39"> </cylinder>
+                      <cylinder label="part40"> </cylinder>
+                      <cylinder label="part41"> </cylinder>
+                      <cylinder label="part42"> </cylinder>
+                      <cylinder label="part43"> </cylinder>
+                      <cylinder label="part44"> </cylinder>
+                      <cylinder label="part45"> </cylinder>
+                      <cylinder label="part46"> </cylinder>
+                      <cylinder label="part47"> </cylinder>
+                      <cylinder label="part48"> </cylinder>
+                      <cylinder label="part49"> </cylinder>
+                      <cylinder label="part50"> </cylinder>
+                      <cylinder label="part51"> </cylinder>
+                      <cylinder label="part52"> </cylinder>
+                      <cylinder label="part53"> </cylinder>
+                      <cylinder label="part54"> </cylinder>
+                      <cylinder label="part55"> </cylinder>
+                      <cylinder label="part56"> </cylinder>
+                      <cylinder label="part57"> </cylinder>
+                      <cylinder label="part58"> </cylinder>
+                      <cylinder label="part59"> </cylinder>
+                      <cylinder label="part60"> </cylinder>
+                      <cylinder label="part61"> </cylinder>
+                      <cylinder label="part62"> </cylinder>
+                      <cylinder label="part63"> </cylinder>
+                      <cylinder label="part64"> </cylinder>
+                      <cylinder label="part65"> </cylinder>
+                      <cylinder label="part66"> </cylinder>
+                      <cylinder label="part67"> </cylinder>
+                      <cylinder label="part68"> </cylinder>
+                      <cylinder label="part69"> </cylinder>
+                      <cylinder label="part70"> </cylinder>
+                      <cylinder label="part71"> </cylinder>
+                      <cylinder label="part72"> </cylinder>
+                      <cylinder label="part73"> </cylinder>
+                      <cylinder label="part74"> </cylinder>
+                      <cylinder label="part75"> </cylinder>
+                      <cylinder label="part76"> </cylinder>
+                      <cylinder label="part77"> </cylinder>
+                      <cylinder label="part78"> </cylinder>
+                      <cylinder label="part79"> </cylinder>
+                      <cylinder label="part80"> </cylinder>
+                      <cylinder label="part81"> </cylinder>
+                      <cylinder label="part82"> </cylinder>
+                      <cylinder label="part83"> </cylinder>
+                      <cylinder label="part84"> </cylinder>
+                      <cylinder label="part85"> </cylinder>
+                      <cylinder label="part86"> </cylinder>
+                      <cylinder label="part87"> </cylinder>
+                      <cylinder label="part88"> </cylinder>
+                      <cylinder label="part89"> </cylinder>
+                      <cylinder label="part90"> </cylinder>
+                      <cylinder label="part91"> </cylinder>
+                      <cylinder label="part92"> </cylinder>
+                      <cylinder label="part93"> </cylinder>
+                      <cylinder label="part94"> </cylinder>
+                      <cylinder label="part95"> </cylinder>
+                      <cylinder label="part96"> </cylinder>
+                      <cylinder label="part97"> </cylinder>
+                      <cylinder label="part98"> </cylinder>
+                      <cylinder label="part99"> </cylinder>
+                      <cylinder label="part100"> </cylinder>
+                      <cylinder label="part101"> </cylinder>
+                      <cylinder label="part102"> </cylinder>
+                      <cylinder label="part103"> </cylinder>
+                      <cylinder label="part104"> </cylinder>
+                      <cylinder label="part105"> </cylinder>
+                      <cylinder label="part106"> </cylinder>
+                      <cylinder label="part107"> </cylinder>
+                      <cylinder label="part108"> </cylinder>
+                      <cylinder label="part109"> </cylinder>
+                      <cylinder label="part110"> </cylinder>
+                      <cylinder label="part111"> </cylinder>
+                      <cylinder label="part112"> </cylinder>
+                      <cylinder label="part113"> </cylinder>
+                    </union>
+                   </intersection>
+                  <res>[2,2,1]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>293</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>single_velocity</type>
+             <materials>[0,1]</materials>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+<!--
+    Actual resolution of the RVE is 256 x 256.
+    Added 14 grid cells in the X and Y directions to allow for
+    expansion in either direction (depending on the direction
+    of the applied force).
+-->
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[-0.0546875,-0.0546875,0.0]</lower>
+              <upper>[1.0546875,1.0546875,1.0]</upper>
+               <resolution>[270,270,4]</resolution>
+              <patches>[4,4,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+    <PhysicalBC>
+       <MPM>
+          <force>
+             <lower>[0.0, 0.0, 0.0]</lower>
+             <upper>[0.0, 1.0, 1.0]</upper>
+             <force_density>[-10,0,0]</force_density>
+          </force>
+          <force>
+             <lower>[1.0, 0.0, 0.0]</lower>
+             <upper>[1.0, 1.0, 1.0]</upper>
+             <force_density>[10,0,0]</force_density>
+          </force>
+       </MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

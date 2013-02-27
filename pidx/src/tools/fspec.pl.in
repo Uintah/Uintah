@@ -1,0 +1,409 @@
+#!@PERL@
+
+$fortran_underscore=@FORTRAN_UNDERSCORE@;
+
+$source=shift;
+$output=shift;
+&usage() unless $source && $output;
+
+open(FILE, "<$source") or die "cannot open $source for reading: $!";
+
+open(OUT, ">$output");
+
+LINE: while(<FILE>){
+ # Scan for the return type.  Must be a simple type, or void
+    chomp;
+    unless(/;/){
+	$_ .= <FILE>;
+	redo unless eof;
+    }
+    if(/^\s*$/ && eof){
+	last LINE;
+    }
+    $line = $_;
+    ($ret, $fn, $arg) = ($line =~ /(\w*)\s+(\w*)\s*\((.*)\)\s*\;/);
+    if($ret eq "" || $fn eq ""){
+	unlink $output;
+	die "Cannot parse function and return type";
+    }
+    @args = split /,/,$arg;
+    foreach $a (@args) {
+	($type, $tmpltype, $name) = &parsearg($a);
+	if(&simpletype($type)){
+	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
+	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
+	} elsif(&othertype($type)){
+	} else {
+	    unlink $output;
+	    die "Cannot understand type: $a";
+	}
+    }
+    # Emit C++ code
+    print OUT "\n#ifndef fspec_$fn\n";
+    print OUT "#define fspec_$fn\n\n";
+    print OUT "#ifdef __cplusplus\n\n";
+    print OUT "extern \"C\" ";
+    print OUT "$ret ".&cname($fn)."(";
+
+    $spacing = "extern \"C\" "."$ret ".&cname($fn)."(";
+    # Replaces all letters (and numbers) with ' '.  Deletes any character that isn't a letter/number.
+    $spacing =~ tr/a-zA-Z0-9_("/ /;
+
+    $sep="";
+    foreach $a (@args) {
+	print OUT $sep;
+	$sep=",\n$spacing";
+	($type, $tmpltype, $name) = &parsearg($a);
+	if(&simpletype($type)){
+	    print OUT "$type\* $name";
+	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
+	    if($fortran_underscore){
+		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
+		    print OUT "int* $name\_$v, ";
+		}
+	    } else {
+		print OUT "int* $name\_low, ";
+		print OUT "int* $name\_high, ";
+	    }
+	    print OUT "$tmpltype\* $name\_ptr";
+	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
+	    if($type eq "OffsetArray1"){
+		print OUT "int* $name\_low, ";
+		print OUT "int* $name\_high, ";
+	    } else {
+		print OUT "int* $name\_size$type, ";
+	    }
+	    print OUT "$tmpltype\* $name\_ptr";
+	} elsif(&othertype($type)){
+	    if($type eq "IntVector"){
+		print OUT "int* $name";
+	    }
+	}
+	
+    }
+    print OUT ");\n\n";
+    print OUT "static $ret fort_$fn(";
+
+    $sep="";
+    foreach $a (@args){
+	print OUT $sep;
+	$sep=",\n$spacing";
+	($type, $tmpltype, $name) = &parsearg($a);
+	if($tmpltype ne ""){
+	    print OUT "$type<$tmpltype>& $name";
+	} else {
+	    print OUT "$type& $name";
+	}
+    }
+    print OUT ")\n{\n";
+    foreach $a (@args) {
+	($type, $tmpltype, $name) = &parsearg($a);
+	if(&knownvartype($type)){
+	    print OUT "  IntVector $name\_low = $name.getWindow()->getOffset();\n";
+	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - IntVector(1, 1, 1);\n";
+	    if($fortran_underscore){
+		foreach $d ("x", "y", "z") {
+		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
+		    print OUT "  int $name\_high_$d = $name\_high.$d();\n";
+		}
+	    }
+	} elsif(&knownarraytype($type)){
+	    if($type eq "OffsetArray1"){
+		print OUT "  int $name\_low = $name.low();\n";
+		print OUT "  int $name\_high = $name.high();\n";
+	    } else {
+		print OUT "  int $name\_size = $name.size();\n";
+	    }
+	}
+    }
+    print OUT "  ";
+    if($ret != "void"){
+	print OUT "return ";
+    }
+
+    $spacing = "   ".&cname($fn)."(";
+    # Replaces all letters (and numbers) with ' '.  Deletes any character that isn't a letter/number.
+    $spacing =~ tr/a-zA-Z0-9_("/ /;
+
+    print OUT &cname($fn)."( ";
+    $sep="";
+    foreach $a (@args) {
+	($type, $tmpltype, $name) = &parsearg($a);
+	print OUT $sep;
+	$sep=",\n$spacing";
+	if(&simpletype($type)){
+	    print OUT "&$name";
+	} elsif(&knownvartype($type)){
+	    if($fortran_underscore){
+		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
+		    print OUT "&$name\_$v, ";
+		}
+	    } else {
+		print OUT "$name\_low.get_pointer(), ";
+		print OUT "$name\_high.get_pointer(), ";
+	    }
+	    if ($type =~ "^const") { 
+		print OUT "const_cast<$tmpltype\*>($name.getPointer())"
+	    } else {
+	      	print OUT "$name.getPointer()";
+            }
+	} elsif(&knownarraytype($type)){
+	    if($type eq "OffsetArray1"){
+		print OUT "&$name\_low, ";
+		print OUT "&$name\_high, ";
+	    } else {
+		print OUT "&$name\_size, ";
+	    }
+	    print OUT "$name\.get_objs()";
+	} elsif(&othertype($type)){
+	    print OUT "$name.get_pointer()";
+	}
+    }
+
+    print OUT " );\n";
+    print OUT "}\n\n";
+    print OUT "#else /* !__cplusplus */\n\n";
+    # Emit fortran code
+    print OUT "C This is the FORTRAN code portion of the file:\n\n";
+
+    $s="subroutine $fn(";
+    $sep="";
+    foreach $a (@args) {
+	($type, $tmpltype, $name) = &parsearg($a);
+	$s.=$sep;
+	$sep=", ";
+	if(&simpletype($type)){
+	    $s.="$name";
+	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
+	    if($fortran_underscore){
+		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
+		    $s.="$name\_$v, ";
+		}
+	    } else {
+		$s.="$name\_low, ";
+		$s.="$name\_high, ";
+	    }
+	    $s.="$name";
+	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
+	    if($type eq "OffsetArray1"){
+		$s.="$name\_low, ";
+		$s.="$name\_high, ";
+	    } else {
+		$s.="$name\_size, ";
+	    }
+	    $s.="$name";
+	} elsif(&othertype($type)){
+	    if($type eq "IntVector"){
+		$s.="$name";
+	    }
+	}
+    }
+    $s.=")";
+    
+    print OUT &formatf($s)."\n\n";
+    print OUT "      implicit none\n";
+    
+    foreach $a (@args) {
+	($type, $tmpltype, $name) = &parsearg($a);
+	if(&simpletype($type)){
+	    $ftype=&ftype($type);
+	    print OUT "      $ftype $name\n";
+	} elsif(&knownvartype($type) && &simpletype($tmpltype)){
+	    $s="integer ";
+	    $sep="";
+	    if($fortran_underscore){
+		foreach $v ("low_x", "low_y", "low_z", "high_x", "high_y", "high_z") {
+		    $s.=$sep;
+		    $sep=", ";
+		    $s.="$name\_$v";
+		}
+	    } else {
+		$s.="$name\_low(3), ";
+		$s.="$name\_high(3)";
+	    }
+	    print OUT &formatf($s)."\n";
+	    $ftype=&ftype($tmpltype);
+	    $s="$ftype $name(";
+	    if($fortran_underscore){
+		$sep="";
+		foreach $v ("x", "y", "z"){
+		    $s.=$sep;
+		    $sep=", ";
+		    $s.="$name\_low_$v:$name\_high_$v";
+		}
+	    } else {
+		$sep="";
+		foreach $v ("1", "2", "3"){
+		    $s.=$sep;
+		    $sep=", ";
+		    $s.="$name\_low($v):$name\_high($v)";
+		}
+	    }
+	    $s.=")";
+	    print OUT &formatf($s)."\n";
+	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
+	    $ftype=&ftype($tmpltype);
+	    if($type eq "OffsetArray1"){
+		print OUT "      integer $name\_low\n";
+		print OUT "      integer $name\_high\n";
+		print OUT "      $ftype $name($name\_low:$name\_high)\n";
+	    } else {
+		print OUT "      integer $name\_size\n";
+		print OUT "      $ftype $name($name\_size)\n";
+	    }
+	} elsif(&othertype($type)){
+	    if($type eq "IntVector"){
+		print OUT "      integer $name(3)\n";
+	    }
+	}
+    }
+    print OUT "#endif /* __cplusplus */\n";
+    print OUT "\n#endif /* fspec_$fn */\n\n";
+}
+
+sub usage {
+    print<<EOM;
+Usage:
+    $0 <source> <output>
+EOM
+    exit(1);
+}
+
+sub parsearg {
+    my($type);
+    my($tmpltype);
+    my($name);
+    ($type, $tmpltype, $name) = ($_[0] =~ /\s*(\w+(?: \w+)?)\s*\<\s*(\w+)\s*>\s*(\w+)\s*/);
+    if(!$type){
+	($type, $name) = ($_[0] =~ /\s*(\w+)\s+(\w+)\s*/);
+    }
+    ($type, $tmpltype, $name);
+}
+
+sub simpletype {
+    my($type);
+    $type = $_[0];
+    if( $type eq "double" || $type eq "int" || $type eq "bool" || $type eq "char" ){
+	1;
+    } else {
+	0;
+    }
+}
+
+sub knownvartype {
+    my($type);
+    $type = $_[0];
+    if($type eq "CCVariable" || $type eq "NCVariable" || $type eq "SFCXVariable" || $type eq "SFCYVariable" || $type eq "SFCZVariable" || $type eq "constCCVariable" || $type eq "constNCVariable" || $type eq "constSFCXVariable" || $type eq "constSFCYVariable" || $type eq "constSFCZVariable" || $type eq "Array3" || $type eq "const Array3") {
+	1;
+    } else {
+	0;
+    }
+}
+
+sub knownarraytype {
+    my($type);
+    $type = $_[0];
+    if($type eq "Array1" || $type eq "OffsetArray1") {
+	1;
+    } else {
+	0;
+    }
+}
+
+sub othertype {
+    my($type);
+    $type = $_[0];
+    if($type eq "IntVector") {
+	1;
+    } else {
+	0;
+    }
+}
+
+sub formatf {
+    $f=$_[0];
+    $s="";
+    $cur="      ";
+    $count=10000;
+    while($f ne ""){
+	($first, $rest) = ($f =~ /^([,\(\)\:]|\w+|\s+)(.*)/);
+	if($first eq ""){
+	    unlink $output;
+	    die "re broke\n";
+	}
+	if(length($cur.$first) >= 72){
+	    $s.=$cur."\n";
+	    $cur="     & ";
+	    if(length($cur.$first) >= 72){
+		unlink $output;
+		die "token more than 66 chars, cannot format line!";
+	    }
+	}
+	if(--$count == 0){
+	    unlink $output;
+	    die "infinite recursion in formatf: f=".$f."\n";
+	}
+	$cur.=$first;
+	$f=$rest;
+    }
+    $s.$cur;
+}
+
+sub ftype {
+    my($type);
+    $type =$_[0];
+    if($type eq "double") {
+	"double precision";
+    } elsif($type eq "int") {
+	"integer";
+    } elsif($type eq "bool") {
+	"logical*1"
+    } elsif($type eq "char") {
+	"character*80"
+    } else {
+	"unknown ftype";
+    }
+}
+
+sub cname {
+    my($name);
+    $name =$_[0];
+
+    if($fortran_underscore eq "linux") {
+        # Add one _ normally, but add __ if _ already in name.
+	if( $name =~ /_/ ) {
+	   $name.="_";
+        }
+        $name.="_";
+    } elsif($fortran_underscore eq "end") {
+        # Always add single _ to end of name.
+        $name.="_";
+    }
+
+    return $name
+}
+
+print OUT "#ifndef PASS1\n";
+print OUT "#  define PASS1(x) x/**/_low, x/**/_high, x\n";
+print OUT "#endif\n\n";
+print OUT "#ifndef PASS3\n";
+if($fortran_underscore){
+    print OUT "#  define PASS3A(x) ";
+    foreach $v ("low_x", "low_y", "low_z"){
+	print OUT "x/**/_$v, ";
+    }
+    print OUT "\n";
+    print OUT "#  define PASS3B(x) ";
+    foreach $v ("high_x", "high_y", "high_z"){
+	print OUT "x/**/_$v, ";
+    }
+    print OUT "x\n";
+} else {
+    print OUT "#  define PASS3A(x) x/**/_low, x/**/_high, x\n";
+    print OUT "#  define PASS3B(x) \n";
+}
+print OUT "#endif\n";
+
+close FILE;
+close OUT;
+

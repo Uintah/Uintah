@@ -1,0 +1,43 @@
+#!/bin/csh
+#__________________________________
+# This script stitches 2 folders of jpgs together
+# All of the images need to be the same size, so you 
+# should use ppm_to_mpg to resize and add labels.      
+       
+       
+set size = "640x960"  # size of a single image
+
+set dir1 = "200^3"    #path to jpgs that you want on the left half
+set dir2 = "300^3"    #path to jpgs that you want on the right half
+set fname = "combined" 
+
+/usr/bin/rm -rf $fname*
+foreach T ( $dir1/*.jpg )
+ set num = `basename $T .jpg`
+ echo "working on jpg # " $num
+ montage -geometry $size $dir1/$num.jpg $dir2/$num.jpg $fname.$num.jpg
+end
+
+
+###########################################################################
+# The following version is a modification of the above, and assumes
+# the more usual movie.####.ppm for the files
+
+#!/bin/csh
+#__________________________________
+# This script stitches 2 folders of ppms together
+# Uncomment all of the following lines to use this version
+
+#set size = "640x480"  # size of a single image
+
+#set dir1 = "SC_PPMs"    #path to ppms that you want on the left half
+#set dir2 = "GP_PPMs"    #path to ppms that you want on the right half
+
+#@ timestep = 0
+#foreach T ( $dir1/*.ppm )
+# set num = `printf '%04d' $timestep`
+# echo "working on ppm # " $num
+# montage -geometry $size $dir1/movie.$num.ppm $dir2/movie.$num.ppm movie.$num.pp
+#m
+# @ timestep = $timestep + 1
+#end

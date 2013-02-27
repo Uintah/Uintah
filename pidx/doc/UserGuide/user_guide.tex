@@ -1,0 +1,129 @@
+\documentclass[12pt]{report}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage[pdftex]{graphicx}
+\usepackage{fancyvrb}
+\usepackage{chapterbib}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{wrapfig}
+\usepackage{subfig}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{esint}
+\usepackage{amssymb}
+\usepackage[usenames]{color}
+\usepackage[toc,page,title,titletoc]{appendix}
+
+\pdfcompresslevel=9
+\DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
+\graphicspath{ {../figures/}}
+\usepackage{color}
+%__________________________________
+% new commands for all sections
+\newcommand{\comment}[1]{ \marginpar{{\scriptsize \color{red} #1 }}}
+\newcommand{\red}[1]{\color{red} {#1} \color{black}}
+\newcommand{\TT}[1]{\tt{#1}\normalfont}
+
+% MPM & ICE
+\newcommand{\tn}[1]{\mbox{\bf{#1}}}
+\newcommand{\sig}{\mbox{\boldmath $\sigma \!\!$ \unboldmath}}
+\newcommand{\bnabla} {\mbox {\boldmath $\nabla \!\!$ \unboldmath}}
+\newcommand{\taubold} {\mbox{\boldmath $\tau \!\!$ \unboldmath}}
+\newcommand{\f}{\ensuremath{f^{\theta}_r} }
+
+\newcommand{\Texp}{\rm{exp}}
+\newcommand{\Text}{\rm{ext}}
+\newcommand{\Tint}{\rm{int}}
+\newcommand{\Teq}{\rm{eq}}
+\newcommand{\Delt}{\ensuremath{\Delta t}}
+\newcommand{\Ep}{\ensuremath{\epsilon_p}}
+\newcommand{\Epj}{\ensuremath{\epsilon_{p,j}}}
+\newcommand{\Epo}{\ensuremath{\epsilon_{p,0}}}
+\newcommand{\Epi}{\ensuremath{\varepsilon_{pi}}}
+\newcommand{\Epdot}[1]{\ensuremath{\dot{\epsilon}_{p#1}}}
+\newcommand{\lambdadot}{\ensuremath{\dot{\lambda}}}
+\newcommand{\erf}{\text{erf}}
+\def\bfE{{\bf E}}
+\newcommand{\BD}{\ensuremath{\boldsymbol{D}}}
+\newcommand{\Half}{\ensuremath{\frac{1}{2}}}
+\newcommand{\Bsig}{\ensuremath{\boldsymbol{\sigma}}}
+\newcommand{\Bn}{\ensuremath{\boldsymbol{n}}}
+\newcommand{\Bg}{\ensuremath{\boldsymbol{g}}}
+\newcommand{\Bd}{\ensuremath{\boldsymbol{d}}}
+\newcommand{\BF}{\ensuremath{\boldsymbol{F}}}
+\newcommand{\Bs}{\ensuremath{\boldsymbol{s}}}
+\newcommand{\Tr}{\ensuremath{\text{tr}}}
+\newcommand{\Beta}{\ensuremath{\boldsymbol{\eta}}}
+\newcommand{\Beq}{\begin{equation}}
+\newcommand{\Bone}{\ensuremath{\boldsymbol{\mathit{1}}}}
+\newcommand{\Bu}{\ensuremath{\mathbf{u}}}
+\newcommand{\Deriv}[2]{\ensuremath{\cfrac{d#1}{d#2}}}
+\newcommand{\Eeq}{\end{equation}}
+\newcommand{\norm}[1]{\ensuremath{\left\lVert#1\right\rVert}}
+\newcommand{\Partial}[2]{\ensuremath{\frac{\displaystyle\partial #1}{\displaystyle\partial #2}}}
+\newcommand{\That}{\ensuremath{\widehat{T}}}
+\newcommand{\Xidot}{\ensuremath{\dot{\xi}}}
+
+
+\def\rmd{{\rm d}}
+\def\rme{{\rm e}}
+\def\rmf{{\rm f}}
+\def\rmr{{\rm r}}
+\def\rmR{{\rm R}}
+\def\rms{{\rm s}}
+\def\bfd{{\bf d}}
+\def\bfE{{\bf E}}
+\def\bfF{{\bf F}}
+\def\bff{{\bf f}}
+\def\bfg{{\bf g}}
+\def\bfI{{\bf I}}
+\def\bfj{{\bf j}}
+\def\bfm{{\bf m}}
+\def\bfr{{\bf r}}
+\def\bfx{{\bf x}}
+\def\bfu{{\bf u}}
+\def\rmg{{\rm g}}
+\def\bfa{{\bf a}}
+\def\bfG{{\bf G}}
+\def\bfv{{\bf v}}
+\def\tdot{{\textstyle\cdot}}
+%__________________________________
+\setlength{\textwidth}{15.5cm}
+\setlength{\textheight}{21.5cm}
+\setlength{\parskip}{0cm}        % paragraph skip
+
+
+\begin{document}
+
+
+\title{Uintah User Guide}
+
+
+\author{ Jim Guilkey, Todd Harman, Justin Luitjens, \\ John Schmidt, Jeremy Thornock, J. Davison de St. Germain, \\ Siddharth Shankar, Joseph Peterson, Carson Brownlee, Charles Reid}
+
+\date{Version 1.5}
+
+\maketitle
+
+\tableofcontents
+
+%\begin{abstract}
+%
+%\end{abstract}
+
+\newpage
+
+%%
+%% INTRODUCTION
+%%
+\include{overview}
+\include{ucf}
+\include{arches}
+\include{ice}
+\include{mpm}
+%\include{mpmarches}
+\include{mpmice}
+\include{glossary}
+
+\end{document} 

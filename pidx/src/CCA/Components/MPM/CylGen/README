@@ -1,0 +1,57 @@
+This directory contains a set of codes for creating a packing of cylinders
+(disks), and for resizing and distributing those cylinders to individual
+materials.
+
+Each .cc file contains instructions on compiling and running.
+
+To begin, cylgen.cc is the program that generates the cylinder packing.
+At the top of the main(){} function therein is a section that start with:
+
+  // Parameters for user to change - BEGIN
+
+and continues with:
+
+  // Parameters for user to change - END IF AN EQUAL SIZE DISTRIBUTION IS O.K.
+  //  If you want to specify the distribution more carefully, see below.
+
+and ends with:
+
+  /********************************************************************
+  No need to make changes below here unless you really want to get into
+  the guts of the algorithm
+  ********************************************************************/
+
+Between those comments is well commented code describing how to configure
+the program to generate the size distribution and packing fraction that you
+desire.  Note that, depending on the size distribution, achieving a packing
+fraction much greater than 65% can be difficult.  If a sufficient number of
+"fines" are allowed, then the packing fraction can be higher.
+
+Once the distribution is specified, recompile and run.  The output includes
+a PositionRadius.txt file, and a Test2D.xml file.  The former simply contains
+the x,y positions of the cylinder centers, and a radius.  The latter contains 
+the same data, but placed in xml format suitable for inclusion into a
+Uintah input file (ups).
+
+Note that this directory also includes a TestCylGen.ups file, to help enable
+quickly looking at your new cylinder distribution.  Simply run:
+
+sus TestCylGen.ups
+
+in from a directory containing both the ups file and the Test2D.xml file.
+One can then visualize the resulting uda in scirun or VisIt.
+
+Because the algorithm in cylgen is somewhat limited in the achievable
+packing fraction, there is also a small program called resizeCylinders.cc.
+This program attempts to increase the size of each cylinder as much as possible,
+without getting any overlap with neighboring cylinders.  This is usually able
+to get a few extra percent in packing fraction.  It will change the size
+distribution slightly, skewing it to be larger than initially specified.
+
+resizeCylinder reads in Position_Radius.txt and creates Position_Radius.RS.txt
+and Test2D.RS.xml.  resizeCylinder can be run multiple successive times by
+simply overwriting the original Postiion_Radius.txt with the .RS. version and
+rerunning.  This will give diminishing increase in packing fraction each time
+it is run.
+
+

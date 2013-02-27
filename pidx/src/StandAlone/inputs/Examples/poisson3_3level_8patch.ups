@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Poisson3 test</title>
+   </Meta>
+
+   <SimulationComponent type="poisson3" />
+
+   <Time>
+       <maxTime>1.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>1</delt_max>
+       <timestep_multiplier>1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>poisson.uda</filebase>
+       <outputInterval>1</outputInterval>
+       <checkpoint cycle = "2" interval = "1"/>
+   </DataArchiver>
+
+    <Poisson>
+        <delt>.01</delt>
+        <maxresidual>.01</maxresidual>
+    </Poisson>
+
+    <Grid>
+       <Level>
+           <Box label = "0">
+              <lower>[0,0,0]</lower>
+              <upper>[1.0,1.0,1.0]</upper>
+               <resolution>[50,50,50]</resolution>
+              <patches>[2,2,2]</patches>
+           </Box>
+       </Level>
+       <Level>
+           <Box label = "1">
+               <lower>[0.3,0.3,0.3]</lower>
+              <upper>[0.7,0.7,0.7]</upper>
+              <resolution>[40,40,40]</resolution>
+              <patches>[2,2,2]</patches>
+            </Box>
+       </Level>
+       <Level>
+           <Box label = "2">
+               <lower>[0.4,0.4,0.4]</lower>
+              <upper>[0.6,0.6,0.6]</upper>
+              <resolution>[40,40,40]</resolution>
+              <patches>[2,2,2]</patches>
+            </Box>
+       </Level>
+    </Grid>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+</Uintah_specification>
+

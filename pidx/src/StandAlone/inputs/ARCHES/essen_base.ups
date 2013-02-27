@@ -1,0 +1,238 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+  <Meta>
+    <title>Laminar he base case</title>
+  </Meta>
+   <SimulationComponent type="arches" />
+   <Solver type="hypre" />
+
+   <Time>
+        <maxTime>10.0</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.00001</delt_min>
+        <delt_max>0.01</delt_max>
+        <timestep_multiplier>0.35</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>helium_HI_Base.uda</filebase>
+        <outputInterval>0.01</outputInterval>
+        <save label = "totalKineticEnergy"/>
+        <save label = "pressurePS"/>
+        <save label = "CCVelocity"/>        
+        <save label = "uVelocitySPBC"/>
+        <save label = "vVelocitySPBC"/>
+        <save label = "wVelocitySPBC"/>
+        <save label = "scalarSP"/>
+        <save label = "densityCP"/>
+        <save label = "viscosityCTS"/>
+        <save label = "cellType"/>
+        <save label = "temperature" table_lookup="true"/>
+        <save label = "MixtureFraction"/>
+        <save label = "pr_no"/>
+        <save label = "laminar_viscosity"/>
+
+        <checkpoint cycle = "2" walltimeStart = "0" walltimeInterval = "1800"/>
+        <outputDoubleAsFloat/>
+        <compression>gzip</compression>
+   </DataArchiver>
+
+    <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[0,0,0]</lower>
+                <upper>[0.138,0.138,0.138]</upper>
+                <resolution>[100,100,100]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[4,4,4]</patches>
+            </Box>
+        </Level>
+        
+        <BoundaryConditions>
+
+          <Face side="x-">
+            <BCType id="0" label="coflow_inlet" var="VelocityInlet">
+              <value>[0.0405,0,0]</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Dirichlet">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+
+          <Face circle="x-" origin="0 0.069 0.069" radius=".023">
+            <BCType id="0" label="helium_inlet" var="VelocityInlet">
+              <value>[0.135,0,0]</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Dirichlet">
+              <value>1.0</value>
+            </BCType>
+          </Face>
+
+          <Face side="x+">
+            <BCType id="0" label="outlet" var="OutletBC">
+              <value>0.0</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Neumann">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+
+          <Face side="y-">
+            <BCType id="0" label="y-pressure" var="PressureBC">
+              <value>0.0</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Neumann">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+          <Face side="y+">
+            <BCType id="0" label="y+pressure" var="PressureBC">
+              <value>0.0</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Neumann">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+
+          <Face side="z-">
+            <BCType id="0" label="z-pressure" var="PressureBC">
+              <value>0.0</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Neumann">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+          <Face side="z+">
+            <BCType id="0" label="z+pressure" var="PressureBC">
+              <value>0.0</value>
+            </BCType>
+            <BCType id="0" label="MixtureFraction" var="Neumann">
+              <value>0.0</value>
+            </BCType>
+          </Face>
+
+        </BoundaryConditions>
+
+    </Grid>
+
+
+   <PhysicalConstants>
+       <gravity>[-9.8,0,0]</gravity>
+       <reference_point>[-1,-1,-1]</reference_point>
+       <viscosity>0.000020</viscosity>
+   </PhysicalConstants>
+
+
+   <CFD>
+
+        <ARCHES>
+
+            <!-- TIME INTEGRATOR -->
+            <TimeIntegrator>
+                <ExplicitIntegrator order="second"/>
+            </TimeIntegrator>
+
+            <!-- EXTRA SCALARS -->
+            <TransportEqns>
+              <Eqn label="MixtureFraction" type = "CCscalar">
+                <doDiff>true</doDiff>
+                <doConv>true</doConv>
+                <determines_properties/>
+                <addSources>false</addSources>
+                <conv_scheme>super_bee</conv_scheme>
+                <D_mol_constant value=".0001"/> <!-- VALUE may need to be adjusted --> 
+                <Clipping>
+                  <low>0.0</low>
+                  <high>1.0</high>
+                </Clipping>
+                <initialization type="constant">
+                  <constant>0.0</constant>
+                </initialization>
+              </Eqn>
+            </TransportEqns>
+
+            <!-- turn off turbulence model by setting the coefficient to zero (cf=0)-->
+            <Turbulence model="smagorinsky">
+              <variance_coefficient>0.1</variance_coefficient>
+              <cf>0.0</cf>
+              <fac_mesh>1.0</fac_mesh>
+              <filterl>0.000001</filterl>
+              <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+            </Turbulence>
+
+            <Properties>
+                <use_mixing_model>false</use_mixing_model>
+                <ColdFlow>
+                    <mixture_fraction_label>MixtureFraction</mixture_fraction_label>
+                        <Stream_1> 
+                            <density>0.159849</density>
+                            <temperature>305.15</temperature>
+                        </Stream_1>
+                        <Stream_2>  
+                            <density>1.15218</density>
+                            <temperature>305.15</temperature>
+                        </Stream_2>
+                </ColdFlow> 
+            </Properties>
+
+            <PropertyModels>
+              <model label = "pr_no" type = "laminar_pr" initialization= "constant">
+
+                <constant>0.4</constant>
+
+                <atm_pressure>1.0 </atm_pressure>
+                <mix_frac_label>MixtureFraction</mix_frac_label>
+                <D>7.5320e-5</D>  <!-- binary diffusion coefficient (m^2/s) --> 
+
+                <fuel>
+                  <molar_mass>4.003 </molar_mass>
+                  <critical_temperature>5.19 </critical_temperature>
+                  <dipole_moment>0.00 </dipole_moment>
+                  <viscosity>2.0123e-5 </viscosity>
+                  <critical_pressure>2.28 </critical_pressure>
+                </fuel>
+
+                <oxidizer>
+                  <molar_mass>29.1 </molar_mass>
+                  <critical_temperature>132.2 </critical_temperature>
+                  <dipole_moment>0.0 </dipole_moment>
+                  <viscosity>1.8714e-5 </viscosity>
+                  <critical_pressure>37.45 </critical_pressure>
+                </oxidizer>
+
+              </model>
+            </PropertyModels>
+
+            <BoundaryConditions>
+              <use_new_bcs/>
+            </BoundaryConditions>
+
+
+            <ExplicitSolver>
+
+            <initial_dt>0.05</initial_dt>
+            <variable_dt>true</variable_dt>
+                <PressureSolver>
+                    <Parameters>
+                        <tolerance>1.0e-10</tolerance>
+                        <solver>cg</solver>
+                        <preconditioner>pfmg</preconditioner>
+                        <maxiterations>75</maxiterations>
+                    </Parameters>
+                </PressureSolver>
+
+                <MomentumSolver>
+                    <convection_scheme>central</convection_scheme>
+                </MomentumSolver>
+
+                <MixtureFractionSolver>
+                    <convection_scheme>central-upwind</convection_scheme>
+                </MixtureFractionSolver>
+
+            </ExplicitSolver>
+
+        </ARCHES>
+
+    </CFD>
+</Uintah_specification>
+
