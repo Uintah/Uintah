@@ -5151,6 +5151,11 @@ pre-Birth coefficient
 
  which is used as a converison factor from SI units into smaller lengths
  (
+\emph on
+i.e.
+
+\emph default
+ 
 \begin_inset Formula $\mu$
 \end_inset
 
@@ -5197,7 +5202,7 @@ Currently Wasatch has three growth models implemented; constant growth,
  The bulk diffusion model uses the appropriate coefficient as
 \begin_inset Formula 
 \begin{equation}
-g_{0}=\nu DC_{eq}(S-\bar{S})
+g_{0}=\nu DC_{eq}(S-\bar{S}),\;\;\; g(r)=1/r
 \end{equation}
 
 \end_inset
@@ -5214,7 +5219,7 @@ with
 \begin_inset Formula $\bar{S}$
 \end_inset
 
- can either be set as one, or set as needed for Ostwald Ripening as 
+ can either be set as one, or set as needed for Ostwald ripening as 
 \begin_inset Formula 
 \begin{equation}
 \bar{S}=\exp(2\nu\gamma/RTr)
@@ -5229,10 +5234,26 @@ For Ostwald ripening, the
  appearing in the exponential does not allow for this term to be converted
  into a moment of the problem, therefore the quadrature weights and abscissae
  are used to evaluate the Ostwald ripening term.
- For monosurface nucleation the growth coefficient is 
+ A similar model is also available for bulk diffusion growth on cylindrical
+ particles as
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T)
+g_{0}=\frac{7\nu DC_{\text{{eq}}}(\bar{{S}}-S)}{6\log(1/2)},\;\;\; g(r)=1/r
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For monosurface nucleation the growth coefficient is 
+\begin_inset Formula 
+\begin{equation}
+g_{0}=\beta_{A}Dd^{3}exp(-\Delta G/K_{B}T),\;\;\; g(r)=r^{2}
 \end{equation}
 
 \end_inset
@@ -5267,6 +5288,29 @@ pre-Growth coeffcient
 \end_inset
 
  can be used for unit conversions.
+ A kintically limted model can be used that has no size dependence of the
+ particles, this is essentially the constant model with supersaturation
+ dependence.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g_{0}=K_{A}(S-\bar{S}),\;\;\; g(r)=1
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here 
+\begin_inset Formula $K_{A}$
+\end_inset
+
+ is a kinetic growth coefficient to be determined from fitting experimental
+ data.
 \end_layout
 
 \begin_layout Subsection
@@ -8442,10 +8486,7 @@ TurbulentInlet
 \end_layout
 
 \begin_layout Standard
-The
- 
-\lang english
-
+The 
 \begin_inset listings
 inline true
 status open
