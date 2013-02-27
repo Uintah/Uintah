@@ -49,6 +49,7 @@ namespace Uintah {
 
 class Level;
 class OutputContext;
+class PIDXOutputContext;
 class ProcessorGroup;
 class VarLabel;
 class Task;
@@ -232,8 +233,11 @@ public:
 			    const PatchSubset*, const MaterialSubset*,
                             bool replace = false, const PatchSubset* = 0) = 0;
 
-  virtual void emit(OutputContext&, const VarLabel* label,
-		    int matlIndex, const Patch* patch) = 0;
+  virtual void emit(OutputContext&, 
+#if HAVE_PIDX
+                    PIDXOutputContext&,
+#endif
+                    const VarLabel* label, int matlIndex, const Patch* patch) = 0;
 
   // Scrubbing
   enum ScrubMode {

@@ -698,6 +698,16 @@ HDF5_LIB_DIR_FLAG
 HDF5_LIB_FLAG
 INC_HDF5_H
 DEF_HDF5
+PIDX_LIB_DIR_FLAG
+PIDX_LIB_FLAG
+INC_PIDX_H
+DEF_PIDX
+HAVE_PIDX
+VISUS_LIB_DIR_FLAG
+VISUS_LIB_FLAG
+INC_VISUS_H
+DEF_VISUS
+HAVE_VISUS
 TEEM_LIB_DIR_FLAG
 TEEM_LIB_FLAG
 INC_TEEM_H
@@ -980,6 +990,8 @@ with_hdf5
 with_freetype
 with_ftgl
 with_visit
+with_visus
+with_pidx
 enable_wasatch_3p
 enable_wasatch_in_arches
 enable_static
@@ -1719,6 +1731,10 @@ Optional Packages:
 --with-ftgl=DIR         Use the Freetype GL installation in DIR
 --with-visit=DIR        Turn on VisIt visualization tool support. Point to
                           VisIt installation.
+--with-visus=DIR        Turn on ViSUS IDX support. Point to ViSUS
+                          installation.
+--with-pidx=DIR         Turn on ViSUS Parallel IDX support. Point to PIDX
+                          installation.
 --with-MallocTrace=DIR  Use MallocTrace library. Note: you cannot use
                           sci-malloc at the same time.
 
@@ -3687,6 +3703,38 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-visit --without-visit"
   if test -n "$visit" -a ! -e "$visit"; then
     as_fn_error $? "The file or directory parameter ($visit) specified for --with-visit does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-visus was given.
+if test "${with_visus+set}" = set; then :
+  withval=$with_visus; with_visus="$withval"
+else
+  with_visus=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-visus --without-visus"
+  if test -n "$visus" -a ! -e "$visus"; then
+    as_fn_error $? "The file or directory parameter ($visus) specified for --with-visus does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-pidx was given.
+if test "${with_pidx+set}" = set; then :
+  withval=$with_pidx; with_pidx="$withval"
+else
+  with_pidx=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-pidx --without-pidx"
+  if test -n "$pidx" -a ! -e "$pidx"; then
+    as_fn_error $? "The file or directory parameter ($pidx) specified for --with-pidx does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -41579,6 +41627,1046 @@ fi
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
+
+##  --  search for visus  -------------------------------------------------
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_visus"; then
+  if test "$with_visus" = "yes"; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ViSUS is already required - you do not need to specify --with-visus." >&5
+$as_echo "$as_me: WARNING: ViSUS is already required - you do not need to specify --with-visus." >&2;}
+  else
+    # If --with-visus has a parameter, then use it
+    _sci_lib="$with_visus"
+    _sci_inc="$with_visus/include $with_visus"
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_sci_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_sci_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_sci_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  fi
+  eval _sci_lib='"$_new_lib_path"'
+
+    _sci_optional=required
+  fi
+
+  if test "$IS_OSX" = "yes"; then
+     VISUS_OSX="-framework Foundation"
+  fi
+
+
+##
+## SCI_TRY_LINK (VISUS):  visus library and headers
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : VISUS
+## arg 2 : visus library and headers
+## arg 3 : visuscpp/kernel/visus_kernel.h
+## arg 4 : $_sci_inc
+## arg 5 : ttmath visusidx curl libz FreeImage tinyxml visusdb visusscenegraph visuskernel curl visusdataflow $VISUS_OSX
+## arg 6 : $_sci_lib
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      VISUS_LIB_DIR        => lib path
+##      VISUS_LIB_DIR_FLAG   => all the -L's
+##      VISUS_LIB_FLAG       => all the -l's
+##      HAVE_VISUS           => yes or no
+##      INC_VISUS_H          => all the -I's
+##      HAVE_VISUS_H         => yes or no
+
+if test 9 != 9; then
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for visus library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for visus library and headers ($_sci_optional)" >&5
+$as_echo_n "checking for visus library and headers ($_sci_optional)... " >&6; }
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for visus library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     as_fn_error $? "Please do not specify /usr/include as the location for VISUS include files." "$LINENO" 5
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of VISUS check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of VISUS check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "^\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "ttmath visusidx curl libz FreeImage tinyxml visusdb visusscenegraph visuskernel curl visusdataflow $VISUS_OSX"; then
+
+   found_framework=no
+   for lib in ttmath visusidx curl libz FreeImage tinyxml visusdb visusscenegraph visuskernel curl visusdataflow $VISUS_OSX; do
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of VISUS check (disregarding $lib)." >&5
+$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VISUS check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "^\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_sci_lib"; then
+
+   for path in $_sci_lib; do
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of VISUS check (disregarding $path)." >&5
+$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of VISUS check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" visuscpp/kernel/visus_kernel.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval VISUS_LIB_DIR='"$_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval VISUS_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $_sci_libs; do
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval VISUS_LIB_FLAG="'$final_libs'"
+eval HAVE_VISUS="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_VISUS_H="'$final_incs'"
+eval HAVE_VISUS_H="yes"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+eval VISUS_LIB_DIR=''
+eval VISUS_LIB_DIR_FLAG=''
+eval VISUS_LIB_FLAG=''
+eval HAVE_VISUS="no"
+eval INC_VISUS_H=''
+eval HAVE_VISUS_H="no"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required VISUS failed.
+    To see the failed compile information, look in config.log,
+    search for VISUS. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" visuscpp/kernel/visus_kernel.h; do
+    #echo looking for $_sci_inc/$i
+    if test ! -e $_sci_inc/$i; then
+     as_fn_error $? "Specifically requested VISUS include file '$_sci_inc/$i' was not found" "$LINENO" 5
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" ttmath visusidx curl libz FreeImage tinyxml visusdb visusscenegraph visuskernel curl visusdataflow $VISUS_OSX; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested VISUS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (VISUS):  visus library and headers
+##
+
+
+
+  if test "$HAVE_VISUS" = "yes"; then
+     DEF_VISUS="#define HAVE_VISUS 1"
+  fi
+fi
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/visus_testdefs.h"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+##  --  search for pidx  -------------------------------------------------
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_pidx"; then
+  if test "$with_pidx" = "yes"; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: PIDX is already required - you do not need to specify --with-pidx." >&5
+$as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify --with-pidx." >&2;}
+  else
+    # If --with-pidx has a parameter, then use it
+    _sci_lib="$with_pidx"
+    _sci_inc="$with_pidx"
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_sci_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_sci_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_sci_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
+    fi
+  fi
+  eval _sci_lib='"$_new_lib_path"'
+
+    _sci_optional=required
+  fi
+
+
+##
+## SCI_TRY_LINK (PIDX):  pidx library and headers
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : PIDX
+## arg 2 : pidx library and headers
+## arg 3 : PIDX.h
+## arg 4 : $_sci_inc $INC_MPI_H
+## arg 5 : $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst
+## arg 6 : $MPI_LIB_DIR_FLAG $_sci_lib
+## arg 7 : -DMPIPP_H
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      PIDX_LIB_DIR        => lib path
+##      PIDX_LIB_DIR_FLAG   => all the -L's
+##      PIDX_LIB_FLAG       => all the -l's
+##      HAVE_PIDX           => yes or no
+##      INC_PIDX_H          => all the -I's
+##      HAVE_PIDX_H         => yes or no
+
+if test 9 != 9; then
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for pidx library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pidx library and headers ($_sci_optional)" >&5
+$as_echo_n "checking for pidx library and headers ($_sci_optional)... " >&6; }
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for pidx library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+fi
+
+# If $_sci_inc $INC_MPI_H (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc $INC_MPI_H; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     as_fn_error $? "Please do not specify /usr/include as the location for PIDX include files." "$LINENO" 5
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc $INC_MPI_H) of PIDX check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc $INC_MPI_H) of PIDX check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "^\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst"; then
+
+   found_framework=no
+   for lib in $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of PIDX check (disregarding $lib)." >&5
+$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PIDX check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "^\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$MPI_LIB_DIR_FLAG $_sci_lib"; then
+
+   for path in $MPI_LIB_DIR_FLAG $_sci_lib; do
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of PIDX check (disregarding $path)." >&5
+$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PIDX check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $MPI_LIB_DIR_FLAG $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $MPI_LIB_DIR_FLAG $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one library path may be specified for arg 6 (you had: $MPI_LIB_DIR_FLAG $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc $INC_MPI_H
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc $INC_MPI_H; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc $INC_MPI_H" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one include path may be specified for arg 4 (you had: $_sci_inc $INC_MPI_H).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs -DMPIPP_H $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" PIDX.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval PIDX_LIB_DIR='"$MPI_LIB_DIR_FLAG $_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval PIDX_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $_sci_libs; do
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval PIDX_LIB_FLAG="'$final_libs'"
+eval HAVE_PIDX="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_PIDX_H="'$final_incs'"
+eval HAVE_PIDX_H="yes"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+eval PIDX_LIB_DIR=''
+eval PIDX_LIB_DIR_FLAG=''
+eval PIDX_LIB_FLAG=''
+eval HAVE_PIDX="no"
+eval INC_PIDX_H=''
+eval HAVE_PIDX_H="no"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required PIDX failed.
+    To see the failed compile information, look in config.log,
+    search for PIDX. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" PIDX.h; do
+    #echo looking for $_sci_inc $INC_MPI_H/$i
+    if test ! -e $_sci_inc $INC_MPI_H/$i; then
+     as_fn_error $? "Specifically requested PIDX include file '$_sci_inc $INC_MPI_H/$i' was not found" "$LINENO" 5
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $MPI_LIB_DIR_FLAG $_sci_lib/lib$i.so && test ! -e $MPI_LIB_DIR_FLAG $_sci_lib/lib$i.a && test ! -e $MPI_LIB_DIR_FLAG $_sci_lib/$i.lib && test ! -e $MPI_LIB_DIR_FLAG $_sci_lib/lib$i.dylib; then
+     as_fn_error $? "Specifically requested PIDX library file '$MPI_LIB_DIR_FLAG $_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (PIDX):  pidx library and headers
+##
+
+
+
+  if test "$HAVE_PIDX" = "yes"; then
+     DEF_PIDX="#define HAVE_PIDX 1"
+  fi
+fi
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/pidx_testdefs.h"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
 ##  --  search for hdf5  -------------------------------------------------
 ac_ext=cpp
