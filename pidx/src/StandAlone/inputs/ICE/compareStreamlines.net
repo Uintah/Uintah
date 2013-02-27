@@ -1,0 +1,525 @@
+# SCIRun Network v1.22.0
+
+
+set name {Main}
+set bbox {6 0 1634 1044}
+set creationDate {Sat Jul 17 2004}
+set creationTime {14:47:45}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->Math->BuildTransform Module
+set m1 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 1331 6]
+
+# Create a SCIRun->FieldsGeometry->TransformField Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 824 227]
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m3 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 6 3]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m4 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 6 73]
+
+# Create a Uintah->Selectors->VectorFieldExtractor Module
+set m5 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 206 163]
+
+# Create a SCIRun->Visualization->StreamLines Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 222 559]
+set Notes($m6) {
+}
+
+# Create a SCIRun->Visualization->ShowField Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 204 720]
+
+# Create a SCIRun->FieldsCreate->SampleField Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 239 407]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 226 0]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 204 640]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 424 569]
+
+# Create a Uintah->Operators->VectorFieldOperator Module
+set m12 [addModuleAtPosition "Uintah" "Operators" "VectorFieldOperator" 443 408]
+
+# Create a Uintah->Visualization->GridVisualizer Module
+set m13 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 641 403]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m14 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 6 162]
+
+# Create a Uintah->Visualization->CuttingPlane Module
+set m15 [addModuleAtPosition "Uintah" "Visualization" "CuttingPlane" 6 483]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 24 402]
+
+# Create a SCIRun->Visualization->ShowColorMap Module
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 22 555]
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m18 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 824 3]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m19 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 824 73]
+
+# Create a Uintah->Selectors->VectorFieldExtractor Module
+set m20 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 1024 163]
+
+# Create a SCIRun->Visualization->StreamLines Module
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1040 553]
+set Notes($m21) {
+}
+
+# Create a SCIRun->Visualization->ShowField Module
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1022 716]
+
+# Create a SCIRun->FieldsCreate->SampleField Module
+set m23 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1059 399]
+
+# Create a SCIRun->Render->Viewer Module
+set m24 [addModuleAtPosition "SCIRun" "Render" "Viewer" 652 1000]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1044 0]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m26 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1022 636]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1242 565]
+
+# Create a Uintah->Operators->VectorFieldOperator Module
+set m28 [addModuleAtPosition "Uintah" "Operators" "VectorFieldOperator" 1261 404]
+
+# Create a Uintah->Visualization->GridVisualizer Module
+set m29 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 1469 400]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m30 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 824 162]
+
+# Create a Uintah->Visualization->CuttingPlane Module
+set m31 [addModuleAtPosition "Uintah" "Visualization" "CuttingPlane" 824 479]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m32 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 842 398]
+
+# Create a SCIRun->Visualization->ShowColorMap Module
+set m33 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 840 551]
+
+# Create a SCIRun->Render->SynchronizeGeometry Module
+set m34 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 650 863]
+
+# Create a SCIRun->FieldsGeometry->TransformField Module
+set m35 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 1023 240]
+
+# Create the Connections between Modules
+set c1 [addConnection $m10 0 $m7 0]
+set c2 [addConnection $m26 0 $m22 0]
+set c3 [addConnection $m2 0 $m31 0]
+set c4 [addConnection $m35 0 $m23 0]
+set c5 [addConnection $m35 0 $m26 0]
+set c6 [addConnection $m35 0 $m21 0]
+set c7 [addConnection $m35 0 $m28 0]
+set c8 [addConnection $m34 0 $m24 0]
+set c9 [addConnection $m9 0 $m11 0]
+set c10 [addConnection $m9 0 $m16 0]
+set c11 [addConnection $m25 0 $m27 0]
+set c12 [addConnection $m25 0 $m32 0]
+set c13 [addConnection $m16 0 $m17 0]
+set c14 [addConnection $m32 0 $m33 0]
+set c15 [addConnection $m3 0 $m4 0]
+set c16 [addConnection $m18 0 $m19 0]
+set c17 [addConnection $m14 0 $m15 0]
+set c18 [addConnection $m30 0 $m2 0]
+set c19 [addConnection $m4 0 $m14 0]
+set c20 [addConnection $m4 0 $m5 0]
+set c21 [addConnection $m4 0 $m13 0]
+set c22 [addConnection $m19 0 $m30 0]
+set c23 [addConnection $m19 0 $m20 0]
+set c24 [addConnection $m19 0 $m29 0]
+set c25 [addConnection $m5 0 $m8 0]
+set c26 [addConnection $m5 0 $m10 0]
+set c27 [addConnection $m5 0 $m6 0]
+set c28 [addConnection $m5 0 $m12 0]
+set c29 [addConnection $m20 0 $m35 0]
+set c30 [addConnection $m15 0 $m34 0]
+set c31 [addConnection $m8 0 $m6 1]
+set c32 [addConnection $m23 0 $m21 1]
+set c33 [addConnection $m2 0 $m32 1]
+set c34 [addConnection $m1 0 $m2 1]
+set c35 [addConnection $m1 0 $m35 1]
+set c36 [addConnection $m16 0 $m15 1]
+set c37 [addConnection $m32 0 $m31 1]
+set c38 [addConnection $m17 0 $m34 1]
+set c39 [addConnection $m6 0 $m10 1]
+set c40 [addConnection $m21 0 $m26 1]
+set c41 [addConnection $m12 0 $m11 1]
+set c42 [addConnection $m28 0 $m27 1]
+set c43 [addConnection $m14 0 $m16 1]
+set c44 [addConnection $m7 0 $m34 2]
+set c45 [addConnection $m31 0 $m34 3]
+set c46 [addConnection $m33 0 $m34 4]
+set c47 [addConnection $m22 0 $m34 5]
+set c48 [addConnection $m19 1 $m34 6]
+set c49 [addConnection $m23 1 $m34 7]
+set c50 [addConnection $m8 1 $m34 8]
+
+# Set GUI variables for the SCIRun->Math->BuildTransform Module
+set $m1-rotate_z {1.0}
+set $m1-translate_x {5.56}
+set $m1-translate_y {0.0}
+set $m1-translate_z {0.0}
+set $m1-shear_plane_c {1.0}
+set $m1-shear_plane_d {1.0}
+set $m1-widget_scale {1.0}
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m3-filebase {}
+set $m3-tcl_status {Executing}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m4-tcl_status {0.525002}
+set $m4-time {105}
+set $m4-max_time {200}
+set $m4-timeval {1e-09}
+set $m4-animate {1}
+set $m4-anisleep {2}
+set $m4-def-color-a {}
+
+# Set GUI variables for the Uintah->Selectors->VectorFieldExtractor Module
+set $m5-tcl_status {Calling VectorFieldExtractor!}
+set $m5-sVar {vel_CC}
+
+# Set GUI variables for the SCIRun->Visualization->StreamLines Module
+set $m6-tolerance {1e-06}
+set $m6-color {0}
+set $m6-remove-colinear {0}
+set $m6-method {2}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m7-nodes-on {0}
+set $m7-nodes-as-disks {1}
+set $m7-edges-usedefcolor {1}
+set $m7-faces-on {0}
+set $m7-normalize-vectors {}
+set $m7-has_vector_data {1}
+set $m7-text-precision {5}
+set $m7-def-color-r {0.0}
+set $m7-def-color-g {0.51}
+set $m7-node_display_type {Spheres}
+set $m7-active_tab {Edges}
+set $m7-node_scale {0.0001}
+set $m7-edge_scale {0.0142}
+set $m7-vectors_scale {0.3}
+set $m7-show_progress {}
+set $m7-node-resolution {3}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleField Module
+set $m8-endpoints {1}
+set $m8-endpoint0x {-2.49193074317}
+set $m8-endpoint0y {-2.52527403435}
+set $m8-endpoint0z {2.57421622867}
+set $m8-endpoint1x {-2.45362944251}
+set $m8-endpoint1y {2.611667584}
+set $m8-endpoint1z {2.56551217605}
+set $m8-widgetscale {0.108210731908}
+set $m8-ringstate {0.108211 1 1.275 0 2.525 0 1 0 0.416503}
+set $m8-framestate {0.108211 1 1.275 0 2.525 1.275 0 2.54 1.785 0 2.525}
+set $m8-maxseeds {100.0}
+set $m8-numseeds {20}
+set $m8-rngseed {18}
+set $m8-dist {impuni}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m9-width {398}
+set $m9-height {40}
+set $m9-resolution {255}
+set $m9-realres {255}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m11-isFixed {1}
+set $m11-min {7.11729615427}
+set $m11-max {77.5939492711}
+
+# Set GUI variables for the Uintah->Operators->VectorFieldOperator Module
+set $m12-operation {3}
+
+# Set GUI variables for the Uintah->Visualization->GridVisualizer Module
+set $m13-var_orientation {1}
+set $m13-nl {1}
+set $m13-default_radius {0.025}
+set $m13-show_selected_node {0}
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m14-tcl_status {Calling ScalarFieldExtractor!}
+set $m14-sVar {scratch}
+
+# Set GUI variables for the Uintah->Visualization->CuttingPlane Module
+set $m15-need_find {1}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m16-isFixed {1}
+set $m16-min {-500.0}
+set $m16-max {500.0}
+
+# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+set $m17-length {half1}
+set $m17-numsigdigits {6}
+set $m17-text-fontsize {1}
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m18-filebase {}
+set $m18-tcl_status {Executing}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m19-tcl_status {0.525005}
+set $m19-time {105}
+set $m19-max_time {200}
+set $m19-timeval {1e-09}
+set $m19-animate {1}
+set $m19-anisleep {2}
+set $m19-def-color-a {}
+
+# Set GUI variables for the Uintah->Selectors->VectorFieldExtractor Module
+set $m20-tcl_status {Calling VectorFieldExtractor!}
+set $m20-sVar {vel_CC}
+
+# Set GUI variables for the SCIRun->Visualization->StreamLines Module
+set $m21-tolerance {1e-06}
+set $m21-color {0}
+set $m21-remove-colinear {0}
+set $m21-method {2}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m22-nodes-on {0}
+set $m22-nodes-as-disks {1}
+set $m22-edges-usedefcolor {1}
+set $m22-faces-on {0}
+set $m22-normalize-vectors {}
+set $m22-has_vector_data {1}
+set $m22-text-precision {5}
+set $m22-def-color-r {0.0}
+set $m22-def-color-g {0.51}
+set $m22-node_display_type {Spheres}
+set $m22-active_tab {Edges}
+set $m22-node_scale {0.0001}
+set $m22-edge_scale {0.0142}
+set $m22-vectors_scale {0.3}
+set $m22-show_progress {}
+set $m22-node-resolution {3}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleField Module
+set $m23-endpoints {1}
+set $m23-endpoint0x {3.06326185788}
+set $m23-endpoint0y {-2.55280975023}
+set $m23-endpoint0z {2.52589725519}
+set $m23-endpoint1x {3.02585088188}
+set $m23-endpoint1y {2.68517535146}
+set $m23-endpoint1z {2.52519940495}
+set $m23-widgetscale {0.108210731908}
+set $m23-ringstate {0.108211 1 1.275 0 2.525 0 1 0 0.416503}
+set $m23-framestate {0.108211 1 1.275 0 2.525 1.275 0 2.54 1.785 0 2.525}
+set $m23-maxseeds {100.0}
+set $m23-numseeds {20}
+set $m23-rngseed {18}
+set $m23-dist {impuni}
+
+$m24 addViewer
+set $m24-ViewWindow_0-geometry 654x888+854+0
+
+$m24 addViewer
+set $m24-ViewWindow_1-geometry 152x164+1372+642
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m24-ViewWindow_0-pos {z1_y1}
+set $m24-ViewWindow_0-caxes {0}
+set $m24-ViewWindow_0-raxes {0}
+set $m24-ViewWindow_0-have_collab_vis {0}
+set $m24-ViewWindow_0-view-eyep-x {0.0730605069426}
+set $m24-ViewWindow_0-view-eyep-y {0.219678003092}
+set $m24-ViewWindow_0-view-eyep-z {21.7282258628}
+set $m24-ViewWindow_0-view-lookat-x {-0.0375563952532}
+set $m24-ViewWindow_0-view-lookat-y {0.128123216031}
+set $m24-ViewWindow_0-view-lookat-z {2.50618912846}
+set $m24-ViewWindow_0-view-up-x {0.0}
+set $m24-ViewWindow_0-view-up-y {1.0}
+set $m24-ViewWindow_0-view-up-z {0.0}
+set $m24-ViewWindow_0-view-fov {20.0}
+set $m24-ViewWindow_0-global-light0 {1}
+set $m24-ViewWindow_0-global-light1 {0}
+set $m24-ViewWindow_0-global-light2 {0}
+set $m24-ViewWindow_0-global-light3 {0}
+set $m24-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m24-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m24-ViewWindow_0-bgcolor-r {0.0}
+set $m24-ViewWindow_0-bgcolor-g {0.0}
+set $m24-ViewWindow_0-bgcolor-b {0.0}
+set $m24-ViewWindow_0-do_stereo {0}
+set $m24-ViewWindow_0-ambient-scale {1.0}
+set $m24-ViewWindow_0-diffuse-scale {1.0}
+set $m24-ViewWindow_0-specular-scale {0.4}
+set $m24-ViewWindow_0-emission-scale {1.0}
+set $m24-ViewWindow_0-shininess-scale {1.0}
+set $m24-ViewWindow_0-polygon-offset-factor {1.0}
+set $m24-ViewWindow_0-polygon-offset-units {0.0}
+set $m24-ViewWindow_0-point-size {1.0}
+set $m24-ViewWindow_0-line-width {1.0}
+set $m24-ViewWindow_0-sbase {0.4}
+set $m24-ViewWindow_0-sr {1}
+set $m24-ViewWindow_0-do_bawgl {0}
+set $m24-ViewWindow_0-global-light {1}
+set $m24-ViewWindow_0-global-fog {0}
+set $m24-ViewWindow_0-global-debug {0}
+set $m24-ViewWindow_0-global-clip {1}
+set $m24-ViewWindow_0-global-cull {0}
+set $m24-ViewWindow_0-global-dl {0}
+set $m24-ViewWindow_0-global-type {Gouraud}
+set $m24-ViewWindow_0-ortho-view {0}
+set $m24-ViewWindow_1-pos {}
+set $m24-ViewWindow_1-caxes {0}
+set $m24-ViewWindow_1-raxes {1}
+set $m24-ViewWindow_1-have_collab_vis {0}
+set $m24-ViewWindow_1-view-eyep-x {2.1}
+set $m24-ViewWindow_1-view-eyep-y {1.6}
+set $m24-ViewWindow_1-view-eyep-z {11.5}
+set $m24-ViewWindow_1-view-lookat-x {0.0}
+set $m24-ViewWindow_1-view-lookat-y {0.0}
+set $m24-ViewWindow_1-view-lookat-z {0.0}
+set $m24-ViewWindow_1-view-up-x {0.0}
+set $m24-ViewWindow_1-view-up-y {1.0}
+set $m24-ViewWindow_1-view-up-z {0.0}
+set $m24-ViewWindow_1-view-fov {20.0}
+set $m24-ViewWindow_1-global-light0 {1}
+set $m24-ViewWindow_1-global-light1 {0}
+set $m24-ViewWindow_1-global-light2 {0}
+set $m24-ViewWindow_1-global-light3 {0}
+set $m24-ViewWindow_1-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m24-ViewWindow_1-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m24-ViewWindow_1-bgcolor-r {0.0}
+set $m24-ViewWindow_1-bgcolor-g {0.0}
+set $m24-ViewWindow_1-bgcolor-b {0.0}
+set $m24-ViewWindow_1-do_stereo {0}
+set $m24-ViewWindow_1-ambient-scale {1.0}
+set $m24-ViewWindow_1-diffuse-scale {1.0}
+set $m24-ViewWindow_1-specular-scale {0.4}
+set $m24-ViewWindow_1-emission-scale {1.0}
+set $m24-ViewWindow_1-shininess-scale {1.0}
+set $m24-ViewWindow_1-polygon-offset-factor {1.0}
+set $m24-ViewWindow_1-polygon-offset-units {0.0}
+set $m24-ViewWindow_1-point-size {1.0}
+set $m24-ViewWindow_1-line-width {1.0}
+set $m24-ViewWindow_1-sbase {0.4}
+set $m24-ViewWindow_1-sr {1}
+set $m24-ViewWindow_1-do_bawgl {0}
+set $m24-ViewWindow_1-global-light {1}
+set $m24-ViewWindow_1-global-fog {0}
+set $m24-ViewWindow_1-global-debug {0}
+set $m24-ViewWindow_1-global-clip {1}
+set $m24-ViewWindow_1-global-cull {0}
+set $m24-ViewWindow_1-global-dl {0}
+set $m24-ViewWindow_1-global-type {Gouraud}
+set $m24-ViewWindow_1-ortho-view {0}
+set $m24-ViewWindow_2-pos {z1_y1}
+set $m24-ViewWindow_2-caxes {0}
+set $m24-ViewWindow_2-raxes {0}
+set $m24-ViewWindow_2-have_collab_vis {0}
+set $m24-ViewWindow_2-view-eyep-x {0.0733151653231}
+set $m24-ViewWindow_2-view-eyep-y {0.619511371}
+set $m24-ViewWindow_2-view-eyep-z {35.1994030131}
+set $m24-ViewWindow_2-view-lookat-x {2.66178453524}
+set $m24-ViewWindow_2-view-lookat-y {0.12602869202}
+set $m24-ViewWindow_2-view-lookat-z {2.51285027171}
+set $m24-ViewWindow_2-view-up-x {0.00299670319898}
+set $m24-ViewWindow_2-view-up-y {0.999885117608}
+set $m24-ViewWindow_2-view-up-z {-0.0148583766514}
+set $m24-ViewWindow_2-view-fov {20.0}
+set $m24-ViewWindow_2-global-light0 {1}
+set $m24-ViewWindow_2-global-light1 {0}
+set $m24-ViewWindow_2-global-light2 {0}
+set $m24-ViewWindow_2-global-light3 {0}
+set $m24-ViewWindow_2-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m24-ViewWindow_2-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m24-ViewWindow_2-bgcolor-r {0.0}
+set $m24-ViewWindow_2-bgcolor-g {0.0}
+set $m24-ViewWindow_2-bgcolor-b {0.0}
+set $m24-ViewWindow_2-do_stereo {0}
+set $m24-ViewWindow_2-ambient-scale {1.0}
+set $m24-ViewWindow_2-diffuse-scale {1.0}
+set $m24-ViewWindow_2-specular-scale {0.4}
+set $m24-ViewWindow_2-emission-scale {1.0}
+set $m24-ViewWindow_2-shininess-scale {1.0}
+set $m24-ViewWindow_2-polygon-offset-factor {1.0}
+set $m24-ViewWindow_2-polygon-offset-units {0.0}
+set $m24-ViewWindow_2-point-size {1.0}
+set $m24-ViewWindow_2-line-width {1.0}
+set $m24-ViewWindow_2-sbase {0.4}
+set $m24-ViewWindow_2-sr {1}
+set $m24-ViewWindow_2-do_bawgl {0}
+set $m24-ViewWindow_2-global-light {1}
+set $m24-ViewWindow_2-global-fog {0}
+set $m24-ViewWindow_2-global-debug {0}
+set $m24-ViewWindow_2-global-clip {1}
+set $m24-ViewWindow_2-global-cull {0}
+set $m24-ViewWindow_2-global-dl {0}
+set $m24-ViewWindow_2-global-type {Gouraud}
+set $m24-ViewWindow_2-ortho-view {0}
+set "$m24-ViewWindow_2-CuttingPlane Widget (4) (1)" {0}
+set "$m24-ViewWindow_2-SampleField Rake (8) (1)" {0}
+set "$m24-ViewWindow_2-SampleField Rake (9) (1)" {0}
+set "$m24-ViewWindow_2-CuttingPlane Widget (1) (1)" {0}
+set "$m24-ViewWindow_2-ShowColorMap Sticky (2) (1)" {1}
+set "$m24-ViewWindow_2-Cutting Plane (1) (1)" {1}
+set "$m24-ViewWindow_2-Edges (3) (1)" {1}
+set "$m24-ViewWindow_2-TimeStamp (7) (1)" {1}
+set "$m24-ViewWindow_2-ShowColorMap Sticky (5) (1)" {1}
+set "$m24-ViewWindow_2-Cutting Plane (4) (1)" {1}
+set "$m24-ViewWindow_2-Edges (6) (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m25-width {398}
+set $m25-height {40}
+set $m25-resolution {255}
+set $m25-realres {255}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m27-isFixed {1}
+set $m27-min {7.11729615427}
+set $m27-max {77.5939492711}
+
+# Set GUI variables for the Uintah->Operators->VectorFieldOperator Module
+set $m28-operation {3}
+
+# Set GUI variables for the Uintah->Visualization->GridVisualizer Module
+set $m29-var_orientation {1}
+set $m29-nl {1}
+set $m29-default_radius {0.025}
+set $m29-show_selected_node {0}
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m30-tcl_status {Calling ScalarFieldExtractor!}
+set $m30-sVar {scratch}
+
+# Set GUI variables for the Uintah->Visualization->CuttingPlane Module
+set $m31-need_find {1}
+set $m31-plane_index {1}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m32-isFixed {1}
+set $m32-min {-500.0}
+set $m32-max {500.0}
+
+# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+set $m33-numsigdigits {6}
+set $m33-text-fontsize {1}
+
+# Open the SCIRun->Render->SynchronizeGeometry UI
+$m34 initialize_ui
+
+
+::netedit scheduleok

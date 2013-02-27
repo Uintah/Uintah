@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# Usage: 
+#   udaCombiner <path-to-uda> destination [-f nodefile | nodelist]
+#   where nodelist is node1 node2 node3 ... 
+#   don't include current node in node list or node file
+
+USAGE="Usage: udaCombiner <path-to-uda> destination [-f nodefile | nodelist]"
+
+if [ "$#" -lt 3 ]; then
+  echo $USAGE
+  exit 1
+fi
+
+UDAPATH=$1
+DEST=$2
+NODEFILE=""
+NODE=""
+shift 2
+
+
+if [ ! -d $DEST ]; then
+  echo $USAGE
+  echo "Invalid Destination Directory"
+  exit 1
+fi
+
+if [ ! -d $UDAPATH ]; then
+  echo $USAGE
+  echo "Invalid UDA Directory"
+  exit 1
+fi
+
+# generate file with arglist 
+FILE="/tmp/`whoami`.tmp.procs"
+rm -f $FILE
+
+
+while [ "$#" -gt 0 ]; do
+  if [ "$1" == "-f" ]; then
+    if [ "$#" -gt 1 ]; then
+      shift
+      if [ "$NODE" != "" ]; then
+        echo "-f $1 argument ignored since nodelist specified"
+      else
+        if [ ! -f $1 ]; then
+          echo $USAGE
+          echo "Invalid filename"
+          exit 1
+        fi
+        NODEFILE="$1"
+      fi
+    else
+      echo $USAGE
+      echo "Please specify a filename with the -f option"
+      exit 1
+    fi
+
+  else
+    if [ "$NODEFILE" != "" ]; then
+      echo "$1 argument ignored since nodefile specified"
+    else
+      # build a file with the nodes
+      NODE="$1"
+      echo $NODE >> $FILE
+    fi
+  fi
+  shift
+done
+
+# first copy this node's stuff
+    echo "Copying from localhost:$UDAPATH to $DEST"
+cp -r $UDAPATH $DEST
+
+# if filename specified use that one instead
+if [ "$NODEFILE" != "" ]; then
+  FILE="$NODEFILE" 
+fi
+
+for node in `cat $FILE`
+do
+  #check for the node's existence
+  ssh $node 'echo >& /dev/null' >& /dev/null
+  rc="$?"
+
+  ssh $node "ls $UDAPATH >& /dev/null" >& /dev/null
+  rc1="$?"
+  
+  if [ $rc != "0" ]; then
+    echo "Unknown host: $node"
+  elif [ $rc1 != "0" ]; then
+    echo "$UDAPATH does not exist on $node"
+  else
+    echo "Copying from $node:$UDAPATH to $DEST"
+    scp -r "$node:$UDAPATH" $DEST > /dev/null
+  fi
+
+done
+exit 0

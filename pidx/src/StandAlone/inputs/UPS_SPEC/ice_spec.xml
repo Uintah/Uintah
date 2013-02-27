@@ -1,0 +1,218 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <CFD>
+    <ICE                                spec="OPTIONAL NO_DATA" >
+      <advection                        spec="REQUIRED NO_DATA" 
+                                          attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'" 
+                                          attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
+                                          attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
+      <ADD_HEAT                         spec="OPTIONAL NO_DATA" >
+       <add_heat_matls                  spec="REQUIRED STRING" />
+       <add_heat_coeff                  spec="REQUIRED STRING" />
+       <add_heat_t_start                spec="REQUIRED DOUBLE" />
+       <add_heat_t_final                spec="REQUIRED DOUBLE" />
+      </ADD_HEAT>                                        
+      <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
+      
+      <turbulence    spec="OPTIONAL NO_DATA"
+                      attribute1="model  REQUIRED STRING 'Smagorinsky Germano'">           
+        <model_constant                 spec="REQUIRED DOUBLE 'positive'"/>
+        <filter_width                   spec="REQUIRED DOUBLE '0,1'"/>
+        <turb_Pr                        spec="REQUIRED DOUBLE '0,1'"/>                            
+      </turbulence>
+      
+      <customInitialization             spec="OPTIONAL NO_DATA" >
+        <manufacturedSolution           spec="OPTIONAL NO_DATA"
+                                        attribute1="type  REQUIRED STRING 'mms_1 mms_2 mms_3'"> 
+          <A                            spec="OPTIONAL DOUBLE" />
+          <angle                        spec="OPTIONAL DOUBLE" />
+        </manufacturedSolution>
+        
+        <vortices                       spec="OPTIONAL NO_DATA" >
+          <vortex                       spec="MULTIPLE NO_DATA" >
+            <origin                     spec="REQUIRED VECTOR" />
+            <strength                   spec="REQUIRED DOUBLE" />
+            <radius                     spec="REQUIRED DOUBLE 'positive'" />
+          </vortex>                
+        </vortices> 
+         
+        <gaussianTemperature            spec="OPTIONAL NO_DATA">
+          <origin                       spec="REQUIRED VECTOR "/>
+          <spread_x                     spec="REQUIRED DOUBLE"/>
+          <spread_y                     spec="REQUIRED DOUBLE"/>
+          <amplitude                    spec="REQUIRED DOUBLE 'positive'"/>
+        </gaussianTemperature>
+        
+        <counterflow                    spec="OPTIONAL NO_DATA">
+          <strainRate                   spec="REQUIRED DOUBLE 'positive'"/>
+          <referenceCell                spec="REQUIRED VECTOR"/>
+        </counterflow>
+      </customInitialization>
+      
+      <ImplicitSolver                   spec="OPTIONAL NO_DATA">
+        <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
+        <outer_iteration_tolerance      spec="REQUIRED DOUBLE  'positive'"/>
+        <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
+        <Parameters                     spec="OPTIONAL NO_DATA"
+                                          attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+          <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
+          <criteria                     spec="OPTIONAL STRING 'Absolute relative'" />                     
+          <jump                         spec="OPTIONAL INTEGER" />                                        
+          <logging                      spec="OPTIONAL INTEGER 'positive'" />                             
+          <maxiterations                spec="OPTIONAL INTEGER 'positive'" />                             
+          <norm                         spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+          <npost                        spec="OPTIONAL INTEGER" />                                        
+          <npre                         spec="OPTIONAL INTEGER" />                                        
+          <preconditioner               spec="OPTIONAL STRING 'none, pfmg, smg'" />                            
+          <outputEquations              spec="OPTIONAL BOOLEAN" />                                        
+          <skip                         spec="OPTIONAL INTEGER" />                                        
+          <setupFrequency               spec="OPTIONAL INTEGER" />                                        
+          <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                         
+          <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
+          <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+        </Parameters>
+      </ImplicitSolver>
+      <max_iteration_equilibration      spec="OPTIONAL INTEGER 'positive'" /> <!-- FIXME: what is default? -->
+      <solution                         spec="OPTIONAL NO_DATA"
+                                          attribute1="technique REQUIRED STRING 'EqForm'" />
+      <TimeStepControl                  spec="OPTIONAL NO_DATA" >
+        <Scheme_for_delT_calc           spec="REQUIRED STRING 'aggressive, conservative'" />
+        <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1'" />
+      </TimeStepControl>
+    </ICE>        
+  </CFD>
+
+  <AMR>
+    <ICE                                spec="OPTIONAL NO_DATA" >
+      <orderOfInterpolation             spec="REQUIRED INTEGER 'positive'" />
+      <orderOf_CFI_Interpolation        spec="OPTIONAL INTEGER 'positive'" />
+      <do_Refluxing                     spec="REQUIRED BOOLEAN" />
+      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" > 
+        <Variable                       spec="MULTIPLE NO_DATA" 
+                                          attribute1="name  REQUIRED STRING"
+                                          attribute2="value REQUIRED DOUBLE"
+                                          attribute3="matl  REQUIRED STRING" />
+      </Refinement_Criteria_Thresholds>
+      <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" /> <!-- Defaults to TRUE.  FIXME: is this correct? -->
+    </ICE>
+  </AMR>
+
+  <MaterialProperties>
+    <ICE                      spec="OPTIONAL NO_DATA" > 
+      <material               spec="MULTIPLE NO_DATA"
+                                attribute1="name OPTIONAL STRING" >
+        <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
+        <EOS                  spec="REQUIRED NO_DATA"
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater, KumariDass'" >
+          <!--  TST  -->
+          <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
+          <a                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater BirchMurnaghan' />
+          <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
+          <b                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater BirchMurnaghan' />
+          <Gamma              spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <u                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <w                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          
+          <gas_constant       spec="OPTIONAL DOUBLE" need_applies_to='type  ideal_gas' />
+          
+          <!--  JWL & JWLC  -->
+          <A                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Gruneisen Tillotson' />
+          <B                  spec="REQUIRED DOUBLE           " need_applies_to='type JWL JWLC Gruneisen Tillotson' />
+          <C                  spec="REQUIRED DOUBLE           " need_applies_to='type     JWLC' />
+          <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
+          <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
+          <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnaghan Gruneisen Tillotson' />
+          <rho0               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+
+          <!--  Murnaghan  -->
+          <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
+          <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
+
+          <!--  Murnaghan  -->
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <B0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <B0prime            spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <lambda             spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+
+          <!-- BirchMurnaghan -->
+          <useSpecificHeatModel spec="OPTIONAL BOOLEAN" need_applies_to='type BirchMurnaghan'/>
+          <c0                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
+          <c1                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
+          <c2                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
+          <c3                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
+          
+          <K                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan Gruneisen' />
+          <T0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Gruneisen' />
+          <T0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          <S0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          <S                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          
+          <co                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          <ko                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          <To                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          <L                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          <vo                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
+          
+          <E0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <Es                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <Esp                spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <alpha              spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          <beta               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Tillotson' />
+          
+        </EOS>
+        <SpecificHeatModel    spec="OPTIONAL NO_DATA"  
+                              attribute1="type REQUIRED STRING 'Debye Component Polynomial'" >
+          <Atoms              spec="REQUIRED INTEGER 'positive'" need_applies_to='type Debye' />
+          <DebyeTemperature   spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Debye' />
+
+          <XCO2               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XCO                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH2O               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XO2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XN2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XOH                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XNO                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XO                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+          <XH2                spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type Component' />
+
+          <MaxOrder           spec="REQUIRED INTEGER 'positive'" need_applies_to='type Polynomial'/>
+          <Tmin               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial' />
+          <Tmax               spec="OPTIONAL DOUBLE" need_applies_to='type Polynomial' />
+          <coefficient        spec="OPTIONAL MULTIPLE_DOUBLES" need_applies_to='type Polynomial'/>
+        </SpecificHeatModel>
+        <gamma                spec="REQUIRED DOUBLE 'positive'" />
+        <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
+        <geom_object          spec="MULTIPLE" />
+        <includeFlowWork      spec="OPTIONAL BOOLEAN" />
+        <isSurroundingMatl    spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
+        <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
+        <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
+
+      </material>
+    </ICE>
+    
+    <exchange_properties           spec="OPTIONAL NO_DATA" >
+      <convective_fluid            spec="OPTIONAL INTEGER" /> 
+      <convective_solid            spec="OPTIONAL INTEGER" /> 
+      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
+      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
+      
+      <exchange_coefficients       spec="REQUIRED NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
+      </exchange_coefficients>
+      
+      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+      </exch_coef_after_MPM_add>
+      
+    </exchange_properties>
+    
+  </MaterialProperties>
+
+</Uintah_Include>

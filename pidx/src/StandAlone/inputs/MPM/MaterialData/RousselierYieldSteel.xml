@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- All Materials -->
+<Uintah_Include>
+  <yield_condition type="rousselier">
+    <D> 2.0 </D>
+    <sig_1> 4.45e6 </sig_1>
+  </yield_condition>
+</Uintah_Include>

@@ -1,0 +1,90 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equations on each mesh (scalar, x,y,z staggered)</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-scalar" state="STATE_N" />
+      <LinearFunction slope="0.1" intercept="0.1">
+        <NameTag name="XSVOL" state="STATE_NONE" />
+      </LinearFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL" >
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="phi-diffusivity" state="STATE_NONE" />
+      <GaussianFunction amplitude="4e-3" deviation="2" mean="5" baseline="1e-3" >
+        <NameTag name="XSVOL" state="STATE_NONE" />
+      </GaussianFunction>
+    </BasicExpression>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <DiffusionCoefficient>
+          <NameTag name="phi-diffusivity" state="STATE_NONE" />
+        </DiffusionCoefficient>
+        <!-- ConstantDiffusivity>0.3</ConstantDiffusivity -->
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>10</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>wasatch_test.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "1" interval = "5"/>
+    <compression>gzip</compression>
+    <save label="phi-scalar" />
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[10,10,10]</upper>
+        <resolution>[10,10,10]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

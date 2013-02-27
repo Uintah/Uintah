@@ -1,0 +1,308 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+   <Meta>
+       <title>Pressurization of a half space via burning w/o fracture with Arenisca</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            8.00e-3     </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           1.0e-12     </delt_min>
+       <delt_max>           1.0e-6      </delt_max>
+       <delt_init>          2.1e-8      </delt_init>
+       <max_Timesteps>      9999         </max_Timesteps>
+       <timestep_multiplier>0.3         </timestep_multiplier>
+   </Time>    
+   <!--
+   <Debug>
+     <dbg_timeStart>       0.00        </dbg_timeStart>
+     <dbg_timeStop>       8.00e-3        </dbg_timeStop>
+     <dbg_outputInterval>  1e-9        </dbg_outputInterval>
+     <dbg_BeginIndex>     [[-1,-1,-1]]    </dbg_BeginIndex>"
+     <dbg_EndIndex>       [[51,51,1]]   </dbg_EndIndex>"
+     <dbg_Matls>           [0]         </dbg_Matls>"
+     <dbg_Level>           [1]         </dbg_Level>"
+     <dbg_SigFigs>         [16]        </dbg_SigFigs>
+     <debug label = "switchDebug_equil_press"/>
+   </Debug>
+   -->
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [ 0.0,     0.0,     0.0      ]    </lower>
+              <upper>        [ 0.1,     0.1,     0.01     ]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [2,2,1]    </patches>
+              <resolution>   [51, 51, 1]                 </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>halfSpaceExpGeo.uda</filebase>
+      <outputTimestepInterval> 1 </outputTimestepInterval>
+      <save label = "rho_CC"/>
+      <save label = "press_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "g.mass"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.temperature"/>
+      <save label = "p.particleID"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.volume"/>
+      <save label = "g.stressFS"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "delP_MassX"/>
+      <save label = "int_eng_L_CC"/>
+      <save label = "sp_vol_L_CC"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "g.acceleration"/>
+      <save label = "p.plasticStrain"/>
+      <save label = "p.plasticStrainVol"/>
+      <save label = "p.elasticStrainVol"/>
+      <save label = "p.kappa"/>
+
+<!--
+      <save label = "p.localized"/>
+-->
+
+      <checkpoint cycle = "2" timestepInterval = "20"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.3</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>                   gimp       </interpolator>
+        <minimum_particle_mass>1.0e-9</minimum_particle_mass>
+        <maximum_particle_velocity>3.e4</maximum_particle_velocity>
+        <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+        <artificial_viscosity>           true       </artificial_viscosity>
+        <use_load_curves>                false      </use_load_curves>
+        <erosion algorithm = "none"/>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "Soil">
+           <density>2600.0</density>
+           <thermal_conductivity>0.25</thermal_conductivity>
+           <specific_heat>890</specific_heat>
+           <room_temp>294.0</room_temp>
+           <melt_temp>2000.0</melt_temp>
+           <!--
+           <constitutive_model type = "comp_neo_hook">
+             <shear_modulus>1.3e6</shear_modulus>
+             <bulk_modulus>3.25e6</bulk_modulus>
+             <B0> 1.0e4 </B0>
+             <G0> 3.75e3 </G0>
+             <CR> 0.001 </CR>
+           </constitutive_model>
+           -->
+           <constitutive_model type="Arenisca">
+             <FSLOPE> 0.057735026919 </FSLOPE>
+             <FSLOPE_p> 0.057735026919 </FSLOPE_p>
+             <hardening_modulus> 0.0 </hardening_modulus>
+             <CR> 14.8 </CR>
+             <p0_crush_curve> -1837.0724e3 </p0_crush_curve>
+             <p1_crush_curve> 6.6666666666666666e-6 </p1_crush_curve>
+             <p3_crush_curve> 0.5 </p3_crush_curve>
+             <p4_fluid_effect> 1.0 </p4_fluid_effect>
+             <fluid_B0> 0.0 </fluid_B0>
+             <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
+             <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+             <subcycling_characteristic_number> 3 </subcycling_characteristic_number>
+             <PEAKI1> 6.123724356953976e2 </PEAKI1>
+             <B0> 3.25e6 </B0>
+             <G0> 1.3e6 </G0>
+           </constitutive_model>
+
+           <geom_object>
+             <difference>
+               <box label = "soil">
+                 <min> [-0.2, -0.05, -0.02 ] </min>
+                 <max> [0.2, 0.05, 0.02 ] </max>
+               </box>
+               <!--
+               <cylinder label = "explosive">
+                 <bottom> [0.05, 0.035, -0.02] </bottom>
+                 <top> [0.05, 0.035, 0.02] </top>
+                 <radius> 0.005 </radius>
+               </cylinder>
+               -->
+               <cylinder label = "explosive">
+                 <bottom> [0.0, 0.035, -0.02] </bottom>
+                 <top> [0.0, 0.035, 0.02] </top>
+                 <radius> 0.005 </radius>
+               </cylinder>
+             </difference>
+             <res> [2,2,2] </res>
+             <velocity> [0.0,0.0,0.0] </velocity>
+             <temperature> 300 </temperature>
+           </geom_object>
+         </material>
+         <material name = "reactant">
+           <density> 1840.0 </density>
+           <constitutive_model type = "comp_neo_hook">
+             <shear_modulus>3.5e8</shear_modulus>
+             <bulk_modulus>5.0e8</bulk_modulus>
+           </constitutive_model>
+           <thermal_conductivity> 0.452 </thermal_conductivity>
+           <specific_heat> 996.0 </specific_heat>
+           <geom_object>
+             <cylinder label = "explosive"> </cylinder>
+             <res> [2,2,2] </res>
+             <velocity> [0.0,0.0,0.0] </velocity>
+             <temperature> 500.0 </temperature>
+           </geom_object>
+         </material>
+         <contact>
+           <type>approach</type>
+           <materials> [0,1] </materials>
+           <mu> 0.0 </mu>
+         </contact>
+       </MPM>
+
+       <ICE>
+         <material name = "product">
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity> 0.0 </dynamic_viscosity>
+           <thermal_conductivity> 0.0  </thermal_conductivity>
+           <specific_heat> 716.0 </specific_heat>
+           <gamma> 1.4 </gamma>
+           <geom_object>
+             <box label="gas">
+               <min> [0.1, 0.1, 0.1] </min>
+               <max> [0.2, 0.2, 0.2] </max>
+             </box>
+             <res> [2,2,2] </res>
+             <velocity> [0.0,0.0,0.0] </velocity>
+             <temperature> 300.0 </temperature>
+             <density> 1.1792946927374306000e+00 </density>
+             <pressure> 101325.0 </pressure>
+           </geom_object>
+         </material>
+         <material>
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity> 0.0 </dynamic_viscosity>
+           <thermal_conductivity> 0.0 </thermal_conductivity>
+           <specific_heat> 716.0 </specific_heat>
+           <gamma> 1.4 </gamma>
+           <geom_object>
+             <difference>
+               <box>
+                 <min> [-0.1, -0.1, -0.02] </min>
+                 <max> [0.1, 0.1, 0.02] </max>
+               </box>
+               <box label="soil"> </box>
+             </difference>
+             <res> [2,2,2] </res>
+             <velocity> [0.0,0.0,0.0] </velocity>
+             <temperature> 300.0 </temperature>
+             <density> 1.1792946927374306000e+00 </density>
+             <pressure> 101325.0 </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+      <exchange_properties>  
+         <exchange_coefficients>
+           <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
+           <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>
+        </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <Models>
+      <Model type="Simple_Burn">
+        <fromMaterial> reactant     </fromMaterial>
+        <toMaterial>  product       </toMaterial>
+        <ThresholdTemp>       450.0 </ThresholdTemp>
+        <ThresholdPressure> 50000.0 </ThresholdPressure>
+        <Enthalpy>        2000000.0 </Enthalpy>
+        <BurnCoeff>            75.3 </BurnCoeff>
+        <refPressure>      101325.0 </refPressure>
+      </Model>
+    </Models>
+
+
+</Uintah_specification>
+
