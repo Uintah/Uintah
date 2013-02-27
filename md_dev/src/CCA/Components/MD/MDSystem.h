@@ -26,9 +26,12 @@
 #define UINTAH_MD_MDSYSTEM_H
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Math/Matrix3.h>
 
 namespace Uintah {
+
+using namespace SCIRun;
 
 /**
  *  @class MDSystem
@@ -94,6 +97,26 @@ class MDSystem {
 
     /**
      * @brief
+     * @param
+     * @return
+     */
+    inline int getNumGhostCells() const
+    {
+      return this->d_numGhostCells;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline int getMaxIterations() const
+    {
+      return this->d_maxIterations;
+    }
+
+    /**
+     * @brief
      * @param None
      * @return
      */
@@ -144,14 +167,16 @@ class MDSystem {
 
   private:
 
-    double d_volume;         //!< Total MD system unit cell volume
-    double d_pressure;      //!< Total MD system pressure
-    double d_temperature;   //!< Total MD system temperature
-    bool d_orthorhombic;    //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_changeBox;       //!< Whether or not the system size has changed
+    double d_volume;            //!< Total MD system unit cell volume
+    double d_pressure;          //!< Total MD system pressure
+    double d_temperature;       //!< Total MD system temperature
+    int d_numGhostCells;        //!< Number of ghost cells used, a function of cutoffRadius and cell size
+    int d_maxIterations;        //!<
+    bool d_orthorhombic;        //!< Whether or not the MD system is using orthorhombic coordinates
+    bool d_changeBox;           //!< Whether or not the system size has changed
 
-    Matrix3 d_unitCell;     //!< MD system unit cell
-    Matrix3 d_inverseCell;  //!< MD system inverse unit cell
+    Matrix3 d_unitCell;         //!< MD system unit cell
+    Matrix3 d_inverseCell;      //!< MD system inverse unit cell
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

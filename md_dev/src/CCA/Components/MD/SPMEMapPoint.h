@@ -35,12 +35,8 @@ namespace Uintah {
 typedef int particleIndex;
 typedef int particleId;
 
-using SCIRun::Vector;
-using SCIRun::IntVector;
-
 class Point;
 class Vector;
-class IntVector;
 
 /**
  *  @class SPMEMapPoint

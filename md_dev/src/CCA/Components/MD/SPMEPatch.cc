@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,33 +22,29 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MDSystem.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/MD/SPMEPatch.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <iostream>
 
-#include <sci_values.h>
-
 using namespace Uintah;
 
-MDSystem::MDSystem()
+SPMEPatch::SPMEPatch()
 {
 
 }
 
-MDSystem::~MDSystem()
+SPMEPatch::~SPMEPatch()
 {
 
 }
 
-MDSystem::MDSystem(ProblemSpecP& ps)
+SPMEPatch::SPMEPatch(IntVector extents,
+                     IntVector offset,
+                     IntVector plusGhostExtents,
+                     IntVector minusGhostExtents) :
+    localExtents(extents), globalOffset(offset), posGhostExtents(plusGhostExtents), negGhostExtents(minusGhostExtents)
 {
-  ps->findBlock("MDSystem");
-  ps->get("pressure", d_pressure);
-  ps->get("temperature", d_temperature);
-  ps->get("orthorhombic", d_orthorhombic);
-  ps->get("changeBox", d_changeBox);
-  ps->get("ghostcells", d_numGhostCells);
-  ps->get("maxiterations", d_maxIterations);
+
 }
 

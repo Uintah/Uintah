@@ -36,9 +36,7 @@ namespace Uintah {
 
 typedef std::complex<double> dblcomplex;
 
-using SCIRun::Vector;
-using SCIRun::Point;
-using SCIRun::IntVector;
+using namespace SCIRun;
 
 class Patch;
 
@@ -72,8 +70,8 @@ template<typename T> class SimpleGrid {
      * @param offset The offset for the first point in the patch in reference to the global grid.
      * @param numGhostCells The number of ghost cells this SimpleGrid has.
      */
-    SimpleGrid(const SCIRun::IntVector& extents,
-               const SCIRun::IntVector& offset,
+    SimpleGrid(const IntVector& extents,
+               const IntVector& offset,
                const int numGhostCells);
     /**
      * @brief Constructor to build grid from 3 linear arrays
@@ -86,7 +84,7 @@ template<typename T> class SimpleGrid {
     SimpleGrid(const std::vector<T>& XArray,
                const std::vector<T>& YArray,
                const std::vector<T>& ZArray,
-               const SCIRun::IntVector& offset,
+               const IntVector& offset,
                const int numGhostCells);
     /**
      * @brief

@@ -353,7 +353,7 @@ void MD::initialize(const ProcessorGroup* pg,
   printTask(patches, md_cout, "MD::initialize");
 
   // initialize electrostatics object
-  electrostatics->initialize(system, patches, matls);
+  electrostatics->initialize(patches, matls, old_dw, new_dw);
 
   // loop through all patches
   unsigned int numPatches = patches->size();

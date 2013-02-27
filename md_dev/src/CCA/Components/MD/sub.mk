@@ -37,6 +37,7 @@ SRCS += $(SRCDIR)/MD.cc                       \
         $(SRCDIR)/MDSystem.cc                 \
         $(SRCDIR)/SPME.cc                     \
         $(SRCDIR)/SPMEMapPoint.cc             \
+        $(SRCDIR)/SPMEPatch.cc                \
         $(SRCDIR)/SimpleGrid.cc               \
         $(SRCDIR)/CenteredCardinalBSpline.cc  \
         $(SRCDIR)/MDBoundaryCondition.cc      \
