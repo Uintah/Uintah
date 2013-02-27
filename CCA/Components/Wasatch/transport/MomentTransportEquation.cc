@@ -86,12 +86,12 @@ namespace Wasatch {
       growthParams->get("PreGrowthCoefficient",constCoef);
 
     if (growthModel == "BULK_DIFFUSION") {      //g(r) = 1/r
-      std::stringstream previousMomentOrderStr;
-      previousMomentOrderStr << momentOrder - 2;
-      const Expr::Tag phiTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
+      std::stringstream twoPreviousMomentOrderStr;
+      twoPreviousMomentOrderStr << momentOrder - 2;
+      const Expr::Tag phiTag( basePhiName + "_" + twoPreviousMomentOrderStr.str(), Expr::STATE_N );
       if ( momentOrder == 1 || momentOrder == 0) {
         // register a moment closure expression
-        const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
+        const Expr::Tag momentClosureTag( basePhiName + "_" + twoPreviousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
         factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
       }
@@ -111,50 +111,54 @@ namespace Wasatch {
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
 
-    } else if (growthModel == "CONSTANT") {   // g0
-      std::stringstream currentMomentOrderStr;
-      currentMomentOrderStr << momentOrder;
-      const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
+    } else if (growthModel == "CONSTANT" || growthModel == "KINETIC" ) {   // g0
+      std::stringstream previousMomentOrderStr;
+      previousMomentOrderStr << momentOrder - 1;
+      const Expr::Tag phiTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
+      if (momentOrder == 0) { //register closure expr
+        const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
+        typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
+        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
+      }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
     }
 
     growthTags.push_back(growthTag);
     factory.register_expression( builder );
+  }
+  
+  //-----------------------------------------------------------------
+  template<typename FieldT>
+  void setup_ostwald_expression( Uintah::ProblemSpecP ostwaldParams,
+                                 const std::string& PopulationName,
+                                 const Expr::TagList& weightsTagList,
+                                 const Expr::TagList& abscissaeTagList,
+                                 Expr::ExpressionFactory& factory)
+  {
+    Expr::Tag ostwaldTag, m0Tag; // this tag will be populated
+    Expr::ExpressionBuilder* builder = NULL;
+    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_N );
+    //need to m0 to normalize wieghts to add to 1, otherwise there are counted twice when the actually growht term is computed
+    m0Tag = Expr::Tag( "m_" + PopulationName + "_0", Expr::STATE_N);  
+    
+    double Molec_Vol;
+    double Surf_Eng;
+    double Temperature;
+    double expCoef;
+    const double R = 8.314;
+    ostwaldParams->get("MolecularVolume", Molec_Vol);
+    ostwaldParams->get("SurfaceEnergy", Surf_Eng);
+    ostwaldParams->get("Temperature", Temperature);
 
-    if (growthParams->findBlock("OstwaldRipening") ){
-      Uintah::ProblemSpecP ostwaldParams = growthParams->findBlock("OstwaldRipening");
-      int nPts = nEqs/2;
-      Expr::Tag ostwaldTag; // this tag will be populated
-      Expr::ExpressionBuilder* builder2 = NULL;
-      ostwaldTag = Expr::Tag( thisPhiName + "_Ostwald_Ripening", Expr::STATE_NONE );
-
-      double Molec_Vol;
-      double Surf_Eng;
-      double Temperature;
-      double expCoef;
-      const double R = 8.314;
-      ostwaldParams->get("MolecularVolume", Molec_Vol);
-      ostwaldParams->get("SurfaceEnergy", Surf_Eng);
-      ostwaldParams->get("Temperature", Temperature);
-      double CFCoef = 1.0;
-      if (ostwaldParams->findBlock("ConversionFactor") )
-        ostwaldParams->get("ConversionFactor", CFCoef);  //converts small radii to SI
-
-      double RCutoff = 0.1;                           //Does RCutoff need an expression in future?
-      if (ostwaldParams->findBlock("RCutoff") )
-        ostwaldParams->get("RCutoff",RCutoff);
-      expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature * CFCoef;
-      
-      Expr::Tag superSatTag;
-      Uintah::ProblemSpecP nameTagParam = ostwaldParams->findBlock("SupersaturationExpression")->findBlock("NameTag");
-      superSatTag = parse_nametag( nameTagParam );
-
-      typedef typename OstwaldRipening<FieldT>::Builder ostwald;
-      builder2 = scinew ostwald(ostwaldTag, growthCoefTag, superSatTag, weightsTagList, abscissaeTagList, momentOrder, expCoef, RCutoff, constCoef, nPts);
-      growthTags.push_back(ostwaldTag);
-      factory.register_expression( builder2 );
-    }
+    double CFCoef, RCutoff;
+    ostwaldParams->getWithDefault("ConversionFactor",CFCoef,1.0); //converts small radii to SI
+    ostwaldParams->getWithDefault("RCutoff",RCutoff,0.1);
+    expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature / CFCoef;  //r is divided in this equation later
+    
+    typedef typename OstwaldRipening<FieldT>::Builder ostwald;
+    builder = scinew ostwald(ostwaldTag, weightsTagList, abscissaeTagList, m0Tag, expCoef, RCutoff);
+    factory.register_expression( builder );
   }
 
   //------------------------------------------------------------------
@@ -348,6 +352,19 @@ namespace Wasatch {
                                         weightsTags,
                                         abscissaeTags,
                                         factory);
+    }
+    
+    //_________________
+    // Ostwald Ripening
+    if (momentOrder == 0) { //only register sBar once
+      if ( params->findBlock("OstwaldRipening") ) {
+        Uintah::ProblemSpecP ostwaldParams = params->findBlock("OstwaldRipening");
+        setup_ostwald_expression <FieldT>( ostwaldParams,
+                                           PopulationName,
+                                           weightsTags,
+                                           abscissaeTags,
+                                           factory);
+      }
     }
 
     //_________________
