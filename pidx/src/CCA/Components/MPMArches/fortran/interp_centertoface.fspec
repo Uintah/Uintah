@@ -1,7 +1,0 @@
-void interp_centertoface(
-	Array3<double> phi_fc,
-     	constCCVariable<double> phi_cc, 
-	int ioff, int joff, int koff,
-     	IntVector valid_lo, IntVector valid_hi);
-
-	
