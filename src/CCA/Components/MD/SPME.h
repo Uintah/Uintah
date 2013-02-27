@@ -28,6 +28,8 @@
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/CenteredCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/MD/SPMEPatch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
 #include <vector>
@@ -39,12 +41,9 @@ namespace Uintah {
 typedef std::complex<double> dblcomplex;
 typedef SimpleGrid<complex<double> > cdGrid;
 
-using SCIRun::IntVector;
-
 class MDSystem;
 class SPMEMapPoint;
 class ParticleSubset;
-class IntVector;
 
 /**
  *  @class SPME
@@ -79,11 +78,11 @@ class SPME : public Electrostatics {
      * @param
      * @param
      */
-    SPME(const MDSystem* system,
+    SPME(MDSystem* system,
          const double ewaldBeta,
          const bool polarizable,
          const double polarizationTolerance,
-         const SCIRun::IntVector& kLimits,
+         const IntVector& kLimits,
          const int splineOrder);
 
     /**
@@ -93,9 +92,10 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    void initialize(const MDSystem* system,
-                    const PatchSubset* patches,
-                    const MaterialSubset* materials);
+    void initialize(const PatchSubset* patches,
+                    const MaterialSubset* materials,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -163,30 +163,6 @@ class SPME : public Electrostatics {
      * @brief
      * @param
      * @param
-     * @param
-     * @param
-     * @return
-     */
-    SimpleGrid<double> fC(const IntVector& gridExtents,
-                          const IntVector& gridOffset,
-                          const int numGhostCells,
-                          const MDSystem& system);
-
-    /**
-     * @brief
-     * @param
-     * @param
-     * @param
-     * @return
-     */
-    SimpleGrid<dblcomplex> fB(const IntVector& gridExtents,
-                              const MDSystem& system,
-                              const int splineOrder);
-
-    /**
-     * @brief
-     * @param
-     * @param
      * @return
      */
     vector<double> calculateOrdinalSpline(const int orderMinusOne,
@@ -212,8 +188,8 @@ class SPME : public Electrostatics {
      *
      * @return A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
      */
-    SimpleGrid<double> calculateBGrid(const SCIRun::IntVector& extents,
-                                      const SCIRun::IntVector& offsets) const;
+    SimpleGrid<double> calculateBGrid(const IntVector& extents,
+                                      const IntVector& offsets) const;
 
     /**
      * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
@@ -223,8 +199,8 @@ class SPME : public Electrostatics {
      *
      * @return A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
      */
-    SimpleGrid<double> calculateCGrid(const SCIRun::IntVector& extents,
-                                      const SCIRun::IntVector& offsets) const;
+    SimpleGrid<double> calculateCGrid(const IntVector& extents,
+                                      const IntVector& offsets) const;
 
     /**
      * @brief
@@ -233,8 +209,8 @@ class SPME : public Electrostatics {
      *
      * @return A SimpleGrid<Matrix3>
      */
-    SimpleGrid<Matrix3> calculateStressPrefactor(const SCIRun::IntVector& extents,
-                                                 const SCIRun::IntVector& offset);
+    SimpleGrid<Matrix3> calculateStressPrefactor(const IntVector& extents,
+                                                 const IntVector& offset);
 
     /**
      * @brief Generates split grid vector.
@@ -312,11 +288,13 @@ class SPME : public Electrostatics {
 
     // Values fixed on instantiation
     ElectrostaticsType electrostaticMethod;         //!< Implementation type for long range electrostatics
+    MDSystem* system;                               //!<
     double ewaldBeta;						                    //!< The Ewald calculation damping coefficient
     bool polarizable;				                    	  //!< Use polarizable Ewald formulation
     double polarizationTolerance;                   //!< Tolerance threshold for polarizable system
-    SCIRun::IntVector kLimits;                      //!< Number of grid divisions in each direction
+    IntVector kLimits;                              //!< Number of grid divisions in each direction
     CenteredCardinalBSpline interpolatingSpline;    //!< Spline object to hold info for spline calculation
+    std::vector<SPMEPatch> spmePatches;             //!< Assuming multiple patches, these are the pieces of the SPME grid
 
     // Variables we'll get from the MDSystem instance to make life easier
     Matrix3 unitCell;           //!< Unit cell lattice parameters

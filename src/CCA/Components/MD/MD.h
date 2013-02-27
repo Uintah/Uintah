@@ -289,8 +289,8 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     vector<const VarLabel*> particleState_preReloc;   //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
-    string coordinateFile;  //!
-    unsigned int numAtoms;  //!
+    string coordinateFile;  //!< file with coordinates of all atoms in this MD system
+    unsigned int numAtoms;  //!< Total number of atoms in this MD simulation
     double cutoffRadius;    //!< The short ranged cut off distances (in Angstroms)
     Vector box;             //!< The size of simulation
     double R12;             //!< This is the v.d.w. repulsive parameter

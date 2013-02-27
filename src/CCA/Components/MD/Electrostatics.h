@@ -26,12 +26,11 @@
 #define UINTAH_MD_ELECTROSTATICS_H
 
 #include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-namespace Uintah {
 
-using SCIRun::Vector;
-using SCIRun::IntVector;
+namespace Uintah {
 
 /**
  *  @class Electrostatics
@@ -70,9 +69,10 @@ class Electrostatics {
      * @brief
      * @param
      */
-    virtual void initialize(const MDSystem* system,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls) = 0;
+    virtual void initialize(const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw) = 0;
 
     /**
      * @brief
