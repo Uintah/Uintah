@@ -173,7 +173,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
       taskQueueAlg_ = PatchOrderRandom;
   }
   if (d_myworld->myrank() == 0) {
-    cout << "   Using \"" << taskQueueAlg << "\" Algorithm" << endl;
+    cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << endl;
   }
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
@@ -192,8 +192,12 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
-         << "\tCreating " << numThreads_ << " threads for task execution." << endl;
+    if (numThreads_ < 0) {
+      cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << endl;
+    } else {
+      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
+           << "\tCreating " << numThreads_ << " thread(s) for task execution." << endl;
+    }
   }
 
 //  d_nextsignal = scinew ConditionVariable("NextCondition");
@@ -215,6 +219,9 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   if (affinity.active()) {
     Thread::self()->set_affinity(0);  // bind main thread to cpu 0
   }
+#ifdef HAVE_CUDA
+  state->setUnifiedScheduler(this);
+#endif
 }
 
 SchedulerP UnifiedScheduler::createSubScheduler()
@@ -1938,7 +1945,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 }
 
 void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
-    CopyType type)
+                                      CopyType type)
 {
   std::vector<cudaStream_t*>* dtaskStreams;
   std::vector<cudaStream_t*>::iterator iter;
@@ -1957,7 +1964,7 @@ void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
-    CopyType type)
+                                     CopyType type)
 {
   std::vector<cudaEvent_t*>* dtaskEvents;
   std::vector<cudaEvent_t*>::iterator iter;

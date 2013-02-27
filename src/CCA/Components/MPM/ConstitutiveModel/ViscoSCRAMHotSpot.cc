@@ -261,7 +261,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   double onethird = (1.0/3.0);
   double sqrtopf  = sqrt(1.5);
   Matrix3 zero(0.0), Id; Id.Identity();
-  Ghost::GhostType gac = Ghost::AroundCells;
 
   // Initial crack growth parameters
   // Baseline PBX 9501
@@ -285,19 +284,17 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
 
   // Define particle and grid variables
   delt_vartype delT;
-  constParticleVariable<Short27> pgCode;
   constParticleVariable<double>  pMass, pVol, pTemp;
   constParticleVariable<double>  pCrackRadius;
-  constParticleVariable<Point>   px;
   constParticleVariable<Vector>  pVel;
-  constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pDefGrad, pSig;
   constParticleVariable<double>  pHotSpotT1, pHotSpotT2;
   constParticleVariable<double>  pHotSpotPhi1, pHotSpotPhi2;
-  constNCVariable<Vector>        gvelocity, Gvelocity;
+  constParticleVariable<double>  pVol_new;
+  constParticleVariable<Matrix3> pDefGrad_new,velGrad;
 
-  ParticleVariable<double>    pVol_new, pIntHeatRate_new;
-  ParticleVariable<Matrix3>   pDefGrad_new, pSig_new;
+  ParticleVariable<double>    pIntHeatRate_new;
+  ParticleVariable<Matrix3>   pSig_new;
   ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
   ParticleVariable<double>    pCrHeatRate_new, pChHeatRate_new;
   ParticleVariable<double>    pCrackRadius_new, pStrainRate_new;
@@ -308,7 +305,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>    pRand;
 
   // Other local variables
-  Matrix3 velGrad(0.0);                       // velocity gradient
   Matrix3 pDefRate(0.0);                       // rate of deformation
   Matrix3 pDefRateDev(0.0);                    // deviatoric rate of deform
   Matrix3 pDefGradInc; pDefGradInc.Identity(); // increment of deform gradient
@@ -323,11 +319,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
     // Initialize patch variables
     double se = 0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -335,15 +326,12 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     // Get patch size
 
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     // Get the particle and grid data for the current patch
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(px,            lb->pXLabel,                  pset);
     old_dw->get(pMass,         lb->pMassLabel,               pset);
     old_dw->get(pVol,          lb->pVolumeLabel,             pset);
     old_dw->get(pTemp,         lb->pTemperatureLabel,        pset);
-    old_dw->get(psize,         lb->pSizeLabel,               pset);
     old_dw->get(pVel,          lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,      lb->pDeformationMeasureLabel, pset);
     old_dw->get(pSig,          lb->pStressLabel,             pset);
@@ -352,19 +340,13 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pHotSpotT2,    pHotSpotT2Label,              pset);
     old_dw->get(pHotSpotPhi1,  pHotSpotPhi1Label,            pset);
     old_dw->get(pHotSpotPhi2,  pHotSpotPhi2Label,            pset);
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,  lb->GVelocityStarLabel, dwi, patch, gac, NGN);
-    }
-    new_dw->get(gvelocity,    lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Allocate arrays for the updated particle data for the current patch
-    new_dw->allocateAndPut(pVol_new,         
-                           lb->pVolumeLabel_preReloc,             pset);
+    new_dw->get(pVol_new,         lb->pVolumeLabel_preReloc,             pset);
+    new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,            pset);
+    new_dw->get(pDefGrad_new,     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pIntHeatRate_new, 
                            lb->pdTdtLabel_preReloc,               pset);
-    new_dw->allocateAndPut(pDefGrad_new,     
-                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pSig_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolHeatRate_new, 
@@ -415,33 +397,9 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       double K = (2.0*G*(1.0+nu))/(3.0*(1.0-2.0*nu));
       //double alphaK = 3.0*K*(alpha*variation);
 
-      velGrad.set(0.0);
-      short pgFld[27];
-      if (flag->d_fracture) {
-        for(int k=0; k<27; k++){
-          pgFld[k]=pgCode[idx][k];
-        }
-        // Compute the velocity gradient
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx],pDefGrad[idx]);
-        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
-      } else {
-        if(!flag->d_axisymmetric){
-         // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
-
-         computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
-        } else {  // axi-symmetric kinematics
-         // Get the node indices that surround the cell
-         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],pDefGrad[idx]);
-         // x -> r, y -> z, z -> theta
-         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-        }
-      }
-
       // Calculate rate of deformation, deviatoric rate of deformation
       // and the effective deviatoric strain rate
-      pDefRate = (velGrad + velGrad.Transpose())*.5;
+      pDefRate = (velGrad[idx] + velGrad[idx].Transpose())*.5;
       pStrainRate_new[idx] = pDefRate.Norm();
 
       if (dbg.active())
@@ -503,18 +461,10 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       //dbg << " Mean Stress (new) = " << sig_m_new << endl;
       //dbg << "Total Stress (new) = " << endl << pSig_new[idx] << endl;
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient (F_n^np1 = dudx * dt + Id)
-      pDefGradInc = velGrad * delT + Id;
-      double Jinc = pDefGradInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
       double J = pDefGrad_new[idx].Determinant();
 
       // Compute the current mass density and volume
       double rho_cur = rho_0/J;
-      pVol_new[idx]=Jinc*pVol[idx];
 
       // Determine the bulk temperature change at a material point
       // assuming adiabatic conditions
@@ -595,7 +545,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 
@@ -673,84 +622,6 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
   }
 }
          
-void 
-ViscoSCRAMHotSpot::allocateCMDataAddRequires(Task* task,
-                                             const MPMMaterial* matl,
-                                             const PatchSet* patches,
-                                             MPMLabel* lb) const
-{
-  // Call the ViscoScram method first
-  ViscoScram::allocateCMDataAddRequires(task, matl, patches, lb);
-
-  // Do the local variables
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW, pChemHeatRateLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW, pHotSpotT1Label_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, pHotSpotT2Label_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, pHotSpotPhi1Label_preReloc,  matlset, gnone);
-  task->requires(Task::NewDW, pHotSpotPhi2Label_preReloc,  matlset, gnone);
-}
-
-
-void 
-ViscoSCRAMHotSpot::allocateCMDataAdd(DataWarehouse* new_dw,
-                                     ParticleSubset* addset,
-                                     map<const VarLabel*,
-                                     ParticleVariableBase*>* newState,
-                                     ParticleSubset* delset,
-                                     DataWarehouse* old_dw)
-{
-  // Call the ViscoScram method first
-  ViscoScram::allocateCMDataAdd(new_dw, addset, newState, delset, old_dw);
-  
-  // Copy the data local to this model from the particles to 
-  // be deleted to the particles to be added
-  ParticleVariable<double>    pChemHeatRate_add;
-  ParticleVariable<double>    pHotSpotT1_add;
-  ParticleVariable<double>    pHotSpotT2_add;
-  ParticleVariable<double>    pHotSpotPhi1_add;
-  ParticleVariable<double>    pHotSpotPhi2_add;
-
-  constParticleVariable<double>    pChemHeatRate_del;
-  constParticleVariable<double>    pHotSpotT1_del;
-  constParticleVariable<double>    pHotSpotT2_del;
-  constParticleVariable<double>    pHotSpotPhi1_del;
-  constParticleVariable<double>    pHotSpotPhi2_del;
-
-  new_dw->allocateTemporary(pChemHeatRate_add, addset);
-  new_dw->allocateTemporary(pHotSpotT1_add,    addset);
-  new_dw->allocateTemporary(pHotSpotT2_add,    addset);
-  new_dw->allocateTemporary(pHotSpotPhi1_add,  addset);
-  new_dw->allocateTemporary(pHotSpotPhi2_add,  addset);
-
-  new_dw->get(pChemHeatRate_del, pChemHeatRateLabel_preReloc, delset);
-  new_dw->get(pHotSpotT1_del,    pHotSpotT1Label_preReloc,    delset);
-  new_dw->get(pHotSpotT2_del,    pHotSpotT2Label_preReloc,    delset);
-  new_dw->get(pHotSpotPhi1_del,  pHotSpotPhi1Label_preReloc,  delset);
-  new_dw->get(pHotSpotPhi2_del,  pHotSpotPhi2Label_preReloc,  delset);
-
-  ParticleSubset::iterator del = delset->begin();
-  ParticleSubset::iterator add = addset->begin();
-  for (; del != delset->end(); del++, add++) {
-    particleIndex delidx = *del;
-    particleIndex addidx = *add;
- 
-    pChemHeatRate_add[addidx] = pChemHeatRate_del[delidx];
-    pHotSpotT1_add[addidx]    = pHotSpotT1_del[delidx];
-    pHotSpotT2_add[addidx]    = pHotSpotT2_del[delidx];
-    pHotSpotPhi1_add[addidx]  = pHotSpotPhi1_del[delidx];
-    pHotSpotPhi2_add[addidx]  = pHotSpotPhi2_del[delidx];
-  }
-
-  (*newState)[pChemHeatRateLabel] = pChemHeatRate_add.clone();
-  (*newState)[pHotSpotT1Label]    = pHotSpotT1_add.clone();
-  (*newState)[pHotSpotT2Label]    = pHotSpotT2_add.clone();
-  (*newState)[pHotSpotPhi1Label]  = pHotSpotPhi1_add.clone();
-  (*newState)[pHotSpotPhi2Label]  = pHotSpotPhi2_add.clone();
-}
-
 void 
 ViscoSCRAMHotSpot::addParticleState(std::vector<const VarLabel*>& from,
                                     std::vector<const VarLabel*>& to)

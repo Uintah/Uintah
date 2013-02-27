@@ -51,8 +51,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
       } else { 
 
-        //radiation model (not DO)  doesn't currently set opl
-        db->require( "opl", _opl ); 
+        src_db->findBlock("RMCRT")->require( "opl", _opl ); 
 
       } 
     }
@@ -64,9 +63,9 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
   } 
 
-  db->getWithDefault( "density_label", _den_label_name, "density"); 
-  db->getWithDefault( "absorption_label", _absorp_label_name, "absorpIN"); 
-  db->getWithDefault( "temperature_label", _T_label_name, "temperature"); 
+  db->getWithDefault( "density_label",          _den_label_name, "density"); 
+  db->getWithDefault( "absorption_label",       _absorp_label_name, "absorpIN"); 
+  db->getWithDefault( "temperature_label",      _T_label_name, "temperature"); 
   db->getWithDefault( "mixture_fraction_label", _f_label_name, "mixture_fraction"); 
 
   db->getWithDefault( "soot_density", _rho_soot, 1950.0); 
@@ -88,29 +87,30 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
 {
   std::string taskname = "EmpSoot::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &EmpSoot::computeProp, time_substep ); 
-
+  Ghost::GhostType  gn  = Ghost::None;
+  
   if ( !(_has_been_computed) ) {
 
     if ( time_substep == 0 ) {
       
       tsk->computes( _prop_label ); 
-			tsk->computes( _absorp_label ); 
+      tsk->computes( _absorp_label ); 
 
-      tsk->requires( Task::OldDW, _T_label, Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, _den_label, Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, _f_label, Ghost::None, 0 ); 
-
+      tsk->requires( Task::OldDW, _T_label,   gn, 0 ); 
+      tsk->requires( Task::OldDW, _den_label, gn, 0 ); 
+      tsk->requires( Task::OldDW, _f_label,   gn, 0 ); 
+      
     } else {
 
       tsk->modifies( _prop_label ); 
       tsk->modifies( _absorp_label ); 
 
-      tsk->requires( Task::NewDW, _T_label, Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, _den_label, Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, _f_label, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _T_label,   gn, 0 ); 
+      tsk->requires( Task::NewDW, _den_label, gn, 0 ); 
+      tsk->requires( Task::NewDW, _f_label,   gn, 0 ); 
 
     }
-
+    
     sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
     _has_been_computed = true; 
@@ -140,26 +140,27 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
     constCCVariable<double> temperature; 
     constCCVariable<double> density; 
     constCCVariable<double> f; 
+    Ghost::GhostType  gn  = Ghost::None;
 
-    if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
-
-      new_dw->getModifiable( soot_vf, _prop_label, matlIndex, patch ); 
+    if ( time_substep != 0 ){
+    
+      new_dw->getModifiable( soot_vf,     _prop_label,   matlIndex, patch ); 
       new_dw->getModifiable( absorp_coef, _absorp_label, matlIndex, patch ); 
 
-      new_dw->get( temperature, _T_label, matlIndex, patch, Ghost::None, 0 ); 
-      new_dw->get( density, _den_label, matlIndex, patch, Ghost::None, 0 ); 
-      new_dw->get( f, _f_label, matlIndex, patch, Ghost::None, 0 ); 
+      new_dw->get( temperature, _T_label,   matlIndex, patch, gn, 0 ); 
+      new_dw->get( density,     _den_label, matlIndex, patch, gn, 0 ); 
+      new_dw->get( f,           _f_label,   matlIndex, patch, gn, 0 ); 
 
     } else {
-
-      new_dw->allocateAndPut( soot_vf, _prop_label, matlIndex, patch ); 
+      
+      new_dw->allocateAndPut( soot_vf,     _prop_label,   matlIndex, patch ); 
       new_dw->allocateAndPut( absorp_coef, _absorp_label, matlIndex, patch ); 
       soot_vf.initialize(0.0); 
       absorp_coef.initialize(0.0); 
 
-      old_dw->get( temperature, _T_label, matlIndex, patch, Ghost::None, 0 ); 
-      old_dw->get( density, _T_label, matlIndex, patch, Ghost::None, 0 ); 
-      old_dw->get( f, _f_label, matlIndex, patch, Ghost::None, 0 ); 
+      old_dw->get( temperature, _T_label,   matlIndex, patch, gn, 0 ); 
+      old_dw->get( density,     _den_label, matlIndex, patch, gn, 0 ); 
+      old_dw->get( f,           _f_label,   matlIndex, patch, gn, 0 ); 
 
     }
 
@@ -204,7 +205,7 @@ void EmpSoot::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &EmpSoot::dummyInit);
   tsk->computes(_prop_label); 
-  tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _prop_label,  Ghost::None, 0 ); 
 
   tsk->computes(_absorp_label); 
   tsk->requires( Task::OldDW, _absorp_label, Ghost::None, 0 ); 

@@ -62,12 +62,12 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  void sched_initialize( const LevelP& level, SchedulerP& sched );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   class Builder
     : public SourceTermBase::Builder { 
@@ -101,6 +101,7 @@ private:
   int _radiation_calc_freq; 
 
   bool _all_rk; 
+  bool _using_prop_calculator; 
 
   std::string _co2_label_name; 
   std::string _h2o_label_name; 
@@ -114,6 +115,8 @@ private:
   BoundaryCondition* _bc; 
   RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
+
+  std::vector<const VarLabel*> _species_varlabels; 
 
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 
@@ -131,8 +134,6 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
-
-  bool _using_prop_calculator; 
 
 }; // end DORadiation
 } // end namespace Uintah

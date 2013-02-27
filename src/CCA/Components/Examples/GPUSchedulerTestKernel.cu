@@ -24,7 +24,6 @@
 
 #include <sci_defs/cuda_defs.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,11 +38,12 @@ extern "C" {
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 __global__ void gpuSchedulerTestKernel(uint3 domainLow,
-                                      uint3 domainHigh,
-                                      uint3 domainSize,
-                                      int ghostLayers,
-                                      double *phi,
-                                      double *newphi) {
+                                       uint3 domainHigh,
+                                       uint3 domainSize,
+                                       int numGhostCells,
+                                       double *phi,
+                                       double *newphi)
+{
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
@@ -74,6 +74,24 @@ __global__ void gpuSchedulerTestKernel(uint3 domainLow,
                    + phi[INDEX3D(dx,dy, i, j, (k+1))]);
     }
   }
+}
+
+void launchGPUSchedulerTestKernel(dim3 dimGrid,
+                                  dim3 dimBlock,
+                                  cudaStream_t* stream,
+                                  uint3 domainLow,
+                                  uint3 domainHigh,
+                                  uint3 domainSize,
+                                  int numGhostCells,
+                                  double* d_phi,
+                                  double* d_newphi)
+{
+  gpuSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(domainLow,
+                                                              domainHigh,
+                                                              domainSize,
+                                                              numGhostCells,
+                                                              d_phi,
+                                                              d_newphi);
 }
 
 #ifdef __cplusplus

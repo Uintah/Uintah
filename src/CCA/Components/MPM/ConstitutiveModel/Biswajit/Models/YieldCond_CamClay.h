@@ -82,6 +82,7 @@ namespace UintahBB {
     // Compute value of yield function
     //--------------------------------------------------------------
     double evalYieldCondition(const ModelState* state);
+    double evalYieldConditionMax(const ModelState* state);
 
     //--------------------------------------------------------------
     // Compute df/dp  where p = volumetric stress = 1/3 Tr(sigma)

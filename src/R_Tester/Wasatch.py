@@ -16,6 +16,21 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
                                        "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+liddrivencavity3Dlaminarperf_ups = modUPS( the_dir, \
+                                       "lid-driven-cavity-3D-Re1000.ups", \
+                                       ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+liddrivencavity3Dvremanperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-VREMAN.ups", \
+                                       ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+liddrivencavity3Dsmagorinskyperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-SMAGORINSKY.ups", \
+                                       ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+liddrivencavity3Dwaleperf_ups = modUPS( the_dir, \
+                                       "turb-lid-driven-cavity-3D-WALE.ups", \
+                                       ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+scalabilitytestperf_ups = modUPS( the_dir, \
+                                  "scalability-test.ups", \
+                                  ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -44,7 +59,23 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                   \
+  ("turbulent-inlet-test-xminus",          "turbulent-inlet-test-xminus.ups",    12,  "Linux",  ["exactComparison","no_restart"] ),                         \
+  ("turb-lid-driven-cavity-3D-VREMAN_perf",   liddrivencavity3Dvremanperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("turb-lid-driven-cavity-3D-WALE_perf",   liddrivencavity3Dwaleperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("lid-driven-cavity-3D-LAMINAR_perf",   liddrivencavity3Dlaminarperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
+  ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),                        \
+  ("intrusion_flow_past_objects_xy",          "intrusion_flow_past_objects_xy.ups",    16,  "Linux",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_over_icse",                "intrusion_flow_over_icse.ups",          16,  "Linux",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),\
+  ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
+  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
+  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                                \
+  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                     \
+  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                  \
   ("read-from-file-test",   "read-from-file-test.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                   \
   ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
@@ -90,12 +121,24 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   1,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("read-from-file-test",   "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("channel-flow-symmetry-bc",   "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                   \
-  ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
-  ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                 \
-  ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),               \
+  ("turbulent-inlet-test-xminus",          "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ), \
+  ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         \
+  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
+  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 \
+  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                \
+  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),                     \
+  ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),                \
+  ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                                 \
+  ("channel-flow-symmetry-bc",                 "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                            \
+  ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       \
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                \
+  ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),         \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               \

@@ -76,10 +76,12 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
+  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_, volfract_;
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
+  bool didMatrixUpdate_;
+  bool hasMovingGeometry_;
   int  materialID_;
   int  rkStage_;
   const bool useRefPressure_;
@@ -87,16 +89,19 @@ class Pressure
   const SCIRun::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
   
-  const Uintah::SolverParameters& solverParams_;
+  Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
   const Uintah::VarLabel* matrixLabel_;
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
   const double* timestep_;
+  const double* currenttime_;
 
   const SVolField* dilatation_;
   const SVolField* d2rhodt2_;
+  const SVolField* volfrac_;
+  
   const XVolField* fx_;
   const YVolField* fy_;
   const ZVolField* fz_;
@@ -129,22 +134,25 @@ class Pressure
             const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
             const Expr::Tag& timesteptag,
+            const Expr::Tag& volfractag,
+            const bool hasMovingGeometry,
             const bool       userefpressure,
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
             const bool       use3dlaplacian,
-            const Uintah::SolverParameters& solverParams,
+            Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
+    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_,volfract_;
+    const bool hasMovingGeometry_;
     const bool userefpressure_;
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
-    const Uintah::SolverParameters& sparams_;
+    Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
     Builder( const Expr::TagList& result,
@@ -154,11 +162,13 @@ public:
              const Expr::Tag& diltationtag,            
              const Expr::Tag& d2rhodt2tag,
              const Expr::Tag& timesteptag,
+             const Expr::Tag& volfractag,
+             const bool hasMovingGeometry,
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
              const bool       use3DLaplacian,            
-             const Uintah::SolverParameters& sparams,
+             Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -227,6 +237,8 @@ public:
    * \brief Calculates pressure coefficient matrix.
    */
   void setup_matrix();
+  
+  void process_embedded_boundaries();
 
   /**
    * \brief Special function to apply pressure boundary conditions after the pressure solve.

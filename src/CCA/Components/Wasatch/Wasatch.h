@@ -218,6 +218,10 @@ namespace Wasatch{
      */
     void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
+    
+    void preGridProblemSetup(const Uintah::ProblemSpecP& params,
+                             Uintah::GridP& grid,
+                             Uintah::SimulationStateP& state);
 
     //__________________________________
     //  AMR
@@ -235,19 +239,21 @@ namespace Wasatch{
     void disable_wasatch_material(){ buildWasatchMaterial_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
-    const std::set<std::string>& io_field_set(){ return ioFieldSet_; }
+    const std::set<std::string>& locked_fields() const{ return lockedFields_; }
+    std::set<std::string>& locked_fields(){ return lockedFields_; }
     void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
-    const Uintah::MaterialSet* const get_wasatch_materials(){ return materials_; }
+    const Uintah::MaterialSet* const get_wasatch_materials() const{ return materials_; }
 
   private:
-    bool buildTimeIntegrator_;
-    bool buildWasatchMaterial_;
+    bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
+    bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
     bool isRestarting_;
     int nRKStages_;
-    std::set<std::string> ioFieldSet_;
+    std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchParams_;
+    std::map<std::string, std::set<std::string> > bcFunctorMap_;
 
     /**
      *  a container of information for constructing ExprLib graphs.
@@ -264,7 +270,7 @@ namespace Wasatch{
 
     Uintah::SolverInterface* linSolver_;
 
-    EquationAdaptors adaptors_;
+    EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 
     std::list< const TaskInterface*  > taskInterfaceList_;
     std::list< const Uintah::PatchSet* > patchSetList_;

@@ -45,7 +45,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
@@ -199,9 +198,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
    
-  else if (mat_type ==  "membrane")
-    return(scinew Membrane(child,flags));
-
   else if (mat_type ==  "murnaghanMPM")
     return(scinew MurnaghanMPM(child,flags));
 

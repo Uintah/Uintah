@@ -30,6 +30,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
+#include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -57,11 +58,14 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::
   ScalarTransportEquation( const std::string solnVarName,
                            Uintah::ProblemSpecP params,
+                           const bool hasEmbeddedGeometry,
                            const Expr::Tag densityTag,
                            const bool isConstDensity,
                            const Expr::ExpressionID rhsID )
     : Wasatch::TransportEquation( solnVarName, rhsID,
-                                  get_staggered_location<FieldT>() ),
+                                  get_staggered_location<FieldT>(),
+                                  hasEmbeddedGeometry,
+                                  params),
       isConstDensity_( isConstDensity ),
       densityTag_( densityTag )
   {
@@ -120,11 +124,51 @@ namespace Wasatch{
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      const Uintah::PatchSet* const localPatches,
                                      const PatchInfoMap& patchInfoMap,
-                                     const Uintah::MaterialSubset* const materials)
+                                     const Uintah::MaterialSubset* const materials,
+                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
 
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
+    
+    // multiply the initial condition by the volume fraction for embedded geometries
+    if (hasEmbeddedGeometry_) {
+            
+      std::cout << "attaching modifier expression on " << phiTag << std::endl;
+      //create modifier expression
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      Expr::TagList theTagList;
+      VolFractionNames& vNames = VolFractionNames::self();
+      theTagList.push_back( vNames.svol_frac_tag() );
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
+                                                                   theTagList,
+                                                                   ExprAlgbr::PRODUCT,
+                                                                   true) );
+      
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        
+        // get the patch subset
+        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
+        
+        // loop over every patch in the patch subset
+        for( int ipss=0; ipss<patches->size(); ++ipss ){
+          
+          // get a pointer to the current patch
+          const Uintah::Patch* const patch = patches->get(ipss);
+          
+          // loop over materials
+          for( int im=0; im<materials->size(); ++im ){
+            //    if (hasVolFrac_) {
+            // attach the modifier expression to the target expression
+            factory.attach_modifier_expression( modifierTag, phiTag, patch->getID(), true );
+            //    }
+            
+          }
+        }
+      }
+    }
+
     if( factory.have_entry(phiTag) ){
       process_boundary_conditions<FieldT>( phiTag,
                                            this->solution_variable_name(),
@@ -132,7 +176,7 @@ namespace Wasatch{
                                            graphHelper,
                                            localPatches,
                                            patchInfoMap,
-                                           materials );
+                                           materials, bcFunctorMap );
     }
   }
 
@@ -144,7 +188,8 @@ namespace Wasatch{
   setup_boundary_conditions( const GraphHelper& graphHelper,
                              const Uintah::PatchSet* const localPatches,
                              const PatchInfoMap& patchInfoMap,
-                             const Uintah::MaterialSubset* const materials )
+                             const Uintah::MaterialSubset* const materials,
+                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
     // see BCHelperTools.cc
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),Expr::STATE_N ),
@@ -153,7 +198,7 @@ namespace Wasatch{
                                          graphHelper,
                                          localPatches,
                                          patchInfoMap,
-                                         materials );
+                                         materials, bcFunctorMap );
     // see BCHelperTools.cc
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name()+"_rhs",Expr::STATE_NONE ),
                                         this->solution_variable_name() + "_rhs",
@@ -161,7 +206,7 @@ namespace Wasatch{
                                         graphHelper,
                                         localPatches,
                                         patchInfoMap,
-                                        materials );
+                                        materials, bcFunctorMap );
 
   }
 
@@ -216,6 +261,7 @@ namespace Wasatch{
                                                     const bool isConstDensity,
                                                     Expr::ExpressionFactory& factory,
                                                     Uintah::ProblemSpecP params,
+                                                    const bool hasEmbeddedGeometry,
                                                     TurbulenceParameters turbulenceParams)
   {
     FieldTagInfo info;
@@ -248,29 +294,21 @@ namespace Wasatch{
 
     //_____________
     // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag = Expr::Tag();
-    if (params->findBlock("VolumeFractionExpression")) {
-      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-    }
-
+    Expr::Tag volFracTag   = Expr::Tag();
     Expr::Tag xAreaFracTag = Expr::Tag();
-    if (params->findBlock("XAreaFractionExpression")) {
-      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
-    }
-
     Expr::Tag yAreaFracTag = Expr::Tag();
-    if (params->findBlock("YAreaFractionExpression")) {
-      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
-    }
-
     Expr::Tag zAreaFracTag = Expr::Tag();
-    if (params->findBlock("ZAreaFractionExpression")) {
-      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    if (hasEmbeddedGeometry) {
+      VolFractionNames& vNames = VolFractionNames::self();
+      volFracTag = vNames.svol_frac_tag();
+      xAreaFracTag = vNames.xvol_frac_tag();
+      yAreaFracTag = vNames.yvol_frac_tag();
+      zAreaFracTag = vNames.zvol_frac_tag();
     }
     
-    
+    //_____________
+    // Turbulence
     Expr::Tag turbDiffTag = Expr::Tag();
-    // TURBULENCE
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     if (turbulenceParams.turbulenceModelName != NONE && enableTurbulenceModel ) { 
       Expr::Tag turbViscTag = turbulent_viscosity_tag();//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
@@ -281,7 +319,6 @@ namespace Wasatch{
         factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbulentSchmidt, turbViscTag ) );
       }      
     }
-    // END TURBULENCE
     
     //_________________
     // Diffusive Fluxes

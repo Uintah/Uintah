@@ -175,34 +175,6 @@
                 </ColdFlow> 
             </Properties>
 
-            <PropertyModels>
-              <model label = "pr_no" type = "laminar_pr" initialization= "constant">
-
-                <constant>0.4</constant>
-
-                <atm_pressure>1.0 </atm_pressure>
-                <mix_frac_label>MixtureFraction</mix_frac_label>
-                <D>7.5320e-5</D>  <!-- binary diffusion coefficient (m^2/s) --> 
-
-                <fuel>
-                  <molar_mass>4.003 </molar_mass>
-                  <critical_temperature>5.19 </critical_temperature>
-                  <dipole_moment>0.00 </dipole_moment>
-                  <viscosity>2.0123e-5 </viscosity>
-                  <critical_pressure>2.28 </critical_pressure>
-                </fuel>
-
-                <oxidizer>
-                  <molar_mass>29.1 </molar_mass>
-                  <critical_temperature>132.2 </critical_temperature>
-                  <dipole_moment>0.0 </dipole_moment>
-                  <viscosity>1.8714e-5 </viscosity>
-                  <critical_pressure>37.45 </critical_pressure>
-                </oxidizer>
-
-              </model>
-            </PropertyModels>
-
             <BoundaryConditions>
               <use_new_bcs/>
             </BoundaryConditions>

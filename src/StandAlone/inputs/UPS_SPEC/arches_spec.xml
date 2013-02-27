@@ -7,7 +7,7 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-      <set_initial_vel_condition             spec="OPTIONAL NO_DATA"
+      <set_initial_vel_condition        spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
           
       <set_initial_condition             spec="OPTIONAL NO_DATA"
@@ -19,7 +19,8 @@
       <VarID                            spec="OPTIONAL NO_DATA"> <!-- matches variables to specific CFD roles --> 
         <var                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction'"/>
+                                        attribute2="role REQUIRED STRING 'temperature, density, enthalpy, mixture_fraction, 
+                                                                          co2, h2o, soot, specific_heat'"/>
       </VarID>
 
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
@@ -31,8 +32,15 @@
                                                                           absorption_coefficient, 
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
-                                                                          heat_loss'"
-                                        attribute3="initialization REQUIRED STRING 'constant'">
+                                                                          heat_loss'">
+
+          <initialization               spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant'">
+
+            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+
+          </initialization>
+
 
           <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
@@ -108,7 +116,7 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
 
           <!-- Heat loss --> 
-          <enthalpy_label               spec="OPTIONAL STRING"
+          <enthalpy_label               spec="REQUIRED STRING"
                                         need_applies_to="type heat_loss"/>  <!-- point to the enthalpy transport equation... optional because you can choose constant value--> 
           <adiabatic_enthalpy_label     spec="OPTIONAL STRING"
                                         need_applies_to="type heat_loss"/>  <!-- point to the tabulated adiabatic enthalpy, default = "adiabaticenthalpy" --> 
@@ -121,8 +129,7 @@
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"
                                         need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
           <constant_heat_loss           spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"
-                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant --> 
+                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant.  Uses the intialization value (or field) --> 
                                           
         </model>
       </PropertyModels>
@@ -248,7 +255,7 @@
                                         attribute1="transport_label REQUIRED STRING">
               <var                      spec="MULTIPLE NO_DATA"   
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+                                        attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
         </ColdFlow>
@@ -308,7 +315,7 @@
                                         attribute1="transport_label REQUIRED STRING">
               <var                      spec="MULTIPLE NO_DATA"   
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="value REQUIRED DOUBLE 'positive'"/>
+                                        attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
         </ClassicTable>
@@ -343,7 +350,7 @@
            <velocity                    spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'flat, from_file, massflow'">
 
-            <!-- flat velocity profile -->                             
+            <!-- flat velocity profile [m/s] -->                             
             <u                          spec="OPTIONAL DOUBLE" 
                                         need_applies_to="type flat"/>
             <v                          spec="OPTIONAL DOUBLE" 
@@ -354,9 +361,9 @@
             <input_file                 spec="REQUIRED STRING"
                                         need_applies_to="type from_file"/>
 
-            <!-- mass flow --> 
+            <!-- mass flow [kg/sec]--> 
             <flow_rate                  spec="REQUIRED DOUBLE"
-                                        need_applies_to="type massflow"/>
+                                        need_applies_to="type massflow"/> 
 
 
            </velocity>
@@ -452,10 +459,54 @@
         </WallBC>
       </BoundaryConditions>
 
+      <WallHT                           spec="OPTIONAL NO_DATA">
+        <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
+        <model                          spec="MULTIPLE NO_DATA"
+                                        attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
+          <!-- simple heat transfer 
+                  Solves for the gas side wall temperature by solving the discrete form of: 
+                  q = - k dT/dy
+                  for all domain solid walls everywhere. Excludes intrusions.  
+          --> 
+          <k                            spec="REQUIRED DOUBLE" need_applies_to="type simple_ht"/> <!-- thermal conductivity, [W/(m K)] --> 
+          <wall_thickness               spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- thickness of the wall in meters, [meters] --> 
+          <tube_side_T                  spec="REQUIRED DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- temperature of the fluid on the tube side (constant), [K] --> 
+          <T_wall_min                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- minimum allowed wall temperature [K]. Default = 373 --> 
+          <T_wall_max                   spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- maximum allowed wall temperature [K]. Default = 373 --> 
+          <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type simple_ht"/> <!-- relaxation to help with wildy varying wall temperatures 
+                                                                                                                  because we have assumed (with this model) that the wall comes to 
+                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 (no relaxation).  --> 
+
+          <!-- region ht 
+                Like simple_ht model but only applies the model in the geometry region as specified by the geom_object. 
+                May specify several different regions, each with a unique set of properties. 
+                This includes all wall types (domain walls and intrusions). 
+          --> 
+          <max_it                       spec="OPTIONAL INTEGER 'positive'"/> <!-- max iterations allowed for temperature solve, default = 50 --> 
+          <initial_tol                  spec="OPTIONAL DOUBLE 'positive'"/>  <!-- tolerance check on before starting the iteration loop, default = 1e-3 --> 
+          <tol                          spec="OPTIONAL DOUBLE 'positive'"/>  <!-- iterator tolerance on temperature, default = 1e-5 --> 
+          <region                       spec="MULTIPLE NO_DATA" need_applies_to="type region_ht">
+            <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
+            <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] --> 
+            <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
+            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
+            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
+            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
+
+                       because we have assumed (with this model) that the wall comes to 
+                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation. for wall with large thermal resistance, recommend relaxation_coef=0.1, for small thermal resisitance, recommend relaxation_coef=1.0 --> 
+
+            <geom_object/>
+          </region> 
+
+        </model>
+      </WallHT>
+
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
         <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
         <variable_dt                    spec="REQUIRED BOOLEAN" />
+        <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
@@ -492,7 +543,7 @@
 
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
-        <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
+        <MixtureFractionSolver          spec="OPTIONAL NO_DATA" >
           <initial_value                spec="OPTIONAL DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
           <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
@@ -506,8 +557,7 @@
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
           <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING"/>
+                                        attribute1="label REQUIRED STRING"/>
 
           <initialization               spec="OPTIONAL NO_DATA"           
                                         attribute1="type REQUIRED STRING 'constant, taylor-green, almgren, exponentialvortex'">
@@ -651,7 +701,8 @@
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
-                                                                           wasatch_expr'">                                                           
+                                                                           wasatch_expr,
+                                                                           pc_transport'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -666,15 +717,21 @@
             <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
 
             <!-- Spec for constant and multi-point constant source term model -->
-            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant_src" />
+            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
             <!-- Spec for the char oxidation source --> 
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
 
             <!-- Multi-point constant injection --> 
-            <injector                   spec="MULTIPLE NO_DATA">
+            <injector_region            spec="REQUIRED NO_DATA" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src">
               <geom_object/>
-            </injector>
+            </injector_region>
+
+            <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
+            <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
+                                          within the geom_oject (use <inputfile> spec)--> 
+            <inject_type                spec="REQUIRED STRING 'constant, fromfile'" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
+            <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
             <!-- Radiation models --> 
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
@@ -688,7 +745,6 @@
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
-              <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
@@ -700,10 +756,25 @@
               <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
               <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
             </DORadiationModel>
+
+            <!-- pc transport --> 
+            <pc_scal_file                spec="REQUIRED STRING" need_applies_to="type pc_transport"/> <!-- ..... --> 
+            <pc_st_scal_file             spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <svm_model_base_name         spec="REQUIRED STRING" need_applies_to="type pc_transport"/>
+            <n_pcs                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_sts                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_ind                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <n_tot                       spec="REQUIRED INTEGER" need_applies_to="type pc_transport"/>
+            <pc                          spec="MULTIPLE NO_DATA" 
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="score_number REQUIRED INTEGER"
+                                         need_applies_to="type pc_transport"/>
+
             
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
               <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
+              <opl                       spec="OPTIONAL DOUBLE  'positive'"/>
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
@@ -722,34 +793,58 @@
               <VRLocationsMin            spec="OPTIONAL VECTOR 'positive'"/>
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
               <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
+              <NoOfFluxRays              spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
+              <applyFilter               spec="OPTIONAL BOOLEAN"/>
              
  
               <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />
-                <gray_gas                spec="OPTIONAL NO_DATA" need_applies_to="type radprops"/>
+                <grey_gas                spec="OPTIONAL NO_DATA" need_applies_to="type radprops">
+                  <inputfile             spec="REQUIRED STRING"/> <!-- the input file as generated by RadProps -->   
+                  <mix_mol_w_label       spec="OPTIONAL STRING"/> <!-- default is "mixture_molecular_weight" --> 
+                </grey_gas>
               </property_calculator> 
+              
+
+              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+                                    
+                <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
+                <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
+        
+                <ROI_extents            spec="OPTIONAL NO_DATA"
+                                  attribute1="type REQUIRED STRING 'fixed dynamic patch_based'">
+    
+                  <abskg_threshold      spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+                  <sigmaT4_threshold    spec="OPTIONAL DOUBLE  'positive'" need_applies_to="type dynamic"/>
+          
+                  <min                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                  <max                  spec="REQUIRED VECTOR" need_applies_to="type fixed"/>
+                </ROI_extents>
+              </algorithm>
+              
             </RMCRT>
 
             
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
-            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor --> 
-            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature --> 
+            <!-- A: pre-exponential factor.  Units for westbrook/dryer model are in (gmol/cm^3)^(1-m-n)/s and consistent with the choice of m and n. --> 
+            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor. -->
+            <!-- E/R: activiation temperature. Unit for westbrook/dryer model are in kelvin --> 
+            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature. Use same units as listed in Turns. --> 
             <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
             <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
             <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
-            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
-            <cstar_for_strip_label      spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label used for the calc of the stripping factor. --> 
-            <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table --> 
+            <c_fraction_label           spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CxHy mass fraction label for the fast chemistry step (this is usually transported) --> 
             <temperature_clip           spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
             <flammability_limit         spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- Use "nose" plot to turn on/off source term. Noses are specified immediately below --> 
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
@@ -764,7 +859,6 @@
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit --> 
 
             </flammability_limit>
-            <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
             <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 

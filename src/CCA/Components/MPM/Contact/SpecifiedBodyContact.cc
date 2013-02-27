@@ -108,7 +108,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   if(flag->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flag->d_8or27==27 || flag->d_8or27==64){
+  } else{
     NGP=2;
     NGN=2;
   }
@@ -316,7 +316,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
          for(int k = 0; k < flag->d_8or27; k++) {
            if (patch->containsNode(ni[k])){
-             Vector G(d_S[k].x(),d_S[k].y(),d_S[k].z()/px[idx].x());
+             Vector G(d_S[k].x(),d_S[k].y(),0.0);
              gsurfnorm[ni[k]] += rho * G;
            } // if
          }   // for

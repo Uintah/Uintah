@@ -95,11 +95,11 @@ PSELIBS := \
         Core/Thread                     \
         Core/Util
 
-ifneq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
-ifneq ($(HAVE_HYPRE),)
+ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
@@ -111,6 +111,7 @@ INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
 SUBDIRS := $(SRCDIR)/ChemMix            \
+           $(SRCDIR)/WallHTModels       \
            $(SRCDIR)/CoalModels         \
            $(SRCDIR)/CoalModels/fortran \
            $(SRCDIR)/DigitalFilter      \
@@ -118,7 +119,7 @@ SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/Radiation          \
            $(SRCDIR)/Radiation/fortran  \
            $(SRCDIR)/SourceTerms        \
-           $(SRCDIR)/TransportEqns      
+           $(SRCDIR)/TransportEqns      \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

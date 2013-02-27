@@ -122,36 +122,6 @@ if(!mms_type.empty()) {
   	}
 }
 
-void CNH_MMS::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-}
-
-
-void CNH_MMS::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*,
-                                    ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-}
-
 void CNH_MMS::addParticleState(std::vector<const VarLabel*>& ,
                                    std::vector<const VarLabel*>& )
 {
@@ -205,39 +175,29 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
     Identity.Identity();
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-
     Vector dx = patch->dCell();
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new,velGrad;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pcolor;
-    ParticleVariable<double> pvolume_new;
+    constParticleVariable<double> pmass;
+    constParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
     ParticleVariable<double> pdTdt;
     delt_vartype delT;
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     
     new_dw->allocateAndPut(pstress,     lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pvolume_new, lb->pVolumeLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
-    if(flag->d_with_color) {
-      old_dw->get(pcolor,      lb->pColorLabel,  pset);
-    }
-
-    new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->get(pvolume_new, lb->pVolumeLabel_preReloc, pset);
+    new_dw->get(deformationGradient_new,
+                            lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->get(velGrad, lb->pVelGradLabel_preReloc,               pset);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -249,25 +209,6 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
 
     double rho_orig = matl->getInitialDensity();
 
-    if(flag->d_doGridReset){
-      constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromVelocity(gvelocity,
-                                             pset, px, psize,
-                                             deformationGradient,
-                                             deformationGradient_new,
-                                             dx, interpolator, delT);
-    }
-    else if(!flag->d_doGridReset){
-      constNCVariable<Vector> gdisplacement;
-      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromDisplacement(gdisplacement,
-                                                 pset, px, psize,
-                                                 deformationGradient_new,
-                                                 deformationGradient,
-                                                 dx, interpolator);
-    }
-
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -277,9 +218,6 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
 
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
-
-      // Get the deformed volume
-      pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute local wave speed
       double rho_cur = rho_orig/J;
@@ -309,7 +247,6 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 
@@ -339,8 +276,8 @@ void CNH_MMS::carryForward(const PatchSubset* patches,
 }
 
 void CNH_MMS::addComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* patches) const
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -413,28 +350,6 @@ double CNH_MMS::getCompressibility()
   return 1.0/d_initialData.Bulk;
 }
 
-
 namespace Uintah {
   
-#if 0
-  static MPI_Datatype makeMPI_CMData()
-  {
-    ASSERTEQ(sizeof(CNH_MMS::StateData), sizeof(double)*0);
-    MPI_Datatype mpitype;
-    MPI_Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
-    return mpitype;
-  }
-  
-  const TypeDescription* fun_getTypeDescription(CNH_MMS::StateData*)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
-                                  "CNH_MMS::StateData", 
-                                  true, &makeMPI_CMData);
-    }
-    return td;
-  }
-#endif
 } // End namespace Uintah

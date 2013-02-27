@@ -162,23 +162,6 @@ namespace Uintah {
                                     DataWarehouse* new_dw) {};
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief allocate CM data requires */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           Uintah::MPMLabel* lb) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief allocate cm data add */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*, 
-                                   ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     void scheduleCheckNeedAddMPMMaterial(Task* task,

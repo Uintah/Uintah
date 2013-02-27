@@ -93,6 +93,7 @@ namespace Wasatch{
      */
     MomentTransportEquation(const std::string thisPhiName,
                             const Expr::ExpressionID id,
+                            const bool hasEmbeddedGeometry,                            
                             Uintah::ProblemSpecP params);
 
     ~MomentTransportEquation();
@@ -104,7 +105,8 @@ namespace Wasatch{
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            const Uintah::PatchSet* const localPatches,
                                            const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);
+                                           const Uintah::MaterialSubset* const materials,
+                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap);
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
@@ -112,7 +114,8 @@ namespace Wasatch{
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                    const Uintah::PatchSet* const localPatches,
                                    const PatchInfoMap& patchInfoMap,
-                                   const Uintah::MaterialSubset* const materials);
+                                   const Uintah::MaterialSubset* const materials,
+                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap);
 
     /**
      *  \brief setup the initial conditions for this transport equation.
@@ -133,6 +136,7 @@ namespace Wasatch{
      */
     static Expr::ExpressionID  get_moment_rhs_id(Expr::ExpressionFactory& factory,
                                                   Uintah::ProblemSpecP params,
+                                                  const bool hasEmbeddedGeometry,
                                                   Expr::TagList& weightsTags,
                                                   Expr::TagList& abscissaeTags,
                                                   const double momentOrder,

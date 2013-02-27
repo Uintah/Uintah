@@ -309,35 +309,12 @@ else
     exit 1
   fi
 
-  # link directly from the build root to the Uintah code
-  # ln -s src/Packages/Uintah Uintah
-
   cd "$BUILD_DIR"
 
   if [ $VERBOSE = "yes" ]; then
       echo "TIME STAMP: SVN CHECKOUT DONE AT:"
       date
   fi
-fi
-
-# set a lock once a month for six months
-if [ "$USE_TREE" = "new" -a "$USE_PREVTREE" = "no" -a `date +%d` = "01" -a "$MONTHLYBACKUP" = "1" ]; then
-  if [ -L "5_month.lock" ]; then
-    mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
-  fi
-  if [ -L "4_month.lock" ]; then
-    mv -f "${BUILD_DIR}/4_month.lock" "${BUILD_DIR}/5_month.lock"
-  fi
-  if [ -L "3_month.lock" ]; then
-    mv -f "${BUILD_DIR}/3_month.lock" "${BUILD_DIR}/4_month.lock"
-  fi
-  if [ -L "2_month.lock" ]; then
-    mv -f "${BUILD_DIR}/2_month.lock" "${BUILD_DIR}/3_month.lock"
-  fi
-  if [ -L "1_month.lock" ]; then
-    mv -f "${BUILD_DIR}/1_month.lock" "${BUILD_DIR}/2_month.lock"
-  fi
-  ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
 fi
 
 #__________________________________

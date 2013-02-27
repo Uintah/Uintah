@@ -503,6 +503,36 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 // Sets the radiation boundary conditions for the D.O method
 //***************************************************************************
 void 
+DORadiationModel::boundarycondition_new(const ProcessorGroup*,
+                                        const Patch* patch,
+                                        CellInformation* cellinfo,
+                                        ArchesVariables* vars,
+                                        ArchesConstVariables* constvars)
+{
+           
+  //__________________________________
+  // loop over computational domain faces
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      if (constvars->cellType[c] != ffield ){
+        vars->ABSKG[c]       = d_wall_abskg;
+      }
+    }
+  }
+}
+
+//***************************************************************************
+// Sets the radiation boundary conditions for the D.O method
+//***************************************************************************
+void 
 DORadiationModel::boundarycondition(const ProcessorGroup*,
                                     const Patch* patch,
                                     CellInformation* cellinfo,
@@ -684,6 +714,137 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   if(d_myworld->myrank() == 0) {
     cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
   }
+}
+//***************************************************************************
+// Solves for intensity in the D.O method
+//***************************************************************************
+void 
+DORadiationModel::intensitysolve_new(const ProcessorGroup* pg,
+                                 const Patch* patch,
+                                 CellInformation* cellinfo,
+                                 ArchesVariables* vars,
+                                 ArchesConstVariables* constvars, 
+                                 int wall_type )
+{
+  double solve_start = Time::currentSeconds();
+  rgamma.resize(1,29);    
+  sd15.resize(1,481);     
+  sd.resize(1,2257);      
+  sd7.resize(1,49);       
+  sd3.resize(1,97);       
+
+  rgamma.initialize(0.0); 
+  sd15.initialize(0.0);   
+  sd.initialize(0.0);     
+  sd7.initialize(0.0);    
+  sd3.initialize(0.0);    
+
+  if (d_lambda > 1) {
+    fort_radarray(rgamma, sd15, sd, sd7, sd3);
+  }
+
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+  IntVector domLo = patch->getExtraCellLowIndex();
+  IntVector domHi = patch->getExtraCellHighIndex();
+
+  CCVariable<double> su;
+  CCVariable<double> ae;
+  CCVariable<double> aw;
+  CCVariable<double> an;
+  CCVariable<double> as;
+  CCVariable<double> at;
+  CCVariable<double> ab;
+  CCVariable<double> ap;
+  //CCVariable<double> volq;
+  CCVariable<double> cenint;
+  
+  vars->cenint.allocate(domLo,domHi);
+
+  su.allocate(domLo,domHi);
+  ae.allocate(domLo,domHi);
+  aw.allocate(domLo,domHi);
+  an.allocate(domLo,domHi);
+  as.allocate(domLo,domHi);
+  at.allocate(domLo,domHi);
+  ab.allocate(domLo,domHi);
+  ap.allocate(domLo,domHi);
+  //volq.allocate(domLo,domHi);
+  
+  srcbm.resize(domLo.x(),domHi.x());
+  srcbm.initialize(0.0);
+  srcpone.resize(domLo.x(),domHi.x());
+  srcpone.initialize(0.0);
+  qfluxbbm.resize(domLo.x(),domHi.x());
+  qfluxbbm.initialize(0.0);
+
+  vars->volq.initialize(0.0);
+  vars->cenint.initialize(0.0);
+  vars->src.initialize(0.0);
+  vars->qfluxe.initialize(0.0);
+  vars->qfluxw.initialize(0.0);
+  vars->qfluxn.initialize(0.0);
+  vars->qfluxs.initialize(0.0);
+  vars->qfluxt.initialize(0.0);
+  vars->qfluxb.initialize(0.0);
+
+
+  //__________________________________
+  //begin discrete ordinates
+
+  for (int bands =1; bands <=d_lambda; bands++){
+
+    vars->volq.initialize(0.0);
+
+    for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+
+      vars->cenint.initialize(0.0);
+      su.initialize(0.0);
+      aw.initialize(0.0);
+      as.initialize(0.0);
+      ab.initialize(0.0);
+      ap.initialize(0.0);
+      ae.initialize(0.0);
+      an.initialize(0.0);
+      at.initialize(0.0);
+      bool plusX, plusY, plusZ;
+      
+      fort_rdomsolve(idxLo, idxHi, constvars->cellType, ffield, 
+                     cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+                     vars->ESRCG, direcn, oxi, omu,oeta, wt, 
+                     vars->temperature, vars->ABSKG,
+                     su, aw, as, ab, ap, ae, an, at,
+                     plusX, plusY, plusZ, fraction, bands, d_intrusion_abskg);
+
+      //      double timeSetMat = Time::currentSeconds();
+      d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, plusZ, 
+                                su, ab, as, aw, ap, ae, an, at);
+                                
+      //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
+      bool converged =  d_linearSolver->radLinearSolve();
+      
+      if (converged) {
+        d_linearSolver->copyRadSoln(patch, vars);
+      }else {
+        throw InternalError("Radiation solver not converged", __FILE__, __LINE__);
+      }
+      
+      d_linearSolver->destroyMatrix();
+
+      fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);
+      
+      fort_rdomflux(idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
+                    plusX, plusY, plusZ, 
+                    vars->qfluxe, vars->qfluxw,
+                    vars->qfluxn, vars->qfluxs,
+                    vars->qfluxt, vars->qfluxb);
+    }  // ordinate loop
+
+    fort_rdomsrc(idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, vars->src);
+  }  // bands loop
+
+  proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
+
 }
 DORadiationModel::PropertyCalculatorBase::PropertyCalculatorBase(){};
 DORadiationModel::PropertyCalculatorBase::~PropertyCalculatorBase(){};

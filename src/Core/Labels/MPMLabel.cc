@@ -58,8 +58,14 @@ MPMLabel::MPMLabel()
   pScratchVecLabel  = VarLabel::create( "p.scratchvec",
 			ParticleVariable<Vector>::getTypeDescription() );
   
+  pScratchLabel  = VarLabel::create( "p.scratch",
+			ParticleVariable<double>::getTypeDescription() );
+  
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  
+  pScaleFactorLabel_preReloc = VarLabel::create( "p.scalefactor+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
   // for thermal stress
@@ -89,6 +95,9 @@ MPMLabel::MPMLabel()
   
   //PermanentParticleState
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pVelGradLabel = VarLabel::create("p.velGrad",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
   pStressLabel = VarLabel::create( "p.stress",
@@ -163,6 +172,9 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
+  pVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
   pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
@@ -437,8 +449,8 @@ MPMLabel::MPMLabel()
   pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
                   ParticleVariable<double>::getTypeDescription());
 
-  pVelGradsLabel = VarLabel::create("p.velGrads",
-                  ParticleVariable<Matrix3>::getTypeDescription());
+//  pVelGradsLabel = VarLabel::create("p.velGrads",
+//                  ParticleVariable<Matrix3>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
                   NCVariable<int>::getTypeDescription());
@@ -661,6 +673,8 @@ MPMLabel::~MPMLabel()
   //PermanentParticleState
   VarLabel::destroy(pDeformationMeasureLabel);
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
+  VarLabel::destroy(pVelGradLabel);
+  VarLabel::destroy(pVelGradLabel_preReloc);
   VarLabel::destroy(pStressLabel);
   VarLabel::destroy(pStressLabel_preReloc);
   VarLabel::destroy(pVolumeLabel);
@@ -696,7 +710,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
   VarLabel::destroy(pScaleFactorLabel);
+  VarLabel::destroy(pScaleFactorLabel_preReloc);
   VarLabel::destroy(pLocalizedMPMLabel);
+  VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);
@@ -787,7 +803,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
-  VarLabel::destroy(pVelGradsLabel);
+//  VarLabel::destroy(pVelGradsLabel);
 
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);

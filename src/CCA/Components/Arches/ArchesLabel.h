@@ -63,18 +63,22 @@ namespace Uintah {
     class ArchesLabel {
     public:
 
+      enum VARID { BADVALUE, TEMPERATURE, DENSITY, SOOT, H2O, CO2, ENTHALPY, SPECIFICHEAT, MIXTUREFRACTION };
+
       ArchesLabel();
       ~ArchesLabel();
       void setSharedState(SimulationStateP& sharedState);
       void problemSetup( const ProblemSpecP& db );
 
-      typedef std::map<const std::string,const std::string> RLMAP; 
+      typedef std::map<VARID,const std::string> RLMAP; 
 
       /** @brief Retrieve a label based on its CFD role **/
-      const VarLabel* getVarlabelByRole( const std::string role );
+      const VarLabel* getVarlabelByRole( VARID role );
 
       /** @brief Set a label to have a specific role **/ 
       void setVarlabelToRole( const std::string label, const std::string role );
+
+      const std::string getRoleString( VARID role );
      
       SimulationStateP d_sharedState;
 
@@ -359,11 +363,6 @@ namespace Uintah {
       const VarLabel* d_continuityResidualLabel;
 
       const VarLabel* d_ScalarClippedLabel;
-      const VarLabel* d_ReactScalarClippedLabel;
-      const VarLabel* d_uVelNormLabel;
-      const VarLabel* d_vVelNormLabel;
-      const VarLabel* d_wVelNormLabel;
-      const VarLabel* d_rhoNormLabel;
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
@@ -376,8 +375,6 @@ namespace Uintah {
       // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
-      const VarLabel* d_totalKineticEnergyPredLabel;
-      const VarLabel* d_totalKineticEnergyIntermLabel;
       
       // scalar mms Ln error
       const VarLabel* d_smmsLnErrorLabel;
@@ -514,7 +511,6 @@ namespace Uintah {
     private: 
 
       RLMAP d_r_to_l; 
-      std::vector<std::string> d_allowed_roles; 
 
     }; // End class ArchesLabel
 } // End namespace Uintah

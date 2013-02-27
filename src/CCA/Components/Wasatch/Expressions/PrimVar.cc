@@ -36,10 +36,12 @@
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
 PrimVar( const Expr::Tag& rhoPhiTag,
-         const Expr::Tag& rhoTag )
+         const Expr::Tag& rhoTag,
+         const Expr::Tag& volFracTag)
   : Expr::Expression<FieldT>(),
     rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    )
+    rhot_   ( rhoTag    ),
+    volfract_(volFracTag)
 {}
 
 template< typename FieldT >
@@ -72,6 +74,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhophit_ );
   exprDeps.requires_expression( rhot_    );
+  if (volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
 }
 
 template< typename FieldT >
@@ -95,6 +98,9 @@ bind_fields( const Expr::FieldManagerList& fml )
 
   rhophi_ = &phifm.field_ref( rhophit_ );
   rho_    = &denfm.field_ref( rhot_    );
+  
+  if (volfract_ != Expr::Tag() )
+    volfrac_ = &phifm.field_ref( volfract_ );
 }
 
 template< typename FieldT >
@@ -130,6 +136,9 @@ evaluate()
   *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
   interpOp_->apply_to_field( *rho_, *tmp );
   phi <<= *rhophi_ / *tmp;
+  if (volfract_ != Expr::Tag() ) {
+    phi <<= *volfrac_ * phi;
+  }
 }
 
 template< typename FieldT >
@@ -148,10 +157,12 @@ template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& rhoPhiTag,
-                  const Expr::Tag& rhoTag )
+                  const Expr::Tag& rhoTag,
+                  const Expr::Tag& volFracTag)
   : ExpressionBuilder(result),
     rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    )
+    rhot_   ( rhoTag    ),
+    volfract_( volFracTag )
 {}
 
 template< typename FieldT >
@@ -170,7 +181,7 @@ template< typename FieldT, typename DensT >
 Expr::ExpressionBase*
 PrimVar<FieldT,DensT>::Builder::build() const
 {
-  return new PrimVar<FieldT,DensT>( rhophit_, rhot_ );
+  return new PrimVar<FieldT,DensT>( rhophit_, rhot_, volfract_ );
 }
 
 template< typename FieldT >

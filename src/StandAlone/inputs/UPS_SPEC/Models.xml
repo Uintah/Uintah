@@ -14,7 +14,6 @@
       <abskgBench4            spec="OPTIONAL DOUBLE  'positive'"/>
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
-      <Slice                  spec="OPTIONAL DOUBLE"/>
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
       <benchmark              spec="OPTIONAL INTEGER 'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
@@ -25,9 +24,11 @@
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
       <NoRadRays              spec="OPTIONAL INTEGER 'positive'"/>
+      <NoOfFluxRays           spec="OPTIONAL INTEGER 'positive'"/>
       <shouldSetBCs           spec="OPTIONAL BOOLEAN"/>
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>
+      <applyFilter            spec="OPTIONAL BOOLEAN"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
            
       <algorithm                spec="OPTIONAL NO_DATA" 
@@ -239,7 +240,13 @@
       <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
       <useCrackModel          spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
-      <useZeroOrderRate       spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>  
+    
+      <!-- Inputs for ignition time  to delay burn propagation-->
+      <useInductionTime        spec="OPTIONAL BOOLEAN" need_applies_to="type DDT1"/>
+      <IgnitionConst           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+      <PressureShift           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+      <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
+      <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
      
       <IandG                  spec="OPTIONAL NO_DATA">
         <fromMaterial         spec="REQUIRED STRING" />

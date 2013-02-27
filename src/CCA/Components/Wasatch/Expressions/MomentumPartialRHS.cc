@@ -23,12 +23,11 @@
  */
 
 #include "MomentumPartialRHS.h"
+#include <CCA/Components/Wasatch/FieldTypes.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
-
 
 template< typename FieldT >
 MomRHSPart<FieldT>::
@@ -39,17 +38,21 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& tauY,
             const Expr::Tag& tauZ,
             const Expr::Tag& densityTag,
-            const Expr::Tag& bodyForce )
+            const Expr::Tag& bodyForceTag,
+            const Expr::Tag& srcTermTag,
+            const Expr::Tag& volFracTag )
   : Expr::Expression<FieldT>(),
-    cfluxXt_   ( convFluxX   ),
-    cfluxYt_   ( convFluxY   ),
-    cfluxZt_   ( convFluxZ   ),
-    tauXt_     ( tauX        ),
-    tauYt_     ( tauY        ),
-    tauZt_     ( tauZ        ),
-    densityt_  ( densityTag  ),
-    bodyForcet_( bodyForce   ),
-    emptyTag_  ( Expr::Tag() )
+    cfluxXt_   ( convFluxX    ),
+    cfluxYt_   ( convFluxY    ),
+    cfluxZt_   ( convFluxZ    ),
+    tauXt_     ( tauX         ),
+    tauYt_     ( tauY         ),
+    tauZt_     ( tauZ         ),
+    densityt_  ( densityTag   ),
+    bodyForcet_( bodyForceTag ),
+    srcTermt_  ( srcTermTag   ),
+    volfract_  ( volFracTag   ),
+    emptyTag_  ( Expr::Tag()  )
 {}
 
 //--------------------------------------------------------------------
@@ -66,14 +69,16 @@ void
 MomRHSPart<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( cfluxXt_ != emptyTag_ )  exprDeps.requires_expression( cfluxXt_ );
-  if( cfluxYt_ != emptyTag_ )  exprDeps.requires_expression( cfluxYt_ );
-  if( cfluxZt_ != emptyTag_ )  exprDeps.requires_expression( cfluxZt_ );
-  if( tauXt_   != emptyTag_ )  exprDeps.requires_expression( tauXt_   );
-  if( tauYt_   != emptyTag_ )  exprDeps.requires_expression( tauYt_   );
-  if( tauZt_   != emptyTag_ )  exprDeps.requires_expression( tauZt_   );
+  if ( cfluxXt_ != emptyTag_ )  exprDeps.requires_expression( cfluxXt_ );
+  if ( cfluxYt_ != emptyTag_ )  exprDeps.requires_expression( cfluxYt_ );
+  if ( cfluxZt_ != emptyTag_ )  exprDeps.requires_expression( cfluxZt_ );
+  if ( tauXt_   != emptyTag_ )  exprDeps.requires_expression( tauXt_   );
+  if ( tauYt_   != emptyTag_ )  exprDeps.requires_expression( tauYt_   );
+  if ( tauZt_   != emptyTag_ )  exprDeps.requires_expression( tauZt_   );
   exprDeps.requires_expression( densityt_);
-  if( bodyForcet_!=emptyTag_)  exprDeps.requires_expression( bodyForcet_);
+  if ( bodyForcet_ != emptyTag_ )  exprDeps.requires_expression( bodyForcet_);
+  if ( srcTermt_   != emptyTag_ )  exprDeps.requires_expression( srcTermt_  );
+  if ( volfract_   != emptyTag_ )  exprDeps.requires_expression( volfract_  );
 }
 
 //--------------------------------------------------------------------
@@ -98,6 +103,9 @@ bind_fields( const Expr::FieldManagerList& fml )
   density_ = &fml.field_manager<SVolField>().field_ref( densityt_ );
 
   if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fml.field_manager<FieldT>().field_ref( bodyForcet_ );
+  if( srcTermt_ != emptyTag_   )  srcTerm_   = &fml.field_manager<FieldT>().field_ref( srcTermt_   );
+  
+  if( volfract_ != emptyTag_   )  volfrac_  = &fml.field_manager<FieldT>().field_ref( volfract_    );
 }
 
 //--------------------------------------------------------------------
@@ -110,7 +118,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if( cfluxXt_ != emptyTag_ || tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
   if( cfluxYt_ != emptyTag_ || tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
   if( cfluxZt_ != emptyTag_ || tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
-  densityInterpOp_                                            = opDB.retrieve_operator<DensityInterpT>();
+  densityInterpOp_                                            = opDB.retrieve_operator<DensityInterpT>();  
 }
 
 //--------------------------------------------------------------------
@@ -125,6 +133,7 @@ evaluate()
   result <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
+  //*tmp <<= 0.0;
 
   if( cfluxXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *cFluxX_, *tmp );
@@ -160,7 +169,14 @@ evaluate()
     densityInterpOp_->apply_to_field( *density_, *tmp );
     result <<= result + *tmp * *bodyForce_;
   }
-
+  
+  if( srcTermt_ != emptyTag_ ){
+    result <<= result + *srcTerm_;
+  }
+  
+  if ( volfract_ != emptyTag_ ) {
+    result <<= result * *volfrac_;
+  }  
 }
 
 //--------------------------------------------------------------------
@@ -175,16 +191,20 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
                   const Expr::Tag& densityTag,
-                  const Expr::Tag& bodyForce )
+                  const Expr::Tag& bodyForceTag,
+                  const Expr::Tag& srcTermTag,
+                  const Expr::Tag& volFracTag )
   : ExpressionBuilder(result),
-    cfluxXt_   ( convFluxX  ),
-    cfluxYt_   ( convFluxY  ),
-    cfluxZt_   ( convFluxZ  ),
-    tauXt_     ( tauX       ),
-    tauYt_     ( tauY       ),
-    tauZt_     ( tauZ       ),
-    densityt_  ( densityTag ),
-    bodyForcet_( bodyForce  )
+    cfluxXt_   ( convFluxX    ),
+    cfluxYt_   ( convFluxY    ),
+    cfluxZt_   ( convFluxZ    ),
+    tauXt_     ( tauX         ),
+    tauYt_     ( tauY         ),
+    tauZt_     ( tauZ         ),
+    densityt_  ( densityTag   ),
+    bodyForcet_( bodyForceTag ),
+    srcTermt_  ( srcTermTag   ),
+    volfract_  ( volFracTag   )
 {}
 
 //--------------------------------------------------------------------
@@ -193,7 +213,10 @@ template< typename FieldT >
 Expr::ExpressionBase*
 MomRHSPart<FieldT>::Builder::build() const
 {
-  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_ );
+  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
+                                 tauXt_, tauYt_, tauZt_,
+                                 densityt_, bodyForcet_, srcTermt_,
+                                 volfract_ );
 }
 
 //--------------------------------------------------------------------

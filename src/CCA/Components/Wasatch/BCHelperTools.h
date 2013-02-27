@@ -83,7 +83,12 @@ namespace Wasatch {
                                     const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials );
+                                    const Uintah::MaterialSubset* const materials,
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
+                                    std::string useFieldForBCIterator="",
+                                    double useBCValue=0,
+                                    std::string useBCKind="",
+                                    std::string useBCFunctorName="");
   /**
    *  \ingroup WasatchCore
    *

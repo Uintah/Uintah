@@ -13,12 +13,6 @@
       <NameTag name="density" state="STATE_NONE" />
     </Density>
 
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
-
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>

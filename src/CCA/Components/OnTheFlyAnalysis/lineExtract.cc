@@ -98,6 +98,7 @@ lineExtract::~lineExtract()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
+                               const ProblemSpecP& ,
                                GridP& grid,
                                SimulationStateP& sharedState)
 {
@@ -111,7 +112,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
 
-  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo", 
+  ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo_lineExtract", 
                                             PerPatch<FileInfoP>::getTypeDescription());       
                                             
   //__________________________________
@@ -400,7 +401,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
    
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo", false, false, false, true, true); 
+  sched->overrideVariableBehavior("FileInfo_lineExtract", false, false, false, true, true); 
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   t->requires(Task::OldDW, ps_lb->fileVarsStructLabel, d_zero_matl, Ghost::None, 0);
@@ -681,6 +682,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           }
           
           fprintf(fp,    "\n");
+          fflush(fp);
         }  // loop over points
       }  // loop over lines 
       lastWriteTime = now;     
@@ -707,7 +709,7 @@ void lineExtract::createFile(string& filename,  FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"X_CC      Y_CC      Z_CC      Time"); 
+  fprintf(fp,"# X_CC      Y_CC      Z_CC      Time"); 
   
   // All CCVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
@@ -777,6 +779,7 @@ void lineExtract::createFile(string& filename,  FILE*& fp)
     }
   }
   fprintf(fp,"\n");
+  fflush(fp);
   
   cout << Parallel::getMPIRank() << " lineExtract:Created file " << filename << endl;
 }

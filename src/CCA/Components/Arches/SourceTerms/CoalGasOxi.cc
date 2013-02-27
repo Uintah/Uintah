@@ -141,14 +141,14 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-CoalGasOxi::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+CoalGasOxi::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasOxi::dummyInit"; 
+  string taskname = "CoalGasOxi::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasOxi::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CoalGasOxi::initialize);
 
   tsk->computes(_src_label);
 
@@ -160,11 +160,11 @@ CoalGasOxi::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasOxi::dummyInit( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
+CoalGasOxi::initialize( const ProcessorGroup* pc, 
+                        const PatchSubset* patches, 
+                        const MaterialSubset* matls, 
+                        DataWarehouse* old_dw, 
+                        DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

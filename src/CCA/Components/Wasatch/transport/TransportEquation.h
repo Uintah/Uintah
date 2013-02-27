@@ -85,18 +85,13 @@ namespace Wasatch{
     TransportEquation( const std::string solutionVarName,
                        const Expr::ExpressionID rhsExprID,
                        const Direction stagLoc,
-                       Uintah::ProblemSpecP params=NULL)
-      : solnVarName_( solutionVarName ),
-        rhsExprID_( rhsExprID ),
-        stagLoc_( stagLoc ),
-        volFracTag_( Expr::Tag() ),
-        hasVolFrac_( false )
-    {
-      if (params && params->findBlock("VolumeFractionExpression")) {
-        volFracTag_ = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
-        hasVolFrac_ = true;
-      }
-    }
+                       const bool hasEmbeddedGeometry = false,
+                       Uintah::ProblemSpecP eqnParams=NULL)
+      : solnVarName_        ( solutionVarName ),
+        rhsExprID_          ( rhsExprID ),
+        stagLoc_            ( stagLoc ),
+        hasEmbeddedGeometry_(hasEmbeddedGeometry)
+    {}
 
     virtual ~TransportEquation(){}
 
@@ -143,7 +138,8 @@ namespace Wasatch{
     virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                                     const Uintah::PatchSet* const localPatches,
                                                     const PatchInfoMap& patchInfoMap,
-                                                    const Uintah::MaterialSubset* const materials ) = 0;
+                                                    const Uintah::MaterialSubset* const materials,
+                                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap_) = 0;
 
 
     /**
@@ -157,7 +153,8 @@ namespace Wasatch{
     virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials ) = 0;
+                                            const Uintah::MaterialSubset* const materials,
+                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap_ ) = 0;
 
     /**
      *  Return the ExpressionID that identifies an expression that will
@@ -172,12 +169,12 @@ namespace Wasatch{
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
+    bool has_embedded_geometry() { return hasEmbeddedGeometry_;}
   protected:
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
-    Expr::Tag volFracTag_;    
-    bool hasVolFrac_;
+    bool hasEmbeddedGeometry_;
   };
 
 } // namespace Wasatch

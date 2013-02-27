@@ -36,6 +36,34 @@
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#include <curand.h>
+#include <curand_kernel.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void launchRayTraceKernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          cudaStream_t* stream,
+                          const uint3 patchLo,
+                          const uint3 patchHi,
+                          const uint3 patchSize,
+                          const uint3 domainLo,
+                          const uint3 domainHi,
+                          const double3 cellSpacing,
+                          double* device_abskg,
+                          double* device_sigmaT4,
+                          double* device_divQ,
+                          bool virtRad,
+                          bool isSeedRandom,
+                          bool ccRays,
+                          int numRays,
+                          double viewAngle,
+                          double threshold,
+                          curandState* globalDevStates);
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 #include <iostream>
@@ -94,6 +122,15 @@ namespace Uintah{
                           Task::WhichDW temp_dw,
                           const bool includeEC = true);
 
+
+      /** @brief Schedule filtering of q and divQ */
+      void sched_filter( const LevelP& level,
+                          SchedulerP& sched,
+                          Task::WhichDW which_divQ_dw,
+                          const bool includeEC = true,
+                          bool modifies_divQFilt = false);
+
+
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
                                  SchedulerP& sched );
@@ -132,7 +169,7 @@ namespace Uintah{
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
-                          int &face);
+                          vector<int> &boundaryFaces);
 
 
       //__________________________________
@@ -180,8 +217,9 @@ namespace Uintah{
       double _abskg_thld;
       
        
-      int    _NoOfRays;
-      int    _NoRadRays;
+      int    _NoOfRays;                      // number of rays per cell used to compute divQ
+      int    _NoRadRays;                     // number of rays per radiometer used to compute radiative flux
+      int    _NoOfFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       
@@ -190,13 +228,6 @@ namespace Uintah{
       
       double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
-
-      struct Flux{
-        double incident;
-        double net;
-      };
-      std::map<std::vector<int>, Flux> CellToValuesMap;                  // holds the fluxes for the cells in the patch
-      std::map< int, std::map<std::vector<int>, Flux> > PatchToCellsMap; // holds the boundary cells in the patch
 
       double _sigmaScat;
       double _abskgBench4;
@@ -208,6 +239,7 @@ namespace Uintah{
       bool _CCRays;
       bool _onOff_SetBCs;                // switch for setting boundary conditions                    
       bool _isDbgOn;
+      bool _applyFilter;                 // Allow for filtering of boundFlux and divQ results
       
       enum ROI_algo{fixed, dynamic, patch_based};
       ROI_algo  _whichROI_algo;
@@ -231,7 +263,9 @@ namespace Uintah{
       const VarLabel* d_cellTypeLabel; 
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
+      const VarLabel* d_divQFiltLabel;
       const VarLabel* d_boundFluxLabel;
+      const VarLabel* d_boundFluxFiltLabel;
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -307,6 +341,16 @@ namespace Uintah{
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
                     const bool includeEC );
+
+      //----------------------------------------
+      void filter( const ProcessorGroup* pc,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+                    Task::WhichDW which_divQ_dw,
+                    const bool includeEC,
+                    bool modifies_divQFilt);
 
       //__________________________________
       inline bool containsCell(const IntVector &low, 

@@ -26,11 +26,13 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
-#include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/AxiLinearInterpolator.h>
+#include <Core/Grid/GIMPInterpolator.h>
+#include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
-#include <Core/Grid/fastCpdiInterpolator.h>
-#include <Core/Grid/fastAxiCpdiInterpolator.h>
+//#include <Core/Grid/fastCpdiInterpolator.h>
+//#include <Core/Grid/fastAxiCpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -59,7 +61,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useCBDI = false;
   d_useCohesiveZones = false;
   d_createNewParticles = false;
-  d_addNewMaterial = false;
   d_with_color = false;
   d_fracture = false;
   d_minGridLevel = 0;
@@ -72,7 +73,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
-  d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
   d_do_contact_friction = false;
   d_addFrictionWork = 0.0;  // don't do frictional heating by default
@@ -90,6 +90,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_insertParticles = false;
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
+  d_min_subcycles_for_F = 1;
   d_min_mass_for_acceleration = 0;// Min mass to allow division by in computing acceleration
   d_max_vel = 3.e105;
   d_with_ice = false;
@@ -171,7 +172,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, cpgimp, 3rdorderBS, cpdi, fastcpdi" << endl;
+     cerr << "linear, gimp, 3rdorderBS, cpdi" << endl;
     exit(1);
   }
 
@@ -208,8 +209,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   mpm_flag_ps->get("create_new_particles", d_createNewParticles);
-  mpm_flag_ps->get("manual_new_material", d_addNewMaterial);
-  mpm_flag_ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
   mpm_flag_ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
@@ -217,6 +216,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
+  mpm_flag_ps->get("minimum_subcycles_for_F",  d_min_subcycles_for_F);
   mpm_flag_ps->get("minimum_mass_for_acc",     d_min_mass_for_acceleration);
   mpm_flag_ps->get("maximum_particle_velocity",d_max_vel);
   mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
@@ -286,46 +286,64 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   delete d_interpolator;
 
   if(d_interpolator_type=="linear"){
-    d_interpolator = scinew LinearInterpolator();
-    d_8or27 = 8;
+    if(d_axisymmetric){
+      d_interpolator = scinew AxiLinearInterpolator();
+    } else{
+      d_interpolator = scinew LinearInterpolator();
+    }
   } else if(d_interpolator_type=="gimp"){
-    d_interpolator = scinew Node27Interpolator();
-    d_8or27 = 27;
-  } else if(d_interpolator_type=="cpgimp"){
-    d_interpolator = scinew Node27Interpolator();
-    d_8or27 = 27;
+    if(d_axisymmetric){
+      d_interpolator = scinew AxiGIMPInterpolator();
+    } else{
+      d_interpolator = scinew GIMPInterpolator();
+    }
   } else if(d_interpolator_type=="3rdorderBS"){
-    d_interpolator = scinew TOBSplineInterpolator();
-    d_8or27 = 27;
+    if(!d_axisymmetric){
+      d_interpolator = scinew TOBSplineInterpolator();
+    } else{
+      ostringstream warn;
+      warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
+           << "Can't be used with axisymmetry at this time \n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
   } else if(d_interpolator_type=="4thorderBS"){
-    d_interpolator = scinew BSplineInterpolator();
-    d_8or27 = 64;
+    if(!d_axisymmetric){
+      d_interpolator = scinew BSplineInterpolator();
+    } else{
+      ostringstream warn;
+      warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
+           << "Can't be used with axisymmetry at this time \n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
   } else if(d_interpolator_type=="cpdi"){
-    d_8or27 = 64;
     if(d_axisymmetric){
       d_interpolator = scinew axiCpdiInterpolator();
     } else{
       d_interpolator = scinew cpdiInterpolator();
     }
-  } else if(d_interpolator_type=="fastcpdi"){
-    d_8or27 = 27;
+  }
+#if 0
+ else if(d_interpolator_type=="fastcpdi"){
     if(d_axisymmetric){
       d_interpolator = scinew fastAxiCpdiInterpolator();
     } else{
       d_interpolator = scinew fastCpdiInterpolator();
     }
-  }else{
+  }
+#endif
+else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
          << "Valid options are: \n"
          << "linear\n"
          << "gimp\n"
-         << "cpgimp\n"
          << "cpdi\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
+  // Get the size of the vectors associated with the interpolator
+  d_8or27=d_interpolator->size();
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
 
@@ -346,7 +364,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
-    dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use CBDI boundary condition = " << d_useCBDI << endl;
@@ -380,8 +397,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("exactDeformation",d_exactDeformation);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
-  ps->appendElement("manual_new_material", d_addNewMaterial);
-  ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial);
   ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);
@@ -391,6 +406,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
+  ps->appendElement("minimum_subcycles_for_F",  d_min_subcycles_for_F);
   ps->appendElement("minimum_mass_for_acc",     d_min_mass_for_acceleration);
   ps->appendElement("maximum_particle_velocity",d_max_vel);
   ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);

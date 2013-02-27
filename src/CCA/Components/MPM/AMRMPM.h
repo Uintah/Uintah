@@ -227,6 +227,13 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+  // Compute Vel. Grad and Def Grad
+  void computeLAndF(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
   virtual void interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                const PatchSubset* patches,
                                                const MaterialSubset* matls,
@@ -238,6 +245,14 @@ protected:
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw);
+
+  // Update particle quantities only
+  virtual void finalParticleUpdate(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
 
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
@@ -316,6 +331,8 @@ protected:
                                   const PatchSet*,
                                   const MaterialSet*);
 
+  void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
+
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
@@ -323,6 +340,10 @@ protected:
   void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
                                                    const PatchSet*,
                                                    const MaterialSet*);
+
+  virtual void scheduleFinalParticleUpdate(SchedulerP&,
+                                           const PatchSet*,
+                                           const MaterialSet*);
   
   //
   //  count the total number of particles in the domain
@@ -375,6 +396,8 @@ protected:
 
 private:
 
+  MaterialSubset* d_one_matl;         // matlsubset for zone of influence
+
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);
@@ -423,7 +446,23 @@ private:
   };
   map<const Patch*,faceMarks> faceMarks_map[2];         
          
-         
+  inline void computeVelocityGradient(Matrix3& velGrad,
+                                    vector<IntVector>& ni,
+                                    vector<Vector>& d_S,
+                                    const double* oodx,
+                                    constNCVariable<Vector>& gVelocity)
+  {
+    for(int k = 0; k < flags->d_8or27; k++) {
+      const Vector& gvel = gVelocity[ni[k]];
+      for (int j = 0; j<3; j++){
+        double d_SXoodx = d_S[k][j]*oodx[j];
+        for (int i = 0; i<3; i++) {
+          velGrad(i,j) += gvel[i] * d_SXoodx;
+        }
+      }
+    }
+  };
+
 };
       
 } // end namespace Uintah

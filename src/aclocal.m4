@@ -776,7 +776,7 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-# Allow GPU code generation for specific compute capabilities: 1.2, 1.3, 2.0, 2.1, 3.1
+# Allow GPU code generation for specific compute capabilities: 2.0, 2.1, 3.0, 3.5
 #   We need to be able to generate code for Fermi and Kepler,
 #   and also for earlier compute capabilities, even non-UVA environments.
 if test "$cuda_gencode" = ""; then
@@ -785,28 +785,23 @@ else
 	NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
 fi
 
-# Add one extra flag to pass to the host compiler when working with .cu to .o
-CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
-
-# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ compiler
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
 for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
-# This line is only place that needs mods if switching compiled module type, e.g., PTX, CUBIN
-NVCCEXT="ptx"
-
-# This will gather flags necessary for module file to be generated
-NVCC_MODULE_FLAGS="-$NVCCEXT $NVCC_CXXFLAGS"
-
-if test "$debug" = "yes"; then
-  # The "-g -G0" option pair must be passed to NVCC when an application is compiled in
-  # order to debug with cuda‐gdb. This forces -O0 compilation, with the exception of
-  # very limited dead‐code eliminations and register‐spilling optimizations.
-  NVCC_CXXFLAGS="-g -G0 $NVCC_CXXFLAGS $_sci_includes"
+if test "$debug" != "no"; then
+  NVCC_CXXFLAGS="-g -G -O0 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
+
+cuda_x64=""
+if test "$enable_64bit" = "yes"; then
+  cuda_x64="-m64"
+fi
+NVCC_CXXFLAGS="$cuda_x64 $NVCC_CXXFLAGS $_sci_includes"
+
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
 # check that the CUDA compiler works
@@ -827,25 +822,14 @@ $CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
 
 if test -f $_file_base_name; then
   AC_MSG_RESULT([yes])
+  HAVE_CUDA="yes"
 else
   AC_MSG_RESULT([no])
   AC_MSG_ERROR( [For some reason we could not link nvcc compiled object code] )
 fi
 
-AC_MSG_CHECKING([for NVCC compilation to PTX])
-$NVCC -ptx $8
-if test -f $_file_base_name.$NVCCEXT; then
-  AC_MSG_RESULT([yes])
-  HAVE_CUDA="yes"
-else
-  AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [For some reason we could not compile to PTX using nvcc] )
-  HAVE_CUDA="no"
-fi
-
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
-  DEF_PTXDIR_ABS="#define PTX_DIR_PATH \"`pwd`/ptx\""
   eval $1_LIB_DIR='"$6"'
   eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
   eval $1_LIB_FLAG='"$_sci_libs"'

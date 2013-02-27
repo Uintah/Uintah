@@ -49,16 +49,18 @@ template< typename FieldT,
 class PrimVar
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag rhophit_, rhot_;
+  const Expr::Tag rhophit_, rhot_, volfract_;
 
   typedef typename OperatorTypeBuilder< Interpolant, DensT, FieldT >::type  InterpT;
 
   const DensT* rho_;
   const FieldT* rhophi_;
+  const FieldT* volfrac_;
   const InterpT* interpOp_;
 
   PrimVar( const Expr::Tag& rhoPhiTag,
-           const Expr::Tag& rhoTag );
+           const Expr::Tag& rhoTag,
+           const Expr::Tag& volFracTag);
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -66,12 +68,13 @@ public:
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoPhiTag,
-             const Expr::Tag& rhoTag );
+             const Expr::Tag& rhoTag,
+             const Expr::Tag& volFracTag);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhophit_, rhot_;
+    const Expr::Tag rhophit_, rhot_,volfract_;
   };
 
   ~PrimVar();

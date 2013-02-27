@@ -108,6 +108,7 @@
           <value> 10.0 </value>
         </BCType>
       </Face>
+      
       <Face side="x+">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>
@@ -172,7 +173,7 @@
         <lower>[0,0,0]</lower>
         <upper>[0.5,0.25,0.01]</upper>
         <resolution>[80,40,2]</resolution>
-        <patches>[1,1,1]</patches>
+        <patches>[4,2,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>

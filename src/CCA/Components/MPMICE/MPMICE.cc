@@ -268,7 +268,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, grid, sharedState);
+      am->problemSetup(prob_spec, restart_prob_spec, grid, sharedState);
     }
   }  
 }
@@ -282,8 +282,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
   
   // Global flags required by mpmice
   ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
-  mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);
-
+  mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);  
 }
 
 //______________________________________________________________________
@@ -586,11 +585,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleAddNewParticles(             sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleConvertLocalizedParticles(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
-  //d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
 
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
@@ -616,15 +613,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
      }
    }
 
-   if(d_mpm->flags->d_canAddMPMMaterial){
-     //  This checks to see if the model on THIS patch says that it's
-     //  time to add a new material
-     d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
-
-     //  This one checks to see if the model on ANY patch says that it's
-     //  time to add a new material
-     d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
-   }
 } // end scheduleTimeAdvance()
 
 
@@ -1100,28 +1088,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel,    indx, patch);
       heatFlux.initialize(0.0);
 
-/*`==========TESTING==========*/
-#if 0
-  09/09/11  Jim is going to check with BB to see if we can delete the particle addition
-      // Ignore the dummy materials that are used when particles are
-      // localized
-      if (d_mpm->flags->d_createNewParticles) {
-        if (m%2 == 0) // The actual materials
-          mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                          Temp_CC,     vel_CC,
-                                          vol_frac_CC, patch);  
-        else // The dummy materials
-          mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                               Temp_CC,     vel_CC,  
-                                               vol_frac_CC, patch);  
-      } else {
-        mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                        Temp_CC,     vel_CC,  
-                                        vol_frac_CC, patch);  
-      }
-#endif 
-/*===========TESTING==========`*/      
-      
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       vol_frac_CC, patch);

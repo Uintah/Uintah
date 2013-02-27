@@ -19,11 +19,6 @@
   <DataArchiver>
     <filebase>methaneplumeexplicit.uda</filebase>
     <outputInterval>0.1</outputInterval>
-    <save label="uvwout"/>
-    <save label="totalflowIN"/>
-    <save label="totalflowOUT"/>
-    <save label="denAccum"/>
-    <save label="netflowOUTBC"/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
@@ -32,6 +27,7 @@
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="tempIN"/>
+    <save label="abskgIN"/>
     <save label="co2IN"/>
     <save label="enthalpySP"/>
     <save label="sootFVIN"/>

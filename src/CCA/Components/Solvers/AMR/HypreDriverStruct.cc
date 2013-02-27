@@ -31,7 +31,7 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/AMR/HypreDriverStruct.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <Core/Grid/Level.h>

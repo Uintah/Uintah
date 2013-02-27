@@ -85,7 +85,7 @@ namespace Uintah{
     _prop_label = VarLabel::create( prop_name, pT::getTypeDescription() ); 
 
     // evaluate after table lookup: 
-    _before_table_lookup = false; 
+    _before_table_lookup = true; 
   }
   
   template <typename pT, typename constpT>

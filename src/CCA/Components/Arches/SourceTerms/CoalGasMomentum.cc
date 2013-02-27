@@ -225,14 +225,14 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-CoalGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasMomentum::dummyInit"; 
+  string taskname = "CoalGasMomentum::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::initialize);
 
   tsk->computes(_src_label);
 
@@ -244,11 +244,11 @@ CoalGasMomentum::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasMomentum::dummyInit( const ProcessorGroup* pc, 
-                            const PatchSubset* patches, 
-                            const MaterialSubset* matls, 
-                            DataWarehouse* old_dw, 
-                            DataWarehouse* new_dw )
+CoalGasMomentum::initialize( const ProcessorGroup* pc, 
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

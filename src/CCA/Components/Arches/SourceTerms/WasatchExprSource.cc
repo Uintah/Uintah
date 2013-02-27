@@ -97,14 +97,14 @@ WasatchExprSource::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-WasatchExprSource::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+WasatchExprSource::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "WasatchExprSource::dummyInit"; 
+  string taskname = "WasatchExprSource::initialize"; 
   
-  Task* tsk = scinew Task(taskname, this, &WasatchExprSource::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &WasatchExprSource::initialize);
   
   tsk->computes(_src_label);
   
@@ -115,14 +115,14 @@ WasatchExprSource::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials() );
 }
 //---------------------------------------------------------------------------
-// Method: Dummy initialization
+// Method: initialization
 //---------------------------------------------------------------------------
 void 
-WasatchExprSource::dummyInit( const ProcessorGroup* pc, 
-                             const PatchSubset* patches, 
-                             const MaterialSubset* matls, 
-                             DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+WasatchExprSource::initialize( const ProcessorGroup* pc, 
+                               const PatchSubset* patches, 
+                               const MaterialSubset* matls, 
+                               DataWarehouse* old_dw, 
+                               DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

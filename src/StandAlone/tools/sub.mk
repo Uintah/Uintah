@@ -45,9 +45,9 @@ ifeq ($(HAVE_TEEM),yes)
              $(SRCDIR)/radiusMaker 
 endif 
 
-ifeq ($(HAVE_PIDX),yes)
-  SUBDIRS += $(SRCDIR)/pidx
-endif 
+#ifeq ($(HAVE_PIDX),yes)
+#  SUBDIRS += $(SRCDIR)/pidx
+#endif 
 
 ifeq ($(BUILD_VISIT),yes)
   SUBDIRS += $(SRCDIR)/uda2vis
@@ -74,6 +74,8 @@ else # Non-static build
 	Core/Math         \
 	Core/Thread       \
 	Core/Util         \
+	Core/ProblemSpec         \
+	CCA/Components/ProblemSpecification        \
         CCA/Components/DataArchiver         
   endif
 endif
@@ -82,7 +84,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
 	$(CORE_STATIC_LIBS)
 else
-  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(XML2_LIBRARY) \
+	  $(Z_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 

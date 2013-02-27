@@ -47,11 +47,6 @@ using namespace std;
 ArchesLabel::ArchesLabel()
 {
 
-  // These are allowed CFD roles: 
-  d_allowed_roles.push_back("temperature"); 
-  d_allowed_roles.push_back("density");
-  d_allowed_roles.push_back("enthalpy"); 
-
    // shortcuts
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
@@ -103,11 +98,11 @@ ArchesLabel::ArchesLabel()
   d_cellTypeLabel = VarLabel::create("cellType", 
                                   CCVariable<int>::getTypeDescription());
   // labels for inlet and outlet flow rates
-  d_totalflowINLabel   =  VarLabel::create("totalflowIN",   sum_variable);
-  d_totalflowOUTLabel  =  VarLabel::create("totalflowOUT",  sum_variable);
-  d_netflowOUTBCLabel  =  VarLabel::create("netflowOUTBC",  sum_variable);
-  d_totalAreaOUTLabel  =  VarLabel::create("totalAreaOUT",  sum_variable);
-  d_denAccumLabel      =  VarLabel::create("denAccum",      sum_variable);
+  d_totalflowINLabel   =  VarLabel::create("totalflowIN",   sum_variable); //gone
+  d_totalflowOUTLabel  =  VarLabel::create("totalflowOUT",  sum_variable); //gone
+  d_netflowOUTBCLabel  =  VarLabel::create("netflowOUTBC",  sum_variable); //gone
+  d_totalAreaOUTLabel  =  VarLabel::create("totalAreaOUT",  sum_variable); //gone
+  d_denAccumLabel      =  VarLabel::create("denAccum",      sum_variable); //not used anywhere that I can tell 
 
 
   // Density Labels
@@ -143,9 +138,9 @@ ArchesLabel::ArchesLabel()
   d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", SFCZ_double);
   
   // labels for ref density and pressure
-  d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable);
+  d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable); //ref density only used in compdynamicproc
   d_refDensityPred_label  =  VarLabel::create("refDensityPredLabel",  sum_variable);
-  d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable);
+  d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable); //ref pressure only used in the pressure solver
   d_refPressure_label     =  VarLabel::create("refPressureLabel",     sum_variable);
 
   // Scalar 
@@ -236,7 +231,7 @@ ArchesLabel::ArchesLabel()
   d_pressPlusHydroLabel = VarLabel::create("pPlusHydro",  CC_double);
 
 
-  d_uvwoutLabel = VarLabel::create("uvwout", min_variable); 
+  d_uvwoutLabel = VarLabel::create("uvwout", min_variable); //turned off 
 
 
   // predictor-corrector labels
@@ -325,28 +320,20 @@ ArchesLabel::ArchesLabel()
   d_velDivResidualLabel        =  VarLabel::create("velDivResidual",        CC_double);
   d_continuityResidualLabel    =  VarLabel::create("continuityResidual",    CC_double);
 
-  d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable);
-  d_ReactScalarClippedLabel  =  VarLabel::create("reactScalarClipped",  max_variable);
+  d_ScalarClippedLabel       =  VarLabel::create("scalarClipped",       max_variable); //only used in ScalarSolver
 
-  d_uVelNormLabel  =  VarLabel::create("uVelNorm",  sum_variable);
-  d_vVelNormLabel  =  VarLabel::create("vVelNorm",  sum_variable);
-  d_wVelNormLabel  =  VarLabel::create("wVelNorm",  sum_variable);
-  d_rhoNormLabel   =  VarLabel::create("rhoNorm",   sum_variable);
-
-  d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable);
+  d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable); // Used in EnthalpySolver and ExplicitSolver (also computed here)
   d_negativeDensityGuessPred_label       =  VarLabel::create("negativeDensityGuessPred",       sum_variable);
   d_negativeDensityGuessInterm_label     =  VarLabel::create("negativeDensityGuessInterm",     sum_variable);
-  d_densityLag_label                     =  VarLabel::create("densityLag",                     sum_variable);
-  d_densityLagPred_label                 =  VarLabel::create("densityLagPred",                 sum_variable);
+  d_densityLag_label                     =  VarLabel::create("densityLag",                     sum_variable); // Only computed/used if maxDensityLag is used in the input file. 
+  d_densityLagPred_label                 =  VarLabel::create("densityLagPred",                 sum_variable); // will restart the timestep if (guess_rho - computed_rho) > lag_rho
   d_densityLagInterm_label               =  VarLabel::create("densityLagInterm",               sum_variable);
   d_densityLagAfterAverage_label         =  VarLabel::create("densityLagAfterAverage",         sum_variable);
   d_densityLagAfterIntermAverage_label   =  VarLabel::create("densityLagAfterIntermAverage",   sum_variable);
   
 // kinetic energy
   d_kineticEnergyLabel             =  VarLabel::create("kineticEnergy",             CC_double);
-  d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable);
-  d_totalKineticEnergyPredLabel    =  VarLabel::create("totalKineticEnergyPred",    sum_variable);
-  d_totalKineticEnergyIntermLabel  =  VarLabel::create("totalKineticEnergyInterm",  sum_variable);
+  d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable); //only computes if turned on from input file 
 
 // scalar mms and gradP Ln error
 // ** warning...the L2 error here is not complete
@@ -356,7 +343,7 @@ ArchesLabel::ArchesLabel()
 //              Alternatively, one could add an 
 //              additional reduction var. and do this inline
 //              with the code.
-  d_smmsLnErrorLabel              =  VarLabel::create("smmsLnError",              CC_double);
+  d_smmsLnErrorLabel              =  VarLabel::create("smmsLnError",              CC_double); //MMS error is only computed if doMMS is true
   d_totalsmmsLnErrorLabel         =  VarLabel::create("totalsmmsLnError",         sum_variable);
   d_totalsmmsLnErrorPredLabel     =  VarLabel::create("totalsmmsLnErrorPred",     sum_variable);
   d_totalsmmsLnErrorIntermLabel   =  VarLabel::create("totalsmmsLnErrorInterm",   sum_variable);
@@ -512,6 +499,10 @@ ArchesLabel::~ArchesLabel()
 
   if (d_symTensorMatl->removeReference())
     delete d_symTensorMatl;
+ for( ArchesLabel::MomentMap::iterator iMoment = DQMOMMoments.begin();
+       iMoment != DQMOMMoments.end(); ++iMoment ) {
+  VarLabel::destroy(iMoment->second); 
+ }
 
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
@@ -659,11 +650,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_ScalarClippedLabel);
-  VarLabel::destroy(d_ReactScalarClippedLabel);
-  VarLabel::destroy(d_uVelNormLabel);
-  VarLabel::destroy(d_vVelNormLabel);
-  VarLabel::destroy(d_wVelNormLabel);
-  VarLabel::destroy(d_rhoNormLabel);
 
 // label for odt model
   //VarLabel::destroy(d_odtDataLabel);
@@ -679,8 +665,6 @@ ArchesLabel::~ArchesLabel()
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 
-  VarLabel::destroy(d_totalKineticEnergyPredLabel); 
-  VarLabel::destroy(d_totalKineticEnergyIntermLabel); 
 // mass balance labels for RK
   VarLabel::destroy(d_totalflowINPredLabel);
   VarLabel::destroy(d_totalflowOUTPredLabel);
@@ -818,10 +802,12 @@ void ArchesLabel::problemSetup( const ProblemSpecP& db )
   } 
 } 
 /** @brief Retrieve a label based on its CFD role **/
-const VarLabel* ArchesLabel::getVarlabelByRole( const std::string role ){ 
+const VarLabel* ArchesLabel::getVarlabelByRole( VARID role ){ 
 
    RLMAP::iterator i = d_r_to_l.find(role);
    const VarLabel* the_label; 
+
+   const std::string role_name = getRoleString( role ); 
 
    if ( i != d_r_to_l.end() ){
 
@@ -833,14 +819,14 @@ const VarLabel* ArchesLabel::getVarlabelByRole( const std::string role ){
 
      } else { 
 
-      std::string msg = "Error: Label not recognized in <VarID> storage for role = "+role+"\n";;
+      std::string msg = "Error: Label not recognized in <VarID> storage for role = "+role_name+"\n";;
       throw InvalidValue(msg,__FILE__,__LINE__);
 
      } 
 
    } else { 
 
-     std::string msg = "Error: Role not found in <VarID> storage for role = "+role+"\n";
+     std::string msg = "Error: Role not found in <VarID> storage for role = "+role_name+"\n";
      throw InvalidValue(msg,__FILE__,__LINE__);
 
    } 
@@ -852,14 +838,30 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
   //first make sure that the role is allowed: 
   //allowed roles are defined in the constructor of this class. 
   bool found_role = false; 
-  for ( std::vector<std::string>::iterator i_r = d_allowed_roles.begin(); i_r != d_allowed_roles.end(); i_r++){ 
-
-    if ( *i_r == role ){ 
-
-      found_role = true; 
-
-    } 
+  VARID which_var; 
+  if ( role == "temperature" ) { 
+    found_role = true; 
+    which_var = TEMPERATURE; 
+  } else if ( role == "density" ) { 
+    found_role = true; 
+    which_var = DENSITY; 
+  } else if ( role == "enthalpy" ) { 
+    found_role = true; 
+    which_var = ENTHALPY;
+  } else if ( role == "co2" ) { 
+    found_role = true; 
+    which_var = CO2; 
+  } else if ( role == "h2o" ) { 
+    found_role = true; 
+    which_var = H2O;
+  } else if ( role == "co2" ) {
+    found_role = true;
+    which_var = CO2; 
+  } else if ( role == "soot" ) { 
+    found_role = true;
+    which_var = SOOT;
   } 
+
   if ( !found_role ){ 
 
     std::string msg = "Error: Trying to assign a role "+role+" which is not defined as valid in ArchesLabel.cc\n";
@@ -867,8 +869,7 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
 
   } 
 
-
-  RLMAP::iterator i = d_r_to_l.find( role ); 
+  RLMAP::iterator i = d_r_to_l.find( which_var ); 
 
   if ( i != d_r_to_l.end() ){ 
     //if this role and found, make sure that the label is consistent with 
@@ -879,7 +880,34 @@ void ArchesLabel::setVarlabelToRole( const std::string label, const std::string 
     } // else the variable is already identified with its role so no need to do anything...
   } else { 
     //not found...so insert it
-    d_r_to_l.insert(std::make_pair(role,label)); 
+    d_r_to_l.insert(std::make_pair(which_var,label)); 
   } 
 
 }; 
+
+const string
+ArchesLabel::getRoleString( VARID role )
+{
+  std::string name; 
+  if ( role == TEMPERATURE ){ 
+    name = "temperature"; 
+  } else if ( role == DENSITY ){ 
+    name = "density"; 
+  } else if ( role == ENTHALPY ){ 
+    name = "enthalpy"; 
+  } else if ( role == SOOT ){ 
+    name = "soot"; 
+  } else if ( role == CO2 ){ 
+    name = "co2"; 
+  } else if ( role == H2O ){ 
+    name = "h2o"; 
+  } else if ( role == SPECIFICHEAT ){ 
+    name = "specific_heat"; 
+  } else if ( role == MIXTUREFRACTION ){ 
+    name = "mixture_fraction"; 
+  } else { 
+    std::string msg = "Error: Role not recognized!\n";
+    throw InvalidValue(msg, __FILE__,__LINE__); 
+  } 
+  return name; 
+}
