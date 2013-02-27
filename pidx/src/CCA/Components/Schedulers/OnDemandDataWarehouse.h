@@ -295,8 +295,13 @@ public:
    virtual void refinalize();
 
 
+#if !HAVE_PIDX
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
+#else
+  virtual void emit(OutputContext&, PIDXOutputContext&, const VarLabel* label,
+                    int matlIndex, const Patch* patch);
+#endif
 
    void exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, 
                                    const VarLabel* pos_var, int iteration);

@@ -32,6 +32,7 @@
 #include <CCA/Ports/ModelInterface.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/OutputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
@@ -1888,7 +1889,14 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           
           // output data to data file
           OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
+#if HAVE_PIDX
+          std::cerr<<"Creating PIDXOutputContext...\n";
+          PIDXOutputContext pc(filename, d_myworld->getComm());
+          new_dw->emit(oc, pc,  var, matlIndex, patch);
+#else
           new_dw->emit(oc, var, matlIndex, patch);
+#endif
+
           pdElem->appendElement("end", oc.cur);
           pdElem->appendElement("filename", dataFilebase.c_str());
           

@@ -39,45 +39,60 @@
 
 #include <sci_defs/error_defs.h>
 
+#include <assert.h>
+#include <iostream>
 #include <Core/Exceptions/AssertionFailed.h>
 #include <Core/Exceptions/ArrayIndexOutOfBounds.h>
 
 #define ASSERTFAIL(string) \
-   SCI_THROW(SCIRun::AssertionFailed(string, __FILE__, __LINE__));
+  {std::cerr<<string<<__FILE__<<__LINE__<<std::endl;  \
+    assert(0);}
+//SCI_THROW(SCIRun::AssertionFailed(string, __FILE__, __LINE__));
 
 #define ASSERTMSG(condition,message) \
-   if(!(condition)){ \
-      SCI_THROW(SCIRun::AssertionFailed(message, __FILE__, __LINE__)); \
-   }
+     if(!(condition)){                                                \
+       std::cerr<<message<<"("<<#condition<<") in "<<__FILE__<<":"<<__LINE__<<std::endl; \
+       assert(false);}
+   // if(!(condition)){ 
+   //    SCI_THROW(SCIRun::AssertionFailed(message, __FILE__, __LINE__)); 
+   // }
 
 #if SCI_ASSERTION_LEVEL >= 1
 #  define IFASSERT(x) x
 #  define ASSERTL1(condition) \
-     if(!(condition)){ \
-        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-     }
+     if(!(condition)){                                                \
+       std::cerr<<#condition<<" in "<<__FILE__<<":"<<__LINE__<<std::endl; \
+       assert(false);}
+     // if(!(condition)){ 
+     //    SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); 
+     // }
 #else
 #  define ASSERTL1(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 2
 #  define ASSERTL2(condition) \
-     if(!(condition)){ \
-        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-     }
+     if(!(condition)){                                                \
+       std::cerr<<#condition<<" in "<<__FILE__<<":"<<__LINE__<<std::endl; \
+       assert(false);}
+       //SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); 
+//     }
 #else
 #  define ASSERTL2(condition)
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 3
 #  define ASSERTL3(condition) \
-     if(!(condition)){ \
-        SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
-     }
+     if(!(condition)){                                                \
+       std::cerr<<#condition<<" in "<<__FILE__<<":"<<__LINE__<<std::endl; \
+       assert(false);}
+     // if(!(condition)){ 
+     //    SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); 
+     // }
 #  define CHECKARRAYBOUNDS(value, lower, upper) \
-     if(value < lower || value >= upper){ \
-        SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper, __FILE__, __LINE__)); \
-     }
+  assert(!(value < lower || value >= upper));
+     //    SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper, __FILE__, __LINE__)); 
+  // }
 #else
 #  define ASSERTL3(condition)
 #  define CHECKARRAYBOUNDS(value, lower, upper)

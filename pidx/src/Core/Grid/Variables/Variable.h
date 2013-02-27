@@ -29,6 +29,7 @@
 #include <iosfwd>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <sci_defs/pidx_defs.h>
 
 namespace SCIRun {
   class IntVector;
@@ -39,6 +40,7 @@ namespace Uintah {
   class TypeDescription;
   class InputContext;
   class OutputContext;
+  class PIDXOutputContext;
   class Patch;
   class RefCounted;
   class VarLabel;
@@ -88,7 +90,11 @@ public:
   //returns if a variable is marked valid or invalid
   bool isValid() const {return d_valid;}
 
-  void emit(OutputContext&, const IntVector& l, const IntVector& h,
+  void emit(OutputContext&, 
+#if HAVE_PIDX
+            PIDXOutputContext&,
+#endif
+            const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);

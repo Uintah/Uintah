@@ -71,8 +71,7 @@ LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
 	           > /dev/null; pwd)
 
 ifneq ($(CREATE_PTXDIR),)	           
-  PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR)\
-  	           > /dev/null; pwd)
+  PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR) > /dev/null; pwd)
 endif
 
 SCIRUN_LIBDIR := $(LIBDIR)
@@ -130,6 +129,16 @@ M_LIBRARY := @M_LIB_DIR_FLAG@ @M_LIB_FLAG@
 HAVE_TEEM    := @HAVE_TEEM@
 TEEM_LIBRARY := @TEEM_LIB_DIR_FLAG@ @TEEM_LIB_FLAG@
 TEEM_INCLUDE := @INC_TEEM_H@
+
+#ViSUS (nvisusio)
+HAVE_VISUS := @HAVE_VISUS@
+VISUS_LIBRARY := @VISUS_LIB_DIR_FLAG@ @VISUS_LIB_FLAG@
+VISUS_INCLUDE := @INC_VISUS_H@
+
+#ViSUS (Parallel IDX)
+HAVE_PIDX := @HAVE_PIDX@
+PIDX_LIBRARY := @PIDX_LIB_DIR_FLAG@ @PIDX_LIB_FLAG@
+PIDX_INCLUDE := @INC_PIDX_H@
 
 FREETYPE_LIBRARY := @FREETYPE_LIB_DIR_FLAG@ @FREETYPE_LIB_FLAG@
 FREETYPE_INCLUDE := @INC_FREETYPE_H@

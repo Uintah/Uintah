@@ -28,6 +28,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/OutputContext.h>
+#include <CCA/Ports/PIDXOutputContext.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
@@ -70,7 +71,11 @@ Variable::setForeign()
 }
 
 void
-Variable::emit( OutputContext& oc, const IntVector& l,
+Variable::emit( OutputContext& oc,
+#if HAVE_PIDX
+                PIDXOutputContext& pc,
+#endif
+                const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
 {
   bool use_rle = false;

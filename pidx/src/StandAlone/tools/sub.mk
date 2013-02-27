@@ -41,8 +41,12 @@ SUBDIRS := \
         $(SRCDIR)/tracker     
 
 ifeq ($(HAVE_TEEM),yes)
-  SUBDIRS += $(SRCDIR)/uda2nrrd \
+  SUBDIRS += $(SRCDIR)/udaconvert \
              $(SRCDIR)/radiusMaker 
+endif 
+
+ifeq ($(HAVE_PIDX),yes)
+  SUBDIRS += $(SRCDIR)/pidx
 endif 
 
 ifeq ($(BUILD_VISIT),yes)

@@ -37,6 +37,7 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/ModelInterface.cc \
 	$(SRCDIR)/ModelMaker.cc \
 	$(SRCDIR)/Output.cc \
+	$(SRCDIR)/PIDXOutputContext.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
@@ -58,6 +59,12 @@ PSELIBS := \
 	Core/Util
 
 LIBS := $(MPI_LIBRARY)
+
+#HAVE_PIDX
+ifeq ($(HAVE_PIDX),yes)
+	INCLUDES += ${PIDX_INCLUDE}
+	LIBS += $(PIDX_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
