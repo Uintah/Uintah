@@ -27,37 +27,14 @@
 #ifndef Uintah_Component_Arches_PhysicalConstants_h
 #define Uintah_Component_Arches_PhysicalConstants_h
 
-/***************************************************************************
-CLASS
-    PhysicalConstants
-       Sets up the Physical Constants 
-       
-GENERAL INFORMATION
-    PhysicalConstants.h - Declaration of PhysicalConstants class
-
-    Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-    
-    Creation Date : 05-30-2000
-
-    C-SAFE
-    
-
-KEYWORDS
-    
-DESCRIPTION
-
-PATTERNS
-    None
-
-WARNINGS
-    None
-
-POSSIBLE REVISIONS
-    None
-***************************************************************************/
+/**
+ *
+ * @class PhysicalConsants
+ * @author Rajesh Rawat
+ * @date May, 2000
+ *
+ *
+ */
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -69,33 +46,20 @@ class PhysicalConstants {
 
 public:
 
-  // GROUP: Constructors:
-  ///////////////////////////////////////////////////////////////////////
-  // Constructor taking
-  //   [in] 
   PhysicalConstants();
 
-  // GROUP: Destructors :
-  ///////////////////////////////////////////////////////////////////////
-  // Destructor
   ~PhysicalConstants();
 
-  // GROUP: Problem Setup :
-  ///////////////////////////////////////////////////////////////////////
-  // Set up the problem specification database
+  /** @brief input file interface **/ 
   void problemSetup(const ProblemSpecP& params);
 
-  // GROUP: Get Methods :
-  ///////////////////////////////////////////////////////////////////////
-  // Get Gravity Vector
+  /** @brief return gravity vecotr **/ 
   const Vector& getGravity(){ return d_gravity; }
 
-  ///////////////////////////////////////////////////////////////////////
-  // Get RefPoint Location
+  /** @brief get reference point i,j,k **/ 
   const IntVector& getRefPoint(){ return d_ref_point; }
 
-  ///////////////////////////////////////////////////////////////////////
-  // Get one component of Gravity Vector
+  /** @brief return only one component of the gravity vector **/ 
   double getGravity(int index){
     if (index == 1){
       return d_gravity.x();
@@ -107,26 +71,15 @@ public:
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////
-  // Get molecular viscosity (of air)
+  /** @brief get the molecular viscosity **/ 
   double getMolecularViscosity() { return d_viscosity; }
 
 protected :
 
 private:
 
-  // GROUP: Constructors:
-  ///////////////////////////////////////////////////////////////////////
-  // Copy Constructor (never instantiated)
-  //   [in] 
-  //        const PhysicalConstants&   
   PhysicalConstants(const PhysicalConstants&);
 
-  // GROUP: Operators:
-  ///////////////////////////////////////////////////////////////////////
-  // Assignment Operator (never instantiated)
-  //   [in] 
-  //        const PhysicalConstants&   
   PhysicalConstants& operator=(const PhysicalConstants&);
 
 private:

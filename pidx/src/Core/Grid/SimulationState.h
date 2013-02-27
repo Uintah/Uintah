@@ -34,6 +34,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
+#include <sci_defs/cuda_defs.h>
+
 #include <map>
 #include <vector>
 #include <iostream>
@@ -53,6 +55,10 @@ class ArchesMaterial;
 class WasatchMaterial;
 class SimpleMaterial;
 class Level;
+
+#ifdef HAVE_CUDA
+  class UnifiedScheduler;
+#endif
    
 /**************************************
       
@@ -224,6 +230,11 @@ public:
   int* getActiveDims() { return d_activeDims; }
   void setDimensionality(bool x, bool y, bool z);
 
+#ifdef HAVE_CUDA
+  void setUnifiedScheduler(UnifiedScheduler* sched);
+  inline UnifiedScheduler* getUnifiedScheduler() { return this->gpuDW; }
+#endif
+
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
@@ -330,6 +341,10 @@ private:
 
   // for AMR, how many times to execute a fine level per coarse level execution
   int d_timeRefinementRatio;
+
+#ifdef HAVE_CUDA
+  UnifiedScheduler* gpuDW;
+#endif
 
 }; // end class SimulationState
 

@@ -34,6 +34,7 @@
 */
 
 #include <sci_defs/lapack_defs.h>
+#include <sci_defs/magma_defs.h>
 
 #include <cmath>
 #include <Core/Math/sci_lapack.h>
@@ -116,18 +117,43 @@ bool lapackinvert(double *A, int n)
   // n is the order of A (A is n*n)
   // P an int array to store the permutations
 
-  int lda, lwork, info;  //The leading dimension of the matrix a.
+  int lda, lwork, info;  // The leading dimension of the matrix a.
 
-  int *P = new int[n];  //int array that stores permutations.
+  int *P = new int[n];  // int array that stores permutations.
  
   lwork = n*64;
-  double * work = new double[lwork];
+  double *work = new double[lwork];
  
   lda = n;
   lwork = n;
   
+#if defined(HAVE_MAGMA)
+
+//  magma_dgetrf_gpu(magma_int_t m,
+//                   magma_int_t n,
+//                   double *dA,
+//                   magma_int_t ldda,
+//                   magma_int_t *ipiv,
+//                   magma_int_t *info)
+
+  magma_dgetrf_gpu(n, n, A, lda, P, &info);
+
+//  magma_dgetri_gpu( magma_int_t n,
+//                    double *dA,
+//                    magma_int_t lda,
+//                    magma_int_t *ipiv,
+//                    double *dwork,
+//                    magma_int_t lwork,
+//                    magma_int_t *info )
+
+  magma_dgetri_gpu(n, A, lda, P, work, lwork, &info);
+
+#else
+
   DGETRF(&n, &n, A, &lda, P, &info);  
-  dgetri_(&n, A, &lda, P, work, &lwork, &info); 
+  dgetri_(&n, A, &lda, P, work, &lwork, &info);
+
+#endif
 
   delete [] work;
   delete [] P;
@@ -176,7 +202,7 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   /* Since A is not a square matrix, we have to make some decisions
      based on which dimension is shorter. */
 
-  if (m>=n) { minmn = n; maxmn = m; } else { minmn = m; maxmn = n; }
+  if (m >= n) { minmn = n; maxmn = m; } else { minmn = m; maxmn = n; }
 
   ldu = m; // Left singular vector matrix
   u = new double[ldu*m];
@@ -187,8 +213,32 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   lwork = 5*maxmn; // Set up the work array, larger than needed.
   work = new double[lwork];
 
+#if defined(HAVE_MAGMA)
+
+//  magma_dgesvd(char jobu,
+//               char jobvt,
+//               magma_int_t m,
+//               magma_int_t n,
+//               double *A,
+//               magma_int_t lda,
+//               double *s,
+//               double *U,
+//               magma_int_t ldu,
+//               double *VT,
+//               magma_int_t ldvt,
+//               double *work,
+//               magma_int_t lwork,
+//               magma_int_t *info )
+
+  magma_dgesvd(jobu, jobvt, m, n, a, lda, S, u,
+               ldu, vt, ldvt, work, lwork, &info);
+
+#else
+
   dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,
-	  &ldu, vt, &ldvt, work, &lwork, &info);
+	        &ldu, vt, &ldvt, work, &lwork, &info);
+
+#endif
 
   ftoc(u, U, ldu, m);
   ftoc(vt, VT, ldvt, n);
@@ -230,13 +280,36 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 
   work = new double[lwork];
   
+#if defined(HAVE_MAGMA)
+
+//  magma_dgeev(char jobvl,
+//              char jobvr,
+//              magma_int_t n,
+//              double *a,
+//              magma_int_t lda,
+//              double *WR,
+//              double *WI,
+//              double *vl,
+//              magma_int_t ldvl,
+//              double *vr,
+//              magma_int_t ldvr,
+//              double *work,
+//              magma_int_t lwork,
+//              magma_int_t *info)
+
+  magma_dgeev(jobvl, jobvr, n, a, lda, Er, Ei, vl,
+              ldvl, vr, ldvr, work, lwork, &info);
+
+#else
+
   dgeev_(&jobvl, &jobvr, &n, a, &lda, Er, Ei, vl,
-	 &ldvl, vr, &ldvr, work, &lwork, &info);
+	       &ldvl, vr, &ldvr, work, &lwork, &info);
+
+#endif
 
   if (Evecs) {
     ftoc(vr, Evecs, n, ldvr);
-    sort_eigens(Er, Ei, n, Evecs); /* Sort the results by eigenvalue in
-					 decreasing magnitude. */
+    sort_eigens(Er, Ei, n, Evecs); // Sort the results by eigenvalue in decreasing magnitude.
   } else {
     sort_eigens(Er, Ei, n);
   }

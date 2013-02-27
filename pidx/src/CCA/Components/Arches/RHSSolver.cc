@@ -66,7 +66,8 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                 double delta_t,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
-                                ArchesConstVariables* constvars)
+                                ArchesConstVariables* constvars, 
+                                constCCVariable<double>& volFrac)
 
 {
   // ignore faces that lie on the edge of the computational domain
@@ -87,8 +88,10 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->uVelRhoHat,               
                                constvars->new_density,         
                                vars->uVelocityCoeff,                    
-                               cellinfo->sewu, cellinfo->sns, cellinfo->stb,          
+                               cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+                               volFrac,
                                delta_t);
+
   //__________________________________
   //    Y dir
   shift = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
@@ -103,6 +106,7 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                constvars->new_density,         
                                vars->vVelocityCoeff,                    
                                cellinfo->sew, cellinfo->snsv, cellinfo->stb,          
+                               volFrac,
                                delta_t);
   //__________________________________
   //    Z dir       
@@ -118,6 +122,7 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                constvars->new_density,         
                                vars->wVelocityCoeff,                    
                                cellinfo->sew, cellinfo->sns, cellinfo->stbw,          
+                               volFrac,
                                delta_t);
 
 }
@@ -131,7 +136,8 @@ RHSSolver::calculateVelocity(const Patch* patch,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              constCCVariable<double>& rho_CC,
-                             constCCVariable<double>& press_CC)
+                             constCCVariable<double>& press_CC, 
+                             constCCVariable<double>& volFrac_CC)
 {
   // ignore faces that lie on the edge of the computational domain
   // in the principal direction
@@ -150,7 +156,12 @@ RHSSolver::calculateVelocity(const Patch* patch,
     int i = c.x();
     IntVector adj = c + shift;
     double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
-    vars->uVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dxpw[i]/rho_ave + vars->uVelRhoHat[c];
+    //WARNING: use of the volume fraction is a bit of a hack here.  
+    //Ideally the coefficients would be modified for the presence of walls
+    //but this was a quick and dirty solution without rewriting the entire 
+    //coefficient calculation. 
+    if ( volFrac_CC[c] > 1e-16 && volFrac_CC[c+shift] > 1e-16 )
+      vars->uVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dxpw[i]/rho_ave + vars->uVelRhoHat[c];
   }
 
   //__________________________________
@@ -165,7 +176,8 @@ RHSSolver::calculateVelocity(const Patch* patch,
     IntVector adj = c + shift;
     int j = c.y();
     double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
-    vars->vVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dyps[j]/rho_ave + vars->vVelRhoHat[c];
+    if ( volFrac_CC[c] > 1e-16 && volFrac_CC[c+shift] > 1.e-16 ) 
+      vars->vVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dyps[j]/rho_ave + vars->vVelRhoHat[c];
   }
   
   //__________________________________
@@ -180,7 +192,8 @@ RHSSolver::calculateVelocity(const Patch* patch,
     IntVector adj = c + shift;
     int k = c.z();
     double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
-    vars->wVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dzpb[k]/rho_ave + vars->wVelRhoHat[c];  
+    if ( volFrac_CC[c] > 1e-16 && volFrac_CC[c+shift] > 1e-16 ) 
+      vars->wVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dzpb[k]/rho_ave + vars->wVelRhoHat[c];  
   }
 }
 
@@ -301,6 +314,7 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                                         const OffsetArray1<double>& sew,
                                         const OffsetArray1<double>& sns,
                                         const OffsetArray1<double>& stb,
+                                        constCCVariable<double>& volFraction, 
                                         double delta_t)
 {
   for (; !iter.done(); iter++) {
@@ -319,8 +333,13 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                  A[Arches::AT][c] * old_phi[c + IntVector(0,0,1)] +                             
                  A[Arches::AB][c] * old_phi[c - IntVector(0,0,1)] +                             
                  source[c] - A[Arches::AP][c] * old_phi[c];
-                 
-    new_phi[c] = rhs/apo;                                                           
+
+    rhs *= volFraction[c] * volFraction[c+shift]; 
+    
+    //Note: volume fraction use here is a hack until the momentum solver is rewritten.
+    if ( std::abs(apo) > 1e-16 )
+      new_phi[c] = rhs/apo;
+
   } 
 }
 

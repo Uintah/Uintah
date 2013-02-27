@@ -2034,7 +2034,6 @@ WARNING
             area *= getExtraCellHighIndex()[i] - getExtraCellLowIndex()[i];
         return area;
       }
-
      
    }; // end class Patch
    

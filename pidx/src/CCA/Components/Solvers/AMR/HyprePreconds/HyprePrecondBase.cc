@@ -30,7 +30,7 @@
 // done in the classes derived from HyprePrecondBase.
 //--------------------------------------------------------------------------
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondBase.h>
-#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSMG.h>
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondPFMG.h>
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSparseMSG.h>

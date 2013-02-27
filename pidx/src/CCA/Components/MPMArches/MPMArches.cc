@@ -82,7 +82,7 @@ using namespace std;
 #undef RIGID_MPM
 // #define RIGID_MPM
 
-  MPMArches::MPMArches(const ProcessorGroup* myworld)
+  MPMArches::MPMArches(const ProcessorGroup* myworld, const bool doAMR)
 : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
@@ -92,7 +92,7 @@ using namespace std;
 #else
   d_mpm      = scinew SerialMPM(myworld);
 #endif
-  d_arches      = scinew Arches(myworld);
+  d_arches      = scinew Arches(myworld, doAMR);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
   d_doingRestart = false; 
@@ -218,7 +218,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     for( iter  = d_analysisModules.begin();
          iter != d_analysisModules.end(); iter++){
       AnalysisModule* am = *iter;
-      am->problemSetup(prob_spec, grid, sharedState);
+      am->problemSetup(prob_spec, materials_ps, grid, sharedState);
     }
   }
 
@@ -1146,8 +1146,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleSolveHeatEquations(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
+  d_mpm->scheduleFinalParticleUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,

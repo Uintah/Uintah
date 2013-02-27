@@ -49,8 +49,10 @@ SRCS += \
         $(SRCDIR)/Grid.cc                  \
         $(SRCDIR)/Level.cc                 \
         $(SRCDIR)/LinearInterpolator.cc    \
+        $(SRCDIR)/AxiLinearInterpolator.cc \
         $(SRCDIR)/Material.cc              \
-        $(SRCDIR)/Node27Interpolator.cc    \
+        $(SRCDIR)/GIMPInterpolator.cc      \
+        $(SRCDIR)/AxiGIMPInterpolator.cc   \
         $(SRCDIR)/PatchRangeTree.cc        \
         $(SRCDIR)/Patch.cc                 \
         $(SRCDIR)/Region.cc                \
@@ -61,9 +63,9 @@ SRCS += \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
         $(SRCDIR)/cpdiInterpolator.cc      \
-        $(SRCDIR)/fastCpdiInterpolator.cc  \
-        $(SRCDIR)/axiCpdiInterpolator.cc   \
-        $(SRCDIR)/fastAxiCpdiInterpolator.cc
+        $(SRCDIR)/axiCpdiInterpolator.cc
+#        $(SRCDIR)/fastCpdiInterpolator.cc  \
+#        $(SRCDIR)/fastAxiCpdiInterpolator.cc
 
 PSELIBS := \
         Core/Geometry    \

@@ -773,7 +773,7 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
     if (e2 < e3)
       swap(e2, e3);
   }
-  else if (num_values == 2)
+  else if (num_values == 2){
     if (r[0] > r[1]) {
       e1 = r[0];
       e2 = r[1];
@@ -781,8 +781,13 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
       e1 = r[1];
       e2 = r[0];
     }
-  else // num_values == 1
+    e3=e2;
+  }
+  else{ // num_values == 1
     e1 = r[0];
+    e2=e1;
+    e3=e2;
+  }
 
   return num_values;
 }

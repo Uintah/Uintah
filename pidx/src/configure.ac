@@ -58,7 +58,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.68)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -228,72 +228,84 @@ SCI_ARG_WITH(atlas,
   [with_atlas="$withval"
    sci_required_atlas=yes],
   [with_atlas=""])
+  
 SCI_ARG_WITH(mkl,
   AC_HELP_STRING(--with-mkl=DIR,
                  Use the mkl (for lapack/blas) installation in DIR),
   [with_mkl="$withval"
    sci_required_mkl=yes],
   [with_mkl=""])
+  
 SCI_ARG_WITH(acml,
   AC_HELP_STRING(--with-acml=DIR,
                  Use the acml (for lapack/blas) installation in DIR),
   [with_acml="$withval"
    sci_required_acml=yes],
   [with_acml=""])
+  
 SCI_ARG_WITH(blas,
   AC_HELP_STRING(--with-blas=DIR,
                  Use the blas installation in DIR),
   [with_blas="$withval"
    sci_required_blas=yes],
   [with_blas=""])
+  
 SCI_ARG_WITH(electric_fence,
   AC_HELP_STRING(--with-electric-fence=DIR,
                  Use Electric Fence (Memory Tracking) library in DIR),
   [with_electric_fence="$withval"
    sci_required_electric_fence=yes],
   [with_electric_fence=""])
+  
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
                  Use the lapack installation in DIR),
   [with_lapack="$withval"
    sci_required_lapack=yes],
   [with_lapack=""])
+  
 SCI_ARG_WITH(teem,
   AC_HELP_STRING(--with-teem=DIR, 
                  Use the teem installation in DIR/lib),
   [with_teem="$withval"
    sci_required_teem=yes],
   [with_teem=""])
+  
 SCI_ARG_WITH(fortran,
   AC_HELP_STRING(--with-fortran=DIR, 
                  Use the fortran (eg: g2c) installation in DIR/lib),
   [with_fortran="$withval"
    sci_required_fortran=yes],
   [with_fortran=""])
+  
 SCI_ARG_WITH(ofed,
   AC_HELP_STRING(--with-ofed=DIR,
                  Specify that OFED - Infiniband - is needed for the mpi installation),
   [with_ofed="$withval"
    sci_required_ofed=no],
   [with_ofed=""])
+  
 SCI_ARG_WITH(mx,
   AC_HELP_STRING(--with-mx=DIR,
                  Specify that mx - Myrinet - is needed for the mpi installation),
   [with_mx="$withval"
    sci_required_mx=no],
   [with_mx=""])
+  
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
   [with_mpi="$withval"
    sci_required_mpi=yes],
   [with_mpi=""])
+  
 SCI_ARG_WITH(mpi_lib,
   AC_HELP_STRING(--with-mpi-lib=DIR,
                  Use the mpi libraries installed in DIR),
   [with_mpi_lib="$withval"
    sci_required_mpi=yes],
   [with_mpi_lib=""])
+  
 SCI_ARG_WITH(mpi_include,
   AC_HELP_STRING(--with-mpi-include=DIR,
                  Use the mpi include files installed in DIR),
@@ -305,60 +317,70 @@ SCI_ARG_WITH(mpi_extra_libs,
                  Use this additional library(or libraries - comma separated) for mpi linking),
   [with_mpi_extra_libs="$withval"],
   [with_mpi_extra_libs=""])
+  
 SCI_ARG_WITH(cuda,
   AC_HELP_STRING(--with-cuda=DIR,
                  Use the CUDA installation in DIR),
   [with_cuda="$withval"
    sci_required_cuda=yes],
-  [with_cuda=""])  
+  [with_cuda=""])
+  
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
   [with_hypre="$withval"
    sci_required_hypre=yes],
   [with_hypre=""])
+  
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR),
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
+  
 SCI_ARG_WITH(boost,
   AC_HELP_STRING(--with-boost=DIR,
                  Use the Boost library in DIR),
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
+  
 SCI_ARG_WITH(spatialops,
   AC_HELP_STRING(--with-spatialops=DIR,
                  Use the SpatialOps library in DIR),
   [with_spatialops="$withval"
    sci_required_spatialops=yes],
   [with_spatialops=""])
+  
 SCI_ARG_WITH(exprlib,
   AC_HELP_STRING(--with-exprlib=DIR,
                  Use the ExprLib library in DIR),
   [with_exprlib="$withval"
    sci_required_exprlib=yes],
   [with_exprlib=""])
+  
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
   [with_tabprops="$withval"
    sci_required_tabprops=yes],
   [with_tabprops=""])
+  
 SCI_ARG_WITH(radprops,
   AC_HELP_STRING(--with-radprops=DIR,
                  Use the RadProps library in DIR),
   [with_radprops="$withval"
    sci_required_radprops=yes],
   [with_radprops=""])
+  
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
+  
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
@@ -380,6 +402,13 @@ SCI_ARG_WITH(gperftools,
    sci_required_gperftools=yes],
   [with_gperftools=""])
   
+SCI_ARG_WITH(magma,
+  AC_HELP_STRING(--with-magma=DIR,
+                 Use the MAGMA installation in DIR),
+  [with_magma="$withval"
+   sci_required_magma=yes],
+  [with_magma=""]) 
+  
 SCI_ARG_WITH(unp,
   AC_HELP_STRING(--with-unp=DIR,
                  Use the unp installation in DIR),
@@ -393,12 +422,14 @@ SCI_ARG_WITH(zlib,
   [with_zlib="$withval"
    sci_required_zlib=yes],
   [with_zlib=""])
+  
 SCI_ARG_WITH(jpeg,
   AC_HELP_STRING(--with-jpeg=DIR,
                  Use the jpeg installation in DIR),
   [with_jpeg="$withval"
    sci_required_jpeg=yes],
   [with_jpeg=""])
+  
 SCI_ARG_WITH(tiff,
   AC_HELP_STRING(--with-tiff=DIR,
                  Use the tiff installation in DIR),
@@ -433,6 +464,7 @@ SCI_ARG_WITH(freetype,
   [with_freetype="$withval"
    sci_required_freetype=yes],
   [with_freetype=""])
+  
 SCI_ARG_WITH(ftgl,
   AC_HELP_STRING(--with-ftgl=DIR,
                  Use the Freetype GL installation in DIR),
@@ -440,6 +472,7 @@ SCI_ARG_WITH(ftgl,
    sci_required_ftgl=yes
    sci_required_freetype=yes],
   [with_ftgl=""])
+  
 SCI_ARG_WITH(visit,
   AC_HELP_STRING(--with-visit=DIR,
                  Turn on VisIt visualization tool support.  Point to VisIt installation.),
@@ -475,87 +508,104 @@ SCI_ARG_ENABLE(static,
                  Build a statically linked version of Uintah.  Set to 'full' to force full static link.),
   [static="$enableval"],
   [static="no"])
+  
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
   [verbosity="yes"],
   [verbosity="no"])
+  
 SCI_ARG_ENABLE(threads,
   AC_HELP_STRING(--enable-threads,
                  Specify a thread implementation (pthreads or irix)),
   [threads="$enableval"],
   [threads=${threads='unknown'}])
+  
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
                  Turn on debugging (default is -g) or specify your own.
                  example: --enable-debug='-O0 -g'),
   [debug="$enableval"],
   [debug="no"])
+  
 SCI_ARG_ENABLE(optimize,
   AC_HELP_STRING(--enable-optimize,
                  Turn on optimize (default is -O2) or specify your own.
                  example: --enable-optimize='-O3'),
   [optimize="$enableval"],
   [optimize=${optimize='no'}])
+  
 SCI_ARG_ENABLE(64bit, AC_HELP_STRING(--enable-64bit,
                  Compile in 64 bit mode),
   [enable_64bit="$enableval"],
   [enable_64bit='no'])
+  
 SCI_ARG_ENABLE(32bit,
   AC_HELP_STRING(--enable-32bit,
                  Compile in 32 bit mode),
   [enable_32bit="$enableval"],
   [enable_32bit='no'])
+  
 SCI_ARG_ENABLE(output-avg-walltime,
   AC_HELP_STRING(--enable-output-avg-walltime,
                  Output ellapsed wall-times),
   [output_avg_walltime="$enableval"],
   [output_avg_walltime=${output_avg_walltime='no'}])
+  
 SCI_ARG_ENABLE(ray-scatter,
   AC_HELP_STRING(--ray-scatter,
                  Turn on ray scattering in Arches),
   [ray_scatter="$enableval"],
   [ray_scatter=${ray_scatter=''}])
+  
 SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
-                 Specify compute capability for GPU code generation (allowable values: 12, 13, 20, 21, 31)),
+                 Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
+  
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
   [exename="$enableval"],
   [exename=${exename='default'}])
+  
 SCI_ARG_ENABLE(largesos,
   AC_HELP_STRING(--enable-largesos,
                  Build one .so per directory),
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
+  
 SCI_ARG_ENABLE(sci-malloc,
   AC_HELP_STRING(--enable-sci-malloc,
                  Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
   [enable_sci_malloc="$enableval"],
   [enable_sci_malloc=${enable_sci_malloc='no'}])
+  
 SCI_ARG_ENABLE(memory-init,
   AC_HELP_STRING(--enable-memory-initialization=8_bit_number,
                  Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
   [enable_memory_initialization="$enableval"],
   [enable_memory_initialization=${enable_memory_initialization='no'}])
+  
 SCI_ARG_WITH(MallocTrace,
   AC_HELP_STRING(--with-MallocTrace=DIR,
                  Use MallocTrace library.  Note: you cannot use sci-malloc at the same time.),
   [with_malloc_trace="$withval"],
   [with_malloc_trace=""])
+  
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=""])
+  
 SCI_ARG_ENABLE(scinew-line-numbers,
   AC_HELP_STRING(--enable-scinew-line-numbers,
                  Have SCI malloc store the file and line that calls 'scinew'),
   [enable_scinew_line_numbers="yes"],
   [enable_scinew_line_numbers="no"])
+  
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
                  Use throw level N (0-3)),
@@ -3218,6 +3268,11 @@ if test "$sci_required_mpi" = "yes"; then
                       SCI_TRY_LINK(MPI,5. mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich pmpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
+                   # try mpi again with mpi_mt
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,6. mpi_mt library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpi_mt  $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+                   fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
                    fi
@@ -3300,6 +3355,7 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 #  --  search for PETSc  --------------------------------------------
+AC_LANG([C++])
 if test "$with_petsc" = "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
 else  
@@ -3402,6 +3458,7 @@ AC_SUBST(INC_PETSC_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
+AC_LANG([C])
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -3532,8 +3589,10 @@ if test "$sci_required_gperftools" = "yes"; then
   
   if test "$IS_OSX" = "yes"; then
      gperf_lib_list=tcmalloc_and_profiler
-  else
+  elif test "$IS_STATIC_BUILD" = "yes"; then 
      gperf_lib_list="tcmalloc profiler unwind"
+  else  
+     gperf_lib_list="tcmalloc profiler"
   fi
 
   AC_LANG(C++)
@@ -3561,6 +3620,214 @@ AC_SUBST(GPERFTOOLS_LIB_DIR_FLAG)
 AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
+
+
+##  --  search for cuda stuff  ------------------------------------------
+if test "$sci_required_cuda" = "yes"; then
+
+  echo
+  AS_MESSAGE(checking for required CUDA components......)
+  echo
+  
+  # This is now turned off to test some static builds on the GPU-enabled Jaguar-XK6
+  # guard against building staticaly linked Uintah with CUDA
+  #if test \( "$with_cuda" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
+    #AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
+  #fi
+
+  # check that the CUDA installation and SDK exist
+  if ! test -d "$with_cuda"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
+  fi
+
+  # the major CUDA definitions, etc
+  DEF_CUDA=""
+  HAVE_CUDA=""
+  HAVE_CUDA_H=""
+  INC_CUDA_H=""
+  CUDA_LIB_DIR=""
+
+  # all the -L's
+  CUDA_LIB_DIR_FLAG=""
+
+  # all the -l's
+  CUDA_LIB_FLAG=""
+
+  # confirm the existence/location of CUDA lib and include directories
+  _cuda_lib=
+  _cuda_inc="$with_cuda/include"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_cuda_lib,$with_cuda)
+  
+# code to compile and test various system GPU/CUDA properties
+# (these files, etc are deleted after tests)
+#------------------------------------------------------------------------------
+# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
+# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
+
+# test CUDA libraries and headers
+  cat > cuda_conf_test.cu << EOF
+#include <stdlib.h>
+#include <stdio.h>
+#include <cuda.h>
+
+__global__ void vectorAddGPU(float *a, float *results, int N) {
+  int idx = threadIdx.x;
+  if (idx < N) {
+    *(results+idx) = *(a+idx) * (*(a+idx));
+  }
+}
+
+int main(int argc, char **argv) {
+
+  int N = 512;
+  float *a = (float *)malloc(N * sizeof(float));
+  float *results = (float *)malloc(N * sizeof(float));
+  float *dev_a, *dev_results;
+  int memsize = N * sizeof(float);
+
+  for (int i = 0; i < N; i++) {
+    *(a+i) = i;
+    printf("a:%d = %f\n", i, *(a+i));
+  }
+  
+  cudaMalloc((void**)&dev_a, memsize);
+  cudaMalloc((void**)&dev_results, memsize);
+  cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_results, results, memsize, cudaMemcpyHostToDevice);
+
+  vectorAddGPU<<< 1, 512 >>>(dev_a, dev_results, N);
+
+  cudaMemcpy(results, dev_results, memsize, cudaMemcpyDeviceToHost);
+
+  for (int i = 0; i < N; i++) {
+    printf("a:%d = %f\n", i, *(results+i));
+  }
+
+    cudaFree(dev_a);
+    cudaFree(dev_results);
+    free(a);
+    free(results);
+
+  cudaDeviceReset();
+
+  return 1;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             CUDA libraries and headers,
+                             cuda.h,
+                             $_cuda_inc,
+                             cudart cuda,
+                             $_cuda_lib,
+                             ,
+                             cuda_conf_test.cu,
+                             optional,
+                             yes)
+
+rm -rf cuda_conf_test*
+echo
+
+#[aph] - debug
+#echo
+#echo "HAVE_CUDA         = " $HAVE_CUDA
+#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
+#echo "INC_CUDA_H        = " $INC_CUDA_H
+#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
+#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
+#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
+#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_LIBS         = " $NVCC_LIBS
+#echo "CC                = " $CC
+#echo "NVCC              = " $NVCC
+#echo "LIBS              = " $LIBS
+#echo "LDFLAGS           = " $LDFLAGS
+#echo "CFLAGS            = " $CFLAGS
+#echo "CXXFLAGS          = " $CXXFLAGS
+#echo
+
+fi #end sci_required_cuda
+
+# these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+AC_SUBST(HAVE_CUDA)
+AC_SUBST(DEF_CUDA)
+AC_SUBST(INC_CUDA_H)
+AC_SUBST(CUDA_LIB_DIR_FLAG)
+AC_SUBST(CUDA_LIB_FLAG)
+AC_SUBST(NVCC_CFLAGS)
+AC_SUBST(NVCC_CXXFLAGS)
+AC_SUBST(NVCC_LIBS)
+
+sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
+
+
+##  --  search for magma stuff  -------------------------------------------
+
+if test "$sci_required_magma" = "yes"; then
+  
+  # guard against building MAGMA without CUDA, need cublas, etc from CUDA installation
+  if test \( "$with_cuda" \) -a \( "$with_magma" = "no" \); then
+    AC_MSG_ERROR( [Cannot build with MAGMA support without CUDA. Both --with-magma=DIR and --with-cuda=DIR must be specified.] )
+  fi
+
+  # check that the MAGMA and CUDA installations exist
+  if ! test -d "$with_magma"; then
+    AC_MSG_ERROR( [The directory specified with --with-magma=DIR is not valid: $with_magma] )
+  fi
+
+  if ! test -d "$with_cuda"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
+  fi
+
+  _sci_optional=required
+  _magma_lib=
+  _magma_inc=
+  _cuda_lib=
+  _cuda_inc=
+
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_magma_lib,$with_magma)
+  BASE_LIB_PATH(_cuda_lib,$with_cuda)   
+  _magma_inc="$with_magma/include"
+  _cuda_inc="$with_cuda/include"
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(MAGMA, MAGMA libraries and headers,
+               magma.h,
+               $_magma_inc $_cuda_inc,
+               magma magmablas lapack cublas cudart,
+               $_magma_lib $_cuda_lib,
+               ,
+               [magma_init();
+                magma_finalize();],
+               $_sci_optional)
+  AC_LANG(C)     
+  
+  DEF_MAGMA="#define HAVE_MAGMA 1"
+
+#[aph] - debug
+#echo
+#echo "HAVE_MAGMA         = " $HAVE_MAGMA
+#echo "HAVE_MAGMA_H       = " $HAVE_MAGMA_H
+#echo "INC_MAGMA_H        = " $INC_MAGMA_H
+#echo "MAGMA_LIB_FLAG     = " $MAGMA_LIB_FLAG
+#echo "MAGMA_LIB_DIR      = " $MAGMA_LIB_DIR
+#echo "MAGMA_LIB_DIR_FLAG = " $MAGMA_LIB_DIR_FLAG
+#echo
+
+fi #end sci_required_magma
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_MAGMA)
+AC_SUBST(DEF_MAGMA)
+AC_SUBST(INC_MAGMA_H)
+AC_SUBST(MAGMA_LIB_DIR_FLAG)
+AC_SUBST(MAGMA_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/magma_testdefs.h"
 
 
 ##  --  search for freetype stuff  -------------------------------------------
@@ -3860,7 +4127,7 @@ if test "$wasatch_3p" = "yes"; then
 
   mkdir -p Wasatch3P
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
@@ -4092,11 +4359,20 @@ else
    #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
    AC_LANG([C++])
    SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            optional)
+
+   if test "$HAVE_HYPRE" != "yes"; then
+      SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                             HYPRE,
                             $_sci_lib,
                             $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
-                            $_sci_optional)
+                            optional)
+   fi
    AC_LANG([C])
 
    if test "$HAVE_HYPRE" = "yes" ; then
@@ -4116,153 +4392,6 @@ AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
-
-
-##  --  search for cuda stuff  ------------------------------------------
-if test "$sci_required_cuda" = "yes"; then
-
-  echo
-  AS_MESSAGE(checking for required CUDA components......)
-  echo
-  
-  # This is now turned off to test some static builds on the GPU-enabled Jaguar-XK6
-  # guard against building staticaly linked Uintah with CUDA
-  #if test \( "$with_cuda" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
-    #AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
-  #fi
-
-  # check that the CUDA installation and SDK exist
-  if ! test -d "$with_cuda"; then
-    AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
-  fi
-
-  # the major CUDA definitions, etc
-  DEF_CUDA=""
-  HAVE_CUDA=""
-  HAVE_CUDA_H=""
-  INC_CUDA_H=""
-  CUDA_LIB_DIR=""
-  NVCCEXT=""
-  NVCC_MODULE_FLAGS=""
-  DEF_PTXDIR_ABS=""
-
-  # all the -L's
-  CUDA_LIB_DIR_FLAG=""
-
-  # all the -l's
-  CUDA_LIB_FLAG=""
-
-  # confirm the existence/location of CUDA lib and include directories
-  _cuda_lib=
-  _cuda_inc="$with_cuda/include"
-  # account for lib64 or lib32 or just lib...
-  BASE_LIB_PATH(_cuda_lib,$with_cuda)
-  
-# code to compile and test various system GPU/CUDA properties
-# (these files, etc are deleted after tests)
-#------------------------------------------------------------------------------
-# test CUDA and CUDA_SDK libraries and headers
-  cat > cuda_conf_test.cu << EOF
-#include <stdlib.h>
-#include <stdio.h>
-#include <cuda.h>
-
-__global__ void vectorAddGPU(float *a, float *results, int N) {
-	int idx = threadIdx.x;
-	if (idx < N) {
-		*(results+idx) = *(a+idx) * (*(a+idx));
-	}
-}
-
-int main(int argc, char **argv) {
-
-	int N = 512;
-  float *a = (float *)malloc(N * sizeof(float));
-  float *results = (float *)malloc(N * sizeof(float));
-	float *dev_a, *dev_results;
-	int memsize = N * sizeof(float);
-
-	for (int i = 0; i < N; i++) {
-	  *(a+i) = i;
-		printf("a:%d = %f\n", i, *(a+i));
-	}
-	
-	cudaMalloc((void**)&dev_a, memsize);
-	cudaMalloc((void**)&dev_results, memsize);
-	cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_results, results, memsize, cudaMemcpyHostToDevice);
-
-	vectorAddGPU<<< 1, 512 >>>(dev_a, dev_results, N);
-
-	cudaMemcpy(results, dev_results, memsize, cudaMemcpyDeviceToHost);
-
-	for (int i = 0; i < N; i++) {
-		printf("a:%d = %f\n", i, *(results+i));
-	}
-
-  cudaFree(dev_a);
-  cudaFree(dev_results);
-  free(a);
-  free(results);
-
-	cudaDeviceReset();
-
-	return 1;
-}
-EOF
-
-  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
-                             CUDA libraries and headers,
-                             cuda.h,
-                             $_cuda_inc,
-                             cudart cuda,
-                             $_cuda_lib,
-                             ,
-                             cuda_conf_test.cu,
-                             optional,
-                             yes)
-
-rm -rf cuda_conf_test*
-echo
-
-#[aph] - debug
-#echo
-#echo "HAVE_CUDA         = " $HAVE_CUDA
-#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
-#echo "INC_CUDA_H        = " $INC_CUDA_H
-#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
-#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
-#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
-#echo "NVCC_LIBS         = " $NVCC_LIBS
-#echo "CC                = " $CC
-#echo "NVCC              = " $NVCC
-#echo "LIBS              = " $LIBS
-#echo "LDFLAGS           = " $LDFLAGS
-#echo "CFLAGS            = " $CFLAGS
-#echo "CXXFLAGS          = " $CXXFLAGS
-#echo "NVCC_MODULE_FLAGS = " $NVCC_MODULE_FLAGS
-#echo "DEF_PTXDIR_ABS    = " $DEF_PTXDIR_ABS
-#echo
-
-fi #end sci_required_cuda
-
-# these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
-AC_SUBST(HAVE_CUDA)
-AC_SUBST(DEF_CUDA)
-AC_SUBST(INC_CUDA_H)
-AC_SUBST(CUDA_LIB_DIR_FLAG)
-AC_SUBST(CUDA_LIB_FLAG)
-AC_SUBST(NVCC_CFLAGS)
-AC_SUBST(NVCC_CXXFLAGS)
-AC_SUBST(NVCC_LIBS)
-AC_SUBST(NVCCEXT)
-AC_SUBST(NVCC_MODULE_FLAGS)
-AC_SUBST(DEF_PTXDIR_ABS)
-
-sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 
 ##  --  finis flags  ------------------------------------------------

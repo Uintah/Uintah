@@ -162,68 +162,6 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
-void TransIsoHyper::allocateCMDataAddRequires(Task* task,
-                                              const MPMMaterial* matl ,
-                                              const PatchSet* patches,
-                                              MPMLabel* ) const
-  // _________________________________________STILL EXPERIMENTAL
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-  // Add requires local to this model
-  task->requires(Task::NewDW,pFailureLabel_preReloc,
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pStretchLabel_preReloc,
-                 matlset, Ghost::None);
-}
-
-
-void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
-                                      ParticleSubset* addset,
-       map<const VarLabel*, ParticleVariableBase*>* newState,
-                                      ParticleSubset* delset,
-                                      DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be
-  // deleted to the particle to be added.
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-
-  // Copy the data local to this constitutive model from the particles to
-  // be deleted to the particles to be added
-  //ParticleVariable<Matrix3> deformationGradient, pstress;
-  //constParticleVariable<Matrix3> o_defGrad, o_stress;
-  ParticleVariable<double> stretch,fail;
-  constParticleVariable<double> o_stretch,o_fail;
-
-  //new_dw->allocateTemporary(deformationGradient,addset);
-  //new_dw->allocateTemporary(pstress,            addset);
-  new_dw->allocateTemporary(stretch,            addset);
-  new_dw->allocateTemporary(fail,               addset);
-
-  //new_dw->get(o_defGrad,lb->pDeformationMeasureLabel_preReloc,   delset);
-  //new_dw->get(o_stress, lb->pStressLabel_preReloc,               delset);
-  new_dw->get(o_stretch,pStretchLabel_preReloc,                  delset);
-  new_dw->get(o_fail,   pFailureLabel_preReloc,                  delset);
-
-  ParticleSubset::iterator o,n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    //deformationGradient[*n] = o_defGrad[*o];
-    //pstress[*n] = o_stress[*o];
-    stretch[*n] = o_stretch[*o];
-    fail[*n] = o_fail[*o];
-  }
-  //(*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  //(*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[pStretchLabel]=stretch.clone();
-  (*newState)[pFailureLabel]=fail.clone();
-}
-
 void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
                                      std::vector<const VarLabel*>& to)
   //______________________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES
@@ -305,8 +243,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double U,W,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    Matrix3 Identity;
-    Identity.Identity();
+    Matrix3 Identity; Identity.Identity();
     Matrix3 RCG_tilde, LCG_tilde;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
@@ -314,52 +251,38 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double shear;
     Vector deformed_fiber_vector;
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
+    constParticleVariable<Matrix3> velGrad;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass;
-    ParticleVariable<double> fail,pdTdt,stretch,pvolume_new,p_q;
-    constParticleVariable<double> fail_old;
+    ParticleVariable<double> fail,pdTdt,stretch,p_q;
+    constParticleVariable<double> fail_old,pvolume_new;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
-    constParticleVariable<Matrix3> psize;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(fail_old,            pFailureLabel,                pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,  pset);
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
     new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
-    ParticleVariable<Matrix3> velGrad;
-    new_dw->allocateTemporary(velGrad, pset);
+    new_dw->get(pvolume_new,      lb->pVolumeLabel_preReloc,  pset);
+    new_dw->get(velGrad,          lb->pVelGradLabel_preReloc, pset);
+    new_dw->get(deformationGradient_new,
+                           lb->pDeformationMeasureLabel_preReloc, pset);
 
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
@@ -374,41 +297,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double failure = d_initialData.failure;
     double crit_shear = d_initialData.crit_shear;
     double crit_stretch = d_initialData.crit_stretch;
-
-    if(flag->d_doGridReset){
-      constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
-                                                                                
-        Matrix3 tensorL(0.0);
-        if(!flag->d_axisymmetric){
-         // Get the node indices that surround the cell
-         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
-        } else {  // axi-symmetric kinematics
-         // Get the node indices that surround the cell
-         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],deformationGradient[idx]);
-         // x -> r, y -> z, z -> theta
-         computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
-        }
-
-        velGrad[idx]=tensorL;
-                                                                                
-        deformationGradient_new[idx]=(tensorL*delT+Identity)
-                                    *deformationGradient[idx];
-      }
-    }
-    else if(!flag->d_doGridReset){
-      constNCVariable<Vector> gdisplacement;
-      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromDisplacement(gdisplacement,
-                                                 pset, px, psize,
-                                                 deformationGradient_new,
-                                                 deformationGradient,
-                                                 dx, interpolator);
-    }
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -476,7 +364,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Compute deformed volume and local wave speed
       double rho_cur = rho_orig/J;
-      pvolume_new[idx]=pmass[idx]/rho_cur;
       c_dil = sqrt((Bulk+1./3.*shear)/rho_cur);
       p = Bulk*log(J)/J; // p -= qVisco;
       if (p >= -1.e-5 && p <= 1.e-5){
@@ -602,7 +489,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 

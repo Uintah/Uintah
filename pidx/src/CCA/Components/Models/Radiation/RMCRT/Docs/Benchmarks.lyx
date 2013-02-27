@@ -83,7 +83,7 @@ Benchmark 1: Burns and Christon
  This case is described by Burns and Christon (Burns 1997).
  The case describes a three dimensional cube 1m in length, with a constant
  temperature and a tri-linearly varying absorption coefficient depicted
- in figure !!!.
+ in figure !!!.  Walls are cold and black.
  
 \end_layout
 

@@ -52,23 +52,15 @@ IS_STATIC_BUILD := @IS_STATIC_BUILD@
 %.tex :: %
 
 
-# PTXDIR is the Nvidia assembler/bytecode subdirectory (for PTX or CUBIN)
-CREATE_PTXDIR := @HAVE_CUDA@
 ifeq ($(OBJTOP),.)
   LIBDIR := lib
-  ifneq ($(CREATE_PTXDIR),)
-    PTXDIR := ptx
-  endif
 else
   LIBDIR := $(OBJTOP_ABS)/lib
-  ifneq ($(CREATE_PTXDIR),)
-    PTXDIR := $(OBJTOP_ABS)/ptx
-  endif
 endif
 
 # squash any output from noisy environments, we just want the pwd output
 LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
-	           > /dev/null; pwd)
+	           > /dev/null; pwd) 
 
 ifneq ($(CREATE_PTXDIR),)	           
   PTXDIR_ABS    := $(shell mkdir -p $(PTXDIR) > /dev/null; cd $(PTXDIR) > /dev/null; pwd)
@@ -221,6 +213,10 @@ MPI_INCLUDE := @INC_MPI_H@
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
 
+HAVE_MAGMA        := @HAVE_MAGMA@
+MAGMA_INCLUDE     := @INC_MAGMA_H@
+MAGMA_LIBRARY     := @MAGMA_LIB_DIR_FLAG@ @MAGMA_LIB_FLAG@
+
 HAVE_CUDA        := @HAVE_CUDA@
 CUDA_INCLUDE     := @INC_CUDA_H@
 CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
@@ -288,7 +284,7 @@ PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@
 
 ELECTRIC_FENCE := @ELECTRIC_FENCE_LIB_DIR_FLAG@ @ELECTRIC_FENCE_LIB_FLAG@
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) $(PAPI_INCLUDE) $(GPERFTOOLS_INCLUDE) $(CUDA_INCLUDE) @INC_Z_H@ @INC_HYPRE_H@ $(TAUINC) @INC_PNG_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) $(PAPI_INCLUDE) $(GPERFTOOLS_INCLUDE) $(CUDA_INCLUDE) $(MAGMA_INCLUDE) @INC_Z_H@ @INC_HYPRE_H@ $(TAUINC) @INC_PNG_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
 
 BUILD_ICE=@BUILD_ICE@
@@ -312,7 +308,8 @@ CORE_STATIC_PSELIBS := \
     Core_Malloc Core_IO Core_OS                             
 CORE_STATIC_LIBS := \
     $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) \
-    $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) $(DL_LIBRARY) $(CUDA_LIBRARY) $(GPERFTOOLS_LIBRARY)
+    $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
+    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------
@@ -329,6 +326,7 @@ NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@
 ifeq ($(IS_WIN),yes)
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
   LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
+  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
   PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
 else
   SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
@@ -341,8 +339,6 @@ FFLAGS		:= @FFLAGS@ $(FFLAGS)
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 OBJEXT := @OBJEXT@
-NVCCEXT := @NVCCEXT@
-NVCC_MODULE_FLAGS :=@NVCC_MODULE_FLAGS@
 
 ################################################################
 # Auto dependency generation flags
@@ -482,42 +478,28 @@ endif
 
 .cu.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@-rm -f $(basename $@).$(NVCCEXT)
-	@-rm -f $(basename $@).$(OBJEXT)
+	@-rm -f $@
 else
-	-rm -f $(basename $@).$(NVCCEXT)
-	-rm -f $(basename $@).$(OBJEXT)
+	-rm -f $@
 endif
 #
 # .d - most likely gcc... have to explicitly put it in a .d file.
 #
 # -M outputs to stdout(err?) dependency info.
-# Prepend that file to replace filename.o with: <path_to_file>/filename.o.
-#
-# Notes: 1.) For the CUDA compiler (nvcc), it is necessary to generate .o, .d and .ptx
-#            in separate compilation phases, e.g. nvcc must be called once for each
-#            generated output file, hence multiple compile lines. This will only be for
-#            .cu files, which in the context of Uintah, strictly contain kernels and
-#            other associated device functions.
-#        2.) First compile line is the Compilation phase to be used in dep. generation
-#        3.) Second compile line is the actual dependency generation
-#        4.) Third compile line generates device-only PTX (Nvidia bytecode)
-#            code used in explicitly registering PTX modules via the CUDA
-#            Driver API for kernel (grid) launches. This step discards host
-#            code for each .cu input file.
-#
+# Prepend that file to replace filename.o with:
+#     <path_to_file>/filename.o.
+# Note: For the CUDA compiler (nvcc), it is necessary to generate
+#       dependencies after the compilation phase.
 #
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	@$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(PTXDIR)/$(basename $(notdir $@)).$(NVCCEXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
-	$(NVCC) $(NVCC_MODULE_FLAGS) $(INCLUDES) $< -o $(PTXDIR)/$(basename $(notdir $@)).$(NVCCEXT)
 endif
 
 .cpp.$(OBJEXT): $<

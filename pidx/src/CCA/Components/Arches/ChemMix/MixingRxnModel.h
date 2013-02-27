@@ -148,6 +148,9 @@ namespace Uintah {
 
     /** @brief Returns the map of participating inerts **/
     inline InertMasterMap& getInertMap(){ return d_inertMap; }; 
+
+    /** @brief Returns a boolean regarding if post mixing is used or not **/ 
+    inline bool doesPostMix(){ return d_does_post_mixing; }; 
   
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
     inline void insertIntoMap( const string var_name ){
@@ -179,6 +182,8 @@ namespace Uintah {
   protected :
 
     std::string _temperature_label_name; 
+
+    IntVector d_ijk_den_ref;                      ///< Reference density location
 
     class TransformBase { 
 
@@ -297,8 +302,8 @@ namespace Uintah {
           bool doit = false; 
           if ( p->findBlock("inert_mixing") ){
 
-            p->findBlock("inert_mixing")->getAttribute("eta_label",     _index_1_name );
-            p->findBlock("inert_mixing")->getAttribute("fp_label",         _index_2_name );
+            p->findBlock("inert_mixing")->getAttribute("fp_label",         _index_1_name );
+            p->findBlock("inert_mixing")->getAttribute("eta_label",     _index_2_name );
             doit = true; 
 
           } 
@@ -337,23 +342,30 @@ namespace Uintah {
 
         void inline transform( std::vector<double>& iv, double inert ){
 
-          double fc = iv[_index_1];
-          double fcstar = iv[_index_2]; 
+          double fcstar = iv[_index_1]; 
+          double fc = iv[_index_2];
 
-          if ( inert != 1.0 ){
+          if ( inert < 1.0 ){
 
             double eta = fc / ( 1.0 - inert ); 
             double fp  = fcstar / ( 1.0 - inert );
 
             if ( fp > 1.0 ) fp = 1.0; 
 
-            double f   = fp / ( 1.0 - eta ); 
+            double f = 0.0; 
 
-            if ( f > 1.0 ) f = 1.0;
-            if ( f < 0.0 ) f = 0.0; 
+            if ( eta < 1.0 ){ 
 
-            iv[_index_1] = eta; 
-            iv[_index_2] = f;  
+              f   = fp / ( 1.0 - eta ); 
+
+              if ( f < 0.0 )
+                f = 0.0;
+              if ( f > 1.0 )
+                f = 1.0; 
+            }
+
+            iv[_index_1] = f; 
+            iv[_index_2] = eta;  
 
           } else { 
 

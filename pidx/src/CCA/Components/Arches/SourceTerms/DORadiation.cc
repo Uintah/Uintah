@@ -151,10 +151,30 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->computes(_src_label);
 
-    tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
-    tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
-    tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
-    tsk->requires( Task::OldDW, _soot_label, gn, 0 ); 
+    if ( _using_prop_calculator ) { 
+
+      std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from property calculator
+
+      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+
+        const VarLabel* label = VarLabel::find(*iter);
+        _species_varlabels.push_back(label); 
+
+        if ( label != 0 ){ 
+          tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+        }
+      }
+
+    } else { 
+
+      tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
+      tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
+      tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
+      tsk->requires( Task::OldDW, _soot_label, gn, 0 ); 
+
+    }
     if ( _abskp_label_name != "new_abskp" ){ 
       tsk->requires( Task::OldDW, _abskpLabel, gn, 0 ); 
     }
@@ -171,10 +191,20 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->modifies(_src_label); 
 
-    tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
-    tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
-    tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
-    tsk->requires( Task::NewDW, _soot_label, gn, 0); 
+    if ( _using_prop_calculator ){ 
+
+      for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+        tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      } 
+
+    } else { 
+
+      tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
+      tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
+      tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
+      tsk->requires( Task::NewDW, _soot_label, gn, 0); 
+    }
+
     if ( _abskp_label_name != "new_abskp" ){ 
       tsk->requires( Task::NewDW, _abskpLabel, gn, 0 ); 
     }
@@ -189,8 +219,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
-
-
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -237,13 +265,28 @@ DORadiation::computeSource( const ProcessorGroup* pc,
      
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
+    std::vector<constCCVariable<double> > species; 
+
     if ( timeSubStep == 0 ) { 
 
-      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gn , 0 );
-      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gn , 0 );
-      old_dw->get( const_radiation_vars.sootFV    , _soot_label, matlIndex , patch , gn , 0 ); 
-      old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
-      old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
+      if ( _using_prop_calculator ){ 
+
+        for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          species.push_back( var ); 
+        }
+
+        old_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
+
+      } else { 
+
+        old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gn , 0 );
+        old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gn , 0 );
+        old_dw->get( const_radiation_vars.sootFV    , _soot_label              , matlIndex , patch , gn , 0 ); 
+        old_dw->getCopy( radiation_vars.temperature     , _T_label                 , matlIndex , patch , gac , 1 );
+
+      }
 
       new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -282,12 +325,23 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     } else { 
 
-      new_dw->get(     const_radiation_vars.co2,    _co2_label, matlIndex, patch, gn, 0 ); 
-      new_dw->get(     const_radiation_vars.h2o,    _h2o_label, matlIndex, patch, gn, 0 ); 
-       
-      new_dw->get(     const_radiation_vars.sootFV,    _soot_label, matlIndex, patch, gn, 0 ); 
-      old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gn ,  0 ); 
-      new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
+      if ( _using_prop_calculator ){ 
+        for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          species.push_back( var ); 
+        }
+        new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
+
+      } else { 
+
+        new_dw->get(     const_radiation_vars.co2,    _co2_label, matlIndex, patch, gn, 0 ); 
+        new_dw->get(     const_radiation_vars.h2o,    _h2o_label, matlIndex, patch, gn, 0 ); 
+        new_dw->get(     const_radiation_vars.sootFV,    _soot_label, matlIndex, patch, gn, 0 ); 
+        new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
+
+      }
+
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -312,17 +366,25 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       } 
 
     } 
+    old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
 
     if ( do_radiation ){ 
 
-
       if ( timeSubStep == 0 ) {
 
-        _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+        if ( _using_prop_calculator ) { 
 
-        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+          _prop_calculator->compute( patch, species, radiation_vars.ABSKG );
 
-        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
+        } else { 
+
+          _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+
+        } 
+
+        _DO_model->boundarycondition_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+
+        _DO_model->intensitysolve_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 
       }
     }
@@ -338,14 +400,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "DORadiation::dummyInit"; 
+  string taskname = "DORadiation::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &DORadiation::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
   tsk->computes(_src_label);
 
@@ -353,7 +415,6 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
        iter != _extra_local_labels.end(); iter++){
 
     tsk->computes(*iter); 
-    tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
 
   }
 
@@ -361,11 +422,11 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-DORadiation::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+DORadiation::initialize( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -384,12 +445,7 @@ DORadiation::dummyInit( const ProcessorGroup* pc,
          iter != _extra_local_labels.end(); iter++){
 
       CCVariable<double> temp_var; 
-      constCCVariable<double> const_temp_var; 
-
       new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
-      //This next line is to get around scrubbing.
-      old_dw->get( const_temp_var, *iter, matlIndex, patch, Ghost::None, 0 ); 
-
       temp_var.initialize(0.0);
       
     }

@@ -42,6 +42,9 @@ public:
   /** @brief Scheduler for the dummy initialization as required by MPMArches */ 
   virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0; 
 
+  /** @brief Common setup for all models. **/
+  void commonProblemSetup( const ProblemSpecP& inputdb );
+
   /** @brief Scheduler for the initialization of the property */ 
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0; 
 

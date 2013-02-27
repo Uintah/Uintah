@@ -13,7 +13,7 @@
 //        in the local destructor
 //     c) Add your input file details in problemSetup
 //     d) Add actual calculation of property in computeSource
-//     e) Make sure that you dummyInit any new variables that require OldDW 
+//     e) Make sure that you initialize any new variables that require OldDW 
 //        values.
 //     f) Make sure that _before_table_lookup is set propertly for this model.
 //        See _before_table_lookup variable. 
@@ -123,14 +123,14 @@ CLASSNAME::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-CLASSNAME::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CLASSNAME::dummyInit"; 
+  string taskname = "CLASSNAME::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
 
   tsk->computes(_src_label);
 
@@ -145,11 +145,11 @@ CLASSNAME::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CLASSNAME::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+CLASSNAME::initialize( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset* matls, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/Properties.h>
 
 using namespace Uintah; 
@@ -15,6 +16,8 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 
   _constant_heat_loss = false; 
 
+  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
+
 }
 
 //---------------------------------------------------------------------------
@@ -22,37 +25,43 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 //---------------------------------------------------------------------------
 HeatLoss::~HeatLoss( )
 {
+  delete _boundary_condition; 
 }
 
 
 //---------------------------------------------------------------------------
 //Method: Problem Setup
 //---------------------------------------------------------------------------
-void HeatLoss::problemSetup( const ProblemSpecP& inputdb )
+void
+HeatLoss::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
   if ( db->findBlock("constant_heat_loss") ){ 
+
     _constant_heat_loss = true; 
-    db->findBlock("constant_heat_loss")->getAttribute("value",_constant);
-  } else {  
-	  db->require( "enthalpy_label", _enthalpy_label_name ); 
-	  db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
-	  db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
 
+  } 
+  else {
 
-	  _low_hl  = -1; 
-	  _high_hl =  1;
-	  if ( db->findBlock( "hl_bounds" ) ) { 
-	  	db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
-	  	db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
+    db->require( "enthalpy_label", _enthalpy_label_name ); 
+    db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
+    db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
+
+    _low_hl  = -1; 
+    _high_hl =  1;
+    if ( db->findBlock( "hl_bounds" ) ) { 
+      db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
+      db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
     }
 
-	  _noisy_heat_loss = false; 
-	  if ( db->findBlock( "noisy_hl_warning" ) ){ 
-	  	_noisy_heat_loss; 
-	  } 
+    _noisy_heat_loss = false; 
+    if ( db->findBlock( "noisy_hl_warning" ) ){ 
+      _noisy_heat_loss = true;
+    } 
   }
+
+  commonProblemSetup( inputdb ); 
 }
 
 //---------------------------------------------------------------------------
@@ -153,7 +162,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
 		  } 
 
-      prop.initialize( _constant ); 
+      prop.initialize( _const_init ); 
 
     } else { 
 
@@ -203,6 +212,11 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 		  	prop[c] = hl;
 
       }
+
+      //Apply boundary conditions
+      _boundary_condition->setScalarValueBC( 0, patch, prop, _prop_name ); 
+
+
       if ( _noisy_heat_loss ) { 
        
         if ( oob_up || oob_dn ) {  
@@ -267,7 +281,6 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
     CCVariable<double> prop; 
 
     new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-    prop.initialize(0.0); 
 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 

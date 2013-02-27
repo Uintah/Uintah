@@ -163,6 +163,7 @@ namespace Wasatch{
      */
     ScalarTransportEquation( const std::string solnVarName,
                              Uintah::ProblemSpecP params,
+                             const bool hasEmbeddedGeometry,
                              const Expr::Tag densityTag,
                              const bool isConstDensity,
                              const Expr::ExpressionID id );
@@ -175,7 +176,8 @@ namespace Wasatch{
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                             const Uintah::PatchSet* const localPatches,
                                             const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials );
+                                            const Uintah::MaterialSubset* const materials,
+                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap_);
 
 
     /**
@@ -184,7 +186,8 @@ namespace Wasatch{
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials );
+                                    const Uintah::MaterialSubset* const materials,
+                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap_);
 
     /**
      *  \brief setup the initial conditions for this transport equation.
@@ -214,6 +217,7 @@ namespace Wasatch{
                                                const bool isConstDensity,
                                                Expr::ExpressionFactory& factory,
                                                Uintah::ProblemSpecP params,
+                                               const bool hasEmbeddedGeometry,
                                                TurbulenceParameters turbulenceParams);
 
     /**

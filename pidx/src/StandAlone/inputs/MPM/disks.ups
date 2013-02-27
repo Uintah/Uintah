@@ -30,6 +30,7 @@
        <save label = "p.stress"/>
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
+       <save label = "p.particleID"/>
 
        <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>

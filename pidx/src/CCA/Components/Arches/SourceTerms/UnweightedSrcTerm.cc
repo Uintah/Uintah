@@ -173,14 +173,14 @@ UnweightedSrcTerm::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-UnweightedSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+UnweightedSrcTerm::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "UnweightedSrcTerm::dummyInit"; 
+  string taskname = "UnweightedSrcTerm::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &UnweightedSrcTerm::initialize);
 
   tsk->computes(_src_label);
 
@@ -192,11 +192,11 @@ UnweightedSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-UnweightedSrcTerm::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+UnweightedSrcTerm::initialize( const ProcessorGroup* pc, 
+                               const PatchSubset* patches, 
+                               const MaterialSubset* matls, 
+                               DataWarehouse* old_dw, 
+                               DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

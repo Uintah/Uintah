@@ -130,8 +130,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   for(NodeIterator it(l,h); !it.done(); it++) { //extra nodes
                     IntVector nd = *it;
                     variable[nd] = Vector(-variable[nd+inner].x(),
-                                          variable[nd+inner].y(), 
-                                          variable[nd+inner].z());
+                                           variable[nd+inner].y(), 
+                                           variable[nd+inner].z());
                   }
                 }
               }  // cpdi, gimp or 3rdorderBS
@@ -206,7 +206,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                     variable[nd]=Vector(variable[nd].x(), variable[nd].y(),0.);
                   }
                 }
-                if(face==Patch::zminus){
+                if(l.z()==-1 || h.z()==3){
+                 if(face==Patch::zminus){
                   inner = IntVector(0,0,2);
                   for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
                     IntVector nd = *it;
@@ -214,7 +215,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                           variable[nd+inner].y(),
                                          -variable[nd+inner].z());
                   }
-                } else if(face==Patch::zplus){
+                 } else if(face==Patch::zplus){
                   inner = IntVector(0,0,-2);
                   for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
                     IntVector nd = *it;
@@ -222,6 +223,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                           variable[nd+inner].y(),
                                          -variable[nd+inner].z());
                   }
+                 }
                 }
               } // cpdi or gimp
             } // zplus/zminus
@@ -307,9 +309,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               
               double gradv = bc->getValue();
+
+              for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
+		IntVector nd = *nbound_ptr;
+		variable[nd] = variable[nd-off] - gradv*dx;
+	      }
+
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
-                variable[nd] = variable[nd-off] + gradv*dx;
+                variable[nd] = variable[nd-off] - gradv*dx;
               }
             }
             

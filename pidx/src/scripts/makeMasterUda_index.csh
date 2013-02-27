@@ -15,7 +15,7 @@ if( $#argv < 1 ) then
   exit(1)
 endif
 
-set udas = ($argv[*]:gh)    # make sure you remove the last / from any entry
+set udas = ($argv[*])    # make sure you remove the last / from any entry
 
 #__________________________________
 # bulletproofing
@@ -26,6 +26,8 @@ if ( $status ) then
 endif
 
 foreach X ($udas[*])
+  echo "Passing $X through bulletproofing section"
+  
   # does each uda exist
   if (! -e $X ) then
     echo "ERROR: makeMasterUda: can't find the uda $X"
@@ -34,6 +36,7 @@ foreach X ($udas[*])
   
   # does each index.xml exist
   if (! -e $X/index.xml ) then
+  echo "Working on $X " 
     echo "______________________________________________________________"
     echo "ERROR: makeMasterUda: can't find the file $X/index.xml"
     echo "                   Do you want to continue"

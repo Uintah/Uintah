@@ -31,7 +31,7 @@
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSparseMSG.h>
 #include <CCA/Components/Solvers/AMR/HypreDriver.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 

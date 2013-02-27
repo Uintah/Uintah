@@ -51,7 +51,7 @@ using std::vector;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
       const VarLabel* pScratchVecLabel;
-      const VarLabel* pScaleFactorLabel;
+      const VarLabel* pScratchLabel;
       const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
@@ -60,7 +60,9 @@ using std::vector;
 
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
+      const VarLabel* pVelGradLabel;
       const VarLabel* pDeformationMeasureLabel_preReloc;
+      const VarLabel* pVelGradLabel_preReloc;
       const VarLabel* pStressLabel;
       const VarLabel* pStressLabel_preReloc;
       const VarLabel* pVolumeLabel;
@@ -101,6 +103,9 @@ using std::vector;
 
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
+
+      const VarLabel* pScaleFactorLabel;
+      const VarLabel* pScaleFactorLabel_preReloc;
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gMassLabel;

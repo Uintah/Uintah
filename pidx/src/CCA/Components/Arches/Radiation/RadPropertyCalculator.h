@@ -12,6 +12,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <sci_defs/uintah_defs.h>
 #ifdef HAVE_RADPROPS
 #include <radprops/AbsCoeffGas.h>
 #include <radprops/RadiativeSpecies.h>
@@ -30,6 +31,8 @@ namespace Uintah {
         delete _calculator; 
       };
 
+      typedef std::vector<constCCVariable<double> > RadCalcSpeciesList; 
+
       bool problemSetup( const ProblemSpecP& db ){ 
 
         if ( db->findBlock("property_calculator") ){ 
@@ -47,7 +50,7 @@ namespace Uintah {
 #ifdef HAVE_RADPROPS
             _calculator = scinew RadPropsInterface(); 
 #else
-            throw InvalidValue("Error: You haven't configured with RADPROPS!.",__FILE__,__LINE__);
+            throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with wasatch3p.)",__FILE__,__LINE__);
 #endif
           } else { 
             throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
@@ -64,22 +67,27 @@ namespace Uintah {
 
       };
 
-      void compute( const Patch* patch, CCVariable<double>& abskg ){ 
+      void compute( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg ){ 
 
-        _calculator->computeProps( patch, abskg );
+        _calculator->computeProps( patch, species, abskg );
 
       };
+
+      inline std::vector<std::string> get_participating_sp(){ 
+        return _calculator->get_sp(); 
+      }
 
     private: 
 
       class PropertyCalculatorBase { 
 
         public: 
-          PropertyCalculatorBase() {} 
-          virtual ~PropertyCalculatorBase() {}
+          PropertyCalculatorBase() {}; 
+          virtual ~PropertyCalculatorBase(){};
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
-          virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
+          virtual void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg )=0;  // for now only assume abskg
+          virtual std::vector<std::string> get_sp()=0;
       };
 #ifdef HAVE_RADPROPS
       //______________________________________________________________________
@@ -87,8 +95,8 @@ namespace Uintah {
       class RadPropsInterface : public PropertyCalculatorBase  { 
 
         public: 
-          RadPropsInterface() {}
-          ~RadPropsInterface() {}
+          RadPropsInterface() {};
+          ~RadPropsInterface() {};
           
           //__________________________________
           //
@@ -96,57 +104,100 @@ namespace Uintah {
 
             if ( db->findBlock( "grey_gas" ) ){
 
-              ProblemSpecP db_gg = db->findBlock( "grey_gas" ); 
-              std::vector<RadiativeSpecies> species; 
+              ProblemSpecP db_gg = db->findBlock( "grey_gas" );
 
-              //look for all the participating species: 
-              for ( ProblemSpecP db_sp = db_gg->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){ 
-                std::string current_sp; 
-                db_sp->getAttribute("label",current_sp); 
-                RadiativeSpecies radprop_sp = species_enum( current_sp );
-                species.push_back( radprop_sp );  
-              }  
+              db_gg->getWithDefault("mix_mol_w_label",_mix_mol_weight_name,"mixture_molecular_weight"); 
+              std::string inputfile;
+              db_gg->require("inputfile",inputfile); 
 
               //allocate gray gas object: 
-              _gg_radprops = scinew GreyGas( species ); 
+              _gg_radprops = scinew GreyGas( inputfile ); 
+
+              //get list of species: 
+              _radprops_species = _gg_radprops->speciesGG(); 
+
+              // mixture molecular weight will always be the first entry 
+              // Note that we will assume the table value is the inverse
+              _species.push_back(_mix_mol_weight_name); 
+
+              // NOTE: this requires that the table names match the RadProps name.  This is, in general, a pretty 
+              // bad assumption.  Need to make this more robust later on...
+              //
+              for ( std::vector<RadiativeSpecies>::iterator iter = _radprops_species.begin(); iter != _radprops_species.end(); iter++){
+                std::string which_species = species_name( *iter ); 
+                _species.push_back( which_species ); 
+
+                if ( which_species == "CO2" ){ 
+                  _sp_mw.push_back(44.0);
+                } else if ( which_species == "H2O" ){ 
+                  _sp_mw.push_back(18.0); 
+                } else if ( which_species == "CO" ){ 
+                  _sp_mw.push_back(28.0); 
+                } else if ( which_species == "NO" ){
+                  _sp_mw.push_back(30.0); 
+                } else if ( which_species == "OH" ){
+                  _sp_mw.push_back(17.0); 
+                } 
+              }
 
             } else { 
 
               throw InvalidValue( "Error: Only grey gas properties are available at this time.",__FILE__,__LINE__);
 
             }
-              
+
+            //need smarter return? 
+            //or no return at all? 
+            return true; 
             
           };
           
           //__________________________________
           //
-          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+          void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg ){ 
 
-            // below is just a placeholder.  
-            // here we need to:  
-            // 1) pass into this method the participating species
-            // (the rest of this should be in a grid loop )
-            // 2) convert them to mol fractions
-            // 3) package them into the molFrac vector
-            // 4) call the mixture_coeffs function to get back the abskg
-            // 5) assign abskg[c] to the value out of the lookup 
+            int N = species.size(); 
 
-            double plankCff = 0.0;
-            double rossCff  = 0.0; 
-            double effCff   = 0.0; 
-            std::vector<double> molFrac; 
-            double T        = 298; 
+            for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-            _gg_radprops->mixture_coeffs( planckCff, rossCff, effCff, mixMoleFrac, TMix );
+              IntVector c = *iter; 
 
-            
+              double plankCff = 0.0;
+              double rossCff  = 0.0; 
+              double effCff   = 0.0; 
+              std::vector<double> mol_frac; 
+              double T        = 298;
+
+              //convert mass frac to mol frac
+              for ( int i = 2; i < N; i++ ){ 
+                double value = (species[i])[c] * _sp_mw[i-1] * (species[1])[c];
+                //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
+                if ( value < 0.0 ){ 
+                  throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
+                } 
+                mol_frac.push_back(value); 
+              } 
+
+              _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+
+              abskg[c] = effCff; //need to generalize this to the other coefficients
+
+            }
 
           }; 
 
+          std::vector<std::string> get_sp(){
+            return _species; 
+          };
+
         private: 
 
-          AbsCoeffGas::GreyGas* _gg_radprops; 
+          GreyGas* _gg_radprops; 
+          std::vector<std::string> _species;               // to match the Arches varlabels
+          std::vector<RadiativeSpecies> _radprops_species; // for rad props
+          std::string _mix_mol_weight_name; 
+          std::vector<double> _sp_mw; 
+
       }; 
 #endif
       //______________________________________________________________________
@@ -154,8 +205,8 @@ namespace Uintah {
       class ConstantProperties : public PropertyCalculatorBase  { 
 
         public: 
-          ConstantProperties() {}
-          ~ConstantProperties() {}
+          ConstantProperties() {};
+          ~ConstantProperties() {};
           
           //__________________________________
           //
@@ -171,9 +222,14 @@ namespace Uintah {
           
           //__________________________________
           //
-          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+          void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg ){ 
             abskg.initialize(_value); 
           }; 
+
+          std::vector<std::string> get_sp(){
+            std::vector<std::string> void_vec; 
+            return void_vec; 
+          };
 
         private: 
           double _value; 
@@ -187,8 +243,8 @@ namespace Uintah {
           BurnsChriston() {
             _notSetMin = Point(SHRT_MAX, SHRT_MAX, SHRT_MAX);
             _notSetMax = Point(SHRT_MIN, SHRT_MIN, SHRT_MIN);
-          }
-          ~BurnsChriston() {}
+          };
+          ~BurnsChriston() {};
           
           //__________________________________
           //
@@ -213,7 +269,7 @@ namespace Uintah {
           
           //__________________________________
           //
-          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+          void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg ){ 
             
             BBox domain(_min,_max);
             
@@ -241,6 +297,11 @@ namespace Uintah {
               }
             } 
           }; 
+
+          std::vector<std::string> get_sp(){
+            std::vector<std::string> void_vec; 
+            return void_vec; 
+          };
 
         private: 
           double _value;

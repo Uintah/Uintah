@@ -3006,7 +3006,7 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
       matls = default_matls.get_rep();
     }
  
-    if( strcmp(currentTask->getName(), "Relocate::relocateParticles")==0 ){
+    if (currentTask->getName() == "Relocate::relocateParticles" ){
       continue;
     }
     

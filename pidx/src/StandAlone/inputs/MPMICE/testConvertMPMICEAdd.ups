@@ -74,7 +74,11 @@
      <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
+<<<<<<< .mine
+          <constitutive_model type="elastic_plastic">
+=======
           <constitutive_model type="elastic_plastic_hp">
+>>>>>>> .r48471
             <useModifiedEOS> true </useModifiedEOS>
             <remove_particles>true</remove_particles>
             <zero_stress_upon_failure>true</zero_stress_upon_failure>
@@ -155,7 +159,11 @@
       <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
+<<<<<<< .mine
+          <constitutive_model type="elastic_plastic">
+=======
           <constitutive_model type="elastic_plastic_hp">
+>>>>>>> .r48471
             <useModifiedEOS> true </useModifiedEOS>
             <remove_particles>true</remove_particles>
             <zero_stress_upon_failure>true</zero_stress_upon_failure>

@@ -20,7 +20,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */#include <CCA/Components/Examples/ExamplesLabel.h>
+ */
+#include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -228,13 +229,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     
     // are the grids the same ?
     GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
+    areGridsEqual(uda_grid.get_rep(), grid.get_rep());
     
-    if( ( *(uda_grid.get_rep() )  == *( grid.get_rep() ) ) == false ){
-      ostringstream warn;
-      warn << "\n\nERROR initalizeUsingUda: The grid defined in the input file"
-           <<  " is not equal to the initialization uda's grid\n";
-      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);  
-    }
     
     // do the variables exist
     vector<string> vars;
@@ -267,7 +263,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 void RMCRT_Test::scheduleInitialize ( const LevelP& level, 
                                       SchedulerP& sched )
 {
-  printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
+  
 
   Task* task = NULL;
   if (!d_old_uda) {
@@ -277,7 +273,8 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
     task = scinew Task( "RMCRT_Test::initializeWithUda", this, 
                         &RMCRT_Test::initializeWithUda );
   }
-
+  
+  printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
   task->computes( d_colorLabel );
   task->computes( d_abskgLabel );
   task->computes( d_cellTypeLabel ); 
@@ -309,7 +306,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   int maxLevels = level->getGrid()->numLevels();
   
   // move data to the new_dw for simplicity
-  for (int l = 0; l <= maxLevels-1; l++) {
+  for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
     d_RMCRT->sched_CarryForward (level, sched, d_colorLabel);
@@ -321,7 +318,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //   D A T A   O N I O N   A P P R O A C H
   if( d_whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* finestPatches = fineLevel->eachPatch();
     Task::WhichDW temp_dw = Task::NewDW;
     
     // modify Radiative properties on the finest level
@@ -349,13 +345,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     //  on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
     
-    // only schedule RMCRT and pseudoCFD on the finest level
     Task::WhichDW abskg_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw = Task::NewDW;
-    bool modifies_divQ       = false;
+    const bool modifies_divQ = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
-    
-//    schedulePseudoCFD(  sched, finestPatches, matls );
   }
   
   //______________________________________________________________________
@@ -364,7 +357,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // and the results are interpolated to the fine level
   if( d_whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* finestPatches = fineLevel->eachPatch();
     Task::WhichDW temp_dw = Task::NewDW;
    
     // modify Radiative properties on the finest level
@@ -372,20 +364,21 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
     
-    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
-    
-    
-    for (int l = 0; l <= maxLevels-1; l++) {
+    for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = true;
       const bool modifies_sigmaT4 = false;
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
       
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4); 
+    
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
-        bool modifies_divQ       = false;
+        const bool modifies_divQ  = false;
+        const bool backoutTemp    = true;
+        
+        d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
     }
@@ -396,71 +389,8 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       d_RMCRT->sched_Refine_Q (sched,  patches, matls);
     }
-
-    // only schedule CFD on the finest level
-//    schedulePseudoCFD( sched, finestPatches, matls );
   }
 }
-//______________________________________________________________________
-//
-void RMCRT_Test::schedulePseudoCFD(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   const MaterialSet* matls)
-{
-  printSchedule(patches,dbg,"RMCRT_Test::schedulePseudoCFD");
-  
-  Task* t = scinew Task("RMCRT_Test::pseudoCFD",
-                  this, &RMCRT_Test::pseudoCFD);
-                  
-  t->requires(Task::NewDW, d_divQLabel,  d_gn, 0);
-  t->modifies( d_colorLabel );
-
-  sched->addTask(t, patches, matls);
-}
-//______________________________________________________________________
-void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw )
-{ 
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch,dbg,"pseudoCFD");
-
-    for(int m = 0;m<matls->size();m++){
-      CCVariable<double> color;
-      constCCVariable<double> divQ;
-                 
-      new_dw->get(           divQ,     d_divQLabel,  d_matl, patch, d_gn,0);
-      new_dw->getModifiable( color,    d_colorLabel, d_matl, patch );
-      
-      
-      const double rhoSTP = 118.39; // density at standard temp and pressure [g/m^3] 
-      double deltaTime = 0.0243902; // !! Should be dynamic
-      const double specHeat = 1.012; // specific heat [J/K]
-      double rho = 0;
-      
-      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-        IntVector c(*iter);
-        // rho = rhoSTP *298 / 1500; // more accurate, but "hard codes" temperature to 1500 
-        //__________________________________
-        //
-        double color_wrong = 0.0;            // THIS IS WRONG
-        //__________________________________
-
-        rho = rhoSTP * 298 / color_wrong; // calculate density based on ideal gas law
-        
-        color[c] = color[c] - (1/rho) * (1/specHeat) * deltaTime * divQ[c];
-      }
-      
-      // set boundary conditions 
-      d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
-    }
-  }
-}
- 
 
 
 //______________________________________________________________________
@@ -551,6 +481,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
 
 //______________________________________________________________________
 // initialize using data from a previously run uda.
+// Execute this tasks on all levels even though the Data-onion only needs 
+// needs data from the finest levels.  
 void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* ,
@@ -564,7 +496,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   vector<double> times;
   archive->queryTimesteps(index, times);
   GridP uda_grid = archive->queryGrid(d_old_uda->timestep);
-
+  
+  const Level*  uda_level = uda_grid->getLevel(0).get_rep();        // there's only one level in these problem 
   const int timestep = d_old_uda->timestep;
   const int uda_matl = d_old_uda->matl;
 
@@ -576,23 +509,28 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
             << " at time " << times[timestep] 
             << " and initializing RMCRT variables " << endl;
             
+  // loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);  
+    const Patch* patch = patches->get(p);
+    
+    IntVector low  = patch->getExtraCellLowIndex();
+    IntVector high = patch->getExtraCellHighIndex();
+    
 
     uda_temp[p]  = scinew CCVariable<double>;
     uda_abskg[p] = scinew CCVariable<double>;
     
-    archive->query( *(CCVariable<double>*) uda_temp[p],  
-                    d_old_uda->temperatureName, uda_matl, patch, timestep);
+    archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
+                         d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);
 
-    archive->query( *(CCVariable<double>*) uda_abskg[p], 
-                    d_old_uda->abskgName,       uda_matl, patch, timestep);
-
+    archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
+                          d_old_uda->abskgName,      uda_matl, uda_level, timestep, low, high);
+    
     if (d_old_uda->cellTypeName != "NONE" ){
-      uda_cellType[p] = scinew CCVariable<int>;
-
-      archive->query( *(CCVariable<int>*) uda_cellType[p],  
-                      d_old_uda->cellTypeName, uda_matl, patch, timestep);  
+      uda_cellType[p] = scinew CCVariable<int>;                      
+      archive->queryRegion( *(CCVariable<int>*) uda_cellType[p],  
+                      d_old_uda->cellTypeName, uda_matl, uda_level, timestep, low, high);
+                      
     }
   }
   delete archive;
@@ -638,6 +576,53 @@ void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
   const Level* level = getLevel(patches);
   double delt = level->dCell().x();
   new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label(), level);
+}
+
+//______________________________________________________________________
+//
+//  This is basically the == operator from Grid.h but slightly tweaked
+void RMCRT_Test::areGridsEqual( const GridP& uda_grid, 
+                                const GridP& grid)
+{
+  bool areEqual = true;
+  
+  int nLevels = grid->numLevels()-1;
+  const LevelP level      = grid->getLevel(nLevels);      // finest grid is on the last level
+  const LevelP otherlevel = uda_grid->getLevel(0);        // there's only one level in these problem
+  if (level->numPatches() != otherlevel->numPatches())
+    areEqual = false;
+
+  // do the patches have the same number of cells and
+  // cover the same physical domain?  
+  Level::const_patchIterator iter      = level->patchesBegin();
+  Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+  for (; iter != level->patchesEnd(); iter++, otheriter++) {
+    const Patch* patch = *iter;
+    const Patch* otherpatch = *otheriter;
+
+    IntVector lo, o_lo;
+    IntVector hi, o_hi;
+    lo   = patch->getCellLowIndex();
+    hi   = patch->getCellHighIndex();
+    o_lo = otherpatch->getCellLowIndex();
+    o_hi = otherpatch->getCellHighIndex();
+
+    if ( lo !=  o_lo || hi != o_hi ){
+      areEqual = false;
+    }
+    if( patch->getCellPosition(lo) != otherpatch->getCellPosition(o_lo) ||
+        patch->getCellPosition(hi) != otherpatch->getCellPosition(o_hi) ){
+      areEqual = false;
+    }
+  }
+  
+  if ( !areEqual ) {
+    ostringstream warn;
+    warn << "\n\nERROR initalizeUsingUda: The grid defined in the input file"
+         <<  " is not equal to the initialization uda's grid\n"
+         <<  " For the Data Onion algorithm the finest level in the input file must be equal";
+    throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+  }
 }
 
 

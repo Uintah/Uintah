@@ -287,12 +287,18 @@ namespace Wasatch {
       modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
     }
     // attach the modifier expression to the target expression
-    factory.attach_modifier_expression( modTag, phiTag, patch->getID() );
+    factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
     
     // now retrieve the modifier expression and set the ghost and interior points
     BoundaryConditionBase<FieldT>& modExpr =
       dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
+    
+    // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
+    const SCIRun::IntVector sciPatchCellOffset = patch->getCellLowIndex(0);
+    SpatialOps::structured::IntVec patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
+    modExpr.set_patch_cell_offset(patchCellOffset);
+    
     // set the ghost and interior points as well as coefficients
     modExpr.set_ghost_coef(cg);
     modExpr.set_ghost_points(flatGhostPoints);
@@ -806,8 +812,14 @@ namespace Wasatch {
                                     const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials )
+                                    const Uintah::MaterialSubset* const materials,
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
+                                    std::string useFieldForBCIterator,
+                                    double useBCValue,
+                                    std::string useBCKind,
+                                    std::string useBCFunctorName)
   {
+
     /*
      ALGORITHM:
      1. loop over the patches
@@ -822,6 +834,13 @@ namespace Wasatch {
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
     const std::string phiName = phiTag.name();
+    
+    bool useOtherField = useFieldForBCIterator.empty() ? false : true;
+    
+    if (useFieldForBCIterator.empty()) {
+      useFieldForBCIterator = fieldName;
+    }
+    
     // loop over local patches
     for( int ip=0; ip<localPatches->size(); ++ip ){
 
@@ -842,6 +861,35 @@ namespace Wasatch {
         // loop over materials
         for( int im=0; im<materials->size(); ++im ){
 
+          // process functors... this is an ugly part of the code but we
+          // have to deal with this because Uintah doesn't allow a given task
+          // to run on different patches with different requires. We also can't
+          // get a bc graph to play nicely with the time advance graphs.
+          // this block will essentially enforce the same dependencies across
+          // all patches by adding functor expressions on them. those patches
+          // that do NOT have that functor associated with any of their boundaries
+          // will just expose the dependencies advertised by the functor but will
+          // accomplish nothing else because that functor doesn't have any bc points
+          // associated with it.
+          
+          Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+          std::map< std::string, std::set<std::string> >::const_iterator iter = bcFunctorMap.begin();
+          
+          while ( iter != bcFunctorMap.end() ) {
+            std::string functorPhiName = (*iter).first;
+            if ( functorPhiName.compare(fieldName) == 0 ) {
+              // get the functor set associated with this field
+              std::set<std::string>::iterator functorIter = (*iter).second.begin();
+              while (functorIter != (*iter).second.end() ) {
+                std::string functorName = *functorIter;
+                Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
+                factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
+                ++functorIter;
+              }
+            }
+            ++iter;
+          }
+
           const int materialID = materials->get(im);
 
           std::vector<Uintah::Patch::FaceType> bndFaces;
@@ -856,7 +904,7 @@ namespace Wasatch {
             SCIRun::IntVector insideCellDir = patch->faceDirection(face);
             //std::cout << "Inside Cell Dir: \n" << insideCellDir << std::endl;
 
-            //get the number of children
+            // get the number of children
             // jcs note that we need to do some error checking here.
             // If the BC has not been set then we get a cryptic error
             // from Uintah.
@@ -877,7 +925,12 @@ namespace Wasatch {
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
               //
-              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, useFieldForBCIterator, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              if (useOtherField) {
+                bc_value = useBCValue;
+                bc_kind = useBCKind;
+                bc_functor_name = useBCFunctorName;
+              }
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
                 process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name);
@@ -1373,7 +1426,13 @@ namespace Wasatch {
                                                        const GraphHelper& graphHelper,                \
                                                        const Uintah::PatchSet* const localPatches,    \
                                                        const PatchInfoMap& patchInfoMap,              \
-                                                       const Uintah::MaterialSubset* const materials);
+                                                       const Uintah::MaterialSubset* const materials, \
+                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap, \
+                                                       std::string useFieldForBCIterator,              \
+                                                       double useBCValue,                              \
+                                                       std::string useBCKind,                          \
+                                                       std::string useBCFunctorName);                 
+
 
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(SVolField);
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(XVolField);

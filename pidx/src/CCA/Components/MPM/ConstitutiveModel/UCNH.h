@@ -203,21 +203,7 @@ namespace Uintah {
       
     // destructor
     virtual ~UCNH();
-    
-    
-    // Initialization Functions //
-    //////////////////////////////
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-                                   map<const VarLabel*,
-                                   ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-    
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-    
+
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,
@@ -293,8 +279,6 @@ namespace Uintah {
     //////////////////////
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
-      
-
     
     // Returns the compressibility of the material
     virtual double getCompressibility();

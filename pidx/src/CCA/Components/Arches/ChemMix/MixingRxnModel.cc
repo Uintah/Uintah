@@ -31,6 +31,8 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 
 // includes for Uintah
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -180,9 +182,32 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
         proc0cout << "Warning: Intert stream " << phi << " was not added because no species were found in UPS file!" << std::endl;
 
       } 
+
+      // inert mixture fraction must be transported
+      EqnFactory& eqn_factory = EqnFactory::self();
+
+      if ( eqn_factory.find_scalar_eqn( phi ) ){ 
+        EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( phi );
+
+        //check if it uses a density guess (which it should) 
+        //if it isn't set properly, then do it automagically for the user
+        if (!eqn.getDensityGuessBool()){ 
+          proc0cout << " Warning: For equation named " << phi << endl 
+            << "     Density guess must be used for this equation because it determines properties." << endl
+            << "     Automatically setting density guess = true. " << endl;
+          eqn.setDensityGuessBool( true ); 
+        }
+      } else { 
+        string err_msg;
+        err_msg = "Error: For inert mixture fraction named "+phi+".  Cannot find an associated <TransportEqn>.\n";
+        throw ProblemSetupException( err_msg,__FILE__,__LINE__);
+      } 
     } 
   } 
 
+  // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
+  const ProblemSpecP db_root = db->getRootNode(); 
+  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 }
 
 //---------------------------------------------------------------------------

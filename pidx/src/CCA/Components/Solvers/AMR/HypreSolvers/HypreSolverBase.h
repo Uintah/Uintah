@@ -65,7 +65,7 @@ WARNING
    --------------------------------------------------------------------------*/
 
 #include <CCA/Ports/SolverInterface.h>
-#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Components/Solvers/HypreTypes.h>
 
 namespace Uintah {

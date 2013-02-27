@@ -52,6 +52,7 @@
 #include <CCA/Components/Arches/ScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
@@ -119,6 +120,8 @@ ExplicitSolver(ArchesLabel* label,
   d_scalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
+  d_printTotalKE = false; 
+  d_wall_ht_models = 0; 
 }
 
 // ****************************************************************************
@@ -128,13 +131,18 @@ ExplicitSolver::~ExplicitSolver()
 {
   delete d_pressSolver;
   delete d_momSolver;
-  delete d_scalarSolver;
+  if ( d_calScalar ){
+    delete d_scalarSolver;
+  }
   delete d_enthalpySolver;
   delete d_eff_calculator; 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
     delete nosolve_timelabels;
+  if ( d_wall_ht_models != 0 ){ 
+    delete d_wall_ht_models; 
+  }
 }
 
 // ****************************************************************************
@@ -145,6 +153,18 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
+  ProblemSpecP db_parent = params; 
+
+  if ( db->findBlock( "print_total_ke" ) ){ 
+    d_printTotalKE = true; 
+  }
+
+  if ( db_parent->findBlock( "WallHT" ) ){ 
+    ProblemSpecP db_wall_ht = db_parent->findBlock( "WallHT" ); 
+    d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
+    d_wall_ht_models->problemSetup( db_wall_ht ); 
+  } 
+
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld,
@@ -176,6 +196,19 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   std::string t_order; 
   ProblemSpecP db_time_int = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator");
   db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
+
+
+  ProblemSpecP db_vars  = params_root->findBlock("DataArchiver");
+  for (ProblemSpecP db_dv = db_vars->findBlock("save"); 
+        db_dv !=0; db_dv = db_dv->findNextBlock("save")){
+
+    std::string var_name; 
+    db_dv->getAttribute( "label", var_name );
+
+    if ( var_name == "kineticEnergy" || var_name == "totalKineticEnergy" ){
+      d_printTotalKE = true;
+    }
+  }
 
   //translate order to the older code: 
   if ( t_order == "first" ){ 
@@ -360,7 +393,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //
       std::stringstream strRKStage;
       strRKStage << curr_level;
-      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
+      const std::set<std::string>& ioFieldSet = wasatch.locked_fields();
       Wasatch::TaskInterface* wasatchRHSTask =
       scinew Wasatch::TaskInterface( gh->rootIDs,
                                     "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
@@ -445,6 +478,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    if ( !d_calScalar ){ 
+      sched_allocateDummyScalar( sched, patches, matls, curr_level ); 
+    } 
+
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
     sched_getDensityGuess(sched, patches, matls,
@@ -453,8 +490,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    d_scalarSolver->solve(sched, patches, matls,
-                          d_timeIntegratorLabels[curr_level]);
+    if ( d_calScalar ){ 
+      d_scalarSolver->solve(sched, patches, matls,
+                            d_timeIntegratorLabels[curr_level]);
+    }
 
     EqnFactory& eqn_factory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
@@ -563,7 +602,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
       d_props->sched_averageRKProps(sched, patches, matls,
-                                    d_timeIntegratorLabels[curr_level]);
+                                    d_timeIntegratorLabels[curr_level], d_calScalar);
       d_props->sched_saveTempDensity(sched, patches, matls,
                                      d_timeIntegratorLabels[curr_level]);
       if (d_calcVariance) {
@@ -622,6 +661,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
+    if ( d_wall_ht_models != 0 ){ 
+      d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
+    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
@@ -648,19 +690,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     //if (curr_level == numTimeIntegratorLevels - 1) {
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-
-      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-    }
-    //}
-    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
-        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
-      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
-      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
-    }
+//    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+//
+//      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//    }
+//    //}
+//    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
+//        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+//      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
+//      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
+//    }
 
     if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
       // this is the new efficiency calculator
@@ -689,8 +731,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level]);
 
 
-    sched_printTotalKE(sched, patches, matls,
-                       d_timeIntegratorLabels[curr_level]);
+
     if ((curr_level==0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
        sched_saveFECopies(sched, patches, matls,
                                        d_timeIntegratorLabels[curr_level]);
@@ -698,6 +739,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
 
+  }
+
+  if ( d_printTotalKE ){ 
+   sched_computeKE( sched, patches, matls ); 
+   sched_printTotalKE( sched, patches, matls );
   }
 
   return(0);
@@ -851,19 +897,16 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_CCVelocityLabel);
-      tsk->computes(d_lab->d_kineticEnergyLabel);
       tsk->computes(d_lab->d_velocityDivergenceLabel);
       tsk->computes(d_lab->d_velDivResidualLabel);
       tsk->computes(d_lab->d_continuityResidualLabel);
     }
     else {
       tsk->modifies(d_lab->d_CCVelocityLabel);
-      tsk->modifies(d_lab->d_kineticEnergyLabel);
       tsk->modifies(d_lab->d_velocityDivergenceLabel);
       tsk->modifies(d_lab->d_velDivResidualLabel);
       tsk->modifies(d_lab->d_continuityResidualLabel);
     }
-    tsk->computes(timelabels->tke_out);
 
     sched->addTask(tsk, patches, matls);
   }
@@ -924,7 +967,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     CCVariable<Vector> CCVel;
-    CCVariable<double> kineticEnergy;
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -945,35 +987,29 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
 
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(drhodt,  d_lab->d_filterdrhodtLabel,  indx, patch, gn, 0);
-    new_dw->get(density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
-    new_dw->get(div_constraint,
-                         d_lab->d_divConstraintLabel, indx, patch, gn, 0);
+    new_dw->get(newUVel        , d_lab->d_uVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(newVVel        , d_lab->d_vVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(newWVel        , d_lab->d_wVelocitySPBCLabel , indx , patch , gaf , 1);
+    new_dw->get(drhodt         , d_lab->d_filterdrhodtLabel  , indx , patch , gn  , 0);
+    new_dw->get(density        , d_lab->d_densityCPLabel     , indx , patch , gac , 1);
+    new_dw->get(div_constraint , d_lab->d_divConstraintLabel , indx , patch , gn  , 0);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
-      new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,     indx, patch);
       new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
       new_dw->allocateAndPut(div_residual,  d_lab->d_velDivResidualLabel,    indx, patch);
       new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
     }
     else {
       new_dw->getModifiable(newCCVel,       d_lab->d_CCVelocityLabel,      indx, patch);
-      new_dw->getModifiable(kineticEnergy,  d_lab->d_kineticEnergyLabel,      indx, patch);
       new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
       new_dw->getModifiable(div_residual,   d_lab->d_velDivResidualLabel,     indx, patch);
       new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
-    kineticEnergy.initialize(0.0);
     divergence.initialize(0.0);
     div_residual.initialize(0.0);
     residual.initialize(0.0);
-
-    double total_kin_energy = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -992,13 +1028,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
+
         }
       }
     }
@@ -1019,13 +1049,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idxU]*newUVel[idxU]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1045,13 +1068,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1071,13 +1087,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idxV]*newVVel[idxV]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1097,13 +1106,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idx]*newWVel[idx])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1123,13 +1125,6 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idxW]*newWVel[idxW])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
@@ -1149,20 +1144,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idx];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
-          if (!d_KE_fromFC)
-            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-          else
-            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
-                                  newVVel[idx]*newVVel[idx]+
-                                  newWVel[idxW]*newWVel[idxW])/2.0;
-          total_kin_energy += kineticEnergy[idx];
         }
       }
     }
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-                for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+        for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 
           IntVector idx(ii,jj,kk);
           IntVector idxU(ii+1,jj,kk);
@@ -1186,10 +1174,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                           (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
                            0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
                           drhodt[idx]/vol;
-                }
+        }
       }
     }
-    new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out);
   }
 }
 
@@ -1511,140 +1498,36 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 }
 
 
-// ****************************************************************************
-// Schedule data copy for first time step of Multimaterial algorithm
-// ****************************************************************************
-void
-ExplicitSolver::sched_dummySolve(SchedulerP& sched,
-                                 const PatchSet* patches,
-                                 const MaterialSet* matls)
-{
-
-  d_boundaryCondition->sched_bcdummySolve( sched, patches, matls );
-
-  Task* tsk = scinew Task( "ExplicitSolver::dataCopy",this,
-                           &ExplicitSolver::dummySolve);
-
-  Ghost::GhostType  gn = Ghost::None;
-
-  if (d_extraProjection) {
-    tsk->requires(Task::OldDW, d_lab->d_pressureExtraProjectionLabel, gn, 0);
-    tsk->computes(d_lab->d_pressureExtraProjectionLabel);
-  }
-
-  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);
-
-  // warning **only works for one scalar
-  tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
-  tsk->computes(d_lab->d_pressurePSLabel);
-  tsk->computes(d_lab->d_uvwoutLabel);
-  tsk->computes(d_lab->d_totalflowINLabel);
-  tsk->computes(d_lab->d_totalflowOUTLabel);
-  tsk->computes(d_lab->d_netflowOUTBCLabel);
-  tsk->computes(d_lab->d_denAccumLabel);
-  tsk->computes(d_lab->d_divConstraintLabel);
-  tsk->computes(d_lab->d_densityGuessLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-// ****************************************************************************
-// Actual Data Copy for first time step of MPMArches
-// ****************************************************************************
-
-void
-ExplicitSolver::dummySolve(const ProcessorGroup* ,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    // gets for old dw variables
-    constCCVariable<double> div;
-    constCCVariable<double> pressure;
-    CCVariable<double> div_new;
-    CCVariable<double> pressure_new;
-
-    Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(div,      d_lab->d_divConstraintLabel, indx, patch, gn, 0);
-    old_dw->get(pressure, d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
-
-    new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel,   indx, patch);
-    new_dw->allocateAndPut(div_new,     d_lab->d_divConstraintLabel, indx, patch);
-    div_new.copyData(div);
-    pressure_new.copyData(pressure);
-
-    CCVariable<double> density_guess;
-    new_dw->allocateAndPut(density_guess, d_lab->d_densityGuessLabel, indx, patch);
-
-    constCCVariable<double> pressureExtraProjection;
-    CCVariable<double> pressureExtraProjection_new;
-    if (d_extraProjection) {
-      old_dw->get(pressureExtraProjection,
-                             d_lab->d_pressureExtraProjectionLabel, indx, patch,  gn, 0);
-      new_dw->allocateAndPut(pressureExtraProjection_new,
-                             d_lab->d_pressureExtraProjectionLabel, indx, patch);
-      pressureExtraProjection_new.copyData(pressureExtraProjection);
-    }
-
-    CCVariable<double> pressureNLSource;
-    new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
-    pressureNLSource.initialize(0.0);
-
-    proc0cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
-
-    double uvwout = 0.0;
-    double flowIN = 0.0;
-    double flowOUT = 0.0;
-    double flowOUToutbc = 0.0;
-    double denAccum = 0.0;
-
-    new_dw->put(delt_vartype(uvwout),         d_lab->d_uvwoutLabel);
-    new_dw->put(delt_vartype(flowIN),         d_lab->d_totalflowINLabel);
-    new_dw->put(delt_vartype(flowOUT),        d_lab->d_totalflowOUTLabel);
-    new_dw->put(delt_vartype(flowOUToutbc),   d_lab->d_netflowOUTBCLabel);
-    new_dw->put(delt_vartype(denAccum),       d_lab->d_denAccumLabel);
-  }
-}
 //______________________________________________________________________
 //
 void
-ExplicitSolver::sched_printTotalKE(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   const MaterialSet* matls,
-                                   const TimeIntegratorLabel* timelabels)
+ExplicitSolver::sched_printTotalKE( SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls )
+                                   
 {
-  string taskname =  "ExplicitSolver::printTotalKE" +
-                     timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname,
-                          this, &ExplicitSolver::printTotalKE,
-                          timelabels);
+  string taskname =  "ExplicitSolver::printTotalKE";
+  Task* tsk = scinew Task( taskname,
+                           this, &ExplicitSolver::printTotalKE );
 
-  tsk->requires(Task::NewDW, timelabels->tke_out);
+  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
   sched->addTask(tsk, patches, matls);
 }
 //______________________________________________________________________
 void
-ExplicitSolver::printTotalKE(const ProcessorGroup* ,
-                             const PatchSubset* ,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels)
+ExplicitSolver::printTotalKE( const ProcessorGroup* ,
+                              const PatchSubset* ,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw )
 {
+
   sum_vartype tke;
-  new_dw->get(tke, timelabels->tke_out);
+  new_dw->get( tke, d_lab->d_totalKineticEnergyLabel ); 
   double total_kin_energy = tke;
-  int me = d_myworld->myrank();
-  if (me == 0){
-     cerr << "Total kinetic energy " <<  total_kin_energy << endl;
-  }
+
+  proc0cout << "Total kinetic energy: " << total_kin_energy << std::endl;
+
 }
 
 //****************************************************************************
@@ -2834,4 +2717,127 @@ void ExplicitSolver::setInitVelConditionInterface( const Patch* patch,
 
   d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel );
 
+}
+
+void ExplicitSolver::sched_computeKE( SchedulerP& sched, 
+                                       const PatchSet* patches, 
+                                       const MaterialSet* matls )
+{
+  string taskname = "ExplicitSolver::computeKE"; 
+  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::computeKE ); 
+  
+  tsk->computes(d_lab->d_totalKineticEnergyLabel); 
+  tsk->computes(d_lab->d_kineticEnergyLabel); 
+
+  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+
+  sched->addTask( tsk, patches, matls ); 
+
+}
+
+void ExplicitSolver::computeKE( const ProcessorGroup* pc,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw )
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    constSFCXVariable<double> u; 
+    constSFCYVariable<double> v; 
+    constSFCZVariable<double> w; 
+    CCVariable<double> ke; 
+
+    new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
+    ke.initialize(0.0);
+    new_dw->get( u, d_lab->d_uVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->get( v, d_lab->d_vVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+    new_dw->get( w, d_lab->d_wVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+
+    double max_ke = 0.0; 
+    double sum_ke = 0.0; 
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+
+      IntVector c = *iter; 
+
+      ke[c] = 0.5 * ( u[c]*u[c] + v[c]*v[c] + w[c]*w[c] ); 
+
+      if ( ke[c] > max_ke ){ 
+        max_ke = ke[c]; 
+      } 
+
+      sum_ke += ke[c]; 
+
+    }
+
+    new_dw->put(sum_vartype(sum_ke), d_lab->d_totalKineticEnergyLabel);
+
+  }
+}
+
+
+void 
+ExplicitSolver::sched_allocateDummyScalar( SchedulerP& sched, 
+                                           const PatchSet* patches, 
+                                           const MaterialSet* matls, 
+                                           int timesubstep )
+{
+  string taskname =  "ExplicitSolver::allocateDummyScalar";
+  Task* tsk = scinew Task( taskname, this,
+                           &ExplicitSolver::allocateDummyScalar,
+                           timesubstep );
+
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  if ( timesubstep == 0 ){ 
+    tsk->modifies( d_lab->d_scalarSPLabel ); 
+    tsk->computes( d_lab->d_scalarDiffusivityLabel);
+    tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
+    tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
+  } 
+
+  sched->addTask(tsk, patches, matls);
+
+}
+
+void
+ExplicitSolver::allocateDummyScalar(const ProcessorGroup* pc,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    int timesubstep )
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->
+                     getArchesMaterial(archIndex)->getDWIndex();
+
+    CCVariable<double> scalar; 
+    CCVariable<double> scalarDiff; 
+    CCVariable<double> scalarDiffSrc; 
+    StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 pt stl
+
+    if ( timesubstep == 0 ){ 
+      new_dw->getModifiable( scalar, d_lab->d_scalarSPLabel, indx, patch ); 
+      new_dw->allocateAndPut( scalarDiff, d_lab->d_scalarDiffusivityLabel, indx, patch ); 
+      new_dw->allocateAndPut( scalarDiffSrc, d_lab->d_scalDiffCoefSrcLabel, indx, patch ); 
+      for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
+        new_dw->allocateAndPut(scalarDiffusionCoeff[ii],
+                             d_lab->d_scalDiffCoefLabel, ii, patch);
+        scalarDiffusionCoeff[ii].initialize(0.0); 
+      }
+      scalar.initialize(0.0); 
+      scalarDiff.initialize(0.0); 
+      scalarDiffSrc.initialize(0.0); 
+    } 
+  }
 }

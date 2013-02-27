@@ -209,6 +209,8 @@
       <thickness              spec="OPTIONAL DOUBLE 'positive'" />
       <num_radial             spec="REQUIRED DOUBLE 'positive'" />
       <num_axial              spec="REQUIRED DOUBLE 'positive'" />
+      <arc_start_angle        spec="OPTIONAL DOUBLE 'positive'" />
+      <arc_angle              spec="OPTIONAL DOUBLE 'positive'" />
     </smoothcyl>
 
     <tri                      spec="OPTIONAL NO_DATA"
@@ -614,15 +616,15 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract"/>
-      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract"/>
-      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
-      <Variables                        spec="OPTIONAL NO_DATA" >
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract particleExtract minMax">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl OPTIONAL STRING" />
@@ -650,6 +652,18 @@
         </geom_object>
 
       </objects>
+      
+      <!--1st lawThermo-->
+      <engy_convt_factor                spec="OPTIONAL DOUBLE"  need_applies_to="name firstLawThermo"/> 
+      <controlVolume                    spec="OPTIONAL NO_DATA" need_applies_to="name firstLawThermo">       
+        <Face                           spec="MULTIPLE NO_DATA"  
+                                          attribute1="side REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" 
+                                          attribute2="extents REQUIRED STRING 'entireFace, partialFace'">
+          <startPt                        spec="OPTIONAL VECTOR" />
+          <endPt                          spec="OPTIONAL VECTOR" />
+        </Face>
+      </controlVolume>
+      
     </Module>
   </DataAnalysis>
   <!--__________________________________-->
@@ -713,6 +727,8 @@
                             attribute1="before_comm OPTIONAL BOOLEAN"
                             attribute2="before_exec OPTIONAL BOOLEAN"
                             attribute3="after_exec  OPTIONAL BOOLEAN" />
+      <task               spec="MULTIPLE NO_DATA"
+                            attribute1="name REQUIRED STRING" />
     </VarTracker>
   </Scheduler>
 

@@ -33,7 +33,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/IO
 
 SRCS += \
-	$(SRCDIR)/UintahZlibUtil.cc
+	$(SRCDIR)/UintahZlibUtil.cc \
+	$(SRCDIR)/UintahIFStreamUtil.cc
 
 PSELIBS :=
 LIBS    := $(Z_LIBRARY) $(GPERFTOOLS_LIBRARY)

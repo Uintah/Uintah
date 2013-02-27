@@ -38,7 +38,10 @@ class ParabolicBC
                const double x0) :
   indepVarTag_ (indepVarTag),
   a_(a), b_(b), c_(c), x0_(x0)
-  {}
+  {
+    this->flatGhostPoints_.resize(0,0.0);
+    this->flatInteriorPoints_.resize(0,0.0);
+}
 public:
   class Builder : public Expr::ExpressionBuilder
   {

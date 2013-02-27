@@ -100,11 +100,11 @@ public:
 
   /** @brief Initializes the scalar to a value from the table as a function of the dependent variables **/
   void sched_tableInitialization( const LevelP&, SchedulerP& sched );
-  void tableInialization(const ProcessorGroup* pc, 
-                 const PatchSubset* patches, 
-                 const MaterialSubset* matls, 
-                 DataWarehouse* old_dw, 
-                 DataWarehouse* new_dw );
+  void tableInitialization(const ProcessorGroup* pc, 
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw );
 
   // Access functions:
   /** @brief Set the boundary condition object associated with this transport equation object */
@@ -170,6 +170,7 @@ public:
     _using_new_intrusion = using_new_intrusions; 
   };
 
+  /** @brief Set a reference to the mix/rxn table **/ 
   inline void set_table( MixingRxnModel* table ){
   	_table = table; 	
   }; 

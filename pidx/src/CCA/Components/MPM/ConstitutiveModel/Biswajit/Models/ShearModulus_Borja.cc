@@ -63,7 +63,7 @@ void ShearModulus_Borja::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP shear_ps = ps->appendChild("elastic_shear_modulus_model");
   shear_ps->setAttribute("type","borja_shear_modulus");
 
-  shear_ps->appendElement("mu_0",d_mu0);
+  shear_ps->appendElement("mu0",d_mu0);
   shear_ps->appendElement("alpha",d_alpha);
   shear_ps->appendElement("p0",d_p0);
   shear_ps->appendElement("epse_v0",d_epse_v0);

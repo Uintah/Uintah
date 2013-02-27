@@ -26,6 +26,8 @@
 
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <sci_defs/cuda_defs.h>
+#include <curand.h>
+#include <curand_kernel.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -327,7 +329,7 @@ __device__ double randDblExcDevice(curandState* globalState)
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__host__ __device__ unsigned int hashDevice(unsigned int a)
+__device__ unsigned int hashDevice(unsigned int a)
 {
     a = (a+0x7ed55d16) + (a<<12);
     a = (a^0xc761c23c) ^ (a>>19);
@@ -337,6 +339,44 @@ __host__ __device__ unsigned int hashDevice(unsigned int a)
     a = (a^0xb55a4f09) ^ (a>>16);
 
     return a;
+}
+
+__host__ void launchRayTraceKernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          cudaStream_t* stream,
+                          const uint3 patchLo,
+                          const uint3 patchHi,
+                          const uint3 patchSize,
+                          const uint3 domainLo,
+                          const uint3 domainHi,
+                          const double3 cellSpacing,
+                          double* device_abskg,
+                          double* device_sigmaT4,
+                          double* device_divQ,
+                          bool virtRad,
+                          bool isSeedRandom,
+                          bool ccRays,
+                          int numRays,
+                          double viewAngle,
+                          double threshold,
+                          curandState* globalDevStates)
+{
+  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(patchLo,
+                                                      patchHi,
+                                                      patchSize,
+                                                      domainLo,
+                                                      domainHi,
+                                                      cellSpacing,
+                                                      device_abskg,
+                                                      device_sigmaT4,
+                                                      device_divQ,
+                                                      virtRad,
+                                                      isSeedRandom,
+                                                      ccRays,
+                                                      numRays,
+                                                      viewAngle,
+                                                      threshold,
+                                                      globalDevStates);
 }
 
 #ifdef __cplusplus

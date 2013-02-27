@@ -31,14 +31,17 @@
     <save label="abskg"/>
     <save label="temperature"/>
     <save label="sigmaT4"/>
+    <save label="cellType"/>
+    <save label = "boundFlux" />
+
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
 
   <Grid>
     <BoundaryConditions>
       <Face side="x-" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="x- wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -55,8 +58,8 @@
         </BCType>
       </Face>
       <Face side="x+" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="x+ wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -73,8 +76,8 @@
         </BCType>
       </Face>
       <Face side="y-" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="y- wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -91,8 +94,8 @@
         </BCType>
       </Face>
       <Face side="y+" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="y+ wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -109,8 +112,8 @@
         </BCType>
       </Face>
       <Face side="z-" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="z- wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -127,8 +130,8 @@
         </BCType>
       </Face>
       <Face side="z+" name="inlet">
-        <BCType id="all" label="velocity inlet" var="VelocityInlet">
-          <value>[0,0,0]</value>
+        <BCType id="all" label="z+ wall" var="WallBC">
+          <value>0</value>
         </BCType>
         <BCType id="all" label="mixture_f"      var="Neumann">
           <value>0.0</value>
@@ -150,7 +153,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [21,21,21]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -206,8 +209,9 @@
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
                 <abskg>             999        </abskg>
-                <NoOfRays>          25         </NoOfRays>
+                <NoOfRays>          5          </NoOfRays>
                 <Threshold>         0.05       </Threshold>
+                <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <property_calculator type="burns_christon">
              

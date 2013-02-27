@@ -104,14 +104,14 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+ConstSrcTerm::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "ConstSrcTerm::dummyInit"; 
+  string taskname = "ConstSrcTerm::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::initialize);
 
   tsk->computes(_src_label);
 
@@ -123,11 +123,11 @@ ConstSrcTerm::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-ConstSrcTerm::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+ConstSrcTerm::initialize( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

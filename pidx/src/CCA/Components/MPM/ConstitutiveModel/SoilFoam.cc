@@ -204,44 +204,6 @@ SoilFoam::initializeCMData(const Patch* patch,
 
 }
 
-///////////////////////////////////////////////////////////////////////////
-/*! Allocate data required during the conversion of failed particles 
-    from one material to another */
-///////////////////////////////////////////////////////////////////////////
-void 
-SoilFoam::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches ,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Allocate other variables used in the conversion process
-
-}
-
-
-void SoilFoam::allocateCMDataAdd(DataWarehouse* new_dw,
-                                         ParticleSubset* addset,
-          map<const VarLabel*, ParticleVariableBase*>* newState,
-                                         ParticleSubset* delset,
-                                         DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-}
-
-
 void SoilFoam::computeStableTimestep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
@@ -292,46 +254,29 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
-    //
-    //  FIX  To do:  Read in table for vres
-    //               Obtain and modify particle temperature (deg K)
-    //
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
+    Matrix3 Identity; Identity.Identity();
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
-    Identity.Identity();
 
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pmass, ptemperature, sv_min, p_sv_min;
-    ParticleVariable<double> pvolume, sv_min_new, p_sv_min_new;
+    ParticleVariable<double> sv_min_new, p_sv_min_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
-    constNCVariable<Vector> gvelocity;
+    constParticleVariable<double> pvolume;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
@@ -339,25 +284,22 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     old_dw->get(p_sv_min,            p_sv_minLabel,                pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
-    constNCVariable<Vector> Gvelocity;
-    constParticleVariable<Short27> pgCode;
     constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    ParticleVariable<Matrix3> pvelGrads;
+    constParticleVariable<Matrix3> velGrad;
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
     ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume,         lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(sv_min_new,   sv_minLabel_preReloc,           pset);
     new_dw->allocateAndPut(p_sv_min_new, p_sv_minLabel_preReloc,         pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc,        pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
+    new_dw->get(pvolume,         lb->pVolumeLabel_preReloc,   pset);
+    new_dw->get(velGrad,       lb->pVelGradLabel_preReloc,  pset);
+    new_dw->get(deformationGradient_new,
+                           lb->pDeformationMeasureLabel_preReloc,        pset);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.bulk;
@@ -369,39 +311,14 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      velGrad.set(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                   psize[idx],deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
-
-
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
-
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                             deformationGradient[idx];
 
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
       double rho_cur = rho_orig/J;
-      pvolume[idx]=pmass[idx]/rho_cur;
       double vol_strain = log(pvolume[idx]/(pmass[idx]/rho_orig));
       double pres;
 
@@ -476,7 +393,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
@@ -491,8 +408,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
-
-    delete interpolator;
   }
 }
 

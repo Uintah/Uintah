@@ -21,18 +21,6 @@ ABSKP::ABSKP( std::string prop_name, SimulationStateP& shared_state ) : Property
 //---------------------------------------------------------------------------
 ABSKP::~ABSKP( )
 {
-  // Destroying all local VarLabels stored in _extra_local_labels: 
-  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-
-    VarLabel::destroy( *iter ); 
-
-  }
-
-//  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
-//      delete i->second;
-//  }
-
-  // Clean up anything else here ... 
 }
 
 
@@ -41,7 +29,6 @@ ABSKP::~ABSKP( )
 //---------------------------------------------------------------------------
 void ABSKP::problemSetup( const ProblemSpecP& inputdb )
 {
-  ProblemSpecP db = inputdb; 
 }
 
 //---------------------------------------------------------------------------
