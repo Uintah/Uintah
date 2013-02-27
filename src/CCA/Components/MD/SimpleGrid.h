@@ -74,16 +74,17 @@ template<typename T> class SimpleGrid {
                const IntVector& offset,
                const int numGhostCells);
     /**
-     * @brief Constructor to build grid from 3 linear arrays
+     * @brief Constructor to build grid from 3 constructed linear arrays
      * @param XArray:  The populated array in the X direction
      * @param YArray:  The populated array in the Y direction
      * @param ZArray:  The populated array in the Z direction
+     * @param offset The offset for the first point in the patch in reference to the global grid.
      * @param offset:  The offset for the first point in the patch in reference to the global grid.
      * @param numGhostCells:  The number of ghost cells for this SimpleGrid.
      */
-    SimpleGrid(const std::vector<T>& XArray,
-               const std::vector<T>& YArray,
-               const std::vector<T>& ZArray,
+    SimpleGrid(const std::vector<double>& xArray,
+               const std::vector<double>& yArray,
+               const std::vector<double>& zArray,
                const IntVector& offset,
                const int numGhostCells);
     /**
