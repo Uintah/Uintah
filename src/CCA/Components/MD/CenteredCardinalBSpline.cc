@@ -25,9 +25,16 @@
 #include <CCA/Components/MD/CenteredCardinalBSpline.h>
 
 #include <iostream>
-#include <iomanip>
+#include <cassert>
+#include <vector>
 #include <cmath>
 
+#ifdef DEBUG
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
+#endif
 using namespace Uintah;
 
 double S0(const double x)
@@ -41,6 +48,17 @@ double S0(const double x)
   return 1;
 }
 
+double S1(const double X)
+{
+  if (X <= -1.0) {
+    return 0;
+  }
+  if (X > 1.0) {
+    return 0;
+  }
+  return (1.0 - std::abs(X));
+}
+
 CenteredCardinalBSpline::CenteredCardinalBSpline()
 {
 
@@ -51,226 +69,247 @@ CenteredCardinalBSpline::~CenteredCardinalBSpline()
 
 }
 
-CenteredCardinalBSpline::CenteredCardinalBSpline(int order) :
+CenteredCardinalBSpline::CenteredCardinalBSpline(const int order) :
     splineOrder(order)
 {
-  int oddShift = splineOrder % 2;
-  splineSupport = splineOrder + oddShift + 1;
-  splineHalfSupport = splineSupport / 2;
+  // For ease of use, we actually generate quantities to calculate the spline
+  //   of order SplineOrder - 1
+  basisShifts = generateBasisShifts(order - 1);
+  prefactorValues = generatePrefactorValues(order - 1);
+  prefactorMap = generatePrefactorMap(order - 1, basisShifts);
 
-  //Initialize calculation arrays; these need only be calculated once per spline order
-  basisOffsets = generateBasisOffsets(splineOrder);
-  prefactorMap = generatePrefactorMap(splineOrder, basisOffsets);
-  prefactorValues = generatePrefactorValues(splineOrder);
-
-  //Initialize derivative arrays
-  derivativeOffsets = generateBasisOffsets(splineOrder - 1);
-  derivativeMap = generatePrefactorMap(splineOrder - 1, basisOffsets);
-  derivativeValues = generatePrefactorValues(splineOrder - 1);
+#ifdef DEBUG
+  std::cout << " Basis Shifts: " << std::endl;
+  for (size_t idx = 0; idx < basisShifts.size(); ++idx) {
+    std::cout << std::setw(5) << idx;
+  }
+  std::cout << std::endl;
+  for (size_t idx = 0; idx < basisShifts.size(); ++idx) {
+    std::cout << std::setw(5) << basisShifts[idx];
+  }
+  std::cout << std::endl;
+  std::cout << " Prefactor Values: " << std::endl;
+  for (size_t idx = 0; idx < prefactorValues.size(); ++idx) {
+    std::cout << std::setw(10) << idx;
+  }
+  std::cout << std::endl;
+  for (size_t idx = 0; idx < prefactorValues.size(); ++idx) {
+    std::cout << std::setw(10) << std::setprecision(5) << prefactorValues[idx];
+  }
+  std::cout << std::endl;
+  std::cout << " Prefactor Map: " << std::endl;
+  int origin = 0;
+  int terms = static_cast<int>(pow(2.0, order - 1));
+  for (int pass = 0; pass < order - 1; ++pass) {
+    std::cout << " Order " << std::setw(3) << pass << ": ";
+    for (size_t termidx = 0; termidx < terms; ++termidx) {
+      std::cout << std::setw(5) << prefactorMap[origin + termidx];
+    }
+    std::cout << std::endl;
+    origin += terms;
+    terms = terms >> 1;
+  }
+#endif
 }
 
 std::vector<double> CenteredCardinalBSpline::evaluate(const double x) const
 {
-  std::vector<double> results = evaluateInternal(x, splineOrder, prefactorMap, basisOffsets, prefactorValues);
-  return results;
+  // Expect standardized input between -1.0 and 0.0 (inclusive)
+  assert(x >= -1.0 && x <= 0.0);
+
+  std::vector<double> subSpline;
+  if (splineOrder % 2 == 1) {
+    subSpline = evaluateInternal(x + 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
+  } else {
+    subSpline = evaluateInternal(x - 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
+  }
+
+  int leftQ = 2 * leftSupport(x, splineOrder);
+  double leftPrefactor = static_cast<double>(splineOrder + leftQ + 1) / 2.0 + x;
+  double rightPrefactor = static_cast<double>(splineOrder - leftQ + 1) / 2.0 - x;
+
+  std::vector<double> fullSpline;
+  double scale = 1.0 / (static_cast<double>(splineOrder));
+
+  // X is at the edge of the support, so X-1/2 contributes 0
+  fullSpline.push_back(scale * (leftPrefactor * subSpline[0]));
+
+  size_t subTerms = subSpline.size();
+  for (size_t idx = 1; idx < subTerms; ++idx) {
+    rightPrefactor -= 1.0;
+    leftPrefactor += 1.0;
+    // At any Index, SubSpline[Index] = S_(p-1)(x+1/2), SubSpline[Index-1] = S_(p-1)(x-1/2)
+    fullSpline.push_back(scale * (leftPrefactor * subSpline[idx] + rightPrefactor * subSpline[idx - 1]));
+  }
+  rightPrefactor -= 1.0;
+  leftPrefactor += 1.0;
+  fullSpline.push_back(scale * (rightPrefactor * subSpline[subTerms - 1]));
+
+  return fullSpline;
 }
 
 std::vector<double> CenteredCardinalBSpline::derivative(const double x) const
 {
-  std::cout << "Beginning Derivative. " << std::endl;
-  std::vector<double> deriv = evaluateInternal(x + 0.5, splineOrder - 1, derivativeMap, derivativeOffsets, derivativeValues);
-  std::cout << "Evaluated Spline. " << std::endl;
-  std::cout.flush();
+  // Expect standardized input between -1.0 and 0.0 (inclusive)
+  assert(x >= -1.0 && x <= 0.0);
+  std::vector<double> subSpline = evaluateInternal(x + 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
 
-  size_t size = deriv.size();
-  for (size_t idx = 0; idx < size; ++idx) {
-    std::cout << std::setw(12) << std::setprecision(5) << deriv[idx];
-  }
-  std::cout << std::endl;
+  std::vector<double> splineDeriv;
 
-  // If the original spline order is odd, then the integral support of the spline is larger than that of the
-  //   derivative, which is of order SplineOrder - 1.  In that case we need to zero-pad the derivative array
-  //   before finding the derivative.
-  if (splineOrder % 2 == 1) {
-    std::cout << "Start padding.. " << std::endl;
-    std::vector<double> padded((splineOrder + 2), 0);
-    std::cout << "Padded Size: " << padded.size() << " -- Deriv Size: " << size << std::endl;
-    for (size_t derivIndex = 0; derivIndex < size; ++derivIndex) {
-      padded[1 + derivIndex] = deriv[derivIndex];
-    }
-    deriv = padded;
-    std::cout << "2 .. " << std::endl;
+  // Derivative of the centered cardinal B spline, S_p(x) is 2.0*(S_(p-1)(x+1/2) - S_(p-1)(x-1/2))
+
+  // First term, S_(p-1)(x-1/2) is 0
+  splineDeriv.push_back(2.0 * subSpline[0]);
+
+  size_t subTerms = subSpline.size();
+  for (size_t idx = 1; idx < subTerms; ++idx) {
+    splineDeriv.push_back(2.0 * (subSpline[idx] - subSpline[idx - 1]));
   }
 
-  size = deriv.size();
+  // Last term, S_(p-1)(x+1/2) is 0
+  splineDeriv.push_back(-2.0 * subSpline[subTerms - 1]);
 
-  for (size_t idx = size - 1; idx > 0; --idx) {
-    std::cout << "DerivIndex:   " << idx << ":  " << deriv[idx] << "  --  " << "DerivIndex-1: " << idx - 1 << ":  "
-              << deriv[idx - 1] << std::endl;
-    deriv[idx] -= deriv[idx - 1];
-    deriv[idx] *= 2.0;
-  }
-  deriv[0] *= 2.0;
-  std::cout << "3 .. " << std::endl;
-
-  return deriv;
+  return splineDeriv;
 }
 
-std::vector<int> CenteredCardinalBSpline::generateBasisOffsets(const int order)
+std::vector<int> CenteredCardinalBSpline::generateBasisShifts(const int order)
 {
-  // Generates the shift offset values which get fed into the basis functions
-  //   The numerical values are the same for either right term or left term prefactors, the difference
-  //     occurs when the particular functional value is added/subtracted.  That is calculated in the
-  //     Evaluate routine.
-  int terms = static_cast<int>(pow(2.0, order));
-  std::vector<int> offsets(terms, 0);
+  int NumberOfTerms = static_cast<int>(pow(2.0, order));
+  std::vector<int> shifts(NumberOfTerms, 0);
 
   int numPartitions = 1;
-  int termExtent = terms >> 1;
-  for (int order_Current = 0; order_Current < order; ++order_Current) {
-    for (int partition = 0; partition < numPartitions; ++partition) {
-      int origin = 2 * termExtent * partition;
-      for (int shiftIndex = origin; shiftIndex < origin + termExtent; ++shiftIndex) {
-        offsets[shiftIndex] += 1.0;
-        offsets[shiftIndex + termExtent] -= 1.0;
+  int termsPerPartition = NumberOfTerms >> 1;
+  for (int currOrder = 0; currOrder < order; ++currOrder) {
+    for (int Partition = 0; Partition < numPartitions; ++Partition) {
+      int origin = 2 * termsPerPartition * Partition;
+      for (int Term = origin; Term < origin + termsPerPartition; ++Term) {
+        shifts[Term] += 1;
+        shifts[Term + termsPerPartition] -= 1;
       }
     }
     numPartitions = numPartitions << 1;
-    termExtent = termExtent >> 1;
+    termsPerPartition = termsPerPartition >> 1;
   }
-  return offsets;
+  return shifts;
 }
 
-std::vector<int> CenteredCardinalBSpline::generatePrefactorMap(const int Order,
-                                                               const std::vector<int>& Offset)
+std::vector<int> CenteredCardinalBSpline::generatePrefactorMap(const int order,
+                                                               const std::vector<int>& shifts)
 {
-  // Generates the offsets necessary to calculate the prefactors which multiply the basis functions
-  int MapSize = static_cast<int>(pow(2.0, Order));
-  std::vector<int> Map(2 * MapSize, 0);
+  // Generates the offset map to map the appropriate prefactor into the constant shift value array
+  int mapSize = static_cast<int>(pow(2.0, order));
+  std::vector<int> map(2 * mapSize, 0);
 
-  int Origin = 0;
-  int StepSize = 1;
-  int NumTerms = MapSize;
-  int CurrentOrder = 0;
+  int origin = 0;
+  int stepSize = 1;
+  int numberOfTerms = mapSize;
+  int currentOrder = 0;
 
-  for (int Pass = 0; Pass < Order; ++Pass) {
-    for (int ShiftIndex = 0; ShiftIndex < NumTerms; ShiftIndex += 2 * StepSize) {
-      int LeftSum = 0;
-      int RightSum = 0;
-      for (int SubIndex = 0; SubIndex < StepSize; ++SubIndex) {
-        LeftSum += Offset[ShiftIndex + SubIndex];
-        RightSum += Offset[ShiftIndex + SubIndex + StepSize];
+  for (size_t pass = 0; pass < order; ++pass) {
+    for (size_t term = 0; term < numberOfTerms; term += 2 * stepSize) {
+      int leftSum = 0;
+      int rightSum = 0;
+      for (size_t intraTerm = 0; intraTerm < stepSize; ++intraTerm) {
+        leftSum += shifts[term + intraTerm];
+        rightSum += shifts[term + intraTerm + stepSize];
       }
-      Map[Origin] = CurrentOrder + LeftSum / StepSize;
-      Origin++;
-      Map[Origin] = CurrentOrder - RightSum / StepSize;
-      Origin++;
+      map[origin] = currentOrder + leftSum / stepSize;
+      origin++;
+
+      map[origin] = currentOrder - rightSum / stepSize;
+      origin++;
     }
-    StepSize = StepSize << 1;
-    ++CurrentOrder;
+    stepSize = stepSize << 1;
+    ++currentOrder;
   }
-  return Map;
+  return map;
 }
 
 std::vector<double> CenteredCardinalBSpline::generatePrefactorValues(const int order)
 {
-  // There are innately p-n terms for the spline centered at X=0.
-  // To return a vector which will allow for calculation of all the supported points
-  //   the spline covers, we need to expand this to account for the support of the spline.
-  // The support of a p^th order spline is int<(p+1)/2> in both directions.
-  // Therefore there are 2p+p%2-n total terms.
+  // Max in either direction is Order+1 integral gradations, for 2*(Order+1) terms with
+  //   a term every 0.5
+  int maxTerm = 2 * (order + 1);
 
-  // For now, we assume n=0 to decompose into selection functions.
-
-  std::vector<double> Values(2 * order + order % 2);
-
-  double Shift = static_cast<double>(-(order - 2) + 1) / 2.0 - static_cast<double>((order + 1) / 2);
-  size_t size = Values.size();
-  for (size_t idx = 0; idx < size; ++idx) {
-    Values[idx] = Shift;
-    Shift += 1.0;
+  std::vector<double> values;
+  for (int idx = -maxTerm; idx <= maxTerm; ++idx) {
+    values.push_back(static_cast<double>(idx) / 2.0);
   }
-  return Values;
+
+  return values;
 }
 
 std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
                                                               const int order,
+                                                              const std::vector<int>& shifts,
                                                               const std::vector<int>& map,
-                                                              const std::vector<int>& offsets,
                                                               const std::vector<double>& values) const
 {
-  // Internal evaluation routines so that Evaluate() and Derivative()
-  // can be wrappers to a single unified routine.
-
+  int leftOffset = leftSupport(x, order);
+  int rightOffset = rightSupport(x, order);
+  int totalOffset = (rightOffset - leftOffset) + 1;
   size_t shiftSize = values.size();
-  int oddShift = order % 2;
-  int zeroIndex = (order - 1 - oddShift) / 2 + (order + 1) / 2;
 
-  //  Number of points in total support range and half support range
-  size_t support = order + 1 + oddShift;
-  int halfSupport = support / 2;
+  std::vector<double> shiftPlusX = values;
+  std::vector<double> shiftMinusX(shiftSize, 0.0);
 
-  std::vector<int> mask(support, 0);
-  for (int Index = -halfSupport; Index <= halfSupport; ++Index) {
-    mask[Index + halfSupport] = 2 * Index;
+  for (size_t shiftIdx = 0; shiftIdx < shiftSize; ++shiftIdx) {
+    shiftPlusX[shiftIdx] += x;
+    // Invert the order of the ShiftMinusX array
+    shiftMinusX[shiftIdx] = values[(shiftSize - 1) - shiftIdx] - x;
   }
 
-  // Set up the shift vectors which store the proper multiplicative factors for the spline recursion
-  std::vector<double> shiftPlus = values;
-  std::vector<double> shiftMinus(shiftSize, 0);
-
-  std::cout << " X2 ... " << std::endl;
-  for (size_t Index = 0; Index <= shiftSize; ++Index) {
-    shiftMinus[Index] = values[shiftSize - 1 - Index] - x;
-    shiftPlus[Index] += x;
+  // Construct the mask for the extension of the spline value to nearby
+  //   grid points.
+  std::vector<int> mask;
+  for (int maskIdx = leftOffset; maskIdx <= rightOffset; ++maskIdx) {
+    mask.push_back(2 * maskIdx);
   }
 
-  for (size_t Idx = 0; Idx < shiftMinus.size(); ++Idx) {
-    std::cout << std::setw(10) << Idx;
-  }
-  std::cout << std::endl;
-  for (size_t Idx = 0; Idx < shiftMinus.size(); ++Idx) {
-    std::cout << std::setw(10) << std::setprecision(5) << shiftMinus[Idx];
-  }
-  std::cout << std::endl;
-  std::cout << " X3 ... " << std::endl;
-  double* left = &shiftPlus[zeroIndex];
-  double* right = &shiftMinus[(shiftSize - 1) - zeroIndex];
+  int zeroIndex = (shiftSize + 1) >> 1;
 
-  // Rows are complete spline arrays for a particular term
-  //   Columns are the sub-terms used to composite the final spline point array
-  size_t terms = offsets.size();
-  std::vector<std::vector<double> > valTemp2D(terms, std::vector<double>(support, 0.0));
+  double* left = &shiftPlusX[zeroIndex];
+  double* right = &shiftMinusX[(shiftSize - 1) - zeroIndex];
+
+  int numTerms = shifts.size();
+
+  // Row - One complete spline array for a given term
+  // Column - All terms comprising the subsplines used to make the current order
+  std::vector<std::vector<double> > valTemp2D;
+  for (size_t vtidx = 0; vtidx < numTerms; ++vtidx) {
+    std::vector<double> vtRow(totalOffset, 0.0);
+    valTemp2D.push_back(vtRow);
+  }
 
   // Populate the array with the initial shifted basis function values
-  for (size_t TermIndex = 0; TermIndex < terms; ++TermIndex) {
-    for (size_t SupportIndex = 0; SupportIndex < support; ++SupportIndex) {
-      valTemp2D[TermIndex][SupportIndex] = S0(x + 0.5 * (static_cast<double>(offsets[TermIndex] + mask[SupportIndex])));
+  for (size_t termIdx = 0; termIdx < numTerms; ++termIdx) {
+    for (int supportIdx = leftOffset; supportIdx <= rightOffset; ++supportIdx) {
+      valTemp2D[termIdx][supportIdx - leftOffset] = S0(
+          x + 0.5 * (static_cast<double>(shifts[termIdx] + mask[supportIdx - leftOffset])));
     }
   }
-  std::cout << " X4 ... " << std::endl;
 
+  // Propagate the recursive calculation of splines from the above initial basis values
   int origin = 0;
-  // Propagate up the recursive structure, summing the current two order o contributions
-  //   into one term of order (o+1).
-  for (size_t Pass = 0; Pass < order; ++Pass) {
-    double Scale = (1.0 / static_cast<double>(Pass + 1));
-    for (size_t TermIndex = 0; TermIndex < terms; TermIndex += 2) {
-      int LeftBase = (map[origin + TermIndex] + oddShift) / 2;
-      int RightBase = -(map[origin + TermIndex + 1] + oddShift) / 2;
-
-      // Calculate all support points at the current level
-      for (int SupportIndex = -halfSupport; SupportIndex <= halfSupport; ++SupportIndex) {
-        int ShiftedIndex = SupportIndex + halfSupport;  // Shift to be 0 anchored
-        valTemp2D[TermIndex / 2][ShiftedIndex] = Scale
-                                                 * (left[LeftBase + SupportIndex] * valTemp2D[TermIndex][ShiftedIndex]
-                                                    + right[RightBase + SupportIndex] * valTemp2D[TermIndex + 1][ShiftedIndex]);
+  double scale = 1.0;
+  for (size_t pass = 0; pass < order; ++pass) {
+    scale *= (static_cast<double>(pass + 1));
+    for (size_t TermIndex = 0; TermIndex < numTerms; TermIndex += 2) {
+      int leftBase = map[origin + TermIndex];
+      int rightBase = -map[origin + TermIndex + 1];
+      for (int supportIdx = leftOffset; supportIdx <= rightOffset; ++supportIdx) {
+        int shiftedSupport = supportIdx - leftOffset;
+        valTemp2D[TermIndex / 2][shiftedSupport] = (left[leftBase + mask[shiftedSupport]] * valTemp2D[TermIndex][shiftedSupport]
+                                                    + right[rightBase + mask[shiftedSupport]]
+                                                      * valTemp2D[TermIndex + 1][shiftedSupport]);
       }
     }
-    origin += terms;
-    terms = terms >> 1;
+    origin += numTerms;
+    numTerms = numTerms >> 1;
   }
-  std::cout << " X5 ... " << std::endl;
-
-  return valTemp2D[0];
+  std::vector<double> results = valTemp2D[0];
+  for (size_t Idx = 0; Idx < results.size(); ++Idx) {
+    results[Idx] /= scale;
+  }
+  return results;
 }

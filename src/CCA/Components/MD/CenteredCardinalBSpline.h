@@ -26,6 +26,7 @@
 #define UINTAH_MD_CENTEREDCARDINALBSPLINE_H
 
 #include <vector>
+#include <cmath>
 
 namespace Uintah {
 
@@ -42,10 +43,17 @@ namespace Uintah {
 
 /**
  * @brief Selection function on [-0.5,0.5)
- * @param X - double, input value for selection function
+ * @param x Input value for selection function
  * @return 1 if -0.5 <= X < 0.5, 0 otherwise
  */
-double s0(const double& X);
+double S0(const double x);
+
+/**
+ * @brief Selection function on [-1.0,1.0)
+ * @param x Input value for selection function
+ * @return 1 if -1.0 <= X < 1.0, 0 otherwise
+ */
+double S1(const double x);
 
 class CenteredCardinalBSpline {
 
@@ -66,7 +74,7 @@ class CenteredCardinalBSpline {
      * @brief Single argument constructor.
      * @param splineOrder The order of the spline.
      */
-    CenteredCardinalBSpline(int splineOrder);
+    CenteredCardinalBSpline(const int order);
 
     /**
      * @brief Constructor for non-null spline.
@@ -97,6 +105,48 @@ class CenteredCardinalBSpline {
     std::vector<double> derivative(const double x) const;
 
     /*
+     * @brief
+     * @param
+     * @return
+     */
+    inline double maxMagnitude(const int order) const
+    {
+      return (static_cast<double>(order + 1) / 2.0);
+    }
+
+    /*
+     * @brief
+     * @param
+     * @param
+     * @return
+     */
+    inline int leftSupport(const double x,
+                           const int order) const
+    {
+      if (x < -maxMagnitude(order) || x > maxMagnitude(order)) {
+        return 0;
+      } else {
+        return static_cast<int>(ceil(-maxMagnitude(order) - x));
+      }
+    }
+
+    /*
+     * @brief
+     * @param
+     * @param
+     * @return
+     */
+    inline int rightSupport(const double x,
+                            const int order) const
+    {
+      if (x < -maxMagnitude(order) || x > maxMagnitude(order)) {
+        return 0;
+      } else {
+        return static_cast<int>(floor(maxMagnitude(order) - x));
+      }
+    }
+
+    /*
      * @brief Return the order of the current spline.
      * @param None
      * @return int The order of the current spline..
@@ -106,55 +156,26 @@ class CenteredCardinalBSpline {
       return this->splineOrder;
     }
 
-    /*
-     * @brief Return the support range of the current spline.
-     * @param None
-     * @return int The support range (maximum number of grid points) over which the spline has non-zero values.
-     */
-    inline int getSupport() const
-    {
-      return this->splineSupport;
-    }
-
-    /*
-     * @brief Returns half of the support range (rounded down) for the current spline.
-     * @param None
-     * @return int Half the support range over which the spline is defined. In a 0-centric language, this is
-     *             also the array index of the principle value in the arrays returned by evaluate and derivative.
-     */
-    inline int getHalfSupport() const
-    {
-      return this->splineHalfSupport;
-    }
-
   private:
 
     int splineOrder;
-    int splineSupport;
-    int splineHalfSupport;
 
-    // Stores values necessary for calculating the spline
-    std::vector<double> prefactorValues;
-    std::vector<int> prefactorMap;
-    std::vector<int> basisOffsets;
+    // For calculating values of the spline
+    std::vector<int> basisShifts;             //!<
+    std::vector<double> prefactorValues;      //!<
+    std::vector<int> prefactorMap;            //!<
 
-    // Stores values necessary for calculating the spline derivatives
-    std::vector<double> derivativeValues;
-    std::vector<int> derivativeMap;
-    std::vector<int> derivativeOffsets;
+    std::vector<int> generateBasisShifts(const int);
 
-    // Internal functions involved in setting up the spline
-    std::vector<int> generateBasisOffsets(const int order);
+    std::vector<double> generatePrefactorValues(const int);
 
-    std::vector<int> generatePrefactorMap(const int order,
-                                          const std::vector<int>& offset);
-
-    std::vector<double> generatePrefactorValues(const int order);
+    std::vector<int> generatePrefactorMap(const int,
+                                          const std::vector<int>&);
 
     std::vector<double> evaluateInternal(const double x,
                                          const int order,
+                                         const std::vector<int>& shifts,
                                          const std::vector<int>& map,
-                                         const std::vector<int>& offsets,
                                          const std::vector<double>& values) const;
 };
 
