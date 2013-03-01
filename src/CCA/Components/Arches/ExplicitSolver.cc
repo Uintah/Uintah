@@ -660,6 +660,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+    d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
 
     if ( d_wall_ht_models != 0 ){ 
       d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
@@ -736,8 +737,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
        sched_saveFECopies(sched, patches, matls,
                                        d_timeIntegratorLabels[curr_level]);
     }
-
-    d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
 
   }
 

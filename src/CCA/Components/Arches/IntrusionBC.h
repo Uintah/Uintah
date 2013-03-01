@@ -186,6 +186,8 @@ namespace Uintah{
 
         public: 
 
+          enum ScalarBCType { CONSTANT, FROMFILE, TABULATED };
+
           scalarInletBase(){ 
             // helper for the intvector direction 
             _dHelp.push_back( IntVector(-1,0,0) ); 
@@ -241,6 +243,8 @@ namespace Uintah{
 
           virtual double get_scalar( const IntVector c ) = 0;
 
+          ScalarBCType get_type(){ return _type; };
+
         protected: 
 
           std::vector<IntVector> _dHelp;
@@ -248,6 +252,7 @@ namespace Uintah{
           std::vector<IntVector> _inside; 
           std::vector<int>       _iHelp; 
           std::vector<double>    _sHelp; 
+          ScalarBCType           _type; 
 
 
       };
@@ -257,7 +262,7 @@ namespace Uintah{
 
         public: 
 
-          constantScalar(){};
+          constantScalar(){ _type = CONSTANT; };
           ~constantScalar(){};
 
           void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){
@@ -289,6 +294,48 @@ namespace Uintah{
 
       }; 
 
+      /** @brief Sets the scalar boundary value to a constant **/ 
+      class tabulatedScalar : public scalarInletBase { 
+
+        public: 
+
+          tabulatedScalar(){ _type = TABULATED; };
+          ~tabulatedScalar(){};
+
+          void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){
+          
+            db->require("depend_varname",_var_name);
+
+          }; 
+
+          inline void set_scalar_rhs( int dir,
+                                      IntVector c, 
+                                      CCVariable<double>& RHS, 
+                                      double face_den, 
+                                      double face_vel, 
+                                      std::vector<double> area ){
+
+            RHS[ c ] += _sHelp[dir] * area[dir] * face_den * face_vel * _C; 
+          
+          }; 
+
+          inline double get_scalar( const IntVector ){ 
+
+            return _C; 
+
+          }; 
+
+          void set_scalar_constant( double C ){ _C = C; }; 
+
+          std::string get_depend_var_name(){ return _var_name; }; 
+
+        private: 
+
+          double _C; 
+          std::string _var_name; 
+
+      }; 
+
       class scalarFromInput : public scalarInletBase { 
 
         public: 
@@ -296,7 +343,7 @@ namespace Uintah{
           typedef std::map<IntVector, double> CellToValuesMap; 
           typedef std::map<std::string, CellToValuesMap> ScalarToBCValueMap; 
 
-          scalarFromInput(std::string label) : _label(label){};
+          scalarFromInput(std::string label) : _label(label){ _type = FROMFILE; };
           ~scalarFromInput(){};
 
           void problem_setup( ProblemSpecP& db, ProblemSpecP& db_intrusion ){ 

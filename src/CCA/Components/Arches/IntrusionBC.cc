@@ -174,6 +174,10 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
             scalar_bc = scinew scalarFromInput( scalar_label ); 
 
+          } else if ( scalar_type == "tabulated" ){ 
+
+            scalar_bc = scinew tabulatedScalar(); 
+
           } else { 
 
             throw ProblemSetupException("Error: Invalid intrusion <scalar> type attribute. ",__FILE__,__LINE__); 
@@ -469,15 +473,39 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
               cout_intrusiondebug << "IntrusionBC::For inert variable " << name << ". Using value = " << inert_value << std::endl;
 
             }
+
             density = mixingTable->getTableValue(iv, "density",inert_list);
 
             cout_intrusiondebug << "IntrusionBC::Got a value for density = " << density << std::endl;
+
+            //get values for all other scalars that depend on a table lookup: 
+            for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin(); 
+                                                                   iter_lookup != iIntrusion->second.scalar_map.end(); 
+                                                                   iter_lookup++ ){ 
+
+              if ( iter_lookup->second->get_type() == scalarInletBase::TABULATED ){ 
+
+                tabulatedScalar& tab_scalar = dynamic_cast<tabulatedScalar&>(*iter_lookup->second);
+
+                std::string lookup_name = tab_scalar.get_depend_var_name(); 
+
+                double lookup_value = mixingTable->getTableValue(iv, lookup_name,inert_list);
+
+                cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
+
+                tab_scalar.set_scalar_constant( lookup_value ); 
+
+              } 
+
+            } 
 
           } else { 
 
             cout_intrusiondebug << "IntrusionBC::NOT using inert stream mixing to look up properties" << std::endl;
 
             density = mixingTable->getTableValue(iv, "density"); 
+
+            //get values for all other scalars that depend on a table lookup: 
           }
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density)); 
@@ -674,7 +702,10 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
                 if ( !neighbor_cell ){ 
                   IntVector face_index = c + _faceDirHelp[idir]; 
+                  //face iterator is the face index using the usual convention 
+                  //note that face iterator + _inside[dir] gives the first wall cell in that direction
                   add_face_iterator( face_index, patch, idir, iter->second ); 
+                  //interior iterator is the first flow cell next to the wall
                   add_interior_iterator( neighbor_index, patch, idir, iter->second );
                 } 
               } 
@@ -1060,6 +1091,7 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
     _T_label = VarLabel::find("temperature"); 
 
     tsk->modifies( _T_label );  
+    tsk->modifies( _lab->d_densityCPLabel );
 
     if ( _mpmlab && _mpm_energy_exchange ){ 
       tsk->requires( Task::NewDW, _mpmlab->integTemp_CCLabel, Ghost::None, 0 );  
@@ -1136,4 +1168,3 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
     }
   }
 }
-

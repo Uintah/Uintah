@@ -7018,4 +7018,3 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
     }
   }
 }
-
