@@ -170,6 +170,7 @@ private:
 
       std::string file_name;
       db->require("inputfile", file_name); 
+      _injet_type = FROMFILE; 
 
       gzFile file = gzopen( file_name.c_str(), "r" ); 
 

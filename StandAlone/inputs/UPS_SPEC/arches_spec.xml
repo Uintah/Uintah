@@ -371,11 +371,13 @@
 
             <scalar                     spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
-                                        attribute2="type REQUIRED STRING 'flat, from_file'">
+                                        attribute2="type REQUIRED STRING 'flat, from_file, tabulated'">
               <input_file               spec="OPTIONAL STRING"
                                         need_applies_to="type from_file"/>
               <constant                 spec="OPTIONAL DOUBLE"
                                         need_applies_to="type flat"/>
+              <depend_varname           spec="REQUIRED STRING"
+                                        need_applies_to="type tabulated"/>
             </scalar>
 
            </scalars>
