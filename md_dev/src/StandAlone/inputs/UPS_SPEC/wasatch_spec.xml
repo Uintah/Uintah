@@ -185,7 +185,7 @@
                             children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
                             PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
                             PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction, BrownianAggregationCoefficient,
-                            TurbulentAggregationCoefficient, MultiEnvMixingModel)">  
+                            TurbulentAggregationCoefficient, MultiEnvMixingModel, CylindricalDiffusionCoefficient, KineticGrowthCoefficient)">  
       <TaskList                         spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag                          spec="REQUIRED" />
 
@@ -198,8 +198,34 @@
         <EquilibriumConcentration spec = "REQUIRED NO_DATA">
           <NameTag spec="REQUIRED"/>
         </EquilibriumConcentration>
-        <OstwaldRipening spec = "OPTIONAL NO_DATA"/> <!-- swaps between (S - \bar{S}) & (S - 1)-->
+        <SBar spec = "OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </SBar>
       </PrecipitationBulkDiffusionCoefficient>
+      
+      <CylindricalDiffusionCoefficient spec = "OPTIONAL NO_DATA"
+                                       attribute1="Diff_Coef REQUIRED DOUBLE"
+                                       attribute2="Molec_Vol REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+        <EquilibriumConcentration spec = "REQUIRED NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </EquilibriumConcentration>
+        <SBar spec = "OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </SBar>
+      </CylindricalDiffusionCoefficient>
+      
+      <KineticGrowthCoefficient spec = "OPTIONAL NO_DATA"
+                         attribute1="K_A REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+        <SBar spec = "OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </SBar>
+      </KineticGrowthCoefficient>                                                                     
       
       <PrecipitationMonosurfaceCoefficient spec = "OPTIONAL NO_DATA"
                                              attribute1="Diff_Coef REQUIRED DOUBLE"
@@ -781,7 +807,7 @@
       <!-- of the form G = alpha * g0 * g(r)-->
       <GrowthExpression spec="MULTIPLE NO_DATA">
                             
-        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION'"/> <!-- dictates g(r) -->
+        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/> <!-- dictates g(r) -->
 
         <PreGrowthCoefficient spec="OPTIONAL DOUBLE" />  <!-- will default to 1 if not specified, dictates alpha -->
 
@@ -790,18 +816,18 @@
           <NameTag              spec="REQUIRED" />
         </GrowthCoefficientExpression> 
         
-        <OstwaldRipening spec = "OPTIONAL NO_DATA" >  <!-- this calculates \bar{S} and creates a new term -->
-          <MolecularVolume  spec="REQUIRED DOUBLE" />
-          <SurfaceEnergy    spec="REQUIRED DOUBLE" />
-          <Temperature      spec="REQUIRED DOUBLE" />
-          <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
-          <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
-          <SupersaturationExpression spec="REQUIRED NO_DATA">
-            <NameTag           spec="REQUIRED"/>
-          </SupersaturationExpression>  
-        </OstwaldRipening>
-
       </GrowthExpression>
+      
+      <!-- Ostwald Ripening -->
+      <!-- this calculates \bar{S} once, to use in growth coefficients -->
+      <!-- expression name is "SBar_PopulationName" state="STATE_N"-->
+      <OstwaldRipening spec = "OPTIONAL NO_DATA" >  
+        <MolecularVolume  spec="REQUIRED DOUBLE" />
+        <SurfaceEnergy    spec="REQUIRED DOUBLE" />
+        <Temperature      spec="REQUIRED DOUBLE" />
+        <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
+        <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
+      </OstwaldRipening>
       
       <!-- ================================================================================== -->            
       <!-- BIRTH EXPRESSION -->

@@ -26,6 +26,7 @@
 #define UINTAH_MD_SPMEPatch_H
 
 #include <CCA/Components/MD/SimpleGrid.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Math/Matrix3.h>
 
 #include <complex>

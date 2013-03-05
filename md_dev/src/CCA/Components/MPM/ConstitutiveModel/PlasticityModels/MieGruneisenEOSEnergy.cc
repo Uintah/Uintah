@@ -134,6 +134,10 @@ MieGruneisenEOSEnergy::eval_dp_dJ(const MPMMaterial* matl,
                             const PlasticityState* state)
 {
   double rho_0 = matl->getInitialDensity();
+  double J = detF;
+  double rho_cur = rho_0/J;
+  return computeBulkModulus(rho_0,rho_cur);
+#if 0
   double C_0 = d_const.C_0;
   double S_1 = d_const.S_1;
   double S_2 = d_const.S_2;
@@ -155,6 +159,7 @@ MieGruneisenEOSEnergy::eval_dp_dJ(const MPMMaterial* matl,
 //  }
 
   return (numer/denom);
+#endif
 }
 
 // Compute bulk modulus

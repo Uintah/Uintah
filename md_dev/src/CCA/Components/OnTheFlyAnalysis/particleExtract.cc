@@ -535,6 +535,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           }        
 
           fprintf(fp,    "\n");
+          fflush(fp);
         }
       }  // loop over particles
       lastWriteTime = now;     
@@ -555,7 +556,7 @@ void particleExtract::createFile(string& filename, FILE*& fp)
   }
   
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"Time    X      Y      Z     "); 
+  fprintf(fp,"# Time    X      Y      Z     "); 
   
   // All ParticleVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
@@ -600,6 +601,7 @@ void particleExtract::createFile(string& filename, FILE*& fp)
     }
   }
   fprintf(fp,"\n");
+  fflush(fp);
 
   cout << Parallel::getMPIRank() << " particleExtract:Created file " << filename << endl;
 }

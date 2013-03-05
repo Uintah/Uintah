@@ -1742,9 +1742,18 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart) {
 
-    if (d_newBC_on_Restart) {
       const PatchSet* patches= level->eachPatch();
       const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+      if ( d_boundaryCondition->isUsingNewBC() ) {
+        d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+        //d_boundaryCondition->printBCInfo();
+        d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls );
+        d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
+        d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls );
+      }
+
+    if (d_newBC_on_Restart) {
 
       //Reapply BC in case there was a modification to input.xml in the uda.
       if (d_boundaryCondition->getInletBC()){

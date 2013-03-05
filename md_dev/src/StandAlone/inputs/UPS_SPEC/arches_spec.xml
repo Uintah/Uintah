@@ -371,11 +371,13 @@
 
             <scalar                     spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
-                                        attribute2="type REQUIRED STRING 'flat, from_file'">
+                                        attribute2="type REQUIRED STRING 'flat, from_file, tabulated'">
               <input_file               spec="OPTIONAL STRING"
                                         need_applies_to="type from_file"/>
               <constant                 spec="OPTIONAL DOUBLE"
                                         need_applies_to="type flat"/>
+              <depend_varname           spec="REQUIRED STRING"
+                                        need_applies_to="type tabulated"/>
             </scalar>
 
            </scalars>
@@ -717,7 +719,7 @@
             <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
 
             <!-- Spec for constant and multi-point constant source term model -->
-            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
+            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
             <!-- Spec for the char oxidation source --> 
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
@@ -731,7 +733,7 @@
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
                                           within the geom_oject (use <inputfile> spec)--> 
             <inject_type                spec="REQUIRED STRING 'constant, fromfile'" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
-            <inputfile                  spec="OPTIONAL STRING 'constant, fromfile'" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
+            <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
             <!-- Radiation models --> 
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
