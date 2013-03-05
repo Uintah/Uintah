@@ -265,6 +265,7 @@ double
 PCTProps::getTableValue( std::vector<double> iv, std::string variable )
 {
   //get a variable by passing the independent variables
+  return 0.0;
 }
 
 //---------------------------
@@ -274,6 +275,7 @@ PCTProps::getTableValue( std::vector<double> iv, std::string depend_varname,
                          IntVector c )
 { 
   //get a variable by passing the independent variables and the inerts and a specific location 
+  return 0.0;
 }
 //---------------------------
 double 
@@ -281,6 +283,7 @@ PCTProps::getTableValue( std::vector<double> iv, std::string depend_varname,
                                       MixingRxnModel::doubleMap inert_mixture_fractions )
 { 
   //get a variable by passing the indep. vars. and single inert values
+  return 0.0;
 }
 
 // --- look into these below this line --------------------------
@@ -295,7 +298,7 @@ void PCTProps::tableMatching(){
 //--------------------------------------------------------------------------- 
 // Old Table Hack -- to be removed with Properties.cc
 //--------------------------------------------------------------------------- 
- void 
+void 
 PCTProps::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
 {
   //NOTHING TO BE DONE HERE
@@ -303,7 +306,7 @@ PCTProps::oldTableHack( const InletStream& inStream, Stream& outStream, bool cal
 //--------------------------------------------------------------------------- 
 // schedule Dummy Init
 //--------------------------------------------------------------------------- 
-  void 
+ void 
 PCTProps::sched_dummyInit( const LevelP& level, 
     SchedulerP& sched )
 

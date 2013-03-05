@@ -6,7 +6,7 @@
 set files = ($argv)
 
 echo "files: " $files
-if ($#argv == 1) then
+if ($#argv == 0) then
   echo " removeBraces <file1 file2 file3......>"
   exit(0)
 endif

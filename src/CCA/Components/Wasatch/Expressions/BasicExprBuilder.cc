@@ -50,6 +50,8 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationSource.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/ParticleVolumeFraction.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitateEffectiveViscosity.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/CylindricalDiffusionCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/KineticGrowthCoefficient.h>
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
@@ -414,12 +416,10 @@ namespace Wasatch{
   
   template<typename FieldT>
   Expr::ExpressionBuilder*
-  build_physics_coefficient_expr( Uintah::ProblemSpecP params , Uintah::ProblemSpecP wasatchParams )
+  build_precipitation_expr( Uintah::ProblemSpecP params , Uintah::ProblemSpecP wasatchParams )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     Expr::ExpressionBuilder* builder = NULL;
-    //std::string exprType;
-    //bool valParams = params->get("value",exprType);
     
     if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {
       double coef, MolecularVolume, DiffusionCoefficient;
@@ -427,13 +427,40 @@ namespace Wasatch{
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
       coef = MolecularVolume*DiffusionCoefficient;
-      bool hasOstwaldRipening = false;
-      if (coefParams->findBlock("OstwaldRipening") )
-        hasOstwaldRipening = true;
+      Expr::Tag sBarTag;
+      if (coefParams->findBlock("SBar") ) 
+        sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, coef, hasOstwaldRipening);
+      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef);
+    }
+    
+    else if (params->findBlock("CylindricalDiffusionCoefficient") ) {
+      double coef, MolecularVolume, DiffusionCoefficient;
+      Uintah::ProblemSpecP coefParams = params->findBlock("CylindricalDiffusionCoefficient");
+      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
+      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
+      coef = MolecularVolume*DiffusionCoefficient* 7.0/6.0/log(0.5);
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
+      Expr::Tag sBarTag;
+      if (coefParams->findBlock("SBar") ) 
+        sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
+      typedef typename CylindricalDiffusionCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, saturationTag, eqTag, sBarTag, coef);
+    }
+    
+    else if (params->findBlock("KineticGrowthCoefficient") ) {
+      double coef;
+      Uintah::ProblemSpecP coefParams = params->findBlock("KineticGrowthCoefficient");
+      coefParams -> getAttribute("K_A",coef);
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      Expr::Tag sBarTag;
+      if (coefParams->findBlock("SBar") ) 
+        sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
+      typedef typename KineticGrowthCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, saturationTag, sBarTag, coef);
     }
     
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
@@ -919,10 +946,10 @@ namespace Wasatch{
       exprParams->require("TaskList",taskListName);
       
       switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_physics_coefficient_expr< SVolField >( exprParams , parser);  break;
-        case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams , parser);  break;
-        case YVOL : builder = build_physics_coefficient_expr< YVolField >( exprParams , parser);  break;
-        case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams , parser);  break;
+        case SVOL : builder = build_precipitation_expr< SVolField >( exprParams , parser);  break;
+        case XVOL : builder = build_precipitation_expr< XVolField >( exprParams , parser);  break;
+        case YVOL : builder = build_precipitation_expr< YVolField >( exprParams , parser);  break;
+        case ZVOL : builder = build_precipitation_expr< ZVolField >( exprParams , parser);  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;

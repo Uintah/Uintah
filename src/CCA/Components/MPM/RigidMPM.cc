@@ -122,6 +122,11 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   Task* t = scinew Task("MPM::computeInternalForce",
                     this, &RigidMPM::computeInternalForce);
+
+  // require pStress so it will be saved in a checkpoint, 
+  // allowing the user to restart using mpmice
+  t->requires(Task::OldDW,lb->pStressLabel, Ghost::None);                
+  
   sched->addTask(t, patches, matls);
 }
 
