@@ -393,7 +393,7 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
       kReal[idx] = (kLimits.asVector())[idx];  //static_cast<double>(kLimits[idx]);  // For some reason I can't construct a Vector from an IntVector -- Maybe we should fix that instead?
       particleGridCoordinates[idx] *= kReal[idx];         // Recast particle into charge grid based representation
       particleGridOffset[idx] = static_cast<int>(particleGridCoordinates[idx]);  // Reference grid point for particle
-      splineValues[idx] = particleGridCoordinates[idx] - particleGridOffset[idx];  // spline offset for spline function
+      splineValues[idx] = particleGridOffset[idx] - particleGridCoordinates[idx];  // spline offset for spline function
     }
     vector<double> xSplineArray = spline.evaluate(splineValues[0]);
     vector<double> ySplineArray = spline.evaluate(splineValues[1]);
@@ -402,8 +402,6 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     vector<double> xSplineDeriv = spline.derivative(splineValues[0]);
     vector<double> ySplineDeriv = spline.derivative(splineValues[1]);
     vector<double> zSplineDeriv = spline.derivative(splineValues[2]);
-
-//    SPMEMapPoint CurrentMapPoint(ParticleID, ParticleGridOffset, XSplineArray, YSplineArray, ZSplineArray);
 
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);

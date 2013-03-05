@@ -224,10 +224,10 @@ class SPME : public Electrostatics {
     inline vector<double> generateMPrimeVector(unsigned int kMax,
                                                const CenteredCardinalBSpline& spline) const
     {
-      int numPoints = kMax + spline.getSupport();  // For simplicity, store the whole vector
+      int numPoints = kMax + spline.getMaxSupport();  // For simplicity, store the whole vector
       std::vector<double> mPrime(numPoints);
 
-      int halfSupport = spline.getHalfSupport();
+      int halfSupport = spline.getHalfMaxSupport();
       size_t halfMax = kMax / 2;
 
       // Pre wrap on the left and right sides as necessary for spline support
@@ -265,9 +265,9 @@ class SPME : public Electrostatics {
     inline vector<double> generateMFractionalVector(size_t kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
-      int numPoints = kMax + interpolatingSpline.getSupport();  // For simplicity, store the whole vector
+      int numPoints = kMax + interpolatingSpline.getMaxSupport();  // For simplicity, store the whole vector
       std::vector<double> mFractional(numPoints);
-      int halfSupport = interpolatingSpline.getHalfSupport();
+      int halfSupport = interpolatingSpline.getHalfMaxSupport();
 
       //  Pre wrap on the left and right sides as necessary for spline support
       std::vector<double> leftMost(mFractional[halfSupport]);

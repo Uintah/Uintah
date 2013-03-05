@@ -149,11 +149,31 @@ class CenteredCardinalBSpline {
     /*
      * @brief Return the order of the current spline.
      * @param None
-     * @return int The order of the current spline..
+     * @return int The order of the current spline.
      */
     inline int getOrder() const
     {
       return this->splineOrder;
+    }
+
+    /*
+     * @brief Return the max support of this spline.
+     * @param None
+     * @return int The max support of this spline.
+     */
+    inline int getMaxSupport() const
+    {
+      return (this->splineOrder + 1) / 2;
+    }
+
+    /*
+     * @brief Return half of the max support of this spline.
+     * @param None
+     * @return int Half of the max support of this spline
+     */
+    inline int getHalfMaxSupport() const
+    {
+      return (this->splineOrder + 1) / 4;
     }
 
   private:
