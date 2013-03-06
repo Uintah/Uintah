@@ -53,25 +53,6 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
 }
 
 template<typename T>
-SimpleGrid<T>::SimpleGrid(const std::vector<double>& xArray,
-                          const std::vector<double>& yArray,
-                          const std::vector<double>& zArray,
-                          const IntVector& offset,
-                          const int numGhostCells) :
-    gridExtents(IntVector(xArray.size(), yArray.size(), zArray.size())), gridOffset(offset), numGhostCells(numGhostCells)
-{
-  charges(xArray.size(), yArray.size(), zArray.size());
-
-  // TODO populate charges
-}
-
-template<typename T>
-SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
-{
-
-}
-
-template<typename T>
 bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 {
   if ((this->gridExtents != gridIn.gridExtents) || (this->gridOffset != gridIn.gridOffset)

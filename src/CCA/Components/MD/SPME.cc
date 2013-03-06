@@ -125,10 +125,10 @@ void SPME::setup()
         }
       }
     }
-    stressPrefactor = calculateStressPrefactor(extents, offsets);
+//    stressPrefactor = calculateStressPrefactor(extents, offsets);
 
     patch.setTheta(fTheta);
-    patch.setStressPrefactor(stressPrefactor);
+    patch.setStressPrefactor(calculateStressPrefactor(extents, offsets));
   }
 }
 
@@ -137,28 +137,32 @@ void SPME::calculate()
   // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
   //          This should be checked for in the system electrostatic driver
 
-  size_t numPatches = spmePatches.size();
-  for (size_t p = 0; p < numPatches; p++) {
+  bool converged = false;
+  int numIterations = 0;
+  int maxIterations = system->getMaxIterations();
+  while (!converged && (numIterations < maxIterations)) {
 
-    SPMEPatch patch = spmePatches[p];
+    size_t numPatches = spmePatches.size();
+    for (size_t p = 0; p < numPatches; p++) {
 
-    SimpleGrid<complex<double> > Q(patch.getLocalExtents(), patch.getGlobalOffset(), system->getNumGhostCells());
-    Q.initialize(complex<double>(0.0, 0.0));
+      SPMEPatch patch = spmePatches[p];
 
-    ParticleSubset* pset = patch.getPset();
-    std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, interpolatingSpline);
-    bool converged = false;
-    int numIterations = 0;
-    int maxIterations = system->getMaxIterations();
-    while (!converged && (numIterations < maxIterations)) {
-      SPME::mapChargeToGrid(gridMap, pset, interpolatingSpline.getHalfSupport());  // Calculate Q(r)
+      SimpleGrid<complex<double> > Q = patch.getQ();
+      Q.initialize(complex<double>(0.0, 0.0));
+
+      SimpleGrid<Matrix3> stressPrefactor = patch.getStressPrefactor();
+
+      ParticleSubset* pset = patch.getPset();
+      std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, interpolatingSpline);
+
+      SPME::mapChargeToGrid(gridMap, pset, interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
       // Map the local patch's charge grid into the global grid and transform
-      SPME::GlobalMPIReduceChargeGrid(GHOST::AROUND);  //Ghost points should get transferred here
+      SPME::GlobalMPIReduceChargeGrid(Ghost::AroundNodes);  //Ghost points should get transferred here
       SPME::ForwardTransformGlobalChargeGrid();  // Q(r) -> Q*(k)
 
       // Once reduced and transformed, we need the local grid re-populated with Q*(k)
-      SPME::MPIDistributeLocalChargeGrid(GHOST::NONE);
+      SPME::MPIDistributeLocalChargeGrid(Ghost::None);
 
       // Multiply the transformed Q out
       IntVector localExtents = patch.getLocalExtents();
@@ -182,9 +186,9 @@ void SPME::calculate()
       }
 
       // Transform back to real space
-      SPME::GlobalMPIReduceChargeGrid(GHOST::NONE);  //Ghost points should NOT get transferred here
+      SPME::GlobalMPIReduceChargeGrid(Ghost::None);  //Ghost points should NOT get transferred here
       SPME::ReverseTransformGlobalChargeGrid();
-      SPME::MPIDistributeLocalChargeGrid(GHOST::AROUND);
+      SPME::MPIDistributeLocalChargeGrid(Ghost::AroundNodes);
 
       //  This may need to be before we transform the charge grid back to real space if we can calculate
       //    polarizability from the fourier space component
@@ -219,7 +223,7 @@ std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& mFracti
   double twoPI = 2.0 * PI;
   double orderM12PI = twoPI * (interpolatingSpline.getOrder() - 1);
 
-  int halfSupport = interpolatingSpline.getHalfSupport();
+  int halfSupport = interpolatingSpline.getHalfMaxSupport();
   std::vector<dblcomplex> B(localGridExtent);
   std::vector<double> zeroAlignedSpline = interpolatingSpline.evaluate(0);
 
@@ -405,7 +409,9 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
 
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);
-    SimpleGrid<SCIRun::Vector> forceGrid(xSplineDeriv, ySplineDeriv, zSplineDeriv, particleGridOffset, 0);
+
+    // TODO this use to use the five argument constructor??
+    SimpleGrid<SCIRun::Vector> forceGrid(extents, particleGridOffset, 0);
     size_t XExtent = xSplineArray.size();
     size_t YExtent = ySplineArray.size();
     size_t ZExtent = zSplineArray.size();

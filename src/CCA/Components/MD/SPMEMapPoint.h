@@ -39,7 +39,6 @@ class Point;
 class Vector;
 class ParticleSubset;
 
-
 /**
  *  @class SPMEMapPoint
  *  @ingroup MD
@@ -74,9 +73,9 @@ class SPMEMapPoint {
      * @return
      */
     SPMEMapPoint(particleIndex particleID,
-             IntVector gridOffset,
-             SimpleGrid<double> chargeGrid,
-             SimpleGrid<SCIRun::Vector> forceGrid);
+                 IntVector gridOffset,
+                 SimpleGrid<double> chargeGrid,
+                 SimpleGrid<SCIRun::Vector> forceGrid);
 
     /**
      * @brief
