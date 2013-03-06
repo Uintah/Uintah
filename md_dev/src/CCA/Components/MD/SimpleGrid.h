@@ -73,20 +73,7 @@ template<typename T> class SimpleGrid {
     SimpleGrid(const IntVector& extents,
                const IntVector& offset,
                const int numGhostCells);
-    /**
-     * @brief Constructor to build grid from 3 constructed linear arrays
-     * @param XArray:  The populated array in the X direction
-     * @param YArray:  The populated array in the Y direction
-     * @param ZArray:  The populated array in the Z direction
-     * @param offset The offset for the first point in the patch in reference to the global grid.
-     * @param offset:  The offset for the first point in the patch in reference to the global grid.
-     * @param numGhostCells:  The number of ghost cells for this SimpleGrid.
-     */
-    SimpleGrid(const std::vector<double>& xArray,
-               const std::vector<double>& yArray,
-               const std::vector<double>& zArray,
-               const IntVector& offset,
-               const int numGhostCells);
+
     /**
      * @brief
      * @param
@@ -105,9 +92,35 @@ template<typename T> class SimpleGrid {
     /**
      *
      */
-    inline T*** getCharges()
+    inline T*** getDataPtr()
     {
       return this->charges.get_dataptr();
+    }
+
+    /**
+     *
+     */
+    inline IntVector getDimensions() const
+    {
+      return IntVector(charges.dim1(), charges.dim2(), charges.dim3());
+    }
+
+    /**
+     *
+     */
+    inline void copyCharges(T*** copy,
+                            IntVector dimensions)
+    {
+      int dm1 = dimensions.x();
+      int dm2 = dimensions.y();
+      int dm3 = dimensions.z();
+      for (int i = 0; i < dm1; i++) {
+        for (int j = 0; j < dm2; j++) {
+          for (int k = 0; k < dm3; k++) {
+            charges(i, j, k) = copy[i][j][k];
+          }
+        }
+      }
     }
 
     /**
@@ -202,11 +215,11 @@ template<typename T> class SimpleGrid {
     /**
      * @brief Checks to make sure grid1 and grid2 have same Extent/Offset/Ghost Regions.
      *        Note that in general, gridIn doesn't have to have the same data type as (this) object does.
-     * @param gridIn A reference to the SimpleGrid to compare against this SimpleGrid.
-     * @return bool Returns true if this SimpleGrid has the same extents, offeset and number of ghost cells as
-     *              as the specified SimpleGrid, flase otherwise.
+     * @param other A reference to the SimpleGrid to compare against this SimpleGrid.
+     * @return bool Returns true if this SimpleGrid has the same extents, offset and number of ghost cells as
+     *              as the specified SimpleGrid, false otherwise.
      */
-    bool verifyRegistration(SimpleGrid<T>& gridIn);
+    bool verifyRegistration(SimpleGrid<T>& other);
 
     /**
      * @brief Transforms 'Q' from real to fourier space
@@ -393,12 +406,12 @@ template<typename T> class SimpleGrid {
 
     /**
      * @brief Assignment operator. Gracefully handles self assignment.
-     * @param sg The assignee.
+     * @param copy The assignee.
      * @return SimpleGrid<T>& The result of the assignment (*this).
      */
-    inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
+    inline SimpleGrid<T>& operator=(SimpleGrid<T>& copy)
     {
-      charges.copy(copy.getCharges());          // SCIRun::Array3 assignment operator is private, use copy() method
+      copyCharges(copy.getDataPtr(), copy.getDimensions());  // SCIRun::Array3 assignment operator is private
       gridExtents = copy.gridExtents;
       gridOffset = copy.gridOffset;
       numGhostCells = copy.numGhostCells;
@@ -416,7 +429,7 @@ template<typename T> class SimpleGrid {
 
   private:
 
-    SCIRun::Array3<T> charges;  //!< Grid cell values - can be double or std::complex<double>>
+    SCIRun::Array3<T> charges;  //!< Grid cell values
     IntVector gridExtents;      //!< Stores the number of total grid points in this grid
     IntVector gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
     int numGhostCells;          //!< The number of ghost cells for the patch the associated points are on
