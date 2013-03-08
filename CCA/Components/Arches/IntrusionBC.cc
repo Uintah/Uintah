@@ -72,6 +72,10 @@ IntrusionBC::~IntrusionBC()
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
       VarLabel::destroy(iIntrusion->second.bc_area); 
+      VarLabel::destroy(iIntrusion->second.min_vel); 
+      VarLabel::destroy(iIntrusion->second.max_vel); 
+      VarLabel::destroy(iIntrusion->second.total_m_dot); 
+
       if ( iIntrusion->second.has_velocity_model )  {
         delete(iIntrusion->second.velocity_inlet_generator); 
       }
@@ -273,6 +277,9 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
       //make an area varlable
       intrusion.bc_area = VarLabel::create( name + "_bc_area", sum_vartype::getTypeDescription() ); 
+      intrusion.min_vel = VarLabel::create( name + "_min_vel", min_vartype::getTypeDescription() ); 
+      intrusion.max_vel = VarLabel::create( name + "_max_vel", max_vartype::getTypeDescription() ); 
+      intrusion.total_m_dot = VarLabel::create( name + "_total_m_dot", sum_vartype::getTypeDescription() ); 
 
       //initialize density
       intrusion.density = 0.0;
@@ -543,6 +550,7 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
 
   sched->addTask(tsk, patches, matls); 
 }
+
 void 
 IntrusionBC::setIntrusionVelocities( const ProcessorGroup*, 
                             const PatchSubset* patches, 
@@ -589,9 +597,9 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_setCellType( SchedulerP& sched, 
-                                  const PatchSet* patches, 
-                                  const MaterialSet* matls, 
-                                  const bool doing_restart )
+                                const PatchSet* patches, 
+                                const MaterialSet* matls, 
+                                const bool doing_restart )
 {
   Task* tsk = scinew Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType, doing_restart); 
 
@@ -769,6 +777,99 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
 //_________________________________________
 void 
+IntrusionBC::sched_gatherReductionInformation( SchedulerP& sched, 
+                                               const PatchSet* patches, 
+                                               const MaterialSet* matls )
+{
+  Task* tsk = scinew Task("IntrusionBC::gatherReductionInformation", this, &IntrusionBC::gatherReductionInformation); 
+
+  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
+
+    tsk->requires( Task::NewDW, i->second.bc_area ); 
+    tsk->computes( i->second.max_vel ); 
+    tsk->computes( i->second.min_vel ); 
+    tsk->computes( i->second.total_m_dot ); 
+
+  } 
+
+  sched->addTask(tsk, patches, matls); 
+}
+
+void 
+IntrusionBC::gatherReductionInformation( const ProcessorGroup*, 
+                                         const PatchSubset* patches, 
+                                         const MaterialSubset* matls, 
+                                         DataWarehouse* old_dw, 
+                                         DataWarehouse* new_dw )
+{
+
+  for ( int p = 0; p < patches->size(); p++ ){ 
+
+
+    const Patch* patch = patches->get(p); 
+    const int patchID = patch->getID(); 
+    int archIndex = 0; 
+    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
+
+    Vector Dx = patch->dCell(); 
+
+    std::vector<double> area; 
+    area.push_back(Dx.y()*Dx.z()); 
+    area.push_back(Dx.y()*Dx.z()); 
+    area.push_back(Dx.x()*Dx.z()); 
+    area.push_back(Dx.x()*Dx.z()); 
+    area.push_back(Dx.y()*Dx.x()); 
+    area.push_back(Dx.y()*Dx.x()); 
+
+    double mass_flow = 0.0; 
+    double min_vel = 99.0e9; 
+    double max_vel = 0.0; 
+    bool found_iterator = false; 
+
+    if ( _intrusion_on ) { 
+    
+      for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+
+        if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+
+          found_iterator = true; 
+          BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+          
+          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+
+            IntVector c = *i; 
+
+            for ( int idir = 0; idir < 6; idir++ ){ 
+
+              if ( iIntrusion->second.directions[idir] != 0 ){ 
+
+                const Vector V = iIntrusion->second.velocity_inlet_generator->get_velocity(c); 
+
+                double face_vel = V[_iHelp[idir]];
+
+                mass_flow += iIntrusion->second.density * face_vel * area[_iHelp[idir]];
+
+                if ( max_vel < face_vel ) max_vel = face_vel; 
+                if ( min_vel > face_vel ) min_vel = face_vel; 
+
+              }
+            }
+          }
+
+          new_dw->put( min_vartype( min_vel ), iIntrusion->second.min_vel );
+          new_dw->put( max_vartype( max_vel ), iIntrusion->second.max_vel ); 
+          new_dw->put( sum_vartype( mass_flow ), iIntrusion->second.total_m_dot ); 
+
+        }
+      }
+    }
+  }
+}
+
+
+
+//_________________________________________
+void 
 IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched, 
                                               const PatchSet* patches, 
                                               const MaterialSet* matls )
@@ -779,6 +880,9 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
     tsk->requires( Task::NewDW, i->second.bc_area ); 
+    tsk->requires( Task::NewDW, i->second.min_vel ); 
+    tsk->requires( Task::NewDW, i->second.max_vel ); 
+    tsk->requires( Task::NewDW, i->second.total_m_dot ); 
 
   } 
 
@@ -800,48 +904,70 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
     int archIndex = 0; 
     int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
-    if ( p == 0 ) { 
+    proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
-      proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
+    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
 
-      for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+      sum_vartype area_var; 
+      new_dw->get( area_var, iter->second.bc_area ); 
+      double area = area_var; 
 
-        sum_vartype area_var; 
-        new_dw->get( area_var, iter->second.bc_area ); 
-        double area = area_var; 
+      sum_vartype total_mdot_var; 
+      max_vartype max_vel_var; 
+      min_vartype min_vel_var; 
 
-        if ( iter->second.type == SIMPLE_WALL ){ 
-          proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+      new_dw->get( total_mdot_var, iter->second.total_m_dot ); 
+      new_dw->get( max_vel_var, iter->second.max_vel ); 
+      new_dw->get( min_vel_var, iter->second.min_vel ); 
 
-        } else if ( iter->second.type == INLET ){ 
-          proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
-          IntVector c(0,0,0); 
-          Vector U = iter->second.velocity_inlet_generator->get_velocity(c); 
-          if ( iter->second.mass_flow_rate < 1e-16 ) { 
-            proc0cout << "              U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
-          } else { 
-            proc0cout << "    m_dot(set)  = "  << iter->second.mass_flow_rate << std::endl;
-            proc0cout << "    resultant U = [" << U.x() << "," << U.y() << "," << U.z() << "]" << std::endl;
+      double max_vel = max_vel_var; 
+      double min_vel = min_vel_var; 
+      double total_mdot = total_mdot_var; 
+
+      if ( iter->second.type == SIMPLE_WALL ){ 
+
+        proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+
+      } else if ( iter->second.type == INLET ){ 
+
+        proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
+        proc0cout << "             m_dot  = "  << total_mdot << std::endl;
+        proc0cout << " max vel. component = " << max_vel << std::endl;
+        proc0cout << " min vel. component = " << min_vel << std::endl;
+        proc0cout << "           density  = "  << iter->second.density << std::endl;
+        proc0cout << "         inlet area = "  << area << std::endl << std::endl;
+
+        proc0cout << " Active inlet directions (normals): " << std::endl;
+
+        for ( int idir = 0; idir < 6; idir++ ){ 
+
+          if ( iter->second.directions[idir] != 0 ){ 
+            proc0cout << "   " << _dHelp[idir] << std::endl;
           }
-          proc0cout << "   density  = "  << iter->second.density << std::endl;
-          proc0cout << " inlet area = "  << area << std::endl;
-          proc0cout << "   scalar information " << std::endl;
-          for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
-              i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
-      
-            proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
-            
-          } 
 
+        }
+
+
+        proc0cout << std::endl << " Scalar information: " << std::endl;
+
+        for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
+            i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
+   
+          IntVector c(0,0,0); 
+          proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
+          
         } 
 
-        proc0cout << "   solid T  = "  << iter->second.temperature << std::endl;
+      } 
 
-        proc0cout << " \n";
+      proc0cout << std::endl;
 
-      }
-      proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
+      proc0cout << " Solid T  = "  << iter->second.temperature << std::endl;
+
+      proc0cout << " \n";
+
     }
+    proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
   }
 }
 
