@@ -179,6 +179,18 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
   sharedState->d_particleState_preReloc[matl].push_back(ps_lb->filePointerLabel_preReloc);
   sharedState->d_particleState[matl].push_back(ps_lb->filePointerLabel);
   
+  //__________________________________
+  //  Warning
+  proc0cout << "\n\n______________________________________________________________________" << endl;
+  proc0cout << "  WARNING      WARNING       WARNING" << endl;
+  proc0cout << "     DataAnalysis:particleExract" << endl;
+  proc0cout << "         BE VERY JUDICIOUS when selecting the <samplingFrequency> " << endl;
+  proc0cout << "         and the number of particles to extract data from. Every time" << endl;
+  proc0cout << "         the particles are analyized N particle files are opened and closed" << endl;
+  proc0cout << "         This WILL slow your simulation down!" << endl;
+  proc0cout << "______________________________________________________________________\n\n" << endl;  
+  
+  
 }
 
 //______________________________________________________________________
@@ -487,15 +499,21 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           string filename = fname.str();
           
           // open the file
-          FILE *fp;
+          FILE *fp = NULL;
+          createFile(filename,fp);
           
+          //__________________________________
+          //   HACK: don't keep track of the file pointers.
+          //   create the file every pass through.  See message below.            
+#if 0          
           if( myFiles[idx] ){           // if the filepointer has been previously stored.
             fp = myFiles[idx];
+            cout << Parallel::getMPIRank() << " I think this pointer is valid " << idx << " fp " << fp << " patch " << patch->getID() << endl;
           } else {
             createFile(filename, fp);
             myFiles[idx] = fp;
           }
-          
+#endif         
           
           if (!fp){
             throw InternalError("\nERROR:dataAnalysisModule:particleExtract:  failed opening file"+filename,__FILE__, __LINE__);
@@ -535,7 +553,14 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           }        
 
           fprintf(fp,    "\n");
-          fflush(fp);
+          
+          //__________________________________
+          //  HACK:  Close each file and set the fp to NULL
+          //  Remove this hack once we figure out how to use
+          //  particle relocation to move file pointers between
+          //  patches.
+          fclose(fp);
+          myFiles[idx] == NULL;
         }
       }  // loop over particles
       lastWriteTime = now;     
