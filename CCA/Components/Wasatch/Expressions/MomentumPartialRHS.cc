@@ -51,8 +51,8 @@ MomRHSPart( const Expr::Tag& convFluxX,
     densityt_  ( densityTag   ),
     bodyForcet_( bodyForceTag ),
     srcTermt_  ( srcTermTag   ),
-    volfract_  ( volFracTag   ),
-    emptyTag_  ( Expr::Tag()  )
+    emptyTag_  ( Expr::Tag()  ),
+    volfract_  ( volFracTag   )
 {}
 
 //--------------------------------------------------------------------
