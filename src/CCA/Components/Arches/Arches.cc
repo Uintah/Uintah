@@ -1750,8 +1750,8 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       //d_boundaryCondition->printBCInfo();
       d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls );
       d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
-      d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls );
       d_doingRestart = false;
+      d_lab->recompile_taskgraph = true;
     }
 
     if (d_newBC_on_Restart) {
