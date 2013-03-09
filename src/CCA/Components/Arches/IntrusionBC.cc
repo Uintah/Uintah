@@ -833,7 +833,7 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
         if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
           found_iterator = true; 
-          BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+          BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).begin(); 
           
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
