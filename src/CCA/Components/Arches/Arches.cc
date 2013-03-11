@@ -159,6 +159,7 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
+  d_init_mix_frac                  = 0.0; 
 }
 
 // ****************************************************************************
