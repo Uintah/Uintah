@@ -129,7 +129,11 @@
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"
                                         need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
           <constant_heat_loss           spec="OPTIONAL NO_DATA"
-                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant.  Uses the intialization value (or field) --> 
+                                        need_applies_to="type heat_loss"/>  <!-- set heat loss to a static constant.  Uses the intialization value (or field).
+                                                                                 Note that you can save the actual computed heat loss by saving out: "*_actual", where * = property label 
+                                                                                 you assigned this model. This allows you to see the value of heat loss as computed from enthalpy without
+                                                                                 actually using it. Note also that if you are after a constant heat loss and don't care to know the value 
+                                                                                 as computed from enthalpy, then you are better off just using the cc_constant model. --> 
                                           
         </model>
       </PropertyModels>
