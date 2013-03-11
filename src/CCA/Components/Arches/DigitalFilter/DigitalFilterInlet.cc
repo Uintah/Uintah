@@ -100,30 +100,25 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   minC[1] = getInt(gzFp);
   minC[2] = getInt(gzFp);
   
-  uFluct.resize(NT); vFluct.resize(NT); wFluct.resize(NT);
-  for (int i=0; i<NT; ++i) {
-    uFluct[i].resize(jSize); vFluct[i].resize(jSize); wFluct[i].resize(jSize);
-    
-    for (int j=0; j<jSize; ++j) {
-      uFluct[i][j].resize(kSize);  
-      vFluct[i][j].resize(kSize);
-      wFluct[i][j].resize(kSize);
-    }
-  }
+  uFluct.resize(NT*jSize*kSize);
+  vFluct.resize(NT*jSize*kSize);
+  wFluct.resize(NT*jSize*kSize);
   
-  for (int t = 0; t<NT; t++) {
-    for(int j = 0; j<jSize; j++) {
-      for (int k = 0; k<kSize; k++) {
-        int tt = getInt(gzFp); int jj = getInt(gzFp); int kk = getInt(gzFp);
-        tt +=0; jj +=0; kk +=0; //silence compiler warning
-        double u = getDouble(gzFp);
-        double v = getDouble(gzFp);
-        double w = getDouble(gzFp);
-        uFluct[t][j][k] = u;
-        vFluct[t][j][k] = v;
-        wFluct[t][j][k] = w;
-      }
-    }
+  int indexCt;
+  int nPts;
+  nPts = getInt(gzFp);
+  proc0cout << "npts: " << nPts << endl;
+  
+  for ( int n = 0; n<nPts; n++) {
+    int tt = getInt(gzFp); int jj = getInt(gzFp); int kk = getInt(gzFp); 
+    double u = getDouble(gzFp);
+    double v = getDouble(gzFp);
+    double w = getDouble(gzFp);
+    indexCt = NT*jSize* kk + NT* jj + tt;
+    
+    uFluct[indexCt] = u;
+    vFluct[indexCt] = v;
+    wFluct[indexCt] = w;
   }
   
   if (period != 0) {
@@ -142,12 +137,13 @@ vector<double> DigitalFilterInlet::getVelocityVector( int t, int j, int k )
 {
  //need to subtract offset vector based on face side
   
+  int indexCt = NT*jSize* k + NT* j + t;
   vector<double> velocity (3, 0);
   if (j>=0 && k >=0 && j<jSize && k<kSize) {
     //make sure within the bounds of inlet (required to check this due to extra cells if inlet is a face side)
-    velocity[0] = uFluct[t][j][k];
-    velocity[1] = vFluct[t][j][k];
-    velocity[2] = wFluct[t][j][k];
+    velocity[0] = uFluct[indexCt];
+    velocity[1] = vFluct[indexCt];
+    velocity[2] = wFluct[indexCt];
   }
   return velocity;
 }

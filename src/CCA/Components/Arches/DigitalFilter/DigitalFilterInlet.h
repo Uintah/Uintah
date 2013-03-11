@@ -92,9 +92,9 @@ namespace Uintah {
     int NT, jSize, kSize; //time and spatial table dimensions
     
     //final velocities
-    vector<vector<vector<double> > > uFluct;
-    vector<vector<vector<double> > > vFluct;
-    vector<vector<vector<double> > > wFluct;
+    vector<double> uFluct;
+    vector<double> vFluct;
+    vector<double> wFluct;
     
     vector<int> minC; //store indicies of lowest corner value of bounding box aroudn inlet
     
