@@ -28,16 +28,17 @@
        <save label="p.deformationMeasure"/>
        <save label="p.particleID"/>
        <save label="g.stressFS"/>
-       <save label = "p.plasticStrainVol"/>
-       <save label = "p.elasticStrainVol"/>
-   </DataArchiver>
+       <save label = "p.evp"/>
+       <save label = "p.eve"/>
+    </DataArchiver>
 
     <MPM>
-      	<time_integrator>           explicit  </time_integrator>
-      	<interpolator>              gimp  </interpolator>
-        <withColor>                 false  </withColor>
-	<UsePrescribedDeformation>  true  </UsePrescribedDeformation>
+      	<time_integrator>           explicit   </time_integrator>
+      	<interpolator>              gimp       </interpolator>
+        <withColor>                 false      </withColor>
+        <UsePrescribedDeformation>  true       </UsePrescribedDeformation>
         <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_11_PrescribedDeformation.inp  </PrescribedDeformationFile>
+        <minimum_subcycles_for_F>       -2     </minimum_subcycles_for_F>
     </MPM>
 
     <PhysicalConstants>
