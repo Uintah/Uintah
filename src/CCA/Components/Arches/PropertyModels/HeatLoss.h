@@ -94,6 +94,8 @@ private:
   bool _noisy_heat_loss; 
   bool _constant_heat_loss; 
 
+  const VarLabel* _actual_hl_label;              ///< If computing heat loss but not actually using it, then stuff the computed value of heat loss in here. 
+
 }; // class HeatLoss
 
 } // end namespace Uintah
