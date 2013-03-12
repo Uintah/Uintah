@@ -104,7 +104,7 @@ class Regridder;
 
       void scheduleComputeStableTimestep(const GridP& grid,
                                          SchedulerP&);
-      void coarsenDelt(const ProcessorGroup*,
+      void reduceSysVar(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* /*matls*/,
                        DataWarehouse* /*old_dw*/,

@@ -189,7 +189,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
         // Look up this variable in the reductionTasks map
         int dw = comp->mapDataWarehouse();
         // skip perlevel redution on delT
-        if (comp->var->getName()== "delT" && task->getName() != "coarsenDelt" ) {
+        if (comp->var->getName()== "delT" ) { //{ && task->getName() != "coarsenDelt" ) {
           if (dbg.active())
             dbg << d_myworld->myrank() << " Skipping Reduction task for variable: " 
               << comp->var->getName() << " on level " << levelidx 
@@ -349,7 +349,7 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
             }
             // with reduction variables, you can modify them up to the Reduction Task, which also modifies
             // those who don't modify will get the reduced value.
-            if (!modifies && req->task->getName() !="coarsenDelt") {
+            if (!modifies  && req->var->getName()!="delT") {// && req->task->getName() !="coarsenDelt") {
                 requiresReductionTask=true;
             }
           }
@@ -973,7 +973,7 @@ TaskGraph::createDetailedDependencies()
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
   int currphase=0;
-  int currcomm=0;
+  int currcomm=0; 
   for(int i=0;i<dts_->numTasks();i++){
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase=currphase;

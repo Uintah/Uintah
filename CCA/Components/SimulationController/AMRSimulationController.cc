@@ -981,7 +981,7 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
 
-  Task* task = scinew Task("coarsenDelt", this, &AMRSimulationController::coarsenDelt);
+  Task* task = scinew Task("reduceSysVar", this, &AMRSimulationController::reduceSysVar);
 
   //coarsenDelT task requires that delT is computed on every level, even if no tasks are 
   // run on that level.  I think this is a bug.  --Todd
@@ -992,17 +992,18 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
   //coarsen delt computes the global delt variable
   task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
+  task->usesMPI(true);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
 
 void
-AMRSimulationController::coarsenDelt( const ProcessorGroup*,
+AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* /*old_dw*/,
                                       DataWarehouse* new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::coarsenDelt()");
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
   if (patches->size() == 0 || new_dw->exists(d_sharedState->get_delt_label(), -1, 0))
@@ -1026,5 +1027,9 @@ AMRSimulationController::coarsenDelt( const ProcessorGroup*,
       delt = deltvar;
       new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
     }
+  }
+ 
+  if (d_myworld->size() > 1) {
+    new_dw->reduceMPI(d_sharedState->get_delt_label() , 0 , 0 , -1 ) ;
   }
 }
