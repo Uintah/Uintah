@@ -80,7 +80,7 @@ WARNING
       }
 
       MPI_Comm getgComm(int i) const {
-        if (d_threads < 1) return d_comm; 
+        if (d_threads < 1 || i == -1) return d_comm; 
         else return d_gComms[i%d_threads];
       }
 
