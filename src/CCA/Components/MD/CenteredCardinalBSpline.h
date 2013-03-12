@@ -41,20 +41,6 @@ namespace Uintah {
  *  @param
  */
 
-/**
- * @brief Selection function on [-0.5,0.5)
- * @param x Input value for selection function
- * @return 1 if -0.5 <= X < 0.5, 0 otherwise
- */
-double S0(const double x);
-
-/**
- * @brief Selection function on [-1.0,1.0)
- * @param x Input value for selection function
- * @return 1 if -1.0 <= X < 1.0, 0 otherwise
- */
-double S1(const double x);
-
 class CenteredCardinalBSpline {
 
   public:
@@ -81,12 +67,6 @@ class CenteredCardinalBSpline {
      * @param splineOrder - int, order of the spline.
      */
     CenteredCardinalBSpline(const CenteredCardinalBSpline& spline);
-
-    /**
-     * @brief
-     * @param
-     */
-    CenteredCardinalBSpline& operator=(const CenteredCardinalBSpline& spline);
 
     /**
      * @brief Evaluate the spline across the entire support range.
@@ -174,6 +154,53 @@ class CenteredCardinalBSpline {
     inline int getHalfMaxSupport() const
     {
       return (this->splineOrder + 1) / 4;
+    }
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline CenteredCardinalBSpline& operator=(const CenteredCardinalBSpline& spline)
+    {
+      splineOrder = spline.splineOrder;
+      basisShifts = spline.basisShifts;
+      prefactorValues = spline.prefactorValues;
+      prefactorMap = spline.prefactorMap;
+
+      return *this;
+    }
+
+    /**
+     * @brief Selection function on [-0.5,0.5)
+     * @param x Input value for selection function
+     * @return 1 if -0.5 <= X < 0.5, 0 otherwise
+     */
+    inline double S0(const double x) const
+    {
+      if (x < -0.5) {
+        return 0;
+      }
+      if (x >= 0.5) {
+        return 0;
+      }
+      return 1;
+    }
+
+    /**
+     * @brief Selection function on [-1.0,1.0)
+     * @param x Input value for selection function
+     * @return 1 if -1.0 <= X < 1.0, 0 otherwise
+     */
+    inline double S1(const double x) const
+    {
+      if (x <= -1.0) {
+        return 0;
+      }
+      if (x > 1.0) {
+        return 0;
+      }
+      return (1.0 - std::abs(x));
     }
 
   private:

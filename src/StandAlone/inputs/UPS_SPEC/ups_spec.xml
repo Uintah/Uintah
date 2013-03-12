@@ -352,7 +352,7 @@
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
-                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, reduce_uda,
+                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, md, reduce_uda,
                                                                       advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test, particletest, ljpotentialtest'" >
@@ -813,6 +813,9 @@
   <!-- FIXME: why is this at the top level?  Shouldn't it be under a component or some such?  Todd? -->
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
+
+  <!--  MD            -->
+  <include href="md_spec.xml" section="MD" />
 
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->

@@ -46,6 +46,7 @@
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MD/MD.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
@@ -117,6 +118,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "MPM ";
 #endif
+
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
     ProblemSpecP cfd_ps = ps->findBlock("CFD");
@@ -137,6 +139,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "ICE ";
 #endif
+
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(world,STAND_MPMICE, doAMR);
@@ -150,6 +153,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "MPMICE ";
 #endif
+
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
     if( !Uintah::Parallel::usingMPI() ) {
@@ -160,6 +164,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "ARCHES ";
 #endif
+
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world, doAMR);
@@ -167,6 +172,15 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "MPMARCHES ";
 #endif
+
+#ifndef NO_MD
+  if (sim_comp == "md" || sim_comp == "MD") {
+    return scinew MD(world);
+  }
+#else
+  turned_off_options += "MD ";
+#endif
+
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
   } 
@@ -176,11 +190,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     else
       return scinew Wave(world);
   }
+
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
     return scinew Wasatch::Wasatch(world);
   } 
 #endif
+
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
   }
@@ -212,6 +228,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
+
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
     return scinew RMCRT_Test(world);
@@ -219,6 +236,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "RMCRT_Test ";
 #endif
+
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 

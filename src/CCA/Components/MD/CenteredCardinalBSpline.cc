@@ -35,29 +35,8 @@
 #include <iomanip>
 #include <fstream>
 #endif
+
 using namespace Uintah;
-
-double S0(const double x)
-{
-  if (x < -0.5) {
-    return 0;
-  }
-  if (x >= 0.5) {
-    return 0;
-  }
-  return 1;
-}
-
-double S1(const double X)
-{
-  if (X <= -1.0) {
-    return 0;
-  }
-  if (X > 1.0) {
-    return 0;
-  }
-  return (1.0 - std::abs(X));
-}
 
 CenteredCardinalBSpline::CenteredCardinalBSpline()
 {
@@ -197,15 +176,15 @@ std::vector<int> CenteredCardinalBSpline::generatePrefactorMap(const int order,
                                                                const std::vector<int>& shifts)
 {
   // Generates the offset map to map the appropriate prefactor into the constant shift value array
-  int mapSize = static_cast<int>(pow(2.0, order));
+  size_t mapSize = static_cast<int>(pow(2.0, order));
   std::vector<int> map(2 * mapSize, 0);
 
   int origin = 0;
-  int stepSize = 1;
-  int numberOfTerms = mapSize;
+  size_t stepSize = 1;
+  size_t numberOfTerms = mapSize;
   int currentOrder = 0;
 
-  for (size_t pass = 0; pass < order; ++pass) {
+  for (int pass = 0; pass < order; ++pass) {
     for (size_t term = 0; term < numberOfTerms; term += 2 * stepSize) {
       int leftSum = 0;
       int rightSum = 0;
@@ -271,7 +250,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
   double* left = &shiftPlusX[zeroIndex];
   double* right = &shiftMinusX[(shiftSize - 1) - zeroIndex];
 
-  int numTerms = shifts.size();
+  size_t numTerms = shifts.size();
 
   // Row - One complete spline array for a given term
   // Column - All terms comprising the subsplines used to make the current order
@@ -292,7 +271,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
   // Propagate the recursive calculation of splines from the above initial basis values
   int origin = 0;
   double scale = 1.0;
-  for (size_t pass = 0; pass < order; ++pass) {
+  for (int pass = 0; pass < order; ++pass) {
     scale *= (static_cast<double>(pass + 1));
     for (size_t TermIndex = 0; TermIndex < numTerms; TermIndex += 2) {
       int leftBase = map[origin + TermIndex];

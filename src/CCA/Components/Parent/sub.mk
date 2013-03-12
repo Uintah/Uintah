@@ -55,6 +55,7 @@ PSELIBS := \
         $(ICE)           \
         $(MPM)           \
         $(MPMICE)        \
+        $(MD)            \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/PatchCombiner        \
         $(COMPONENTS)/ProblemSpecification \

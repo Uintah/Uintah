@@ -68,12 +68,12 @@ SUBDIRS := \
         $(SRCDIR)/Regridder \
         $(SRCDIR)/SimulationController \
         $(MPM)            \
-        $(MD)             \
         $(ICE)            \
         $(MPMICE)         \
         $(ARCHES)         \
         $(MPMARCHES)      \
         $(WASATCH)        \
+        $(MD)             \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

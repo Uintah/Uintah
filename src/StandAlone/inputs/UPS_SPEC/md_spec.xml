@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>   
+
+  <MD                         spec="OPTIONAL NO_DATA" >
+    <coordinateFile           spec="REQUIRED STRING" />
+    <numAtoms                 spec="REQUIRED INTEGER"/>
+    <boxSize                  spec="REQUIRED VECTOR" />
+    <cutoffRadius             spec="REQUIRED DOUBLE" />
+    <R12                      spec="REQUIRED DOUBLE" />
+    <R6                       spec="REQUIRED DOUBLE" />
+  </MD>
+
+</Uintah_Include>
+
+
