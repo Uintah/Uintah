@@ -47,4 +47,3 @@ SPMEPatch::SPMEPatch(IntVector extents,
 {
 
 }
-

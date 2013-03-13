@@ -296,7 +296,7 @@ class SPME : public Electrostatics {
     double polarizationTolerance;                   //!< Tolerance threshold for polarizable system
     IntVector kLimits;                              //!< Number of grid divisions in each direction
     CenteredCardinalBSpline interpolatingSpline;    //!< Spline object to hold info for spline calculation
-    std::vector<SPMEPatch>* spmePatches;             //!< Assuming multiple patches, these are the pieces of the SPME grid
+    std::vector<SPMEPatch*> spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
 
     // Variables we'll get from the MDSystem instance to make life easier
     Matrix3 unitCell;           //!< Unit cell lattice parameters

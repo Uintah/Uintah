@@ -75,20 +75,6 @@ class SPMEPatch {
      * @param
      * @return
      */
-    SPMEPatch(const SPMEPatch& patch);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    SPMEPatch& operator=(const SPMEPatch& patch);
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
     inline IntVector getLocalExtents() const
     {
       return this->localExtents;
@@ -205,6 +191,9 @@ class SPMEPatch {
     }
 
   private:
+
+    SPMEPatch(const SPMEPatch& patch);
+    SPMEPatch& operator=(const SPMEPatch& patch);
 
     // Patch dependent quantities
     IntVector localExtents;       //!< Number of grid points in each direction for this patch
