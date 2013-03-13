@@ -98,8 +98,7 @@ cat $udas[1]/index.xml | sed /"timestep "/d > index.tmp
 sed /"\/timesteps"/,/"\/Uintah_DataArchive"/d <index.tmp > index.xml
 
 # add the list of timesteps to index.xml
-echo 
-makeCombinedIndex.sh $udas >> index.xml
+makeCombinedIndex.sh "$udas" >> index.xml
 
 # put the xml tags back
 echo  "  </timesteps>" >> index.xml
