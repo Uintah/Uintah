@@ -872,7 +872,8 @@
             <pos                        spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"/><!-- source term is positive --> 
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
               <geom_object/>                                                                            <!-- defines the location of the pilot --> 
-              <max_time                 spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines how long does the pilot last -->  
+              <start_time               spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns on at this time -->  
+              <stop_time                spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns off at this time -->  
               <temperature              spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines the temperature of the pilot --> 
             </hot_spot>
 

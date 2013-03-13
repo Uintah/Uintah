@@ -97,7 +97,8 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
     ProblemSpecP db_hotspot = db->findBlock("hot_spot"); 
     ProblemSpecP the_geometry = db_hotspot->findBlock("geom_object");
     GeometryPieceFactory::create( the_geometry, _geom_hot_spot ); 
-    db_hotspot->require("max_time",_max_time_hot_spot);
+    db_hotspot->require("start_time",_start_time_hot_spot);
+    db_hotspot->require("stop_time", _stop_time_hot_spot); 
     db_hotspot->require("temperature", _T_hot_spot);
     _hot_spot = true; 
   }
@@ -294,7 +295,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
             Point P = patch->cellPosition( c ); 
             
-            if ( g_piece->inside(P) && total_time < _max_time_hot_spot ){ 
+            if ( g_piece->inside(P) && total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ){ 
 
               if ( _use_T_clip ){ 
                 double fake_diluent = 0.0; 
@@ -307,7 +308,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
           }
         }
 
-        if ( total_time > _max_time_hot_spot ){ 
+        if ( total_time > _stop_time_hot_spot ){ 
           _hot_spot = false; 
         } 
       }
