@@ -634,13 +634,9 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::addTask");
   // Save the DW map
   task->setMapping(dwmap);
-  dbg << d_myworld->myrank() <<  " adding Task: " << task->getName() << ", # patches: ";
-  if( patches ) dbg << patches->size();
-  else          dbg << "0";
-  dbg << ", # matls: " ;
-  if( matls ) dbg << matls->size();
-  else          dbg << "0";
-  dbg << "\n";
+ // if (d_myworld->myrank() == 1 || d_myworld->myrank() == d_myworld->size()-1)
+  dbg << d_myworld->myrank() <<  " adding Task: " << task->getName() << ", # patches: "
+      << (patches?patches->size():0) << ", # matls: " << (matls?matls->size():0) << endl;
 
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
