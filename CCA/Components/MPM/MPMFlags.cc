@@ -95,6 +95,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
+  d_cell_based_smoothing = false;
   d_use_momentum_form = false;
   d_myworld = myworld;
   
@@ -349,6 +350,8 @@ else{
 
   mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
 
+  mpm_flag_ps->get("CellBasedSmoothing", d_cell_based_smoothing);
+    
   mpm_flag_ps->get("UseMomentumForm", d_use_momentum_form);
 
   if (dbg.active()) {
@@ -431,6 +434,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
 
+  ps->appendElement("CellBasedSmoothing", d_cell_based_smoothing);
+  
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
 }
 

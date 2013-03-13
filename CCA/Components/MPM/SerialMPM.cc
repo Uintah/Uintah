@@ -584,7 +584,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
-  if(!flags->d_use_momentum_form){
+  if(!flags->d_use_momentum_form && !flags->d_cell_based_smoothing){
+    scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+    scheduleComputeStressTensor(            sched, patches, matls);
+    scheduleFinalParticleUpdate(            sched, patches, matls);
+  }
+  if(flags->d_cell_based_smoothing){
+    cout << "CELL BASED SMOOTHING FLAG WORKED" << endl;
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
     scheduleComputeStressTensor(            sched, patches, matls);
     scheduleFinalParticleUpdate(            sched, patches, matls);
