@@ -406,7 +406,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
       }
       
       ICE_totalIntEng += mat_int_eng;
-
+      cout_dbg.precision(15);
       //__________________________________
       // Sum the fluxes passing through the boundaries      
       vector<Patch::FaceType> bf;
@@ -418,7 +418,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         string faceName = patch->getFaceName(face );
         cv_face* cvFace = d_cv_faces[face];
 
-        cout_dbg << " cvFace: " <<  faceName << " faceType " << cvFace->face 
+        cout_dbg << "\ncvFace: " <<  faceName << " faceType " << cvFace->face 
                  << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
         cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
 
@@ -443,7 +443,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
         int P_dir = axes[0];  // principal direction
         double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
         
-//        cout << " face Direction " << patch->faceDirection(face) << endl;
+        cout_dbg << "    face Direction " << patch->faceDirection(face) << endl;
 
         //__________________________________
         //           X faces
@@ -452,7 +452,7 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
           double sumKE   = 0;
           double sumH    = 0;
           double sumMdot = 0;
-//          cout << "iter limits " << iterLimits << endl;
+          cout_dbg << "    iterLimits: " << iterLimits << endl;
            
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
@@ -481,15 +481,18 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
             //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
           }
-         // cout << "face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
+          cout_dbg << "    face: " << faceName << " mdot = " << sumMdot << "      sum of KE = " << sumKE << "     sum H = " << sumH <<  "      sum mat_fluxes = " << mat_fluxes << endl; 
         }
         
         //__________________________________
         //        Y faces
         if (face == Patch::yminus || face == Patch::yplus) {    
           double area = dx.x() * dx.z();
-          double sumKE = 0;
-          double sumH  = 0;
+          double sumKE   = 0;
+          double sumH    = 0;
+          double sumMdot = 0;
+          cout_dbg << "    iterLimits: " << iterLimits << endl;
+
           
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
@@ -513,21 +516,24 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             double enthpy = ( temp_CC[c]  * gamma[c]  * cv[c] + 
                               temp_CC[cc] * gamma[cc] * cv[cc] )/2.0;
             
-            sumH  += mdot * enthpy; 
-            sumKE += mdot * KE;         
+            sumH    += mdot * enthpy; 
+            sumKE   += mdot * KE;
+            sumMdot += mdot;
              
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
             //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
           }
-          // cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+           cout_dbg << "    face: " << faceName << " mdot = "<< sumMdot << "     sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
         
         //__________________________________
         //        Z faces
         if (face == Patch::zminus || face == Patch::zplus) {
           double area = dx.x() * dx.y();
-          double sumKE = 0;
-          double sumH  = 0;
+          double sumKE   = 0;
+          double sumH    = 0;
+          double sumMdot = 0;
+          cout_dbg << "    iterLimits: " << iterLimits << endl;
           
           for(CellIterator iter = iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
@@ -551,16 +557,18 @@ void FirstLawThermo::compute_ICE_Contributions(const ProcessorGroup* pg,
             
             sumH  += mdot * enthpy;
             sumKE += mdot * KE;
-            
+            sumMdot += mdot;
             mat_fluxes +=  mdot * (enthpy + KE * d_conversion);
           }
-          // cout << "face: " << faceName << "      sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
+           cout_dbg << "    face: " << faceName << " mdot = "<< sumMdot << "     sum of KE = " << sumKE << "     sum H = " << sumH << "      sum mat_fluxes = " << mat_fluxes << endl;;
         }
       }  // boundary faces
       
       total_flux += mat_fluxes;
     }  // ICE Matls loop
     
+    cout_dbg << "Patch: " << patch->getID() << " totalFlux: " << total_flux <<endl;
+     
     new_dw->put( sum_vartype(ICE_totalIntEng), FL_lb->ICE_totalIntEngLabel );
     new_dw->put( sum_vartype(total_flux),      FL_lb->totalFluxesLabel );
   }  // patch loop
