@@ -614,7 +614,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           double VRTheta   = 0; // the polar angle of each ray from the radiometer normal
           // ray loop
           for (int iRay=0; iRay < _NoRadRays; iRay++){
-
+            
             if(_isSeedRandom == false){
               _mTwister.seed((i + j +k) * iRay +1);
             }
@@ -1423,7 +1423,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
           //  wall emission
           sumI += abskg[L][cur] * sigmaT4OverPi[L][cur] * intensity;
 
-          intensity = intensity * (1-abskg[L][cur]);  
+          intensity = intensity * fs;  
            
           //__________________________________
           //  Reflections
@@ -2325,7 +2325,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      //  wall emission 12/15/11
      sumI += abskg[cur]*sigmaT4OverPi[cur] * intensity;
 
-     intensity = intensity * (1-abskg[cur]);
+     intensity = intensity * fs;  
 
      // for DOM comparisons, we don't allow for reflections, so 
      // when a ray reaches the end of the domain, we force it to terminate. 
