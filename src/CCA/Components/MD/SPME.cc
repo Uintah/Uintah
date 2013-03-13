@@ -51,7 +51,10 @@ SPME::SPME()
 
 SPME::~SPME()
 {
-  delete spmePatches;
+  std::vector<SPMEPatch*>::iterator iter;
+  for (iter = spmePatches.begin(); iter != spmePatches.end(); iter++) {
+    delete *iter;
+  }
 }
 
 SPME::SPME(MDSystem* system,
@@ -76,7 +79,7 @@ void SPME::initialize(const PatchSubset* patches,
   int material = 0;  // single material for now
 
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
-  spmePatches = new std::vector<SPMEPatch>(patches->size());
+  spmePatches.reserve(patches->size());
 
   // Get useful information from global system descriptor to work with locally.
   unitCell = system->getUnitCell();
@@ -94,20 +97,20 @@ void SPME::initialize(const PatchSubset* patches,
     IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
 
     ParticleSubset* pset = old_dw->getParticleSubset(material, patch);
-    SPMEPatch spmePatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents);
-    spmePatch.setPset(pset);
-    spmePatches->push_back(spmePatch);
+    SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents);
+    spmePatch->setPset(pset);
+    spmePatches.push_back(spmePatch);
   }
 }
 
 void SPME::setup()
 {
-  size_t numPatches = spmePatches->size();
+  size_t numPatches = spmePatches.size();
   for (size_t p = 0; p < numPatches; p++) {
 
-    SPMEPatch patch = (*spmePatches)[p];
-    IntVector extents = patch.getLocalExtents();
-    IntVector offsets = patch.getGlobalOffset();
+    SPMEPatch* patch = spmePatches[p];
+    IntVector extents = patch->getLocalExtents();
+    IntVector offsets = patch->getGlobalOffset();
 
     // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
     SimpleGrid<double> fBGrid = calculateBGrid(extents, offsets);
@@ -128,8 +131,8 @@ void SPME::setup()
     }
 //    stressPrefactor = calculateStressPrefactor(extents, offsets);
 
-    patch.setTheta(fTheta);
-    patch.setStressPrefactor(calculateStressPrefactor(extents, offsets));
+    patch->setTheta(fTheta);
+    patch->setStressPrefactor(calculateStressPrefactor(extents, offsets));
   }
 }
 
@@ -143,17 +146,17 @@ void SPME::calculate()
   int maxIterations = system->getMaxIterations();
   while (!converged && (numIterations < maxIterations)) {
 
-    size_t numPatches = spmePatches->size();
+    size_t numPatches = spmePatches.size();
     for (size_t p = 0; p < numPatches; p++) {
 
-      SPMEPatch patch = (*spmePatches)[p];
+      SPMEPatch* patch = spmePatches[p];
 
-      SimpleGrid<complex<double> > Q = patch.getQ();
+      SimpleGrid<complex<double> > Q = patch->getQ();
       Q.initialize(complex<double>(0.0, 0.0));
 
-      SimpleGrid<Matrix3> stressPrefactor = patch.getStressPrefactor();
+      SimpleGrid<Matrix3> stressPrefactor = patch->getStressPrefactor();
 
-      ParticleSubset* pset = patch.getPset();
+      ParticleSubset* pset = patch->getPset();
       std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, interpolatingSpline);
 
       SPME::mapChargeToGrid(gridMap, pset, interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
@@ -166,7 +169,7 @@ void SPME::calculate()
 //      SPME::MPIDistributeLocalChargeGrid(Ghost::None);
 
       // Multiply the transformed Q out
-      IntVector localExtents = patch.getLocalExtents();
+      IntVector localExtents = patch->getLocalExtents();
       size_t xExtent = localExtents.x();
       size_t yExtent = localExtents.y();
       size_t zExtent = localExtents.z();
@@ -175,7 +178,7 @@ void SPME::calculate()
       for (size_t kX = 0; kX < xExtent; ++kX) {
         for (size_t kY = 0; kY < yExtent; ++kY) {
           for (size_t kZ = 0; kZ < zExtent; ++kZ) {
-            SimpleGrid<double> fTheta = patch.getTheta();
+            SimpleGrid<double> fTheta = patch->getTheta();
             complex<double> gridValue = Q(kX, kY, kZ);
 
             // Calculate (Q*Q^)*(B*C)
