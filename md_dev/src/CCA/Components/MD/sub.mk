@@ -32,15 +32,16 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR	:= CCA/Components/MD
 
-SRCS += $(SRCDIR)/MD.cc                       \
-        $(SRCDIR)/MDLabel.cc                  \
-        $(SRCDIR)/MDSystem.cc                 \
-        $(SRCDIR)/SPME.cc                     \
-        $(SRCDIR)/SPMEMapPoint.cc             \
-        $(SRCDIR)/SPMEPatch.cc                \
-        $(SRCDIR)/SimpleGrid.cc               \
-        $(SRCDIR)/CenteredCardinalBSpline.cc  \
-        $(SRCDIR)/MDBoundaryCondition.cc      \
+SRCS += $(SRCDIR)/MD.cc                         \
+        $(SRCDIR)/MDLabel.cc                    \
+        $(SRCDIR)/MDSystem.cc                   \
+        $(SRCDIR)/Electrostatics.cc             \
+        $(SRCDIR)/SPME.cc                       \
+        $(SRCDIR)/SPMEMapPoint.cc               \
+        $(SRCDIR)/SPMEPatch.cc                  \
+        $(SRCDIR)/SimpleGrid.cc                 \
+        $(SRCDIR)/CenteredCardinalBSpline.cc    \
+        $(SRCDIR)/MDBoundaryCondition.cc        \
         $(SRCDIR)/ElectrostaticsFactory.cc
 
 SUBDIRS := \
