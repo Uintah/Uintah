@@ -634,7 +634,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::addTask");
   // Save the DW map
   task->setMapping(dwmap);
-  dbg << "adding Task: " << task->getName() << ", # patches: ";
+  dbg << d_myworld->myrank() <<  " adding Task: " << task->getName() << ", # patches: ";
   if( patches ) dbg << patches->size();
   else          dbg << "0";
   dbg << ", # matls: " ;
