@@ -761,8 +761,6 @@
                 <max_iter                 spec="REQUIRED INTEGER" />
               </LinearSolver>
               <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
-              <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
-              <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
             </DORadiationModel>
 
             <!-- pc transport --> 
