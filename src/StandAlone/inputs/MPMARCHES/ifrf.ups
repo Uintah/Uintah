@@ -353,7 +353,6 @@
                 <max_iter>150</max_iter>
               </LinearSolver>
               <ordinates>2</ordinates>
-              <wall_abskg>0.5</wall_abskg>
             </DORadiationModel>
           </src>
         </Sources>
