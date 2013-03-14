@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,7 +62,7 @@ template<typename T> class SimpleGrid {
     /**
      * @brief Destructor
      */
-    virtual ~SimpleGrid();
+    ~SimpleGrid();
 
     /**
      * @brief 3 argument constructor.
@@ -80,7 +80,7 @@ template<typename T> class SimpleGrid {
      */
     inline void initialize(T val)
     {
-      this->charges.initialize(val);
+      d_charges.initialize(val);
     }
 
     /**
@@ -94,7 +94,7 @@ template<typename T> class SimpleGrid {
      */
     inline T*** getDataPtr()
     {
-      return this->charges.get_dataptr();
+      return d_charges.get_dataptr();
     }
 
     /**
@@ -102,7 +102,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getDimensions() const
     {
-      return IntVector(charges.dim1(), charges.dim2(), charges.dim3());
+      return IntVector(d_charges.dim1(), d_charges.dim2(), d_charges.dim3());
     }
 
     /**
@@ -117,7 +117,7 @@ template<typename T> class SimpleGrid {
       for (int i = 0; i < dm1; i++) {
         for (int j = 0; j < dm2; j++) {
           for (int k = 0; k < dm3; k++) {
-            charges(i, j, k) = copy[i][j][k];
+            d_charges(i, j, k) = copy[i][j][k];
           }
         }
       }
@@ -130,7 +130,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getExtents() const
     {
-      return this->gridExtents;
+      return d_gridExtents;
     }
 
     /**
@@ -140,7 +140,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getOffset() const
     {
-      return this->gridOffset;
+      return d_gridOffset;
     }
 
     /**
@@ -150,7 +150,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getNonGhostExtent() const
     {
-      return this->gridExtents - this->numGhostCells;
+      return d_gridExtents - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
     }
 
     /**The offset
@@ -161,7 +161,7 @@ template<typename T> class SimpleGrid {
      */
     inline IntVector getNonGhostOffset() const
     {
-      return this->gridOffset - this->numGhostCells;
+      return d_gridOffset - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
     }
 
     /**
@@ -175,7 +175,7 @@ template<typename T> class SimpleGrid {
                          const int& y,
                          const int& z)
     {
-      return this->charges(x, y, z);
+      return d_charges(x, y, z);
     }
 
     /**
@@ -189,7 +189,7 @@ template<typename T> class SimpleGrid {
                         const int& y,
                         const int& z) const
     {
-      return this->charges(x, y, z);
+      return d_charges(x, y, z);
     }
 
     /**
@@ -199,7 +199,7 @@ template<typename T> class SimpleGrid {
      */
     inline T& operator()(const IntVector& idx)
     {
-      return this->charges(idx.x(), idx.y(), idx.z());
+      return d_charges(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -209,7 +209,7 @@ template<typename T> class SimpleGrid {
      */
     inline T operator()(const IntVector& idx) const
     {
-      return this->charges(idx.x(), idx.y(), idx.z());
+      return d_charges(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -234,10 +234,6 @@ template<typename T> class SimpleGrid {
      * @return
      */
     void inPlaceFFT_FourierToReal();
-
-    //-------------------------------------------------------------------------------------
-    // Beware high expense temporary creation; meta-template.
-    // and/or re-couch in functions like .MultiplyInPlace(GridIn)?
 
     /**
      * @brief Multiplication of grids; be sure to check for same.
@@ -267,10 +263,10 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator+=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] += gridIn.charges[x][y][z];
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) += gridIn.d_charges(x, y, z);
           }
         }
       }
@@ -280,14 +276,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief In place grid point by point subtraction.
      * @param gridIn The subtrahend.
-     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid (*this).
+     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
      */
     inline SimpleGrid<T>& operator-=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] -= gridIn.charges[x][y][z];
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
           }
         }
       }
@@ -297,14 +293,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief In place grid point by point multiplication.
      * @param gridIn The multiplicand.
-     * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid (*this).
+     * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid.
      */
     inline SimpleGrid<T>& operator*=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] *= gridIn.charges[x][y][z];
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            // FIXME charges(x, y, z) *= gridIn.charges(x, y, z);
           }
         }
       }
@@ -314,14 +310,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief In place grid point by point division.
      * @param gridIn The divisor.
-     * @return SimpleGrid<T>& The result of the division on this SimpleGrid (*this).
+     * @return SimpleGrid<T>& The result of the division on this SimpleGrid.
      */
     inline SimpleGrid<T>& operator/=(const SimpleGrid<T>& gridIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] /= gridIn.charges[x][y][z];
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            // FIXME charges(x, y, z) /= gridIn.charges(x, y, z);
           }
         }
       }
@@ -331,14 +327,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief In place value addition.
      * @param gridIn The addend.
-     * @return SimpleGrid<T>& The result of the addition on this SimpleGrid (*this).
+     * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
      */
     inline SimpleGrid<T>& operator+=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] += valueIn;
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) += valueIn;
           }
         }
       }
@@ -348,14 +344,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief In place value subtraction.
      * @param gridIn The subtrahend.
-     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid (*this).
+     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
      */
     inline SimpleGrid<T>& operator-=(const T& valueIn)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] -= valueIn;
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) -= valueIn;
           }
         }
       }
@@ -364,15 +360,15 @@ template<typename T> class SimpleGrid {
 
     /**
      * @brief In place value multiplication.
-     * @param valueIn The value multiplier.
+     * @param value The value multiplier.
      * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid with the specified value.
      */
-    inline SimpleGrid<T>& operator*=(const T& valueIn)
+    inline SimpleGrid<T>& operator*=(const double value)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] *= valueIn;
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) *= value;
           }
         }
       }
@@ -381,15 +377,15 @@ template<typename T> class SimpleGrid {
 
     /**
      * @brief In place value division.
-     * @param valueIn The value multiplier.
+     * @param value The value multiplier.
      * @return SimpleGrid<T>& The result of the division on this SimpleGrid by the specified value.
      */
-    inline SimpleGrid<T>& operator/=(const T& valueIn)
+    inline SimpleGrid<T>& operator/=(const double value)
     {
-      for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-        for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-          for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-            charges[x][y][z] /= valueIn;
+      for (int x = 0; x < d_gridExtents.x(); ++x) {
+        for (int y = 0; y < d_gridExtents.y(); ++y) {
+          for (int z = 0; z < d_gridExtents.z(); ++z) {
+            d_charges(x, y, z) /= value;
           }
         }
       }
@@ -407,14 +403,14 @@ template<typename T> class SimpleGrid {
     /**
      * @brief Assignment operator. Gracefully handles self assignment.
      * @param copy The assignee.
-     * @return SimpleGrid<T>& The result of the assignment (*this).
+     * @return SimpleGrid<T>& The result of the assignment.
      */
     inline SimpleGrid<T>& operator=(SimpleGrid<T>& copy)
     {
       copyCharges(copy.getDataPtr(), copy.getDimensions());  // SCIRun::Array3 assignment operator is private
-      gridExtents = copy.gridExtents;
-      gridOffset = copy.gridOffset;
-      numGhostCells = copy.numGhostCells;
+      d_gridExtents = copy.d_gridExtents;
+      d_gridOffset = copy.d_gridOffset;
+      d_numGhostCells_ = copy.d_numGhostCells_;
       return *this;
     }
 
@@ -429,10 +425,10 @@ template<typename T> class SimpleGrid {
 
   private:
 
-    SCIRun::Array3<T> charges;  //!< Grid cell values
-    IntVector gridExtents;      //!< Stores the number of total grid points in this grid
-    IntVector gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
-    int numGhostCells;          //!< The number of ghost cells for the patch the associated points are on
+    SCIRun::Array3<T> d_charges;  //!< Grid cell values
+    IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
+    IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
+    int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
 
     // NOTE:  We need to decide how to deal with ghost cells.
     // Extent/Offset of total grid doesn't tell us how much is "real" and how much is "ghost"

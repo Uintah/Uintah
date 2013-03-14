@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,13 +23,14 @@
  */
 
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <Core/Math/UintahMiscMath.h>
-#include <Core/Math/MiscMath.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Geometry/Vector.h>
 
 #include <sci_values.h>
 
-using namespace Uintah;
 using namespace SCIRun;
+
+namespace Uintah {
 
 template<typename T>
 SimpleGrid<T>::SimpleGrid()
@@ -47,16 +48,34 @@ template<typename T>
 SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const IntVector& offset,
                           const int numGhostCells) :
-    gridExtents(extents), gridOffset(offset), numGhostCells(numGhostCells)
+    d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
 {
-  charges(extents.x(), extents.y(), extents.z());
+  d_charges(extents.x(), extents.y(), extents.z());
+}
+
+template<typename T>
+SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
+{
+  int dm1 = d_gridExtents.x();
+  int dm2 = d_gridExtents.y();
+  int dm3 = d_gridExtents.z();
+  for (int i = 0; i < dm1; i++) {
+    for (int j = 0; j < dm2; j++) {
+      for (int k = 0; k < dm3; k++) {
+        d_charges(i, j, k) = copy(i, j, k);
+      }
+    }
+  }
+  d_gridExtents = copy.d_gridExtents;
+  d_gridOffset = copy.d_gridOffset;
+  d_numGhostCells_ = copy.d_numGhostCells_;
 }
 
 template<typename T>
 bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 {
-  if ((this->gridExtents != gridIn.gridExtents) || (this->gridOffset != gridIn.gridOffset)
-      || (this->numGhostCells != gridIn.numGhostCells)) {
+  if ((this->d_gridExtents != gridIn.d_gridExtents) || (this->d_gridOffset != gridIn.d_gridOffset)
+      || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
     ostringstream ostr;
     ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
     throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -80,59 +99,57 @@ void SimpleGrid<T>::inPlaceFFT_FourierToReal()
 template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
 {
-  SimpleGrid sg();
-  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-        sg[x][y][z] *= gridIn.charges[x][y][z];
+  int xdim = d_gridExtents.x();
+  int ydim = d_gridExtents.y();
+  int zdim = d_gridExtents.z();
+  for (int x = 0; x < xdim; ++x) {
+    for (int y = 0; y < ydim; ++y) {
+      for (int z = 0; z < zdim; ++z) {
+        // FIXME d_charges(x,y,z) *= gridIn.d_charges(x,y,z);
       }
     }
   }
-  return sg;
+  return *this;
 }
 
 template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
 {
-  SimpleGrid sg();
-  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-        sg[x][y][z] += gridIn.charges[x][y][z];
+  int xdim = d_gridExtents.x();
+  int ydim = d_gridExtents.y();
+  int zdim = d_gridExtents.z();
+  for (int x = 0; x < xdim; ++x) {
+    for (int y = 0; y < ydim; ++y) {
+      for (int z = 0; z < zdim; ++z) {
+        d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
       }
     }
   }
-  return sg;
+  return *this;
 }
 
 template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 {
-  SimpleGrid sg();
-  for (unsigned int x = 0; x < gridExtents.x(); ++x) {
-    for (unsigned int y = 0; y < gridExtents.y(); ++y) {
-      for (unsigned int z = 0; z < gridExtents.z(); ++z) {
-        sg[x][y][z] -= gridIn.charges[x][y][z];
+  int xdim = d_gridExtents.x();
+  int ydim = d_gridExtents.y();
+  int zdim = d_gridExtents.z();
+  for (int x = 0; x < xdim; ++x) {
+    for (int y = 0; y < ydim; ++y) {
+      for (int z = 0; z < zdim; ++z) {
+        d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
       }
     }
   }
-  return sg;
-}
-
-// ------------------------------------------------------------------
-
-template<typename T>
-SimpleGrid<T>& SimpleGrid<T>::operator-()
-{
-
+  return *this;
 }
 
 template<typename T>
 std::ostream& SimpleGrid<T>::print(std::ostream& out) const
 {
-  out << "Extent, [x,y,z]: " << this->gridExtents;
-  out << "Offset, [x,y,z]: " << this->gridOffset;
-  out << "GhostCells, [x,y,z]: " << this->gridExtents;
+  out << "Extent, [x,y,z]: " << this->d_gridExtents;
+  out << "Offset, [x,y,z]: " << this->d_gridOffset;
+  out << "GhostCells, [x,y,z]: " << this->d_gridExtents;
   return out;
 }
 
@@ -142,3 +159,11 @@ std::ostream& operator<<(std::ostream& out,
 {
   return sg.print(out);
 }
+
+// Explicit template instantiations:
+template class SimpleGrid<dblcomplex> ;
+template class SimpleGrid<Uintah::Matrix3> ;
+template class SimpleGrid<double> ;
+template class SimpleGrid<SCIRun::Vector> ;
+
+}  // end namespace Uintah
