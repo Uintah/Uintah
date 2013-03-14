@@ -327,14 +327,14 @@ SCI_ARG_WITH(cuda,
   
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
-                 Use the hypre installation in DIR),
+                 Use the hypre installation in DIR.  Set to 'built-in' if explicit linking of hypre is NOT required. ),
   [with_hypre="$withval"
    sci_required_hypre=yes],
   [with_hypre=""])
   
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
-                 Use the petsc installation in DIR),
+                 Use the petsc installation in DIR (or set to 'built-in'). ),
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
@@ -1511,17 +1511,22 @@ case $host in
       CXXFLAGS=" -Wall"
     fi
 
-    # fPIC option for ppc architecture
-    if test `uname -m` = "ppc"; then
-       CFLAGS="-fPIC $CFLAGS"
-       FFLAGS="-fPIC $FFLAGS"
-       CXXFLAGS="-fPIC $CXXFLAGS"
-    fi
-
-    if test "$enable_64bit" = "yes"; then
-       CFLAGS="-fPIC $CFLAGS"
-       FFLAGS="-fPIC $FFLAGS"
-       CXXFLAGS="-fPIC $CXXFLAGS"
+    ######################################
+    #
+    # Set -fPIC as necessary...
+    #
+    if test "$static" != "full"; then
+       if test `uname -m` = "ppc"; then
+          CFLAGS="-fPIC $CFLAGS"
+          FFLAGS="-fPIC $FFLAGS"
+          CXXFLAGS="-fPIC $CXXFLAGS"
+       else
+          if test "$enable_64bit" = "yes"; then
+             CFLAGS="-fPIC $CFLAGS"
+             FFLAGS="-fPIC $FFLAGS"
+             CXXFLAGS="-fPIC $CXXFLAGS"
+          fi
+       fi
     fi
 
     AC_MSG_CHECKING(if special 32/64 bits flags required)
@@ -4256,49 +4261,56 @@ _sci_optional=optional
 if test "$with_hypre" = "no"; then
    AC_MSG_WARN( "Hypre is turned off." )
 else
-   if test "$with_hypre" = "yes"; then
-      _sci_optional=required
-   elif test "$with_hypre"; then
-      _sci_lib="$with_hypre/lib"
-      _sci_inc="$with_hypre/include"
-      _sci_optional=specific
-   fi
+  if test "$with_hypre" = "built-in"; then
+     HAVE_HYPRE="yes"
+     DEF_HYPRE="#define HAVE_HYPRE 1"
+     AC_MSG_WARN(Relying on a built-in version of Hypre)
+  else
 
-   # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-   # # so we aren't going to check for it in any version.  If the other 3
-   # # libs exist, we will assume that HYPRE_blas is there if it is needed.
-   # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-   #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-   #                          $_sci_lib,-lm,,$_sci_optional)
+     if test "$with_hypre" = "yes"; then
+        _sci_optional=required
+     elif test "$with_hypre"; then
+        _sci_lib="$with_hypre/lib"
+        _sci_inc="$with_hypre/include"
+        _sci_optional=specific
+     fi
 
-   # We should just be able to link vs. libHYPRE.so...
-   #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
-   AC_LANG([C++])
-   SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                            HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
-                            $_sci_lib,
-                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                            ,
-                            optional)
+     # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+     # # so we aren't going to check for it in any version.  If the other 3
+     # # libs exist, we will assume that HYPRE_blas is there if it is needed.
+     # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+     #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+     #                          $_sci_lib,-lm,,$_sci_optional)
 
-   if test "$HAVE_HYPRE" != "yes"; then
-      SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                            HYPRE,
-                            $_sci_lib,
-                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                            ,
-                            optional)
-   fi
-   AC_LANG([C])
+     # We should just be able to link vs. libHYPRE.so...
+     #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+     AC_LANG([C++])
+     SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                        HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
+                        $_sci_lib,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        ,
+                        optional)
 
-   if test "$HAVE_HYPRE" = "yes" ; then
-      DEF_HYPRE="#define HAVE_HYPRE 1"
-   fi
+     if test "$HAVE_HYPRE" != "yes"; then
+        SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                           HYPRE,
+                           $_sci_lib,
+                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           ,
+                           optional)
+     fi
+     AC_LANG([C])
 
-   if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-      echo
-      AC_MSG_ERROR(One or more of the HYPRE components is missing.)
-   fi
+     if test "$HAVE_HYPRE" = "yes" ; then
+        DEF_HYPRE="#define HAVE_HYPRE 1"
+     fi
+
+     if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+        echo
+        AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+     fi
+  fi
 fi
 
 AC_SUBST(HAVE_HYPRE)
