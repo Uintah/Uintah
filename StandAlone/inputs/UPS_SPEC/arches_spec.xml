@@ -647,7 +647,9 @@
           <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true. Has the same effect as <use_density_guess> --> 
           <!--                                                -->
           <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/> <!-- Pointer to sources defined elsewhere --> 
+                                        attribute1="label REQUIRED STRING"> <!-- Pointer to sources defined elsewhere --> 
+            <weight                     spec="OPTIONAL DOUBLE"/>            <!-- Multiply by this weight when adding source to the RHS. Default is +1.0. --> 
+          </src>
           <D_mol                        spec="OPTIONAL NO_DATA" 
                                         attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity --> 
           <D_mol_constant               spec="OPTIONAL NO_DATA"
