@@ -148,6 +148,7 @@ private:
 
   struct constCCVarWrapper {
     constCCVariable<double> data; 
+    double sign; 
   };  
 
   bool d_laminar_pr; 

@@ -107,11 +107,22 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   // Source terms:
   if (db->findBlock("src")){
+
     string srcname; 
+    double weight; 
+
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
-      src_db->getAttribute("label", srcname);
+
+      SourceContainer this_src; 
+      double weight; 
+
+      src_db->getAttribute("label",  this_src.name   );
+      src_db->getWithDefault("weight", weight, 1.0);    // by default, add the source to the RHS
+
+      this_src.weight = weight; 
+
       //which sources are turned on for this equation
-      d_sources.push_back( srcname ); 
+      d_sources.push_back( this_src ); 
 
     }
   }
@@ -248,9 +259,9 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
   printTask(patches,dbg,"ScalarEqn::cleanUp");
   //Set the initialization flag for the source label to false.
   SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
- 
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
+  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+
+    SourceTermBase& temp_src = factory.retrieve_source_term( iter->name ); 
   
     temp_src.reinitializeLabel(); 
 
@@ -385,11 +396,11 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
 {
   // This scheduler only calls other schedulers
   SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
 
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
+    SourceTermBase& temp_src = factory.retrieve_source_term( iter->name ); 
 
-    printSchedule(level,dbg,"ScalarEqn::sched_computeSources " + *iter );
+    printSchedule(level,dbg,"ScalarEqn::sched_computeSources " + iter->name );
     temp_src.sched_computeSource( level, sched, timeSubStep );
   }
 }
@@ -424,9 +435,9 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   // srcs
   if (d_addSources) {
     SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_sources.begin(); 
+    for (vector<SourceContainer>::iterator iter = d_sources.begin(); 
          iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
+      SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name ); 
       const VarLabel* temp_varLabel; 
       temp_varLabel = temp_src.getSrcLabel(); 
       tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
@@ -516,10 +527,11 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     vector<constCCVarWrapper> sourceVars; 
     if (d_addSources) { 
       SourceTermFactory& src_factory = SourceTermFactory::self(); 
-      for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+      for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
         constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
-        SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
+        SourceTermBase& temp_src = src_factory.retrieve_source_term( src_iter->name ); 
         new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+        temp_var.sign = (*src_iter).weight; 
         sourceVars.push_back(temp_var); 
       }
     }
@@ -554,7 +566,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       //-----ADD SOURCES
       if (d_addSources) {
         for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
-          RHS[c] += (siter->data)[c] * vol; 
+          RHS[c] += siter->sign * (siter->data)[c] * vol; 
         }
       }
     }
