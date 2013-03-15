@@ -929,7 +929,6 @@
                 <max_iter>1500</max_iter>
               </LinearSolver>
               <ordinates>4</ordinates>
-              <wall_abskg>1.0</wall_abskg>
             </DORadiationModel>
           </src>
 
