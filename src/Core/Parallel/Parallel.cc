@@ -55,7 +55,7 @@ using std::ostringstream;
 static bool            determinedIfUsingMPI = false;
 static bool            initialized = false;
 static bool            usingMPI = false;
-static bool            usingGPU = false;
+static bool            usingDevice = false;
 static int             numThreads = -1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
@@ -86,15 +86,15 @@ Parallel::usingMPI()
 }
 
 bool
-Parallel::usingGPU()
+Parallel::usingDevice()
 {
-  return ::usingGPU;
+  return ::usingDevice;
 }
 
 void
-Parallel::setUsingGPU( bool useGPU )
+Parallel::setUsingDevice( bool state )
 {
-  ::usingGPU = useGPU;
+  ::usingDevice = state;
 }
 
 int

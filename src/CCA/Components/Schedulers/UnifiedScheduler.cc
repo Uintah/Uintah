@@ -92,7 +92,7 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 #endif
 {
 #ifdef HAVE_CUDA
-  if (Uintah::Parallel::usingGPU()) {
+  if (Uintah::Parallel::usingDevice()) {
     gpuInitialize();
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
@@ -177,7 +177,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
-  if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingGPU())) {
+  if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
@@ -332,7 +332,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 
   // For GPU tasks, we will call postMPISends() and done() from execute().
   // This will be after we know a particular task has all D2H copies have completed.
-  if (!task->getTask()->usesGPU()) {
+  if (!task->getTask()->usesDevice()) {
     if (Uintah::Parallel::usingMPI()) {
       postMPISends(task, iteration, t_id);
     }
@@ -411,7 +411,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   // Do the work of the SingleProcessorScheduler and bail if not using MPI or GPU
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingGPU()) {
+  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
     for (int i = 0; i < ntasks; i++) {
       DetailedTask* dtask = dts->getTask(i);
       runTask(dtask, iteration, -1);
@@ -790,7 +790,7 @@ void UnifiedScheduler::runTasks(int t_id)
            *
            * gpuInitReady = true
            */
-          if (readyTask->getTask()->usesGPU()) {
+          if (readyTask->getTask()->usesDevice()) {
             readyTask->assignDevice(currentGPU_);
             currentGPU_++;
             currentGPU_ %= this->numGPUs_;

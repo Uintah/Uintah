@@ -494,12 +494,12 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  if (!tsk->usesGPU()) {
+  if (!tsk->usesDevice()) {
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
-    if (!tsk->usesGPU()) {
+    if (!tsk->usesDevice()) {
       tsk->modifies( d_VRFluxLabel );
       tsk->modifies( d_boundFluxLabel );
       tsk->modifies( d_divQFiltLabel );
@@ -507,7 +507,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   } else {
     tsk->computes( d_divQLabel );
-    if (!tsk->usesGPU()) {
+    if (!tsk->usesDevice()) {
       tsk->computes( d_VRFluxLabel );
       tsk->computes( d_boundFluxLabel );
       tsk->computes( d_divQFiltLabel );

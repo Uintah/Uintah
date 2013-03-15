@@ -266,8 +266,8 @@ void DetailedTask::doit(const ProcessorGroup* pg,
 
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or GPU
-  if (task->usesGPU()) {
-    task->doitGPU(pg, patches, matls, dws, deviceNum_);
+  if (task->usesDevice()) {
+    task->doitDevice(pg, patches, matls, dws, deviceNum_);
   } else {
     task->doit(pg, patches, matls, dws);
   }
