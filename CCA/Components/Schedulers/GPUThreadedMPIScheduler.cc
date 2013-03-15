@@ -75,7 +75,7 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
       dlbLock("loadbalancer lock")
 {
 
-  if (Parallel::usingGPU()) {
+  if (Parallel::usingDevice()) {
     gpuInitialize();
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
@@ -110,7 +110,7 @@ GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler()
     }
   }
 
-  if (Parallel::usingGPU()) {
+  if (Parallel::usingDevice()) {
     clearCudaStreams();
     clearCudaEvents();
   }
@@ -173,7 +173,7 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    cout << "\tWARNING: " << (Uintah::Parallel::usingGPU() ? "GPU " : "") << "Multi-thread/MPI hybrid scheduler is EXPERIMENTAL "
+    cout << "\tWARNING: " << (Uintah::Parallel::usingDevice() ? "GPU " : "") << "Multi-thread/MPI hybrid scheduler is EXPERIMENTAL "
          << "not all tasks are thread safe yet." << endl << "\tUsing 1 thread for scheduling, " << numThreads_
          << " threads for task execution." << endl;
   }
@@ -586,7 +586,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
        * If it's a GPU-enabled task, assign it to a device and initiate it's H2D computes
        * and requires data copies. This is where each GPU task's execution cycle begins.
        */
-      if (dtask->getTask()->usesGPU()) {
+      if (dtask->getTask()->usesDevice()) {
 
         // assigning devices round robin fashion for now
         dtask->assignDevice(currentGPU_);
