@@ -326,14 +326,13 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
     // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
-    bool gpuExternallyReady_;
+    bool deviceExternallyReady_;
     bool completed_;
     int  h2dCopyCount_;
     int  d2hCopyCount_;
     int  deviceNum_;
 
-    // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
-    std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
+    // these lists are needed to attach CUDA calls to the correct stream for a particular GridVariablevariable, etc
     std::vector<cudaStream_t*>  h2dStreams;
     std::vector<cudaStream_t*>  d2hStreams;
     std::vector<cudaEvent_t*>   h2dCopyEvents;
@@ -428,14 +427,14 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
-    void addInitiallyReadyGPUTask(DetailedTask* dtask);
-    void addCompletionPendingGPUTask(DetailedTask* dtask);
-    DetailedTask* getNextInitiallyReadyGPUTask();
-    DetailedTask* getNextCompletionPendingGPUTask();
-    DetailedTask* peekNextInitiallyReadyGPUTask();
-    DetailedTask* peekNextCompletionPendingGPUTask();
-    int numInitiallyReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
-    int numCompletionPendingGPUTasks() { return completionPendingGPUTasks_.size(); }
+    void addInitiallyReadyDeviceTask(DetailedTask* dtask);
+    void addCompletionPendingDeviceTask(DetailedTask* dtask);
+    DetailedTask* getNextInitiallyReadyDeviceTask();
+    DetailedTask* getNextCompletionPendingDeviceTask();
+    DetailedTask* peekNextInitiallyReadyDeviceTask();
+    DetailedTask* peekNextCompletionPendingDeviceTask();
+    int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
+    int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
 #endif
 
   protected:
@@ -515,11 +514,11 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_;     // initially ready, h2d copies pending
-    TaskPQueue completionPendingGPUTasks_;  // execution and d2h copies pending
+    TaskPQueue initiallyReadyDeviceTasks_;     // initially ready, h2d copies pending
+    TaskPQueue completionPendingDeviceTasks_;  // execution and d2h copies pending
 
-    mutable CrowdMonitor  gpuReadyQueueLock_;
-    mutable CrowdMonitor  gpuCompletedQueueLock_;
+    mutable CrowdMonitor  deviceReadyQueueLock_;
+    mutable CrowdMonitor  deviceCompletedQueueLock_;
 #endif
 
   }; // end class DetailedTasks

@@ -78,8 +78,8 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
       readyQueueLock_("DetailedTasks Ready Queue"),
       mpiCompletedQueueLock_("DetailedTasks MPI completed Queue")
 #ifdef HAVE_CUDA
-      ,gpuReadyQueueLock_("DetailedTasks GPU Ready Queue"),
-      gpuCompletedQueueLock_("DetailedTasks GPU Completed Queue")
+      ,deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
+      deviceCompletedQueueLock_("DetailedTasks Device Completed Queue")
 #endif
 //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
@@ -221,7 +221,7 @@ DetailedTask::DetailedTask(Task* task,
     matls->addReference();
   }
 #ifdef HAVE_CUDA
-  gpuExternallyReady_ = false;
+  deviceExternallyReady_ = false;
   completed_ = false;
   h2dCopyCount_ = 0;
   d2hCopyCount_ = 0;
@@ -265,7 +265,7 @@ void DetailedTask::doit(const ProcessorGroup* pg,
   }
 
 #ifdef HAVE_CUDA
-  // determine if task will be executed on CPU or GPU
+  // determine if task will be executed on CPU or device, e.g. GPU or MIC
   if (task->usesDevice()) {
     task->doitDevice(pg, patches, matls, dws, deviceNum_);
   } else {
@@ -1067,7 +1067,7 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
   }
 
   // otherwise this task is ready for execution
-  this->gpuExternallyReady_ = true;
+  this->deviceExternallyReady_ = true;
   return cudaSuccess;
 }
 
@@ -1285,62 +1285,62 @@ int DetailedTasks::numExternalReadyTasks()
 }
 
 #ifdef HAVE_CUDA
-DetailedTask* DetailedTasks::getNextInitiallyReadyGPUTask()
+DetailedTask* DetailedTasks::getNextInitiallyReadyDeviceTask()
 {
   DetailedTask* nextTask = NULL;
-  gpuReadyQueueLock_.writeLock();
-  if (!initiallyReadyGPUTasks_.empty()) {
-    nextTask = initiallyReadyGPUTasks_.top();
-    initiallyReadyGPUTasks_.pop();
+  deviceReadyQueueLock_.writeLock();
+  if (!initiallyReadyDeviceTasks_.empty()) {
+    nextTask = initiallyReadyDeviceTasks_.top();
+    initiallyReadyDeviceTasks_.pop();
   }
-  gpuReadyQueueLock_.writeUnlock();
+  deviceReadyQueueLock_.writeUnlock();
 
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::getNextCompletionPendingGPUTask()
+DetailedTask* DetailedTasks::getNextCompletionPendingDeviceTask()
 {
   DetailedTask* nextTask = NULL;
-  gpuCompletedQueueLock_.writeLock();
-  if (!completionPendingGPUTasks_.empty()) {
-    nextTask = completionPendingGPUTasks_.top();
-    completionPendingGPUTasks_.pop();
+  deviceCompletedQueueLock_.writeLock();
+  if (!completionPendingDeviceTasks_.empty()) {
+    nextTask = completionPendingDeviceTasks_.top();
+    completionPendingDeviceTasks_.pop();
   }
-  gpuCompletedQueueLock_.writeUnlock();
+  deviceCompletedQueueLock_.writeUnlock();
 
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::peekNextInitiallyReadyGPUTask()
+DetailedTask* DetailedTasks::peekNextInitiallyReadyDeviceTask()
 {
-  gpuReadyQueueLock_.readLock();
-  DetailedTask* dtask = initiallyReadyGPUTasks_.top();
-  gpuReadyQueueLock_.readUnlock();
+  deviceReadyQueueLock_.readLock();
+  DetailedTask* dtask = initiallyReadyDeviceTasks_.top();
+  deviceReadyQueueLock_.readUnlock();
 
   return dtask;
 }
 
-DetailedTask* DetailedTasks::peekNextCompletionPendingGPUTask()
+DetailedTask* DetailedTasks::peekNextCompletionPendingDeviceTask()
 {
-  gpuCompletedQueueLock_.readLock();
-  DetailedTask* dtask = completionPendingGPUTasks_.top();
-  gpuCompletedQueueLock_.readUnlock();
+  deviceCompletedQueueLock_.readLock();
+  DetailedTask* dtask = completionPendingDeviceTasks_.top();
+  deviceCompletedQueueLock_.readUnlock();
 
   return dtask;
 }
 
-void DetailedTasks::addInitiallyReadyGPUTask(DetailedTask* dtask)
+void DetailedTasks::addInitiallyReadyDeviceTask(DetailedTask* dtask)
 {
-  gpuReadyQueueLock_.writeLock();
-  initiallyReadyGPUTasks_.push(dtask);
-  gpuReadyQueueLock_.writeUnlock();
+  deviceReadyQueueLock_.writeLock();
+  initiallyReadyDeviceTasks_.push(dtask);
+  deviceReadyQueueLock_.writeUnlock();
 }
 
-void DetailedTasks::addCompletionPendingGPUTask(DetailedTask* dtask)
+void DetailedTasks::addCompletionPendingDeviceTask(DetailedTask* dtask)
 {
-  gpuCompletedQueueLock_.writeLock();
-  completionPendingGPUTasks_.push(dtask);
-  gpuCompletedQueueLock_.writeUnlock();
+  deviceCompletedQueueLock_.writeLock();
+  completionPendingDeviceTasks_.push(dtask);
+  deviceCompletedQueueLock_.writeUnlock();
 }
 #endif
 

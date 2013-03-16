@@ -601,7 +601,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
         }
 
         dtask->markInitiated();
-        dts->addInitiallyReadyGPUTask(dtask);
+        dts->addInitiallyReadyDeviceTask(dtask);
         continue;
       }  // end first stage of GPU task execution cycle
 
@@ -626,17 +626,17 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
      * reclaim the streams and events it used for these operations, execute the task and
      * then put it into the GPU completion-pending queue.
      */
-    else if (dts->numInitiallyReadyGPUTasks() > 0) {
+    else if (dts->numInitiallyReadyDeviceTasks() > 0) {
 
-      DetailedTask* dtask = dts->peekNextInitiallyReadyGPUTask();
+      DetailedTask* dtask = dts->peekNextInitiallyReadyDeviceTask();
       cudaError_t retVal = dtask->checkH2DCopyDependencies();
       if (retVal == cudaSuccess) {
         // all work associated with this task's h2d copies is complete
-        dtask = dts->getNextInitiallyReadyGPUTask();
+        dtask = dts->getNextInitiallyReadyDeviceTask();
 
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Dispatching task " << *dtask << "(" << dts->numInitiallyReadyGPUTasks() << "/"
+          taskdbg << d_myworld->myrank() << " Dispatching task " << *dtask << "(" << dts->numInitiallyReadyDeviceTasks() << "/"
           << pending_tasks.size() << " tasks in queue)" << endl;
           cerrLock.unlock();
           pending_tasks.erase(pending_tasks.find(dtask));
@@ -650,7 +650,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
         // ASSERTEQ(task->getExternalDepCount(), 0);
         runGPUTask(dtask, iteration);
         phaseTasksDone[dtask->getTask()->d_phase]++;
-        dts->addCompletionPendingGPUTask(dtask);
+        dts->addCompletionPendingDeviceTask(dtask);
       }
     }
 
@@ -661,12 +661,12 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
      * have executed and all teh results are back on the host in the DataWarehouse. This task's
      * MPI sends can then be posted and done() can be called.
      */
-    else if (dts->numCompletionPendingGPUTasks() > 0) {
+    else if (dts->numCompletionPendingDeviceTasks() > 0) {
 
-      DetailedTask* dtask = dts->peekNextCompletionPendingGPUTask();
+      DetailedTask* dtask = dts->peekNextCompletionPendingDeviceTask();
       cudaError_t retVal = dtask->checkD2HCopyDependencies();
       if (retVal == cudaSuccess) {
-        dtask = dts->getNextCompletionPendingGPUTask();
+        dtask = dts->getNextCompletionPendingDeviceTask();
         postMPISends(dtask, iteration, 0);  // t_id 0 (the control thread) for centralized threaded scheduler
 
         // recycle streams and events used by the DetailedTask for kernel execution and H2D copies
