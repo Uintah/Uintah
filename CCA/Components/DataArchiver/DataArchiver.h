@@ -181,6 +181,8 @@ using SCIRun::Mutex;
        { return d_lastTimestepLocation; }
 
        bool isLabelSaved( std::string label );
+       void updateOutputInv(double inv);
+       void updateCheckpointInv(double inv);
 
      public:
 

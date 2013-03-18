@@ -238,6 +238,18 @@ AMRSimulationController::run()
 
      delt = delt_var;
 
+     if (d_output && d_sharedState->updateOutputInterval()) {
+       min_vartype outputInv_var;
+       newDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
+       d_output->updateOutputInv(outputInv_var);
+     }
+
+     if (d_output && d_sharedState->updateCheckpointInterval()) {
+       min_vartype checkInv_var;
+       newDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
+       d_output->updateOutputInv(checkInv_var);
+     }
+     
      // delt adjusted based on timeinfo parameters
      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
@@ -989,6 +1001,12 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     task->requires(Task::NewDW, d_sharedState->get_delt_label(), grid->getLevel(i).get_rep());
   }
 
+  if (d_sharedState->updateOutputInterval())
+    task->requires(Task::NewDW, d_sharedState->get_outputInterval_label());
+
+  if (d_sharedState->updateCheckpointInterval())
+    task->requires(Task::NewDW, d_sharedState->get_checkpointInterval_label());
+  
   //coarsen delt computes the global delt variable
   task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
@@ -1031,5 +1049,9 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
  
   if (d_myworld->size() > 1) {
     new_dw->reduceMPI(d_sharedState->get_delt_label() , 0 , 0 , -1 ) ;
+    if (d_sharedState->updateOutputInterval())
+      new_dw->reduceMPI(d_sharedState->get_outputInterval_label() , 0 , 0 , -1 ) ;
+    if (d_sharedState->updateCheckpointInterval())
+      new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label() , 0 , 0 , -1 ) ;
   }
 }

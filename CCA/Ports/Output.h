@@ -143,6 +143,12 @@ class SimulationState;
     // Returns true if the label is being saved
     virtual bool isLabelSaved(std::string label) = 0;
 
+    // update output interval
+    virtual void updateOutputInv(double inv) = 0;
+
+    // update checkpoint interval
+    virtual void updateCheckpointInv(double inv) = 0;
+
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;
