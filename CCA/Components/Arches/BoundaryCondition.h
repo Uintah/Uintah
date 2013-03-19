@@ -208,13 +208,15 @@ namespace Uintah {
 
      void sched_setupBCInletVelocities__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
-                                      const MaterialSet* matls);
+                                      const MaterialSet* matls, 
+                                      bool doing_restart );
 
      void setupBCInletVelocities__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
                                 DataWarehouse*,
-                                DataWarehouse* new_dw);
+                                DataWarehouse* new_dw, 
+                                bool doing_restart );
 
      void sched_setInitProfile__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
