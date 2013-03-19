@@ -59,15 +59,9 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     }
   }
 
-  // Output which electrostatics type that will be used
-  const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
-  if (world->myrank() == 0) {
-    cout << "Electrostatics: \t\t" << type << endl;
-  }
-
   // Check for specific electrostatics request
   if (type == "SPME" || type == "spme") {
-    ProblemSpecP spme_ps = ps->findBlock("Electrostatics");
+    ProblemSpecP spme_ps = ps->findBlock("MD")->findBlock("Electrostatics");
     double ewaldBeta;
     bool polarizable;
     double polTolerance;
@@ -83,6 +77,12 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     electrostatics = scinew SPME(system, ewaldBeta, polarizable, polTolerance, kLimits, splineOrder);
   } else {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
+  }
+
+  // Output which electrostatics type that will be used
+  const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+  if (world->myrank() == 0) {
+    cout << "Electrostatics Method: \t\t" << type << endl;
   }
 
   return electrostatics;
