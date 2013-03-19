@@ -338,6 +338,8 @@ SimulationState::~SimulationState()
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   VarLabel::destroy(switch_label);
+  VarLabel::destroy(checkInv_label);
+  VarLabel::destroy(outputInv_label);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++)
