@@ -460,6 +460,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           CellToValue velocity_comp; 
 
           std::map<string, string>::iterator vel_iter = input_files.find( "uvel" ); 
+          if ( vel_iter == input_files.end() ){ 
+            throw ProblemSetupException("Error: Could not find a velocity file for the u-component (should be named uvel in reference file).", __FILE__, __LINE__);
+          }
           velocity_comp = readInputFile__NEW( vel_iter->second ); 
 
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
@@ -473,6 +476,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           velocity_comp.clear(); 
 
           vel_iter = input_files.find( "vvel" ); 
+          if ( vel_iter == input_files.end() ){ 
+            throw ProblemSetupException("Error: Could not find a velocity file for the v-component (should be named vvel in reference file).", __FILE__, __LINE__);
+          }
           velocity_comp = readInputFile__NEW( vel_iter->second ); 
 
           check_iter = _v_input.find(face_name); 
@@ -486,6 +492,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           velocity_comp.clear(); 
 
           vel_iter = input_files.find( "wvel" ); 
+          if ( vel_iter == input_files.end() ){ 
+            throw ProblemSetupException("Error: Could not find a velocity file for the w-component (should be named wvel in reference file).", __FILE__, __LINE__);
+          }
           velocity_comp = readInputFile__NEW( vel_iter->second ); 
 
           check_iter = _w_input.find(face_name); 
@@ -6982,6 +6991,7 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
     _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
     _intrusionBC->sched_computeProperties( sched, patches, matls ); 
     _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_gatherReductionInformation( sched, patches, matls ); 
     _intrusionBC->sched_printIntrusionInformation( sched, patches, matls ); 
   }
 

@@ -29,9 +29,9 @@
       <save label = "g.mass"/>
       <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
-      <save label = "p.plasticStrain"/>
-      <save label = "p.plasticStrainVol"/>
-      <save label = "p.elasticStrainVol"/>
+      <save label = "p.ep"/>
+      <save label = "p.evp"/>
+      <save label = "p.eve"/>
       <save label = "p.kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
@@ -52,6 +52,7 @@
     <withColor>                     true      </withColor>
     <UsePrescribedDeformation>      true      </UsePrescribedDeformation>
     <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_09_PrescribedDeformation.inp  </PrescribedDeformationFile>
+    <minimum_subcycles_for_F>       -2        </minimum_subcycles_for_F>
     <erosion algorithm = "none"/>
   </MPM>
 
@@ -79,7 +80,7 @@
              <p0_crush_curve> -30e6 </p0_crush_curve>
              <p1_crush_curve> 5.9e-11 </p1_crush_curve>
              <p3_crush_curve> 0.5 </p3_crush_curve>
-             <p4_fluid_effect> 0.0019 </p4_fluid_effect> <!-- 0.0006369 --???-->
+             <p4_fluid_effect> 0.0019 </p4_fluid_effect> <!-- 0.0006369 -->
              <fluid_B0> 2.0e9 </fluid_B0>
              <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
              <subcycling_characteristic_number> 100.0 </subcycling_characteristic_number>

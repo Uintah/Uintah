@@ -59,10 +59,22 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    switch_label = VarLabel::create("switchFlag", 
                                    max_vartype::getTypeDescription());
 
+   VarLabel* nonconstOutputInv = 
+     VarLabel::create("outputInv", min_vartype::getTypeDescription() );
+   nonconstOutputInv->allowMultipleComputes();
+   outputInv_label= nonconstOutputInv;
+   
+   VarLabel* nonconstCheckInv = 
+     VarLabel::create("checkInv", min_vartype::getTypeDescription() );
+   nonconstCheckInv->allowMultipleComputes();
+   checkInv_label= nonconstCheckInv;
+   
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
 
   d_lockstepAMR = false;
+  d_updateOutputInv = false;
+  d_updateCheckInv = false;
   ProblemSpecP amr = ps->findBlock("AMR");
   if (amr)
     amr->get("useLockStep", d_lockstepAMR);
@@ -326,6 +338,8 @@ SimulationState::~SimulationState()
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   VarLabel::destroy(switch_label);
+  VarLabel::destroy(checkInv_label);
+  VarLabel::destroy(outputInv_label);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++)

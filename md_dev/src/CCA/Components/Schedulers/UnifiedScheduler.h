@@ -61,16 +61,16 @@ GENERAL INFORMATION
 
    
 KEYWORDS
-   Task Scheduler, Multi-threaded, CPU, GPU
+   Task Scheduler, Multi-threaded, CPU, GPU, MIC
 
 DESCRIPTION
    This class is meant to be serve as a single, unified, multi-threaded
    Uintah task scheduler to support, schedule and execute solely CPU tasks
-   or both CPU and GPU tasks when enabled.
+   or some combination of CPU, GPU and MIC tasks when enabled.
   
 WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
-   development, not all tasks/components are GPU-enabled and/or thread-safe yet.
+   development, not all tasks/components are GPU/MIC-enabled and/or thread-safe yet.
   
 ****************************************/
   class UnifiedScheduler : public MPIScheduler  {
@@ -220,8 +220,8 @@ WARNING
     vector<queue<cudaStream_t*> >  idleStreams;
     vector<queue<cudaEvent_t*> >   idleEvents;
     set<double*>  pinnedHostPtrs;
-    int           numGPUs_;
-    int           currentGPU_;
+    int           numDevices_;
+    int           currentDevice_;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     mutable CrowdMonitor deviceComputesLock_;

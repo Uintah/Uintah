@@ -80,23 +80,23 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       recvLock("MPI receive Lock")
 #ifdef HAVE_CUDA
       ,
-      deviceComputesLock_("GPU_DB Device computes ptrs lock"),
-      hostComputesLock_("GPU-DB host computes ptrs lock"),
-      deviceRequiresLock_("GPU-DB device requires ptrs lock"),
-      hostRequiresLock_("GPU-DB host requires ptrs lock"),
+      deviceComputesLock_("Device-DB Device computes ptrs lock"),
+      hostComputesLock_("Device-DB host computes ptrs lock"),
+      deviceRequiresLock_("Device-DB device requires ptrs lock"),
+      hostRequiresLock_("Device-DB host requires ptrs lock"),
       idleStreamsLock_("CUDA streams lock"),
       idleEventsLock_("CUDA events lock"),
-      h2dComputesLock_("GPU-DB computes copy lock"),
-      h2dRequiresLock_("GPU-DB requires copy lock")
+      h2dComputesLock_("Device-DB computes copy lock"),
+      h2dRequiresLock_("Device-DB requires copy lock")
 
 #endif
 {
 #ifdef HAVE_CUDA
-  if (Uintah::Parallel::usingGPU()) {
+  if (Uintah::Parallel::usingDevice()) {
     gpuInitialize();
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
-    for (int i = 0; i < numGPUs_; i++) {
+    for (int i = 0; i < numDevices_; i++) {
       idleStreams.push_back(std::queue<cudaStream_t*>());
       idleEvents.push_back(std::queue<cudaEvent_t*>());
     }
@@ -177,7 +177,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
-  if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingGPU())) {
+  if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
@@ -332,7 +332,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 
   // For GPU tasks, we will call postMPISends() and done() from execute().
   // This will be after we know a particular task has all D2H copies have completed.
-  if (!task->getTask()->usesGPU()) {
+  if (!task->getTask()->usesDevice()) {
     if (Uintah::Parallel::usingMPI()) {
       postMPISends(task, iteration, t_id);
     }
@@ -411,7 +411,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   // Do the work of the SingleProcessorScheduler and bail if not using MPI or GPU
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingGPU()) {
+  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
     for (int i = 0; i < ntasks; i++) {
       DetailedTask* dtask = dts->getTask(i);
       runTask(dtask, iteration, -1);
@@ -790,10 +790,10 @@ void UnifiedScheduler::runTasks(int t_id)
            *
            * gpuInitReady = true
            */
-          if (readyTask->getTask()->usesGPU()) {
-            readyTask->assignDevice(currentGPU_);
-            currentGPU_++;
-            currentGPU_ %= this->numGPUs_;
+          if (readyTask->getTask()->usesDevice()) {
+            readyTask->assignDevice(currentDevice_);
+            currentDevice_++;
+            currentDevice_ %= this->numDevices_;
             gpuInitReady = true;
           } else {
 #endif
@@ -849,13 +849,13 @@ void UnifiedScheduler::runTasks(int t_id)
        *
        * gpuRunReady = true
        */
-      else if (dts->numInitiallyReadyGPUTasks() > 0) {
-        readyTask = dts->peekNextInitiallyReadyGPUTask();
+      else if (dts->numInitiallyReadyDeviceTasks() > 0) {
+        readyTask = dts->peekNextInitiallyReadyDeviceTask();
         cudaError_t retVal = readyTask->checkH2DCopyDependencies();
         if (retVal == cudaSuccess) {
           // All of this task's h2d copies is complete, so add it to the completion
           // pending GPU task queue and prepare to run.
-          readyTask = dts->getNextInitiallyReadyGPUTask();
+          readyTask = dts->getNextInitiallyReadyDeviceTask();
           gpuRunReady = true;
           havework = true;
           break;
@@ -871,11 +871,11 @@ void UnifiedScheduler::runTasks(int t_id)
        *
        * gpuPending = true
        */
-      else if (dts->numCompletionPendingGPUTasks() > 0) {
-        readyTask = dts->peekNextCompletionPendingGPUTask();
+      else if (dts->numCompletionPendingDeviceTasks() > 0) {
+        readyTask = dts->peekNextCompletionPendingDeviceTask();
         cudaError_t retVal = readyTask->checkD2HCopyDependencies();
         if (retVal == cudaSuccess) {
-          readyTask = dts->getNextCompletionPendingGPUTask();
+          readyTask = dts->getNextCompletionPendingDeviceTask();
           havework = true;
           gpuPending = true;
           break;
@@ -930,13 +930,13 @@ void UnifiedScheduler::runTasks(int t_id)
         // initiate all asynchronous H2D memory copies for this task's computes and requires
         initiateH2DRequiresCopies(readyTask);
         initiateH2DComputesCopies(readyTask);
-        dts->addInitiallyReadyGPUTask(readyTask);
+        dts->addInitiallyReadyDeviceTask(readyTask);
       } else if (gpuRunReady) {
         // recycle this task's H2D copies streams and events
         reclaimStreams(readyTask, H2D);
         reclaimEvents(readyTask, H2D);
         runTask(readyTask, currentIteration, t_id);
-        dts->addCompletionPendingGPUTask(readyTask);
+        dts->addCompletionPendingDeviceTask(readyTask);
       } else if (gpuPending) {
         // recycle this task's D2H copies streams and events
         reclaimStreams(readyTask, D2H);
@@ -1364,8 +1364,8 @@ int UnifiedScheduler::getAviableThreadNum()
 void UnifiedScheduler::gpuInitialize()
 {
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numGPUs_));
-  currentGPU_ = 0;
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+  currentDevice_ = 0;
 }
 
 void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)

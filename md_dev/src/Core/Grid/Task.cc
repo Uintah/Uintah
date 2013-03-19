@@ -49,7 +49,7 @@ void Task::initialize()
   matl_set = 0;
   d_usesMPI = false;
   d_usesThreads = false;
-  d_usesGPU = false;
+  d_usesDevice = false;
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
 
@@ -66,14 +66,14 @@ Task::ActionBase::~ActionBase()
 {
 }
 
-Task::ActionGPUBase::~ActionGPUBase()
+Task::ActionDeviceBase::~ActionDeviceBase()
 {
 }
 
 Task::~Task()
 {
   delete d_action;
-  delete d_actionGPU;
+  delete d_actionDevice;
 
   Dependency* dep = req_head;
   while(dep){
@@ -158,9 +158,9 @@ Task::usesThreads(bool state)
 }
 
 void
-Task::usesGPU(bool state)
+Task::usesDevice(bool state)
 {
-  d_usesGPU = state;
+  d_usesDevice = state;
 }
 
 void
@@ -818,16 +818,16 @@ Task::doit(const ProcessorGroup* pg,
 }
 
 void
-Task::doitGPU(const ProcessorGroup* pg,
-              const PatchSubset* patches,
-              const MaterialSubset* matls,
-              vector<DataWarehouseP>& dws,
-              int device)
+Task::doitDevice(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      vector<DataWarehouseP>& dws,
+                      int device)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-  if(d_actionGPU) {
-    d_actionGPU->doitGPU(pg, patches, matls, fromDW, toDW, device);
+  if(d_actionDevice) {
+    d_actionDevice->doitDevice(pg, patches, matls, fromDW, toDW, device);
   }
 }
 

@@ -124,12 +124,12 @@ WARNING
       static void noThreading();
 
       //////////
-      // Returns true if this process is to use GPUs, false otherwise
-      static bool usingGPU();
+      // Returns true if this process is to use an accelerator or co-processor (e.g. GPU, MIC, etc), false otherwise
+      static bool usingDevice();
 
       //////////
-      // Sets whether or not to use available GPUs
-      static void setUsingGPU( bool state );
+      // Sets whether or not to use available accelerators or co-processors (e.g. GPU, MIC, etc)
+      static void setUsingDevice( bool state );
 
       //////////
       // Returns the number of threads that a processing element is

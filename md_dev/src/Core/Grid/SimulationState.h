@@ -112,6 +112,13 @@ public:
     return switch_label;
   }
 
+  const VarLabel* get_outputInterval_label() const {
+    return outputInv_label;
+  }
+
+  const VarLabel* get_checkpointInterval_label() const {
+    return checkInv_label;
+  }
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
   void registerMPMMaterial(MPMMaterial*,unsigned int index);
@@ -225,6 +232,11 @@ public:
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
   bool isLockstepAMR() { return d_lockstepAMR; }
+  
+  bool updateOutputInterval() { return d_updateOutputInv; }
+  void updateOutputInterval(bool ans) { d_updateOutputInv = ans; }
+  bool updateCheckpointInterval() { return d_updateCheckInv; }
+  void updateCheckpointInterval(bool ans) { d_updateCheckInv = ans; }
 
   int getNumDims() { return d_numDims; }
   int* getActiveDims() { return d_activeDims; }
@@ -248,6 +260,8 @@ public:
   SimulationTime* d_simTime;
 
   bool d_lockstepAMR;
+  bool d_updateCheckInv;
+  bool d_updateOutputInv;
 
   // timing statistics to test load balance
   void clearStats();
@@ -283,6 +297,8 @@ private:
   const VarLabel* oldRefineFlag_label;
   const VarLabel* refinePatchFlag_label;
   const VarLabel* switch_label;
+  const VarLabel* outputInv_label;
+  const VarLabel* checkInv_label;
 
   std::vector<Material*>        matls;
   std::vector<MPMMaterial*>     mpm_matls;

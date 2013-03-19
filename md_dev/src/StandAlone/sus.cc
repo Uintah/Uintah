@@ -288,7 +288,6 @@ main( int argc, char *argv[], char *env[] )
   string udaDir; // for restart or combine_patches
   bool   restartFromScratch = true;
   bool   restartRemoveOldDir = false;
-//bool   useScheduler3 = false;
   int    numThreads = 0;
   string filename;
   string solver;
@@ -370,7 +369,7 @@ main( int argc, char *argv[], char *env[] )
       restartRemoveOldDir = true;
 #ifdef HAVE_CUDA
     } else if(arg == "-gpu") {
-        Uintah::Parallel::setUsingGPU(true);
+        Uintah::Parallel::setUsingDevice(true);
 #endif
     } else if(arg == "-t") {
       if (i < argc-1) {

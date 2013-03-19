@@ -75,7 +75,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
           throw ProblemSetupException("Cannot use Single Processor Scheduler with MPI.", __FILE__, __LINE__);
         } else if (Threaded.active() || Threaded2.active() || GPU.active()) {
           throw ProblemSetupException("Cannot run Threaded Schedulers without -nthreads <num>.", __FILE__, __LINE__);
-        } else if (GPU.active() && !(Uintah::Parallel::usingGPU())) {
+        } else if (GPU.active() && !(Uintah::Parallel::usingDevice())) {
           throw ProblemSetupException("Cannot use GPU Scheduler without configuring with --enable-cuda.", __FILE__, __LINE__);
         } else if (DynamicMPI.active()) {
           scheduler = "DynamicMPIScheduler";

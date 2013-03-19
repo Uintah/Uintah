@@ -12,7 +12,7 @@ from matplotlib import rc
 import matplotlib.pyplot as plt
 from matplotlib import ticker 
 
-SHOW_ON_MAKE = False
+SHOW_ON_MAKE = FALSE
 
 #Useful constants
 sqrtThree = np.sqrt(3.0)
@@ -138,6 +138,7 @@ def get_pStress(uda_path):
   print "Extracting stress history..."
   args = ["partextract","-partvar","p.stress",uda_path]
   F_stress = tempfile.TemporaryFile()
+  #F_stress = open("./tempStressFileOut.txt","w+")
   #open(os.path.split(uda_path)[0]+'/stressHistory.dat',"w+")
   tmp = sub_proc.Popen(args,stdout=F_stress,stderr=sub_proc.PIPE)
   dummy = tmp.wait()
@@ -236,7 +237,7 @@ def get_pPlasticStrainVol(uda_path):
   FAIL_NAN = False
   #Extract stress history
   print "Extracting plasticStrainVol history..."
-  args = ["partextract","-partvar","p.plasticStrainVol",uda_path]
+  args = ["partextract","-partvar","p.evp",uda_path]
   F_plasticStrainVol = tempfile.TemporaryFile()
   #open(os.path.split(uda_path)[0]+'/plasticStrainVolHistory.dat',"w+")
   tmp = sub_proc.Popen(args,stdout=F_plasticStrainVol,stderr=sub_proc.PIPE)
@@ -254,14 +255,14 @@ def get_pPlasticStrainVol(uda_path):
       FAIL_NAN = True
   F_plasticStrainVol.close()
   if FAIL_NAN:
-    print "\ERROR: 'nan' encountered while retrieving p.plasticStrainVol, will not plot correctly."  
+    print "\ERROR: 'nan' encountered while retrieving p.evp, will not plot correctly."  
   return times,plasticStrainVol  
 
 def get_pElasticStrainVol(uda_path):
   FAIL_NAN = False
   #Extract elastic strain history
   print "Extracting elasticStrainVol history..."
-  args = ["partextract","-partvar","p.elasticStrainVol",uda_path]
+  args = ["partextract","-partvar","p.eve",uda_path]
   F_elasticStrainVol = tempfile.TemporaryFile()
   #open(os.path.split(uda_path)[0]+'/elasticStrainVolHistory.dat',"w+")
   tmp = sub_proc.Popen(args,stdout=F_elasticStrainVol,stderr=sub_proc.PIPE)
@@ -279,7 +280,7 @@ def get_pElasticStrainVol(uda_path):
       FAIL_NAN = True
   F_elasticStrainVol.close()
   if FAIL_NAN:
-    print "\ERROR: 'nan' encountered while retrieving p.elasticStrainVol, will not plot correctly."
+    print "\ERROR: 'nan' encountered while retrieving p.eve, will not plot correctly."
   return times,elasticStrainVol  
 
 def get_totalStrainVol(uda_path):
@@ -702,7 +703,7 @@ def test01_postProc(uda_path,save_path,**kwargs):
   plt.ylabel(str_to_mathbf('\sigma_{xx} (Pa)')) 
   plt.title('AreniscaTest 01:\nUniaxial Compression With Rotation')
   plt.legend()
-  savePNG(save_path+'/Test01_verificationPlot','1280x960')
+  #savePNG(save_path+'/Test01_verificationPlot','1280x960')
   if SHOW_ON_MAKE:
     plt.show()
   

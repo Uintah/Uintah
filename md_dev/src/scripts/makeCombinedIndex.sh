@@ -1,16 +1,17 @@
-#! /bin/sh
+#! /bin/bash
 
 # makeCombinedIndex.sh creates a list of timesteps from multiple UDAs that can be 
 # used in a single index.xml file to refer to multiple UDA directories.
 #
 # Run makeCombinedIndex.sh in the directory containing the UDAs of interest.
 
-if test $# == 0 || test $1 == "-h" -o $1 == "--h" -o $1 == "--help" -o $1 == "-help"; then
+if test $# -eq 0 || test "$1" == "-h" -o "$1" == "--h" -o "$1" == "--help" -o "$1" == "-help"; then
    echo ""
    echo "Usage: $0 <UDAs>"
    echo ""
    exit
 fi
+
 
 for dir in $*; do
 

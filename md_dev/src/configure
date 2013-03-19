@@ -1705,8 +1705,10 @@ Optional Packages:
                           Use this additional library(or libraries - comma
                           separated) for mpi linking
 --with-cuda=DIR         Use the CUDA installation in DIR
---with-hypre=DIR        Use the hypre installation in DIR
---with-petsc=DIR        Use the petsc installation in DIR
+--with-hypre=DIR        Use the hypre installation in DIR. Set to 'built-in'
+                          if explicit linking of hypre is NOT required.
+--with-petsc=DIR        Use the petsc installation in DIR (or set to
+                          'built-in').
 --with-boost=DIR        Use the Boost library in DIR
 --with-spatialops=DIR   Use the SpatialOps library in DIR
 --with-exprlib=DIR      Use the ExprLib library in DIR
@@ -7839,17 +7841,22 @@ $as_echo "no ($_SCI_REPORT_)" >&6; }
       CXXFLAGS=" -Wall"
     fi
 
-    # fPIC option for ppc architecture
-    if test `uname -m` = "ppc"; then
-       CFLAGS="-fPIC $CFLAGS"
-       FFLAGS="-fPIC $FFLAGS"
-       CXXFLAGS="-fPIC $CXXFLAGS"
-    fi
-
-    if test "$enable_64bit" = "yes"; then
-       CFLAGS="-fPIC $CFLAGS"
-       FFLAGS="-fPIC $FFLAGS"
-       CXXFLAGS="-fPIC $CXXFLAGS"
+    ######################################
+    #
+    # Set -fPIC as necessary...
+    #
+    if test "$static" != "full"; then
+       if test `uname -m` = "ppc"; then
+          CFLAGS="-fPIC $CFLAGS"
+          FFLAGS="-fPIC $FFLAGS"
+          CXXFLAGS="-fPIC $CXXFLAGS"
+       else
+          if test "$enable_64bit" = "yes"; then
+             CFLAGS="-fPIC $CFLAGS"
+             FFLAGS="-fPIC $FFLAGS"
+             CXXFLAGS="-fPIC $CXXFLAGS"
+          fi
+       fi
     fi
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking if special 32/64 bits flags required" >&5
@@ -45340,24 +45347,31 @@ if test "$with_hypre" = "no"; then
    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"Hypre is turned off.\" " >&5
 $as_echo "$as_me: WARNING: \"Hypre is turned off.\" " >&2;}
 else
-   if test "$with_hypre" = "yes"; then
-      _sci_optional=required
-   elif test "$with_hypre"; then
-      _sci_lib="$with_hypre/lib"
-      _sci_inc="$with_hypre/include"
-      _sci_optional=specific
-   fi
+  if test "$with_hypre" = "built-in"; then
+     HAVE_HYPRE="yes"
+     DEF_HYPRE="#define HAVE_HYPRE 1"
+     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Relying on a built-in version of Hypre" >&5
+$as_echo "$as_me: WARNING: Relying on a built-in version of Hypre" >&2;}
+  else
 
-   # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-   # # so we aren't going to check for it in any version.  If the other 3
-   # # libs exist, we will assume that HYPRE_blas is there if it is needed.
-   # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-   #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-   #                          $_sci_lib,-lm,,$_sci_optional)
+     if test "$with_hypre" = "yes"; then
+        _sci_optional=required
+     elif test "$with_hypre"; then
+        _sci_lib="$with_hypre/lib"
+        _sci_inc="$with_hypre/include"
+        _sci_optional=specific
+     fi
 
-   # We should just be able to link vs. libHYPRE.so...
-   #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
-   ac_ext=cpp
+     # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+     # # so we aren't going to check for it in any version.  If the other 3
+     # # libs exist, we will assume that HYPRE_blas is there if it is needed.
+     # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+     #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+     #                          $_sci_lib,-lm,,$_sci_optional)
+
+     # We should just be able to link vs. libHYPRE.so...
+     #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+     ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -45802,7 +45816,7 @@ _sci_includes=''
 
 
 
-   if test "$HAVE_HYPRE" != "yes"; then
+     if test "$HAVE_HYPRE" != "yes"; then
 
 ##
 ## SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
@@ -46241,22 +46255,23 @@ _sci_includes=''
 ##
 
 
-   fi
-   ac_ext=c
+     fi
+     ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-   if test "$HAVE_HYPRE" = "yes" ; then
-      DEF_HYPRE="#define HAVE_HYPRE 1"
-   fi
+     if test "$HAVE_HYPRE" = "yes" ; then
+        DEF_HYPRE="#define HAVE_HYPRE 1"
+     fi
 
-   if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-      echo
-      as_fn_error $? "One or more of the HYPRE components is missing." "$LINENO" 5
-   fi
+     if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+        echo
+        as_fn_error $? "One or more of the HYPRE components is missing." "$LINENO" 5
+     fi
+  fi
 fi
 
 

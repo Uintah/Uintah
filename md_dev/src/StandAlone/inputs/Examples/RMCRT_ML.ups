@@ -24,7 +24,7 @@
                             <value> 0. </value> 
         </BCType> 
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                            <value> 0. </value>
+                            <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side = "x+">
@@ -32,7 +32,7 @@
                            <value> 0. </value>                
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+                           <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -40,7 +40,7 @@
                            <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+                           <value> 1.0 </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
@@ -48,7 +48,7 @@
                             <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+                           <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side = "z-">
@@ -56,7 +56,7 @@
                            <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+                           <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side = "z+">
@@ -64,7 +64,7 @@
                            <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+                           <value> 1.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>

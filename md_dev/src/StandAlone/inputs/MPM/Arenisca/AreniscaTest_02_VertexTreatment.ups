@@ -29,8 +29,8 @@
       <save label = "g.mass"/>
       <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
-      <save label = "p.plasticStrainVol"/>
-      <save label = "p.elasticStrainVol"/>
+      <save label = "p.evp"/>
+      <save label = "p.eve"/>
       <save label = "p.kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
@@ -51,6 +51,7 @@
     <withColor>                    true      </withColor>
     <UsePrescribedDeformation>     true      </UsePrescribedDeformation>
     <PrescribedDeformationFile>    inputs/MPM/Arenisca/AreniscaTest_02_PrescribedDeformation.inp  </PrescribedDeformationFile>
+    <minimum_subcycles_for_F>       -2       </minimum_subcycles_for_F>
     <erosion algorithm = "none"/>
   </MPM>
 
