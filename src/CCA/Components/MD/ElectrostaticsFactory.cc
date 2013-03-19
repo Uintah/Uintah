@@ -45,7 +45,7 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
   Electrostatics* electrostatics = 0;
   string type = "";
 
-  ProblemSpecP electrostatics_ps = ps->findBlock("Electrostatics");
+  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Electrostatics");
   if (electrostatics_ps) {
     electrostatics_ps->getAttribute("type", type);
   }
