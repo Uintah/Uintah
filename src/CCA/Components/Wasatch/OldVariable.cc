@@ -186,13 +186,21 @@ namespace Wasatch {
     VarHelperBase* const vh = new VarHelper<T>(var);
     typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
 
-    wasatch_->graph_categories()[category]->exprFactory->register_expression( new PlaceHolder( vh->old_var_name() ), false );
+    Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);
+    
+    // if this expression has already been registered, then return
+    if( factory.have_entry( vh->old_var_name() ) )
+      return;
+      
+    factory.register_expression( new PlaceHolder( vh->old_var_name() ), false );
 
     varHelpers_.push_back( vh );
 
     // don't allow the ExpressionTree to reclaim memory for this field since
     // it will need to be seen by the task that copies it to the "old" value.
-    wasatch_->locked_fields().insert( var.name() );
+    if ( wasatch_->locked_fields().find( var.name() ) != wasatch_->locked_fields().end() )  {
+      wasatch_->locked_fields().insert( var.name() );
+    }
   }
 
   //------------------------------------------------------------------

@@ -29,12 +29,14 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/StringNames.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
+#include <CCA/Components/Wasatch/OldVariable.h>
 
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
@@ -344,7 +346,7 @@ namespace Wasatch{
                   Uintah::SolverInterface& linSolver )
   {
     const Expr::Tag momTag = mom_tag( momName );
-    const Expr::Tag rhsFull( momTag.name() + "_rhs_full", Expr::STATE_NONE );
+    const Expr::Tag rhsFullTag( momTag.name() + "_rhs_full", Expr::STATE_NONE );
     bool  enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     
     Expr::Tag volFracTag = Expr::Tag();
@@ -363,7 +365,7 @@ namespace Wasatch{
       default:
         break;
     }    
-    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) , volFracTag ) );
+    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFullTag, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) , volFracTag ) );
   }
 
   //==================================================================
@@ -418,6 +420,18 @@ namespace Wasatch{
     Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? vNames.xvol_frac_tag() : Expr::Tag();
     Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? vNames.yvol_frac_tag() : Expr::Tag();
     Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? vNames.zvol_frac_tag() : Expr::Tag();
+
+    //__________________
+    // old variables
+    const StringNames& sName = StringNames::self();
+    const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
+//
+//    OldVariable& oldVar = OldVariable::self();
+//    Expr::Tag rhsFullTag = Expr::Tag( thisMomTag.name() + "_rhs_full", Expr::STATE_NONE );
+//    Expr::Tag rhsFullOldTag = Expr::Tag( thisMomTag.name() + "_rhs_full_old", Expr::STATE_NONE );
+//    oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, rhsFullTag);
+//    Expr::Tag timeDerivTag("d_" + rhsFullTag.name() + "_dt", Expr::STATE_NONE);
+//    factory.register_expression( new typename TimeDerivative<FieldT>::Builder(timeDerivTag,rhsFullTag,rhsFullOldTag,timestepTag));
 
     //__________________
     // dilatation
@@ -580,10 +594,7 @@ namespace Wasatch{
         if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
         if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
         if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
-        
-        const StringNames& sName = StringNames::self();
-        const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
-        
+                
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
