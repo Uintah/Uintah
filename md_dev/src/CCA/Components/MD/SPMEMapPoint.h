@@ -84,7 +84,7 @@ class SPMEMapPoint {
      */
     inline const particleIndex getParticleID() const
     {
-      return this->particleID;
+      return d_particleID;
     }
 
     /**
@@ -94,7 +94,7 @@ class SPMEMapPoint {
      */
     inline const IntVector getGridOffset() const
     {
-      return this->gridOffset;
+      return d_gridOffset;
     }
 
     /**
@@ -104,7 +104,7 @@ class SPMEMapPoint {
      */
     inline const SimpleGrid<double>& getChargeGrid() const
     {
-      return this->chargeGrid;
+      return d_chargeGrid;
     }
 
     /**
@@ -114,15 +114,15 @@ class SPMEMapPoint {
      */
     inline const SimpleGrid<SCIRun::Vector>& getForceGrid() const
     {
-      return this->forceGrid;
+      return d_forceGrid;
     }
 
   private:
 
-    particleIndex particleID;
-    IntVector gridOffset;
-    SimpleGrid<double> chargeGrid;
-    SimpleGrid<SCIRun::Vector> forceGrid;
+    particleIndex d_particleID;
+    IntVector d_gridOffset;
+    SimpleGrid<double> d_chargeGrid;
+    SimpleGrid<SCIRun::Vector> d_forceGrid;
 
 };
 

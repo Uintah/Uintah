@@ -41,7 +41,7 @@ SPMEMapPoint::SPMEMapPoint(particleIndex _particleID,
                            IntVector _gridOffset,
                            SimpleGrid<double> _chargeGrid,
                            SimpleGrid<SCIRun::Vector> _forceGrid) :
-    particleID(_particleID), gridOffset(_gridOffset), chargeGrid(_chargeGrid), forceGrid(_forceGrid)
+    d_particleID(_particleID), d_gridOffset(_gridOffset), d_chargeGrid(_chargeGrid), d_forceGrid(_forceGrid)
 {
 
 }

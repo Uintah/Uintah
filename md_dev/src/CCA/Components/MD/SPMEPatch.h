@@ -77,7 +77,7 @@ class SPMEPatch {
      */
     inline IntVector getLocalExtents() const
     {
-      return this->localExtents;
+      return d_localExtents;
     }
 
     /**
@@ -87,7 +87,7 @@ class SPMEPatch {
      */
     inline IntVector getGlobalOffset() const
     {
-      return this->globalOffset;
+      return d_globalOffset;
     }
 
     /**
@@ -97,7 +97,7 @@ class SPMEPatch {
      */
     inline IntVector getPosGhostExtents() const
     {
-      return this->posGhostExtents;
+      return d_posGhostExtents;
     }
 
     /**
@@ -107,7 +107,7 @@ class SPMEPatch {
      */
     inline IntVector getNegGhostExtents() const
     {
-      return this->negGhostExtents;
+      return d_negGhostExtents;
     }
 
     /**
@@ -117,7 +117,7 @@ class SPMEPatch {
      */
     inline SimpleGrid<double> getTheta() const
     {
-      return this->theta;
+      return d_theta;
     }
 
     /**
@@ -127,7 +127,7 @@ class SPMEPatch {
      */
     inline void setTheta(SimpleGrid<double> theta)
     {
-      this->theta = theta;
+      d_theta = theta;
     }
 
     /**
@@ -137,7 +137,7 @@ class SPMEPatch {
      */
     inline SimpleGrid<Matrix3> getStressPrefactor() const
     {
-      return this->stressPrefactor;
+      return d_stressPrefactor;
     }
 
     /**
@@ -147,7 +147,7 @@ class SPMEPatch {
      */
     inline void setStressPrefactor(SimpleGrid<Matrix3> stressPrefactor)
     {
-      this->stressPrefactor = stressPrefactor;
+      d_stressPrefactor = stressPrefactor;
     }
 
     /**
@@ -157,7 +157,7 @@ class SPMEPatch {
      */
     inline SimpleGrid<complex<double> > getQ() const
     {
-      return this->Q;
+      return Q;
     }
 
     /**
@@ -167,7 +167,7 @@ class SPMEPatch {
      */
     inline void setQ(SimpleGrid<complex<double> > q)
     {
-      this->Q = q;
+      Q = q;
     }
 
     /**
@@ -177,7 +177,7 @@ class SPMEPatch {
      */
     inline ParticleSubset* getPset() const
     {
-      return this->pset;
+      return d_pset;
     }
 
     /**
@@ -187,28 +187,29 @@ class SPMEPatch {
      */
     inline void setPset(ParticleSubset* pset)
     {
-      this->pset = pset;
+      d_pset = pset;
     }
 
   private:
 
-    SPMEPatch(const SPMEPatch& patch);
-    SPMEPatch& operator=(const SPMEPatch& patch);
-
     // Patch dependent quantities
-    IntVector localExtents;       //!< Number of grid points in each direction for this patch
-    IntVector globalOffset;       //!< Grid point index of local 0,0,0 origin in global coordinates
+    IntVector d_localExtents;       //!< Number of grid points in each direction for this patch
+    IntVector d_globalOffset;       //!< Grid point index of local 0,0,0 origin in global coordinates
 
     // Store the number of ghost cells  along each of the min/max boundaries
     // This lets us differentiate should we need to for centered and  left/right shifted splines
-    IntVector posGhostExtents;    //!< Number of ghost cells on positive boundary
-    IntVector negGhostExtents;     //!< Number of ghost cells on negative boundary
+    IntVector d_posGhostExtents;    //!< Number of ghost cells on positive boundary
+    IntVector d_negGhostExtents;     //!< Number of ghost cells on negative boundary
 
-    SimpleGrid<double> theta;             //!<
-    SimpleGrid<Matrix3> stressPrefactor;  //!<
+    SimpleGrid<double> d_theta;             //!<
+    SimpleGrid<Matrix3> d_stressPrefactor;  //!<
     SimpleGrid<complex<double> > Q;       //!<
 
-    ParticleSubset* pset;                 //!<
+    ParticleSubset* d_pset;                 //!<
+
+    SPMEPatch(const SPMEPatch& patch);
+    SPMEPatch& operator=(const SPMEPatch& patch);
+
 };
 
 }  // End namespace Uintah

@@ -66,14 +66,14 @@ static DebugStream md_spme("MDSPME", false);
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
 {
-  lb = scinew MDLabel();
+  d_lb = scinew MDLabel();
 }
 
 MD::~MD()
 {
-  delete lb;
-  delete system;
-  delete electrostatics;
+  delete d_lb;
+  delete d_system;
+  delete d_electrostatics;
 }
 
 void MD::problemSetup(const ProblemSpecP& params,
@@ -83,36 +83,36 @@ void MD::problemSetup(const ProblemSpecP& params,
 {
   printTask(md_cout, "MD::problemSetup");
 
-  sharedState = shared_state;
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  d_sharedState = shared_state;
+  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_lb->pXLabel);
   ProblemSpecP md_ps = params->findBlock("MD");
 
-  md_ps->get("coordinateFile", coordinateFile);
-  md_ps->get("numAtoms", numAtoms);
-  md_ps->get("boxSize", box);
-  md_ps->get("cutoffRadius", cutoffRadius);
+  md_ps->get("coordinateFile", d_coordinateFile);
+  md_ps->get("numAtoms", d_numAtoms);
+  md_ps->get("boxSize", d_box);
+  md_ps->get("cutoffRadius", d_cutoffRadius);
   md_ps->get("R12", R12);
   md_ps->get("R6", R6);
 
   // create and populate the MD System object
-  system = scinew MDSystem(md_ps);
+  d_system = scinew MDSystem(md_ps);
 
   // create the Electrostatics object via factory method
-  electrostatics = ElectrostaticsFactory::create(params, system);
+  d_electrostatics = ElectrostaticsFactory::create(params, d_system);
 
   // create and register MD materials (this is ill defined right now)
-  material = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(material);
+  d_material = scinew SimpleMaterial();
+  d_sharedState->registerSimpleMaterial(d_material);
 
   // register permanent particle state; for relocation, etc
-  registerPermanentParticleState(material);
+  registerPermanentParticleState(d_material);
 
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
 
   // for neighbor indices; one list for each atom
-  for (unsigned int i = 0; i < numAtoms; i++) {
-    neighborList.push_back(vector<int>(0));
+  for (unsigned int i = 0; i < d_numAtoms; i++) {
+    d_neighborList.push_back(vector<int>(0));
   }
 
   // create neighbor list for each atom in the system
@@ -125,16 +125,16 @@ void MD::scheduleInitialize(const LevelP& level,
   printSchedule(level, md_cout, "MD::scheduleInitialize");
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
-  task->computes(lb->pXLabel);
-  task->computes(lb->pForceLabel);
-  task->computes(lb->pAccelLabel);
-  task->computes(lb->pVelocityLabel);
-  task->computes(lb->pEnergyLabel);
-  task->computes(lb->pMassLabel);
-  task->computes(lb->pChargeLabel);
-  task->computes(lb->pParticleIDLabel);
-  task->computes(lb->vdwEnergyLabel);
-  sched->addTask(task, level->eachPatch(), sharedState->allMaterials());
+  task->computes(d_lb->pXLabel);
+  task->computes(d_lb->pForceLabel);
+  task->computes(d_lb->pAccelLabel);
+  task->computes(d_lb->pVelocityLabel);
+  task->computes(d_lb->pEnergyLabel);
+  task->computes(d_lb->pMassLabel);
+  task->computes(d_lb->pChargeLabel);
+  task->computes(d_lb->pParticleIDLabel);
+  task->computes(d_lb->vdwEnergyLabel);
+  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -143,9 +143,9 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
   printSchedule(level, md_cout, "MD::scheduleComputeStableTimestep");
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
-  task->requires(Task::NewDW, lb->vdwEnergyLabel);
-  task->computes(sharedState->get_delt_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState->allMaterials());
+  task->requires(Task::NewDW, d_lb->vdwEnergyLabel);
+  task->computes(d_sharedState->get_delt_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 void MD::scheduleTimeAdvance(const LevelP& level,
@@ -154,15 +154,15 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   printSchedule(level, md_cout, "MD::scheduleTimeAdvance");
 
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = sharedState->allMaterials();
+  const MaterialSet* matls = d_sharedState->allMaterials();
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
   schedulePerformSPME(sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, sharedState->d_particleState_preReloc, lb->pXLabel,
-                                    sharedState->d_particleState, lb->pParticleIDLabel, matls, 1);
+  sched->scheduleParticleRelocation(level, d_lb->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_lb->pXLabel,
+                                    d_sharedState->d_particleState, d_lb->pParticleIDLabel, matls, 1);
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
@@ -175,13 +175,13 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
 
   if (pg->myrank() == 0) {
     sum_vartype vdwEnergy;
-    new_dw->get(vdwEnergy, lb->vdwEnergyLabel);
+    new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << "Total Energy = " << std::setprecision(16) << vdwEnergy << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << std::endl;
   }
-  new_dw->put(delt_vartype(1), sharedState->get_delt_label(), getLevel(patches));
+  new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
 }
 
 void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
@@ -192,14 +192,14 @@ void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
 
   Task* task = scinew Task("MD::calculateNonBondedForces", this, &MD::calculateNonBondedForces);
 
-  task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
 
-  task->computes(lb->pForceLabel_preReloc);
-  task->computes(lb->pEnergyLabel_preReloc);
-  task->computes(lb->vdwEnergyLabel);
+  task->computes(d_lb->pForceLabel_preReloc);
+  task->computes(d_lb->pEnergyLabel_preReloc);
+  task->computes(d_lb->vdwEnergyLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -223,16 +223,16 @@ void MD::schedulePerformSPME(SchedulerP& sched,
 
   Task* task = scinew Task("performSPME", this, &MD::performSPME);
 
-  task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
-  task->computes(lb->pXLabel_preReloc);
-  task->computes(lb->pForceLabel_preReloc);
-  task->computes(lb->pChargeLabel_preReloc);
-  task->computes(lb->pParticleIDLabel_preReloc);
+  task->computes(d_lb->pXLabel_preReloc);
+  task->computes(d_lb->pForceLabel_preReloc);
+  task->computes(d_lb->pChargeLabel_preReloc);
+  task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
 }
@@ -245,21 +245,21 @@ void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   Task* task = scinew Task("interpolateToParticlesAndUpdate", this, &MD::interpolateToParticlesAndUpdate);
 
-  task->requires(Task::OldDW, lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
-  task->computes(lb->pXLabel_preReloc);
-  task->computes(lb->pAccelLabel_preReloc);
-  task->computes(lb->pVelocityLabel_preReloc);
-  task->computes(lb->pMassLabel_preReloc);
-  task->computes(lb->pChargeLabel_preReloc);
-  task->computes(lb->pParticleIDLabel_preReloc);
+  task->computes(d_lb->pXLabel_preReloc);
+  task->computes(d_lb->pAccelLabel_preReloc);
+  task->computes(d_lb->pVelocityLabel_preReloc);
+  task->computes(d_lb->pMassLabel_preReloc);
+  task->computes(d_lb->pChargeLabel_preReloc);
+  task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
 }
@@ -267,16 +267,16 @@ void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 void MD::extractCoordinates()
 {
   std::ifstream inputFile;
-  inputFile.open(coordinateFile.c_str());
+  inputFile.open(d_coordinateFile.c_str());
   if (!inputFile.is_open()) {
-    string message = "\tCannot open input file: " + coordinateFile;
+    string message = "\tCannot open input file: " + d_coordinateFile;
     throw ProblemSetupException(message, __FILE__, __LINE__);
   }
 
   // do file IO to extract atom coordinates
   string line;
   unsigned int numRead;
-  for (unsigned int i = 0; i < numAtoms; i++) {
+  for (unsigned int i = 0; i < d_numAtoms; i++) {
     // get the atom coordinates
     getline(inputFile, line);
     double x, y, z;
@@ -286,7 +286,7 @@ void MD::extractCoordinates()
       throw ProblemSetupException(message, __FILE__, __LINE__);
     }
     Point pnt(x, y, z);
-    atomList.push_back(pnt);
+    d_atomList.push_back(pnt);
   }
   inputFile.close();
 }
@@ -295,26 +295,26 @@ void MD::generateNeighborList()
 {
   double r2;
   Vector reducedCoordinates;
-  double cut_sq = cutoffRadius * cutoffRadius;
-  for (unsigned int i = 0; i < numAtoms; i++) {
-    for (unsigned int j = 0; j < numAtoms; j++) {
+  double cut_sq = d_cutoffRadius * d_cutoffRadius;
+  for (unsigned int i = 0; i < d_numAtoms; i++) {
+    for (unsigned int j = 0; j < d_numAtoms; j++) {
       if (i != j) {
         // the vector distance between atom i and j
-        reducedCoordinates = atomList[i] - atomList[j];
+        reducedCoordinates = d_atomList[i] - d_atomList[j];
 
         // this is required for periodic boundary conditions
-        reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+        reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
 
         // eliminate atoms outside of cutoff radius, add those within as neighbors
-        if ((fabs(reducedCoordinates[0]) < cutoffRadius) && (fabs(reducedCoordinates[1]) < cutoffRadius)
-            && (fabs(reducedCoordinates[2]) < cutoffRadius)) {
+        if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
+            && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
           r2 = sqrt(reducedX + reducedY + reducedZ);
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
-            neighborList[i].push_back(j);
+            d_neighborList[i].push_back(j);
           }
         }
       }
@@ -327,17 +327,17 @@ bool MD::isNeighbor(const Point* atom1,
 {
   double r2;
   Vector reducedCoordinates;
-  double cut_sq = cutoffRadius * cutoffRadius;
+  double cut_sq = d_cutoffRadius * d_cutoffRadius;
 
   // the vector distance between atom 1 and 2
   reducedCoordinates = *atom1 - *atom2;
 
   // this is required for periodic boundary conditions
-  reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+  reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
 
   // check if outside of cutoff radius
-  if ((fabs(reducedCoordinates[0]) < cutoffRadius) && (fabs(reducedCoordinates[1]) < cutoffRadius)
-      && (fabs(reducedCoordinates[2]) < cutoffRadius)) {
+  if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
+      && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
     r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
     return r2 < cut_sq;
   }
@@ -353,7 +353,7 @@ void MD::initialize(const ProcessorGroup* pg,
   printTask(patches, md_cout, "MD::initialize");
 
   // initialize electrostatics object
-  electrostatics->initialize(patches, matls, old_dw, new_dw);
+  d_electrostatics->initialize(patches, matls, old_dw, new_dw);
 
   // loop through all patches
   unsigned int numPatches = patches->size();
@@ -380,21 +380,21 @@ void MD::initialize(const ProcessorGroup* pg,
 
       // eventually we'll need to use PFS for this
       vector<Point> localAtoms;
-      for (unsigned int i = 0; i < numAtoms; i++) {
-        if (containsAtom(low, high, atomList[i])) {
-          localAtoms.push_back(atomList[i]);
+      for (unsigned int i = 0; i < d_numAtoms; i++) {
+        if (containsAtom(low, high, d_atomList[i])) {
+          localAtoms.push_back(d_atomList[i]);
         }
       }
 
       ParticleSubset* pset = new_dw->createParticleSubset(localAtoms.size(), matl, patch);
-      new_dw->allocateAndPut(px, lb->pXLabel, pset);
-      new_dw->allocateAndPut(pforce, lb->pForceLabel, pset);
-      new_dw->allocateAndPut(paccel, lb->pAccelLabel, pset);
-      new_dw->allocateAndPut(pvelocity, lb->pVelocityLabel, pset);
-      new_dw->allocateAndPut(penergy, lb->pEnergyLabel, pset);
-      new_dw->allocateAndPut(pmass, lb->pMassLabel, pset);
-      new_dw->allocateAndPut(pcharge, lb->pChargeLabel, pset);
-      new_dw->allocateAndPut(pids, lb->pParticleIDLabel, pset);
+      new_dw->allocateAndPut(px, d_lb->pXLabel, pset);
+      new_dw->allocateAndPut(pforce, d_lb->pForceLabel, pset);
+      new_dw->allocateAndPut(paccel, d_lb->pAccelLabel, pset);
+      new_dw->allocateAndPut(pvelocity, d_lb->pVelocityLabel, pset);
+      new_dw->allocateAndPut(penergy, d_lb->pEnergyLabel, pset);
+      new_dw->allocateAndPut(pmass, d_lb->pMassLabel, pset);
+      new_dw->allocateAndPut(pcharge, d_lb->pChargeLabel, pset);
+      new_dw->allocateAndPut(pids, d_lb->pParticleIDLabel, pset);
 
       int numParticles = pset->numParticles();
       for (int i = 0; i < numParticles; i++) {
@@ -406,7 +406,7 @@ void MD::initialize(const ProcessorGroup* pg,
         penergy[i] = 0.0;
         pmass[i] = 2.5;
         pcharge[i] = 0.0;
-        pids[i] = patch->getID() * numAtoms + i;
+        pids[i] = patch->getID() * d_numAtoms + i;
 
         // TODO update this with new VarLabels
         if (md_dbg.active()) {
@@ -422,37 +422,37 @@ void MD::initialize(const ProcessorGroup* pg,
         }
       }
     }
-    new_dw->put(sum_vartype(0.0), lb->vdwEnergyLabel);
+    new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
   }
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)
 {
   // load up the ParticleVariables we want to register for relocation
-  particleState_preReloc.push_back(lb->pForceLabel_preReloc);
-  particleState.push_back(lb->pForceLabel);
+  d_particleState_preReloc.push_back(d_lb->pForceLabel_preReloc);
+  d_particleState.push_back(d_lb->pForceLabel);
 
-  particleState_preReloc.push_back(lb->pAccelLabel_preReloc);
-  particleState.push_back(lb->pAccelLabel);
+  d_particleState_preReloc.push_back(d_lb->pAccelLabel_preReloc);
+  d_particleState.push_back(d_lb->pAccelLabel);
 
-  particleState_preReloc.push_back(lb->pVelocityLabel_preReloc);
-  particleState.push_back(lb->pVelocityLabel);
+  d_particleState_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
+  d_particleState.push_back(d_lb->pVelocityLabel);
 
-  particleState_preReloc.push_back(lb->pEnergyLabel_preReloc);
-  particleState.push_back(lb->pEnergyLabel);
+  d_particleState_preReloc.push_back(d_lb->pEnergyLabel_preReloc);
+  d_particleState.push_back(d_lb->pEnergyLabel);
 
-  particleState_preReloc.push_back(lb->pMassLabel_preReloc);
-  particleState.push_back(lb->pMassLabel);
+  d_particleState_preReloc.push_back(d_lb->pMassLabel_preReloc);
+  d_particleState.push_back(d_lb->pMassLabel);
 
-  particleState_preReloc.push_back(lb->pChargeLabel_preReloc);
-  particleState.push_back(lb->pChargeLabel);
+  d_particleState_preReloc.push_back(d_lb->pChargeLabel_preReloc);
+  d_particleState.push_back(d_lb->pChargeLabel);
 
-  particleState_preReloc.push_back(lb->pParticleIDLabel_preReloc);
-  particleState.push_back(lb->pParticleIDLabel);
+  d_particleState_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
+  d_particleState.push_back(d_lb->pParticleIDLabel);
 
   // register the particle states with the shared SimulationState for persistence across timesteps
-  sharedState->d_particleState_preReloc.push_back(particleState_preReloc);
-  sharedState->d_particleState.push_back(particleState);
+  d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
+  d_sharedState->d_particleState.push_back(d_particleState);
 }
 
 void MD::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -472,14 +472,14 @@ void MD::performSPME(const ProcessorGroup* pg,
 {
   printTask(patches, md_cout, "MD::performSPME");
 
-  if (system->newBox()) {
-    electrostatics->setup();
-    system->changeBox(false);
+  if (d_system->newBox()) {
+    d_electrostatics->setup();
+    d_system->changeBox(false);
   }
 
-  electrostatics->calculate();
+  d_electrostatics->calculate();
 
-  electrostatics->finalize();
+  d_electrostatics->finalize();
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,
@@ -509,16 +509,16 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
       constParticleVariable<Vector> pforce;
       constParticleVariable<double> penergy;
       constParticleVariable<long64> pids;
-      old_dw->get(px, lb->pXLabel, pset);
-      old_dw->get(penergy, lb->pEnergyLabel, pset);
-      old_dw->get(pforce, lb->pForceLabel, pset);
-      old_dw->get(pids, lb->pParticleIDLabel, pset);
+      old_dw->get(px, d_lb->pXLabel, pset);
+      old_dw->get(penergy, d_lb->pEnergyLabel, pset);
+      old_dw->get(pforce, d_lb->pForceLabel, pset);
+      old_dw->get(pids, d_lb->pParticleIDLabel, pset);
 
       // computes variables
       ParticleVariable<Vector> pforcenew;
       ParticleVariable<double> penergynew;
-      new_dw->allocateAndPut(penergynew, lb->pEnergyLabel_preReloc, pset);
-      new_dw->allocateAndPut(pforcenew, lb->pForceLabel_preReloc, pset);
+      new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
+      new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, pset);
 
       unsigned int numParticles = pset->numParticles();
       for (unsigned int i = 0; i < numParticles; i++) {
@@ -537,15 +537,15 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
 
         // loop over the neighbors of atom "i"
         unsigned int idx;
-        unsigned int numNeighbors = neighborList[i].size();
+        unsigned int numNeighbors = d_neighborList[i].size();
         for (unsigned int j = 0; j < numNeighbors; j++) {
-          idx = neighborList[i][j];
+          idx = d_neighborList[i][j];
 
           // the vector distance between atom i and j
           reducedCoordinates = px[i] - px[idx];
 
           // this is required for periodic boundary conditions
-          reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+          reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
@@ -611,7 +611,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
     }  // end materials loop
 
     // global reduction on
-    new_dw->put(sum_vartype(vdwEnergy), lb->vdwEnergyLabel);
+    new_dw->put(sum_vartype(vdwEnergy), d_lb->vdwEnergyLabel);
 
   }  // end patch loop
 
@@ -646,13 +646,13 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
       constParticleVariable<double> pmass;
       constParticleVariable<double> pcharge;
       constParticleVariable<long64> pids;
-      old_dw->get(px, lb->pXLabel, lpset);
-      old_dw->get(pforce, lb->pForceLabel, lpset);
-      old_dw->get(paccel, lb->pAccelLabel, lpset);
-      old_dw->get(pvelocity, lb->pVelocityLabel, lpset);
-      old_dw->get(pmass, lb->pMassLabel, lpset);
-      old_dw->get(pcharge, lb->pChargeLabel, lpset);
-      old_dw->get(pids, lb->pParticleIDLabel, lpset);
+      old_dw->get(px, d_lb->pXLabel, lpset);
+      old_dw->get(pforce, d_lb->pForceLabel, lpset);
+      old_dw->get(paccel, d_lb->pAccelLabel, lpset);
+      old_dw->get(pvelocity, d_lb->pVelocityLabel, lpset);
+      old_dw->get(pmass, d_lb->pMassLabel, lpset);
+      old_dw->get(pcharge, d_lb->pChargeLabel, lpset);
+      old_dw->get(pids, d_lb->pParticleIDLabel, lpset);
 
       // computes variables
       ParticleVariable<Point> pxnew;
@@ -661,16 +661,16 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
       ParticleVariable<double> pmassnew;
       ParticleVariable<double> pchargenew;
       ParticleVariable<long64> pidsnew;
-      new_dw->allocateAndPut(pxnew, lb->pXLabel_preReloc, lpset);
-      new_dw->allocateAndPut(paccelnew, lb->pAccelLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pmassnew, lb->pMassLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pchargenew, lb->pChargeLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pidsnew, lb->pParticleIDLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pxnew, d_lb->pXLabel_preReloc, lpset);
+      new_dw->allocateAndPut(paccelnew, d_lb->pAccelLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pvelocitynew, d_lb->pVelocityLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pmassnew, d_lb->pMassLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pidsnew, d_lb->pParticleIDLabel_preReloc, lpset);
 
       // get delT
       delt_vartype delT;
-      old_dw->get(delT, sharedState->get_delt_label(), getLevel(patches));
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
 
       // loop over the local atoms
       unsigned int localNumParticles = lpset->numParticles();

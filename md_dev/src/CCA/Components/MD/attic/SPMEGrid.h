@@ -135,7 +135,7 @@ template<class T> class SPMEGrid {
                              const int& y,
                              const int& z)
    {
-     return this->d_field(x,y,z);
+     return d_field(x,y,z);
    }
 
    /**
@@ -149,7 +149,7 @@ template<class T> class SPMEGrid {
                              const int& y,
                              const int& z) const
    {
-     return this->d_field(x, y, z);
+     return d_field(x, y, z);
    }
 
   private:

@@ -49,31 +49,31 @@ CenteredCardinalBSpline::~CenteredCardinalBSpline()
 }
 
 CenteredCardinalBSpline::CenteredCardinalBSpline(const int order) :
-    splineOrder(order)
+    d_splineOrder(order)
 {
   // For ease of use, we actually generate quantities to calculate the spline
   //   of order SplineOrder - 1
-  basisShifts = generateBasisShifts(order - 1);
-  prefactorValues = generatePrefactorValues(order - 1);
-  prefactorMap = generatePrefactorMap(order - 1, basisShifts);
+  d_basisShifts = generateBasisShifts(order - 1);
+  d_prefactorValues = generatePrefactorValues(order - 1);
+  d_prefactorMap = generatePrefactorMap(order - 1, d_basisShifts);
 
 #ifdef DEBUG
   std::cout << " Basis Shifts: " << std::endl;
-  for (size_t idx = 0; idx < basisShifts.size(); ++idx) {
+  for (size_t idx = 0; idx < d_basisShifts.size(); ++idx) {
     std::cout << std::setw(5) << idx;
   }
   std::cout << std::endl;
-  for (size_t idx = 0; idx < basisShifts.size(); ++idx) {
-    std::cout << std::setw(5) << basisShifts[idx];
+  for (size_t idx = 0; idx < d_basisShifts.size(); ++idx) {
+    std::cout << std::setw(5) << d_basisShifts[idx];
   }
   std::cout << std::endl;
   std::cout << " Prefactor Values: " << std::endl;
-  for (size_t idx = 0; idx < prefactorValues.size(); ++idx) {
+  for (size_t idx = 0; idx < d_prefactorValues.size(); ++idx) {
     std::cout << std::setw(10) << idx;
   }
   std::cout << std::endl;
-  for (size_t idx = 0; idx < prefactorValues.size(); ++idx) {
-    std::cout << std::setw(10) << std::setprecision(5) << prefactorValues[idx];
+  for (size_t idx = 0; idx < d_prefactorValues.size(); ++idx) {
+    std::cout << std::setw(10) << std::setprecision(5) << d_prefactorValues[idx];
   }
   std::cout << std::endl;
   std::cout << " Prefactor Map: " << std::endl;
@@ -82,7 +82,7 @@ CenteredCardinalBSpline::CenteredCardinalBSpline(const int order) :
   for (int pass = 0; pass < order - 1; ++pass) {
     std::cout << " Order " << std::setw(3) << pass << ": ";
     for (size_t termidx = 0; termidx < terms; ++termidx) {
-      std::cout << std::setw(5) << prefactorMap[origin + termidx];
+      std::cout << std::setw(5) << d_prefactorMap[origin + termidx];
     }
     std::cout << std::endl;
     origin += terms;
@@ -97,18 +97,18 @@ std::vector<double> CenteredCardinalBSpline::evaluate(const double x) const
   assert(x >= -1.0 && x <= 0.0);
 
   std::vector<double> subSpline;
-  if (splineOrder % 2 == 1) {
-    subSpline = evaluateInternal(x + 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
+  if (d_splineOrder % 2 == 1) {
+    subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
   } else {
-    subSpline = evaluateInternal(x - 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
+    subSpline = evaluateInternal(x - 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
   }
 
-  int leftQ = 2 * leftSupport(x, splineOrder);
-  double leftPrefactor = static_cast<double>(splineOrder + leftQ + 1) / 2.0 + x;
-  double rightPrefactor = static_cast<double>(splineOrder - leftQ + 1) / 2.0 - x;
+  int leftQ = 2 * leftSupport(x, d_splineOrder);
+  double leftPrefactor = static_cast<double>(d_splineOrder + leftQ + 1) / 2.0 + x;
+  double rightPrefactor = static_cast<double>(d_splineOrder - leftQ + 1) / 2.0 - x;
 
   std::vector<double> fullSpline;
-  double scale = 1.0 / (static_cast<double>(splineOrder));
+  double scale = 1.0 / (static_cast<double>(d_splineOrder));
 
   // X is at the edge of the support, so X-1/2 contributes 0
   fullSpline.push_back(scale * (leftPrefactor * subSpline[0]));
@@ -131,7 +131,7 @@ std::vector<double> CenteredCardinalBSpline::derivative(const double x) const
 {
   // Expect standardized input between -1.0 and 0.0 (inclusive)
   assert(x >= -1.0 && x <= 0.0);
-  std::vector<double> subSpline = evaluateInternal(x + 0.5, splineOrder - 1, basisShifts, prefactorMap, prefactorValues);
+  std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
 
   std::vector<double> splineDeriv;
 

@@ -52,7 +52,7 @@ SPME::SPME()
 SPME::~SPME()
 {
   std::vector<SPMEPatch*>::iterator iter;
-  for (iter = spmePatches.begin(); iter != spmePatches.end(); iter++) {
+  for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
     delete *iter;
   }
 }
@@ -63,10 +63,10 @@ SPME::SPME(MDSystem* system,
            const double tolerance,
            const IntVector& kLimits,
            const int splineOrder) :
-    system(system), ewaldBeta(ewaldBeta), polarizable(isPolarizable), polarizationTolerance(tolerance), kLimits(kLimits)
+    d_system(system), d_ewaldBeta(ewaldBeta), d_polarizable(isPolarizable), d_polarizationTolerance(tolerance), d_kLimits(kLimits)
 {
-  interpolatingSpline = CenteredCardinalBSpline(splineOrder);
-  electrostaticMethod = Electrostatics::SPME;
+  d_interpolatingSpline = CenteredCardinalBSpline(splineOrder);
+  d_electrostaticMethod = Electrostatics::SPME;
 }
 
 //-----------------------------------------------------------------------------
@@ -79,14 +79,14 @@ void SPME::initialize(const PatchSubset* patches,
   int material = 0;  // single material for now
 
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
-  spmePatches.reserve(patches->size());
+  d_spmePatches.reserve(patches->size());
 
   // Get useful information from global system descriptor to work with locally.
-  unitCell = system->getUnitCell();
-  inverseUnitCell = system->getInverseCell();
-  systemVolume = system->getVolume();
+  d_unitCell = d_system->getUnitCell();
+  d_inverseUnitCell = d_system->getInverseCell();
+  d_systemVolume = d_system->getVolume();
 
-  int numGhostCells = system->getNumGhostCells();
+  int numGhostCells = d_system->getNumGhostCells();
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -99,16 +99,16 @@ void SPME::initialize(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(material, patch);
     SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents);
     spmePatch->setPset(pset);
-    spmePatches.push_back(spmePatch);
+    d_spmePatches.push_back(spmePatch);
   }
 }
 
 void SPME::setup()
 {
-  size_t numPatches = spmePatches.size();
+  size_t numPatches = d_spmePatches.size();
   for (size_t p = 0; p < numPatches; p++) {
 
-    SPMEPatch* patch = spmePatches[p];
+    SPMEPatch* patch = d_spmePatches[p];
     IntVector extents = patch->getLocalExtents();
     IntVector offsets = patch->getGlobalOffset();
 
@@ -143,13 +143,13 @@ void SPME::calculate()
 
   bool converged = false;
   int numIterations = 0;
-  int maxIterations = system->getMaxIterations();
+  int maxIterations = d_system->getMaxIterations();
   while (!converged && (numIterations < maxIterations)) {
 
-    size_t numPatches = spmePatches.size();
+    size_t numPatches = d_spmePatches.size();
     for (size_t p = 0; p < numPatches; p++) {
 
-      SPMEPatch* patch = spmePatches[p];
+      SPMEPatch* patch = d_spmePatches[p];
 
       SimpleGrid<complex<double> > Q = patch->getQ();
       Q.initialize(complex<double>(0.0, 0.0));
@@ -157,9 +157,9 @@ void SPME::calculate()
       SimpleGrid<Matrix3> stressPrefactor = patch->getStressPrefactor();
 
       ParticleSubset* pset = patch->getPset();
-      std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, interpolatingSpline);
+      std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, d_interpolatingSpline);
 
-      SPME::mapChargeToGrid(gridMap, pset, interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
+      SPME::mapChargeToGrid(gridMap, pset, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
       // Map the local patch's charge grid into the global grid and transform
 //      SPME::GlobalMPIReduceChargeGrid(Ghost::AroundNodes);  //Ghost points should get transferred here
@@ -197,7 +197,7 @@ void SPME::calculate()
       //  This may need to be before we transform the charge grid back to real space if we can calculate
       //    polarizability from the fourier space component
       converged = true;
-      if (polarizable) {
+      if (d_polarizable) {
         // calculate polarization here
         // if (RMSPolarizationDifference > PolarizationTolerance) { ElectrostaticsConverged = false; }
         std::cerr << "Error:  Polarization not currently implemented!";
@@ -248,18 +248,18 @@ std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>&
 SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
                                         const IntVector& globalOffset) const
 {
-  size_t Limit_Kx = kLimits.x();
-  size_t Limit_Ky = kLimits.y();
-  size_t Limit_Kz = kLimits.z();
+  size_t Limit_Kx = d_kLimits.x();
+  size_t Limit_Ky = d_kLimits.y();
+  size_t Limit_Kz = d_kLimits.z();
 
-  std::vector<double> mf1 = SPME::generateMFractionalVector(Limit_Kx, interpolatingSpline);
-  std::vector<double> mf2 = SPME::generateMFractionalVector(Limit_Ky, interpolatingSpline);
-  std::vector<double> mf3 = SPME::generateMFractionalVector(Limit_Kz, interpolatingSpline);
+  std::vector<double> mf1 = SPME::generateMFractionalVector(Limit_Kx, d_interpolatingSpline);
+  std::vector<double> mf2 = SPME::generateMFractionalVector(Limit_Ky, d_interpolatingSpline);
+  std::vector<double> mf3 = SPME::generateMFractionalVector(Limit_Kz, d_interpolatingSpline);
 
   // localExtents is without ghost grid points
-  std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), interpolatingSpline);
-  std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), interpolatingSpline);
-  std::vector<dblcomplex> b3 = generateBVector(mf3, globalOffset.z(), localExtents.z(), interpolatingSpline);
+  std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
+  std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), d_interpolatingSpline);
+  std::vector<dblcomplex> b3 = generateBVector(mf3, globalOffset.z(), localExtents.z(), d_interpolatingSpline);
 
   SimpleGrid<double> BGrid(localExtents, globalOffset, 0);  // No ghost cells; internal only
 
@@ -284,9 +284,9 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
 SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
                                         const IntVector& offset) const
 {
-  std::vector<double> mp1 = SPME::generateMPrimeVector(kLimits.x(), interpolatingSpline);
-  std::vector<double> mp2 = SPME::generateMPrimeVector(kLimits.y(), interpolatingSpline);
-  std::vector<double> mp3 = SPME::generateMPrimeVector(kLimits.z(), interpolatingSpline);
+  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
+  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
+  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
 
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
@@ -298,8 +298,8 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
-  double invBeta2 = 1.0 / (ewaldBeta * ewaldBeta);
-  double invVolFactor = 1.0 / (systemVolume * PI);
+  double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
+  double invVolFactor = 1.0 / (d_systemVolume * PI);
 
   SimpleGrid<double> CGrid(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
@@ -308,7 +308,7 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
         if (kX != 0 || kY != 0 || kZ != 0) {
           SCIRun::Vector m(mp1[kX + xOffset], mp2[kY + yOffset], mp3[kZ + zOffset]);
 
-          m = m * inverseUnitCell;
+          m = m * d_inverseUnitCell;
 
           double M2 = m.length2();
           double factor = PI2 * M2 * invBeta2;
@@ -324,9 +324,9 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
 SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
                                                    const IntVector& offset)
 {
-  std::vector<double> mp1 = SPME::generateMPrimeVector(kLimits.x(), interpolatingSpline);
-  std::vector<double> mp2 = SPME::generateMPrimeVector(kLimits.y(), interpolatingSpline);
-  std::vector<double> mp3 = SPME::generateMPrimeVector(kLimits.z(), interpolatingSpline);
+  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
+  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
+  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
 
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
@@ -338,7 +338,7 @@ SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
-  double invBeta2 = 1.0 / (ewaldBeta * ewaldBeta);
+  double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
 
   SimpleGrid<Matrix3> stressPre(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
@@ -346,7 +346,7 @@ SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
         if (kX != 0 || kY != 0 || kZ != 0) {
           SCIRun::Vector m(mp1[kX + XOffset], mp2[kY + YOffset], mp3[kZ + ZOffset]);
-          m = m * inverseUnitCell;
+          m = m * d_inverseUnitCell;
           double M2 = m.length2();
           Matrix3 localStressContribution(-2.0 * (1.0 + PI2 * M2 * invBeta2) / M2);
 
@@ -388,7 +388,7 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     SCIRun::Vector particleGridCoordinates;
 
     //Calculate reduced coordinates of point to recast into charge grid
-    particleGridCoordinates = (position.asVector()) * inverseUnitCell;
+    particleGridCoordinates = (position.asVector()) * d_inverseUnitCell;
     // ** NOTE: JBH --> We may want to do this with a bit more thought eventually, since multiplying by the InverseUnitCell
     //                  is expensive if the system is orthorhombic, however it's not clear it's more expensive than dropping
     //                  to call MDSystem->IsOrthorhombic() and then branching the if statement appropriately.
@@ -398,7 +398,7 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     SCIRun::Vector kReal, splineValues;
     IntVector particleGridOffset;
     for (size_t idx = 0; idx < 3; ++idx) {
-      kReal[idx] = (kLimits.asVector())[idx];  //static_cast<double>(kLimits[idx]);  // For some reason I can't construct a Vector from an IntVector -- Maybe we should fix that instead?
+      kReal[idx] = (d_kLimits.asVector())[idx];  //static_cast<double>(kLimits[idx]);  // For some reason I can't construct a Vector from an IntVector -- Maybe we should fix that instead?
       particleGridCoordinates[idx] *= kReal[idx];         // Recast particle into charge grid based representation
       particleGridOffset[idx] = static_cast<int>(particleGridCoordinates[idx]);  // Reference grid point for particle
       splineValues[idx] = particleGridOffset[idx] - particleGridCoordinates[idx];  // spline offset for spline function

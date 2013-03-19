@@ -72,7 +72,7 @@ class MDSystem {
      */
     inline double getVolume() const
     {
-      return this->d_volume;
+      return d_volume;
     }
 
     /**
@@ -82,7 +82,7 @@ class MDSystem {
      */
     inline bool getPressure() const
     {
-      return this->d_pressure;
+      return d_pressure;
     }
 
     /**
@@ -92,7 +92,7 @@ class MDSystem {
      */
     inline bool getTemperature() const
     {
-      return this->d_temperature;
+      return d_temperature;
     }
 
     /**
@@ -102,7 +102,7 @@ class MDSystem {
      */
     inline int getNumGhostCells() const
     {
-      return this->d_numGhostCells;
+      return d_numGhostCells;
     }
 
     /**
@@ -112,7 +112,7 @@ class MDSystem {
      */
     inline int getMaxIterations() const
     {
-      return this->d_maxIterations;
+      return d_maxIterations;
     }
 
     /**
@@ -122,7 +122,7 @@ class MDSystem {
      */
     inline bool isOrthorhombic() const
     {
-      return this->d_orthorhombic;
+      return d_orthorhombic;
     }
 
     /**
@@ -132,7 +132,7 @@ class MDSystem {
      */
     inline bool newBox() const
     {
-      return this->d_changeBox;
+      return d_changeBox;
     }
 
     /**
@@ -142,7 +142,7 @@ class MDSystem {
      */
     inline void changeBox(bool value)
     {
-      this->d_changeBox = value;
+      d_changeBox = value;
     }
 
     /**
@@ -152,7 +152,7 @@ class MDSystem {
      */
     inline Matrix3 getUnitCell() const
     {
-      return this->d_unitCell;
+      return d_unitCell;
     }
 
     /**
@@ -162,7 +162,7 @@ class MDSystem {
      */
     inline Matrix3 getInverseCell() const
     {
-      return this->d_inverseCell;
+      return d_inverseCell;
     }
 
   private:

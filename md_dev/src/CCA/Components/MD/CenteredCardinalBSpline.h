@@ -133,7 +133,7 @@ class CenteredCardinalBSpline {
      */
     inline int getOrder() const
     {
-      return this->splineOrder;
+      return d_splineOrder;
     }
 
     /*
@@ -143,7 +143,7 @@ class CenteredCardinalBSpline {
      */
     inline int getMaxSupport() const
     {
-      return (this->splineOrder + 1) / 2;
+      return (d_splineOrder + 1) / 2;
     }
 
     /*
@@ -153,7 +153,7 @@ class CenteredCardinalBSpline {
      */
     inline int getHalfMaxSupport() const
     {
-      return (this->splineOrder + 1) / 4;
+      return (d_splineOrder + 1) / 4;
     }
 
     /**
@@ -163,10 +163,10 @@ class CenteredCardinalBSpline {
      */
     inline CenteredCardinalBSpline& operator=(const CenteredCardinalBSpline& spline)
     {
-      splineOrder = spline.splineOrder;
-      basisShifts = spline.basisShifts;
-      prefactorValues = spline.prefactorValues;
-      prefactorMap = spline.prefactorMap;
+      d_splineOrder = spline.d_splineOrder;
+      d_basisShifts = spline.d_basisShifts;
+      d_prefactorValues = spline.d_prefactorValues;
+      d_prefactorMap = spline.d_prefactorMap;
 
       return *this;
     }
@@ -205,12 +205,12 @@ class CenteredCardinalBSpline {
 
   private:
 
-    int splineOrder;
+    int d_splineOrder;                          //!<
 
     // For calculating values of the spline
-    std::vector<int> basisShifts;             //!<
-    std::vector<double> prefactorValues;      //!<
-    std::vector<int> prefactorMap;            //!<
+    std::vector<int> d_basisShifts;             //!<
+    std::vector<double> d_prefactorValues;      //!<
+    std::vector<int> d_prefactorMap;            //!<
 
     std::vector<int> generateBasisShifts(const int);
 

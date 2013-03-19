@@ -55,7 +55,7 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     if (SPMEDBG.active()) {
       type = "SPME";
     } else {
-      throw ProblemSetupException("Must specify Electrostatics type in input file.", __FILE__, __LINE__);
+      throw ProblemSetupException("Must specify Electrostatics type in input file ", __FILE__, __LINE__);
     }
   }
 
