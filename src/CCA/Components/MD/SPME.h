@@ -41,7 +41,6 @@ namespace Uintah {
 using namespace SCIRun;
 
 typedef std::complex<double> dblcomplex;
-typedef SimpleGrid<complex<double> > cdGrid;
 
 class MDSystem;
 class SPMEMapPoint;

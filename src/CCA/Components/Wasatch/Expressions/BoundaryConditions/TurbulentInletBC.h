@@ -135,23 +135,22 @@ timePeriod_(timePeriod)
   getValue(ifs,minC_[0]);
   getValue(ifs,minC_[1]);
   getValue(ifs,minC_[2]);
+  int nPts;
+  getValue(ifs,nPts);
   
   fluct_.resize(NT_,vector< vector<double> >(jSize_,vector<double>(kSize_)));
-  int dummyVar;
+  int t,j,k;
   double u,v,w;
-  for (int t = 0; t<NT_; t++) {
-    for(int j = 0; j<jSize_; j++) {
-      for (int k = 0; k<kSize_; k++) {
-        getValue(ifs,dummyVar);
-        getValue(ifs,dummyVar);
-        getValue(ifs,dummyVar);
-        getValue(ifs,u);
-        getValue(ifs,v);
-        getValue(ifs,w);
-        fluct_[t][j][k] = (velDir_.compare("X")==0) ? u : (velDir_.compare("Y")==0 ? v : w);
-      }
-    }
+  for (int n = 0; n<nPts; n++) {
+    getValue(ifs,t);
+    getValue(ifs,j);
+    getValue(ifs,k);
+    getValue(ifs,u);
+    getValue(ifs,v);
+    getValue(ifs,w);
+    fluct_[t][j][k] = (velDir_.compare("X")==0) ? u : (velDir_.compare("Y")==0 ? v : w);
   }
+
 }
 
 //--------------------------------------------------------------------

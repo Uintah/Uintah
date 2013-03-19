@@ -2316,3 +2316,21 @@ bool DataArchiver::isLabelSaved( string label )
   }
   return false;
 }
+
+void DataArchiver::updateOutputInv(double newinv)
+{
+  if (d_outputInterval ==  newinv) return;
+  else {
+    d_outputInterval = newinv;
+    d_nextOutputTime=0.0;  
+  }
+}
+
+void DataArchiver::updateCheckpointInv(double newinv)
+{
+  if (d_outputInterval ==  newinv) return;
+  else {
+    d_checkpointInterval = newinv;
+    d_nextCheckpointTime=0.0;  
+  }
+}

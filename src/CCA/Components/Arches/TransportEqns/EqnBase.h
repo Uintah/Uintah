@@ -43,6 +43,11 @@ public:
 
   virtual ~EqnBase();
 
+  struct SourceContainer{           ///< Hold the source names for this transport equation and the sign to either add or subtract from rhs.
+    std::string name; 
+    double      weight;             
+  };
+
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
   virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
@@ -148,7 +153,7 @@ public:
   };
 
   /** @brief Return a list of all sources associated with this transport equation */ 
-  inline const vector<string> getSourcesList(){
+  inline const vector<SourceContainer> getSourcesList(){
     return d_sources; };
 
   /** @brief Compute the boundary conditions for this transport equation object */
@@ -261,10 +266,11 @@ protected:
   double curr_time;                 ///< "old" time (t)
   bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
                                     ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
-  vector<std::string> d_sources;    ///< List of source terms for this eqn
-  double d_mol_diff;                ///< Molecular Diffusivity
-  bool d_use_constant_D;            ///< Switch for using constant D or not. 
-  bool _table_init;                 ///< Requires a table lookup for initialization 
+
+  vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
+  double d_mol_diff;                  ///< Molecular Diffusivity
+  bool d_use_constant_D;              ///< Switch for using constant D or not. 
+  bool _table_init;                   ///< Requires a table lookup for initialization 
 
 private:
 

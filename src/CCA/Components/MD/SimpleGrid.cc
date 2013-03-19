@@ -26,6 +26,8 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 
+#include <complex>
+
 #include <sci_values.h>
 
 using namespace SCIRun;

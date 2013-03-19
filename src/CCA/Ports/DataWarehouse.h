@@ -266,7 +266,10 @@ public:
   virtual bool timestepRestarted() = 0;
   virtual void abortTimestep() = 0;
   virtual void restartTimestep() = 0;
-  
+
+  virtual void reduceMPI(const VarLabel* label, const Level* level,
+	  const MaterialSubset* matls, int nComm) = 0;
+
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
 		 Scheduler* scheduler, 

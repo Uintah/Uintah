@@ -288,12 +288,11 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="heat_loss" label="heat_loss">
-          <enthalpy_label>enthalpy</enthalpy_label>
+        <model type="cc_constant" label="heat_loss">
           <initialization type="constant">
             <constant>0</constant> 
           </initialization>
-          <constant_heat_loss/>
+          <constant>0.0</constant>
         </model>
       </PropertyModels>
 

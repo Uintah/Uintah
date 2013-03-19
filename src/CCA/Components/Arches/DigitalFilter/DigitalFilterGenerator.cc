@@ -1078,7 +1078,7 @@ int main( int argc, const char* argv[] )
     for (int j = 0; j<resolution[1]; j++) {
       for (int k = 0; k<resolution[2]; k++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
+        pointTest = Point( gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1089,7 +1089,7 @@ int main( int argc, const char* argv[] )
     for (int j = 0; j<resolution[1]; j++) {
       for (int k = 0; k<resolution[2]; k++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2]+ gridLoPts[2] );
+        pointTest = Point( gridHiPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2]+ gridLoPts[2] );
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1100,7 +1100,7 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<resolution[0]; i++) {
       for (int k = 0; k<resolution[2]; k++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2]+ gridLoPts[2] );
+        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], gridLoPts[1], (k + 0.5) * Dx[2]+ gridLoPts[2] );
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1111,7 +1111,7 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<resolution[0]; i++) {
       for (int k = 0; k<resolution[2]; k++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
+        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0],  gridHiPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1122,7 +1122,7 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<resolution[0]; i++) {
       for (int j = 0; j<resolution[1]; j++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
+        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1] + gridLoPts[1], gridLoPts[2]);
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1133,7 +1133,7 @@ int main( int argc, const char* argv[] )
     for (int i = 0; i<resolution[0]; i++) {
       for (int j = 0; j<resolution[1]; j++) {
         C = IntVector( i, j, k);  
-        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1]+ gridLoPts[1], (k + 0.5) * Dx[2] + gridLoPts[2]);
+        pointTest = Point( (i + 0.5) * Dx[0] + gridLoPts[0], (j+ 0.5) * Dx[1]+ gridLoPts[1], gridHiPts[2]);
         if (bcGeom->inside( pointTest ) ) {
           ptList.push_back(C);
         }
@@ -1589,108 +1589,118 @@ int main( int argc, const char* argv[] )
   for (int t = 0; t<NT+1; t++) {
     //each timestep
     cout << "Writing TimeStep: " << t << endl;
-    for (int j = 0; j<jSize; j++) {
-      for (int k = 0; k<kSize; k++) {
-        uBaseX[j][k] = 0.0;
-        uBaseY[j][k] = 0.0;
-        uBaseZ[j][k] = 0.0;
-        
-        if ( !userL) {
-          sizeX = filterSize[0];
-          sizeY = filterSize[1];
-          sizeZ = filterSize[2];
-        } else {
-          sizeX = variableFilterSize[j][k][0];
-          sizeY = variableFilterSize[j][k][1];
-          sizeZ = variableFilterSize[j][k][2];
-        }
-        
-        for (int iprime = 0; iprime<sizeX; iprime++) {
-          for (int jprime = 0; jprime<sizeY; jprime++) {
-            for (int kprime = 0; kprime<sizeZ; kprime++) {
-
-              if (!userL) {
-                bijk = filterCoefficients[iprime][jprime][kprime];
-              } else {
-                bijk = variableFilterCoefficients[j][k][iprime][jprime][kprime];
-              }
-              
-              if (faceSide == "x-" || faceSide=="x+") {
-                uBaseX[j][k] += bijk * randomFieldx[iprime+t][j+jprime][k+kprime];
-                uBaseY[j][k] += bijk * randomFieldy[iprime+t][j+jprime][k+kprime];
-                uBaseZ[j][k] += bijk * randomFieldz[iprime+t][j+jprime][k+kprime];
-              } else if (faceSide=="y-" || faceSide=="y+") {
-                uBaseX[j][k] += bijk * randomFieldx[iprime+j][jprime+t][k+kprime];
-                uBaseY[j][k] += bijk * randomFieldy[iprime+j][jprime+t][k+kprime];
-                uBaseZ[j][k] += bijk * randomFieldz[iprime+j][jprime+t][k+kprime];
-              } else if (faceSide=="z-" || faceSide=="z+") {
-                uBaseX[j][k] += bijk * randomFieldx[iprime+j][k+jprime][kprime+t];
-                uBaseY[j][k] += bijk * randomFieldy[iprime+j][k+jprime][kprime+t];
-                uBaseZ[j][k] += bijk * randomFieldz[iprime+j][k+jprime][kprime+t];
-              }
-              
-            }
-          }
-        } //end iprime
-        
-        if (!userV) {
-          u = aveU[0];
-          v = aveU[1];
-          w = aveU[2];
-        } else {
-          u = newTurbInlet.velocityProfile[j][k][0];
-          v = newTurbInlet.velocityProfile[j][k][1];
-          w = newTurbInlet.velocityProfile[j][k][2];
-        }
-        
-        if (!userS) {
-          a11 = newTurbInlet.constStress[0];
-          a21 = newTurbInlet.constStress[1];
-          a22 = newTurbInlet.constStress[2];
-          a31 = newTurbInlet.constStress[3];
-          a32 = newTurbInlet.constStress[4];
-          a33 = newTurbInlet.constStress[5];
-        } else {
-          a11 = newTurbInlet.stressProfile[j][k][0];
-          a21 = newTurbInlet.stressProfile[j][k][1];
-          a22 = newTurbInlet.stressProfile[j][k][2];
-          a31 = newTurbInlet.stressProfile[j][k][3];
-          a32 = newTurbInlet.stressProfile[j][k][4];
-          a33 = newTurbInlet.stressProfile[j][k][5];
-        }
-
-        if (!angleVelocity) {
-          uFluctX[t][j][k] = u + a11 * uBaseX[j][k];
-          uFluctY[t][j][k] = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
-          uFluctZ[t][j][k] = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
-        } else {
-          double tempX, tempY, tempZ;
-          tempX = u + a11 * uBaseX[j][k];
-          tempY = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
-          tempZ = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
-          
-          uFluctX[t][j][k] = rotationMatrix[0][0] * tempX + rotationMatrix[1][0]*tempY + rotationMatrix[2][0]*tempZ;
-          uFluctY[t][j][k] = rotationMatrix[0][1] * tempX + rotationMatrix[1][1]*tempY + rotationMatrix[2][1]*tempZ;
-          uFluctZ[t][j][k] = rotationMatrix[0][2] * tempX + rotationMatrix[1][2]*tempY + rotationMatrix[2][2]*tempZ;
-        }
-        
-        //prevent negative flow on velocity normal to the inlet
-        if ( faceSide=="x-" && uFluctX[t][j][k] < 0.0) {
-          uFluctX[t][j][k] = 0.0;
-        } else if ( faceSide=="x+" && uFluctX[t][j][k] > 0.0 ) {
-          uFluctX[t][j][k] = 0.0;
-        } else if ( faceSide=="y-" && uFluctY[t][j][k] < 0.0 ) {
-          uFluctY[t][j][k] = 0.0;
-        } else if ( faceSide=="y+" && uFluctY[t][j][k] > 0.0 ) {
-          uFluctY[t][j][k] = 0.0;
-        } else if ( faceSide=="z-" && uFluctZ[t][j][k] < 0.0 ) {
-          uFluctZ[t][j][k] = 0.0;
-        } else if ( faceSide=="z+" && uFluctZ[t][j][k] > 0.0 ) {
-          uFluctZ[t][j][k] = 0.0; 
-        }
-        
+    for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
+      int j, k;
+      if (faceSide == "x-" || faceSide == "x+") {
+        j = it->y() - minCell[1] ;
+        k = it->z() - minCell[2];
+      } else if (faceSide == "y-" || faceSide == "y+") {
+        j = it->x() - minCell[0];
+        k = it->z() - minCell[2];
+      } else {
+        j = it->x() - minCell[0];
+        k = it->y() - minCell[1];
       }
-    } //end j
+      
+      uBaseX[j][k] = 0.0;
+      uBaseY[j][k] = 0.0;
+      uBaseZ[j][k] = 0.0;
+        
+      if ( !userL) {
+        sizeX = filterSize[0];
+        sizeY = filterSize[1];
+        sizeZ = filterSize[2];
+      } else {
+        sizeX = variableFilterSize[j][k][0];
+        sizeY = variableFilterSize[j][k][1];
+        sizeZ = variableFilterSize[j][k][2];
+      }
+        
+      for (int iprime = 0; iprime<sizeX; iprime++) {
+        for (int jprime = 0; jprime<sizeY; jprime++) {
+          for (int kprime = 0; kprime<sizeZ; kprime++) {
+
+            if (!userL) {
+              bijk = filterCoefficients[iprime][jprime][kprime];
+            } else {
+              bijk = variableFilterCoefficients[j][k][iprime][jprime][kprime];
+            }
+              
+            if (faceSide == "x-" || faceSide=="x+") {
+              uBaseX[j][k] += bijk * randomFieldx[iprime+t][j+jprime][k+kprime];
+              uBaseY[j][k] += bijk * randomFieldy[iprime+t][j+jprime][k+kprime];
+              uBaseZ[j][k] += bijk * randomFieldz[iprime+t][j+jprime][k+kprime];
+            } else if (faceSide=="y-" || faceSide=="y+") {
+              uBaseX[j][k] += bijk * randomFieldx[iprime+j][jprime+t][k+kprime];
+              uBaseY[j][k] += bijk * randomFieldy[iprime+j][jprime+t][k+kprime];
+              uBaseZ[j][k] += bijk * randomFieldz[iprime+j][jprime+t][k+kprime];
+            } else if (faceSide=="z-" || faceSide=="z+") {
+              uBaseX[j][k] += bijk * randomFieldx[iprime+j][k+jprime][kprime+t];
+              uBaseY[j][k] += bijk * randomFieldy[iprime+j][k+jprime][kprime+t];
+              uBaseZ[j][k] += bijk * randomFieldz[iprime+j][k+jprime][kprime+t];
+            }
+              
+          }
+        }
+      } //end iprime
+        
+      if (!userV) {
+        u = aveU[0];
+        v = aveU[1];
+        w = aveU[2];
+      } else {
+        u = newTurbInlet.velocityProfile[j][k][0];
+        v = newTurbInlet.velocityProfile[j][k][1];
+        w = newTurbInlet.velocityProfile[j][k][2];
+      }
+        
+      if (!userS) {
+        a11 = newTurbInlet.constStress[0];
+        a21 = newTurbInlet.constStress[1];
+        a22 = newTurbInlet.constStress[2];
+        a31 = newTurbInlet.constStress[3];
+        a32 = newTurbInlet.constStress[4];
+        a33 = newTurbInlet.constStress[5];
+      } else {
+        a11 = newTurbInlet.stressProfile[j][k][0];
+        a21 = newTurbInlet.stressProfile[j][k][1];
+        a22 = newTurbInlet.stressProfile[j][k][2];
+        a31 = newTurbInlet.stressProfile[j][k][3];
+        a32 = newTurbInlet.stressProfile[j][k][4];
+        a33 = newTurbInlet.stressProfile[j][k][5];
+      }
+
+      if (!angleVelocity) {
+        uFluctX[t][j][k] = u + a11 * uBaseX[j][k];
+        uFluctY[t][j][k] = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
+        uFluctZ[t][j][k] = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
+      } else {
+        double tempX, tempY, tempZ;
+        tempX = u + a11 * uBaseX[j][k];
+        tempY = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
+        tempZ = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
+         
+        uFluctX[t][j][k] = rotationMatrix[0][0] * tempX + rotationMatrix[1][0]*tempY + rotationMatrix[2][0]*tempZ;
+        uFluctY[t][j][k] = rotationMatrix[0][1] * tempX + rotationMatrix[1][1]*tempY + rotationMatrix[2][1]*tempZ;
+        uFluctZ[t][j][k] = rotationMatrix[0][2] * tempX + rotationMatrix[1][2]*tempY + rotationMatrix[2][2]*tempZ;
+      }
+        
+      //prevent negative flow on velocity normal to the inlet
+      if ( faceSide=="x-" && uFluctX[t][j][k] < 0.0) {
+        uFluctX[t][j][k] = 0.0;
+      } else if ( faceSide=="x+" && uFluctX[t][j][k] > 0.0 ) {
+        uFluctX[t][j][k] = 0.0;
+      } else if ( faceSide=="y-" && uFluctY[t][j][k] < 0.0 ) {
+        uFluctY[t][j][k] = 0.0;
+      } else if ( faceSide=="y+" && uFluctY[t][j][k] > 0.0 ) {
+        uFluctY[t][j][k] = 0.0;
+      } else if ( faceSide=="z-" && uFluctZ[t][j][k] < 0.0 ) {
+        uFluctZ[t][j][k] = 0.0;
+      } else if ( faceSide=="z+" && uFluctZ[t][j][k] > 0.0 ) {
+        uFluctZ[t][j][k] = 0.0; 
+      }
+        
+    }
   } //end t
   
   //open file to write out
@@ -1708,13 +1718,26 @@ int main( int argc, const char* argv[] )
   myfile << NT+1 << " " << jSize << " " << kSize << endl; 
   myfile << "#Minimum Cell Index" << endl;
   myfile << minCell[0] << " " << minCell[1] << " " << minCell[2] << endl;
+  
+  myfile << "#Total Size : " << (int)ptList.size() << endl;
+  myfile << (int)ptList.size()*(NT+1) << endl;
   myfile.precision(15);
   for (int t=0; t<NT+1; t++) {
-    for (int j=0; j<jSize; j++) {
-      for (int k=0; k<kSize; k++) {
-        myfile << t << " " << j << " " << k << "  "; 
-        myfile << uFluctX[t][j][k] << "  " << uFluctY[t][j][k] << "  " << uFluctZ[t][j][k] << "\n";
+    for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
+      int j, k;
+      if (faceSide == "x-" || faceSide == "x+") {
+        j = it->y() - minCell[1] ;
+        k = it->z() - minCell[2];
+      } else if (faceSide == "y-" || faceSide == "y+") {
+        j = it->x() - minCell[0];
+        k = it->z() - minCell[2];
+      } else {
+        j = it->x() - minCell[0];
+        k = it->y() - minCell[1];
       }
+    
+      myfile << t << " " << j << " " << k << "  "; 
+      myfile << uFluctX[t][j][k] << "  " << uFluctY[t][j][k] << "  " << uFluctZ[t][j][k] << "\n";
     }
   }
   myfile.close();

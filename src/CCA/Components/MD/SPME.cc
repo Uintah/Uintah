@@ -218,10 +218,10 @@ void SPME::finalize()
   // Output?
 }
 
-std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
-                                              const int initialIndex,
-                                              const int localGridExtent,
-                                              const CenteredCardinalBSpline& interpolatingSpline) const
+std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
+                                                      const int initialIndex,
+                                                      const int localGridExtent,
+                                                      const CenteredCardinalBSpline& interpolatingSpline) const
 {
   double PI = acos(-1.0);
   double twoPI = 2.0 * PI;

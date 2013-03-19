@@ -36,7 +36,7 @@ C     WRITTEN BY Gautham, OCTOBER 14, 2002
 C
 C     fixval FIXES THE VALUE OF A VARIABLE AT THE VALUE VAL AT THE
 C     POSITION (I,J,K) BY SETTING THE OFF-DIAGONALS, AE,AW,AN,AS,AT,AB,
-C     OF THAT EQUATION TO ZERO AND THE DIAGONAL, AP, TO THAT VALUE.
+C     OF THAT EQUATION TO ZERO AND THE DIAGONAL, AP, TO CONST.
 C     
 C-----------------------------------------------------------------------
       implicit none

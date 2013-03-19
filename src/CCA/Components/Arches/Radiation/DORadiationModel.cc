@@ -195,8 +195,13 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
     d_do_const_wall_T = true; 
     d_wall_temperature = 293.0; 
   }
-  db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
-  db->getWithDefault("intrusion_abskg", d_intrusion_abskg, 1.0); 
+
+  // now defunct options. automatically setting them to 1.0
+  //db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
+  //db->getWithDefault("intrusion_abskg", d_intrusion_abskg, 1.0);
+  d_wall_abskg      = 1.0; 
+  d_intrusion_abskg = 1.0;
+
 
 }
 //______________________________________________________________________

@@ -124,6 +124,17 @@ namespace Uintah{
                                         DataWarehouse* old_dw, 
                                         DataWarehouse* new_dw );
 
+      /** @brief Gather (compute) reduction intrusion information **/ 
+      void sched_gatherReductionInformation( SchedulerP& sched, 
+                                             const PatchSet* patches, 
+                                             const MaterialSet* matls );
+
+      void gatherReductionInformation( const ProcessorGroup*, 
+                                       const PatchSubset* patches, 
+                                       const MaterialSubset* matls, 
+                                       DataWarehouse* old_dw, 
+                                       DataWarehouse* new_dw );
+
       /** @brief Sets the cell type, volume and area fractions @ boundaries */
       void sched_setCellType( SchedulerP& sched, 
                                 const PatchSet* patches, 
@@ -925,6 +936,13 @@ namespace Uintah{
 
         //geometric information: 
         const VarLabel* bc_area; 
+
+        //other reduction information 
+        //this information is used to check the intrusion 
+        //fluxes
+        const VarLabel* max_vel; 
+        const VarLabel* min_vel; 
+        const VarLabel* total_m_dot; 
       
         //inlet generator
         IntrusionBC::VelInletBase* velocity_inlet_generator; 
