@@ -9,13 +9,14 @@
     <R12                        spec="REQUIRED DOUBLE" />
     <R6                         spec="REQUIRED DOUBLE" />
     
-    <Electrostatics             spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'none SPME'">
+    <Electrostatics             spec="REQUIRED NO_DATA"
+                                  attribute1="type REQUIRED STRING 'none SPME'">
       <ewaldBeta                spec="REQUIRED DOUBLE 'positive'"/>
       <polarizable              spec="REQUIRED BOOLEAN"/>
       <polarizationTolerance    spec="REQUIRED DOUBLE 'positive'"/>
       <kLimits                  spec="OPTIONAL VECTOR 'positive'"/>
       <splineOrder              spec="REQUIRED INTEGER"/>
-    <Electrostatics/>
+    </Electrostatics>
     
   </MD>
 
