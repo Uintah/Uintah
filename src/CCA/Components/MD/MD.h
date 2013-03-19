@@ -279,29 +279,29 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     bool isNeighbor(const Point* atom1,
                     const Point* atom2);
 
-    MDLabel* lb;                     //!<
-    SimulationStateP sharedState;    //!<
-    SimpleMaterial* material;        //!<
-    IntegratorType integrator;       //!<
+    MDLabel* d_lb;                     //!<
+    SimulationStateP d_sharedState;    //!<
+    SimpleMaterial* d_material;        //!<
+    IntegratorType d_integrator;       //!<
     double delt;                     //!<
 
-    vector<const VarLabel*> particleState;            //!<
-    vector<const VarLabel*> particleState_preReloc;   //!<
+    vector<const VarLabel*> d_particleState;            //!<
+    vector<const VarLabel*> d_particleState_preReloc;   //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
-    string coordinateFile;  //!< file with coordinates of all atoms in this MD system
-    unsigned int numAtoms;  //!< Total number of atoms in this MD simulation
-    double cutoffRadius;    //!< The short ranged cut off distances (in Angstroms)
-    Vector box;             //!< The size of simulation
-    double R12;             //!< This is the v.d.w. repulsive parameter
-    double R6;              //!< This is the v.d.w. attractive parameter
+    string d_coordinateFile;  //!< file with coordinates of all atoms in this MD system
+    unsigned int d_numAtoms;  //!< Total number of atoms in this MD simulation
+    double d_cutoffRadius;    //!< The short ranged cut off distances (in Angstroms)
+    Vector d_box;             //!< The size of simulation
+    double R12;               //!< This is the v.d.w. repulsive parameter
+    double R6;                //!< This is the v.d.w. attractive parameter
 
     // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-    std::vector<Point> atomList;             //!<
-    std::vector<vector<int> > neighborList;  //!<
+    std::vector<Point> d_atomList;             //!<
+    std::vector<vector<int> > d_neighborList;  //!<
 
-    Electrostatics* electrostatics;          //!<
-    MDSystem* system;                  //!<
+    Electrostatics* d_electrostatics;          //!<
+    MDSystem* d_system;                        //!<
 
     // copy constructor and operator=
     MD(const MD&);                           //!<

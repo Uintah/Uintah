@@ -126,7 +126,7 @@ class SPME : public Electrostatics {
      */
     inline ElectrostaticsType getType() const
     {
-      return this->electrostaticMethod;
+      return d_electrostaticMethod;
     }
 
   private:
@@ -288,23 +288,23 @@ class SPME : public Electrostatics {
     }
 
     // Values fixed on instantiation
-    ElectrostaticsType electrostaticMethod;         //!< Implementation type for long range electrostatics
-    MDSystem* system;                               //!<
-    double ewaldBeta;						                    //!< The Ewald calculation damping coefficient
-    bool polarizable;				                    	  //!< Use polarizable Ewald formulation
-    double polarizationTolerance;                   //!< Tolerance threshold for polarizable system
-    IntVector kLimits;                              //!< Number of grid divisions in each direction
-    CenteredCardinalBSpline interpolatingSpline;    //!< Spline object to hold info for spline calculation
-    std::vector<SPMEPatch*> spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
+    ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
+    MDSystem* d_system;                               //!< A handle to the MD simulation system object
+    double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
+    bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
+    double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
+    IntVector d_kLimits;                              //!< Number of grid divisions in each direction
+    CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
+    std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
 
     // Variables we'll get from the MDSystem instance to make life easier
-    Matrix3 unitCell;           //!< Unit cell lattice parameters
-    Matrix3 inverseUnitCell;    //!< Inverse lattice parameters
-    double systemVolume;        //!< Volume of the unit cell
+    Matrix3 d_unitCell;           //!< Unit cell lattice parameters
+    Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
+    double d_systemVolume;        //!< Volume of the unit cell
 
     // FFT Related variables
-    fftw_complex forwardTransformPlan;    //!<
-    fftw_complex backwardTransformPlan;   //!<
+    fftw_complex d_forwardTransformPlan;    //!<
+    fftw_complex d_backwardTransformPlan;   //!<
 
 };
 

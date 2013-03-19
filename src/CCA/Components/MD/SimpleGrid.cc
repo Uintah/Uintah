@@ -76,7 +76,7 @@ SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 template<typename T>
 bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
 {
-  if ((this->d_gridExtents != gridIn.d_gridExtents) || (this->d_gridOffset != gridIn.d_gridOffset)
+  if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
       || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
     ostringstream ostr;
     ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
@@ -149,9 +149,9 @@ SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 template<typename T>
 std::ostream& SimpleGrid<T>::print(std::ostream& out) const
 {
-  out << "Extent, [x,y,z]: " << this->d_gridExtents;
-  out << "Offset, [x,y,z]: " << this->d_gridOffset;
-  out << "GhostCells, [x,y,z]: " << this->d_gridExtents;
+  out << "Extent, [x,y,z]: " << d_gridExtents;
+  out << "Offset, [x,y,z]: " << d_gridOffset;
+  out << "GhostCells, [x,y,z]: " << d_gridExtents;
   return out;
 }
 
