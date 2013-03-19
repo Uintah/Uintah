@@ -1166,7 +1166,7 @@ namespace Wasatch {
               default:                                                      break;
             }
           }
-        } else { // when no pressure BC is specified, it implies that we have wall. 
+        } else { // when no pressure BC is specified, it implies that we have a wall/inlet.
                  // note that when the face is periodic, then bound_ptr is empty
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);

@@ -378,8 +378,9 @@ Pressure::evaluate()
   if (useRefPressure_) set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
-  if(patch_->hasBoundaryFaces()) update_poisson_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
-  
+  if(patch_->hasBoundaryFaces())
+    update_poisson_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
+
   // process embedded boundaries
   if (volfract_ != Expr::Tag())
       process_embedded_boundaries();

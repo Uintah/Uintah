@@ -779,6 +779,9 @@ namespace Wasatch{
       //       solve)
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
+      // set up any "old" variables that have been requested.
+      OldVariable::self().setup_tasks( allPatches, materials_, sched );
+
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
@@ -807,9 +810,6 @@ namespace Wasatch{
       if( buildTimeIntegrator_ ){
         create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
       }
-
-      // set up any "old" variables that have been requested.
-      OldVariable::self().setup_tasks( allPatches, materials_, sched );
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
