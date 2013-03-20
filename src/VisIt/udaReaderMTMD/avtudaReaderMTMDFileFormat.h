@@ -131,6 +131,8 @@ protected:
   // DATA MEMBERS
   bool useExtraCells;
   int currTimeStep;
+  bool nodeCentered;
+  bool forceMeshReload;
 
   //VisIt meshes (see https://visitbugs.ornl.gov/issues/52)
   std::map<std::string, void_ref_ptr> mesh_domains;

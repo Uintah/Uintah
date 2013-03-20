@@ -102,6 +102,8 @@ const double NAN_REPLACE_VAL=1.0E9;
 avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBOptionsAttributes* attrs) :
   avtMTMDFileFormat(filename),
   useExtraCells(true),
+  nodeCentered(false),
+  forceMeshReload(true),
   archive(NULL),
   grid(NULL)
 {
@@ -291,6 +293,7 @@ avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
   stepInfo = (*getTimeStepInfo)(archive, grid, ts, useExtraCells);
 
   currTimeStep = ts; 
+  forceMeshReload = true;
 }
 
 
@@ -760,7 +763,7 @@ void
 avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::string &meshname)
 {
   //lookup mesh in our cache and if it's not there, compute it
-  if (*this->mesh_domains[meshname]==NULL)
+  if (*this->mesh_domains[meshname]==NULL || forceMeshReload == true)
   {
     //
     // Calculate some info we will need in the rest of the routine.
@@ -880,6 +883,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate, const std::str
     }
 
     this->mesh_domains[meshname]=void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
+    forceMeshReload = false;
   }
 
   //
@@ -989,9 +993,19 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
     //debug5<<"Calculating vtkRectilinearGrid mesh for "<<meshName<<" mesh ("<<rgrid<<").\n";
 
+	  if (meshName.find("NC_") != string::npos)
+	    nodeCentered = true;
+
     int dims[3];
-    for (int i=0; i<3; i++)
-      dims[i] = high[i]-low[i]+1; // The +1 is important...
+    for (int i=0; i<3; i++) 
+    {
+      int offset = 1; // always one for non-node-centered
+      if (nodeCentered && high[i] == ghigh[i]) 
+        offset = 0; // nodeCentered and patch end is on high boundary
+
+      dims[i] = high[i]-low[i]+offset;
+    }
+
     rgrid->SetDimensions(dims);
 
     // need these to offset grid points in order to preserve face 
@@ -1233,6 +1247,18 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     }
 
     else {
+      if (nodeCentered == true){
+        int glow[3], ghigh[3];
+        getBounds(glow,ghigh,varType, levelInfo);
+        patchInfo.getBounds(qlow,qhigh,varType);
+                
+        for (int j=0; j<3; j++)
+          if (qhigh[j] != ghigh[j]) // patch is on low boundary
+            qhigh[j] = qhigh[j]+1;
+          else
+            qhigh[j] = qhigh[j];
+      }
+
 #ifdef SERIALIZED_READS
       int numProcs, rank;
       int msg = 128, tag = 256;
