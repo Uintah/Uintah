@@ -528,6 +528,11 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
    else {
       d_checkpointsDir = d_dir.getSubdir("checkpoints");
    }
+
+   //sync up before every rank can use the base dir
+   if (Parallel::usingMPI()) { 
+       MPI_Barrier(d_myworld->getComm());
+   }
 } // end initializeOutput()
 
 
