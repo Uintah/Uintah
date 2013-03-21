@@ -164,7 +164,9 @@ PressureBC::flagMaterialPoint(const Point& p,
     GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
                                                  box.upper()+dxpp);
 
-    if (volume->inside(p)) flag = true;
+    if (volume->inside(p)){
+      flag = true;
+    }
     delete volume;
 
   } else if (d_surfaceType == "cylinder") {
