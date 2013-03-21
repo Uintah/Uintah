@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -96,12 +96,7 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 #if defined(HAVE_LAPACK)
 
 extern "C" {
-#if defined(REDSTORM)
-#  define DGETRF dgetrf
-#else
-#  define DGETRF dgetrf_
-#endif
-  int DGETRF(int *m, int *n, double *a, int *lda, int *ipiv, int *info);
+  int dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info);
   int dgetri_(int *m, double *a, int *lda, int *ipiv, 
 	      double *work, int *lwork, int *info);
   int dgesvd_(char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
@@ -117,20 +112,15 @@ bool lapackinvert(double *A, int n)
   
 #if defined(HAVE_MAGMA)
 
-  // d_A is the device matrix
-  // h_R is the host result (pinned buffer)
-  // n is the order of A (A is n*n)
-  // ipiv an int array to store the permutations
-  // lda, lwork, info The leading dimension of the host matrix A.
-  // ldda, ldwork, info The leading dimension of the device matrix A.
+  // d_A    is the device matrix
+  // h_R    is the host result (pinned buffer)
+  // n      is the order of A (A is n*n)
+  // ipiv   an int array to store the permutations
+  // lda,   lwork, info The leading dimension of the host matrix A.
+  // ldda,  ldwork, info The leading dimension of the device matrix A.
 
   // CUDA and CUBLAS initialization
-  CUdevice dev;
-  CUcontext context;
-  cuInit(0);
-  cuDeviceGet(&dev, 0);
-  cuCtxCreate(&context, 0, dev);
-  cublasInit();
+  MAGMA_CUDA_INIT();
 
   // things we'll be working with
   double* h_R = 0;
@@ -153,9 +143,9 @@ bool lapackinvert(double *A, int n)
   // allocate host memory, pinned host memory and device memory
   ipiv = new int[n];
   work = new double[n*64];
-  CUDA_RT_SAFE_CALL(cudaMallocHost((void**)&h_R, n2 * sizeof(double)));
-  CUDA_RT_SAFE_CALL(cudaMalloc((void**)&d_A, (n * ldda) * sizeof(*A)));
-  CUDA_RT_SAFE_CALL(cudaMalloc((void**)&dwork, ldwork * sizeof(*A)));
+  MAGMA_HOSTALLOC(h_R, double, n2);
+  MAGMA_DEVALLOC(d_A, double, n * ldda);
+  MAGMA_DEVALLOC(dwork, int, ldwork);
 
   // make the MAGMA calls and get results back host-side
   magma_dsetmatrix(n, n, A, lda, d_A, ldda);
@@ -164,7 +154,7 @@ bool lapackinvert(double *A, int n)
   magma_dgetri_gpu(n, d_A, ldda, ipiv, dwork, ldwork, &info);
   magma_dgetmatrix(n, n, d_A, ldda, h_R, lda);
 
-  // swap pointers with pinned host verion of A and A istelf
+  // swap pointers with pinned memory host version of A and A itself
   A = h_R;
 
   // clean up CPU memory allocations
@@ -172,13 +162,12 @@ bool lapackinvert(double *A, int n)
   delete[] ipiv;
 
   // clean up device memory allocations
-  cudaFreeHost(h_R);
-  cudaFree(d_A);
-  cudaFree(dwork);
+  MAGMA_HOSTFREE(h_R);
+  MAGMA_DEVFREE(d_A);
+  MAGMA_DEVFREE(dwork);
 
   // shutdown CUDA and CUBLAS
-  cuCtxDetach(context);
-  cublasShutdown();
+  MAGMA_CUDA_FINALIZE();
 
   if (info == 0) {
     return true;
@@ -202,7 +191,7 @@ bool lapackinvert(double *A, int n)
   lda = n;
   lwork = n;
 
-  DGETRF(&n, &n, A, &lda, P, &info);  
+  dgetrf_(&n, &n, A, &lda, P, &info);
   dgetri_(&n, A, &lda, P, work, &lwork, &info);
 
   delete [] work;
@@ -220,51 +209,6 @@ bool lapackinvert(double *A, int n)
 
 void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 {
-  char jobu, jobvt;
-  int lda, ldu, ldvt, lwork, info;
-  double *a, *u, *vt, *work;
-
-  int minmn, maxmn;
-
-  jobu = 'A'; 
-  /* Specifies options for computing U.
-		 A: all M columns of U are returned in array U;
-		 S: the first min(m,n) columns of U (the left
-		    singular vectors) are returned in the array U;
-		 O: the first min(m,n) columns of U (the left
-		    singular vectors) are overwritten on the array A;
-		 N: no columns of U (no left singular vectors) are
-		    computed. */
-
-  jobvt = 'A'; 
-  /* Specifies options for computing VT.
-		  A: all N rows of V**T are returned in the array
-		     VT;
-		  S: the first min(m,n) rows of V**T (the right
-		     singular vectors) are returned in the array VT;
-		  O: the first min(m,n) rows of V**T (the right
-		     singular vectors) are overwritten on the array A;
-		  N: no rows of V**T (no right singular vectors) are
-		     computed. */
-
-  lda = m; // The leading dimension of the matrix a.
-  a = ctof(A, m, n); // Convert the matrix A from double pointer
-			                 // C form to single pointer Fortran form.
-
-
-  /* Since A is not a square matrix, we have to make some decisions
-     based on which dimension is shorter. */
-
-  if (m >= n) { minmn = n; maxmn = m; } else { minmn = m; maxmn = n; }
-
-  ldu = m; // Left singular vector matrix
-  u = new double[ldu*m];
-
-  ldvt = n; // Right singular vector matrix
-  vt = new double[ldvt*n];
-
-  lwork = 5*maxmn; // Set up the work array, larger than needed.
-  work = new double[lwork];
 
 #if defined(HAVE_MAGMA)
 
@@ -283,15 +227,59 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 //               magma_int_t lwork,
 //               magma_int_t *info )
 
-  magma_dgesvd(jobu, jobvt, m, n, a, lda, S, u,
-               ldu, vt, ldvt, work, lwork, &info);
+//  magma_dgesvd(jobu, jobvt, m, n, a, lda, S, u,
+//               ldu, vt, ldvt, work, lwork, &info);
 
 #else
 
+  char jobu, jobvt;
+  int lda, ldu, ldvt, lwork, info;
+  double *a, *u, *vt, *work;
+
+  int minmn, maxmn;
+
+  jobu = 'A'; 
+  /* Specifies options for computing U.
+     A: all M columns of U are returned in array U;
+     S: the first min(m,n) columns of U (the left
+        singular vectors) are returned in the array U;
+     O: the first min(m,n) columns of U (the left
+        singular vectors) are overwritten on the array A;
+     N: no columns of U (no left singular vectors) are
+        computed. */
+
+  jobvt = 'A'; 
+  /* Specifies options for computing VT.
+      A: all N rows of V**T are returned in the array
+         VT;
+      S: the first min(m,n) rows of V**T (the right
+         singular vectors) are returned in the array VT;
+      O: the first min(m,n) rows of V**T (the right
+         singular vectors) are overwritten on the array A;
+      N: no rows of V**T (no right singular vectors) are
+         computed. */
+
+  lda = m; // The leading dimension of the matrix a.
+  a = ctof(A, m, n); // Convert the matrix A from double pointer
+                       // C form to single pointer Fortran form.
+
+
+  /* Since A is not a square matrix, we have to make some decisions
+     based on which dimension is shorter. */
+
+  if (m >= n) { minmn = n; maxmn = m; } else { minmn = m; maxmn = n; }
+
+  ldu = m; // Left singular vector matrix
+  u = new double[ldu*m];
+
+  ldvt = n; // Right singular vector matrix
+  vt = new double[ldvt*n];
+
+  lwork = 5*maxmn; // Set up the work array, larger than needed.
+  work = new double[lwork];
+
   dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,
 	        &ldu, vt, &ldvt, work, &lwork, &info);
-
-#endif
 
   ftoc(u, U, ldu, m);
   ftoc(vt, VT, ldvt, n);
@@ -300,6 +288,9 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   delete [] u;
   delete [] vt;
   delete [] work;
+
+#endif
+
 }
 
 
