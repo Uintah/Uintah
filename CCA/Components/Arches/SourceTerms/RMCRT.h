@@ -162,7 +162,7 @@ private:
   const VarLabel* _sigmaT4Label;
   const VarLabel* _abskgLabel;
   const VarLabel* _absorpLabel;
-  const VarLabel* _cellTypeLabel; 
+  const VarLabel* _volumeFracLabel; 
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
