@@ -31,7 +31,6 @@
     <save label="abskg"/>
     <save label="temperature"/>
     <save label="sigmaT4"/>
-    <save label="cellType"/>
     <save label = "boundFlux" />
 
     <checkpoint cycle = "2" timestepInterval = "2"/>

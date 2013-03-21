@@ -106,7 +106,7 @@ namespace Uintah{
                            SchedulerP& sched,
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
-                           Task::WhichDW celltype_dw,
+                           Task::WhichDW volumeFrac_dw,
                            bool modifies_divQ );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
@@ -168,7 +168,7 @@ namespace Uintah{
 
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
-                          constCCVariable<int> &celltype,
+                          constCCVariable<double> &volumeFrac,
                           vector<int> &boundaryFaces);
 
 
@@ -199,7 +199,7 @@ namespace Uintah{
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
                             const VarLabel* temperature,
-                            const VarLabel* celltype, 
+                            const VarLabel* volumeFrac, 
                             const VarLabel* divQ);
                             
                             
@@ -260,7 +260,7 @@ namespace Uintah{
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
-      const VarLabel* d_cellTypeLabel; 
+      const VarLabel* d_volumeFracLabel; 
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
       const VarLabel* d_divQFiltLabel;
@@ -285,7 +285,7 @@ namespace Uintah{
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW which_sigmaT4_dw,
-                     Task::WhichDW which_celltype_dw);
+                     Task::WhichDW which_volumeFrac_dw);
 
 #ifdef HAVE_CUDA
 
@@ -302,7 +302,7 @@ namespace Uintah{
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw);
+                        Task::WhichDW which_volumeFrac_dw);
 
 #endif
 

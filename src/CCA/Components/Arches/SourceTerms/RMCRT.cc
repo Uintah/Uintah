@@ -17,7 +17,7 @@ static DebugStream dbg("RMCRT", false);
   
   - Don't like how _matlSet is being defined.
   
-  - Initialize cellType on the non-arches levels.  Right now
+  - Initialize volumeFrac on the non-arches levels.  Right now
     it's hard wired to 0
     
   
@@ -47,7 +47,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
   _abskgLabel     = VarLabel::create( "abskg",   CC_double );
   _absorpLabel    = VarLabel::create( "absorp",  CC_double );
-  _cellTypeLabel  = _labels->d_cellTypeLabel; 
+  _volumeFracLabel  = _labels->d_volFractionLabel; 
   
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -162,7 +162,7 @@ RMCRT_Radiation::extraSetup()
                             _abskgLabel,
                             _absorpLabel,
                             _tempLabel,
-                            _cellTypeLabel, 
+                            _volumeFracLabel, 
                             _src_label);
 
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
@@ -198,7 +198,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   for (int L = 0; L < maxLevels; L++) {
     if( L != archesLevelIndex ){
       const LevelP& level = grid->getLevel(L);
-      _RMCRT->sched_CarryForward (level, sched, _cellTypeLabel);
+      _RMCRT->sched_CarryForward (level, sched, _volumeFracLabel);
     }
   }
   
@@ -410,20 +410,20 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
       LevelP level = grid->getLevel(L);
       printSchedule(level,dbg,taskname);
       
-      tsk->computes( _cellTypeLabel );
+      tsk->computes( _volumeFracLabel );
       sched->addTask(tsk, level->eachPatch(), _matlSet);
     }
 
-  // THIS IS THE RIGHT WAY TO INITIALIZE cellType
+  // THIS IS THE RIGHT WAY TO INITIALIZE volumeFrac
   // The problem is _bc is not defined at this point in Arches::problemSetup
   #if 0 
     //__________________________________
-    // cellType initialization
+    // volumeFrac initialization
     const PatchSet* patches = level->eachPatch();
     if ( _bc->isUsingNewBC() ) {
-      _bc->sched_cellTypeInit__NEW( sched, patches, _matlSet );
+      _bc->sched_volumeFracInit__NEW( sched, patches, _matlSet );
     } else {
-      _bc->sched_cellTypeInit(sched, patches, _matlSet);
+      _bc->sched_volumeFracInit(sched, patches, _matlSet);
     }
    #endif
   }
@@ -444,9 +444,9 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
 
 
-    CCVariable<int> cellType;        // HACK UNTIL WE KNOW WHAT TO DO
-    new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
-    cellType.initialize( 0 ); 
+    CCVariable<double> volumeFrac;        // HACK UNTIL WE KNOW WHAT TO DO
+    new_dw->allocateAndPut( volumeFrac,    _volumeFracLabel,    _matl, patch );
+    volumeFrac.initialize( 1.0 ); 
   }
 }
 
