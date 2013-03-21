@@ -35,6 +35,7 @@
 
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/magma_defs.h>
+#include <sci_defs/cuda_defs.h>
 
 #include <cmath>
 #include <Core/Math/sci_lapack.h>
@@ -113,47 +114,96 @@ extern "C" {
 
 bool lapackinvert(double *A, int n)
 {
+  
+#if defined(HAVE_MAGMA)
+
+  // d_A is the device matrix
+  // h_R is the host result (pinned buffer)
+  // n is the order of A (A is n*n)
+  // ipiv an int array to store the permutations
+  // lda, lwork, info The leading dimension of the host matrix A.
+  // ldda, ldwork, info The leading dimension of the device matrix A.
+
+  // CUDA and CUBLAS initialization
+  CUdevice dev;
+  CUcontext context;
+  cuInit(0);
+  cuDeviceGet(&dev, 0);
+  cuCtxCreate(&context, 0, dev);
+  cublasInit();
+
+  // things we'll be working with
+  double* h_R = 0;
+  double* d_A = 0;
+  double* dwork = 0;
+  magma_int_t n2, lda, ldda;
+  magma_int_t info;
+  double* work;
+  magma_int_t *ipiv;
+  magma_int_t lwork, ldwork;
+
+  // query for Magma workspace size and pad for device memory
+  lwork = int(n * 64);
+  ldwork = n * magma_get_dgetri_nb(n);
+  n2 = n * n;
+  ldda = ((n + 31) / 32) * 32;
+  lda = n;
+  lwork = n;
+
+  // allocate host memory, pinned host memory and device memory
+  ipiv = new int[n];
+  work = new double[n*64];
+  CUDA_RT_SAFE_CALL(cudaMallocHost((void**)&h_R, n2 * sizeof(double)));
+  CUDA_RT_SAFE_CALL(cudaMalloc((void**)&d_A, (n * ldda) * sizeof(*A)));
+  CUDA_RT_SAFE_CALL(cudaMalloc((void**)&dwork, ldwork * sizeof(*A)));
+
+  // make the MAGMA calls and get results back host-side
+  magma_dsetmatrix(n, n, A, lda, d_A, ldda);
+  magma_dgetrf_gpu(n, n, d_A, ldda, ipiv, &info);
+  magma_dgetmatrix(n, n, d_A, ldda, A, lda);
+  magma_dgetri_gpu(n, d_A, ldda, ipiv, dwork, ldwork, &info);
+  magma_dgetmatrix(n, n, d_A, ldda, h_R, lda);
+
+  // swap pointers with pinned host verion of A and A istelf
+  A = h_R;
+
+  // clean up CPU memory allocations
+  delete[] work;
+  delete[] ipiv;
+
+  // clean up device memory allocations
+  cudaFreeHost(h_R);
+  cudaFree(d_A);
+  cudaFree(dwork);
+
+  // shutdown CUDA and CUBLAS
+  cuCtxDetach(context);
+  cublasShutdown();
+
+  if (info == 0) {
+    return true;
+  } else {
+    return false;
+  }
+
+#else
+
   // A is the matrix
   // n is the order of A (A is n*n)
   // P an int array to store the permutations
 
-  int lda, lwork, info;  // The leading dimension of the matrix a.
+  int lda, lwork, info;  //The leading dimension of the matrix A.
 
-  int *P = new int[n];  // int array that stores permutations.
- 
+  int* P = new int[n];  //int array that stores permutations.
+
   lwork = n*64;
-  double *work = new double[lwork];
- 
+  double* work = new double[lwork];
+
   lda = n;
   lwork = n;
-  
-#if defined(HAVE_MAGMA)
-
-//  magma_dgetrf_gpu(magma_int_t m,
-//                   magma_int_t n,
-//                   double *dA,
-//                   magma_int_t ldda,
-//                   magma_int_t *ipiv,
-//                   magma_int_t *info)
-
-  magma_dgetrf_gpu(n, n, A, lda, P, &info);
-
-//  magma_dgetri_gpu( magma_int_t n,
-//                    double *dA,
-//                    magma_int_t lda,
-//                    magma_int_t *ipiv,
-//                    double *dwork,
-//                    magma_int_t lwork,
-//                    magma_int_t *info )
-
-  magma_dgetri_gpu(n, A, lda, P, work, lwork, &info);
-
-#else
 
   DGETRF(&n, &n, A, &lda, P, &info);  
   dgetri_(&n, A, &lda, P, work, &lwork, &info);
-
-#endif
 
   delete [] work;
   delete [] P;
@@ -162,6 +212,9 @@ bool lapackinvert(double *A, int n)
     return true;
   else
     return false;
+
+#endif
+
 }
 
 
