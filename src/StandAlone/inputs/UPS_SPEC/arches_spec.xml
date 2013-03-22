@@ -804,7 +804,8 @@
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
-             
+              <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
+ 
  
               <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
