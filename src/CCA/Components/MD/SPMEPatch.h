@@ -68,7 +68,8 @@ class SPMEPatch {
     SPMEPatch(IntVector extents,
               IntVector offset,
               IntVector plusGhostExtents,
-              IntVector minusGhostExtents);
+              IntVector minusGhostExtents,
+              ParticleSubset* pset);
 
     /**
      * @brief
@@ -178,16 +179,6 @@ class SPMEPatch {
     inline ParticleSubset* getPset() const
     {
       return d_pset;
-    }
-
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setPset(ParticleSubset* pset)
-    {
-      d_pset = pset;
     }
 
   private:
