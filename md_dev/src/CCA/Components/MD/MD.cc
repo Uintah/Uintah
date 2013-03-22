@@ -96,6 +96,7 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   // create and populate the MD System object
   d_system = scinew MDSystem(md_ps);
+  d_system->setNewBox(true);
 
   // create the Electrostatics object via factory method
   d_electrostatics = ElectrostaticsFactory::create(params, d_system);
@@ -159,9 +160,13 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allMaterials();
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
+
 //  scheduleInterpolateParticlesToGrid(sched, patches, matls);
-//  schedulePerformSPME(sched, patches, matls);
+
+  schedulePerformSPME(sched, patches, matls);
+
 //  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+
   scheduleUpdatePosition(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, d_lb->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_lb->pXLabel,
@@ -227,15 +232,12 @@ void MD::schedulePerformSPME(SchedulerP& sched,
   Task* task = scinew Task("performSPME", this, &MD::performSPME);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
-  task->computes(d_lb->pXLabel_preReloc);
-  task->computes(d_lb->pForceLabel_preReloc);
+  task->modifies(d_lb->pForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
-  task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
 }
@@ -278,7 +280,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::NewDW, d_lb->pChargeLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
@@ -286,7 +288,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->computes(d_lb->pAccelLabel_preReloc);
   task->computes(d_lb->pVelocityLabel_preReloc);
   task->computes(d_lb->pMassLabel_preReloc);
-  task->computes(d_lb->pChargeLabel_preReloc);
+  task->modifies(d_lb->pChargeLabel_preReloc);
   task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
@@ -433,7 +435,7 @@ void MD::initialize(const ProcessorGroup* pg,
         pcharge[i] = 0.0;
         pids[i] = patch->getID() * d_numAtoms + i;
 
-        // TODO update this with new VarLabels
+        // TODO update this with other VarLabels
         if (md_dbg.active()) {
           cerrLock.unlock();
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
@@ -451,7 +453,7 @@ void MD::initialize(const ProcessorGroup* pg,
   }
 
   // initialize electrostatics object
-  d_electrostatics->initialize(patches, matls, old_dw, new_dw);
+  d_electrostatics->initialize();
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)
@@ -481,33 +483,6 @@ void MD::registerPermanentParticleState(SimpleMaterial* matl)
   // register the particle states with the shared SimulationState for persistence across timesteps
   d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
   d_sharedState->d_particleState.push_back(d_particleState);
-}
-
-void MD::interpolateParticlesToGrid(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
-{
-  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
-}
-
-void MD::performSPME(const ProcessorGroup* pg,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw)
-{
-  printTask(patches, md_cout, "MD::performSPME");
-
-  if (d_system->newBox()) {
-    d_electrostatics->setup();
-    d_system->changeBox(false);
-  }
-
-  d_electrostatics->calculate();
-
-  d_electrostatics->finalize();
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,
@@ -545,8 +520,8 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
       // computes variables
       ParticleVariable<Vector> pforcenew;
       ParticleVariable<double> penergynew;
-      new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
       new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, pset);
+      new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
 
       unsigned int numParticles = pset->numParticles();
       for (unsigned int i = 0; i < numParticles; i++) {
@@ -643,6 +618,33 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
 
   }  // end patch loop
 
+}
+
+void MD::interpolateParticlesToGrid(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
+}
+
+void MD::performSPME(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::performSPME");
+
+  if (d_system->newBox()) {
+    d_electrostatics->setup(pg, patches, matls, old_dw, new_dw);
+    d_system->setNewBox(false);
+  }
+
+  d_electrostatics->calculate();
+
+  d_electrostatics->finalize();
 }
 
 void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
@@ -796,7 +798,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
         pchargenew[idx] = pcharge[idx];
         pidsnew[idx] = pids[idx];
 
-        // update position
+        // update position (Velocity Verlet)
         paccelnew[idx] = pforce[idx] / pmass[idx];
         pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
         pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;

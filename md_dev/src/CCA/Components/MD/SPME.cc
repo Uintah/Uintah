@@ -71,22 +71,27 @@ SPME::SPME(MDSystem* system,
 
 //-----------------------------------------------------------------------------
 // Interface implementations
-void SPME::initialize(const PatchSubset* patches,
-                      const MaterialSubset* materials,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw)
+void SPME::initialize()
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
-  d_spmePatches.reserve(patches->size());
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
   d_inverseUnitCell = d_system->getInverseCell();
   d_systemVolume = d_system->getVolume();
+}
 
+void SPME::setup(const ProcessorGroup* pg,
+                 const PatchSubset* patches,
+                 const MaterialSubset* materials,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw)
+{
   int numGhostCells = d_system->getNumGhostCells();
+  size_t numPatches = patches->size();
+  d_spmePatches.reserve(numPatches);
 
-  for (int p = 0; p < patches->size(); p++) {
+  for (size_t p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
 
     IntVector localExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
@@ -94,32 +99,19 @@ void SPME::initialize(const PatchSubset* patches,
     IntVector plusGhostExtents = patch->getExtraCellHighIndex(numGhostCells) - patch->getCellHighIndex();
     IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
 
-    ParticleSubset* pset = new_dw->getParticleSubset(materials->get(0), patch);
-    SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents);
-    spmePatch->setPset(pset);
-    d_spmePatches.push_back(spmePatch);
-  }
-}
-
-void SPME::setup()
-{
-  size_t numPatches = d_spmePatches.size();
-  for (size_t p = 0; p < numPatches; p++) {
-
-    SPMEPatch* patch = d_spmePatches[p];
-    IntVector extents = patch->getLocalExtents();
-    IntVector offsets = patch->getGlobalOffset();
+    ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
+    SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents, pset);
 
     // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
-    SimpleGrid<double> fBGrid = calculateBGrid(extents, offsets);
-    SimpleGrid<double> fCGrid = calculateCGrid(extents, offsets);
+    SimpleGrid<double> fBGrid = calculateBGrid(localExtents, globalOffset);
+    SimpleGrid<double> fCGrid = calculateCGrid(localExtents, globalOffset);
     SimpleGrid<double> fTheta;
     SimpleGrid<Matrix3> stressPrefactor;
 
     // Composite B and C into Theta
-    size_t xExtent = extents.x();
-    size_t yExtent = extents.y();
-    size_t zExtent = extents.z();
+    size_t xExtent = localExtents.x();
+    size_t yExtent = localExtents.y();
+    size_t zExtent = localExtents.z();
     for (size_t xidx = 0; xidx < xExtent; ++xidx) {
       for (size_t yidx = 0; yidx < yExtent; ++yidx) {
         for (size_t zidx = 0; zidx < zExtent; ++zidx) {
@@ -127,10 +119,9 @@ void SPME::setup()
         }
       }
     }
-//    stressPrefactor = calculateStressPrefactor(extents, offsets);
-
-    patch->setTheta(fTheta);
-    patch->setStressPrefactor(calculateStressPrefactor(extents, offsets));
+    spmePatch->setTheta(fTheta);
+    spmePatch->setStressPrefactor(calculateStressPrefactor(localExtents, globalOffset));
+    d_spmePatches.push_back(spmePatch);
   }
 }
 
@@ -230,15 +221,15 @@ std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>&
   std::vector<double> zeroAlignedSpline = interpolatingSpline.evaluate(0);
 
   const double* localMFractional = &(mFractional[initialIndex]);  // Reset MFractional zero so we can index into it negatively
-  for (int Index = 0; Index < localGridExtent; ++Index) {
-    double internal = twoPI * localMFractional[Index];
+  for (int idx = 0; idx < localGridExtent; ++idx) {
+    double internal = twoPI * localMFractional[idx];
     // Formula looks significantly different from given SPME for offset splines.
     //   See Essmann et. al., J. Chem. Phys. 103 8577 (1995). for conversion, particularly formula C3 pt. 2 (paper uses pt. 4)
     dblcomplex phi_N = 0.0;
     for (int denomIndex = -halfSupport; denomIndex <= halfSupport; ++denomIndex) {
       phi_N += dblcomplex(cos(internal * denomIndex), sin(internal * denomIndex));
     }
-    B[Index] = 1.0 / phi_N;
+    B[idx] = 1.0 / phi_N;
   }
   return B;
 }
@@ -246,13 +237,13 @@ std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>&
 SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
                                         const IntVector& globalOffset) const
 {
-  size_t Limit_Kx = d_kLimits.x();
-  size_t Limit_Ky = d_kLimits.y();
-  size_t Limit_Kz = d_kLimits.z();
+  size_t limit_Kx = d_kLimits.x();
+  size_t limit_Ky = d_kLimits.y();
+  size_t limit_Kz = d_kLimits.z();
 
-  std::vector<double> mf1 = SPME::generateMFractionalVector(Limit_Kx, d_interpolatingSpline);
-  std::vector<double> mf2 = SPME::generateMFractionalVector(Limit_Ky, d_interpolatingSpline);
-  std::vector<double> mf3 = SPME::generateMFractionalVector(Limit_Kz, d_interpolatingSpline);
+  std::vector<double> mf1 = SPME::generateMFractionalVector(limit_Kx, d_interpolatingSpline);
+  std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
+  std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
 
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
@@ -261,17 +252,17 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
 
   SimpleGrid<double> BGrid(localExtents, globalOffset, 0);  // No ghost cells; internal only
 
-  size_t XExtents = localExtents.x();
-  size_t YExtents = localExtents.y();
-  size_t ZExtents = localExtents.z();
+  size_t xExtents = localExtents.x();
+  size_t yExtents = localExtents.y();
+  size_t zExtents = localExtents.z();
 
   int xOffset = globalOffset.x();
   int yOffset = globalOffset.y();
   int zOffset = globalOffset.z();
 
-  for (size_t kX = 0; kX < XExtents; ++kX) {
-    for (size_t kY = 0; kY < YExtents; ++kY) {
-      for (size_t kZ = 0; kZ < ZExtents; ++kZ) {
+  for (size_t kX = 0; kX < xExtents; ++kX) {
+    for (size_t kY = 0; kY < yExtents; ++kY) {
+      for (size_t kZ = 0; kZ < zExtents; ++kZ) {
         BGrid(kX, kY, kZ) = norm(b1[kX + xOffset]) * norm(b2[kY + yOffset]) * norm(b3[kZ + zOffset]);
       }
     }

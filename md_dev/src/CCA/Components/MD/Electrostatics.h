@@ -29,7 +29,6 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-
 namespace Uintah {
 
 /**
@@ -69,16 +68,17 @@ class Electrostatics {
      * @brief
      * @param
      */
-    virtual void initialize(const PatchSubset* patches,
-                            const MaterialSubset* materials,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw) = 0;
+    virtual void initialize() = 0;
 
     /**
      * @brief
      * @param
      */
-    virtual void setup() = 0;
+    virtual void setup(const ProcessorGroup* pg,
+                       const PatchSubset* patches,
+                       const MaterialSubset* materials,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw) = 0;
 
     /**
      * @brief

@@ -52,7 +52,7 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const int numGhostCells) :
     d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
 {
-  d_charges(extents.x(), extents.y(), extents.z());
+  d_charges.copy(Array3<T>(extents.x(), extents.y(), extents.z()));
 }
 
 template<typename T>

@@ -93,17 +93,18 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    void initialize(const PatchSubset* patches,
-                    const MaterialSubset* materials,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+    void initialize();
 
     /**
      * @brief
      * @param None
      * @return None
      */
-    void setup();
+    void setup(const ProcessorGroup* pg,
+               const PatchSubset* patches,
+               const MaterialSubset* materials,
+               DataWarehouse* old_dw,
+               DataWarehouse* new_dw);
 
     /**
      * @brief

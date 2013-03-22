@@ -132,7 +132,7 @@ class MDSystem {
      */
     inline bool newBox() const
     {
-      return d_changeBox;
+      return d_newBox;
     }
 
     /**
@@ -140,9 +140,9 @@ class MDSystem {
      * @param
      * @return
      */
-    inline void changeBox(bool value)
+    inline void setNewBox(bool value)
     {
-      d_changeBox = value;
+      d_newBox = value;
     }
 
     /**
@@ -173,7 +173,7 @@ class MDSystem {
     int d_numGhostCells;        //!< Number of ghost cells used, a function of cutoffRadius and cell size
     int d_maxIterations;        //!<
     bool d_orthorhombic;        //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_changeBox;           //!< Whether or not the system size has changed
+    bool d_newBox;           //!< Whether or not the system size has changed... create a new box
 
     Matrix3 d_unitCell;         //!< MD system unit cell
     Matrix3 d_inverseCell;      //!< MD system inverse unit cell
