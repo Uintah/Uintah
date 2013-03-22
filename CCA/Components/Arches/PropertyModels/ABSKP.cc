@@ -29,6 +29,7 @@ ABSKP::~ABSKP( )
 //---------------------------------------------------------------------------
 void ABSKP::problemSetup( const ProblemSpecP& inputdb )
 {
+  commonProblemSetup( inputdb ); 
 }
 
 //---------------------------------------------------------------------------
