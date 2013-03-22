@@ -80,7 +80,7 @@ class MDSystem {
      * @param  None
      * @return
      */
-    inline bool getPressure() const
+    inline Vector getPressure() const
     {
       return d_pressure;
     }
@@ -90,7 +90,7 @@ class MDSystem {
      * @param
      * @return
      */
-    inline bool getTemperature() const
+    inline double getTemperature() const
     {
       return d_temperature;
     }
@@ -168,7 +168,7 @@ class MDSystem {
   private:
 
     double d_volume;            //!< Total MD system unit cell volume
-    double d_pressure;          //!< Total MD system pressure
+    Vector d_pressure;          //!< Total MD system pressure
     double d_temperature;       //!< Total MD system temperature
     int d_numGhostCells;        //!< Number of ghost cells used, a function of cutoffRadius and cell size
     int d_maxIterations;        //!<

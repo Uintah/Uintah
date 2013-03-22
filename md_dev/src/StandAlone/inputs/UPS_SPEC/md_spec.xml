@@ -9,6 +9,16 @@
     <R12                        spec="REQUIRED DOUBLE" />
     <R6                         spec="REQUIRED DOUBLE" />
     
+    
+    <MDSystem                   spec="OPTIONAL NO_DATA">
+      <pressure                 spec="REQUIRED VECTOR"/>
+      <temperature              spec="REQUIRED DOUBLE"/>
+      <orthorhombic             spec="REQUIRED BOOLEAN"/>
+      <ghostcells               spec="REQUIRED INTEGER"/>
+      <maxiterations            spec="REQUIRED INTEGER 'positive'"/>
+    </MDSystem>
+    
+    
     <Electrostatics             spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'none SPME'">
       <ewaldBeta                spec="REQUIRED DOUBLE 'positive'"/>

@@ -43,12 +43,11 @@ MDSystem::~MDSystem()
 
 MDSystem::MDSystem(ProblemSpecP& ps)
 {
-  ps->findBlock("MDSystem");
-  ps->get("pressure", d_pressure);
-  ps->get("temperature", d_temperature);
-  ps->get("orthorhombic", d_orthorhombic);
-  ps->get("changeBox", d_changeBox);
-  ps->get("ghostcells", d_numGhostCells);
-  ps->get("maxiterations", d_maxIterations);
+  ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
+  mdsystem_ps->get("pressure", d_pressure);
+  mdsystem_ps->get("temperature", d_temperature);
+  mdsystem_ps->get("orthorhombic", d_orthorhombic);
+  mdsystem_ps->get("ghostcells", d_numGhostCells);
+  mdsystem_ps->get("maxiterations", d_maxIterations);
 }
 

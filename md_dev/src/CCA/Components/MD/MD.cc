@@ -134,6 +134,7 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->pChargeLabel);
   task->computes(d_lb->pParticleIDLabel);
   task->computes(d_lb->vdwEnergyLabel);
+
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
@@ -145,6 +146,7 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
   task->requires(Task::NewDW, d_lb->vdwEnergyLabel);
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
+
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
@@ -157,9 +159,10 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allMaterials();
 
   scheduleCalculateNonBondedForces(sched, patches, matls);
-  scheduleInterpolateParticlesToGrid(sched, patches, matls);
-  schedulePerformSPME(sched, patches, matls);
-  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+//  scheduleInterpolateParticlesToGrid(sched, patches, matls);
+//  schedulePerformSPME(sched, patches, matls);
+//  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  scheduleUpdatePosition(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, d_lb->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_lb->pXLabel,
                                     d_sharedState->d_particleState, d_lb->pParticleIDLabel, matls, 1);
@@ -244,6 +247,31 @@ void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   printSchedule(patches, md_cout, "MD::scheduleInterpolateToParticlesAndUpdate");
 
   Task* task = scinew Task("interpolateToParticlesAndUpdate", this, &MD::interpolateToParticlesAndUpdate);
+
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+
+  task->computes(d_lb->pXLabel_preReloc);
+  task->computes(d_lb->pAccelLabel_preReloc);
+  task->computes(d_lb->pVelocityLabel_preReloc);
+  task->computes(d_lb->pMassLabel_preReloc);
+  task->computes(d_lb->pChargeLabel_preReloc);
+  task->computes(d_lb->pParticleIDLabel_preReloc);
+
+  sched->addTask(task, patches, matls);
+}
+
+void MD::scheduleUpdatePosition(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls)
+{
+  Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -352,9 +380,6 @@ void MD::initialize(const ProcessorGroup* pg,
 {
   printTask(patches, md_cout, "MD::initialize");
 
-  // initialize electrostatics object
-  d_electrostatics->initialize(patches, matls, old_dw, new_dw);
-
   // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
@@ -424,6 +449,9 @@ void MD::initialize(const ProcessorGroup* pg,
     }
     new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
   }
+
+  // initialize electrostatics object
+  d_electrostatics->initialize(patches, matls, old_dw, new_dw);
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)
@@ -694,6 +722,93 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
           std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].x();
           std::cout << std::setw(10) << std::setprecision(6) << pxnew[i].y();
           std::cout << std::setprecision(6) << pxnew[i].z() << std::setw(4) << "]";
+          std::cout << std::endl;
+          cerrLock.unlock();
+        }
+      }  // end atom loop
+
+      new_dw->deleteParticles(delset);
+
+    }  // end materials loop
+
+  }  // end patch loop
+}
+
+void MD::updatePosition(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw)
+{
+  // loop through all patches
+  unsigned int numPatches = patches->size();
+  for (unsigned int p = 0; p < numPatches; p++) {
+    const Patch* patch = patches->get(p);
+
+    // do this for each material; for this example, there is only a single material, material "0"
+    unsigned int numMatls = matls->size();
+    for (unsigned int m = 0; m < numMatls; m++) {
+      int matl = matls->get(m);
+
+      ParticleSubset* lpset = old_dw->getParticleSubset(matl, patch);
+      ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
+
+      // requires variables
+      constParticleVariable<Point> px;
+      constParticleVariable<Vector> pforce;
+      constParticleVariable<Vector> paccel;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<double> pmass;
+      constParticleVariable<double> pcharge;
+      constParticleVariable<long64> pids;
+      old_dw->get(px, d_lb->pXLabel, lpset);
+      old_dw->get(pforce, d_lb->pForceLabel, lpset);
+      old_dw->get(paccel, d_lb->pAccelLabel, lpset);
+      old_dw->get(pvelocity, d_lb->pVelocityLabel, lpset);
+      old_dw->get(pmass, d_lb->pMassLabel, lpset);
+      old_dw->get(pcharge, d_lb->pChargeLabel, lpset);
+      old_dw->get(pids, d_lb->pParticleIDLabel, lpset);
+
+      // computes variables
+      ParticleVariable<Point> pxnew;
+      ParticleVariable<Vector> paccelnew;
+      ParticleVariable<Vector> pvelocitynew;
+      ParticleVariable<double> pmassnew;
+      ParticleVariable<double> pchargenew;
+      ParticleVariable<long64> pidsnew;
+      new_dw->allocateAndPut(pxnew, d_lb->pXLabel_preReloc, lpset);
+      new_dw->allocateAndPut(paccelnew, d_lb->pAccelLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pvelocitynew, d_lb->pVelocityLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pmassnew, d_lb->pMassLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pidsnew, d_lb->pParticleIDLabel_preReloc, lpset);
+
+      // get delT
+      delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
+
+      // loop over the local atoms
+      for (ParticleSubset::iterator iter = lpset->begin(); iter != lpset->end(); iter++) {
+        particleIndex idx = *iter;
+
+        // carry these values over for now
+        pmassnew[idx] = pmass[idx];
+        pchargenew[idx] = pcharge[idx];
+        pidsnew[idx] = pids[idx];
+
+        // update position
+        paccelnew[idx] = pforce[idx] / pmass[idx];
+        pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
+        pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;
+
+        if (md_dbg.active()) {
+          cerrLock.lock();
+          std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
+          std::cout << "ParticleID: " << std::setw(6) << pidsnew[idx] << std::setw(6);
+          std::cout << "New Position: [";
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[idx].x();
+          std::cout << std::setw(10) << std::setprecision(6) << pxnew[idx].y();
+          std::cout << std::setprecision(6) << pxnew[idx].z() << std::setw(4) << "]";
           std::cout << std::endl;
           cerrLock.unlock();
         }
