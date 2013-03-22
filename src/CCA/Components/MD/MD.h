@@ -170,6 +170,15 @@ class MD : public UintahParallelComponent, public SimulationInterface {
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls);
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void scheduleUpdatePosition(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls);
+
   private:
 
     /**
@@ -244,6 +253,16 @@ class MD : public UintahParallelComponent, public SimulationInterface {
                                          const MaterialSubset* matls,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw);
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    void updatePosition(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
 
     /**
      * @brief

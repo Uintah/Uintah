@@ -76,8 +76,6 @@ void SPME::initialize(const PatchSubset* patches,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
-  int material = 0;  // single material for now
-
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
   d_spmePatches.reserve(patches->size());
 
@@ -96,7 +94,7 @@ void SPME::initialize(const PatchSubset* patches,
     IntVector plusGhostExtents = patch->getExtraCellHighIndex(numGhostCells) - patch->getCellHighIndex();
     IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
 
-    ParticleSubset* pset = old_dw->getParticleSubset(material, patch);
+    ParticleSubset* pset = new_dw->getParticleSubset(materials->get(0), patch);
     SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents);
     spmePatch->setPset(pset);
     d_spmePatches.push_back(spmePatch);
