@@ -46,6 +46,7 @@
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
+      <CellBasedSmoothing                 spec="OPTIONAL BOOLEAN" />
       <UseMomentumForm                    spec="OPTIONAL BOOLEAN" />
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
