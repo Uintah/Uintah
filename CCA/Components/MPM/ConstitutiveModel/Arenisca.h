@@ -55,6 +55,8 @@ namespace Uintah {
       double FSLOPE_p;
       double hardening_modulus;
       double CR;
+      double T1_rate_dependence;
+      double T2_rate_dependence;
       double p0_crush_curve;
       double p1_crush_curve;
       double p3_crush_curve;
@@ -62,6 +64,7 @@ namespace Uintah {
       double kinematic_hardening_constant;
       double fluid_B0;
       double fluid_pressure_initial;
+      double gruneisen_parameter;
       double subcycling_characteristic_number;
       double PEAKI1;
       double B0;
@@ -85,10 +88,20 @@ namespace Uintah {
     const VarLabel* peveLabel_preReloc;
     const VarLabel* pCapXLabel;
     const VarLabel* pCapXLabel_preReloc;
+    const VarLabel* pCapXQSLabel;
+    const VarLabel* pCapXQSLabel_preReloc;
     const VarLabel* pKappaLabel;
     const VarLabel* pKappaLabel_preReloc;
     const VarLabel* pZetaLabel;
     const VarLabel* pZetaLabel_preReloc;
+    const VarLabel* pZetaQSLabel;
+    const VarLabel* pZetaQSLabel_preReloc;
+    const VarLabel* pIotaLabel;
+    const VarLabel* pIotaLabel_preReloc;
+    const VarLabel* pIotaQSLabel;
+    const VarLabel* pIotaQSLabel_preReloc;
+    const VarLabel* pStressQSLabel;
+    const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
     //Xconst VarLabel* pVelGradLabel;
