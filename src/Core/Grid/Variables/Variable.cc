@@ -89,16 +89,24 @@ Variable::emit( OutputContext& oc,
     use_rle = false; // try without rle first
     use_gzip = true;
     try_all = true;
+    cout << "ALL MODE";
   }
   else if ((compressionModeHint == "rle, gzip") ||
            (compressionModeHint == "gzip, rle")) {
     use_rle = true;
     use_gzip = true;
+    cout << "BOTH MODE";
   }
   else if (compressionModeHint == "rle")
+  {
     use_rle = true;
+    cout << "RLE MODE";
+  }
   else if (compressionModeHint == "gzip")
+  {
     use_gzip = true;
+    cout << "GZIP MODE";
+  }
   else if (compressionModeHint != "" && compressionModeHint != "none") {
     cout << "Invalid Compression Mode - throwing exception...\n";
     SCI_THROW(InvalidCompressionMode(compressionModeHint, "", __FILE__, __LINE__));
@@ -165,6 +173,15 @@ Variable::emit( OutputContext& oc,
   #else
     ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
   #endif
+
+#if HAVE_PIDX
+
+/* -AM */
+//   PIDX_variable_local_layout(pc.idx, pc.variable, (char*)writebuffer, MPI_DOUBLE);
+//   PIDX_write(pc.idx);
+//   PIDX_close(pc.idx);
+
+#endif
 
     if(s != (long)writebufferSize) {
       cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
