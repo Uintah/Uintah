@@ -1803,8 +1803,23 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     }
 
     // loop over variables
+    // char* varXX;
+    // varXX[0] = 0;
+#if HAVE_PIDX
+    char str[1024];
+    strcpy (str,filename);
+    strcat (str,"_X.idx");
+    std::cerr<<"Creating PIDXOutputContext..." << filename << "\n";
+    PIDXOutputContext pc(str, d_myworld->getComm());
+#endif
+    int rank;
+    MPI_Comm_rank(d_myworld->getComm(), &rank);
+    int x1;
+
     vector<SaveItem>::iterator saveIter;
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+//    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    for(saveIter = saveLabels.begin(), x1=0; saveIter!= saveLabels.end(); saveIter++, x1++) {
+
       const VarLabel* var = saveIter->label_;
       // check to see if we need to save on this level
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
@@ -1841,19 +1856,39 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       }
 
       // loop through patches and materials
+      int counter2 = 0;
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
+        counter2++;
         const Patch* patch;
         int patchID;
         if (type == CHECKPOINT_REDUCTION) {
           // to consolidate into this function, force patch = 0
           patch = 0;
           patchID = -1;
-        }
-        else {
-          patch = patches->get(p);
-          patchID = patch->getID();
+
+                } else {
+                    patch = patches->get(p);
+                    patchID = patch->getID();
+
+                    IntVector hi, low, range;
+                    low = patch->getCellLowIndex();
+                    hi = patch->getCellHighIndex();
+
+                    std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
+                    std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
+                    std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
+                    std::cout << " X" << ", " << " ]\n";
         }
         
+       //IntVector hi, low, range;
+       //low = patch->getCellLowIndex();
+       //hi = patch->getCellHighIndex();
+       
+       //std::cout<<"Patch info: \nPatch number "<< p << "\n";
+       //std::cout<< "Patch extent " << low.x() << ", "<< low.y() << ", " <<  low.z() <<" "  <<hi.x() << ", "<< hi.y() << ", "<< hi.z()  << "\n";
+       //std::cout<< " X" << rank << " [" <<x1 << ", " << p << " ]\n";
+       //std::cout<< " X" <<  ", " <<  " ]\n";
+
         for(int m=0;m<var_matls->size();m++){
           
           // add info for this variable to the current xml file
