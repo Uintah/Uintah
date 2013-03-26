@@ -66,7 +66,6 @@ void Ray::constructor(){
   d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
-  d_volumeFracLabel        = VarLabel::create( "volumeFrac",         CCVariable<double>::getTypeDescription() );
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -113,7 +112,6 @@ Ray::~Ray()
   VarLabel::destroy( d_boundFluxLabel);
   VarLabel::destroy( d_divQFiltLabel);
   VarLabel::destroy( d_boundFluxFiltLabel);
-  VarLabel::destroy( d_volumeFracLabel);
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -282,7 +280,7 @@ Ray::registerVarLabels(int   matlIndex,
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
-  d_volumeFracLabel    = volumeFrac; 
+  d_volumeFracLabel  = volumeFrac; 
   d_divQLabel        = divQ;
 
   //__________________________________
