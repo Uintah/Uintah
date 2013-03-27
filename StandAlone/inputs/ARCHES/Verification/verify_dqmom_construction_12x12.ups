@@ -139,7 +139,6 @@
         <Eqn label="scalar1" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <addSources>true</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="step">
             <step_direction>z</step_direction>
@@ -154,7 +153,6 @@
         <Eqn label="scalar2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <addSources>true</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="step">
             <step_direction>z</step_direction>
@@ -168,7 +166,6 @@
         <Eqn label="scalar3" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <addSources>true</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="constant">
             <constant>3.0</constant>

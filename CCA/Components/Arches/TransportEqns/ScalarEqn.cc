@@ -89,7 +89,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
-  db->getWithDefault( "addSources", d_addSources, true); 
   
   // algorithmic knobs
   d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
@@ -105,12 +104,13 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   } 
 
 
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  factory.commonSrcProblemSetup( db ); 
+
   // Source terms:
   if (db->findBlock("src")){
 
     string srcname; 
-    double weight; 
-
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
 
       SourceContainer this_src; 
@@ -279,9 +279,6 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   if (timeSubStep == 0)
     sched_initializeVariables( level, sched );
 
-  if (d_addSources) 
-    sched_computeSources( level, sched, timeSubStep ); 
-
   sched_buildTransportEqn( level, sched, timeSubStep );
 
   if (d_use_density_guess)
@@ -394,15 +391,6 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 void 
 ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  // This scheduler only calls other schedulers
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-
-    SourceTermBase& temp_src = factory.retrieve_source_term( iter->name ); 
-
-    printSchedule(level,dbg,"ScalarEqn::sched_computeSources " + iter->name );
-    temp_src.sched_computeSource( level, sched, timeSubStep );
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation. 
@@ -433,15 +421,13 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0); 
 
   // srcs
-  if (d_addSources) {
-    SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    for (vector<SourceContainer>::iterator iter = d_sources.begin(); 
-         iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name ); 
-      const VarLabel* temp_varLabel; 
-      temp_varLabel = temp_src.getSrcLabel(); 
-      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
-    }
+  SourceTermFactory& src_factory = SourceTermFactory::self(); 
+  for (vector<SourceContainer>::iterator iter = d_sources.begin(); 
+       iter != d_sources.end(); iter++){
+    SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name ); 
+    const VarLabel* temp_varLabel; 
+    temp_varLabel = temp_src.getSrcLabel(); 
+    tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
   }
   
   //-----OLD-----
@@ -525,15 +511,13 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     vector<constCCVarWrapper> sourceVars; 
-    if (d_addSources) { 
-      SourceTermFactory& src_factory = SourceTermFactory::self(); 
-      for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-        constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
-        SourceTermBase& temp_src = src_factory.retrieve_source_term( src_iter->name ); 
-        new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-        temp_var.sign = (*src_iter).weight; 
-        sourceVars.push_back(temp_var); 
-      }
+    SourceTermFactory& src_factory = SourceTermFactory::self(); 
+    for (vector<SourceContainer>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+      constCCVarWrapper temp_var;  // Outside of this scope src is no longer available 
+      SourceTermBase& temp_src = src_factory.retrieve_source_term( src_iter->name ); 
+      new_dw->get(temp_var.data, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
+      temp_var.sign = (*src_iter).weight; 
+      sourceVars.push_back(temp_var); 
     }
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
@@ -564,10 +548,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       //-----ADD SOURCES
-      if (d_addSources) {
-        for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
-          RHS[c] += siter->sign * (siter->data)[c] * vol; 
-        }
+      for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
+        RHS[c] += siter->sign * (siter->data)[c] * vol; 
       }
     }
   }

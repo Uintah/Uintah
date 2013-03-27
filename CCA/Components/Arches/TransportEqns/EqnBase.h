@@ -315,7 +315,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
   for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
-    Vector Dx = patch->dCell(); 
     Point  P  = patch->getCellPosition(c); 
 
     double x=0.0,y=0.0,z=0.0; 
@@ -325,7 +324,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
     celly = c[1];
     cellz = c[2];
 
-    x = P.x(); // the +Dx/2 is because variable is cell-centered
+    x = P.x(); 
     y = P.y(); 
     z = P.z();
 
@@ -427,7 +426,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
 
   for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
     IntVector c = *iter; 
-    Vector Dx = patch->dCell(); 
     Point  P  = patch->getCellPosition(c);
 
     double x=0.0,y=0.0,z=0.0; 

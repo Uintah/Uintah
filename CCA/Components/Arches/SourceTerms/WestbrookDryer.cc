@@ -18,7 +18,6 @@ WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
   _field_labels(field_labels)
 { 
 
-  _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
   _extra_local_labels.resize(2); 
@@ -71,13 +70,29 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
     db->getWithDefault("temperature_clip", d_T_clip, 10000);                 // [K], Turns off the rate below this T.
     _use_T_clip = true;
   }
+
   if ( db->findBlock("flammability_limit") ){ 
-    _use_flam_limits = true; 
-    db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("label",_diluent_label_name); 
+
+    _const_diluent = false; 
+
+    if ( db->findBlock("flammability_limit")->findBlock("const_diluent") ){ 
+
+      db->findBlock("flammability_limit")->require("const_diluent",_const_diluent_mass_fraction); 
+      _const_diluent = true; 
+
+    } else { 
+
+      db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("label",_diluent_label_name); 
+
+    }
+
     db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("slope", _flam_low_m);
     db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("intercept",_flam_low_b);
     db->findBlock("flammability_limit")->findBlock("upper")->getAttribute("slope", _flam_up_m);
     db->findBlock("flammability_limit")->findBlock("upper")->getAttribute("intercept",_flam_up_b);
+
+    _use_flam_limits = true; 
+
   } 
 
   //Bullet proofing: 
@@ -103,12 +118,6 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
     _hot_spot = true; 
   }
 
-  if ( db->findBlock("pos") ) { 
-    d_sign = 1.0; 
-  } else { 
-    d_sign = -1.0; 
-  }
-
   // hard set some values...may want to change some of these to be inputs
   d_MW_O2 = 32.0; 
   d_R     = 8.314472; 
@@ -129,18 +138,18 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   _temperatureLabel   = VarLabel::find( d_T_label );
   _denLabel           = VarLabel::find( d_rho_label );
   _CstarMassFracLabel = VarLabel::find( d_cstar_label );
+  if ( _CstarMassFracLabel == 0 ){ 
+    throw ProblemSetupException( "Error: Could not locate the C* mass fraction label.", __FILE__, __LINE__);
+  } 
   _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
   _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
-  if ( _use_flam_limits ){ 
+  if ( _use_flam_limits && !_const_diluent ){ 
     _diluentLabel       = VarLabel::find( _diluent_label_name ); 
   }
 
 
 
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
+  if (timeSubStep == 0 ) {
 
     tsk->computes(_src_label);
     tsk->computes(d_WDstrippingLabel); 
@@ -151,7 +160,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
-    if ( _use_flam_limits ){ 
+    if ( _use_flam_limits && !_const_diluent ){ 
       tsk->requires( Task::OldDW, _diluentLabel, Ghost::None, 0 ); 
     } 
 
@@ -166,7 +175,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _CEqMassFracLabel, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 ); 
-    if ( _use_flam_limits ){ 
+    if ( _use_flam_limits && !_const_diluent ){ 
       tsk->requires( Task::NewDW, _diluentLabel, Ghost::None, 0 ); 
     } 
 
@@ -227,11 +236,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       new_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
-      if ( _use_flam_limits ){ 
+      if ( _use_flam_limits && !_const_diluent ){ 
         new_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
       } 
 
     } else {
+
       new_dw->allocateAndPut( CxHyRate , _src_label         , matlIndex , patch );
       new_dw->allocateAndPut( S        , d_WDstrippingLabel , matlIndex , patch );
       new_dw->allocateAndPut( E        , d_WDextentLabel    , matlIndex , patch );
@@ -245,7 +255,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
-      if ( _use_flam_limits ){ 
+      if ( _use_flam_limits && !_const_diluent ){ 
         old_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
       } 
 
@@ -275,10 +285,18 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       // Step 2: Compute rate
       double rate = 0.0;
       if ( _use_T_clip ){ 
+
         double fake_diluent = 0.0; 
         rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
+
       } else { 
-        rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+
+        if ( _const_diluent ){ 
+          rate = getRate( _T_hot_spot, Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
+        } else { 
+          rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+        } 
+
       } 
 
       // Overwrite with hot spot if specified -- like a pilot light
@@ -301,7 +319,11 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
                 double fake_diluent = 0.0; 
                 rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
               } else { 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+                if ( _const_diluent ){ 
+                  rate = getRate( _T_hot_spot, Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
+                } else { 
+                  rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+                } 
               } 
 
             }
