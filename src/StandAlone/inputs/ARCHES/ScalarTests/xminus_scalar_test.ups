@@ -100,7 +100,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="constant">
             <constant>0.00</constant>
           </initialization>
@@ -113,7 +112,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>roe_minmod</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="constant">
             <constant>0.00</constant>
           </initialization>
@@ -126,7 +124,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="constant">
             <constant>0.00</constant>
           </initialization>

@@ -99,6 +99,37 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 }
 
 //---------------------------------------------------------------------------
+// Method: Activate all source terms here
+//---------------------------------------------------------------------------
+void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
+{
+  for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+
+    SourceContainer this_src; 
+    double weight; 
+
+    src_db->getAttribute(  "label",  this_src.name   );
+    src_db->getWithDefault("weight", weight, 1.0);    // by default, add the source to the RHS
+
+    this_src.weight = weight; 
+
+    //which sources are turned on for this equation
+    //only add them if they haven't already been added. 
+    bool add_me = true; 
+    for ( vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++ ){ 
+      if ( iter->name == this_src.name ){ 
+        add_me = false; 
+      } 
+    }
+
+    if ( add_me ){ 
+      _active_sources.push_back( this_src ); 
+    }
+
+  }
+}
+
+//---------------------------------------------------------------------------
 // Method: Find if a property model is included in the map. 
 //---------------------------------------------------------------------------
 bool
@@ -312,4 +343,12 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
     }
   }
 }
+
+void SourceTermFactory::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{ 
+  for (vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++){
+    SourceTermBase& temp_src = retrieve_source_term( iter->name ); 
+    temp_src.sched_computeSource( level, sched, timeSubStep );
+  }
+} 
 

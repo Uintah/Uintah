@@ -255,7 +255,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="geometry_fill">
             <geom_object>
               <cylinder label="inner cylinder"/>
@@ -273,7 +272,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="geometry_fill">
             <geom_object>
               <cylinder label="inner cylinder"/>
