@@ -26,12 +26,14 @@
 #define UINTAH_MD_SPMEPatch_H
 
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Math/Matrix3.h>
 
 #include <complex>
 
 namespace Uintah {
+
+class IntVector;
 
 /**
  *  @class SPMEPatch
@@ -69,7 +71,7 @@ class SPMEPatch {
               IntVector offset,
               IntVector plusGhostExtents,
               IntVector minusGhostExtents,
-              ParticleSubset* pset);
+              const Patch* patch);
 
     /**
      * @brief
@@ -176,27 +178,27 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline ParticleSubset* getPset() const
+    inline const Patch* getPatch() const
     {
-      return d_pset;
+      return d_patch;
     }
 
   private:
 
     // Patch dependent quantities
-    IntVector d_localExtents;       //!< Number of grid points in each direction for this patch
-    IntVector d_globalOffset;       //!< Grid point index of local 0,0,0 origin in global coordinates
+    IntVector d_localExtents;               //!< Number of grid points in each direction for this patch
+    IntVector d_globalOffset;               //!< Grid point index of local 0,0,0 origin in global coordinates
 
     // Store the number of ghost cells  along each of the min/max boundaries
     // This lets us differentiate should we need to for centered and  left/right shifted splines
-    IntVector d_posGhostExtents;    //!< Number of ghost cells on positive boundary
-    IntVector d_negGhostExtents;     //!< Number of ghost cells on negative boundary
+    IntVector d_posGhostExtents;            //!< Number of ghost cells on positive boundary
+    IntVector d_negGhostExtents;            //!< Number of ghost cells on negative boundary
 
     SimpleGrid<double> d_theta;             //!<
     SimpleGrid<Matrix3> d_stressPrefactor;  //!<
-    SimpleGrid<complex<double> > Q;       //!<
+    SimpleGrid<complex<double> > Q;         //!<
 
-    ParticleSubset* d_pset;                 //!<
+    const Patch* d_patch;                   //!<
 
     SPMEPatch(const SPMEPatch& patch);
     SPMEPatch& operator=(const SPMEPatch& patch);

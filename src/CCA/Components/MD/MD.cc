@@ -100,6 +100,9 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   // create the Electrostatics object via factory method
   d_electrostatics = ElectrostaticsFactory::create(params, d_system);
+  if (d_electrostatics->getType() == Electrostatics::SPME) {
+    dynamic_cast<SPME*>(d_electrostatics)->setMDLabel(d_lb);
+  }
 
   // create and register MD materials (this is ill defined right now)
   d_material = scinew SimpleMaterial();
@@ -642,7 +645,7 @@ void MD::performSPME(const ProcessorGroup* pg,
     d_system->setNewBox(false);
   }
 
-  d_electrostatics->calculate();
+  d_electrostatics->calculate(pg, patches, matls, old_dw, new_dw);
 
   d_electrostatics->finalize();
 }
@@ -665,7 +668,7 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = matls->get(m);
 
-      ParticleSubset* lpset = old_dw->getParticleSubset(matl, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
 
       // requires variables
@@ -676,13 +679,13 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
       constParticleVariable<double> pmass;
       constParticleVariable<double> pcharge;
       constParticleVariable<long64> pids;
-      old_dw->get(px, d_lb->pXLabel, lpset);
-      old_dw->get(pforce, d_lb->pForceLabel, lpset);
-      old_dw->get(paccel, d_lb->pAccelLabel, lpset);
-      old_dw->get(pvelocity, d_lb->pVelocityLabel, lpset);
-      old_dw->get(pmass, d_lb->pMassLabel, lpset);
-      old_dw->get(pcharge, d_lb->pChargeLabel, lpset);
-      old_dw->get(pids, d_lb->pParticleIDLabel, lpset);
+      old_dw->get(px, d_lb->pXLabel, pset);
+      old_dw->get(pforce, d_lb->pForceLabel, pset);
+      old_dw->get(paccel, d_lb->pAccelLabel, pset);
+      old_dw->get(pvelocity, d_lb->pVelocityLabel, pset);
+      old_dw->get(pmass, d_lb->pMassLabel, pset);
+      old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+      old_dw->get(pids, d_lb->pParticleIDLabel, pset);
 
       // computes variables
       ParticleVariable<Point> pxnew;
@@ -691,25 +694,25 @@ void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
       ParticleVariable<double> pmassnew;
       ParticleVariable<double> pchargenew;
       ParticleVariable<long64> pidsnew;
-      new_dw->allocateAndPut(pxnew, d_lb->pXLabel_preReloc, lpset);
-      new_dw->allocateAndPut(paccelnew, d_lb->pAccelLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pvelocitynew, d_lb->pVelocityLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pmassnew, d_lb->pMassLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, lpset);
-      new_dw->allocateAndPut(pidsnew, d_lb->pParticleIDLabel_preReloc, lpset);
+      new_dw->allocateAndPut(pxnew, d_lb->pXLabel_preReloc, pset);
+      new_dw->allocateAndPut(paccelnew, d_lb->pAccelLabel_preReloc, pset);
+      new_dw->allocateAndPut(pvelocitynew, d_lb->pVelocityLabel_preReloc, pset);
+      new_dw->allocateAndPut(pmassnew, d_lb->pMassLabel_preReloc, pset);
+      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
+      new_dw->allocateAndPut(pidsnew, d_lb->pParticleIDLabel_preReloc, pset);
 
       // get delT
       delt_vartype delT;
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
 
       // loop over the local atoms
-      unsigned int localNumParticles = lpset->numParticles();
+      unsigned int localNumParticles = pset->numParticles();
       for (unsigned int i = 0; i < localNumParticles; i++) {
 
         // carry these values over for now
-        pmassnew[i] = pmass[i];
-        pchargenew[i] = pcharge[i];
-        pidsnew[i] = pids[i];
+        pmassnew.copyData(pmass);
+        pchargenew.copyData(pcharge);
+        pidsnew.copyData(pids);
 
         // update position
         paccelnew[i] = pforce[i] / pmass[i];

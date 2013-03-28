@@ -45,6 +45,7 @@ typedef std::complex<double> dblcomplex;
 class MDSystem;
 class SPMEMapPoint;
 class ParticleSubset;
+class MDLabel;
 
 /**
  *  @class SPME
@@ -111,7 +112,11 @@ class SPME : public Electrostatics {
      * @param None
      * @return None
      */
-    void calculate();
+    void calculate(const ProcessorGroup* pg,
+                   const PatchSubset* patches,
+                   const MaterialSubset* materials,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -128,6 +133,16 @@ class SPME : public Electrostatics {
     inline ElectrostaticsType getType() const
     {
       return d_electrostaticMethod;
+    }
+
+    /**
+     * @brief
+     * @param None
+     * @return
+     */
+    inline void setMDLabel(MDLabel* lb)
+    {
+      d_lb = lb;
     }
 
   private:
@@ -291,6 +306,7 @@ class SPME : public Electrostatics {
     // Values fixed on instantiation
     ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
     MDSystem* d_system;                               //!< A handle to the MD simulation system object
+    MDLabel* d_lb;                                    //!<
     double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
     bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
     double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
