@@ -754,6 +754,10 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   //this should have been pruned out earlier
   ASSERT(!req->var->typeDescription()->isReductionVariable())
+  // Do not check external deps on SoleVariable
+  if (req->var->typeDescription()->getType() == TypeDescription::SoleVariable) {
+    return;
+  }
 
   //get dependancy batch
   DependencyBatch* batch = from->getComputes();
