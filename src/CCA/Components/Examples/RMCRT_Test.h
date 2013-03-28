@@ -131,7 +131,7 @@ WARNING
     VarLabel* d_abskgLabel;
     VarLabel* d_absorpLabel;
     VarLabel* d_sigmaT4Label;
-    VarLabel* d_volumeFracLabel; 
+    VarLabel* d_cellTypeLabel; 
     
     Ghost::GhostType d_gn;
     Ghost::GhostType d_gac;
@@ -148,7 +148,7 @@ WARNING
     
     struct useOldUdaData{
       string udaName;
-      string volumeFracName;
+      string cellTypeName;
       string temperatureName;
       string abskgName;
       unsigned int timestep;

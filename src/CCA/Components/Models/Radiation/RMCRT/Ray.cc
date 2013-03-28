@@ -66,6 +66,7 @@ void Ray::constructor(){
   d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
+  d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -112,6 +113,7 @@ Ray::~Ray()
   VarLabel::destroy( d_boundFluxLabel);
   VarLabel::destroy( d_divQFiltLabel);
   VarLabel::destroy( d_boundFluxFiltLabel);
+  VarLabel::destroy( d_cellTypeLabel);
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -273,14 +275,14 @@ Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
                        const VarLabel* absorp,
                        const VarLabel* temperature,
-                       const VarLabel* volumeFrac, 
+                       const VarLabel* celltype, 
                        const VarLabel* divQ)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
-  d_volumeFracLabel  = volumeFrac; 
+  d_cellTypeLabel    = celltype; 
   d_divQLabel        = divQ;
 
   //__________________________________
@@ -303,7 +305,7 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched )
 
     tsk->modifies( d_temperatureLabel );
     tsk->modifies( d_abskgLabel );
-    tsk->modifies( d_volumeFracLabel );
+    tsk->modifies( d_cellTypeLabel );
 
 
     sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
@@ -327,7 +329,7 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
-    CCVariable<double> volumeFrac;
+    CCVariable<double> celltype;
 
     new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
     abskg.initialize  ( 0.0 ); 
@@ -473,17 +475,17 @@ Ray::sched_rayTrace( const LevelP& level,
                      SchedulerP& sched,
                      Task::WhichDW abskg_dw,
                      Task::WhichDW sigma_dw,
-                     Task::WhichDW volumeFrac_dw,
+                     Task::WhichDW celltype_dw,
                      bool modifies_divQ )
 {
   std::string taskname = "Ray::rayTrace";
 #ifdef HAVE_CUDA
   std::string gputaskname = "Ray::rayTraceGPU";
   Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
-                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, volumeFrac_dw );
+                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, sigma_dw, volumeFrac_dw );
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #endif
 
   printSchedule(level,dbg,taskname);
@@ -493,7 +495,7 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   if (!tsk->usesDevice()) {
-    tsk->requires( volumeFrac_dw , d_volumeFracLabel , gac, SHRT_MAX);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
@@ -527,7 +529,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
-               Task::WhichDW which_volumeFrac_dw)
+               Task::WhichDW which_celltype_dw)
 { 
   const Level* level = getLevel(patches);
   MTRand _mTwister;
@@ -541,16 +543,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
   
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-  DataWarehouse* volumeFrac_dw = new_dw->getOtherDataWarehouse(which_volumeFrac_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
 
   constCCVariable<double> sigmaT4OverPi;
   constCCVariable<double> abskg;
-  constCCVariable<double>    volumeFrac;
+  constCCVariable<int>    celltype;
 
   abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
   sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
-  volumeFrac_dw->getRegion( volumeFrac ,     d_volumeFracLabel, d_matl , level, domainLo_EC, domainHi_EC);
+  celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
   
   double start=clock();
 
@@ -787,7 +789,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
-        boundFlux[origin].p = has_a_boundary(origin, volumeFrac, boundaryFaces);
+        boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
 
 
         /*  Benchmark4
@@ -1590,7 +1592,7 @@ void Ray::adjustLocation(Vector &location,
 //______________________________________________________________________
 //
 bool Ray::has_a_boundary(const IntVector &c, 
-                         constCCVariable<double> &volumeFrac, 
+                         constCCVariable<int> &celltype, 
                          vector<int> &boundaryFaces){
 
   IntVector adjacentCell = c;
@@ -1599,14 +1601,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell = c;
   adjacentCell[0] = c[0] - 1; // west
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(0);
     hasBoundary = true;
   }
 
   adjacentCell[0] += 2; // east
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(1);
     hasBoundary = true;
   }
@@ -1614,14 +1616,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[0] -= 1;
   adjacentCell[1] = c[1] - 1; // south
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(2);
     hasBoundary = true;
   }
 
   adjacentCell[1] += 2; // north
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(3);
     hasBoundary = true;
   }
@@ -1629,14 +1631,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[1] -= 1;
   adjacentCell[2] = c[2] - 1; // bottom
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(4);
     hasBoundary = true;
   }
 
   adjacentCell[2] += 2; // top
 
-  if (volumeFrac[adjacentCell] == 0.0){
+  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
     boundaryFaces.push_back(5);
     hasBoundary = true;
   }
@@ -1714,7 +1716,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4OverPi;
-      CCVariable<double> volumeFrac;
+      CCVariable<double> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,         d_abskgLabel,     d_matl, patch );
@@ -1751,7 +1753,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       // set the boundary conditions
       setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
-      setBC(volumeFrac, d_volumeFracLabel->getName(), patch, d_matl);
+      setBC(cellType, d_cellTypeLabel->getName(), patch, d_matl);
 
 
       //__________________________________
