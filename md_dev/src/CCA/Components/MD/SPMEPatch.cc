@@ -43,9 +43,9 @@ SPMEPatch::SPMEPatch(IntVector extents,
                      IntVector offset,
                      IntVector plusGhostExtents,
                      IntVector minusGhostExtents,
-                     ParticleSubset* pset) :
-      d_localExtents(extents), d_globalOffset(offset), d_posGhostExtents(plusGhostExtents),
-      d_negGhostExtents(minusGhostExtents), d_pset(pset)
+                     const Patch* patch) :
+    d_localExtents(extents), d_globalOffset(offset), d_posGhostExtents(plusGhostExtents), d_negGhostExtents(minusGhostExtents),
+    d_patch(patch)
 {
 
 }

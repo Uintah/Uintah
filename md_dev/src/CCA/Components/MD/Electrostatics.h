@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,7 +84,11 @@ class Electrostatics {
      * @brief
      * @param
      */
-    virtual void calculate() = 0;
+    virtual void calculate(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* materials,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw) = 0;
 
     /**
      * @brief
