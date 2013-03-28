@@ -70,7 +70,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );          
   d_absorpLabel   = VarLabel::create( "absorp",   CCVariable<double>::getTypeDescription() );
   d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
-  d_volumeFracLabel = VarLabel::create( "volumeFrac", CCVariable<double>::getTypeDescription() );
+  d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
    
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
@@ -78,6 +78,8 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_initColor = -9;
   d_initAbskg = -9;
   d_whichAlgo = coarseLevel;
+  d_wall_cell = 8; //<----HARD CODED WALL CELL
+  d_flow_cell = -1; //<----HARD CODED FLOW CELL 
   
   d_old_uda = 0; 
 }
@@ -94,7 +96,7 @@ RMCRT_Test::~RMCRT_Test ( void )
   VarLabel::destroy(d_abskgLabel);
   VarLabel::destroy(d_absorpLabel);
   VarLabel::destroy(d_sigmaT4Label);
-  VarLabel::destroy(d_volumeFracLabel); 
+  VarLabel::destroy(d_cellTypeLabel); 
   
   if( d_old_uda){
     delete d_old_uda;
@@ -133,7 +135,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
                                  d_colorLabel,
-                                 d_volumeFracLabel, 
+                                 d_cellTypeLabel, 
                                  d_divQLabel);
                                  
     rmcrt_ps->require("Temperature",  d_initColor);
@@ -180,7 +182,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     uda_ps->get( "abskg_varName"  ,     d_old_uda->abskgName );
     uda_ps->get( "temperature_varName", d_old_uda->temperatureName );
     uda_ps->getWithDefault( "matl_index",          d_old_uda->matl, 0 );
-    uda_ps->getWithDefault( "volumeFrac_varName"  ,  d_old_uda->volumeFracName, "NONE" );
+    uda_ps->getWithDefault( "cellType_varName"  ,  d_old_uda->cellTypeName, "NONE" );
   }
   
   //__________________________________
@@ -249,7 +251,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       ostringstream warn;
       warn << "The variables (" << d_old_uda->abskgName << "),"
            << " (" << d_old_uda->temperatureName << "), or"
-           << " optional variale volumeFrac: (" << d_old_uda->volumeFracName 
+           << " optional variale cellType: (" << d_old_uda->cellTypeName 
            << ") was not found in the uda";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);        
     }
@@ -275,7 +277,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
   printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
   task->computes( d_colorLabel );
   task->computes( d_abskgLabel );
-  task->computes( d_volumeFracLabel ); 
+  task->computes( d_cellTypeLabel ); 
   sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
 
@@ -306,7 +308,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // move data to the new_dw for simplicity
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    d_RMCRT->sched_CarryForward (level, sched, d_volumeFracLabel);
+    d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
     d_RMCRT->sched_CarryForward (level, sched, d_colorLabel);
     d_RMCRT->sched_CarryForward (level, sched, d_abskgLabel);
   }
@@ -372,12 +374,12 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW volumeFrac_dw = Task::NewDW;
+        Task::WhichDW celltype_dw = Task::NewDW;
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
         
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
-        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, volumeFrac_dw, modifies_divQ);
+        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
       }
     }
 
@@ -434,10 +436,10 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
 
       CCVariable<double> color;
       CCVariable<double> abskg;
-      CCVariable<double> volumeFrac; 
+      CCVariable<int> cellType; 
       new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
       new_dw->allocateAndPut(abskg,    d_abskgLabel,    matl, patch);
-      new_dw->allocateAndPut(volumeFrac, d_volumeFracLabel, matl, patch); 
+      new_dw->allocateAndPut(cellType, d_cellTypeLabel, matl, patch); 
 
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
          IntVector idx(*iter);
@@ -449,7 +451,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, matl);
 
       // initialize cell type
-      volumeFrac.initialize(1.0);
+      cellType.initialize(d_flow_cell);
 
       for ( int i = 0; i < (int)d_intrusion_geom.size(); i++ ){
 
@@ -466,7 +468,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
               Point p = patch->cellPosition( c ); 
               if ( piece->inside( p ) ) {
                 
-                volumeFrac[c] = 0.0; 
+                cellType[c] = d_wall_cell; 
                
               }
             }
@@ -501,7 +503,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 
   vector<CCVariable<double>*> uda_temp(     patches->size() );
   vector<CCVariable<double>*> uda_abskg(    patches->size() );
-  vector<CCVariable<double>*>    uda_volumeFrac( patches->size() );
+  vector<CCVariable<int>*>    uda_cellType( patches->size() );
 
   proc0cout << "Extracting data from " << d_old_uda->udaName
             << " at time " << times[timestep] 
@@ -524,10 +526,10 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
                           d_old_uda->abskgName,      uda_matl, uda_level, timestep, low, high);
     
-    if (d_old_uda->volumeFracName != "NONE" ){
-      uda_volumeFrac[p] = scinew CCVariable<double>;                      
-      archive->queryRegion( *(CCVariable<double>*) uda_volumeFrac[p],  
-                      d_old_uda->volumeFracName, uda_matl, uda_level, timestep, low, high);
+    if (d_old_uda->cellTypeName != "NONE" ){
+      uda_cellType[p] = scinew CCVariable<int>;                      
+      archive->queryRegion( *(CCVariable<int>*) uda_cellType[p],  
+                      d_old_uda->cellTypeName, uda_matl, uda_level, timestep, low, high);
                       
     }
   }
@@ -541,19 +543,19 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 
     CCVariable<double> color;
     CCVariable<double> abskg;
-    CCVariable<double> volumeFrac; 
+    CCVariable<int> cellType; 
     new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
     new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
-    new_dw->allocateAndPut(volumeFrac, d_volumeFracLabel, d_matl, patch); 
-    volumeFrac.initialize(1.0);
+    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
+    cellType.initialize(d_flow_cell);
 
     for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
       IntVector c(*iter);                      
       color[c] = (*uda_temp[p])[c];            
       abskg[c] = (*uda_abskg[p])[c];           
 
-      if (d_old_uda->volumeFracName != "NONE" ){ 
-       volumeFrac[c] = (*uda_volumeFrac[p])[c];    
+      if (d_old_uda->cellTypeName != "NONE" ){ 
+       cellType[c] = (*uda_cellType[p])[c];    
       }
     }
 
