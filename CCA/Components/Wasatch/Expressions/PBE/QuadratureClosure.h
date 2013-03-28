@@ -26,9 +26,6 @@
 #define MomentClosure_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/FieldExpressionsExtended.h>
 
 /**
  *  \class QuadratureClosure
