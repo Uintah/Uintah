@@ -162,27 +162,14 @@ namespace Wasatch{
   //--------------------------------------------------------------------
 
   void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
-                                   GraphCategories& gc,
-                                   const std::string taskListName )
+                                   GraphHelper* const gh )
   {
-    Category cat = INITIALIZATION;
-    if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-    else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-    else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-    else{
-      std::ostringstream msg;
-      msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-          << __FILE__ << " : " << __LINE__ << endl;
-    }
-
-    GraphHelper* const graphHelper = gc[cat];
-
     for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("NameTag");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::Tag tag = parse_nametag( exprParams );
-      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(tag) );
+      gh->rootIDs.insert( gh->exprFactory->get_id(tag) );
     }
   }
 
@@ -556,15 +543,12 @@ namespace Wasatch{
         forceOnGraphParams != 0;
         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
       std::vector<std::string> taskListNames;
-      //std::string taskListName;
       forceOnGraphParams->getAttribute("tasklist", taskListNames);
       std::vector<std::string>::iterator taskListIter = taskListNames.begin();
-      while (taskListIter != taskListNames.end()) {
-        force_expressions_on_graph(forceOnGraphParams, graphCategories_, *taskListIter);
-        ++taskListIter;
+      for( ; taskListIter != taskListNames.end(); ++taskListIter ){
+        force_expressions_on_graph( forceOnGraphParams, select_tasklist(*taskListIter,graphCategories_) );
       }
     }
-    
   }
 
   //--------------------------------------------------------------------

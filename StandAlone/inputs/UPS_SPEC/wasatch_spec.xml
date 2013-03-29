@@ -914,8 +914,7 @@
             
     </MomentTransportEquation>
 
-    <ForceOnGraph             spec="MULTIPLE NO_DATA"
-                    attribute1="tasklist REQUIRED STRING">
+    <ForceOnGraph spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING">
       <NameTag                  spec="MULTIPLE" />
     </ForceOnGraph>
 

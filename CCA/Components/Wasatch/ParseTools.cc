@@ -33,6 +33,7 @@
 #include <expression/Tag.h>
 
 #include <string>
+#include <sstream>
 
 namespace Wasatch{
 
@@ -47,4 +48,48 @@ namespace Wasatch{
     return Expr::Tag( exprName, Expr::str2context(state) );
   }
 
+  //============================================================================
+
+  GraphHelper*
+  parse_tasklist( Uintah::ProblemSpecP param,
+                  GraphCategories& graphCat,
+                  const bool isAttribute )
+  {
+    // jcs note that if we have a vector of attributes, then this will not work properly.
+    std::string taskListName;
+    if( isAttribute ){
+      std::vector<std::string> tmp;
+      param->getAttribute( "tasklist", tmp );
+      if( tmp.size() > 1 ){
+        std::ostringstream msg;
+        msg << std::endl
+            << "parse_tasklist() can only be used to parse single attributes, not vectors of attributes"
+            << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      taskListName = tmp[0];
+    }
+    else{
+      param->require("TaskList",taskListName);
+    }
+    return select_tasklist( taskListName, graphCat );
+  }
+
+  GraphHelper*
+  select_tasklist( const std::string& taskList,
+                   GraphCategories& graphCat )
+  {
+    Category cat = ADVANCE_SOLUTION;
+    if     ( taskList == "initialization"   )   cat = INITIALIZATION;
+    else if( taskList == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+    else if( taskList == "advance_solution" )   cat = ADVANCE_SOLUTION;
+    else{
+      std::ostringstream msg;
+      msg << "ERROR: unsupported task list specified: '" << taskList << "'" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    return graphCat[cat];
+  }
+
+  //============================================================================
 } // namespace Wasatch
