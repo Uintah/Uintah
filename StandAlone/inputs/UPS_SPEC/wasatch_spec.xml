@@ -918,6 +918,16 @@
       <NameTag                  spec="MULTIPLE" />
     </ForceOnGraph>
 
+    <Cleave spec="MULTIPLE NO_DATA" attribute1="from REQUIRED STRING 'PARENTS,CHILDREN'">
+      <NameTag spec="MULTIPLE" />
+    </Cleave>
+    
+    <AttachDependency spec="MULTIPLE NO_DATA"
+                      attribute1="tasklist REQUIRED STRING 'initialization,advance_solution'">
+      <Source spec="REQUIRED NO_DATA"><NameTag spec="REQUIRED"/></Source> 
+      <Target spec="REQUIRED NO_DATA"><NameTag spec="REQUIRED"/></Target> 
+    </AttachDependency>
+
     <FieldClipping      spec="MULTIPLE NO_DATA"
                         attribute1="tasklist REQUIRED STRING 'initialization,advance_solution">
       <FieldExpression  spec="MULTIPLE NO_DATA"

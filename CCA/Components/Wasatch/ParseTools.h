@@ -71,6 +71,25 @@ namespace Wasatch{
   GraphHelper* select_tasklist( const std::string& taskList,
                                 GraphCategories& graphCat );
 
+  /**
+   * \ingroup WasatchParser
+   * \brief Parse user requests for graph cleaving
+   * \param param The parser block
+   * \param graphCat the GraphCategories
+   */
+  void parse_cleave_requests( Uintah::ProblemSpecP param,
+                              GraphCategories& graphCat );
+
+  /**
+   * \ingroup WasatchParser
+   * \brief Parse user requests for attaching dependencies to expressions
+   * \param param The parser block
+   * \param graphCat the GraphCategories
+   */
+  void parse_attach_dependencies( Uintah::ProblemSpecP param,
+                                  GraphCategories& graphCat );
+
+
 } // namespace Wasatch
 
 
