@@ -23,18 +23,57 @@
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="thermal conductivity" state="STATE_NONE" />
-       <Constant>1.0</Constant>
+       <NameTag name="beta" state="STATE_NONE" />
+       <Constant>5.4321</Constant>
      </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="alpha" state="STATE_NONE" />
+       <Constant>5.4321</Constant>
+     </BasicExpression>
+     
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="phi1" state="STATE_NONE" />
+       <Constant>2.3</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="phi2" state="STATE_NONE" />
+       <Constant>4.5</Constant>
+     </BasicExpression>
+
+     <AttachDependency tasklist="advance_solution">
+       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
+       <Target> <NameTag name="phi1"  state="STATE_NONE"/> </Target>   
+     </AttachDependency>
+     <AttachDependency tasklist="advance_solution">
+       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
+       <Target> <NameTag name="phi2"  state="STATE_NONE"/> </Target>   
+     </AttachDependency>
+
+     <ForceOnGraph tasklist="advance_solution">
+       <NameTag name="phi1" state="STATE_NONE"/>
+       <NameTag name="phi2" state="STATE_NONE"/>
+     </ForceOnGraph>
+     
+     <Cleave from="CHILDREN">
+       <NameTag name="phi1" state="STATE_NONE"/>
+     </Cleave>
+     <!--Cleave from="PARENTS">
+       <NameTag name="beta" state="STATE_NONE"/>
+     </Cleave-->
 
   </Wasatch>
 
    <!-- no timestepping -->
   <Time>
-    <maxTime>0.0</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00</delt_min>
-    <delt_max>2.0</delt_max>
+    <delt_min>1.0</delt_min>
+    <delt_max>1.0</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -43,6 +82,10 @@
     <outputInitTimestep />
     <outputTimestepInterval>10</outputTimestepInterval>
     <checkpoint cycle = "1" interval = "0.01"/>
+    <!--save label="phi1"/>
+    <save label="phi2"/>
+    <save label="alpha"/-->
+    <!--save label="beta"/-->
     <compression>gzip</compression>
   </DataArchiver>
 
