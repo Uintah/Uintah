@@ -31,6 +31,7 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/MD/SPMEPatch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <vector>
 
@@ -41,6 +42,8 @@ namespace Uintah {
 using namespace SCIRun;
 
 typedef std::complex<double> dblcomplex;
+typedef int particleIndex;
+typedef int particleId;
 
 class MDSystem;
 class SPMEMapPoint;
@@ -109,7 +112,7 @@ class SPME : public Electrostatics {
 
     /**
      * @brief
-     * @param None
+     * @param
      * @return None
      */
     void calculate(const ProcessorGroup* pg,
@@ -123,7 +126,11 @@ class SPME : public Electrostatics {
      * @param None
      * @return None
      */
-    void finalize();
+    void finalize(const ProcessorGroup* pg,
+                  const PatchSubset* patches,
+                  const MaterialSubset* materials,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
 
     /**
      * @brief
@@ -154,6 +161,8 @@ class SPME : public Electrostatics {
      * @return
      */
     std::vector<SPMEMapPoint> generateChargeMap(ParticleSubset* pset,
+                                                constParticleVariable<Point> particlePositions,
+                                                constParticleVariable<long64> particleIDs,
                                                 CenteredCardinalBSpline& spline);
 
     /**
@@ -163,8 +172,10 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    void mapChargeToGrid(const std::vector<SPMEMapPoint>& gridMap,
+    void mapChargeToGrid(SPMEPatch* spmePatch,
+                         const std::vector<SPMEMapPoint>& gridMap,
                          ParticleSubset* pset,
+                         constParticleVariable<double> charges,
                          int halfSupport);
 
     /**
@@ -172,8 +183,11 @@ class SPME : public Electrostatics {
      * @param
      * @return
      */
-    void mapForceFromGrid(const std::vector<SPMEMapPoint>& gridMap,
+    void mapForceFromGrid(SPMEPatch* spmePatch,
+                          const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
+                          constParticleVariable<Vector> pforce,
+                          ParticleVariable<Vector> pforcenew,
                           int halfSupport);
 
     /**
@@ -226,8 +240,8 @@ class SPME : public Electrostatics {
      *
      * @return A SimpleGrid<Matrix3>
      */
-    SimpleGrid<Matrix3> calculateStressPrefactor(const IntVector& extents,
-                                                 const IntVector& offset);
+    SimpleGrid<Matrix3>& calculateStressPrefactor(const IntVector& extents,
+                                                  const IntVector& offset);
 
     /**
      * @brief Generates split grid vector.
@@ -236,6 +250,7 @@ class SPME : public Electrostatics {
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
+// New Hotness
     inline vector<double> generateMPrimeVector(unsigned int kMax,
                                                const CenteredCardinalBSpline& spline) const
     {
@@ -245,31 +260,61 @@ class SPME : public Electrostatics {
       int halfSupport = spline.getHalfMaxSupport();
       size_t halfMax = kMax / 2;
 
-      // Pre wrap on the left and right sides as necessary for spline support
-      std::vector<double> leftMost(mPrime[halfSupport]);
-
       // Seed internal array (without wrapping)
-      for (size_t idx = 0; idx <= halfMax; ++idx) {
-        leftMost[idx] = idx;
+      int TrueZeroIndex = halfSupport;  // The zero index of the unwrapped array embedded in the wrapped array
+
+      for (size_t Index = TrueZeroIndex; Index <= halfMax + TrueZeroIndex; ++Index) {
+        mPrime[Index] = Index;
+      }
+      for (size_t Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
+        mPrime[Index] = static_cast<double>(Index - kMax);
       }
 
-      for (size_t idx = halfMax + 1; idx < kMax; ++idx) {
-        leftMost[idx] = (double)(idx - kMax);
-      }
-
-      // Right end wraps into m=i portion
-      for (int idx = 0; idx < halfSupport; ++idx) {
-        mPrime[kMax + idx] = (double)idx;
-      }
-
-      // Left end wraps into m=i-KMax portion
-      for (int idx = -3; idx < 0; ++idx) {
-        leftMost[idx] = idx;  // i = KMax - abs(idx) = KMax + idx; i-KMax = KMax + idx - KMax = idx
+      // Wrapped ends of the vector
+      for (size_t Index = 1; Index <= halfSupport; ++Index) {
+        // Left wrapped end
+        mPrime[TrueZeroIndex - Index] = mPrime[TrueZeroIndex - Index + kMax];
+        mPrime[TrueZeroIndex + kMax + Index - 1] = mPrime[TrueZeroIndex + Index - 1];  //-1 offsets for 0 based array
       }
 
       return mPrime;
     }
+// Old Busted
+    /*
+     inline vector<double> generateMPrimeVector(unsigned int kMax,
+     const CenteredCardinalBSpline& spline) const
+     {
+     int numPoints = kMax + spline.getMaxSupport();  // For simplicity, store the whole vector
+     std::vector<double> mPrime(numPoints);
 
+     int halfSupport = spline.getHalfMaxSupport();
+     size_t halfMax = kMax / 2;
+
+     // Pre wrap on the left and right sides as necessary for spline support
+     std::vector<double> leftMost(mPrime[halfSupport]);
+
+     // Seed internal array (without wrapping)
+     for (size_t idx = 0; idx <= halfMax; ++idx) {
+     leftMost[idx] = idx;
+     }
+
+     for (size_t idx = halfMax + 1; idx < kMax; ++idx) {
+     leftMost[idx] = (double)(idx - kMax);
+     }
+
+     // Right end wraps into m=i portion
+     for (int idx = 0; idx < halfSupport; ++idx) {
+     mPrime[kMax + idx] = (double)idx;
+     }
+
+     // Left end wraps into m=i-KMax portion
+     for (int idx = -3; idx < 0; ++idx) {
+     leftMost[idx] = idx;  // i = KMax - abs(idx) = KMax + idx; i-KMax = KMax + idx - KMax = idx
+     }
+
+     return mPrime;
+     }
+     */
     /**
      * @brief Generates reduced Fourier grid vector.
      *        Generates the vector of values i/K_i for i = 0...K-1
@@ -277,31 +322,58 @@ class SPME : public Electrostatics {
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
+    // New Hotness
     inline vector<double> generateMFractionalVector(size_t kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
       int numPoints = kMax + interpolatingSpline.getMaxSupport();  // For simplicity, store the whole vector
       std::vector<double> mFractional(numPoints);
+
       int halfSupport = interpolatingSpline.getHalfMaxSupport();
+      double kMaxInv = 1.0 / (double)kMax;
 
-      //  Pre wrap on the left and right sides as necessary for spline support
-      std::vector<double> leftMost(mFractional[halfSupport]);
-      double kMaxInv = (double)kMax;
-      for (size_t idx = -3; idx < 0; ++idx) {
-        leftMost[-idx] = (static_cast<double>(kMax - idx)) * kMaxInv;
+      int TrueZeroIndex = halfSupport;  // Location of base array zero index
+      for (size_t Index = TrueZeroIndex; Index < TrueZeroIndex + kMax; ++Index) {
+        mFractional[Index] = static_cast<double>(Index) * kMaxInv;
       }
 
-      for (size_t idx = 0; idx < kMax; ++idx) {
-        mFractional[idx] = (double)idx * kMaxInv;
-      }
-
-      std::vector<double> rightMost(mFractional[kMax]);
-      for (int idx = 0; idx < halfSupport; ++idx) {
-        rightMost[idx] = (double)idx * kMaxInv;
+      // Wrapped ends of the vector
+      for (size_t Index = 1; Index <= halfSupport; ++Index) {
+        // Left wrapped end
+        mFractional[TrueZeroIndex - Index] = mFractional[TrueZeroIndex - Index + kMax];
+        mFractional[TrueZeroIndex + kMax + Index - 1] = mFractional[TrueZeroIndex + Index - 1];  //-1 offsets for 0 based array
       }
 
       return mFractional;
     }
+
+// Old and busted 
+    /*
+     inline vector<double> generateMFractionalVector(size_t kMax,
+     const CenteredCardinalBSpline& interpolatingSpline) const
+     {
+     int numPoints = kMax + interpolatingSpline.getMaxSupport();  // For simplicity, store the whole vector
+     std::vector<double> mFractional(numPoints);
+     int halfSupport = interpolatingSpline.getHalfMaxSupport();
+
+     //  Pre wrap on the left and right sides as necessary for spline support
+     std::vector<double> leftMost(mFractional[halfSupport]);
+     double kMaxInv = (double)kMax;
+     for (size_t idx = -3; idx < 0; ++idx) {
+     leftMost[-idx] = (static_cast<double>(kMax - idx)) * kMaxInv;
+     }
+
+     for (size_t idx = 0; idx < kMax; ++idx) {
+     mFractional[idx] = (double)idx * kMaxInv;
+     }
+
+     std::vector<double> rightMost(mFractional[kMax]);
+     for (int idx = 0; idx < halfSupport; ++idx) {
+     rightMost[idx] = (double)idx * kMaxInv;
+     }
+
+     return mFractional;
+     } */
 
     // Values fixed on instantiation
     ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics

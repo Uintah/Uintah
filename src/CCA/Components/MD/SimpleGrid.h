@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//---------------------------------------------------------------------------------------------------------------------------------
+
 #ifndef UINTAH_MD_SIMPLEGRID_H
 #define UINTAH_MD_SIMPLEGRID_H
 
@@ -78,7 +78,7 @@ template<typename T> class SimpleGrid {
      * @brief
      * @param
      */
-    inline void initialize(T val)
+    inline void initialize(const T val)
     {
       d_charges.initialize(val);
     }
@@ -88,40 +88,6 @@ template<typename T> class SimpleGrid {
      * @param copy A reference to the SimpleGrid to copy.
      */
     SimpleGrid(const SimpleGrid& copy);
-
-    /**
-     *
-     */
-    inline T*** getDataPtr()
-    {
-      return d_charges.get_dataptr();
-    }
-
-    /**
-     *
-     */
-    inline IntVector getDimensions() const
-    {
-      return IntVector(d_charges.dim1(), d_charges.dim2(), d_charges.dim3());
-    }
-
-    /**
-     *
-     */
-    inline void copyCharges(T*** copy,
-                            IntVector dimensions)
-    {
-      int dm1 = dimensions.x();
-      int dm2 = dimensions.y();
-      int dm3 = dimensions.z();
-      for (int i = 0; i < dm1; i++) {
-        for (int j = 0; j < dm2; j++) {
-          for (int k = 0; k < dm3; k++) {
-            d_charges(i, j, k) = copy[i][j][k];
-          }
-        }
-      }
-    }
 
     /**
      * @brief Returns the extents of this SimpleGrid.
@@ -300,7 +266,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            // FIXME charges(x, y, z) *= gridIn.charges(x, y, z);
+            d_charges(x, y, z) *= gridIn.d_charges(x, y, z);
           }
         }
       }
@@ -317,7 +283,8 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            // FIXME charges(x, y, z) /= gridIn.charges(x, y, z);
+            // FIXME / is not well defined for vector/vector
+//            d_charges(x, y, z) /= gridIn.d_charges(x, y, z);
           }
         }
       }
@@ -405,17 +372,15 @@ template<typename T> class SimpleGrid {
      * @param copy The assignee.
      * @return SimpleGrid<T>& The result of the assignment.
      */
-    inline SimpleGrid<T>& operator=(SimpleGrid<T>& copy)
+    inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
     {
-      copyCharges(copy.getDataPtr(), copy.getDimensions());  // SCIRun::Array3 assignment operator is private
+      d_charges.copy(copy.d_charges);  // SCIRun::Array3 assignment operator is private
       d_gridExtents = copy.d_gridExtents;
       d_gridOffset = copy.d_gridOffset;
       d_numGhostCells_ = copy.d_numGhostCells_;
       return *this;
     }
 
-//    friend std::ostream& operator<<(std::ostream& out,
-//                                    const Uintah::SimpleGrid<T>& sg);
     /**
      * @brief A way to print this SimpleGrid. Avoids friending std::ostream.
      * @param out The std::ostream to output to.
@@ -423,15 +388,15 @@ template<typename T> class SimpleGrid {
      */
     std::ostream& print(std::ostream& out) const;
 
+    //    friend std::ostream& operator<<(std::ostream& out,
+    //                                    const Uintah::SimpleGrid<T>& sg);
+
   private:
 
     SCIRun::Array3<T> d_charges;  //!< Grid cell values
     IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
     IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
     int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
-
-    // NOTE:  We need to decide how to deal with ghost cells.
-    // Extent/Offset of total grid doesn't tell us how much is "real" and how much is "ghost"
 
 };
 

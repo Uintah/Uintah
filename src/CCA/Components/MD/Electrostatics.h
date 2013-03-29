@@ -94,7 +94,11 @@ class Electrostatics {
      * @brief
      * @param
      */
-    virtual void finalize() = 0;
+    virtual void finalize(const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* materials,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw) = 0;
 
     /**
      * @brief

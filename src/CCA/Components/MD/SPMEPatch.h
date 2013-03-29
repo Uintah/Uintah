@@ -138,7 +138,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<Matrix3> getStressPrefactor() const
+    inline SimpleGrid<Matrix3> getStressPrefactor()
     {
       return d_stressPrefactor;
     }
@@ -158,7 +158,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<complex<double> > getQ() const
+    inline SimpleGrid<complex<double> > getQ()
     {
       return Q;
     }
@@ -182,6 +182,8 @@ class SPMEPatch {
     {
       return d_patch;
     }
+
+    friend class SPME;
 
   private:
 

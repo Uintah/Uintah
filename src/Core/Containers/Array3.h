@@ -246,7 +246,7 @@ void Array3<T>::initialize(const T& t)
   for(int i=0;i<dm1;i++){
     for(int j=0;j<dm2;j++){
       for(int k=0;k<dm3;k++){
-	objs[i][j][k]=t;
+        objs[i][j][k]=t;
       }
     }
   }
@@ -272,7 +272,7 @@ T* Array3<T>::get_onedim()
   for( i=0; i<dm1; i++)
     for( j=0; j<dm2; j++ )
       for( k=0; k<dm3; k++ )
-	a[index++] = objs[i][j][k];
+        a[index++] = objs[i][j][k];
   return a;
 }
 

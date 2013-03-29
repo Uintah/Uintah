@@ -79,7 +79,10 @@ void SPME::initialize()
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
   d_inverseUnitCell = d_system->getInverseCell();
-  d_systemVolume = d_system->getVolume();
+
+  // FIXME what should this be and where should the initial
+//  d_systemVolume = d_system->getVolume();
+  d_systemVolume = .01;
 }
 
 // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
@@ -107,8 +110,8 @@ void SPME::setup(const ProcessorGroup* pg,
     // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
     SimpleGrid<double> fBGrid = calculateBGrid(localExtents, globalOffset);
     SimpleGrid<double> fCGrid = calculateCGrid(localExtents, globalOffset);
-    SimpleGrid<double> fTheta;
-    SimpleGrid<Matrix3> stressPrefactor;
+    SimpleGrid<double> fTheta(localExtents, globalOffset, 0);  // No ghost cells; internal only
+    fTheta.initialize(0.0);
 
     // Composite B and C into Theta
     size_t xExtent = localExtents.x();
@@ -118,11 +121,22 @@ void SPME::setup(const ProcessorGroup* pg,
       for (size_t yidx = 0; yidx < yExtent; ++yidx) {
         for (size_t zidx = 0; zidx < zExtent; ++zidx) {
           fTheta(xidx, yidx, zidx) = fBGrid(xidx, yidx, zidx) * fCGrid(xidx, yidx, zidx);
+          // FIXME - some "nan" values interspersed in B and C
+//          if (isnan(fBGrid(xidx, yidx, zidx))) {
+//            std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
+//            std::cin.get();
+//          }
+//          if (isnan(fCGrid(xidx, yidx, zidx))) {
+//            std::cout << "C: " << xidx << " " << yidx << " " << zidx << std::endl;
+//            std::cin.get();
+//          }
         }
       }
     }
     spmePatch->setTheta(fTheta);
     spmePatch->setStressPrefactor(calculateStressPrefactor(localExtents, globalOffset));
+    SimpleGrid<dblcomplex> q(localExtents, globalOffset, numGhostCells);
+    spmePatch->setQ(q);
     d_spmePatches.push_back(spmePatch);
   }
 }
@@ -138,20 +152,26 @@ void SPME::calculate(const ProcessorGroup* pg,
   int maxIterations = d_system->getMaxIterations();
   while (!converged && (numIterations < maxIterations)) {
 
-    size_t numPatches = d_spmePatches.size();
-    for (size_t p = 0; p < numPatches; p++) {
+    std::vector<SPMEPatch*>::iterator iter;
+    for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
+      SPMEPatch* spmePatch = *iter;
 
-      SPMEPatch* spmePatch = d_spmePatches[p];
+      const Patch* patch = spmePatch->getPatch();
+      ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
+
+      constParticleVariable<Point> px;
+      constParticleVariable<long64> pids;
+      constParticleVariable<double> pcharge;
+      old_dw->get(px, d_lb->pXLabel, pset);
+      old_dw->get(pids, d_lb->pParticleIDLabel, pset);
+      old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+
+      std::vector<SPMEMapPoint> gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
+      mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
       SimpleGrid<complex<double> > Q = spmePatch->getQ();
       Q.initialize(complex<double>(0.0, 0.0));
-
       SimpleGrid<Matrix3> stressPrefactor = spmePatch->getStressPrefactor();
-
-      ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), spmePatch->getPatch());
-      std::vector<SPMEMapPoint> gridMap = SPME::generateChargeMap(pset, d_interpolatingSpline);
-
-      SPME::mapChargeToGrid(gridMap, pset, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
       // Map the local patch's charge grid into the global grid and transform
 //      SPME::GlobalMPIReduceChargeGrid(Ghost::AroundNodes);  //Ghost points should get transferred here
@@ -202,9 +222,31 @@ void SPME::calculate(const ProcessorGroup* pg,
   }
 }
 
-void SPME::finalize()
+void SPME::finalize(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset* materials,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw)
 {
-//  SPME::mapForceFromGrid(pset, ChargeMap);  // Calculate electrostatic contribution to f_ij(r)
+  std::vector<SPMEPatch*>::iterator iter;
+  for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
+    SPMEPatch* spmePatch = *iter;
+
+    const Patch* patch = spmePatch->getPatch();
+    ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
+
+    constParticleVariable<Vector> pforce;
+    old_dw->get(pforce, d_lb->pForceLabel, pset);
+
+    ParticleVariable<Vector> pforcenew;
+    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
+
+    //FIXME need gridMap from each SPMEPatch
+
+    // Calculate electrostatic contribution to f_ij(r)
+//    SPME::mapForceFromGrid(pset, ChargeMap);
+  }
+
   // Reduction for Energy, Pressure Tensor?
   // Something goes here, though I'm not sure what... output?
 }
@@ -303,7 +345,10 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
 
           double M2 = m.length2();
           double factor = PI2 * M2 * invBeta2;
-          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
+          // FIXME  M2 always zero.... mp1[kX + xOffset], etc
+          // always accessing garbage memory outside of mp bounds
+//          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
+          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / 1.0;
         }
       }
     }
@@ -312,8 +357,8 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   return CGrid;
 }
 
-SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
-                                                   const IntVector& offset)
+SimpleGrid<Matrix3>& SPME::calculateStressPrefactor(const IntVector& extents,
+                                                    const IntVector& offset)
 {
   std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
@@ -358,22 +403,20 @@ SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
       }
     }
   }
-  stressPre(0, 0, 0) = Matrix3(0);
+  stressPre(0, 0, 0) = Matrix3(0.0);
   return stressPre;
 }
 
 std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
+                                                  constParticleVariable<Point> particlePositions,
+                                                  constParticleVariable<long64> particleIDs,
                                                   CenteredCardinalBSpline& spline)
 {
   std::vector<SPMEMapPoint> chargeMap;
+
   // Loop through particles
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
     particleIndex pidx = *iter;
-
-    // TODO how should we handle passing ParticleVariables in SPME?
-
-    constParticleVariable<Point> particlePositions;
-    constParticleVariable<long64> particleIDs;
     SCIRun::Point position = particlePositions[pidx];
     particleId pid = particleIDs[pidx];
     SCIRun::Vector particleGridCoordinates;
@@ -405,7 +448,6 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);
 
-    // TODO this use to use the five argument constructor??
     SimpleGrid<SCIRun::Vector> forceGrid(extents, particleGridOffset, 0);
     size_t XExtent = xSplineArray.size();
     size_t YExtent = ySplineArray.size();
@@ -424,54 +466,46 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
   return chargeMap;
 }
 
-void SPME::mapChargeToGrid(const std::vector<SPMEMapPoint>& gridMap,
+void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
+                           const std::vector<SPMEMapPoint>& gridMap,
                            ParticleSubset* pset,
+                           constParticleVariable<double> charges,
                            int halfSupport)
 {
-  std::vector<SPMEPatch*>::iterator iter;
-  for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
-    SPMEPatch* spmePatch = *iter;
 
-    // Reset charges before we start adding onto them.
-    SimpleGrid<dblcomplex> Q;
-    Q.initialize(0.0);
+  // Reset charges before we start adding onto them.
+  SimpleGrid<dblcomplex> Q = spmePatch->getQ();
+  Q.initialize(0.0);
 
+  ParticleSubset::iterator particleIter;
+  for (particleIter = pset->begin(); particleIter != pset->end(); particleIter++) {
+    particleIndex pidx = *particleIter;
 
+    double charge = charges[pidx];
+    const SimpleGrid<double> chargeMap = gridMap[pidx].getChargeGrid();
 
-
-    ParticleSubset::iterator iter;
-    for (iter = pset->begin(); iter != pset->end(); iter++) {
-      particleIndex pidx = *iter;
-
-      // get pcharge
-      double charge = pset[pidx].GetCharge();
-
-      const SimpleGrid<double> chargeMap = gridMap[pidx].getChargeGrid();
-
-      IntVector QAnchor = chargeMap.getOffset();  // Location of the 0,0,0 origin for the charge map grid
-      IntVector SupportExtent = chargeMap.getExtents();  // Extents of the charge map grid
-      for (int xmask = -halfSupport; xmask <= halfSupport; ++xmask) {
-        for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
-          for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
-            dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
-            Q(QAnchor.x() + xmask, QAnchor.y() + ymask, QAnchor.z() + zmask) += val;
-          }
+    IntVector QAnchor = chargeMap.getOffset();  // Location of the 0,0,0 origin for the charge map grid
+    IntVector SupportExtent = chargeMap.getExtents();  // Extents of the charge map grid
+    for (int xmask = -halfSupport; xmask <= halfSupport; ++xmask) {
+      for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
+        for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
+          dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
+          Q(QAnchor.x() + xmask, QAnchor.y() + ymask, QAnchor.z() + zmask) += val;
         }
       }
     }
-    spmePatch->setQ(Q);
   }
+  spmePatch->setQ(Q);
 }
 
-void SPME::mapForceFromGrid(const std::vector<SPMEMapPoint>& gridMap,
+void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
+                            const std::vector<SPMEMapPoint>& gridMap,
                             ParticleSubset* pset,
+                            constParticleVariable<Vector> pforce,
+                            ParticleVariable<Vector> pforcenew,
                             int halfSupport)
 {
-  constParticleVariable<Vector> pforce;
-  constParticleVariable<double> pcharge;
-  ParticleVariable<Vector> pforcenew;
-
-  // TODO how should we handle passing ParticleVariables in SPME?
+  SimpleGrid<complex<double> > Q = spmePatch->getQ();
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
     particleIndex pidx = *iter;
@@ -485,8 +519,9 @@ void SPME::mapForceFromGrid(const std::vector<SPMEMapPoint>& gridMap,
       for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
         for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
           SCIRun::Vector currentForce;
-          currentForce = forceMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport)
-                         * Q(QAnchor.x() + xmask, QAnchor.y() + ymask, QAnchor.z() + zmask);
+          //FIXME This operation doesn't make sense
+//          currentForce = forceMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport)
+//                         * Q(QAnchor.x() + xmask, QAnchor.y() + ymask, QAnchor.z() + zmask);
           newForce += currentForce;
         }
       }
