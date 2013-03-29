@@ -178,10 +178,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       std::string adiab_name, sens_name; 
 
       if ( type == "heat_loss" ){ 
+        model_db->getWithDefault( "adiabatic_enthalpy_label" , adiab_name  , "adiabaticenthalpy" );
+        model_db->getWithDefault( "sensible_enthalpy_label"  , sens_name   , "sensibleenthalpy" );
         insertIntoMap( adiab_name ); 
         insertIntoMap( sens_name ); 
-	      model_db->getWithDefault( "adiabatic_enthalpy_label" , adiab_name  , "adiabaticenthalpy" );
-	      model_db->getWithDefault( "sensible_enthalpy_label"  , sens_name   , "sensibleenthalpy" );
       } 
 
     }
