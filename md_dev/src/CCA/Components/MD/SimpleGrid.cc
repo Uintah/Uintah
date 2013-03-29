@@ -52,22 +52,13 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const int numGhostCells) :
     d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
 {
-  d_charges.copy(Array3<T>(extents.x(), extents.y(), extents.z()));
+  d_charges.resize(extents.x(), extents.y(), extents.z());
 }
 
 template<typename T>
 SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 {
-  int dm1 = d_gridExtents.x();
-  int dm2 = d_gridExtents.y();
-  int dm3 = d_gridExtents.z();
-  for (int i = 0; i < dm1; i++) {
-    for (int j = 0; j < dm2; j++) {
-      for (int k = 0; k < dm3; k++) {
-        d_charges(i, j, k) = copy(i, j, k);
-      }
-    }
-  }
+  d_charges.copy(copy.d_charges);  // SCIRun::Array3 assignment operator is private
   d_gridExtents = copy.d_gridExtents;
   d_gridOffset = copy.d_gridOffset;
   d_numGhostCells_ = copy.d_numGhostCells_;
@@ -107,7 +98,7 @@ SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
   for (int x = 0; x < xdim; ++x) {
     for (int y = 0; y < ydim; ++y) {
       for (int z = 0; z < zdim; ++z) {
-        // FIXME d_charges(x,y,z) *= gridIn.d_charges(x,y,z);
+        d_charges(x, y, z) *= gridIn.d_charges(x, y, z);
       }
     }
   }

@@ -647,7 +647,7 @@ void MD::performSPME(const ProcessorGroup* pg,
 
   d_electrostatics->calculate(pg, patches, matls, old_dw, new_dw);
 
-  d_electrostatics->finalize();
+  d_electrostatics->finalize(pg, patches, matls, old_dw, new_dw);
 }
 
 void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
