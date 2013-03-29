@@ -549,6 +549,9 @@ namespace Wasatch{
         force_expressions_on_graph( forceOnGraphParams, select_tasklist(*taskListIter,graphCategories_) );
       }
     }
+
+    parse_cleave_requests    ( wasatchParams, graphCategories_ );
+    parse_attach_dependencies( wasatchParams, graphCategories_ );
   }
 
   //--------------------------------------------------------------------
