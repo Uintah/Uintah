@@ -42,7 +42,6 @@ namespace Wasatch{
    *  @par Template Parameters
    *  <ul>
    *   <li> \b FieldT The type of field to set the clip on.
-   
    *  </ul>
    *
    */

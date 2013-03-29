@@ -27,6 +27,8 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include "GraphHelperTools.h"
+
 /**
  *  \file ParseTools.h
  *  \defgroup WasatchParser	Wasatch Parsers
@@ -44,6 +46,30 @@ namespace Wasatch{
    *  \return the Expr::Tag.
    */
   Expr::Tag parse_nametag( Uintah::ProblemSpecP param );
+
+
+  /**
+   * \ingroup WasatchParser
+   * \brief Extracts the appropriate GraphHelper
+   * \param param The parser block
+   * \param graphCat the GraphCategories
+   * \param isAttribute true if the tasklist is an attribute, false if it is a separate block
+   * \return the GraphHelper
+   */
+  GraphHelper*
+  parse_tasklist( Uintah::ProblemSpecP param,
+                  GraphCategories& graphCat,
+                  const bool isAttribute );
+
+  /**
+   * \ingroup WasatchParser
+   * \brief Extracts the appropriate GraphHelper
+   * \param taskList The name of the tasklist.
+   * \param graphCat the GraphCategories
+   * \return the GraphHelper
+   */
+  GraphHelper* select_tasklist( const std::string& taskList,
+                                GraphCategories& graphCat );
 
 } // namespace Wasatch
 

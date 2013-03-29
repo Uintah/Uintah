@@ -238,20 +238,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
-      // determine which task list this goes on
-      std::string taskListName;
-      tabPropsParams->require("TaskList",taskListName);
-      Category cat;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-
-      parse_tabprops( tabPropsParams, *gc[cat] );
+      parse_tabprops( tabPropsParams, *parse_tasklist(tabPropsParams,gc,false) );
     }
   }
 
