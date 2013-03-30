@@ -292,9 +292,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       } else { 
 
         if ( _const_diluent ){ 
-          rate = getRate( _T_hot_spot, Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
+          rate = getRate( T[c], Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
         } else { 
-          rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+          rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
         } 
 
       } 
@@ -314,7 +314,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
             Point P = patch->cellPosition( c ); 
             
             if ( g_piece->inside(P) && total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ){ 
-
               if ( _use_T_clip ){ 
                 double fake_diluent = 0.0; 
                 rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
