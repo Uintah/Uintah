@@ -36,6 +36,7 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvSource.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvAveMoment.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/OstwaldRipening.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/AggregationEfficiency.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -216,14 +217,17 @@ namespace Wasatch {
   }
 
   //------------------------------------------------------------------
+  
   template<typename FieldT>
   void setup_aggregation_expression ( Uintah::ProblemSpecP aggParams,
-                                              const std::string& thisPhiName,
-                                              const double momentOrder,
-                                              Expr::TagList& aggTags,
-                                              const Expr::TagList& weightsTagList,
-                                              const Expr::TagList& abscissaeTagList,
-                                              Expr::ExpressionFactory& factory) 
+                                      const std::string& thisPhiName,
+                                      const std::string& PopulationName,
+                                      const double momentOrder,
+                                      const int nEnv,
+                                      Expr::TagList& aggTags,
+                                      const Expr::TagList& weightsTagList,
+                                      const Expr::TagList& abscissaeTagList,
+                                      Expr::ExpressionFactory& factory) 
   {
     std::string aggModel;
     double efficiencyCoef;
@@ -235,13 +239,46 @@ namespace Wasatch {
       Uintah::ProblemSpecP nameTagParam = aggParams->findBlock("AggregationCoefficientExpression")->findBlock("NameTag");
       aggCoefTag = parse_nametag( nameTagParam );
     }
-    
+
     aggParams->getWithDefault("EfficiencyCoefficient", efficiencyCoef, 1.0);
     aggParams->get("AggregationModel", aggModel );
     
+    bool useEffTags = false;
+    Expr::TagList efficiencyTagList;
+    if (aggParams->findBlock("SizeDependentEfficiency") ){
+      useEffTags = true;
+      Expr::Tag efficiencyTag;
+      for (int i = 0; i<nEnv; i++) {
+        for (int j = 0; j<nEnv; j++) {
+          std::stringstream iStr,jStr ;
+          iStr << i; jStr << j;
+          efficiencyTag = Expr::Tag(PopulationName + "_" + aggModel + "_efficiency_" + iStr.str() + jStr.str(), Expr::STATE_NONE );     
+          efficiencyTagList.push_back(efficiencyTag);
+        }
+      }
+      if (momentOrder == 0) { //only register coefficient expression once per pop name
+        Uintah::ProblemSpecP effParams = aggParams->findBlock("SizeDependentEfficiency");
+        double lengthParam;
+        Uintah::ProblemSpecP nameTagParam;
+        Expr::Tag growthCoefTag;
+        Expr::Tag densityTag;
+        Expr::Tag dissipationTag;
+        std::string growthModel;
+        growthCoefTag = parse_nametag( nameTagParam = effParams->findBlock("GrowthCoefficientExpression")->findBlock("NameTag") );
+        densityTag = parse_nametag( nameTagParam = effParams->findBlock("Density")->findBlock("NameTag") );
+        dissipationTag = parse_nametag( nameTagParam = effParams->findBlock("EnergyDissipation")->findBlock("NameTag") );
+        effParams->getWithDefault("LengthParam", lengthParam, 1.0);
+        effParams->get("GrowthModel",growthModel);
+        
+        typedef typename AggregationEfficiency<FieldT>::Builder aggregationEfficiency;
+        builder = scinew aggregationEfficiency(efficiencyTagList, abscissaeTagList, growthCoefTag, dissipationTag, densityTag, lengthParam, growthModel);
+        factory.register_expression(builder);
+      }
+    }
+    
     aggTag = Expr::Tag( thisPhiName + "_agg_" + aggModel, Expr::STATE_NONE );
     typedef typename Aggregation<FieldT>::Builder aggregation;
-    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, aggCoefTag, momentOrder, efficiencyCoef, aggModel);
+    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, efficiencyTagList, aggCoefTag,  momentOrder, efficiencyCoef, aggModel, useEffTags);
     aggTags.push_back(aggTag);
     factory.register_expression( builder );
   }
@@ -388,7 +425,9 @@ namespace Wasatch {
         aggParams = aggParams->findNextBlock("AggregationExpression") ){
       setup_aggregation_expression <FieldT>( aggParams,
                                              thisPhiName,
+                                             PopulationName,
                                              momentOrder,
+                                             nEnv,
                                              rhsTags,
                                              weightsTags,
                                              abscissaeTags,

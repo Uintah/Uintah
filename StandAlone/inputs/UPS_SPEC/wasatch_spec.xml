@@ -870,6 +870,20 @@
         <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
         </AggregationCoefficientExpression>
+        <!-- make growth & size dependent efficiency kernel-->
+        <SizeDependentEfficiency spec="OPTIONAL NO_DATA">
+          <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/>
+          <GrowthCoefficientExpression   spec="REQUIRED NO_DATA">  <!-- use the same tag here used in growth tags-->
+            <NameTag              spec="REQUIRED" />
+          </GrowthCoefficientExpression> 
+          <LengthParam spec="OPTIONAL DOUBLE" />
+          <Density spec="REQUIRED NO_DATA">
+            <NameTag spec="REQUIRED"/>
+          </Density>  
+          <EnergyDissipation spec="REQUIRED NO_DATA">
+            <NameTag spec="REQUIRED"/>
+          </EnergyDissipation>  
+        </SizeDependentEfficiency>  
       </AggregationExpression>
       
       <!-- ================================================================================== -->            
