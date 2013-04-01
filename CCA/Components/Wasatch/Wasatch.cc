@@ -541,12 +541,13 @@ namespace Wasatch{
     //
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
-        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
+        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
+    {
       std::vector<std::string> taskListNames;
       forceOnGraphParams->getAttribute("tasklist", taskListNames);
       std::vector<std::string>::iterator taskListIter = taskListNames.begin();
       for( ; taskListIter != taskListNames.end(); ++taskListIter ){
-        force_expressions_on_graph( forceOnGraphParams, select_tasklist(*taskListIter,graphCategories_) );
+        force_expressions_on_graph( forceOnGraphParams, graphCategories_[select_tasklist(*taskListIter)] );
       }
     }
 

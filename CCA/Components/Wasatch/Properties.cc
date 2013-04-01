@@ -237,8 +237,9 @@ namespace Wasatch{
 
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
-         tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
-      parse_tabprops( tabPropsParams, *parse_tasklist(tabPropsParams,gc,false) );
+         tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
+    {
+      parse_tabprops( tabPropsParams, *gc[parse_tasklist( tabPropsParams,false)] );
     }
   }
 

@@ -897,7 +897,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      parse_tasklist(exprParams,gc,false)->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //________________________________________
@@ -920,7 +921,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      parse_tasklist(exprParams,gc,false)->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________
@@ -943,7 +945,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      parse_tasklist(exprParams,gc,false)->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________
@@ -967,7 +970,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      parse_tasklist(exprParams,gc,false)->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________
