@@ -36,14 +36,20 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <iomanip>
 #include <complex>
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
 
 using namespace Uintah;
+
+extern SCIRun::Mutex cerrLock;
+
+static DebugStream md_spme("MDSPME", false);
 
 SPME::SPME()
 {
@@ -79,10 +85,7 @@ void SPME::initialize()
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
   d_inverseUnitCell = d_system->getInverseCell();
-
-  // FIXME what should this be and where should the initial
-//  d_systemVolume = d_system->getVolume();
-  d_systemVolume = .01;
+  d_systemVolume = d_system->getCellVolume();
 }
 
 // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
@@ -100,42 +103,66 @@ void SPME::setup(const ProcessorGroup* pg,
   for (size_t p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
 
-    IntVector localExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
-    IntVector globalOffset = localExtents - IntVector(0, 0, 0);
-    IntVector plusGhostExtents = patch->getExtraCellHighIndex(numGhostCells) - patch->getCellHighIndex();
-    IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
+//!FIXME -- These aren't extents/offsets/ghost extents in K grid, which they need to be.
+    /*    IntVector localExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
+     IntVector globalOffset = localExtents - IntVector(0, 0, 0);
+     IntVector plusGhostExtents = patch->getExtraCellHighIndex(numGhostCells) - patch->getCellHighIndex();
+     IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
+     */
 
-    SPMEPatch* spmePatch = new SPMEPatch(localExtents, globalOffset, plusGhostExtents, minusGhostExtents, patch);
+    Point PatchPositionLow = patch->cellPosition(patch->getCellLowIndex());
+    Point PatchPositionHigh = patch->cellPosition(patch->getCellHighIndex());
+
+    IntVector PatchKLow, PatchKHigh;
+    for (size_t idx = 0; idx < 3; ++idx) {  // Tedious stuff because operators aren't defined
+      PatchKLow[idx] = ceil(d_kLimits(idx) * PatchPositionLow(idx) / d_unitCell(idx, idx));
+      PatchKHigh[idx] = floor(d_kLimits(idx) * PatchPositionHigh(idx) / d_unitCell(idx, idx));
+    }
+    IntVector PatchKGridExtents = (PatchKHigh - PatchKLow) + IntVector(1, 1, 1);  // +1 for inclusive limits
+    IntVector PatchKGridOffset = PatchKLow;
+
+    int SplineHalfMaxSupport = d_interpolatingSpline.getHalfMaxSupport();
+    IntVector plusGhostExtents = IntVector(SplineHalfMaxSupport, SplineHalfMaxSupport, SplineHalfMaxSupport);
+    IntVector minusGhostExtents = plusGhostExtents;  // ensure symmetry
+
+    // 
+    SPMEPatch* spmePatch = new SPMEPatch(PatchKGridExtents, PatchKGridOffset, plusGhostExtents, minusGhostExtents, patch);
 
     // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
-    SimpleGrid<double> fBGrid = calculateBGrid(localExtents, globalOffset);
-    SimpleGrid<double> fCGrid = calculateCGrid(localExtents, globalOffset);
-    SimpleGrid<double> fTheta(localExtents, globalOffset, 0);  // No ghost cells; internal only
+    SimpleGrid<double> fBGrid = calculateBGrid(PatchKGridExtents, PatchKGridOffset);
+    SimpleGrid<double> fCGrid = calculateCGrid(PatchKGridExtents, PatchKGridOffset);
+    SimpleGrid<double> fTheta(PatchKGridExtents, PatchKGridOffset, 0);  // No ghost cells; internal only
     fTheta.initialize(0.0);
 
     // Composite B and C into Theta
-    size_t xExtent = localExtents.x();
-    size_t yExtent = localExtents.y();
-    size_t zExtent = localExtents.z();
+    size_t xExtent = PatchKGridExtents.x();
+    size_t yExtent = PatchKGridExtents.y();
+    size_t zExtent = PatchKGridExtents.z();
     for (size_t xidx = 0; xidx < xExtent; ++xidx) {
       for (size_t yidx = 0; yidx < yExtent; ++yidx) {
         for (size_t zidx = 0; zidx < zExtent; ++zidx) {
           fTheta(xidx, yidx, zidx) = fBGrid(xidx, yidx, zidx) * fCGrid(xidx, yidx, zidx);
-          // FIXME - some "nan" values interspersed in B and C
-//          if (isnan(fBGrid(xidx, yidx, zidx))) {
-//            std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
-//            std::cin.get();
-//          }
-//          if (isnan(fCGrid(xidx, yidx, zidx))) {
-//            std::cout << "C: " << xidx << " " << yidx << " " << zidx << std::endl;
-//            std::cin.get();
-//          }
+
+          if (md_spme.active()) {
+            cerrLock.unlock();
+            // FIXME - some "nan" values interspersed in B and C
+            if (isnan(fBGrid(xidx, yidx, zidx))) {
+              std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
+              std::cin.get();
+            }
+            if (isnan(fCGrid(xidx, yidx, zidx))) {
+              std::cout << "C: " << xidx << " " << yidx << " " << zidx << std::endl;
+              std::cin.get();
+            }
+            cerrLock.unlock();
+          }
+
         }
       }
     }
     spmePatch->setTheta(fTheta);
-    spmePatch->setStressPrefactor(calculateStressPrefactor(localExtents, globalOffset));
-    SimpleGrid<dblcomplex> q(localExtents, globalOffset, numGhostCells);
+    spmePatch->setStressPrefactor(calculateStressPrefactor(PatchKGridExtents, PatchKGridOffset));
+    SimpleGrid<dblcomplex> q(PatchKGridExtents, PatchKGridOffset, 2 * SplineHalfMaxSupport);  // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
     spmePatch->setQ(q);
     d_spmePatches.push_back(spmePatch);
   }
@@ -289,6 +316,21 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
   std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
 
+  std::cout << " DEBUG: " << std::endl;
+  std::cout << "Expect mf1 size: " << d_kLimits.x() << "  Actual mf1 size: " << mf1.size() << std::endl;
+  for (size_t idx = 0; idx < mf1.size(); ++idx) {
+    std::cout << "mf1(" << std::setw(3) << idx << "): " << mf1[idx] << std::endl;
+  }
+  std::cout << "Expect mf2 size: " << d_kLimits.y() << "  Actual mf2 size: " << mf2.size() << std::endl;
+  for (size_t idx = 0; idx < mf2.size(); ++idx) {
+    std::cout << "mf2(" << std::setw(3) << idx << "): " << mf2[idx] << std::endl;
+  }
+  std::cout << "Expect mf3 size: " << d_kLimits.x() << "  Actual mf3 size: " << mf3.size() << std::endl;
+  for (size_t idx = 0; idx < mf3.size(); ++idx) {
+    std::cout << "mf3(" << std::setw(3) << idx << "): " << mf3[idx] << std::endl;
+  }
+  std::cout << " END DEBUG: " << std::endl;
+
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
   std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), d_interpolatingSpline);
@@ -321,6 +363,21 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
 
+  std::cout << " DEBUG: " << std::endl;
+  std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
+  for (size_t idx = 0; idx < mp1.size(); ++idx) {
+    std::cout << "mp1(" << std::setw(3) << idx << "): " << mp1[idx] << std::endl;
+  }
+  std::cout << "Expect mp2 size: " << d_kLimits.y() << "  Actual mp2 size: " << mp2.size() << std::endl;
+  for (size_t idx = 0; idx < mp2.size(); ++idx) {
+    std::cout << "mp2(" << std::setw(3) << idx << "): " << mp2[idx] << std::endl;
+  }
+  std::cout << "Expect mp3 size: " << d_kLimits.x() << "  Actual mp3 size: " << mp3.size() << std::endl;
+  for (size_t idx = 0; idx < mp3.size(); ++idx) {
+    std::cout << "mp3(" << std::setw(3) << idx << "): " << mp3[idx] << std::endl;
+  }
+  std::cout << " END DEBUG: " << std::endl;
+
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
   size_t zExtents = extents.z();
@@ -347,8 +404,8 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
           double factor = PI2 * M2 * invBeta2;
           // FIXME  M2 always zero.... mp1[kX + xOffset], etc
           // always accessing garbage memory outside of mp bounds
-//          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
-          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / 1.0;
+          CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
+          // CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / 1.0;
         }
       }
     }

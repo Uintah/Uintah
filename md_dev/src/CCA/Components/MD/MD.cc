@@ -2,7 +2,7 @@
 
  The MIT License
 
- Copyright (c) 1997-2012 The University of Utah
+ Copyright (c) 1997-2013 The University of Utah
 
  License for the specific language governing rights and limitations under
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -89,7 +89,6 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   md_ps->get("coordinateFile", d_coordinateFile);
   md_ps->get("numAtoms", d_numAtoms);
-  md_ps->get("boxSize", d_box);
   md_ps->get("cutoffRadius", d_cutoffRadius);
   md_ps->get("R12", R12);
   md_ps->get("R6", R6);
@@ -97,6 +96,11 @@ void MD::problemSetup(const ProblemSpecP& params,
   // create and populate the MD System object
   d_system = scinew MDSystem(md_ps);
   d_system->setNewBox(true);
+
+  Matrix3 unitCell = d_system->getUnitCell();
+  d_box[0] = unitCell(0, 0);
+  d_box[1] = unitCell(1, 1);
+  d_box[2] = unitCell(2, 2);
 
   // create the Electrostatics object via factory method
   d_electrostatics = ElectrostaticsFactory::create(params, d_system);

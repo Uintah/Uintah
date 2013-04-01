@@ -98,6 +98,7 @@ SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
   for (int x = 0; x < xdim; ++x) {
     for (int y = 0; y < ydim; ++y) {
       for (int z = 0; z < zdim; ++z) {
+//!FIXME This should be operator*=, not operator *.
         d_charges(x, y, z) *= gridIn.d_charges(x, y, z);
       }
     }
@@ -114,6 +115,7 @@ SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
   for (int x = 0; x < xdim; ++x) {
     for (int y = 0; y < ydim; ++y) {
       for (int z = 0; z < zdim; ++z) {
+//!FIXME This shoudl be operator+=, not +.  Also the below line is for operator-=
         d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
       }
     }
@@ -130,6 +132,7 @@ SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
   for (int x = 0; x < xdim; ++x) {
     for (int y = 0; y < ydim; ++y) {
       for (int z = 0; z < zdim; ++z) {
+//!FIXME This should be operator-=, not -.
         d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
       }
     }

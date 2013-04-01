@@ -247,31 +247,31 @@ class SPME : public Electrostatics {
      * @brief Generates split grid vector.
      *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
      * @param kMax - Maximum number of grid points for direction
-     * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
+     * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
 // New Hotness
     inline vector<double> generateMPrimeVector(unsigned int kMax,
                                                const CenteredCardinalBSpline& spline) const
     {
-      int numPoints = kMax + spline.getMaxSupport();  // For simplicity, store the whole vector
+      int halfSupport = spline.getHalfMaxSupport();
+      int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
       std::vector<double> mPrime(numPoints);
 
-      int halfSupport = spline.getHalfMaxSupport();
       size_t halfMax = kMax / 2;
 
       // Seed internal array (without wrapping)
       int TrueZeroIndex = halfSupport;  // The zero index of the unwrapped array embedded in the wrapped array
 
-      for (size_t Index = TrueZeroIndex; Index <= halfMax + TrueZeroIndex; ++Index) {
-        mPrime[Index] = Index;
+      for (int Index = TrueZeroIndex; Index <= halfMax + TrueZeroIndex; ++Index) {
+        mPrime[Index] = static_cast<double>(Index - TrueZeroIndex);
       }
-      for (size_t Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
-        mPrime[Index] = static_cast<double>(Index - kMax);
+      for (int Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
+        mPrime[Index] = static_cast<double>(Index - TrueZeroIndex - static_cast<int>(kMax));
       }
 
       // Wrapped ends of the vector
-      for (size_t Index = 1; Index <= halfSupport; ++Index) {
+      for (int Index = 1; Index <= halfSupport; ++Index) {
         // Left wrapped end
         mPrime[TrueZeroIndex - Index] = mPrime[TrueZeroIndex - Index + kMax];
         mPrime[TrueZeroIndex + kMax + Index - 1] = mPrime[TrueZeroIndex + Index - 1];  //-1 offsets for 0 based array
@@ -279,42 +279,6 @@ class SPME : public Electrostatics {
 
       return mPrime;
     }
-// Old Busted
-    /*
-     inline vector<double> generateMPrimeVector(unsigned int kMax,
-     const CenteredCardinalBSpline& spline) const
-     {
-     int numPoints = kMax + spline.getMaxSupport();  // For simplicity, store the whole vector
-     std::vector<double> mPrime(numPoints);
-
-     int halfSupport = spline.getHalfMaxSupport();
-     size_t halfMax = kMax / 2;
-
-     // Pre wrap on the left and right sides as necessary for spline support
-     std::vector<double> leftMost(mPrime[halfSupport]);
-
-     // Seed internal array (without wrapping)
-     for (size_t idx = 0; idx <= halfMax; ++idx) {
-     leftMost[idx] = idx;
-     }
-
-     for (size_t idx = halfMax + 1; idx < kMax; ++idx) {
-     leftMost[idx] = (double)(idx - kMax);
-     }
-
-     // Right end wraps into m=i portion
-     for (int idx = 0; idx < halfSupport; ++idx) {
-     mPrime[kMax + idx] = (double)idx;
-     }
-
-     // Left end wraps into m=i-KMax portion
-     for (int idx = -3; idx < 0; ++idx) {
-     leftMost[idx] = idx;  // i = KMax - abs(idx) = KMax + idx; i-KMax = KMax + idx - KMax = idx
-     }
-
-     return mPrime;
-     }
-     */
     /**
      * @brief Generates reduced Fourier grid vector.
      *        Generates the vector of values i/K_i for i = 0...K-1
@@ -326,15 +290,15 @@ class SPME : public Electrostatics {
     inline vector<double> generateMFractionalVector(size_t kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
-      int numPoints = kMax + interpolatingSpline.getMaxSupport();  // For simplicity, store the whole vector
+      int halfSupport = interpolatingSpline.getHalfMaxSupport();
+      int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
       std::vector<double> mFractional(numPoints);
 
-      int halfSupport = interpolatingSpline.getHalfMaxSupport();
-      double kMaxInv = 1.0 / (double)kMax;
+      double kMaxInv = 1.0 / static_cast<double>(kMax);
 
       int TrueZeroIndex = halfSupport;  // Location of base array zero index
-      for (size_t Index = TrueZeroIndex; Index < TrueZeroIndex + kMax; ++Index) {
-        mFractional[Index] = static_cast<double>(Index) * kMaxInv;
+      for (int Index = TrueZeroIndex; Index < TrueZeroIndex + kMax; ++Index) {
+        mFractional[Index] = static_cast<double>(Index - TrueZeroIndex) * kMaxInv;
       }
 
       // Wrapped ends of the vector
@@ -346,34 +310,6 @@ class SPME : public Electrostatics {
 
       return mFractional;
     }
-
-// Old and busted 
-    /*
-     inline vector<double> generateMFractionalVector(size_t kMax,
-     const CenteredCardinalBSpline& interpolatingSpline) const
-     {
-     int numPoints = kMax + interpolatingSpline.getMaxSupport();  // For simplicity, store the whole vector
-     std::vector<double> mFractional(numPoints);
-     int halfSupport = interpolatingSpline.getHalfMaxSupport();
-
-     //  Pre wrap on the left and right sides as necessary for spline support
-     std::vector<double> leftMost(mFractional[halfSupport]);
-     double kMaxInv = (double)kMax;
-     for (size_t idx = -3; idx < 0; ++idx) {
-     leftMost[-idx] = (static_cast<double>(kMax - idx)) * kMaxInv;
-     }
-
-     for (size_t idx = 0; idx < kMax; ++idx) {
-     mFractional[idx] = (double)idx * kMaxInv;
-     }
-
-     std::vector<double> rightMost(mFractional[kMax]);
-     for (int idx = 0; idx < halfSupport; ++idx) {
-     rightMost[idx] = (double)idx * kMaxInv;
-     }
-
-     return mFractional;
-     } */
 
     // Values fixed on instantiation
     ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics

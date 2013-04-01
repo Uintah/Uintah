@@ -4,7 +4,6 @@
   <MD                           spec="OPTIONAL NO_DATA" >
     <coordinateFile             spec="REQUIRED STRING" />
     <numAtoms                   spec="REQUIRED INTEGER"/>
-    <boxSize                    spec="REQUIRED VECTOR" />
     <cutoffRadius               spec="REQUIRED DOUBLE" />
     <R12                        spec="REQUIRED DOUBLE" />
     <R6                         spec="REQUIRED DOUBLE" />
@@ -14,6 +13,7 @@
       <pressure                 spec="REQUIRED VECTOR"/>
       <temperature              spec="REQUIRED DOUBLE"/>
       <orthorhombic             spec="REQUIRED BOOLEAN"/>
+      <boxSize                  spec="REQUIRED VECTOR" />
       <ghostcells               spec="REQUIRED INTEGER"/>
       <maxiterations            spec="REQUIRED INTEGER 'positive'"/>
     </MDSystem>
