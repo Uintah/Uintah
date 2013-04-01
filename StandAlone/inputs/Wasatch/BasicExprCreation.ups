@@ -45,6 +45,10 @@
        <Constant>4.5</Constant>
      </BasicExpression>
 
+     <!--
+       manually attach alpha to phi1 and phi2 as additive dependencies.
+       This mimics what would be done for an MMS where a source term is attached.
+      -->
      <AttachDependency tasklist="advance_solution">
        <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
        <Target> <NameTag name="phi1"  state="STATE_NONE"/> </Target>   
@@ -54,11 +58,20 @@
        <Target> <NameTag name="phi2"  state="STATE_NONE"/> </Target>   
      </AttachDependency>
 
+     <!--
+       Force the calculation of phi1.  Since it isn't associated with a
+       transport equation, it will not be automatically placed on the graph.
+       This forces it on. 
+      -->
      <ForceOnGraph tasklist="advance_solution">
        <NameTag name="phi1" state="STATE_NONE"/>
        <NameTag name="phi2" state="STATE_NONE"/>
      </ForceOnGraph>
      
+     <!--
+       Force a cleave of the graph into two separate graphs.
+       This will create two separate Uintah tasks.
+     -->
      <Cleave from="CHILDREN">
        <NameTag name="phi1" state="STATE_NONE"/>
      </Cleave>
