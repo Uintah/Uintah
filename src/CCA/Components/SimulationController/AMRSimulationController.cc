@@ -238,16 +238,18 @@ AMRSimulationController::run()
 
      delt = delt_var;
 
+     // a component may update the output interval or the checkpoint interval
+     // during a simulation.  For example in deflagration -> detonation simulations
      if (d_output && d_sharedState->updateOutputInterval()) {
        min_vartype outputInv_var;
        newDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
-       d_output->updateOutputInv(outputInv_var);
+       d_output->updateOutputInterval(outputInv_var);
      }
 
      if (d_output && d_sharedState->updateCheckpointInterval()) {
        min_vartype checkInv_var;
        newDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
-       d_output->updateOutputInv(checkInv_var);
+       d_output->updateCheckpointInterval(checkInv_var);
      }
      
      // delt adjusted based on timeinfo parameters
