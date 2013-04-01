@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -139,21 +139,21 @@ class CenteredCardinalBSpline {
     /*
      * @brief Return the max support of this spline.
      * @param None
-     * @return int The max support of this spline.
+     * @return int The support range in grid points of this spline.
      */
     inline int getMaxSupport() const
     {
-      return (d_splineOrder + 1) / 2;
+      return (d_splineOrder + 1);
     }
 
     /*
      * @brief Return half of the max support of this spline.
      * @param None
-     * @return int Half of the max support of this spline
+     * @return int Half of the support range in grid points of this spline
      */
     inline int getHalfMaxSupport() const
     {
-      return (d_splineOrder + 1) / 4;
+      return ceil(static_cast<double>(d_splineOrder + 1) * 0.5);
     }
 
     /**

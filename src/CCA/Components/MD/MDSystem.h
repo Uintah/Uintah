@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -165,6 +165,16 @@ class MDSystem {
       return d_inverseCell;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    double getCellVolume() const
+    {
+      return d_cellVolume;
+    }
+
   private:
 
     double d_volume;            //!< Total MD system unit cell volume
@@ -177,10 +187,12 @@ class MDSystem {
 
     Matrix3 d_unitCell;         //!< MD system unit cell
     Matrix3 d_inverseCell;      //!< MD system inverse unit cell
+    double d_cellVolume;       //!< Cell volume; calculate internally, return at request for efficiency
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);
 
+    void calcCellVolume();
 };
 
 }  // End namespace Uintah
