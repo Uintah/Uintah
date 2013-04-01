@@ -51,9 +51,8 @@ namespace Wasatch{
 
   //============================================================================
 
-  GraphHelper*
+  Category
   parse_tasklist( Uintah::ProblemSpecP param,
-                  GraphCategories& graphCat,
                   const bool isAttribute )
   {
     // jcs note that if we have a vector of attributes, then this will not work properly.
@@ -74,12 +73,11 @@ namespace Wasatch{
     else{
       param->require("TaskList",taskListName);
     }
-    return select_tasklist( taskListName, graphCat );
+    return select_tasklist( taskListName );
   }
 
-  GraphHelper*
-  select_tasklist( const std::string& taskList,
-                   GraphCategories& graphCat )
+  Category
+  select_tasklist( const std::string& taskList )
   {
     Category cat = ADVANCE_SOLUTION;
     if     ( taskList == "initialization"   )   cat = INITIALIZATION;
@@ -90,7 +88,7 @@ namespace Wasatch{
       msg << "ERROR: unsupported task list specified: '" << taskList << "'" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    return graphCat[cat];
+    return cat;
   }
 
   //============================================================================
@@ -132,7 +130,8 @@ namespace Wasatch{
 
       // currently we only support adding, not subtracting - this could be
       // easily changed by adding this to the parser.
-      parse_tasklist( attachParams, graphCat, true )->exprFactory->attach_dependency_to_expression( src, target );
+      const Category cat = parse_tasklist( attachParams, true );
+      graphCat[cat]->exprFactory->attach_dependency_to_expression( src, target );
     }
   }
 

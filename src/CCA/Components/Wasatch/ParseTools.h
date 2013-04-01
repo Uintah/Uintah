@@ -50,26 +50,22 @@ namespace Wasatch{
 
   /**
    * \ingroup WasatchParser
-   * \brief Extracts the appropriate GraphHelper
+   * \brief Extracts the appropriate Category
    * \param param The parser block
-   * \param graphCat the GraphCategories
    * \param isAttribute true if the tasklist is an attribute, false if it is a separate block
-   * \return the GraphHelper
+   * \return the Category
    */
-  GraphHelper*
+  Category
   parse_tasklist( Uintah::ProblemSpecP param,
-                  GraphCategories& graphCat,
                   const bool isAttribute );
 
   /**
    * \ingroup WasatchParser
-   * \brief Extracts the appropriate GraphHelper
+   * \brief Extracts the appropriate Category
    * \param taskList The name of the tasklist.
-   * \param graphCat the GraphCategories
    * \return the GraphHelper
    */
-  GraphHelper* select_tasklist( const std::string& taskList,
-                                GraphCategories& graphCat );
+  Category select_tasklist( const std::string& taskList );
 
   /**
    * \ingroup WasatchParser
