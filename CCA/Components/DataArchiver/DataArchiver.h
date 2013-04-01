@@ -181,8 +181,10 @@ using SCIRun::Mutex;
        { return d_lastTimestepLocation; }
 
        bool isLabelSaved( std::string label );
-       void updateOutputInv(double inv);
-       void updateCheckpointInv(double inv);
+       
+       //! Allow a component to define the output and checkpoint interval on the fly.
+       void updateOutputInterval(double inv);
+       void updateCheckpointInterval(double inv);
 
      public:
 
