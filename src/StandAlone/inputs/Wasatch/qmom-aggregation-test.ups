@@ -32,54 +32,20 @@
       </TurbulentAggregationCoefficient>
     </PrecipitationBasicExpression>    
 
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_0" state="STATE_N" />
-    <Constant>1.0</Constant>
-    </BasicExpression>
+    <MomentInitialization>
+      <PopulationName> CACO3 </PopulationName>
+      <Values>
+        1.0,
+        5.0,
+        26.0,
+        140.0,
+        778.0,
+        4450.0,
+        26140.0,
+        157400.0
+      </Values>
+    </MomentInitialization>
     
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_1" state="STATE_N" />
-    <Constant>5.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_2" state="STATE_N" />
-    <Constant>26.0 </Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_3" state="STATE_N" />
-    <Constant>140.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_4" state="STATE_N" />
-    <Constant>778.0</Constant>
-    </BasicExpression>
-   
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_5" state="STATE_N" />
-    <Constant>4450.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_6" state="STATE_N" />
-    <Constant>26140.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-    <TaskList>initialization</TaskList>
-    <NameTag name="m_CACO3_7" state="STATE_N" />
-    <Constant>157400.0</Constant>
-    </BasicExpression>
-
     <MomentTransportEquation>
         <PopulationName>CACO3</PopulationName>
         <NumberOfEnvironments>3</NumberOfEnvironments>
