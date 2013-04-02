@@ -29,6 +29,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+#include "Core/Thread/Time.h"
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -37,6 +39,7 @@ using namespace SCIRun;
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex       cerrLock;
 extern SCIRun::DebugStream mixedDebug;
+static DebugStream dbg("RecvTiming", false);
 
 double CommRecMPI::WaitTimePerMessage=0;
 
@@ -202,6 +205,9 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
 			   list<int>* finishedGroups )
 {
   bool anyFinished = false;
+  int numReceived = 0;
+  int volReceived = 0;
+  
   //  mixedDebug << me << " Done calling testsome with " << ids.size() 
   //      << " waiters and got " << donecount << " done\n";
   ASSERT(donecount != MPI_UNDEFINED);
@@ -223,8 +229,10 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
       delete handlers[idx];
       handlers[idx]=0;
     }
+    numReceived++;
+    volReceived += byteCounts[idx];
     ids[idx] = MPI_REQUEST_NULL;
-    totalBytes_ -= byteCounts[idx];    
+    totalBytes_ -= byteCounts[idx];
     byteCounts[idx] = 0;
     int groupID = groupIDs[idx];
     ASSERT(groupWaitCount_.find(groupID) != groupWaitCount_.end());
@@ -235,6 +243,10 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
       }
       anyFinished = true;
     }
+  }
+  if (dbg && numReceived>0) {
+    dbg << pg->myrank() << " Time: " << Time::currentSeconds() << " , NumReceived= "
+         << numReceived << " , VolReceived: " << volReceived << endl;
   }
   if(donecount == (int)ids.size()){
     ASSERT(totalBytes_==0);
