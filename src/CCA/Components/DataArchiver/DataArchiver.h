@@ -186,6 +186,9 @@ using SCIRun::Mutex;
        void updateOutputInterval(double inv);
        void updateCheckpointInterval(double inv);
 
+       double getOutputInterval(){return d_outputInterval;};
+       double getCheckpointInterval(){return d_checkpointInterval;};
+
      public:
 
        //! problemSetup parses the ups file into a list of these
