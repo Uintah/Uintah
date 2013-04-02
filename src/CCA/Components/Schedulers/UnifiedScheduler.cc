@@ -60,6 +60,7 @@ extern DebugStream execout;
 static double CurrentWaitTime = 0;
 
 static DebugStream dbg("UnifiedScheduler", false);
+static DebugStream dbgst("SendTiming", false);
 static DebugStream timeout("UnifiedScheduler.timings", false);
 static DebugStream queuelength("QueueLength", false);
 static DebugStream threaddbg("UnifiedThreadDBG", false);
@@ -1225,6 +1226,9 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
     cerrLock.unlock();
   }
 
+  int numSend=0;
+  int volSend=0;
+
   // Send data to dependendents
   for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
 
@@ -1326,10 +1330,12 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
       }
 
       numMessages_++;
+      numSend++;
       int typeSize;
 
       MPI_Type_size(datatype, &typeSize);
       messageVolume_ += count * typeSize;
+      volSend +=count*typeSize;
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
@@ -1345,7 +1351,10 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
   }  // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
-
+  if (dbgst && numSend>0){
+     dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
+         << numSend << " , VolSend: " << volSend << endl;
+  }
 }  // end postMPISends();
 
 int UnifiedScheduler::getAviableThreadNum()

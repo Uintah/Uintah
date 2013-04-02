@@ -65,6 +65,7 @@ extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler",             false);
+static DebugStream dbgst("SendTiming", false);
 static DebugStream timeout("MPIScheduler.timings", false);
 static DebugStream reductionout("ReductionTasks",  false);
 
@@ -327,6 +328,9 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
     cerrLock.unlock();
   }
 
+  int numSend=0;
+  int volSend=0;
+
   // Send data to dependendents
   for(DependencyBatch* batch = task->getComputes();
       batch != 0; batch = batch->comp_next){
@@ -419,10 +423,12 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
         mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
         numMessages_++;
+        numSend++;
         int typeSize;
 
         MPI_Type_size(datatype,&typeSize);
         messageVolume_+=count*typeSize;
+        volSend +=count*typeSize;
 
         MPI_Request requestid;
         MPI_Isend(buf, count, datatype, to, batch->messageTag,
@@ -436,7 +442,11 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
   } // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds()-sendstart;
   mpi_info_.totalsend += dsend;
+  if (dbgst && numSend>0){
+     dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
+         << numSend << " , VolSend: " << volSend << endl;
 
+  }
 } // end postMPISends();
 
 
