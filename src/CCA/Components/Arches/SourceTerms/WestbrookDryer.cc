@@ -107,7 +107,6 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   _field_labels->add_species( d_rho_label ); 
   _field_labels->add_species( d_T_label ); 
 
-  _hot_spot = false; 
   if ( db->findBlock("hot_spot") ){
     ProblemSpecP db_hotspot = db->findBlock("hot_spot"); 
     ProblemSpecP the_geometry = db_hotspot->findBlock("geom_object");
@@ -115,7 +114,6 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
     db_hotspot->require("start_time",_start_time_hot_spot);
     db_hotspot->require("stop_time", _stop_time_hot_spot); 
     db_hotspot->require("temperature", _T_hot_spot);
-    _hot_spot = true; 
   }
 
   // hard set some values...may want to change some of these to be inputs
@@ -299,10 +297,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       } 
 
+      double total_time = _field_labels->d_sharedState->getElapsedTime();
       // Overwrite with hot spot if specified -- like a pilot light
-      if ( _hot_spot ) { 
-
-        double total_time = _field_labels->d_sharedState->getElapsedTime();
+      if ( total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ) { 
 
         for (std::vector<GeometryPieceP>::iterator giter = _geom_hot_spot.begin(); giter != _geom_hot_spot.end(); giter++){
 
@@ -328,10 +325,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
             }
           }
         }
-
-        if ( total_time > _stop_time_hot_spot ){ 
-          _hot_spot = false; 
-        } 
       }
 
       CxHyRate[c] = rate; 
