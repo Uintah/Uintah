@@ -184,7 +184,6 @@ class SPME : public Electrostatics {
      * @return
      */
     void mapForceFromGrid(SPMEPatch* spmePatch,
-                          const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
                           constParticleVariable<Vector> pforce,
                           ParticleVariable<Vector> pforcenew,
@@ -240,7 +239,7 @@ class SPME : public Electrostatics {
      *
      * @return A SimpleGrid<Matrix3>
      */
-    SimpleGrid<Matrix3>& calculateStressPrefactor(const IntVector& extents,
+    SimpleGrid<Matrix3> calculateStressPrefactor(const IntVector& extents,
                                                   const IntVector& offset);
 
     /**
