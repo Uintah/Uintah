@@ -225,7 +225,6 @@ private:
   double _T_hot_spot;                            ///< Temperature of the pilot light
   double _start_time_hot_spot;                   ///< Starting time for hot spot
   double _stop_time_hot_spot;                    ///< Ending time for hot spot
-  bool _hot_spot;                                ///< Logical on/off switch for the pilot
 
   ArchesLabel* _field_labels;
 
