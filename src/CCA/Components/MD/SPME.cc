@@ -49,7 +49,7 @@ using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
 
-static DebugStream md_spme("MDSPME", false);
+static DebugStream spme_dbg("SPMEDBG", true);
 
 SPME::SPME()
 {
@@ -143,7 +143,7 @@ void SPME::setup(const ProcessorGroup* pg,
         for (size_t zidx = 0; zidx < zExtent; ++zidx) {
           fTheta(xidx, yidx, zidx) = fBGrid(xidx, yidx, zidx) * fCGrid(xidx, yidx, zidx);
 
-          if (md_spme.active()) {
+          if (spme_dbg.active()) {
             cerrLock.unlock();
             // FIXME - some "nan" values interspersed in B and C
             if (isnan(fBGrid(xidx, yidx, zidx))) {
@@ -161,7 +161,8 @@ void SPME::setup(const ProcessorGroup* pg,
       }
     }
     spmePatch->setTheta(fTheta);
-    spmePatch->setStressPrefactor(calculateStressPrefactor(PatchKGridExtents, PatchKGridOffset));
+    SimpleGrid<Matrix3> stressPrefactor = calculateStressPrefactor(PatchKGridExtents, PatchKGridOffset);
+    spmePatch->setStressPrefactor(stressPrefactor);
     SimpleGrid<dblcomplex> q(PatchKGridExtents, PatchKGridOffset, 2 * SplineHalfMaxSupport);  // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
     spmePatch->setQ(q);
     d_spmePatches.push_back(spmePatch);
@@ -263,15 +264,13 @@ void SPME::finalize(const ProcessorGroup* pg,
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
     constParticleVariable<Vector> pforce;
-    old_dw->get(pforce, d_lb->pForceLabel, pset);
+    new_dw->get(pforce, d_lb->pForceLabel_preReloc, pset);
 
     ParticleVariable<Vector> pforcenew;
     new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
 
-    //FIXME need gridMap from each SPMEPatch
-
     // Calculate electrostatic contribution to f_ij(r)
-//    SPME::mapForceFromGrid(pset, ChargeMap);
+//    SPME::mapForceFromGrid(spmePatch, pset, pforce, pforcenew);
   }
 
   // Reduction for Energy, Pressure Tensor?
@@ -316,20 +315,24 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
   std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
 
-  std::cout << " DEBUG: " << std::endl;
-  std::cout << "Expect mf1 size: " << d_kLimits.x() << "  Actual mf1 size: " << mf1.size() << std::endl;
-  for (size_t idx = 0; idx < mf1.size(); ++idx) {
-    std::cout << "mf1(" << std::setw(3) << idx << "): " << mf1[idx] << std::endl;
+  if (spme_dbg.active()) {
+    cerrLock.unlock();
+    std::cout << " DEBUG: " << std::endl;
+    std::cout << "Expect mf1 size: " << d_kLimits.x() << "  Actual mf1 size: " << mf1.size() << std::endl;
+    for (size_t idx = 0; idx < mf1.size(); ++idx) {
+      std::cout << "mf1(" << std::setw(3) << idx << "): " << mf1[idx] << std::endl;
+    }
+    std::cout << "Expect mf2 size: " << d_kLimits.y() << "  Actual mf2 size: " << mf2.size() << std::endl;
+    for (size_t idx = 0; idx < mf2.size(); ++idx) {
+      std::cout << "mf2(" << std::setw(3) << idx << "): " << mf2[idx] << std::endl;
+    }
+    std::cout << "Expect mf3 size: " << d_kLimits.x() << "  Actual mf3 size: " << mf3.size() << std::endl;
+    for (size_t idx = 0; idx < mf3.size(); ++idx) {
+      std::cout << "mf3(" << std::setw(3) << idx << "): " << mf3[idx] << std::endl;
+    }
+    std::cout << " END DEBUG: " << std::endl;
+    cerrLock.unlock();
   }
-  std::cout << "Expect mf2 size: " << d_kLimits.y() << "  Actual mf2 size: " << mf2.size() << std::endl;
-  for (size_t idx = 0; idx < mf2.size(); ++idx) {
-    std::cout << "mf2(" << std::setw(3) << idx << "): " << mf2[idx] << std::endl;
-  }
-  std::cout << "Expect mf3 size: " << d_kLimits.x() << "  Actual mf3 size: " << mf3.size() << std::endl;
-  for (size_t idx = 0; idx < mf3.size(); ++idx) {
-    std::cout << "mf3(" << std::setw(3) << idx << "): " << mf3[idx] << std::endl;
-  }
-  std::cout << " END DEBUG: " << std::endl;
 
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
@@ -363,20 +366,24 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
 
-  std::cout << " DEBUG: " << std::endl;
-  std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
-  for (size_t idx = 0; idx < mp1.size(); ++idx) {
-    std::cout << "mp1(" << std::setw(3) << idx << "): " << mp1[idx] << std::endl;
+  if (spme_dbg.active()) {
+    cerrLock.unlock();
+    std::cout << " DEBUG: " << std::endl;
+    std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
+    for (size_t idx = 0; idx < mp1.size(); ++idx) {
+      std::cout << "mp1(" << std::setw(3) << idx << "): " << mp1[idx] << std::endl;
+    }
+    std::cout << "Expect mp2 size: " << d_kLimits.y() << "  Actual mp2 size: " << mp2.size() << std::endl;
+    for (size_t idx = 0; idx < mp2.size(); ++idx) {
+      std::cout << "mp2(" << std::setw(3) << idx << "): " << mp2[idx] << std::endl;
+    }
+    std::cout << "Expect mp3 size: " << d_kLimits.x() << "  Actual mp3 size: " << mp3.size() << std::endl;
+    for (size_t idx = 0; idx < mp3.size(); ++idx) {
+      std::cout << "mp3(" << std::setw(3) << idx << "): " << mp3[idx] << std::endl;
+    }
+    std::cout << " END DEBUG: " << std::endl;
+    cerrLock.unlock();
   }
-  std::cout << "Expect mp2 size: " << d_kLimits.y() << "  Actual mp2 size: " << mp2.size() << std::endl;
-  for (size_t idx = 0; idx < mp2.size(); ++idx) {
-    std::cout << "mp2(" << std::setw(3) << idx << "): " << mp2[idx] << std::endl;
-  }
-  std::cout << "Expect mp3 size: " << d_kLimits.x() << "  Actual mp3 size: " << mp3.size() << std::endl;
-  for (size_t idx = 0; idx < mp3.size(); ++idx) {
-    std::cout << "mp3(" << std::setw(3) << idx << "): " << mp3[idx] << std::endl;
-  }
-  std::cout << " END DEBUG: " << std::endl;
 
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
@@ -414,7 +421,7 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   return CGrid;
 }
 
-SimpleGrid<Matrix3>& SPME::calculateStressPrefactor(const IntVector& extents,
+SimpleGrid<Matrix3> SPME::calculateStressPrefactor(const IntVector& extents,
                                                     const IntVector& offset)
 {
   std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
@@ -547,7 +554,11 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
       for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
         for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
           dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
-          Q(QAnchor.x() + xmask, QAnchor.y() + ymask, QAnchor.z() + zmask) += val;
+          int x_anchor = QAnchor.x() + xmask;
+          int y_anchor = QAnchor.y() + ymask;
+          int z_anchor = QAnchor.z() + zmask;
+          // FIXME Q is being indexed negatively e.g. (-4, -4, -4)
+//          Q(x_anchor, y_anchor, z_anchor) += val;
         }
       }
     }
@@ -556,7 +567,6 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 }
 
 void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
-                            const std::vector<SPMEMapPoint>& gridMap,
                             ParticleSubset* pset,
                             constParticleVariable<Vector> pforce,
                             ParticleVariable<Vector> pforcenew,
@@ -566,6 +576,9 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
     particleIndex pidx = *iter;
+
+    // FIXME SPMEPatch needs to now have its own gridMap?
+    const std::vector<SPMEMapPoint> gridMap;
 
     SimpleGrid<SCIRun::Vector> forceMap = gridMap[pidx].getForceGrid();
     SCIRun::Vector newForce = pforce[pidx];

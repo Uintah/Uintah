@@ -61,7 +61,6 @@ extern SCIRun::Mutex cerrLock;
 
 static DebugStream md_dbg("MDDebug", false);
 static DebugStream md_cout("MDCout", false);
-static DebugStream md_spme("MDSPME", false);
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
@@ -444,7 +443,7 @@ void MD::initialize(const ProcessorGroup* pg,
 
         // TODO update this with other VarLabels
         if (md_dbg.active()) {
-          cerrLock.unlock();
+          cerrLock.lock();
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
