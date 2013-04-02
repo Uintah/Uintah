@@ -171,6 +171,22 @@ namespace Uintah{
 
           std::string _model_name; 
 
+        protected: 
+
+          /** @brief Test if the (i,j,k) is inside or outside of the geometry **/ 
+          inline bool in_or_out( IntVector c, GeometryPieceP piece, const Patch* patch ){ 
+
+            bool test = false; 
+
+            Point p = patch->cellPosition( c ); 
+            if ( piece->inside( p ) ) { 
+              test = true; 
+            } 
+
+            return test; 
+
+          }; 
+
       };
 
       std::vector<HTModelBase*> _all_ht_models; 
