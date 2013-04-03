@@ -346,6 +346,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   // for thermal stress
   new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
   new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
+  new_dw->allocateAndPut(pvelGrad,       d_lb->pVelGradLabel,       subset);
   
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
@@ -354,7 +355,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pcolor,      d_lb->pColorLabel,         subset);
   }
   if(d_artificial_viscosity){
-     new_dw->allocateAndPut(p_q,      d_lb->p_qLabel,            subset);
+     new_dw->allocateAndPut(p_q,         d_lb->p_qLabel,            subset);
   }
   return subset;
 }
@@ -666,7 +667,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
     psize[i]      = size;
     pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
-
+    pvelGrad[i] = Matrix3(0.0);
+  
     double vol_frac_CC = 1.0;
     try {
      if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
