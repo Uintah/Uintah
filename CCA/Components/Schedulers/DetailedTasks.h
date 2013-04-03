@@ -217,6 +217,15 @@ namespace Uintah {
     int getAssignedResourceIndex() const {
       return resourceIndex;
     }
+    
+    void assignStaticOrder(int i) {
+      staticOrder = i;
+    }
+
+    int getSaticOrder() const {
+      return staticOrder;
+    }
+ 
     DetailedTasks* getTaskGroup() const {
      return taskGroup;
     }
@@ -312,6 +321,8 @@ namespace Uintah {
     Mutex internalDependencyLock;
     
     int resourceIndex;
+
+    int staticOrder;
 
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);

@@ -53,6 +53,7 @@ extern map<string,double> waittimes;
 extern map<string,double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
+extern DebugStream taskorder;
 
 static double CurrentWaitTime=0;
 
@@ -286,6 +287,13 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
+  // generate a static order for each detailed tasks by running
+  // with MPI scheduler on timestep 1
+  if (taskorder && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
+    MPIScheduler::execute(tgnum, iteration);
+    return;
+  }
+
   MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler2::execute");
   TAU_PROFILE("ThreadedMPIScheduler2::execute()", " ", TAU_USER); 
 
@@ -655,6 +663,10 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         readyTask= phaseSyncTask[currphase];
         havework=true;
         numTasksDone++;
+        if (taskorder){
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
+                << numTasksDone << endl;
+        }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase+1 < numPhase) currphase++;
         break;
@@ -664,6 +676,10 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         if (readyTask!=NULL) {
           havework=true;
           numTasksDone++;
+          if (taskorder){
+            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
+                << numTasksDone << endl;
+          }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase+1 < numPhase) currphase++;
           break;

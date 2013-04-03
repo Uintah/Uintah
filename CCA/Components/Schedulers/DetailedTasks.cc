@@ -207,6 +207,7 @@ DetailedTask::DetailedTask(Task* task,
       numPendingInternalDependencies(0),
       internalDependencyLock("DetailedTask Internal Dependencies"),
       resourceIndex(-1),
+      staticOrder(-1),
       d_profileType(Normal)
 {
   if (patches) {
