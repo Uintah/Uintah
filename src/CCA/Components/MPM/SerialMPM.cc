@@ -72,6 +72,9 @@
 #include <fstream>
 #include <sstream>
 
+//#define GE_Proj
+#undef GE_Proj
+
 using namespace Uintah;
 
 using namespace std;
@@ -327,6 +330,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
@@ -704,6 +708,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
+#ifdef GE_Proj
+  t->requires(Task::OldDW, lb->pVelGradLabel,          gan,NGP);
+#endif
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
@@ -2040,6 +2047,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                    pExternalForceCorner3, pExternalForceCorner4;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
+      constParticleVariable<Matrix3> pVelGrad;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -2048,6 +2056,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
+#ifdef GE_Proj
+      old_dw->get(pVelGrad,       lb->pVelGradLabel,       pset);
+#endif
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
@@ -2126,6 +2137,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) { // Iterates through the nodes which receive information from the current particle
           node = ni[k];
           if(patch->containsNode(node)) {
+#ifdef GE_Proj
+            Point gpos = patch->getNodePosition(node);
+            Vector distance = px[idx] - gpos;
+            Vector pvel_ext = pvelocity[idx] - pVelGrad[idx]*distance;
+            pmom = pvel_ext*pmass[idx];
+#endif
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -3245,14 +3262,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-    bool combustion_problem=false;
+//    bool combustion_problem=false;
 
     Material* reactant;
-    int RMI = -99;
+//    int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
     if(reactant != 0){
-      RMI = reactant->getDWIndex();
-      combustion_problem=true;
+//      RMI = reactant->getDWIndex();
+      //combustion_problem=true;
     }
     double move_particles=1.;
     if(!flags->d_doGridReset){
@@ -3767,14 +3784,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-    bool combustion_problem=false;
+//    bool combustion_problem=false;
 
     Material* reactant;
     int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
     if(reactant != 0){
       RMI = reactant->getDWIndex();
-      combustion_problem=true;
+      //combustion_problem=true;
     }
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -3981,12 +3998,12 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
     StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-    double rho_init[numMPMMatls];
+    //double rho_init[numMPMMatls];
     Vector dx = patch-> dCell();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      rho_init[m]=mpm_matl->getInitialDensity();
+      //rho_init[m]=mpm_matl->getInitialDensity();
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
       new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);

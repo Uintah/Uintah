@@ -124,7 +124,7 @@ namespace Uintah {
 
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce;
-    ParticleVariable<Matrix3> psize;
+    ParticleVariable<Matrix3> psize,pvelGrad;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<long64> pparticleID;
