@@ -152,6 +152,8 @@ namespace Uintah {
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
+    typedef map<pair<const Patch*,GeometryObject*>,vector<Matrix3> > geomMat3s;
+    geomMat3s d_object_size;  
     
     mutable CrowdMonitor   d_lock;
   };

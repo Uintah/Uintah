@@ -96,7 +96,6 @@ SmoothGeomPiece::getFiberDirs()
   return &d_fiberdirs;
 }
 
-
 ////////////////////////////////////////////////////////////////////// // gcd adds
 /* Returns the vector containing the set of particle velocity components */
 //////////////////////////////////////////////////////////////////////
@@ -105,6 +104,15 @@ SmoothGeomPiece::getVelocity()
 {
   return &d_velocity;
 }                                                  // end gcd add
+
+//////////////////////////////////////////////////////////////////////
+/* Returns the vector containing the set of particle size tensor */
+//////////////////////////////////////////////////////////////////////
+vector<Matrix3>* 
+SmoothGeomPiece::getSize()
+{
+  return &d_size;
+}
 
 //////////////////////////////////////////////////////////////////////
 /* Deletes the vector containing the set of particle locations */
