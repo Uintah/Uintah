@@ -3527,6 +3527,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // Change F such that the determinant is equal to the average for
           // the cell
           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
+          // Change L such that it is consistent with the F          
+          double ThreedelT  = 3.0*delT;
+          pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
         }
       } //end of pressureStabilization loop  at the patch level
 
