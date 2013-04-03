@@ -69,6 +69,7 @@ static DebugStream dbgst("SendTiming", false);
 static DebugStream timeout("MPIScheduler.timings", false);
 static DebugStream reductionout("ReductionTasks",  false);
 
+DebugStream taskorder("TaskOrder",             false);
 DebugStream waitout("WaitTimes", false);
 DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG",   false);
@@ -802,6 +803,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
+      if (taskorder) task->assignStaticOrder(numTasksDone);
       taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
 
 #ifdef USE_TAU_PROFILING

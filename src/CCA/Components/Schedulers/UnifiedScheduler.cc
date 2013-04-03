@@ -56,6 +56,7 @@ extern map<string, double> waittimes;
 extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
+extern DebugStream taskorder;
 
 static double CurrentWaitTime = 0;
 
@@ -370,6 +371,13 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
+  // generate a static order for each detailed tasks by running
+  // with MPI scheduler on timestep 1, may need to change this
+  if (taskorder && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
+    MPIScheduler::execute(tgnum, iteration);
+    return;
+  }
+  MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
   TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
@@ -760,6 +768,10 @@ void UnifiedScheduler::runTasks(int t_id)
         readyTask = phaseSyncTask[currphase];
         havework = true;
         numTasksDone++;
+        if (taskorder){
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
+                << numTasksDone << endl;
+        }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
           currphase++;
@@ -799,6 +811,10 @@ void UnifiedScheduler::runTasks(int t_id)
           } else {
 #endif
           numTasksDone++;
+          if (taskorder){
+            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
+                << numTasksDone << endl;
+          }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
             currphase++;
@@ -944,6 +960,10 @@ void UnifiedScheduler::runTasks(int t_id)
         reclaimEvents(readyTask, D2H);
         postMPISends(readyTask, currentIteration, t_id);
         numTasksDone++;
+        if (taskorder){
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
+                << numTasksDone << endl;
+        }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
           currphase++;
