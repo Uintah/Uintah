@@ -534,7 +534,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       // NEED TO FIND R
       Matrix3 tensorR, tensorU;
       //Comment by KC: Computing tensorR at the beginning of the timestep
-      deformationGradient[idx].polarDecompositionAFFinvTran(tensorU, tensorR);
+      deformationGradient[idx].polarDecompositionRMB(tensorU, tensorR);
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
       Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
@@ -596,7 +596,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       tensorSig(2,0) = sigarg[5];
       tensorSig(0,2) = sigarg[5];
       //Comment by KC : Computing tensorR at the end of the time-step
-      deformationGradient_new[idx].polarDecompositionAFFinvTran(tensorU,tensorR);
+      deformationGradient_new[idx].polarDecompositionRMB(tensorU,tensorR);
       // ROTATE pstress_new: S=R*tensorSig*R^T
       pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
       c_dil = sqrt(USM/rho_cur);
