@@ -27,6 +27,7 @@
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Grid/Box.h>
 #include <vector>
 #include <string>
@@ -131,6 +132,11 @@ namespace Uintah {
     vector<Vector>* getVelocity();                          // gcd add end
 
     //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle size tensor */
+    //////////////////////////////////////////////////////////////////////
+    vector<Matrix3>* getSize();
+
+    //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle locations */
     //////////////////////////////////////////////////////////////////////
     void deletePoints();
@@ -139,7 +145,6 @@ namespace Uintah {
     /*! Deletes the vector containing the set of particle volumes */
     //////////////////////////////////////////////////////////////////////
     void deleteVolume();
-
 
     //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle temperatures */
@@ -170,6 +175,7 @@ namespace Uintah {
     vector<Vector> d_forces;
     vector<Vector> d_fiberdirs;
     vector<Vector> d_velocity;    // gcd adds
+    vector<Matrix3> d_size;
     double d_dx;
   };
 } // End namespace Uintah

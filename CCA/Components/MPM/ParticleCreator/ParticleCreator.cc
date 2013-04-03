@@ -110,12 +110,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pforces       = 0;
     vector<Vector>* pfiberdirs    = 0;
     vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
+    vector<Matrix3>* psizes       = 0;
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
       pforces      = sgp->getForces();
       pfiberdirs   = sgp->getFiberDirs();
       pvelocities  = sgp->getVelocity();  // gcd adds and new change name
+      psizes       = sgp->getSize();
 
       if(d_with_color){
         colors      = sgp->getColors();
@@ -157,6 +159,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (!pvelocities->empty()) velocityiter =
               d_object_velocity[pvelocitykey].begin();  // new change name
     }                                                    // end gcd adds
+
+    // For getting particle sizes (if they exist)
+    vector<Matrix3>::const_iterator sizeiter;
+    geomMat3s::key_type psizekey(patch,*obj);
+    if (psizes) {
+      if (!psizes->empty()) sizeiter = d_object_size[psizekey].begin();
+    }
     
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
@@ -213,7 +222,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++fiberiter;
         }
       }
-      
+
+      if (psizes && d_flags->d_interpolator_type=="cpdi") {
+        if (!psizes->empty()) {
+          psize[pidx] = *sizeiter;
+          ++sizeiter;
+        }
+      }
+
       if (colors) {
         if (!colors->empty()) {
           pcolor[pidx] = *coloriter;
@@ -617,7 +633,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
   Vector affineTrans_A1=(*obj)->getInitialData_Vector("affineTransformation_A1");
   Vector affineTrans_A2=(*obj)->getInitialData_Vector("affineTransformation_A2");
-  Vector affineTrans_b= (*obj)->getInitialData_Vector("affineTransformation_b");
   Matrix3 affineTrans_A(
           affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
@@ -739,6 +754,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvecs::key_type   forcekey(patch,obj);
   geomvecs::key_type   fiberkey(patch,obj);
   geomvecs::key_type   pvelocitykey(patch,obj);
+  geomMat3s::key_type   psizekey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getExtraBox();
