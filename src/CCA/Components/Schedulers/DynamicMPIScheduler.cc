@@ -146,12 +146,6 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
-  // generate a static order for each detailed tasks by running
-  // with MPI scheduler on timestep 1
-  if (taskorder.active() && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
-    MPIScheduler::execute(tgnum, iteration);
-    return;
-  }
   MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
   TAU_PROFILE("DynamicMPIScheduler::execute()", " ", TAU_USER); 
   
@@ -366,7 +360,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       runTask(task, iteration);
       numTasksDone++;
       if (taskorder.active()){
-        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " ,current order: "
+        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
       }
       phaseTasksDone[task->getTask()->d_phase]++;
@@ -402,7 +396,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
       numTasksDone++;
       if (taskorder.active()){
-        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " ,current order: "
+        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
       }
       phaseTasksDone[reducetask->getTask()->d_phase]++;

@@ -175,6 +175,7 @@ void DetailedTasks::computeLocalTasks(int me)
   if (localtasks_.size() != 0) {
     return;
   }
+  int order=0;
   for (int i = 0; i < (int)tasks_.size(); i++) {
     DetailedTask* task = tasks_[i];
 
@@ -191,6 +192,7 @@ void DetailedTasks::computeLocalTasks(int me)
           cerrLock.unlock();
         }
       }
+      task->assignStaticOrder(++order);
     }
   }
 }

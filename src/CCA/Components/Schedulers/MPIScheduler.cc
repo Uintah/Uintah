@@ -803,7 +803,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
-      if (taskorder.active()) task->assignStaticOrder(numTasksDone);
+      if (taskorder.active()){
+        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
+                << numTasksDone << endl;
+      }
       taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
 
 #ifdef USE_TAU_PROFILING
