@@ -31,7 +31,7 @@
       <save label = "g.acceleration"/>
       <save label = "p.evp"/>
       <save label = "p.eve"/>
-      <save label = "p.kappa"/>
+      <save label = "p.Kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
 
@@ -77,12 +77,15 @@
             <FSLOPE_p> 1e-10 </FSLOPE_p>
             <PEAKI1> 35.355339059327378e10 </PEAKI1>
             <CR> 14.8 </CR>
+            <T1_rate_dependence> 1 </T1_rate_dependence>
+            <T2_rate_dependence> 2 </T2_rate_dependence>
             <p0_crush_curve> -1e99 </p0_crush_curve>
             <p1_crush_curve> -1e99 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
             <p4_fluid_effect> 0.0 </p4_fluid_effect>
             <fluid_B0> 0.0 </fluid_B0>
             <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
+            <gruneisen_parameter>    0.1          </gruneisen_parameter>
             <subcycling_characteristic_number> 100 </subcycling_characteristic_number>
         </constitutive_model>
 
