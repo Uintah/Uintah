@@ -532,6 +532,7 @@
             <ordinates                  spec="OPTIONAL INTEGER" />
             <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
             <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
+            <print_all_info             spec="OPTIONAL NO_DATA" /> <!-- if this tag is present, do a little more work in the radiation solver to print some extra information (initial norm, sum(RHS) ). Default is false. --> 
             <LinearSolver               spec="OPTIONAL NO_DATA" 
                                         attribute1="type REQUIRED STRING 'hypre, petsc'">
               <res_tol                  spec="REQUIRED DOUBLE" />

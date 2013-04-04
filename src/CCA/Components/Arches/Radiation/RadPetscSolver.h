@@ -112,9 +112,10 @@ public:
                      CCVariable<double>& AP,
                      CCVariable<double>& AE,
                      CCVariable<double>& AN,
-                     CCVariable<double>& AT);
+                     CCVariable<double>& AT, 
+                     const bool print );
 
-      bool radLinearSolve();
+      bool radLinearSolve( const int dir, const bool print_all_info );
 
       virtual void copyRadSoln(const Patch* patch, 
                                ArchesVariables* vars);
