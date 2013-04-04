@@ -443,7 +443,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
   } // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds()-sendstart;
   mpi_info_.totalsend += dsend;
-  if (dbgst && numSend>0){
+  if (dbgst.active() && numSend>0){
      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
          << numSend << " , VolSend: " << volSend << endl;
 
@@ -803,7 +803,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
-      if (taskorder) task->assignStaticOrder(numTasksDone);
+      if (taskorder.active()) task->assignStaticOrder(numTasksDone);
       taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
 
 #ifdef USE_TAU_PROFILING
