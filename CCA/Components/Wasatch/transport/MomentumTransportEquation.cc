@@ -413,6 +413,10 @@ namespace Wasatch{
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
 
+    if (stagLoc_ == XDIR) thisMomName_ = xmomname;
+    if (stagLoc_ == YDIR) thisMomName_ = ymomname;
+    if (stagLoc_ == ZDIR) thisMomName_ = zmomname;
+
     //_____________
     // volume fractions for embedded boundaries Terms
     VolFractionNames& vNames = VolFractionNames::self();
@@ -423,15 +427,24 @@ namespace Wasatch{
 
     //__________________
     // old variables
+    // Here we calculate drhoudt using rhou and rhou_old. The catch is to remember
+    // to set the momentum_rhs_full to zero at wall/inlet boundaries.
+    // One could also calculate this time derivative from rho, u and rho_old, u_old.
+    // We may consider this option later.
+    bool enabledudtInPRHS = !(params->findBlock("Disabledmomdt"));
     const StringNames& sName = StringNames::self();
     const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
-//
-//    OldVariable& oldVar = OldVariable::self();
-//    Expr::Tag rhsFullTag = Expr::Tag( thisMomTag.name() + "_rhs_full", Expr::STATE_NONE );
-//    Expr::Tag rhsFullOldTag = Expr::Tag( thisMomTag.name() + "_rhs_full_old", Expr::STATE_NONE );
-//    oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, rhsFullTag);
-//    Expr::Tag timeDerivTag("d_" + rhsFullTag.name() + "_dt", Expr::STATE_NONE);
-//    factory.register_expression( new typename TimeDerivative<FieldT>::Builder(timeDerivTag,rhsFullTag,rhsFullOldTag,timestepTag));
+    if (enabledudtInPRHS) {    
+      OldVariable& oldVar = OldVariable::self();
+      Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
+//      Expr::Tag thisVelOldTag = Expr::Tag( thisVelTag_.name()  + "_old", Expr::STATE_NONE );
+      Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
+      Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
+//      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisVelTag_);
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
+      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,timestepTag));
+    }
 
     //__________________
     // dilatation
@@ -444,9 +457,6 @@ namespace Wasatch{
 
     //___________________________________
     // diffusive flux (stress components)
-    if (stagLoc_ == XDIR) thisMomName_ = xmomname;
-    if (stagLoc_ == YDIR) thisMomName_ = ymomname;
-    if (stagLoc_ == ZDIR) thisMomName_ = zmomname;
     Expr::TagList tauTags;
     const std::string thisMomDirName = this->dir_name();
     set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
@@ -594,11 +604,20 @@ namespace Wasatch{
         if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
         if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
         if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
-                
+
+        // add drhoudt term to the pressure rhs
+        Expr::Tag dxmomdtt, dymomdtt, dzmomdtt;
+        if (enabledudtInPRHS) {
+          if( doxmom )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
+          if( doymom )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
+          if( dozmom )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
+        }
+
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dilTag,
+        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dxmomdtt, dymomdtt, dzmomdtt,
+                                                                                       dilTag,
                                                                                        d2rhodt2t, timestepTag,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
@@ -651,7 +670,6 @@ namespace Wasatch{
           break;
       }
       
-      std::cout << "MOM TAG = " << mom_tag(thisMomName_) << std::endl;
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;

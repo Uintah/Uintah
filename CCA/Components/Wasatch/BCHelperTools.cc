@@ -956,7 +956,10 @@ namespace Wasatch {
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
-                            const int material)
+                            const int material,
+                            const XVolField* dudt,
+                            const YVolField* dvdt,
+                            const ZVolField* dwdt)
   {
     /*
      ALGORITHM:
@@ -1006,27 +1009,28 @@ namespace Wasatch {
         SCIRun::Iterator bound_ptr;
         const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name,bc_functor_name);
 
-        if (foundIterator) {
-
-          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-          const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
-
-          SS::IntVec bcPointGhostOffset(0,0,0);
-          double denom   = 1.0;
-          double spacing = 1.0;
+        SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+        const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
         
-          switch( face ){
-            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
-            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
-            default:                                                                                                  break;
-          } // switch
+        SS::IntVec bcPointGhostOffset(0,0,0);
+        double denom   = 1.0;
+        double spacing = 1.0;
+        
+        switch( face ){
+          case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
+          case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
+          case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
+          case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
+          case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
+          case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
+          default:                                                                                                  break;
+        } // switch
+        
+        // cell offset used to calculate local cell index with respect to patch.
+        const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
 
-          // cell offset used to calculate local cell index with respect to patch.
-          const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+
+        if (foundIterator) {
 
           if (bc_kind=="Dirichlet") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
@@ -1035,13 +1039,13 @@ namespace Wasatch {
               bc_point_indices = bc_point_indices - patchCellOffset;
               
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
 //            const double ghostValue = 2.0*bc_value - poissonField[iInterior];
 //            poissonRHS[iInterior] += bc_value/denom;
@@ -1054,11 +1058,12 @@ namespace Wasatch {
               bc_point_indices = bc_point_indices - patchCellOffset;
                             
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
+              
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
@@ -1068,6 +1073,64 @@ namespace Wasatch {
             }
           } else {
             return;
+          }
+        } else if (dudt || dvdt || dwdt) {
+          // if no bc was specified for the pressure, this implies that we have an inlet/wall
+          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+            SCIRun::IntVector bc_point_indices(*bound_ptr);
+            
+            bc_point_indices = bc_point_indices - patchCellOffset;
+            
+            const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                          bc_point_indices[1],
+                                          bc_point_indices[2] );
+            
+            const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                           bc_point_indices[1]+bcPointGhostOffset[1],
+                                           bc_point_indices[2]+bcPointGhostOffset[2] );
+            
+            const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
+            double plusOrMinusOne = 1.0;
+            
+            switch(face){
+              case Uintah::Patch::xminus:
+              {
+                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK );
+                poissonRHS[iInterior]  += (*dudt)[ixInterior]/dx;
+              }
+                break;                
+              case Uintah::Patch::xplus:
+              {
+                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dudt)[ixInterior]/dx;
+              }
+                break;
+                case Uintah::Patch::yminus:
+              {
+                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+                poissonRHS[iInterior]  += (*dvdt)[iyInterior]/dy;
+              }                
+                case Uintah::Patch::yplus:
+              {
+                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dvdt)[iyInterior]/dy;
+              }
+                break;
+                case Uintah::Patch::zminus:
+              {
+                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+                poissonRHS[iInterior]  += (*dwdt)[izInterior]/dz;
+              }
+                break;                
+                case Uintah::Patch::zplus:
+              {
+                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dwdt)[izInterior]/dz;
+              }
+                break;
+              default:
+                break;
+            }
           }
         }
       } // child loop

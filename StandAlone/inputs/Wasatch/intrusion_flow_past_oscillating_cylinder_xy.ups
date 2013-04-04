@@ -110,6 +110,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
+ 	 <Disabledmomdt/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
