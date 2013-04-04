@@ -71,24 +71,25 @@ RadPetscSolver::matrixCreate(const PatchSet* ,
 // ****************************************************************************
 void 
 RadPetscSolver::setMatrix(const ProcessorGroup* ,
-                           const Patch* ,
-                           ArchesVariables* ,
-                           bool , bool , bool ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& ,
-                           CCVariable<double>& )
+                          const Patch* ,
+                          ArchesVariables* ,
+                          bool , bool , bool ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          CCVariable<double>& ,
+                          const bool print )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 bool
-RadPetscSolver::radLinearSolve()
+RadPetscSolver::radLinearSolve( const int, const bool )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
