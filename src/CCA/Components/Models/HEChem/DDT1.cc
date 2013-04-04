@@ -448,7 +448,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->requires(Task::OldDW, burningLabel,              react_matl, gac,1);
   t1->requires(Task::OldDW, inductionTimeLabel,        react_matl, gn);
   t1->requires(Task::OldDW, countTimeLabel,            react_matl, gn);
-  t1->requires(Task::OldDW, BurningCriteriaLabel,      react_matl, gac, 1);
   
   //__________________________________
   // Computes
@@ -631,7 +630,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     // Old Reactant Quantities
     constCCVariable<double> cv_reactant, rctVolFrac;
     constCCVariable<double> rctTemp, rctRho, rctSpvol, rctFr, numPPC, inductionTimeOld,  countTimeOld;
-    constCCVariable<int> burningCellOld, BurningCriteriaOld;
+    constCCVariable<int> burningCellOld;
     constCCVariable<Vector> rctvel_CC;
     constNCVariable<double> NC_CCweight, rctMass_NC;
     constParticleVariable<Point> px;
@@ -656,7 +655,6 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     old_dw->get(inductionTimeOld, inductionTimeLabel,   m0, patch,gn, 0);
     old_dw->get(countTimeOld,  countTimeLabel,          m0, patch,gn, 0);
     old_dw->get(burningCellOld,burningLabel,            m0, patch,gac,1);
-    old_dw->get(BurningCriteriaOld,BurningCriteriaLabel,m0, patch,gac,1);
     
     
     if(d_useCrackModel){
