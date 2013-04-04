@@ -652,8 +652,8 @@
         
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
-      <DisablePressureSolve   spec="OPTIONAL NO_DATA" />    
-      
+      <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
+      <Disabledmomdt          spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
       <Z-Velocity             spec="OPTIONAL STRING" />

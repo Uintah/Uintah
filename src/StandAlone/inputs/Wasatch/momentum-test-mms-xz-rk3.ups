@@ -49,6 +49,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
+ 	 <Disabledmomdt/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Z-Velocity>w</Z-Velocity>

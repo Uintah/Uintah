@@ -116,7 +116,10 @@ namespace Wasatch {
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
-                            const int material);
+                            const int material,
+                            const XVolField* dudt=NULL,
+                            const YVolField* dvdt=NULL,
+                            const ZVolField* dwdt=NULL);
 
   /**
    *  \ingroup WasatchCore
