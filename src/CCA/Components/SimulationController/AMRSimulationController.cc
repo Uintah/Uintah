@@ -1035,29 +1035,27 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
-  if (patches->size() == 0 || new_dw->exists(d_sharedState->get_delt_label(), -1, 0))
-    return;
-  
-  int multiplier = 1;
-  const GridP grid = patches->get(0)->getLevel()->getGrid();
-  
-  for (int i = 0; i < grid->numLevels(); i++) {
-    const LevelP level = grid->getLevel(i);
-    
-    if (i > 0 && !d_sharedState->isLockstepAMR()){
-      multiplier *= level->getRefinementRatioMaxDim();
-    }
-        
-    if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
-      delt_vartype deltvar;
-      double delt;
-      new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
-      
-      delt = deltvar;
-      new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
+  if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_delt_label(), -1, 0)) {
+    int multiplier = 1;
+    const GridP grid = patches->get(0)->getLevel()->getGrid();
+
+    for (int i = 0; i < grid->numLevels(); i++) {
+      const LevelP level = grid->getLevel(i);
+
+      if (i > 0 && !d_sharedState->isLockstepAMR()) {
+        multiplier *= level->getRefinementRatioMaxDim();
+      }
+
+      if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
+        delt_vartype deltvar;
+        double delt;
+        new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
+
+        delt = deltvar;
+        new_dw->put(delt_vartype(delt * multiplier), d_sharedState->get_delt_label());
+      }
     }
   }
-
   if (d_myworld->size() > 1) {
     new_dw->reduceMPI(d_sharedState->get_delt_label() , 0 , 0 , -1 ) ;
     if (d_sharedState->updateOutputInterval())
