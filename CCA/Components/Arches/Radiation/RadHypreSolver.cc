@@ -25,6 +25,7 @@
 //----- RadHypreSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #include <Core/Thread/Time.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
@@ -239,7 +240,8 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           CCVariable<double>& AP,
                           CCVariable<double>& AE,
                           CCVariable<double>& AN,
-                          CCVariable<double>& AT)
+                          CCVariable<double>& AT, 
+                          const bool print_all_info )
 
 { 
   double start_time = Time::currentSeconds();
@@ -357,14 +359,14 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   
   hypre_TFree(d_value);
 
-  if(d_myworld->myrank() == 0) {
-    cerr << "Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
-  }
+  if ( print_all_info ) {
+    proc0cout << " Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
+  } 
 }
 //______________________________________________________________________
 //
 bool
-RadHypreSolver::radLinearSolve()
+RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 {
   /*-----------------------------------------------------------
    * Solve the system using CG
@@ -383,17 +385,22 @@ RadHypreSolver::radLinearSolve()
   double sum_b, iprod, final_res_norm;
 
   /*Calculating initial norm*/
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
-  HYPRE_StructVectorInitialize(tmp);  
-  hypre_StructCopy(d_b,tmp);
-  hypre_StructMatvec(1.0, d_A, d_x, -1.0,tmp);
-  iprod = hypre_StructInnerProd(tmp,tmp);
-  init_norm = sqrt(iprod);
-  HYPRE_StructVectorDestroy(tmp);
+  if ( print_all_info ){ 
 
-  /*Calculating sum of RHS*/
-  iprod = hypre_StructInnerProd(d_b,d_b);
-  sum_b = sqrt(iprod);
+    /*Calculating Ax-b = r */ 
+    HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
+    HYPRE_StructVectorInitialize(tmp);  
+    hypre_StructCopy(d_b,tmp);
+    hypre_StructMatvec(1.0, d_A, d_x, -1.0,tmp);
+    iprod = hypre_StructInnerProd(tmp,tmp);
+    init_norm = sqrt(iprod);
+    HYPRE_StructVectorDestroy(tmp);
+
+    /*Calculating sum of RHS*/
+    iprod = hypre_StructInnerProd(d_b,d_b);
+    sum_b = sqrt(iprod);
+  }
+
   d_residual = d_stored_residual;
   double zero_residual = 0.0;
 
@@ -607,12 +614,11 @@ RadHypreSolver::radLinearSolve()
 
   }
 
-  if(me == 0) {
-    //final_res_norm *= sum_b;          
-    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
-    cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
-    cerr << "Sum of RHS vector: " << sum_b << endl;
-  }
+  if ( print_all_info ){ 
+    proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+  } else { 
+    proc0cout << "    Direction: " << direcn << "     Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+  } 
 
   if (final_res_norm < d_residual)
     return true;

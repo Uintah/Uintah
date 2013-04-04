@@ -118,9 +118,10 @@ public:
                            CCVariable<double>& AP,
                            CCVariable<double>& AE,
                            CCVariable<double>& AN,
-                           CCVariable<double>& AT) = 0;
+                           CCVariable<double>& AT, 
+                           const bool print ) = 0;
 
-   virtual bool radLinearSolve() = 0;
+   virtual bool radLinearSolve( const int direction, const bool print_all_info ) = 0;
    virtual void copyRadSoln(const Patch* patch, ArchesVariables* vars) = 0;
    virtual void destroyMatrix() = 0;
 //   double init_norm;
