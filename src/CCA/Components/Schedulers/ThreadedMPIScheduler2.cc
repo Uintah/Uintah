@@ -289,7 +289,7 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
   // generate a static order for each detailed tasks by running
   // with MPI scheduler on timestep 1
-  if (taskorder && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
+  if (taskorder.active() && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -663,7 +663,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         readyTask= phaseSyncTask[currphase];
         havework=true;
         numTasksDone++;
-        if (taskorder){
+        if (taskorder.active()){
           taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
                 << numTasksDone << endl;
         }
@@ -676,7 +676,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         if (readyTask!=NULL) {
           havework=true;
           numTasksDone++;
-          if (taskorder){
+          if (taskorder.active()){
             taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " ,current order: "
                 << numTasksDone << endl;
           }
@@ -1136,7 +1136,7 @@ ThreadedMPIScheduler2::postMPISends( DetailedTask         * task, int iteration,
     }
   } // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds()-sendstart;
-  if (dbgst && numSend>0){
+  if (dbgst.active() && numSend>0){
      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
          << numSend << " , VolSend: " << volSend << endl;
 

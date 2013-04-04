@@ -148,7 +148,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
   // generate a static order for each detailed tasks by running
   // with MPI scheduler on timestep 1
-  if (taskorder && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
+  if (taskorder.active() && d_sharedState->getCurrentTopLevelTimeStep()==1) { 
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -365,7 +365,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       ASSERTEQ(task->getExternalDepCount(), 0);
       runTask(task, iteration);
       numTasksDone++;
-      if (taskorder){
+      if (taskorder.active()){
         taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " ,current order: "
                 << numTasksDone << endl;
       }
@@ -401,7 +401,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       ASSERT(reducetask->getTask()->d_phase==currphase);
 
       numTasksDone++;
-      if (taskorder){
+      if (taskorder.active()){
         taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " ,current order: "
                 << numTasksDone << endl;
       }

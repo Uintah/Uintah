@@ -244,7 +244,7 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
       anyFinished = true;
     }
   }
-  if (dbg && numReceived>0) {
+  if (dbg.active() && numReceived>0) {
     dbg << pg->myrank() << " Time: " << Time::currentSeconds() << " , NumReceived= "
          << numReceived << " , VolReceived: " << volReceived << endl;
   }
