@@ -168,6 +168,7 @@ run \
   $STATIC \
   -DTabProps_PREPROCESSOR=OFF \
   -DTabProps_UTILS=OFF \
+  -DTabProps_ENABLE_TESTING=OFF \
   -DTabProps_BSPLINE=OFF \
   -DTabProps_ENABLE_IO=ON \
   -DBoost_DIR=$BOOST_DIR \
