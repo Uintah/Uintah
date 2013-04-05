@@ -185,7 +185,7 @@ template<typename T> class SimpleGrid {
      * @return bool Returns true if this SimpleGrid has the same extents, offset and number of ghost cells as
      *              as the specified SimpleGrid, false otherwise.
      */
-    bool verifyRegistration(SimpleGrid<T>& other);
+    bool verifyRegistration(const SimpleGrid<T>& other);
 
     /**
      * @brief Transforms 'Q' from real to fourier space
