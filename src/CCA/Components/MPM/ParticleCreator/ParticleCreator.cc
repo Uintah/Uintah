@@ -362,7 +362,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   // for thermal stress
   new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
   new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
-  new_dw->allocateAndPut(pvelGrad,       d_lb->pVelGradLabel,       subset);
+  if(d_flags->d_integrator_type=="explicit"){
+    new_dw->allocateAndPut(pvelGrad,     d_lb->pVelGradLabel,       subset);
+  }
   
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
@@ -682,7 +684,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
     psize[i]      = size;
     pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
-    pvelGrad[i] = Matrix3(0.0);
+    if(d_flags->d_integrator_type=="explicit"){
+      pvelGrad[i] = Matrix3(0.0);
+    }
   
     double vol_frac_CC = 1.0;
     try {
