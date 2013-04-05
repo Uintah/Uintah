@@ -83,7 +83,7 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   ps->get("arc_angle", angle);
   if (angle > 0.0) d_angle = (M_PI/180.0)*angle;
   if (d_angle < 0.0 || d_angle > 2.0*M_PI)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 2*Pi", 
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Angle < 0.0 || > 360", 
 			   __FILE__, __LINE__ ));
 
   d_fileName = "none";
