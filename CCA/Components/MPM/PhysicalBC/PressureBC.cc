@@ -162,7 +162,7 @@ PressureBC::flagMaterialPoint(const Point& p,
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
     GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
-                                                 box.upper()+dxpp);
+                                                    box.upper()+dxpp);
 
     if (volume->inside(p)){
       flag = true;
@@ -183,6 +183,7 @@ PressureBC::flagMaterialPoint(const Point& p,
                                                        cgp->radius()-tol);
 
       GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
+
       if (volume->inside(p)){
         flag = true;
       }
@@ -192,7 +193,7 @@ PressureBC::flagMaterialPoint(const Point& p,
       Vector add_ends = tol*(cgp->top()-cgp->bottom())
                            /(cgp->top()-cgp->bottom()).length();
 
-      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
+      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()   +add_ends, 
                                                         cgp->bottom()-add_ends,
                                                         cgp->radius());
       if (end->inside(p)){
