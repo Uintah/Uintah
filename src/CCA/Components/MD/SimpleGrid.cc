@@ -65,7 +65,7 @@ SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 }
 
 template<typename T>
-bool SimpleGrid<T>::verifyRegistration(SimpleGrid<T>& gridIn)
+bool SimpleGrid<T>::verifyRegistration(const SimpleGrid<T>& gridIn)
 {
   if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
       || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
@@ -90,54 +90,48 @@ void SimpleGrid<T>::inPlaceFFT_FourierToReal()
 }
 
 template<typename T>
-SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
-{
-  int xdim = d_gridExtents.x();
-  int ydim = d_gridExtents.y();
-  int zdim = d_gridExtents.z();
-  for (int x = 0; x < xdim; ++x) {
-    for (int y = 0; y < ydim; ++y) {
-      for (int z = 0; z < zdim; ++z) {
-//!FIXME This should be operator*=, not operator *.
-        d_charges(x, y, z) *= gridIn.d_charges(x, y, z);
-      }
-    }
-  }
-  return *this;
-}
-
-template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
 {
-  int xdim = d_gridExtents.x();
-  int ydim = d_gridExtents.y();
-  int zdim = d_gridExtents.z();
-  for (int x = 0; x < xdim; ++x) {
-    for (int y = 0; y < ydim; ++y) {
-      for (int z = 0; z < zdim; ++z) {
-//!FIXME This shoudl be operator+=, not +.  Also the below line is for operator-=
-        d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
-      }
-    }
+  if (this->verifyRegistration(gridIn)) {
+    SimpleGrid<T> newGrid(*this);
+    newGrid += gridIn;
+    return newGrid;
   }
-  return *this;
+  else {
+    ostringstream ostr;
+    ostr << "SimpleGrid operator+ error:  Grids are not registered with one another.";
+    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  }
 }
 
 template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
 {
-  int xdim = d_gridExtents.x();
-  int ydim = d_gridExtents.y();
-  int zdim = d_gridExtents.z();
-  for (int x = 0; x < xdim; ++x) {
-    for (int y = 0; y < ydim; ++y) {
-      for (int z = 0; z < zdim; ++z) {
-//!FIXME This should be operator-=, not -.
-        d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
-      }
-    }
+  if (this->verifyRegistration(gridIn)) {
+    SimpleGrid<T> newGrid(*this);
+    newGrid -= gridIn;
+    return newGrid;
   }
-  return *this;
+  else {
+    ostringstream ostr;
+    ostr << "SimpleGrid operator- error:  Grids are not registered with one another.";
+    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  }
+}
+
+template<typename T>
+SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
+{
+  if (this->verifyRegistration(gridIn)) {
+    SimpleGrid<T> newGrid(*this);
+    newGrid *= gridIn;
+    return newGrid;
+  }
+  else {
+    ostringstream ostr;
+    ostr << "SimpleGrid operator* error:  Grids are not registered with one another.";
+    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  }
 }
 
 template<typename T>
