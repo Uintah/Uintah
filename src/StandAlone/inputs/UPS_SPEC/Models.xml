@@ -191,6 +191,19 @@
       <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
       <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
      
+      <adjust_IO_intervals       spec="OPTIONAL NO_DATA">
+        <PressureSwitch          spec="OPTIONAL NO_DATA">
+          <PressureThreshold     spec="REQUIRED DOUBLE 'positive'"/>
+          <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+          <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+        </PressureSwitch>
+        <DetonationDetected      spec="OPTIONAL NO_DATA">
+          <remainingTimesteps    spec="REQUIRED INTEGER 'positive'"/>
+          <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+          <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+        </DetonationDetected>
+      </adjust_IO_intervals>
+      
      <!--__________________________________-->
      <!-- Ignition and growth -->
       <IandG                  spec="OPTIONAL NO_DATA">
