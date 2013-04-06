@@ -260,7 +260,7 @@ WARNING
       
     void UpdateConstants(double To, double P, double Vc, IterationVariables *iter);
     double F_Ts(double Ts, IterationVariables *iter); /* function Ts = Ts(m(Ts))    */                    
-    double Ts_m(double m, IterationVariables *iter); /* function Ts = Ts(m)    */
+    double Ts_m(double m, IterationVariables *iter);  /* function Ts = Ts(m)    */
     double m_Ts(double Ts, IterationVariables *iter); /* function  m = m(Ts)    */
       
     double Func(double Ts, IterationVariables *iter);  /* function f = Ts - F_Ts(Ts) */
@@ -272,8 +272,8 @@ WARNING
       
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     double d_cv_0;      //specific heat
+    
     // flags for the conservation test
-      
     struct saveConservedVars{
         bool onOff;
         bool mass;
@@ -281,6 +281,21 @@ WARNING
     };
     saveConservedVars* d_saveConservedVars;
       
+    
+    //__________________________________
+    // struct used to adjust the I/O intervals based 
+    // on either a pressure threshold exceeded or a detonation has been detected
+    struct adj_IO{                  // pressure_switch
+      bool onOff;                   // is this option on or off?
+      int nTimesSet;                // number of times the intervals have been adjusted
+      double timestepsLeft;         // timesteps left until sus shuts down
+      double pressThreshold;
+      double output_interval;       // output interval in physical seconds
+      double chkPt_interval;        // checkpoing interval in physical seconds
+      ~adj_IO(){};
+    };  
+    adj_IO* d_adj_IO_Press;
+    adj_IO* d_adj_IO_Det;  
       
     static const double EPSILON;   /* stop epsilon for Bisection-Newton method */   
     #define d_SMALL_NUM 1e-100
