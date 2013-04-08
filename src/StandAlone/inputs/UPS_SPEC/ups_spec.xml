@@ -548,7 +548,8 @@
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
                               VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
                               TurbulentInlet, Tabulated '"
-                              attribute3="label     REQUIRED STRING " >
+                              attribute3="label     REQUIRED STRING "
+                              attribute4="type      OPTIONAL STRING 'int'" >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
                                                                      MassFlowInlet Swirl VelocityInlet, TurbulentInlet, Tabulated" />
