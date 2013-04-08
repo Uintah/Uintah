@@ -72,9 +72,6 @@ WARNING
 
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
                               ModelSetup* setup);
-
-    virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
-                               ModelSetup* setup);
       
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level,
@@ -102,9 +99,6 @@ WARNING
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
 
-   virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
-                                             const LevelP& level,
-                                             const ModelInfo*);
                                              
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches,
@@ -117,13 +111,6 @@ WARNING
                              DataWarehouse*,
                              DataWarehouse* new_dw,
                              const ModelInfo*);
-
-    void checkNeedAddMaterial(const ProcessorGroup*, 
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse* new_dw,
-                              const ModelInfo*);
 
     JWLpp(const JWLpp&);
     JWLpp& operator=(const JWLpp&);
@@ -151,7 +138,6 @@ WARNING
     saveConservedVars* d_saveConservedVars;
 
     string fromMaterial, toMaterial;
-    bool d_active;
     double d_G;
     double d_b;
     double d_E0;

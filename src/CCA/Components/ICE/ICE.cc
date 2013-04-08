@@ -584,11 +584,6 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec,
     
     d_exchCoeff->problemSetup(mat_ps, sharedState);
     
-    // problem setup for each model  
-    for(vector<ModelInterface*>::iterator iter = d_models.begin();
-        iter != d_models.end(); iter++){
-      (*iter)->activateModel(grid, sharedState, d_modelSetup);
-    }
   }
 }
 /*______________________________________________________________________
@@ -1072,16 +1067,6 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls);
                                                           
-  //_________________________________                                                        
-  if(d_canAddICEMaterial){
-    //  This checks to see if the model on THIS patch says that it's
-    //  time to add a new material
-    scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
-
-    //  This one checks to see if the model on ANY patch says that it's
-    //  time to add a new material
-    scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
-  }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
 
@@ -6125,52 +6110,6 @@ bool ICE::needRecompile(double /*time*/, double /*dt*/, const GridP& /*grid*/)
     return false;
   }
 }
-//______________________________________________________________________
-//      Dynamic material addition
-void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const MaterialSet* /*ice_matls*/)
-{
-  if(d_models.size() != 0){
-    cout_doing << d_myworld->myrank() << " ICE::scheduleCheckNeedAddMaterial" << endl;
-    for(vector<ModelInterface*>::iterator iter = d_models.begin();
-       iter != d_models.end(); iter++){
-      ModelInterface* model = *iter;
-      model->scheduleCheckNeedAddMaterial(sched, level, d_modelInfo);
-    }
-  }
-}
-//__________________________________
-void ICE::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const MaterialSet* all_matls)
-{
-  if(d_models.size() != 0){
-    cout_doing << d_myworld->myrank() << " ICE::scheduleSetNeedAddMaterialFlag" << endl;
-    Task* t= scinew Task("ICE::setNeedAddMaterialFlag",
-                 this, &ICE::setNeedAddMaterialFlag);
-    t->requires(Task::NewDW, lb->NeedAddIceMaterialLabel);
-    sched->addTask(t, level->eachPatch(), all_matls);
-  }
-}
-//__________________________________
-void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
-                                 const PatchSubset* /*patches*/,
-                                 const MaterialSubset* /*matls*/,
-                                 DataWarehouse* /*old_dw*/,
-                                 DataWarehouse* new_dw)
-{
-    sum_vartype need_add_flag;
-    new_dw->get(need_add_flag, lb->NeedAddIceMaterialLabel);
-
-    if(need_add_flag>0.1){
-      d_sharedState->setNeedAddMaterial(1);
-    }
-    else{
-      d_sharedState->setNeedAddMaterial(0);
-    }
- }
-
 
 
 /*______________________________________________________________________

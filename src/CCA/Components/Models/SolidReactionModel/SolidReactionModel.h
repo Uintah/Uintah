@@ -73,9 +73,6 @@ namespace Uintah {
         virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
                                   ModelSetup* setup);
         
-        virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
-                                   ModelSetup* setup);
-        
         virtual void scheduleInitialize(SchedulerP&,
                                         const LevelP& level,
                                         const ModelInfo*);
@@ -100,11 +97,7 @@ namespace Uintah {
                                          const int indx);
         
         virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                           SchedulerP& sched);                                  
-        
-        virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
-                                                  const LevelP& level,
-                                                  const ModelInfo*);
+                                           SchedulerP& sched);
         
         virtual void scheduleTestConservation(SchedulerP&,
                                               const PatchSet* patches,
@@ -132,7 +125,6 @@ namespace Uintah {
         string toMaterial;
         double d_E0;                 // Enthalpy change for reaction in J/kg
        
-        bool d_active;
         ICELabel *Ilb;               // Used to get handles on temperature, pressure, etc.
         MaterialSet *mymatls;        // All the materials referenced by this model
 
