@@ -244,7 +244,9 @@ namespace Wasatch {
     // construct flat indices for staggered fields
     // NOTE ON STAGGERED FIELDS: To avoid random values in the ghost (extra) cell
     // layer, we also set the SAME BC on those faces if we have Dirichlet conditions.
-    if (isStaggered && bc_kind.compare("Dirichlet")==0) {
+    const bool normalAndStaggered = (isStaggered && bc_kind.compare("Dirichlet")==0);
+    if (normalAndStaggered) {
+      std::cout << "setting BC on " << fieldName << std::endl;
       for( std::vector<IntVec>::const_iterator interiorIJKIter = bcPointsIJK.begin(),
           ghostIJKIter = ghostPointsIJK.begin();
           interiorIJKIter != bcPointsIJK.end() && ghostIJKIter != ghostPointsIJK.end();
@@ -300,6 +302,7 @@ namespace Wasatch {
     modExpr.set_patch_cell_offset(patchCellOffset);
     
     // set the ghost and interior points as well as coefficients
+    modExpr.set_staggered( normalAndStaggered );
     modExpr.set_ghost_coef(cg);
     modExpr.set_ghost_points(flatGhostPoints);
     modExpr.set_interior_coef(ci);
@@ -1090,7 +1093,6 @@ namespace Wasatch {
                                            bc_point_indices[2]+bcPointGhostOffset[2] );
             
             const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
-            double plusOrMinusOne = 1.0;
             
             switch(face){
               case Uintah::Patch::xminus:
