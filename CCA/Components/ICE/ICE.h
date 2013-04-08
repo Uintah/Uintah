@@ -229,14 +229,7 @@ namespace Uintah {
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
-                                       
-      void scheduleCheckNeedAddMaterial(SchedulerP&, 
-                                        const LevelP& level,
-                                        const MaterialSet*);
 
-      void scheduleSetNeedAddMaterialFlag(SchedulerP&, 
-                                          const LevelP& level,
-                                          const MaterialSet*);
 //__________________________________ 
 //__________________________________ 
 //  I M P L I C I T   I C E
