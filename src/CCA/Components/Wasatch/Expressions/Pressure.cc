@@ -366,24 +366,27 @@ Pressure::evaluate()
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
   if( doX_ ){
-    SpatFldPtr<SS::SSurfXField> tmpx = SpatialFieldStore::get<SS::SSurfXField>( *fx_ );
-    interpX_->apply_to_field( *fx_, *tmpx );
-    divXOp_ ->apply_to_field( *tmpx, *tmp );
-    rhs <<= rhs - *tmp;
+    rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
+//    SpatFldPtr<SS::SSurfXField> tmpx = SpatialFieldStore::get<SS::SSurfXField>( *fx_ );
+//    interpX_->apply_to_field( *fx_, *tmpx );
+//    divXOp_ ->apply_to_field( *tmpx, *tmp );
+//    rhs <<= rhs - *tmp;
   }
 
   if( doY_ ){
-    SpatFldPtr<SS::SSurfYField> tmpy = SpatialFieldStore::get<SS::SSurfYField>( *fy_ );
-    interpY_->apply_to_field( *fy_, *tmpy );
-    divYOp_ ->apply_to_field( *tmpy, *tmp );
-    rhs <<= rhs - *tmp;
+    rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
+//    SpatFldPtr<SS::SSurfYField> tmpy = SpatialFieldStore::get<SS::SSurfYField>( *fy_ );
+//    interpY_->apply_to_field( *fy_, *tmpy );
+//    divYOp_ ->apply_to_field( *tmpy, *tmp );
+//    rhs <<= rhs - *tmp;
   }
 
   if( doZ_ ){
-    SpatFldPtr<SS::SSurfZField> tmpz = SpatialFieldStore::get<SS::SSurfZField>( *fz_ );
-    interpZ_->apply_to_field( *fz_, *tmpz );
-    divZOp_ ->apply_to_field( *tmpz, *tmp );
-    rhs <<= rhs - *tmp;
+    rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
+//    SpatFldPtr<SS::SSurfZField> tmpz = SpatialFieldStore::get<SS::SSurfZField>( *fz_ );
+//    interpZ_->apply_to_field( *fz_, *tmpz );
+//    divZOp_ ->apply_to_field( *tmpz, *tmp );
+//    rhs <<= rhs - *tmp;
   }
 
   if( doDens_ ){
