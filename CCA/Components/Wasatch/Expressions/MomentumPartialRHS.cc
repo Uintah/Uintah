@@ -132,43 +132,71 @@ evaluate()
   FieldT& result = this->value();
   result <<= 0.0;
 
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
+  //SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
   //*tmp <<= 0.0;
-
+  
   if( cfluxXt_ != emptyTag_ ){
-    divXOp_->apply_to_field( *cFluxX_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divXOp_)(*cFluxX_);
   }
-
+  
   if( cfluxYt_ != emptyTag_ ){
-    divYOp_->apply_to_field( *cFluxY_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divYOp_)(*cFluxY_);
   }
-
+  
   if( cfluxZt_ != emptyTag_ ){
-    divZOp_->apply_to_field( *cFluxZ_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divZOp_)(*cFluxZ_);
   }
-
+  
   if( tauXt_ != emptyTag_ ){
-    divXOp_->apply_to_field( *tauX_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divXOp_)(*tauX_);
   }
-
+  
   if( tauYt_ != emptyTag_ ){
-    divYOp_->apply_to_field( *tauY_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divYOp_)(*tauY_);
   }
-
+  
   if( tauZt_ != emptyTag_ ){
-    divZOp_->apply_to_field( *tauZ_, *tmp );
-    result <<= result - *tmp;
+    result <<= result - (*divZOp_)(*tauZ_);
+  }
+  
+  if( bodyForcet_ != emptyTag_ ){
+    result <<= result + (*densityInterpOp_)(*density_) * *bodyForce_;
   }
 
-  if( bodyForcet_ != emptyTag_ ){
-    densityInterpOp_->apply_to_field( *density_, *tmp );
-    result <<= result + *tmp * *bodyForce_;
-  }
+//  if( cfluxXt_ != emptyTag_ ){
+//    divXOp_->apply_to_field( *cFluxX_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( cfluxYt_ != emptyTag_ ){
+//    divYOp_->apply_to_field( *cFluxY_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( cfluxZt_ != emptyTag_ ){
+//    divZOp_->apply_to_field( *cFluxZ_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( tauXt_ != emptyTag_ ){
+//    divXOp_->apply_to_field( *tauX_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( tauYt_ != emptyTag_ ){
+//    divYOp_->apply_to_field( *tauY_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( tauZt_ != emptyTag_ ){
+//    divZOp_->apply_to_field( *tauZ_, *tmp );
+//    result <<= result - *tmp;
+//  }
+//
+//  if( bodyForcet_ != emptyTag_ ){
+//    densityInterpOp_->apply_to_field( *density_, *tmp );
+//    result <<= result + *tmp * *bodyForce_;
+//  }
   
   if( srcTermt_ != emptyTag_ ){
     result <<= result + *srcTerm_;
