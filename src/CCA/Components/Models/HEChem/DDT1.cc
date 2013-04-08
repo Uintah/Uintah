@@ -126,6 +126,8 @@ DDT1::~DDT1()
   delete MIlb;
   delete Mlb;
   delete d_saveConservedVars;
+  delete d_adj_IO_Press;
+  delete d_adj_IO_Det;
 
   // JWL++
   VarLabel::destroy(reactedFractionLabel);
