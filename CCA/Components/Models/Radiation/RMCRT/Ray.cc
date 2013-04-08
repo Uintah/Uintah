@@ -1683,6 +1683,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
+  tsk->modifies( d_cellTypeLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1716,12 +1717,12 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4OverPi;
-      CCVariable<double> cellType;
+      CCVariable<int> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,         d_abskgLabel,     d_matl, patch );
       new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4_label,  d_matl, patch );
-      
+      new_dw->getModifiable( cellType,      d_cellTypeLabel,  d_matl, patch );
       //__________________________________
       // loop over boundary faces and backout the temperature 
       // one cell from the boundary.  Note that the temperature 
@@ -1751,9 +1752,9 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       
       //__________________________________
       // set the boundary conditions
-      setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
-      setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
-      setBC(cellType, d_cellTypeLabel->getName(), patch, d_matl);
+      setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
+      setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
+      setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
 
 
       //__________________________________
@@ -1775,11 +1776,11 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 
 //______________________________________________________________________
 //  Set Boundary conditions
-void 
-Ray::setBC(CCVariable<double>& Q_CC,
-           const string& desc,
-           const Patch* patch,
-           const int mat_id)
+template<class T>
+void Ray::setBC(CCVariable<T>& Q_CC,
+                const string& desc,
+                const Patch* patch,
+                const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false || _onOff_SetBCs == false){
     return;
@@ -1803,7 +1804,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
     // iterate over each geometry object along that face
     for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
+      T bc_value = -9;
       Iterator bound_ptr;
 
       bool foundIterator = 
@@ -1815,18 +1816,18 @@ Ray::setBC(CCVariable<double>& Q_CC,
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-          nCells += setDirichletBC_CC<double>( Q_CC, bound_ptr, bc_value);
+          nCells += setDirichletBC_CC<T>( Q_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<T>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<T> ( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
         }
 
         //__________________________________
@@ -2453,9 +2454,11 @@ Ray::filter( const ProcessorGroup*,
 }
 
 
+//______________________________________________________________________
+// Explicit template instantiations:
 
-
-
+template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
