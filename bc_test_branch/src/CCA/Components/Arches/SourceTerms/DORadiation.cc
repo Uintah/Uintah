@@ -315,12 +315,11 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if ( do_radiation ){ 
 
-
       if ( timeSubStep == 0 ) {
 
         _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 
-        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+        _DO_model->boundarycondition_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 
@@ -338,14 +337,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "DORadiation::dummyInit"; 
+  string taskname = "DORadiation::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &DORadiation::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
 
   tsk->computes(_src_label);
 
@@ -353,7 +352,6 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
        iter != _extra_local_labels.end(); iter++){
 
     tsk->computes(*iter); 
-    tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
 
   }
 
@@ -361,11 +359,11 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-DORadiation::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+DORadiation::initialize( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -384,12 +382,7 @@ DORadiation::dummyInit( const ProcessorGroup* pc,
          iter != _extra_local_labels.end(); iter++){
 
       CCVariable<double> temp_var; 
-      constCCVariable<double> const_temp_var; 
-
       new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
-      //This next line is to get around scrubbing.
-      old_dw->get( const_temp_var, *iter, matlIndex, patch, Ghost::None, 0 ); 
-
       temp_var.initialize(0.0);
       
     }

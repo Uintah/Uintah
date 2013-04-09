@@ -503,6 +503,36 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 // Sets the radiation boundary conditions for the D.O method
 //***************************************************************************
 void 
+DORadiationModel::boundarycondition_new(const ProcessorGroup*,
+                                        const Patch* patch,
+                                        CellInformation* cellinfo,
+                                        ArchesVariables* vars,
+                                        ArchesConstVariables* constvars)
+{
+           
+  //__________________________________
+  // loop over computational domain faces
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      if (constvars->cellType[c] != ffield ){
+        vars->ABSKG[c]       = d_wall_abskg;
+      }
+    }
+  }
+}
+
+//***************************************************************************
+// Sets the radiation boundary conditions for the D.O method
+//***************************************************************************
+void 
 DORadiationModel::boundarycondition(const ProcessorGroup*,
                                     const Patch* patch,
                                     CellInformation* cellinfo,

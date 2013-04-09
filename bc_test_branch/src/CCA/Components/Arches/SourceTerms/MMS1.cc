@@ -108,14 +108,14 @@ MMS1::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-MMS1::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+MMS1::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "MMS1::dummyInit"; 
+  string taskname = "MMS1::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &MMS1::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &MMS1::initialize);
 
   tsk->computes(_src_label);
 
@@ -127,11 +127,11 @@ MMS1::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-MMS1::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+MMS1::initialize( const ProcessorGroup* pc, 
+                  const PatchSubset* patches,      
+                  const MaterialSubset* matls,     
+                  DataWarehouse* old_dw,           
+                  DataWarehouse* new_dw )          
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

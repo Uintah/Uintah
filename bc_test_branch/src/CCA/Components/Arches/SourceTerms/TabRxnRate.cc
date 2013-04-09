@@ -99,14 +99,14 @@ TabRxnRate::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-TabRxnRate::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+TabRxnRate::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "TabRxnRate::dummyInit"; 
+  string taskname = "TabRxnRate::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &TabRxnRate::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &TabRxnRate::initialize);
 
   tsk->computes(_src_label);
 
@@ -118,11 +118,11 @@ TabRxnRate::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-TabRxnRate::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+TabRxnRate::initialize( const ProcessorGroup* pc, 
+                        const PatchSubset* patches, 
+                        const MaterialSubset* matls, 
+                        DataWarehouse* old_dw, 
+                        DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

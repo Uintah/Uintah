@@ -70,13 +70,13 @@ public:
                       DataWarehouse* new_dw, 
                       int timeSubStep );
 
-  /** @brief Schedule a dummy initialization */ 
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  /** @brief Schedule initialization */ 
+  void sched_initialize( const LevelP& level, SchedulerP& sched );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   class Builder
     : public SourceTermBase::Builder { 
@@ -257,11 +257,11 @@ private:
   // Method: Schedule dummy initialization
   //---------------------------------------------------------------------------
   template <typename sT>
-  void Inject<sT>::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+  void Inject<sT>::sched_initialize( const LevelP& level, SchedulerP& sched )
   {
-    string taskname = "Inject::dummyInit"; 
+    string taskname = "Inject::initialize"; 
   
-    Task* tsk = scinew Task(taskname, this, &Inject::dummyInit);
+    Task* tsk = scinew Task(taskname, this, &Inject::initialize);
   
     tsk->computes(_src_label);
   
@@ -273,7 +273,7 @@ private:
   
   }
   template <typename sT>
-  void Inject<sT>::dummyInit( const ProcessorGroup* pc, 
+  void Inject<sT>::initialize( const ProcessorGroup* pc, 
                                        const PatchSubset* patches, 
                                        const MaterialSubset* matls, 
                                        DataWarehouse* old_dw, 

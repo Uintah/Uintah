@@ -60,8 +60,8 @@ public:
                               DataWarehouse* new_dw, 
                               int timeSubStep ) = 0;
 
-  /** @brief Get the labels for the MPMARCHES dummy solve. */
-  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0;
+  /** @brief  Initialize variables. */
+  virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
   virtual void extraSetup(){ };
