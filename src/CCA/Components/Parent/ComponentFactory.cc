@@ -151,6 +151,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
+
     // FIXME - when done debugging, turn this back on!
     //if( !Uintah::Parallel::usingMPI() ) {
     //  throw ProblemSetupException("You must be using MPI when running an arches problem!", __FILE__, __LINE__);
