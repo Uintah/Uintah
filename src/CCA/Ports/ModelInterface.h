@@ -169,7 +169,10 @@ WARNING
                                                
      virtual void scheduleTestConservation(SchedulerP&,
                                            const PatchSet* patches,
-                                           const ModelInfo* mi)=0;    
+                                           const ModelInfo* mi)=0;
+                                           
+     virtual void scheduleRefine(const PatchSet* patches,
+                                 SchedulerP& sched);
 
      virtual void setMPMLabel(MPMLabel* MLB);
                                                

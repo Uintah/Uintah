@@ -85,7 +85,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   detonatingLabel = VarLabel::create("detonating",
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
-  //  diagnostic labels Steady Burn    
+  //  diagnostic labels   
   d_saveConservedVars = scinew saveConservedVars();
   
   onSurfaceLabel   = VarLabel::create("onSurface",
@@ -271,8 +271,30 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
       d_saveConservedVars->energy = true;
     }
   }
+  
+  problemSetup_BulletProofing( d_prob_spec );
 }
 
+//______________________________________________________________________
+//
+void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
+{
+  ProblemSpecP root = ps->getRootNode();
+  ProblemSpecP amr = root->findBlock("AMR");      
+  ProblemSpecP reg_ps = amr->findBlock("Regridder");
+  if (reg_ps) {
+
+    string regridder;
+    reg_ps->getAttribute( "type", regridder );
+
+    if (regridder != "Tiled") {
+      ostringstream msg;
+      msg << "\n ERROR:Model:DDT1: The (" << regridder << ") regridder will not work with this burn model. \n";
+      msg << "The only regridder that works with this burn model is the \"Tiled\" regridder\n"; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+  }
+}
 //______________________________________________________________________
 //
 void DDT1::outputProblemSpec(ProblemSpecP& ps)
@@ -375,11 +397,11 @@ void DDT1::initialize(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
+    printTask(patches,patch,cout_doing,"Doing DDT1::initialize");
     
     // This section is needed for outputting F and burn on each timestep
     CCVariable<double> F, Ts, det, crack, inductionTime, countTime, inductionTimeOld, countTimeOld;
-    CCVariable<int> burningCell,  BurningCriteria, burningCellOld, BurningCriteriaOld;
+    CCVariable<int> burningCellOld, BurningCriteriaOld;
     new_dw->allocateAndPut(F,                  reactedFractionLabel, m0, patch);
     new_dw->allocateAndPut(burningCellOld,     burningLabel,         m0, patch);
     new_dw->allocateAndPut(Ts,                 surfaceTempLabel,     m0, patch);
@@ -651,7 +673,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
 //
 void DDT1::computeBurnLogic(const ProcessorGroup*, 
                             const PatchSubset* patches,
-                            const MaterialSubset*,
+                            const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             const ModelInfo* mi)
@@ -668,10 +690,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch   = patches->get(p);  
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch); 
-   
-    cout_doing << "Doing computeBurnLogic on patch "<< patch->getID()
-               <<"\t\t\t\t  DDT1" << endl;
-
+    printTask(patches,patch,cout_doing,"Doing DDT1::computeBurnLogic");
 
     // Burning related
     CCVariable<double> inductionTime, countTime;
@@ -750,6 +769,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     detLocalTo.initialize(0.);
     BurningCriteria.initialize(0);
     inductionTime.initialize(0.);
+
     countTime.initialize(0.);
   
     IntVector nodeIdx[8];
@@ -936,11 +956,10 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                     if(calculateInductionTime){
                       A = min(A_HotSolidCell,A_HotGasCell);
 
-                      double l;
                       if(A  == A_HotGasCell){
-                       ignitedFrom = CONDUCTIVE;
-                       }else {
-                       ignitedFrom = ignitedFromHotSolidCell;
+                        ignitedFrom = CONDUCTIVE;
+                      }else {
+                        ignitedFrom = ignitedFromHotSolidCell;
                       }
                      
                     }  
@@ -1084,9 +1103,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch   = patches->get(p);
-   
-    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
-               <<"\t\t\t\t  DDT1" << endl;
+    printTask(patches,patch,cout_doing,"Doing DDT1::computeBurnLogic");
+    
 
     /* Variable to modify or compute */
     // Sources and Sinks
@@ -1400,33 +1418,55 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                   const LevelP&,
-                                                   const MaterialSet*)
+void DDT1::scheduleRefine(const PatchSet* patches,
+                          SchedulerP& sched)
 {
-  // do nothing      
-}
-void DDT1::computeSpecificHeat(CCVariable<double>&,
-                               const Patch*,   
-                               DataWarehouse*, 
-                               const int)      
-{
-  //do nothing
-}
-//______________________________________________________________________
-//
-void DDT1::scheduleErrorEstimate(const LevelP&,
-                                 SchedulerP&)
-{
-  // Not implemented yet
+  const Level* level = getLevel(patches);
+  
+  if(level->hasFinerLevel() == false){  // only on finest level
+    printSchedule( patches ,cout_doing,"DDT1::scheduleRefine" );
+    
+    Task* t = scinew Task("DDT1::refine",this, &DDT1::refine);
+    
+    const MaterialSubset* react_matl = d_matl0->thisMaterial();
+    t->computes( burningLabel,       react_matl );
+    t->computes( countTimeLabel,     react_matl );
+    t->computes( inductionTimeLabel, react_matl );
+    
+    sched->addTask(t, patches, d_mymatls);
+  }
 }
 //__________________________________
-void DDT1::scheduleTestConservation(SchedulerP&,
-                                    const PatchSet*,                      
-                                    const ModelInfo*)                     
+// Initialize variables on the new fine level patches
+// This only works with the tiled regridder.  With the other regridders
+// it's possible to have a new patch that contains new cells and old cells.
+// We don't want to overwrite the old cell data!
+void DDT1::refine(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* /*matls*/,
+                  DataWarehouse* ,
+                  DataWarehouse* new_dw)
 {
-  // Not implemented yet
+  int m0 = d_matl0->getDWIndex();
+
+  for(int p=0;p<patches->size();p++) {
+    const Patch* patch = patches->get(p);
+    printTask( patches,patch,cout_doing,"Doing DDT1::refine" );
+    
+    CCVariable<int>    burningCell;
+    CCVariable<double> countTime;
+    CCVariable<double> inductionTime;
+    
+    new_dw->allocateAndPut( burningCell,    burningLabel,       m0, patch );
+    new_dw->allocateAndPut( countTime,      countTimeLabel,     m0, patch );
+    new_dw->allocateAndPut( inductionTime,  inductionTimeLabel, m0, patch );
+    
+    burningCell.initialize( -9 );
+    countTime.initialize( -9 );
+    inductionTime.initialize( -9 );
+  }
 }
+
     
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/    
@@ -1598,4 +1638,35 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
 
       Ts = (iterVar->IL+iterVar->IR)/2.0; //Bisection Step
   }
+}
+
+
+//______________________________________________________________________
+//
+void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                   const LevelP&,
+                                                   const MaterialSet*)
+{
+  // do nothing      
+}
+void DDT1::computeSpecificHeat(CCVariable<double>&,
+                               const Patch*,   
+                               DataWarehouse*, 
+                               const int)      
+{
+  //do nothing
+}
+//______________________________________________________________________
+//
+void DDT1::scheduleErrorEstimate(const LevelP&,
+                                 SchedulerP&)
+{
+  // Not implemented yet
+}
+//__________________________________
+void DDT1::scheduleTestConservation(SchedulerP&,
+                                    const PatchSet*,                      
+                                    const ModelInfo*)                     
+{
+  // Not implemented yet
 }
