@@ -41,18 +41,6 @@ bool ModelInterface::computesThermoTransportProps() const
   return d_modelComputesThermoTransportProps;
 }
 
-void ModelInterface::activateModel(GridP& , SimulationStateP& , ModelSetup* )
-{
-
-}
-
-void ModelInterface::scheduleCheckNeedAddMaterial(SchedulerP&,
-                                                  const LevelP& ,
-                                                  const ModelInfo*)
-{
-
-}
-
 void ModelInterface::setMPMLabel(MPMLabel*)
 {
 }

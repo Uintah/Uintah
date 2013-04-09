@@ -599,20 +599,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
                                                     ice_matls,"afterAdvection");
   }
-  if(d_ice->d_canAddICEMaterial){
-     for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
-
-       //  This checks to see if the model on THIS patch says that it's
-       //  time to add a new material
-       d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
-
-       //  This one checks to see if the model on ANY patch says that it's
-       //  time to add a new material
-       d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
-     }
-   }
-
 } // end scheduleTimeAdvance()
 
 

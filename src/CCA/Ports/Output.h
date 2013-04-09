@@ -144,11 +144,16 @@ class SimulationState;
     virtual bool isLabelSaved(std::string label) = 0;
 
     // update output interval
-    virtual void updateOutputInv(double inv) = 0;
+    virtual void updateOutputInterval(double inv) = 0;
 
+    //get output interval
+    virtual double getOutputInterval()=0;
+    
     // update checkpoint interval
-    virtual void updateCheckpointInv(double inv) = 0;
+    virtual void updateCheckpointInterval(double inv) = 0;
 
+    //get checkpoint interval
+    virtual double getCheckpointInterval()=0;
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;

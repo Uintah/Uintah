@@ -51,9 +51,6 @@ ICELabel::ICELabel()
   const TypeDescription* max_variable = max_vartype::getTypeDescription();
 
   delTLabel = VarLabel::create( "delT", delt_vartype::getTypeDescription() );
-
-  NeedAddIceMaterialLabel
-            = VarLabel::create("NeedAddIceMaterial", sum_variable);
     
   
   //__________________________________
@@ -361,8 +358,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(maxMach_yplusLabel);
     VarLabel::destroy(maxMach_zminusLabel);
     VarLabel::destroy(maxMach_zplusLabel);
-    
-    VarLabel::destroy(NeedAddIceMaterialLabel);
 
     // Model variables
     VarLabel::destroy(modelMass_srcLabel);

@@ -62,6 +62,13 @@ public:
    */
   SourceTermBase& retrieve_source_term( const std::string name );
 
+  struct SourceContainer{           ///< Hold the source names for this transport equation and the sign to either add or subtract from rhs.
+    std::string name; 
+    double      weight;             
+  };
+
+  void commonSrcProblemSetup( const ProblemSpecP& db ); 
+
   /** @brief Determine if a source term is contained in the factory. */
   bool source_term_exists( const std::string name );
 
@@ -78,6 +85,9 @@ public:
   /** @brief Register all user-defined sources */ 
   void registerUDSources(ProblemSpecP& db, ArchesLabel* lab, BoundaryCondition* bcs, const ProcessorGroup* my_world);
 
+  /** @brief Actually execute the sources */ 
+  void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep );
+
 private:
 
   BuildMap  _builders;          ///< Builder map
@@ -85,6 +95,8 @@ private:
 
   SourceTermFactory();
   ~SourceTermFactory();
+
+  vector<SourceContainer> _active_sources;  ///< The list of all active source with associated weights.
 
 }; // class SourceTermFactory
 }  //Namespace Uintah

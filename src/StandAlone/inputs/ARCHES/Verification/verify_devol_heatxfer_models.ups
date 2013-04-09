@@ -131,7 +131,6 @@
         <Eqn label="eta" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <addSources>true</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="constant">
             <constant>0.0</constant>

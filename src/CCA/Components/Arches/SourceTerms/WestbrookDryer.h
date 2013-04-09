@@ -150,14 +150,13 @@ public:
       rate = d_A * exp( my_exp ) * p_HC * pow(c_O2, d_n); // gmol/cm^3/s
 
       rate *= 1.0e3 * d_MW_HC; 
-      rate *= d_sign; // picking the sign.
 
       // now check the rate based on local reactants: 
       double constant = dt / den; 
 
       // check limiting reactant
       if ( std::abs( constant*rate ) > CxHy ){ 
-        rate = d_sign * den / dt * CxHy; 
+        rate = den / dt * CxHy; 
       } 
 
       // check for nan
@@ -185,11 +184,13 @@ private:
   double d_T_clip;   ///< Temperature limit on the rate. Below this value, the rate turns off. 
   bool   _use_T_clip;      ///< Use clip or not
   bool   _use_flam_limits; ///< Use flamibility limits or not
+  bool   _const_diluent;   ///< Indicates a constant diluent as specified in the input file
   double _flam_low_m; ///< Lower flammability slope as defined by y=mx+b; 
   double _flam_low_b; ///< Lower flammability intercept
   double _flam_up_m;  ///< Upper flammability slope
   double _flam_up_b;  ///< Upper flammability intercept
   double _diluent_mw; ///< molecular weight of the duluent
+  double _const_diluent_mass_fraction;  ///< use a constant diluent mass fraction everywhere 
 
 
   int d_X;           ///< C_xH_Y
@@ -224,11 +225,8 @@ private:
   double _T_hot_spot;                            ///< Temperature of the pilot light
   double _start_time_hot_spot;                   ///< Starting time for hot spot
   double _stop_time_hot_spot;                    ///< Ending time for hot spot
-  bool _hot_spot;                                ///< Logical on/off switch for the pilot
 
   ArchesLabel* _field_labels;
-
-  double d_sign; 
 
 }; // end WestbrookDryer
 } // end namespace Uintah

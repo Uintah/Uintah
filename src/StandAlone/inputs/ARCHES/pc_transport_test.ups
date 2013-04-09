@@ -65,7 +65,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
-          <addSources>false</addSources>
           <determines_properties/>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -80,7 +79,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>true</addSources>
           <initialization type="constant">
             <constant>1.0</constant>
           </initialization>
@@ -90,7 +88,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>true</addSources>
           <initialization type="constant">
             <constant>2.0</constant>
           </initialization>
@@ -100,7 +97,6 @@
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>upwind</conv_scheme>
-          <addSources>true</addSources>
           <initialization type="constant">
             <constant>3.0</constant>
           </initialization>

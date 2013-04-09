@@ -528,6 +528,11 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
    else {
       d_checkpointsDir = d_dir.getSubdir("checkpoints");
    }
+
+   //sync up before every rank can use the base dir
+   if (Parallel::usingMPI()) { 
+       MPI_Barrier(d_myworld->getComm());
+   }
 } // end initializeOutput()
 
 
@@ -2316,8 +2321,9 @@ bool DataArchiver::isLabelSaved( string label )
   }
   return false;
 }
-
-void DataArchiver::updateOutputInv(double newinv)
+//__________________________________
+// Allow the component to set the output interval
+void DataArchiver::updateOutputInterval(double newinv)
 {
   if (d_outputInterval ==  newinv) return;
   else {
@@ -2325,10 +2331,11 @@ void DataArchiver::updateOutputInv(double newinv)
     d_nextOutputTime=0.0;  
   }
 }
-
-void DataArchiver::updateCheckpointInv(double newinv)
+//__________________________________
+// Allow the component to set the checkpoint interval
+void DataArchiver::updateCheckpointInterval(double newinv)
 {
-  if (d_outputInterval ==  newinv) return;
+  if (d_checkpointInterval ==  newinv) return;
   else {
     d_checkpointInterval = newinv;
     d_nextCheckpointTime=0.0;  

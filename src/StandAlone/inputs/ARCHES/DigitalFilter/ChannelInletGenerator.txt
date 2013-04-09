@@ -1,8 +1,8 @@
 #grid resolution
-90 30 30 
+150 25 25
 #lower/upper grid pts
 0 0 0
-0.3 0.1 0.1
+0.6 0.1 0.1
 #face
 x-
 #shape (box/circle/ellipse/annulus)

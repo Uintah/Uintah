@@ -478,6 +478,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+    src_factory.sched_computeSources( level, sched, curr_level ); 
+
     if ( !d_calScalar ){ 
       sched_allocateDummyScalar( sched, patches, matls, curr_level ); 
     } 

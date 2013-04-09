@@ -681,6 +681,8 @@
     <G0                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <PEAKI1                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <CR                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
+    <T1_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
+    <T2_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <p0_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <p1_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <p3_crush_curve                   spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
@@ -688,6 +690,7 @@
     <kinematic_hardening_constant     spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <fluid_B0                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <fluid_pressure_initial           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
+    <gruneisen_parameter              spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <subcycling_characteristic_number spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     
   <!--______________________________________________________________________ -->    

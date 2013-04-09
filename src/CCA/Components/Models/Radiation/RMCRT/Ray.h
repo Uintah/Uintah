@@ -150,6 +150,7 @@ namespace Uintah{
                          const IntVector& domainHi,
                          constCCVariable<double>& sigmaT4Pi,
                          constCCVariable<double>& abskg,
+                         constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
                          MTRand * _mTwister);
@@ -202,8 +203,8 @@ namespace Uintah{
                             const VarLabel* celltype, 
                             const VarLabel* divQ);
                             
-                            
-    void setBC(CCVariable<double>& Q_CC,
+    template< class T >                        
+    void setBC(CCVariable<T>& Q_CC,
                const string& desc,
                const Patch* patch,          
                const int mat_id);

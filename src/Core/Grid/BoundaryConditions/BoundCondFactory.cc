@@ -38,14 +38,14 @@ using namespace Uintah;
 using std::string;
 using std::map;
 
+//______________________________________________________________________
 void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc, 
                               int& mat_id, const std::string face_label)
 
 {
   map<string,string> bc_attr;
   child->getAttributes(bc_attr);
-  
-  
+
   // Check to see if "id" is defined
   if (bc_attr.find("id") == bc_attr.end()) 
     SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
@@ -60,7 +60,7 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   //  std::cout << "mat_id = " << mat_id << std::endl;
   // Determine whether or not things are a scalar, Vector or a NoValue, i.e.
   // Symmetry
-
+  int    i_value;
   double d_value;
   Vector v_value;
   string s_value = "none";
@@ -77,8 +77,13 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
 
     switch (theInputType) {
       case ProblemSpec::NUMBER_TYPE:
-        child->get( "value", d_value );
-        bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+        if( bc_attr["type"] == "int" ){                  // integer ONLY if the tag 'type = "int"' is added
+          child->get( "value", i_value);
+          bc = scinew BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, functor_name );
+        }else{                                           // double (default) 
+          child->get( "value", d_value );
+          bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+        }
         break;
       case ProblemSpec::VECTOR_TYPE:
         child->get( "value", v_value );

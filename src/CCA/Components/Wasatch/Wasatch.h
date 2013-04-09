@@ -124,7 +124,7 @@ namespace Uintah{ class Task; }
 
 namespace Wasatch{
   void force_expressions_on_graph( Expr::TagList& exprTagList,
-                                  GraphHelper* const graphHelper );
+                                   GraphHelper* const graphHelper );
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class CoordHelper;

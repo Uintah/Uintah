@@ -374,7 +374,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::NewDW;
+        Task::WhichDW celltype_dw  = Task::NewDW;
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
         

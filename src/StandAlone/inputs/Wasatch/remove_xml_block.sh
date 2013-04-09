@@ -1,0 +1,1 @@
+sed -i '/<Disabledmomdt\/>/d' *.ups

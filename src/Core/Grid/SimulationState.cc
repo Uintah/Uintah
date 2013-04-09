@@ -50,31 +50,35 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
 
-   refineFlag_label = VarLabel::create("refineFlag",
+   refineFlag_label      = VarLabel::create("refineFlag",
                                        CCVariable<int>::getTypeDescription());
-   oldRefineFlag_label = VarLabel::create("oldRefineFlag",
+   oldRefineFlag_label   = VarLabel::create("oldRefineFlag",
                                        CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
                                        PerPatch<int>::getTypeDescription());
-   switch_label = VarLabel::create("switchFlag", 
-                                   max_vartype::getTypeDescription());
+   switch_label          = VarLabel::create("switchFlag", 
+                                       max_vartype::getTypeDescription());
 
-   VarLabel* nonconstOutputInv = 
-     VarLabel::create("outputInv", min_vartype::getTypeDescription() );
+   //__________________________________
+   //  These variables can be modified by a component.
+   VarLabel* nonconstOutputInv =     // output timestep interval
+                           VarLabel::create("outputInterval",      min_vartype::getTypeDescription() );
+   VarLabel* nonconstCheckInv =      // check point interval
+                           VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
+
    nonconstOutputInv->allowMultipleComputes();
-   outputInv_label= nonconstOutputInv;
-   
-   VarLabel* nonconstCheckInv = 
-     VarLabel::create("checkInv", min_vartype::getTypeDescription() );
    nonconstCheckInv->allowMultipleComputes();
-   checkInv_label= nonconstCheckInv;
+   
+   outputInterval_label     = nonconstOutputInv;
+   checkpointInterval_label = nonconstCheckInv;
+   //__________________________________
    
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
 
-  d_lockstepAMR = false;
-  d_updateOutputInv = false;
-  d_updateCheckInv = false;
+  d_lockstepAMR               = false;
+  d_updateOutputInterval      = false;
+  d_updateCheckpointInterval  = false;
   ProblemSpecP amr = ps->findBlock("AMR");
   if (amr)
     amr->get("useLockStep", d_lockstepAMR);
@@ -338,8 +342,8 @@ SimulationState::~SimulationState()
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   VarLabel::destroy(switch_label);
-  VarLabel::destroy(checkInv_label);
-  VarLabel::destroy(outputInv_label);
+  VarLabel::destroy(checkpointInterval_label);
+  VarLabel::destroy(outputInterval_label);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++)

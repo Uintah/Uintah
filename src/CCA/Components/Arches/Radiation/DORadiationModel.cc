@@ -43,6 +43,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
@@ -173,7 +174,10 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
 
   computeOrdinatesOPL();
 
-
+  d_print_all_info = false; 
+  if ( db->findBlock("print_all_info") ){
+    d_print_all_info = true; 
+  }
     
   string linear_sol;
   db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
@@ -691,10 +695,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
       //      double timeSetMat = Time::currentSeconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, plusZ, 
-                                su, ab, as, aw, ap, ae, an, at);
+                                su, ab, as, aw, ap, ae, an, at, d_print_all_info );
                                 
       //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
-      bool converged =  d_linearSolver->radLinearSolve();
+      bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
       
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);
@@ -731,6 +735,7 @@ DORadiationModel::intensitysolve_new(const ProcessorGroup* pg,
                                  ArchesConstVariables* constvars, 
                                  int wall_type )
 {
+  proc0cout << " Radiation Solve: " << endl;
   double solve_start = Time::currentSeconds();
   rgamma.resize(1,29);    
   sd15.resize(1,481);     
@@ -823,10 +828,10 @@ DORadiationModel::intensitysolve_new(const ProcessorGroup* pg,
 
       //      double timeSetMat = Time::currentSeconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, plusZ, 
-                                su, ab, as, aw, ap, ae, an, at);
+                                su, ab, as, aw, ap, ae, an, at, d_print_all_info );
                                 
       //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
-      bool converged =  d_linearSolver->radLinearSolve();
+      bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
       
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);

@@ -1744,101 +1744,114 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
                               int             verbosity)
 {
   // construct AX=B
-  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+  unsigned int indicesSize = momentIndexes.size();
+  for (unsigned int k = 0; k < indicesSize; ++k) {
     MomentVector thisMoment = momentIndexes[k];
- 
-    // weights
-    for ( unsigned int alpha = 0; alpha < N_; ++alpha) {
-      double prefixA = 1;
-      double productA = 1;
-      for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
-        if (weights[alpha] != 0) {
-          // Appendix C, C.9 (A1 matrix)
-          prefixA = prefixA - (thisMoment[i]);
-          double base = weightedAbscissas[i*(N_)+alpha] / weights[alpha];
-          double exponent = thisMoment[i];
-          //productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
-          productA = productA*( pow(base, exponent) );
-        } else {
-          prefixA = 0;
-          productA = 0;
+
+    // preprocessing - start with powers
+    double d_powers[N_][N_xi];  // a^(b-1)
+    double powers[N_][N_xi];    // a^b
+    double rightPartialProduct[N_][N_xi], leftPartialProduct[N_][N_xi];
+    for (unsigned int m = 0; m < N_; m++) {
+      if (weights[m] != 0) {
+        for (unsigned int n = 0; n < N_xi; n++) {
+
+          //TODO should we worry about 0^0, based on former seq code, only fear is resolved
+          double base = weightedAbscissas[n * N_ + m] / weights[m];
+          double exponent = thisMoment[n] - 1;
+          d_powers[m][n] = pow(base, exponent);
+          powers[m][n] = d_powers[m][n] * base;
+        }
+      } else {
+        for (unsigned int n = 0; n < N_xi; n++) {
+          d_powers[m][n] = powers[m][n] = 0;
+          rightPartialProduct[m][n] = leftPartialProduct[m][n] = 0;
+        }
+        rightPartialProduct[m][0] = leftPartialProduct[m][N_xi - 1] = 1;
+      }
+    }
+    // now partial products to eliminate innermost for loop
+    for (unsigned int m = 0; m < N_; m++) {
+      if (weights[m] != 0) {
+        rightPartialProduct[m][0] = 1;
+        leftPartialProduct[m][N_xi - 1] = 1;
+        for (unsigned int n = 1; n < N_xi; n++) {
+          rightPartialProduct[m][n] = rightPartialProduct[m][n - 1] * powers[m][n - 1];
+          leftPartialProduct[m][N_xi - 1 - n] = leftPartialProduct[m][N_xi - 1 - n + 1] * powers[m][N_xi - 1 - n + 1];
         }
       }
-      (*AA)[k][alpha] = prefixA*productA;
-      if(verbosity == 1)
-        proc0cout << "Setting A(" << k << "," << alpha << ") = " << prefixA*productA << endl;
-    } //end weights sub-matrix
+    }
+    //end preprocessing
+
+    // weights
+    for (unsigned int alpha = 0; alpha < N_; ++alpha) {
+      double prefixA = 1;
+      double productA = 1;
+
+      // preprocessing eliminates conditional
+      unsigned int momentSize = thisMoment.size();
+      for (unsigned int i = 0; i < momentSize; ++i) {
+        // Appendix C, C.9 (A1 matrix)
+        prefixA = prefixA - (thisMoment[i]);
+        productA = productA * (powers[alpha][i]);
+      }
+      (*AA)[k][alpha] = prefixA * productA;
+      if (verbosity == 1) {
+        proc0cout << "Setting A(" << k << "," << alpha << ") = " << prefixA * productA << endl;
+      }
+    }  //end weights sub-matrix
 
     // weighted abscissas
     double totalsumS = 0;
-    for( unsigned int j = 0; j < N_xi; ++j ) {
-      double prefixA    = 1;
-      double productA   = 1;
-      
-      double prefixS    = 1;
-      double productS   = 1;
-      double modelsumS  = 0;
-      
+    for (unsigned int j = 0; j < N_xi; ++j) {
+      double prefixA = 1;
+      double productA = 1;
+
+      double prefixS = 1;
+      double productS = 1;
+      double modelsumS = 0;
+
       double quadsumS = 0;
-      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+      for (unsigned int alpha = 0; alpha < N_; ++alpha) {
+
         if (weights[alpha] == 0) {
           prefixA = 0;
           prefixS = 0;
           productA = 0;
           productS = 0;
-        } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
-          //FIXME:
-          // both prefixes contain 0^(-1)
+        } else if (weightedAbscissas[j * (N_) + alpha] == 0 && thisMoment[j] == 0) {
+          // FIXME: both prefixes contain 0^(-1)
           prefixA = 0;
           prefixS = 0;
         } else {
+
           // Appendix C, C.11 (A_j+1 matrix)
-          double base = weightedAbscissas[j*(N_)+alpha] / weights[alpha];
-          double exponent = thisMoment[j] - 1;
-          //prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
-          prefixA = (thisMoment[j])*(pow(base, exponent));
+          prefixA = (thisMoment[j]) * (d_powers[alpha][j]);
           productA = 1;
 
           // Appendix C, C.16 (S matrix)
-          //prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
-          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          prefixS = -(thisMoment[j]) * (d_powers[alpha][j]);
           productS = 1;
 
           // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
-            if (n != j) {
-              // the if statements checking these same conditions (above) are only
-              // checking internal coordinate j, so we need them again for internal
-              // coordinate n
-              if (weights[alpha] == 0) {
-                productA = 0;
-                productS = 0;
-              //} else if ( weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
-              //  productA = 0;
-              //  productS = 0;
-              } else {
-                double base2 = weightedAbscissas[n*(N_)+alpha]/weights[alpha];
-                double exponent2 = thisMoment[n];
-                productA = productA*( pow(base2, exponent2));
-                productS = productS*( pow(base2, exponent2));
-              }//end divide by zero conditionals
-            }
-          }//end int coord n
-        }//end divide by zero conditionals
-        
+          // use partial products to do this quickly w/o a for loop
+          productA = productS = rightPartialProduct[alpha][j] * leftPartialProduct[alpha][j];
+        } //end divide by zero conditionals
 
-        modelsumS = - models[j*(N_)+alpha];
+        modelsumS = -models[j * (N_) + alpha];
 
-        int col = (j+1)*N_ + alpha;
-        (*AA)[k][col] = prefixA*productA;
-        if(verbosity == 1)
-          proc0cout << "Setting A(" << k << "," << col << ") = " << prefixA*productA << endl;
-        
-        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
-      }//end quad nodes
+        int col = (j + 1) * N_ + alpha;
+        (*AA)[k][col] = prefixA * productA;
+        if (verbosity == 1) {
+          proc0cout << "Setting A(" << k << "," << col << ") = " << prefixA * productA << endl;
+        }
+
+        quadsumS = quadsumS + weights[alpha] * modelsumS * prefixS * productS;
+      } //end quad nodes
+
       totalsumS = totalsumS + quadsumS;
-    }//end int coords j sub-matrix
-    
+    } //end int coords j sub-matrix
+
     (*BB)[k] = totalsumS;
   } // end moments
 }

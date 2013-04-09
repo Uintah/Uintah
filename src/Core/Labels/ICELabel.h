@@ -37,7 +37,6 @@ namespace Uintah {
       ~ICELabel();
 
     const VarLabel* delTLabel;
-    const VarLabel* NeedAddIceMaterialLabel;
 
     // Cell centered variables
     const VarLabel* TMV_CCLabel;

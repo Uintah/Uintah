@@ -86,19 +86,23 @@ template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
 {
   using namespace SpatialOps;
-  
+
   PhiFaceT& result = this->value();
+  
+//  result <<= 0.0;
+//  // note that PhiFaceT and VelFaceT should on the same mesh location
+//  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
+//  
+//  // move the velocity from staggered volume to phi faces
+//  velInterpOp_->apply_to_field( *vel_, *velInterp );
+//  
+//  // intepolate phi to the control volume faces
+//  phiInterpOp_->apply_to_field( *phi_, result );
+//  
+//  result <<= result * *velInterp;
+  
   result <<= 0.0;
-  // note that PhiFaceT and VelFaceT should on the same mesh location
-  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
-  
-  // move the velocity from staggered volume to phi faces
-  velInterpOp_->apply_to_field( *vel_, *velInterp );
-  
-  // intepolate phi to the control volume faces
-  phiInterpOp_->apply_to_field( *phi_, result );
-  
-  result <<= result * *velInterp;
+  result <<= (*phiInterpOp_)(*phi_) * (*velInterpOp_)(*vel_);
 }
 
 //--------------------------------------------------------------------

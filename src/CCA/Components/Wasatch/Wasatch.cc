@@ -162,27 +162,14 @@ namespace Wasatch{
   //--------------------------------------------------------------------
 
   void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
-                                   GraphCategories& gc,
-                                   const std::string taskListName )
+                                   GraphHelper* const gh )
   {
-    Category cat = INITIALIZATION;
-    if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-    else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-    else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-    else{
-      std::ostringstream msg;
-      msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-          << __FILE__ << " : " << __LINE__ << endl;
-    }
-
-    GraphHelper* const graphHelper = gc[cat];
-
     for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("NameTag");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::Tag tag = parse_nametag( exprParams );
-      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(tag) );
+      gh->rootIDs.insert( gh->exprFactory->get_id(tag) );
     }
   }
 
@@ -554,17 +541,18 @@ namespace Wasatch{
     //
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
-        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
+        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
+    {
       std::vector<std::string> taskListNames;
-      //std::string taskListName;
       forceOnGraphParams->getAttribute("tasklist", taskListNames);
       std::vector<std::string>::iterator taskListIter = taskListNames.begin();
-      while (taskListIter != taskListNames.end()) {
-        force_expressions_on_graph(forceOnGraphParams, graphCategories_, *taskListIter);
-        ++taskListIter;
+      for( ; taskListIter != taskListNames.end(); ++taskListIter ){
+        force_expressions_on_graph( forceOnGraphParams, graphCategories_[select_tasklist(*taskListIter)] );
       }
     }
-    
+
+    parse_cleave_requests    ( wasatchParams, graphCategories_ );
+    parse_attach_dependencies( wasatchParams, graphCategories_ );
   }
 
   //--------------------------------------------------------------------
@@ -779,6 +767,9 @@ namespace Wasatch{
       //       solve)
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
+      // set up any "old" variables that have been requested.
+      OldVariable::self().setup_tasks( allPatches, materials_, sched );
+
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
@@ -807,9 +798,6 @@ namespace Wasatch{
       if( buildTimeIntegrator_ ){
         create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
       }
-
-      // set up any "old" variables that have been requested.
-      OldVariable::self().setup_tasks( allPatches, materials_, sched );
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       

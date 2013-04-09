@@ -652,7 +652,9 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         default:
           throw InternalError("MinMax: invalid data type", __FILE__, __LINE__); 
         }
+        fflush(fp);
       }  // label names
+      
       lastWriteTime = now;     
     }  // time to write data
     

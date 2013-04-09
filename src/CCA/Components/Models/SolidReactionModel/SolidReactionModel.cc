@@ -101,7 +101,6 @@ void SolidReactionModel::outputProblemSpec(ProblemSpecP& ps)
     ProblemSpecP model_ps = ps->appendChild("Model");
     model_ps->setAttribute("type","SolidReactionModel");
 
-    model_ps->appendElement("Active",d_active);
     model_ps->appendElement("fromMaterial",fromMaterial);
     model_ps->appendElement("toMaterial",toMaterial);
     model_ps->appendElement("E0",   d_E0);
@@ -114,8 +113,6 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
                                       ModelSetup* setup)
 {  
     d_sharedState = sharedState;
-    bool defaultActive=true;
-    d_params->getWithDefault("Active",          d_active, defaultActive);
 
     // Get base includes
     d_params->require("fromMaterial",fromMaterial);
@@ -175,29 +172,6 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
       }
     }
 
-    if(d_active){
-      reactant = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-      product  = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
-
-      //__________________________________
-      //  define the materialSet
-      mymatls = scinew MaterialSet();
-
-      vector<int> m;
-      m.push_back(0);                       // needed for the pressure and NC_CCWeight
-      m.push_back(reactant->getDWIndex());
-      m.push_back(product->getDWIndex());
-
-      mymatls->addAll_unique(m);            // elimiate duplicate entries
-      mymatls->addReference();
-    }
-}
-
-void SolidReactionModel::activateModel(GridP& grid, SimulationStateP& sharedState,
-                                       ModelSetup* setup)
-{
-    d_active=true;
-
     reactant = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
     product  = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
 
@@ -233,52 +207,50 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
                                                      const LevelP& level,
                                                      const ModelInfo* mi)
 {
-    if(d_active){
-        Task* t = scinew Task("SolidReactionModel::computeModelSources", this,
-                              &SolidReactionModel::computeModelSources, mi);
-        cout_doing << "SolidReactionModel::scheduleComputeModelSources "<<  endl;
+  Task* t = scinew Task("SolidReactionModel::computeModelSources", this,
+                        &SolidReactionModel::computeModelSources, mi);
+  cout_doing << "SolidReactionModel::scheduleComputeModelSources "<<  endl;
 
-        Ghost::GhostType  gn  = Ghost::None;
-        const MaterialSubset* react_matl = reactant->thisMaterial();
-        const MaterialSubset* prod_matl  = product->thisMaterial();
-        MaterialSubset* one_matl     = scinew MaterialSubset();
-        one_matl->add(0);
-        one_matl->addReference();
-        MaterialSubset* press_matl   = one_matl;
+  Ghost::GhostType  gn  = Ghost::None;
+  const MaterialSubset* react_matl = reactant->thisMaterial();
+  const MaterialSubset* prod_matl  = product->thisMaterial();
+  MaterialSubset* one_matl     = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+  MaterialSubset* press_matl   = one_matl;
 
-        t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
-        //__________________________________
-        // Products
-        t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->requires(Task::OldDW, mi->delT_Label,         level.get_rep());
+  //__________________________________
+  // Products
+  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
 
-        //__________________________________
-        // Reactants
-        t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-        t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-        t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-        t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-        t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
+  //__________________________________
+  // Reactants
+  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
 
-        t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
-        t->computes(reactedFractionLabel, react_matl);
-        t->computes(delFLabel,            react_matl);
+  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+  t->computes(reactedFractionLabel, react_matl);
+  t->computes(delFLabel,            react_matl);
 
-        t->modifies(mi->modelMass_srcLabel);
-        t->modifies(mi->modelMom_srcLabel);
-        t->modifies(mi->modelEng_srcLabel);
-        t->modifies(mi->modelVol_srcLabel);
+  t->modifies(mi->modelMass_srcLabel);
+  t->modifies(mi->modelMom_srcLabel);
+  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(mi->modelVol_srcLabel);
 
-        if(d_saveConservedVars->mass ){
-          t->computes(SolidReactionModel::totalMassBurnedLabel);
-        }
-        if(d_saveConservedVars->energy){
-          t->computes(SolidReactionModel::totalHeatReleasedLabel);
-        }
-        sched->addTask(t, level->eachPatch(), mymatls);
+  if(d_saveConservedVars->mass ){
+    t->computes(SolidReactionModel::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+    t->computes(SolidReactionModel::totalHeatReleasedLabel);
+  }
+  sched->addTask(t, level->eachPatch(), mymatls);
 
-        if (one_matl->removeReference())
-          delete one_matl;
-    } 
+  if (one_matl->removeReference())
+    delete one_matl;
 }
 
 
@@ -430,13 +402,6 @@ void SolidReactionModel::scheduleErrorEstimate(const LevelP& coarseLevel,
                                                SchedulerP& sched)
 {
     // Nothing implemented 
-}
-
-void SolidReactionModel::scheduleCheckNeedAddMaterial(SchedulerP&,
-                                                      const LevelP& level,
-                                                      const ModelInfo*)
-{
-    // Nothing implemented
 }
 
 void SolidReactionModel::scheduleTestConservation(SchedulerP&,

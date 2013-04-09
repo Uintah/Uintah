@@ -12,7 +12,7 @@ from matplotlib import rc
 import matplotlib.pyplot as plt
 from matplotlib import ticker 
 
-SHOW_ON_MAKE = FALSE
+SHOW_ON_MAKE = False
 
 #Useful constants
 sqrtThree = np.sqrt(3.0)

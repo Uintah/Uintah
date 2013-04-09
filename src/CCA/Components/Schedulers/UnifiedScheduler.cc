@@ -56,10 +56,12 @@ extern map<string, double> waittimes;
 extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
+extern DebugStream taskorder;
 
 static double CurrentWaitTime = 0;
 
 static DebugStream dbg("UnifiedScheduler", false);
+static DebugStream dbgst("SendTiming", false);
 static DebugStream timeout("UnifiedScheduler.timings", false);
 static DebugStream queuelength("QueueLength", false);
 static DebugStream threaddbg("UnifiedThreadDBG", false);
@@ -369,7 +371,6 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
-
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
   TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
 
@@ -759,6 +760,10 @@ void UnifiedScheduler::runTasks(int t_id)
         readyTask = phaseSyncTask[currphase];
         havework = true;
         numTasksDone++;
+        if (taskorder.active()){
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+                << numTasksDone << endl;
+        }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
           currphase++;
@@ -798,6 +803,10 @@ void UnifiedScheduler::runTasks(int t_id)
           } else {
 #endif
           numTasksDone++;
+          if (taskorder.active()){
+            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+                << numTasksDone << endl;
+          }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
             currphase++;
@@ -943,6 +952,10 @@ void UnifiedScheduler::runTasks(int t_id)
         reclaimEvents(readyTask, D2H);
         postMPISends(readyTask, currentIteration, t_id);
         numTasksDone++;
+        if (taskorder.active()){
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+                << numTasksDone << endl;
+        }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
           currphase++;
@@ -1225,6 +1238,9 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
     cerrLock.unlock();
   }
 
+  int numSend=0;
+  int volSend=0;
+
   // Send data to dependendents
   for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
 
@@ -1326,10 +1342,12 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
       }
 
       numMessages_++;
+      numSend++;
       int typeSize;
 
       MPI_Type_size(datatype, &typeSize);
       messageVolume_ += count * typeSize;
+      volSend +=count*typeSize;
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
@@ -1345,7 +1363,10 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
   }  // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
-
+  if (dbgst.active() && numSend>0){
+     dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
+         << numSend << " , VolSend: " << volSend << endl;
+  }
 }  // end postMPISends();
 
 int UnifiedScheduler::getAviableThreadNum()

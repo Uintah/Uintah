@@ -39,7 +39,7 @@ namespace Uintah {
    *  \brief Function that parses the current location of an ifstream input file 
   for a value. The values are assumed to be separated by a space, comma (,), or
    semi colon (;). This function will skip all commented lines, i.e. those lines
-   starting with #, %, //, and /*. As an example, assume that your input file looks
+   starting with #, %, //, and C-style comments. As an example, assume that your input file looks
    like the following:
    \verbatim
    # my input file

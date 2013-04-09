@@ -98,6 +98,8 @@ namespace Uintah{
     ProblemSpecP db = inputdb; 
 
     db->getWithDefault("constant", _constant, 0.); 
+
+    commonProblemSetup( inputdb ); 
   }
   
   template <typename pT, typename constpT>
