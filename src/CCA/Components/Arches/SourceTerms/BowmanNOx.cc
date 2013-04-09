@@ -160,14 +160,14 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
   }
 }
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-BowmanNOx::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+BowmanNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "BowmanNOx::dummyInit"; 
+  string taskname = "BowmanNOx::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &BowmanNOx::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &BowmanNOx::initialize);
 
   tsk->computes(_src_label);
 
@@ -179,11 +179,11 @@ BowmanNOx::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-BowmanNOx::dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw )
+BowmanNOx::initialize( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset* matls, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){

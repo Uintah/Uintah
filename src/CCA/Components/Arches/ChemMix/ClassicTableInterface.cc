@@ -55,10 +55,10 @@ using namespace Uintah;
 // Default Constructor 
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels )
+  MixingRxnModel( labels, MAlabels ), depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
+  enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
 {
   _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
- 
 }
 
 //--------------------------------------------------------------------------- 
@@ -78,82 +78,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Create sub-ProblemSpecP object
   string tableFileName;
   ProblemSpecP db_classic = propertiesParameters->findBlock("ClassicTable");
-  ProblemSpecP db_properties_root = propertiesParameters; 
 
   // Obtain object parameters
   db_classic->require( "inputfile", tableFileName );
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
-#if 0
-FIXME delete the following section
-  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
-  db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, string("enthalpySP") ); 
- 
-  // Developer only for now. 
-  if ( db_classic->findBlock("mf_for_hl") ){ 
-    _use_mf_for_hl =  true; 
-  } 
-
-  d_noisy_hl_warning = false; 
-  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
-    d_noisy_hl_warning = true; 
-
-  // only solve for heat loss if a working radiation model is found
-  const ProblemSpecP params_root = db_classic->getRootNode();
-  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-  ProblemSpecP db_sources   =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources"); 
-  d_allocate_soot = false; 
-  if ( db_sources ) { 
-    for (ProblemSpecP src_db = db_sources->findBlock("src");
-        src_db !=0; src_db = src_db->findNextBlock("src")){
-      std::string type="null";
-      src_db->getAttribute("type",type); 
-      if ( type == "do_radiation" || type == "rmcrt_radiation" ){ 
-        d_allocate_soot = true; 
-      } 
-    }
-  } 
-  if (db_enthalpy) { 
-    ProblemSpecP db_DO_Rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
-    ProblemSpecP db_RMCRT_Rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
-    d_adiabatic = true; 
-    if (db_DO_Rad || db_RMCRT_Rad) { 
-      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
-      d_adiabatic = false; 
-      d_allocate_soot = false; // needed for new DORadiation source term 
-    }
-  } else {
-    d_adiabatic = true; 
-  }
-
-  if ( d_enthalpy_name != "enthalpySP" ){ 
-    // For cases where <TransportEqn> defines the enthalpy equation. 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( d_enthalpy_name ); 
-    std::vector<std::string> srcs = eqn.getSourcesList(); 
-    //check density guess -- must be true in this case: 
-    if ( !eqn.getDensityGuessBool() ){ 
-      proc0cout << " Warning: For equation named " << d_enthalpy_name << endl 
-        << "     Density guess must be used for this equation because it determines properties." << endl
-        << "     Automatically setting density guess = true. " << endl;
-      eqn.setDensityGuessBool( true ); 
-    } 
-    for ( std::vector<std::string>::iterator iter = srcs.begin(); iter != srcs.end(); iter++ ){ 
-
-      //check for valid radiation terms in the enthalpy equations. If found, turn on heat loss: 
-      SourceTermFactory& src_factory = SourceTermFactory::self(); 
-      SourceTermBase& src = src_factory.retrieve_source_term( *iter ); 
-      std::string type = src.getSourceType(); 
-
-      if ( type == "do_radiation" ) { 
-        d_adiabatic = false; 
-      } 
-    } 
-  }
-#endif
-  
-  // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
-  const ProblemSpecP db_root = db_classic->getRootNode(); 
-  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
   proc0cout << "----------Mixing Table Information---------------  " << endl;
@@ -179,7 +107,8 @@ FIXME delete the following section
 
   cout_tabledbg << " Creating the independent variable map " << endl;
 
-  for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
+  size_t numIvVarNames = d_allIndepVarNames.size();
+  for ( unsigned int i = 0; i < numIvVarNames; ++i ){
 
     //put the right labels in the label map
     string var_name = d_allIndepVarNames[i];  
@@ -234,6 +163,7 @@ FIXME delete the following section
   // Check for heat loss as a property model 
   // If found, add sensible and adiabatic enthalpy to the lookup 
   // Some of this is a repeat of what is happening already in HeatLoss.cc
+  const ProblemSpecP db_root = db_classic->getRootNode(); 
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels") ){ 
    const ProblemSpecP db_prop_models = 
      db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
@@ -257,6 +187,8 @@ FIXME delete the following section
     }
   } 
   //**** END HACKISHNESS ***
+  //setting varlabels to roles:
+  d_lab->setVarlabelToRole( "temperature", "temperature" );
 }
 
 void ClassicTableInterface::tableMatching(){ 
@@ -384,7 +316,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
-    for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+    int size = (int)d_allIndepVarNames.size();
+    for ( int i = 0; i < size; i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
 
@@ -616,13 +549,11 @@ cout << "ClassicTableInterface.cc: faces: " << bf.size() << "\n";
           bool foundIterator = "false"; 
 
           getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
-
 //qwerty bound pointer is different... 
 
           // The template parameter needs to be generalized here to handle strings, etc...
           foundIterator = 
             getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
-
 
 // FIXME: debug
 cout << "ClassicTableInterface.cc: bc_value: " << bc_value << "\n";
@@ -635,11 +566,9 @@ cout << "\n";
           if ( foundIterator ) { 
             bc_values.push_back( bc_value ); 
           } else { 
+            // FIXME: This might not be right...????
             throw InvalidValue( "Error: Boundary condition not found for: "+variable_name, __FILE__, __LINE__ ); 
           } 
-
-          // currently assuming a constant value across the boundary
-          bc_values.push_back( bc_value ); 
 
         }
 
@@ -665,7 +594,6 @@ cout << "ClassicTableInterface.cc: c, cp1: " << c << ", " << cp1 <<"\n";
 cout << "ClassicTableInterface.cc: indep_storage(i,c), indep_storage(i,cp1): " << indep_storage[i][c] << ", " << indep_storage[i][cp1] <<"\n";
 
             iv.push_back( 0.5 * ( indep_storage[i][c] + indep_storage[i][cp1]) );
-
           }
 
 cout << "ClassicTableInterface.cc: 2) here:" << iv.size() <<": ";
@@ -677,6 +605,7 @@ cout << "\n";
               inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
             total_inert_f += 0.5 * ( inert_iter->second.var[c] + inert_iter->second.var[cp1] );
+
           }
 
           if ( d_does_post_mixing && d_has_transform ) { 
@@ -994,13 +923,17 @@ ClassicTableInterface::getIndexInfo()
     std::string name = i->first; 
     int index = findIndex( name ); 
 
-    IndexMap::iterator iter = d_depVarIndexMap.find( name );   
+    depVarIndexMapLock.readLock();
+    IndexMap::iterator iter = d_depVarIndexMap.find( name );
+    depVarIndexMapLock.readUnlock();
+
     // Only insert variable if it isn't already there. 
     if ( iter == d_depVarIndexMap.end() ) {
-
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
-      iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
 
+      depVarIndexMapLock.writeLock();
+      iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
+      depVarIndexMapLock.writeUnlock();
     }
   }
 }
@@ -1009,6 +942,7 @@ ClassicTableInterface::getIndexInfo()
   void 
 ClassicTableInterface::getEnthalpyIndexInfo()
 {
+  enthalpyVarIndexMapLock.writeLock();
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
   int index = findIndex( "sensibleenthalpy" ); 
 
@@ -1020,6 +954,7 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 
   index = findIndex( "density" ); 
   d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
+  enthalpyVarIndexMapLock.writeUnlock();
 }
 
 //-------------------------------------

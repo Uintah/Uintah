@@ -52,6 +52,7 @@
 #include <CCA/Components/Arches/ScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
@@ -119,7 +120,8 @@ ExplicitSolver(ArchesLabel* label,
   d_scalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
-  d_printTotalKE = false; 
+  d_printTotalKE = false;
+  d_wall_ht_models = 0;
 }
 
 // ****************************************************************************
@@ -138,6 +140,9 @@ ExplicitSolver::~ExplicitSolver()
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
     delete nosolve_timelabels;
+  if ( d_wall_ht_models != 0 ){ 
+    delete d_wall_ht_models; 
+  }
 }
 
 // ****************************************************************************
@@ -149,9 +154,17 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
 
+  ProblemSpecP db_parent = params; 
+
   if ( db->findBlock( "print_total_ke" ) ){ 
     d_printTotalKE = true; 
   }
+
+  if ( db_parent->findBlock( "WallHT" ) ){ 
+    ProblemSpecP db_wall_ht = db_parent->findBlock( "WallHT" ); 
+    d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
+    d_wall_ht_models->problemSetup( db_wall_ht ); 
+  } 
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
@@ -649,6 +662,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
+    if ( d_wall_ht_models != 0 ){ 
+      d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
+    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
@@ -675,19 +691,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     //if (curr_level == numTimeIntegratorLevels - 1) {
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-
-      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-    }
-    //}
-    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
-        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
-      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
-      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
-    }
+//    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+//
+//      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//    }
+//    //}
+//    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
+//        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+//      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
+//      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
+//    }
 
     if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
       // this is the new efficiency calculator
@@ -1511,8 +1527,7 @@ ExplicitSolver::printTotalKE( const ProcessorGroup* ,
   new_dw->get( tke, d_lab->d_totalKineticEnergyLabel ); 
   double total_kin_energy = tke;
 
-  proc0cout << "Total kinetic energy: " << tke << std::endl;
-
+  proc0cout << "Total kinetic energy: " << total_kin_energy << std::endl;
 }
 
 //****************************************************************************

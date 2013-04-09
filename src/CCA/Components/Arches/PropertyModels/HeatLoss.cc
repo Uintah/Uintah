@@ -25,6 +25,7 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 //---------------------------------------------------------------------------
 HeatLoss::~HeatLoss( )
 {
+  delete _boundary_condition; 
 }
 
 

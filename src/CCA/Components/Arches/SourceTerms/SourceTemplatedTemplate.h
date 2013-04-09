@@ -23,7 +23,7 @@
 //        in the local destructor
 //     c) Add your input file details in problemSetup
 //     d) Add actual calculation of source term in computeSource. 
-//     e) Make sure that you dummyInit any new variables that require OldDW 
+//     e) Make sure that you initialize any new variables that require OldDW 
 //        values.
 //     f) Make sure that _before_table_lookup is properly set for this source term. 
 //   7) Please clean up unused code from this template in your final version
@@ -67,12 +67,12 @@ public:
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw, 
                       int timeSubStep );
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
+  void sched_initialize( const LevelP& level, SchedulerP& sched );
+  void initialize( const ProcessorGroup* pc, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw );
 
   class Builder
     : public SourceTermBase::Builder { 
@@ -262,14 +262,14 @@ void CLASSNAME<TEMP_PARAMS>::computeSource( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
+// Method: Schedule initialization
 //---------------------------------------------------------------------------
 template <TEMP_PARAMS>
-void CLASSNAME<TEMP_PARAMS>::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+void CLASSNAME<TEMP_PARAMS>::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CLASSNAME::dummyInit"; 
+  string taskname = "CLASSNAME::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
 
   tsk->computes(_src_label);
 
@@ -284,7 +284,7 @@ void CLASSNAME<TEMP_PARAMS>::sched_dummyInit( const LevelP& level, SchedulerP& s
 
 }
 template <TEMP_PARAMS>
-void CLASSNAME<TEMP_PARAMS>::dummyInit( const ProcessorGroup* pc, 
+void CLASSNAME<TEMP_PARAMS>::initialize( const ProcessorGroup* pc, 
                                         const PatchSubset* patches, 
                                         const MaterialSubset* matls, 
                                         DataWarehouse* old_dw, 

@@ -1,6 +1,8 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_new_h
 #define Uintah_Components_Arches_BoundaryCondition_new_h
 
+#include <map>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -62,18 +64,17 @@ public:
    * interior cell and boundary cell match the boundary condition. This is 
    * a specialized case where the boundary value comes from some other vector */
   void setVectorValueBC( const ProcessorGroup*,
-    const Patch* patch,
-    CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
-    string varname );
+                         const Patch* patch,
+                         CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
+                         const string & varname );
 
   /** @brief Sets the area fraction for each minus face according to the boundaries */
-  void setAreaFraction( 
-    const Patch* patch,
-    CCVariable<Vector>& areaFraction, 
-    CCVariable<double>& volFraction, 
-    constCCVariable<int>& pcell, 
-    const int wallType, 
-    const int flowType );
+  void setAreaFraction( const Patch                * patch,
+                              CCVariable<Vector>   & areaFraction, 
+                              CCVariable<double>   & volFraction, 
+                              constCCVariable<int> & pcell, 
+                        const int                    wallType, 
+                        const int                    flowType );
 
   /** @brief Compute the volume weights for the filter cell **/
   void computeFilterVolume( const Patch* patch, 
@@ -88,7 +89,101 @@ public:
   /** @brief Read in a file for boundary conditions **/ 
   std::map<IntVector, double> readInputFile( std::string file_name ); 
 
+  //new stuff--------------------
+  class BCFunctionBase{ 
+
+    public: 
+
+      BCFunctionBase() {};
+      virtual ~BCFunctionBase(){}; 
+
+      virtual void setupBC( ProblemSpecP& db, const std::string eqn_name ) = 0; 
+      virtual void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi ) = 0; 
+ 
+    protected: 
+    
+  };
+
 private: 
+
+  typedef std::map< std::string, std::map<std::string, BCFunctionBase* > > VarToMappedF; 
+
+  class Dirichlet : public BCFunctionBase { 
+
+    public:
+
+      Dirichlet( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Dirichlet(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+
+    private: 
+
+      const int d_matl_id; 
+
+  }; 
+
+  class Neumann : public BCFunctionBase { 
+
+    public:
+
+      Neumann( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Neumann(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ){}; 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+
+    private: 
+
+      const int d_matl_id; 
+
+  }; 
+
+  class FromFile : public BCFunctionBase { 
+
+    public:
+
+      FromFile( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~FromFile(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+
+    private: 
+
+      typedef std::map<IntVector, double> CellToValueMap;                 ///< (i,j,k)   ---> boundary condition value 
+      typedef std::map<std::string, CellToValueMap> FaceToBCValueMap;     ///< face name ---> CellToValueMap 
+
+      const int d_matl_id; 
+      
+      std::map<IntVector, double> readInputFile( std::string file_name );
+      FaceToBCValueMap d_face_map; 
+
+  }; 
+
+  class Tabulated : public BCFunctionBase { 
+
+    public:
+
+      Tabulated( const int matl_id ) : d_matl_id( matl_id ){}; 
+      ~Tabulated(){};
+
+      void setupBC( ProblemSpecP& db, const std::string eqn_name ); 
+      void extra_setupBC( ProblemSpecP& db, const std::string eqn_name, MixingRxnModel* table ); 
+      void applyBC( const Patch* patch, Patch::FaceType face, int child, std::string varname, std::string face_name, CCVariable<double>& phi); 
+
+    private: 
+
+      typedef std::map< std::string, double  > DoubleMap;                   ///< dependant var ---> value
+      typedef std::map< std::string, DoubleMap > MapDoubleMap;              ///< face name  ---> DoubleMap
+
+      const int d_matl_id; 
+      
+      MapDoubleMap _tabVarsMap; 
+
+  }; 
+  //-----------------------------
  
   //variables
 	const int d_matl_id; 

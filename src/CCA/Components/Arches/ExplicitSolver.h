@@ -78,6 +78,7 @@ class EnthalpySolver;
 class PartVel;
 class DQMOM;
 class EfficiencyCalculator; 
+class WallModelDriver; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -355,7 +356,6 @@ private:
   void setDQMOMSolver( DQMOM* dqmomSolver ) {
     d_dqmomSolver = dqmomSolver; };
 
-private:
   // const VarLabel*
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -377,12 +377,10 @@ private:
   bool d_enthalpySolve;
   bool d_calcVariance;
 
-  // Momentum Eqn Solver
-  MomentumSolver* d_momSolver;
-  // Scalar solver
-  ScalarSolver* d_scalarSolver;
-  // physcial constatns
-  PhysicalConstants* d_physicalConsts;
+  MomentumSolver* d_momSolver;             ///< Momentum solver 
+  ScalarSolver* d_scalarSolver;            ///< Old scalar solver
+  PhysicalConstants* d_physicalConsts;     ///< Physical constants
+  WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;

@@ -95,11 +95,11 @@ PSELIBS := \
         Core/Thread                     \
         Core/Util
 
-ifneq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
-ifneq ($(HAVE_HYPRE),)
+ifeq ($(HAVE_HYPRE),yes)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
