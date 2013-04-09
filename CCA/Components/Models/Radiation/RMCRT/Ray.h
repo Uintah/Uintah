@@ -150,6 +150,7 @@ namespace Uintah{
                          const IntVector& domainHi,
                          constCCVariable<double>& sigmaT4Pi,
                          constCCVariable<double>& abskg,
+                         constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
                          MTRand * _mTwister);
