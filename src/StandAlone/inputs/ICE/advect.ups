@@ -169,7 +169,7 @@
       <save label="vel_CC"/>         
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
-      <checkpoint interval="0.005" cycle="2"/>
+      <checkpoint interval="0.0000001" cycle="2"/>
    </DataArchiver>
 
     

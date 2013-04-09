@@ -1,0 +1,416 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Flow over the ICSE logo</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+
+    <!-- Set the initial condition for a cell centered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-scalar" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a cell-centered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="u" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+    
+
+    <EmbeddedGeometry>
+          <!-- I -->
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[0.8,2,0]</min>
+                <max>[1.4,2.2,1.0]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[1,1,0]</min>
+                <max>[1.2,2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[0.8,0.8,0]</min>
+                <max>[1.4,1.0,1.0]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          
+          <!-- C -->
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[1.8,2,0]</min>
+                <max>[2.4,2.2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[1.8,1,0]</min>
+                <max>[2,2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[1.8,0.8,0]</min>
+                <max>[2.4,1,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+
+          <!-- S -->
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[2.8,2,0]</min>
+                <max>[3.4,2.2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[2.8,1.6,0]</min>
+                <max>[3,2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[2.8,1.4,0]</min>
+                <max>[3.4,1.6,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>                    
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.2,1,0]</min>
+                <max>[3.4,1.4,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>          
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[2.8,0.8,0]</min>
+                <max>[3.4,1,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+
+          <!-- E -->
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.8,2,0]</min>
+                <max>[4.4,2.2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.8,1.6,0]</min>
+                <max>[4,2,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.8,1.4,0]</min>
+                <max>[4.4,1.6,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>                    
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.8,1,0]</min>
+                <max>[4,1.4,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>          
+          <Intrusion>
+            <geom_object>
+              <box>
+                <min>[3.8,0.8,0]</min>
+                <max>[4.4,1,1]</max>
+              </box>
+            </geom_object>
+          </Intrusion>    
+    </EmbeddedGeometry>
+
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="x-mom" state="STATE_N" />
+       <Constant>0.1</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="y-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-12  </tolerance>
+            <maxiterations>  500    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+  </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0005</delt_min>
+    <delt_max>0.0005</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>intrusion_flow_over_icse.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0005"/>
+    <compression>gzip</compression>
+    <save label="svolFraction"/>    
+    <save label="xvolFraction"/>    
+    <save label="yvolFraction"/>    
+    <save label="phi-scalar"/>        
+    <save label="x-mom"/>    
+    <save label="u"/>
+    <save label="v"/>    
+    <save label="y-mom"/>
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="x-">
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 1.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>                                               
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+      </Face>
+      
+      <Face side="x+">
+
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 1.0 </value>
+        </BCType>
+      
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>     
+
+      </Face>
+      
+      <Face side="y-">
+
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 10.0 </value>
+        </BCType>
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 1.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 1.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+                        
+      </Face>
+      <Face side="y+">
+      
+              <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Neumann" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Neumann" label="u">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="pressure">
+          <value> 0.0 </value>
+        </BCType>                       
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                              
+      </Face>
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[5.2,3,1]</upper>
+        <resolution>[320,184,2]</resolution>
+        <patches>[4,4,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -10,7 +10,7 @@
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>3.0</maxTime>
+       <maxTime>0.5</maxTime>
        <initTime>0.0</initTime>
        <delt_min>2.e-5</delt_min>
        <delt_max>2.e-3</delt_max>
@@ -19,8 +19,6 @@
    <DataArchiver>
         <filebase>explicit_viscoelastic_bi.uda</filebase>
        <outputInterval>0.01</outputInterval>
-       <compression>gzip</compression>
-       <save label = "p.xx"/>
        <save label = "p.x"/>
        <save label = "p.velocity"/>
        <save label = "p.volume"/>
@@ -42,10 +40,8 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
-       <dynamic>false</dynamic>
-       <interpolator>linear</interpolator>
-       <do_grid_reset>false</do_grid_reset>
-       <ForceBC_force_increment_factor>0.0</ForceBC_force_increment_factor>
+       <interpolator>gimp</interpolator>
+       <do_grid_reset>true</do_grid_reset>
     </MPM>
 
     <PhysicalConstants>
@@ -168,7 +164,7 @@
               <upper>[0.03,0.03,0.02]</upper>
                <resolution>[3,3,3]</resolution>
               <patches>[1,1,1]</patches>
-              <extraCells>[0, 0, 0]</extraCells>
+              <extraCells>[1, 1, 1]</extraCells>
            </Box>
        </Level>
     </Grid>
