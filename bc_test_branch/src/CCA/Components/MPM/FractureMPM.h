@@ -342,12 +342,6 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
-  void scheduleAddNewParticles(SchedulerP&, const PatchSet*,
-                               const MaterialSet*);
-
-  void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
-                                         const MaterialSet*);
-
   // for Fracture ----------------------------------
   virtual void scheduleParticleVelocityField(SchedulerP& sched,
                                              const PatchSet* patches,

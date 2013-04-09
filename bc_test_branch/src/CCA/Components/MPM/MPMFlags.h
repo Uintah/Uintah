@@ -68,7 +68,6 @@ namespace Uintah {
     bool        d_useCohesiveZones; // Flag for using cohesive zones
     bool        d_createNewParticles; // Flag to decide whether to create
                                          // new particles after failure
-    bool        d_addNewMaterial; // Flag to decide whether to create
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_deleteRogueParticles;// Flag to delete rogue particles
     bool        d_doThermalExpansion; // Decide whether to do thermExp or not
@@ -85,7 +84,6 @@ namespace Uintah {
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
-    bool        d_canAddMPMMaterial;
     bool        d_do_contact_friction;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
@@ -98,6 +96,7 @@ namespace Uintah {
     bool        d_computeScaleFactor;    // compute the scale factor for viz 
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
+    int         d_min_subcycles_for_F; // Minimum number of subcycles to use in computing the deformation gradient
     double      d_min_mass_for_acceleration; // Minimum mass to allow division by in computing acceleration
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
     bool        d_prescribeDeformation;  // Prescribe deformation via a table of U and R
@@ -108,6 +107,7 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
+    bool        d_cell_based_smoothing;
     bool        d_use_momentum_form;
     std::string d_mms_type;  // MMS Flag
     
