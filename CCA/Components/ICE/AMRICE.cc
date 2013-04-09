@@ -699,7 +699,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
     
     //__________________________________
-    // Model Variables.
+    // Models with transported variables
     if(d_modelSetup && d_modelSetup->tvars.size() > 0){
       vector<TransportedVariable*>::iterator iter;
       
@@ -711,6 +711,15 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
         task->computes(tvar->var);
       }
     }
+    
+    //__________________________________
+    // Models that need to refine/initialize
+    // variables on new patches  This will call both ICE and MPMICE based models
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+      iter != d_models.end(); iter++){
+      (*iter)->scheduleRefine(patches, sched);
+    }
+    
     
     task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
     task->computes(lb->rho_CCLabel);

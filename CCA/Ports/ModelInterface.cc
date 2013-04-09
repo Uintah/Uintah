@@ -45,3 +45,8 @@ void ModelInterface::setMPMLabel(MPMLabel*)
 {
 }
 
+void ModelInterface::scheduleRefine( const PatchSet* patches,
+                                     SchedulerP& sched )
+{
+}
+
