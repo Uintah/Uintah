@@ -737,9 +737,9 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 
    ProblemSpecP oldTimesteps = oldIndexDoc->findBlock("timesteps");
 
-   ProblemSpecP ts;
+   ProblemSpecP old_ts;
    if (oldTimesteps != 0)
-     ts = oldTimesteps->findBlock("timestep");
+     old_ts = oldTimesteps->findBlock("timestep");
 
    // while we're at it, add restart information to index.xml
    if (maxTimestep >= 0)
@@ -753,47 +753,71 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
    
    // copy each timestep 
    int timestep;
-   while (ts != 0) {
-      ts->get(timestep);
-      if (timestep >= startTimestep &&
-          (timestep <= maxTimestep || maxTimestep < 0)) {
+   while( old_ts != 0 ) {
+
+      old_ts->get( timestep );
+
+      if (timestep >= startTimestep && (timestep <= maxTimestep || maxTimestep < 0)) {
          // copy the timestep directory over
          map<string,string> attributes;
-         ts->getAttributes(attributes);
+         old_ts->getAttributes( attributes );
 
-         string hrefNode = attributes["href"];
-         if (hrefNode == "")
+         string href_value    = attributes[ "href"    ];
+         string oldDelt_value = attributes[ "oldDelt" ];
+         string time_value    = attributes[ "time"    ];
+
+         if (href_value == "") {
             throw InternalError("timestep href attribute not found", __FILE__, __LINE__);
+         }
 
-         string::size_type href_pos = hrefNode.find_first_of("/");
+         string::size_type href_pos = href_value.find_first_of("/");
 
-         string href = hrefNode;
-         if (href_pos != string::npos)
-           href = hrefNode.substr(0, href_pos);
+         string href = href_value;
+         if( href_pos != string::npos ) {
+           href = href_value.substr( 0, href_pos );
+         }
          
-         //copy timestep directory
-         Dir timestepDir = fromDir.getSubdir(href);
-         if (removeOld)
+         // Copy the timestep directory.
+         Dir timestepDir = fromDir.getSubdir( href );
+         if( removeOld ) {
             timestepDir.move(toDir);
-         else
+         }
+         else {
             timestepDir.copy(toDir);
+         }
 
-         if (areCheckpoints)
+         if( areCheckpoints ) {
             d_checkpointTimestepDirs.push_back(toDir.getSubdir(href).getName());
+         }
          
          // add the timestep to the index.xml
          ostringstream timestep_str;
          timestep_str << timestep;
          timesteps->appendElement( "timestep", timestep_str.str().c_str() );
 
-         ProblemSpecP timestepBlock = timesteps->findBlock( "timestep" );
+         ProblemSpecP timestepBlock = timesteps->findLastBlock( "timestep" );
+
+         // Manually set the main tags (href, time, oldDelt) so that we can keep them
+         // in the same order as the original file.
+         //
+         timestepBlock->setAttribute( "href",    href_value );
+         timestepBlock->setAttribute( "time",    time_value );
+         timestepBlock->setAttribute( "oldDelt", oldDelt_value );
 
          for( map<string,string>::iterator iter = attributes.begin(); iter != attributes.end(); iter++ ) {
-           timestepBlock->setAttribute( (*iter).first, (*iter).second );
+
+           // Now set all the rest of the tags (if there are any... I'm guessing that there
+           // are not, but just to be safe...).
+           string tag_name = (*iter).first;
+           string tag_value = (*iter).second;
+           if( tag_name != "href" && tag_name != "time" && tag_name != "oldDelt" ) {
+             // href/time/oldDelt set already
+             timestepBlock->setAttribute( tag_name, tag_value );
+           }
          }
          
       }
-      ts = ts->findNextBlock("timestep");
+      old_ts = old_ts->findNextBlock("timestep");
    }
 
    // re-output index.xml
